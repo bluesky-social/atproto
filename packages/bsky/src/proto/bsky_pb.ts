@@ -5411,6 +5411,11 @@ export class GetDidsByHandlesRequest extends Message<GetDidsByHandlesRequest> {
    */
   handles: string[] = []
 
+  /**
+   * @generated from field: bool lookup_unidirectional = 2;
+   */
+  lookupUnidirectional = false
+
   constructor(data?: PartialMessage<GetDidsByHandlesRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5425,6 +5430,12 @@ export class GetDidsByHandlesRequest extends Message<GetDidsByHandlesRequest> {
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
       repeated: true,
+    },
+    {
+      no: 2,
+      name: 'lookup_unidirectional',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
     },
   ])
 
