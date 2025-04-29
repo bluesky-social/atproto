@@ -565,9 +565,9 @@ export class Hydrator {
     )
     for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
-        embed: embed ? isRelationshipPairBlocked(blocks, embed) : false,
-        parent: parent ? isRelationshipPairBlocked(blocks, parent) : false,
-        root: root ? isRelationshipPairBlocked(blocks, root) : false,
+        embed: embed ? isBlocked(blocks, embed) : false,
+        parent: parent ? isBlocked(blocks, parent) : false,
+        root: root ? isBlocked(blocks, root) : false,
       })
     }
     return postBlocks
@@ -803,8 +803,7 @@ export class Hydrator {
       agg.listItemSampleUris = [
         ...members.listitems.filter(
           (li) =>
-            ctx.viewer === creator ||
-            !isRelationshipPairBlocked(blocks, [creator, li.did]),
+            ctx.viewer === creator || !isBlocked(blocks, [creator, li.did]),
         ),
       ]
         .sort((li1, li2) => {
@@ -850,10 +849,7 @@ export class Hydrator {
     const likeBlocks = new HydrationMap<LikeBlock>()
     for (const [uri, like] of likes) {
       if (like) {
-        likeBlocks.set(
-          uri,
-          isRelationshipPairBlocked(blocks, [authorDid, didFromUri(uri)]),
-        )
+        likeBlocks.set(uri, isBlocked(blocks, [authorDid, didFromUri(uri)]))
       } else {
         likeBlocks.set(uri, null)
       }
@@ -952,10 +948,7 @@ export class Hydrator {
       if (follow) {
         followBlocks.set(
           uri,
-          isRelationshipPairBlocked(blocks, [
-            didFromUri(uri),
-            follow.record.subject,
-          ]),
+          isBlocked(blocks, [didFromUri(uri), follow.record.subject]),
         )
       } else {
         followBlocks.set(uri, null)
@@ -1284,11 +1277,7 @@ const getListUrisFromThreadgates = (gates: Threadgates) => {
   return uris
 }
 
-const isRelationshipPairBlocked = (
-  blocks: BidirectionalBlocks,
-  pair: RelationshipPair,
-): boolean => {
-  const [a, b] = pair
+const isBlocked = (blocks: BidirectionalBlocks, [a, b]: RelationshipPair) => {
   return blocks.get(a)?.get(b) ?? false
 }
 
