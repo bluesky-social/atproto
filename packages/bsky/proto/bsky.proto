@@ -470,6 +470,7 @@ message GetActorsResponse {
 //     - answering queries where the query param is a handle
 message GetDidsByHandlesRequest {
   repeated string handles = 1;
+  bool lookup_unidirectional = 2;
 }
 
 message GetDidsByHandlesResponse {
