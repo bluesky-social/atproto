@@ -107,6 +107,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     return { actors }
   },
 
+  // @TODO handle req.lookupUnidirectional w/ networked handle resolution
   async getDidsByHandles(req) {
     const { handles } = req
     if (handles.length === 0) {
