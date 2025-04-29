@@ -229,11 +229,8 @@ export class TeamService {
           profiles.set(profile.did, profile)
         })
       }
-    } catch (error) {
-      httpLogger.error(
-        { error, dids },
-        'Failed to get profiles for team members',
-      )
+    } catch (err) {
+      httpLogger.error({ err, dids }, 'Failed to get profiles for team members')
     }
 
     return profiles

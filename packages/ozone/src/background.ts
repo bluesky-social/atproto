@@ -63,7 +63,7 @@ export class BackgroundQueue {
         await task(this.db, abortController.signal)
       } catch (err) {
         if (!isCausedBySignal(err, abortController.signal)) {
-          dbLogger.error(err, 'background queue task failed')
+          dbLogger.error({ err }, 'background queue task failed')
         }
       } finally {
         abortController.abort()

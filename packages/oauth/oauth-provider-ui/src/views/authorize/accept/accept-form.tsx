@@ -66,7 +66,6 @@ export function AcceptForm({
       {clientTrusted && clientMetadata.logo_uri && (
         <div key="logo" className="flex items-center justify-center">
           <img
-            crossOrigin="anonymous"
             src={clientMetadata.logo_uri}
             alt={clientMetadata.client_name}
             className="h-16 w-16 rounded-full"

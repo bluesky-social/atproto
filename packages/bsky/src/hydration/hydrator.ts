@@ -486,7 +486,7 @@ export class Hydrator {
       starterPackState,
       postgates,
     ] = await Promise.all([
-      this.feed.getPostAggregates(allRefs),
+      this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
@@ -683,7 +683,10 @@ export class Hydrator {
     const [feedgens, feedgenAggs, feedgenViewers, profileState, labels] =
       await Promise.all([
         this.feed.getFeedGens(uris, ctx.includeTakedowns),
-        this.feed.getFeedGenAggregates(uris.map((uri) => ({ uri }))),
+        this.feed.getFeedGenAggregates(
+          uris.map((uri) => ({ uri })),
+          ctx.viewer,
+        ),
         ctx.viewer
           ? this.feed.getFeedGenViewerStates(uris, ctx.viewer)
           : undefined,
@@ -1002,7 +1005,7 @@ export class Hydrator {
     const [labelers, labelerAggs, labelerViewers, profileState] =
       await Promise.all([
         this.label.getLabelers(dids, ctx.includeTakedowns),
-        this.label.getLabelerAggregates(dids),
+        this.label.getLabelerAggregates(dids, ctx.viewer),
         ctx.viewer
           ? this.label.getLabelerViewerStates(dids, ctx.viewer)
           : undefined,

@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/accept/accept-form.tsx:77
+#: src/views/authorize/accept/accept-form.tsx:76
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> があなたのアカウント (<1/>) へのアクセス権限を要求しています。"
 
@@ -25,11 +25,11 @@ msgstr "２要素認証の確認"
 msgid "A second authentication factor is required"
 msgstr "２番目の認証要素が必要です"
 
-#: src/views/authorize/accept/accept-form.tsx:149
+#: src/views/authorize/accept/accept-form.tsx:148
 msgid "Access your account data (except chat messages)"
 msgstr "あなたのアカウントデータにアクセス （チャットメッセージを除く）"
 
-#: src/views/authorize/accept/accept-form.tsx:151
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your chat messages"
 msgstr "チャットメッセージにアクセス"
 
@@ -74,7 +74,7 @@ msgstr "戻る"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength} 文字以上 {maxLength} 文字以下"
 
-#: src/views/authorize/accept/accept-form.tsx:90
+#: src/views/authorize/accept/accept-form.tsx:89
 msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
 msgstr "<0>承認する</0>をクリックすると、<1>利用規約</1>と<2>プライバシーポリシー</2>に従って、このアプリが次のアクションを実行することを許可します："
 
@@ -319,7 +319,7 @@ msgstr "プライバシーポリシー"
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
-#: src/views/authorize/accept/accept-form.tsx:124
+#: src/views/authorize/accept/accept-form.tsx:123
 msgid "Requested permissions"
 msgstr "要求した権限"
 
@@ -436,7 +436,7 @@ msgstr "希望するユーザー名をタイプしてください"
 msgid "Unexpected server response"
 msgstr "予期しないサーバー応答"
 
-#: src/views/authorize/accept/accept-form.tsx:147
+#: src/views/authorize/accept/accept-form.tsx:146
 msgid "Uniquely identify you"
 msgstr "あなたを一意に識別"
 

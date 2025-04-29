@@ -20,10 +20,26 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const modViews = ctx.modService(ctx.db).views
+      const profilesBefore = await modViews.getProfiles(
+        input.body.verifications.map((v) => v.subject),
+      )
+
+      // Filter out any subject for which, the current issuer already has a valid verification record indexed
+      const verificationsToBeGranted = input.body.verifications.filter(
+        (verificationInput) => {
+          const hasValidVerification = profilesBefore
+            .get(verificationInput.subject)
+            ?.verification?.verifications.find(
+              (v) => v.issuer === ctx.cfg.verifier?.did && v.isValid,
+            )
+          return !hasValidVerification
+        },
+      )
+
       const verificationIssuer = ctx.verificationIssuer(ctx.cfg.verifier)
       const verificationService = ctx.verificationService(ctx.db)
       const { grantedVerifications, failedVerifications } =
-        await verificationIssuer.verify(input.body.verifications)
+        await verificationIssuer.verify(verificationsToBeGranted)
 
       if (!grantedVerifications.length) {
         return {

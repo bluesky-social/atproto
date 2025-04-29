@@ -17,7 +17,7 @@ export const createRouter = (ctx: AppContext): Router => {
     try {
       await sql`select 1`.execute(ctx.db.db)
     } catch (err) {
-      req.log.error(err, 'failed health check')
+      req.log.error({ err }, 'failed health check')
       return res.status(503).send({ version, error: 'Service Unavailable' })
     }
     res.send({ version })
