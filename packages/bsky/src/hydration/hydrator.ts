@@ -1297,7 +1297,6 @@ const getBlockEntryForRelationshipPair = (
   blocks: BidirectionalBlocks,
   pair: RelationshipPair,
 ): BlockEntry | null => {
-  if (!pair) return null
   const [a, b] = pair
   return blocks.get(a)?.get(b) ?? null
 }
