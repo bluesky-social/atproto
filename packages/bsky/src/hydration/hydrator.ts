@@ -998,11 +998,6 @@ export class Hydrator {
       }
     }
 
-    const listAuthorDids = listUris.map((blockListUri) =>
-      uriToDid(blockListUri),
-    )
-    const activeListAuthors = await this.actor.getActors(listAuthorDids)
-
     const result: BidirectionalBlocks = new HydrationMap<
       HydrationMap<boolean>
     >()
@@ -1014,7 +1009,7 @@ export class Hydrator {
           blockUri: block?.blockUri,
           blockListUri:
             block?.blockListUri &&
-            activeListAuthors.get(uriToDid(block.blockListUri))
+            listState.actors?.get(uriToDid(block.blockListUri))
               ? block.blockListUri
               : undefined,
         }
