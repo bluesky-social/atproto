@@ -565,9 +565,9 @@ export class Hydrator {
     )
     for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
-        embed: embed ? isBlocked(blocks, embed) : false,
-        parent: parent ? isBlocked(blocks, parent) : false,
-        root: root ? isBlocked(blocks, root) : false,
+        embed: !!embed && !!isBlocked(blocks, embed),
+        parent: !!parent && !!isBlocked(blocks, parent),
+        root: !!root && !!isBlocked(blocks, root),
       })
     }
     return postBlocks
