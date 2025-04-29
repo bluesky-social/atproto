@@ -88,10 +88,16 @@ export class ActorHydrator {
     }
   }
 
-  async getDids(handleOrDids: string[]): Promise<(string | undefined)[]> {
+  async getDids(
+    handleOrDids: string[],
+    opts?: { lookupUnidirectional?: boolean },
+  ): Promise<(string | undefined)[]> {
     const handles = handleOrDids.filter((actor) => !actor.startsWith('did:'))
     const res = handles.length
-      ? await this.dataplane.getDidsByHandles({ handles })
+      ? await this.dataplane.getDidsByHandles({
+          handles,
+          lookupUnidirectional: opts?.lookupUnidirectional,
+        })
       : { dids: [] }
     const didByHandle = handles.reduce(
       (acc, cur, i) => {
