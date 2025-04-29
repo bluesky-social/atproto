@@ -1,7 +1,6 @@
 import dns, { LookupAddress } from 'node:dns'
 import { LookupFunction } from 'node:net'
 import ipaddr from 'ipaddr.js'
-import { parse as pslParse } from 'psl'
 import { Agent, Client } from 'undici'
 import {
   Fetch,
@@ -157,8 +156,8 @@ export function unicastLookup(
   options: dns.LookupOptions,
   callback: Parameters<LookupFunction>[2],
 ) {
-  if (!isValidDomain(hostname)) {
-    callback(new Error('Hostname is not a public domain'), '')
+  if (!isInternetDomain(hostname)) {
+    callback(new Error('Hostname is not a public domain'), [])
     return
   }
 
@@ -183,12 +182,13 @@ export function unicastLookup(
   })
 }
 
-// see lupomontero/psl#258 for context on psl usage.
-// in short, this ensures a structurally valid domain
-// plus a "listed" tld.
-function isValidDomain(domain: string) {
-  const parsed = pslParse(domain)
-  return !parsed.error && parsed.listed
+export function isInternetDomain(domain: string): boolean {
+  for (const tld of ['.test', '.local', '.localhost', '.invalid', '.example']) {
+    if (domain.endsWith(tld)) {
+      return false
+    }
+  }
+  return true
 }
 
 function isNotUnicast(ip: ipaddr.IPv4 | ipaddr.IPv6): boolean {
