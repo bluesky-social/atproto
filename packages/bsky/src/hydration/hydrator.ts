@@ -998,6 +998,13 @@ export class Hydrator {
       const didBlocks = new HydrationMap<boolean>()
       for (const target of targets) {
         const block = blocks.get(source, target)
+
+        // If a list no longer exists or is not a mod list, then remove from block entry.
+        // isModList confirms the list exists in listState, which ensures it wasn't taken down.
+        if (!isModList(block?.blockListUri, listState)) {
+          delete block?.blockListUri
+        }
+
         const blockEntry: BlockEntry = {
           blockUri: block?.blockUri,
           blockListUri:
