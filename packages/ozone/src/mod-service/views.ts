@@ -544,10 +544,14 @@ export class ModerationViews {
     subjects: string[],
     includeNeg?: boolean,
   ): Promise<Map<string, Label[]>> {
+    const now = new Date().toISOString()
     const labels = new Map<string, Label[]>()
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
+      .where((qb) =>
+        qb.where('label.exp', 'is', null).orWhere('label.exp', '>', now),
+      )
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
