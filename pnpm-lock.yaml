@@ -1789,6 +1789,9 @@ importers:
 
   services/ozone:
     dependencies:
+      '@atproto/api':
+        specifier: workspace:^
+        version: link:../../packages/api
       '@atproto/aws':
         specifier: workspace:^
         version: link:../../packages/aws

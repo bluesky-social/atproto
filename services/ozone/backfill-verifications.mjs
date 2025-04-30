@@ -5,6 +5,7 @@
 import { Buffer } from 'node:buffer'
 import fs from 'node:fs'
 import path from 'node:path'
+import { lexicons } from '@atproto/api'
 import { Database, envToCfg, readEnv } from '@atproto/ozone'
 
 const CHUNK_SIZE = 100
@@ -42,6 +43,7 @@ async function processVerificationData(
 
     let processedCount = 0
     let currentLineNumber = startLine - 1
+    let ignoredLines = 0
 
     for (let i = 0; i < linesToProcess.length; i += CHUNK_SIZE) {
       const chunk = []
@@ -51,7 +53,11 @@ async function processVerificationData(
         try {
           currentLineNumber++
           const row = parseCSVLine(line)
-          chunk.push(row)
+          if (row) {
+            chunk.push(row)
+          } else {
+            ignoredLines++
+          }
         } catch (error) {
           throw new Error(
             `Error processing line ${currentLineNumber}: ${error.message}\nLine content: ${line}`,
@@ -71,6 +77,7 @@ async function processVerificationData(
       }
     }
 
+    console.log(`Ignored ${ignoredLines} lines due to invalid data`)
     console.log(`Finished processing ${processedCount} total rows`)
     console.log(`Last processed line number: ${currentLineNumber}`)
     console.log(
@@ -84,6 +91,7 @@ async function processVerificationData(
   }
 }
 
+const COLLECTION = 'app.bsky.graph.verification'
 function parseCSVLine(line) {
   const [issuer, rkey, subject, cid, recordHex, createdAt, updatedAt] =
     line.split(',')
@@ -92,11 +100,17 @@ function parseCSVLine(line) {
   const recordStr = Buffer.from(hexValue, 'hex').toString('utf8')
   const recordJson = JSON.parse(recordStr)
 
+  const recordValidity = lexicons.validate(COLLECTION, recordJson)
+
+  if (!recordValidity.success) {
+    return null
+  }
+
   const { handle, displayName } = recordJson
 
   return {
     issuer,
-    uri: `at://${issuer}/app.bsky.graph.verification/${rkey}`,
+    uri: `at://${issuer}/${COLLECTION}/${rkey}`,
     subject,
     cid,
     createdAt,

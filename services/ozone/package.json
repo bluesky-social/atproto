@@ -5,6 +5,7 @@
   "dependencies": {
     "@atproto/aws": "workspace:^",
     "@atproto/ozone": "workspace:^",
+    "@atproto/api": "workspace:^",
     "dd-trace": "3.13.2"
   }
 }
