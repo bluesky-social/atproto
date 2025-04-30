@@ -74,7 +74,10 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { followUris, subjectDid } = skeleton
-  const followState = await ctx.hydrator.hydrateFollows(followUris)
+  const followState = await ctx.hydrator.hydrateFollows(
+    followUris,
+    params.hydrateCtx,
+  )
   const dids = [subjectDid]
   if (followState.follows) {
     for (const [uri, follow] of followState.follows) {

@@ -95,7 +95,7 @@ const hydration = async (
   }
   const [starterPacksState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateStarterPacks(skeleton.starterPacks, params.hydrateCtx),
-    ctx.hydrator.hydrateBidirectionalBlocks(pairs),
+    ctx.hydrator.hydrateBidirectionalBlocks(pairs, params.hydrateCtx),
   ])
 
   return mergeManyStates(starterPacksState, { bidirectionalBlocks })
