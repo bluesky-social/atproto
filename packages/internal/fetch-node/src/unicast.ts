@@ -156,7 +156,7 @@ export function unicastLookup(
   options: dns.LookupOptions,
   callback: Parameters<LookupFunction>[2],
 ) {
-  if (!isInternetDomain(hostname)) {
+  if (isLocalHostname(hostname)) {
     callback(new Error('Hostname is not a public domain'), [])
     return
   }
@@ -182,13 +182,23 @@ export function unicastLookup(
   })
 }
 
-export function isInternetDomain(domain: string): boolean {
-  for (const tld of ['.test', '.local', '.localhost', '.invalid', '.example']) {
-    if (domain.endsWith(tld)) {
-      return false
-    }
-  }
-  return true
+/**
+ * @param hostname - a syntactically valid hostname
+ * @returns whether the hostname is a name typically used for on locale area networks.
+ * @note **DO NOT** use for security reasons. Only as heuristic.
+ */
+export function isLocalHostname(hostname: string): boolean {
+  const parts = hostname.split('.')
+  if (parts.length < 2) return true
+
+  const tld = parts.at(-1)!.toLowerCase()
+  return (
+    tld === 'test' ||
+    tld === 'local' ||
+    tld === 'localhost' ||
+    tld === 'invalid' ||
+    tld === 'example'
+  )
 }
 
 function isNotUnicast(ip: ipaddr.IPv4 | ipaddr.IPv6): boolean {

@@ -17,7 +17,7 @@ import {
   fetchJsonZodProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
-import { isInternetDomain } from '@atproto-labs/fetch-node'
+import { isLocalHostname } from '@atproto-labs/fetch-node'
 import { pipe } from '@atproto-labs/pipe'
 import {
   CachedGetter,
@@ -240,7 +240,7 @@ export class ClientManager {
       ? new URL(metadata.client_uri)
       : null
 
-    if (clientUriUrl && !isInternetDomain(clientUriUrl.hostname)) {
+    if (clientUriUrl && isLocalHostname(clientUriUrl.hostname)) {
       throw new InvalidClientMetadataError('client_uri hostname is invalid')
     }
 
@@ -539,9 +539,9 @@ export class ClientManager {
         }
 
         case url.protocol === 'https:': {
-          if (!isInternetDomain(url.hostname)) {
+          if (isLocalHostname(url.hostname)) {
             throw new InvalidRedirectUriError(
-              `Redirect URI "${url}"'s domain name must belong to the Public Suffix List (PSL)`,
+              `Redirect URI "${url}"'s domain name must not be a local hostname`,
             )
           }
 
@@ -608,9 +608,9 @@ export class ClientManager {
 
           const urlDomain = reverseDomain(url.protocol.slice(0, -1))
 
-          if (!isInternetDomain(urlDomain)) {
+          if (isLocalHostname(urlDomain)) {
             throw new InvalidRedirectUriError(
-              `Private-use URI Scheme redirect URI must be based on a valid domain name`,
+              `Private-use URI Scheme redirect URI must not be a local hostname`,
             )
           }
 
