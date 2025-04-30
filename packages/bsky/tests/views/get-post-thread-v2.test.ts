@@ -114,7 +114,7 @@ describe('appview thread views', () => {
   ]
 
   it.each(cases)(`root viewed by op — %j`, async ({ params }) => {
-    const {data} = await agent.app.bsky.feed.getPostThread(
+    const { data } = await agent.app.bsky.feed.getPostThread(
       { uri: seed.posts.root.ref.uriStr },
       {
         headers: await network.serviceHeaders(
@@ -140,7 +140,9 @@ describe('appview thread views', () => {
     expect(v1.highlightedPost.post.record).toEqual(
       v2.highlightedPost.post.record,
     )
-    expect(v1.highlightedPost.parent?.uri).toEqual(v2.highlightedPost.parent?.uri)
+    expect(v1.highlightedPost.parent?.uri).toEqual(
+      v2.highlightedPost.parent?.uri,
+    )
     expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
       v2.highlightedPost.isHighlighted,
     )
@@ -164,7 +166,7 @@ describe('appview thread views', () => {
   })
 
   it.each(cases)(`root viewed by dan — %j`, async ({ params }) => {
-    const {data} = await agent.app.bsky.feed.getPostThread(
+    const { data } = await agent.app.bsky.feed.getPostThread(
       { uri: seed.posts.root.ref.uriStr },
       {
         headers: await network.serviceHeaders(
@@ -190,7 +192,9 @@ describe('appview thread views', () => {
     expect(v1.highlightedPost.post.record).toEqual(
       v2.highlightedPost.post.record,
     )
-    expect(v1.highlightedPost.parent?.uri).toEqual(v2.highlightedPost.parent?.uri)
+    expect(v1.highlightedPost.parent?.uri).toEqual(
+      v2.highlightedPost.parent?.uri,
+    )
     expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
       v2.highlightedPost.isHighlighted,
     )
@@ -214,7 +218,7 @@ describe('appview thread views', () => {
   })
 
   it.each(cases)(`self thread viewed by op — %j`, async ({ params }) => {
-    const {data} = await agent.app.bsky.feed.getPostThread(
+    const { data } = await agent.app.bsky.feed.getPostThread(
       { uri: seed.posts.op1_0.ref.uriStr },
       {
         headers: await network.serviceHeaders(
@@ -240,7 +244,9 @@ describe('appview thread views', () => {
     expect(v1.highlightedPost.post.record).toEqual(
       v2.highlightedPost.post.record,
     )
-    expect(v1.highlightedPost.parent?.uri).toEqual(v2.highlightedPost.parent?.uri)
+    expect(v1.highlightedPost.parent?.uri).toEqual(
+      v2.highlightedPost.parent?.uri,
+    )
     expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
       v2.highlightedPost.isHighlighted,
     )

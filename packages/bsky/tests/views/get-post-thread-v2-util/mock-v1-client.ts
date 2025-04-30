@@ -420,15 +420,18 @@ function hasPwiOptOut(node: ThreadPost) {
   return !!node.post.author.labels?.find((l) => l.val === '!no-unauthenticated')
 }
 
-export function mockClientData(data: AppBskyFeedGetPostThread.OutputSchema['thread'], {
-  viewerDid,
-  sort,
-  prioritizeFollowedUsers,
-}: {
-  viewerDid: string | undefined
-  sort: ThreadViewPreferences['sort']
-  prioritizeFollowedUsers: ThreadViewPreferences['prioritizeFollowedUsers']
-}) {
+export function mockClientData(
+  data: AppBskyFeedGetPostThread.OutputSchema['thread'],
+  {
+    viewerDid,
+    sort,
+    prioritizeFollowedUsers,
+  }: {
+    viewerDid: string | undefined
+    sort: ThreadViewPreferences['sort']
+    prioritizeFollowedUsers: ThreadViewPreferences['prioritizeFollowedUsers']
+  },
+) {
   const thread = responseToThreadNodes(data)
   annotateSelfThread(thread)
   const sorted = sortThread({
@@ -440,10 +443,6 @@ export function mockClientData(data: AppBskyFeedGetPostThread.OutputSchema['thre
     viewerDid,
     fetchedAt: Date.now(),
   })
-  const skeleton = createThreadSkeleton(
-    sorted,
-    viewerDid,
-    false,
-  )
+  const skeleton = createThreadSkeleton(sorted, viewerDid, false)
   return skeleton
 }
