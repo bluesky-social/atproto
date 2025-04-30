@@ -240,22 +240,29 @@ export function responseToThreadNodes(
       isHighlighted: depth === 0,
       isOPThread: false, // populated `annotateSelfThread`
       // TODO reply depth?
-      hasUnhydratedReplies: direction === 'down' && depth === REPLY_TREE_DEPTH && !node.replies?.length && !!node.post.replyCount,
+      hasUnhydratedReplies:
+        direction === 'down' &&
+        depth === REPLY_TREE_DEPTH &&
+        !node.replies?.length &&
+        !!node.post.replyCount,
     }
   } else if (AppBskyFeedDefs.isBlockedPost(node)) {
-    return { type: 'blocked', uri: node.uri, depth, }
+    return { type: 'blocked', uri: node.uri, depth }
   } else if (AppBskyFeedDefs.isNotFoundPost(node)) {
-    return { type: 'not-found', uri: node.uri, depth, }
+    return { type: 'not-found', uri: node.uri, depth }
   } else {
     return { type: 'unknown', uri: '' }
   }
 }
 
-function annotateSelfThread(thread: ThreadNode, {
-  opDid,
-}: {
-  opDid: string
-}) {
+function annotateSelfThread(
+  thread: ThreadNode,
+  {
+    opDid,
+  }: {
+    opDid: string
+  },
+) {
   if (thread.type !== 'post') {
     return
   }
@@ -266,10 +273,7 @@ function annotateSelfThread(thread: ThreadNode, {
    */
   let parent: ThreadNode | undefined = thread.parent
   while (parent) {
-    if (
-      parent.type !== 'post' ||
-      parent.post.author.did !== opDid
-    ) {
+    if (parent.type !== 'post' || parent.post.author.did !== opDid) {
       // not a self-thread
       return
     }
@@ -420,19 +424,22 @@ function hasPwiOptOut(node: ThreadPost) {
   return !!node.post.author.labels?.find((l) => l.val === '!no-unauthenticated')
 }
 
-export function sandbox(data: AppBskyFeedGetPostThread.OutputSchema['thread'], {
-  opDid,
-  viewerDid,
-  sort,
-  prioritizeFollowedUsers,
-}: {
-  opDid: string
-  viewerDid: string | undefined
-  sort: ThreadViewPreferences['sort']
-  prioritizeFollowedUsers: ThreadViewPreferences['prioritizeFollowedUsers']
-}) {
+export function sandbox(
+  data: AppBskyFeedGetPostThread.OutputSchema['thread'],
+  {
+    opDid,
+    viewerDid,
+    sort,
+    prioritizeFollowedUsers,
+  }: {
+    opDid: string
+    viewerDid: string | undefined
+    sort: ThreadViewPreferences['sort']
+    prioritizeFollowedUsers: ThreadViewPreferences['prioritizeFollowedUsers']
+  },
+) {
   const thread = responseToThreadNodes(data)
-  annotateSelfThread(thread, {opDid})
+  annotateSelfThread(thread, { opDid })
   const sorted = sortThread({
     node: thread,
     options: {
@@ -442,10 +449,6 @@ export function sandbox(data: AppBskyFeedGetPostThread.OutputSchema['thread'], {
     viewerDid,
     fetchedAt: Date.now(),
   })
-  const skeleton = createThreadSkeleton(
-    sorted,
-    viewerDid,
-    false,
-  )
+  const skeleton = createThreadSkeleton(sorted, viewerDid, false)
   return skeleton
 }
