@@ -2,9 +2,6 @@ import {
   AppBskyFeedDefs,
   AppBskyFeedGetPostThread,
   AppBskyFeedPost,
-  moderatePost,
-  ModerationDecision,
-  ModerationOpts,
   BskyThreadViewPreference,
   asPredicate,
 } from '@atproto/api'
@@ -17,101 +14,232 @@ export type ThreadViewPreferences = Pick<
   BskyThreadViewPreference,
   'prioritizeFollowedUsers'
 > & {
-  sort: 'hotness' | 'oldest' | 'newest' | 'most-likes' | 'random' | string
+  sort: 'hotness' | 'oldest' | 'newest' | 'most-likes' | string
   lab_treeViewEnabled?: boolean
 }
 
-type ThreadViewNode = AppBskyFeedGetPostThread.OutputSchema['thread']
-
-export interface ThreadCtx {
-  depth: number
-  isHighlightedPost?: boolean
-  hasMore?: boolean
-  isSelfThread?: boolean
-  hasMoreSelfThread?: boolean
-}
-
-export type ThreadPost = {
-  type: 'post'
-  uri: string
-  post: AppBskyFeedDefs.PostView
-  parent: ThreadNode | undefined
-  replies: ThreadNode[] | undefined
-  depth: number
-  isHighlighted?: boolean
-  isOPThread?: boolean
-  hasOPLike: boolean | undefined
-  hasUnhydratedReplies?: boolean
-}
-
-export type ThreadNotFound = {
-  type: 'not-found'
-  uri: string
-  depth: number
-}
-
-export type ThreadBlocked = {
-  type: 'blocked'
-  uri: string
-  depth: number
-}
-
-export type ThreadUnknown = {
-  type: 'unknown'
-  uri: string
-}
-
-export type ThreadNode =
-  | ThreadPost
-  | ThreadNotFound
-  | ThreadBlocked
-  | ThreadUnknown
-
-export type ThreadModerationCache = WeakMap<ThreadNode, ModerationDecision>
-
-export type PostThreadQueryData = {
-  thread: ThreadNode
-  threadgate?: AppBskyFeedDefs.ThreadgateView
-}
-
-export function fillThreadModerationCache(
-  cache: ThreadModerationCache,
-  node: ThreadNode,
-  moderationOpts: ModerationOpts,
-) {
-  if (node.type === 'post') {
-    cache.set(node, moderatePost(node.post, moderationOpts))
-    if (node.parent) {
-      fillThreadModerationCache(cache, node.parent, moderationOpts)
+type ThreadSlice =
+  | {
+      $type: 'post'
+      uri: string
+      post: AppBskyFeedDefs.PostView
+      parent: Exclude<ThreadSlice, { $type: 'unknown' }> | undefined
+      replies: Exclude<ThreadSlice, { $type: 'unknown' }>[] | undefined
+      depth: number
+      isHighlighted: boolean
+      isOPThread: boolean
+      hasOPLike: boolean
+      hasUnhydratedReplies: boolean
     }
-    if (node.replies) {
-      for (const reply of node.replies) {
-        fillThreadModerationCache(cache, reply, moderationOpts)
-      }
+  | {
+      $type: 'postNotFound'
+      uri: string
+      depth: number
     }
+  | {
+      $type: 'postBlocked'
+      uri: string
+      depth: number
+    }
+  | {
+      $type: 'postNoUnauthenticated'
+      uri: string
+      depth: number
+    }
+  | {
+      $type: 'unknown'
+    }
+
+export function postThreadView({
+  thread,
+  depth = 0,
+  direction,
+}: {
+  thread: AppBskyFeedGetPostThread.OutputSchema['thread']
+  depth: number
+  direction?: 'up' | 'down'
+}): ThreadSlice {
+  if (
+    AppBskyFeedDefs.isThreadViewPost(thread) &&
+    isPostRecord(thread.post.record)
+  ) {
+    const parent =
+      thread.parent && direction !== 'down'
+        ? postThreadView({
+            thread: thread.parent,
+            depth: depth - 1,
+            direction: 'up',
+          })
+        : undefined
+    return {
+      $type: 'post',
+      uri: thread.post.uri,
+      post: thread.post,
+      parent: parent && parent.$type !== 'post' ? undefined : parent,
+      replies:
+        thread.replies?.length && direction !== 'up'
+          ? thread.replies
+              .map((reply) =>
+                postThreadView({
+                  thread: reply,
+                  depth: depth + 1,
+                  direction: 'down',
+                }),
+              )
+              // TODO only return posts?
+              .filter((thread) => thread.$type !== 'unknown')
+          : undefined,
+      hasOPLike: Boolean(thread?.threadContext?.rootAuthorLike),
+      depth,
+      isHighlighted: depth === 0,
+      isOPThread: false, // populated `annotateSelfThread`
+      hasUnhydratedReplies:
+        direction === 'down' &&
+        depth === REPLY_TREE_DEPTH &&
+        !thread.replies?.length &&
+        !!thread.post.replyCount,
+    }
+  } else if (AppBskyFeedDefs.isNotFoundPost(thread)) {
+    // TODO test 404
+    return { $type: 'postNotFound', uri: thread.uri, depth }
+  } else if (AppBskyFeedDefs.isBlockedPost(thread)) {
+    // TODO test blocked
+    return { $type: 'postBlocked', uri: thread.uri, depth }
+  } else {
+    return { $type: 'unknown' }
   }
 }
 
-export function sortThread({
+function* flattenThreadView({
+  thread,
+  isAuthenticated,
+  direction,
+}: {
+  thread: ThreadSlice
+  isAuthenticated: boolean
+  direction: 'up' | 'down'
+}): Generator<Exclude<ThreadSlice, { $type: 'unknown' }>, void> {
+  if (thread.$type === 'post') {
+    if (direction === 'up') {
+      if (thread.parent) {
+        yield* flattenThreadView({
+          thread: thread.parent,
+          isAuthenticated,
+          direction: 'up',
+        })
+      }
+
+      if (!thread.isHighlighted) {
+        yield thread
+      }
+    } else {
+      const isNoUnauthenticated = !!thread.post.author.labels?.find(
+        (l) => l.val === '!no-unauthenticated',
+      )
+      if (!isAuthenticated && isNoUnauthenticated) {
+        // TODO we exit early atm
+        // return HiddenReplyType.None
+        yield {
+          $type: 'postNoUnauthenticated',
+          uri: thread.uri,
+          depth: thread.depth,
+        }
+      }
+
+      if (!thread.isHighlighted) {
+        yield thread
+      }
+
+      if (thread.replies?.length) {
+        for (const reply of thread.replies) {
+          yield* flattenThreadView({
+            thread: reply,
+            isAuthenticated,
+            direction: 'down',
+          })
+          // TODO what
+          if (!thread.isHighlighted) {
+            break
+          }
+        }
+      }
+    }
+  } else if (thread.$type === 'postNotFound') {
+    yield thread
+  } else if (thread.$type === 'postBlocked') {
+    yield thread
+  }
+}
+
+function annotateOPThread(
+  thread: ThreadSlice,
+  {
+    opDid,
+  }: {
+    opDid: string
+  },
+) {
+  if (thread.$type !== 'post') {
+    return
+  }
+  const parentsByOP: Extract<ThreadSlice, { $type: 'post' }>[] = [thread]
+
+  /*
+   * Walk up parents
+   */
+  let parent: ThreadSlice | undefined = thread.parent
+  while (parent) {
+    if (parent.$type !== 'post' || parent.post.author.did !== opDid) {
+      // not a self-thread
+      return
+    }
+    parentsByOP.unshift(parent)
+    parent = parent.parent
+  }
+
+  if (parentsByOP.length > 1) {
+    for (const node of parentsByOP) {
+      node.isOPThread = true
+    }
+  }
+
+  function walkReplies(node: ThreadSlice) {
+    if (node.$type !== 'post') {
+      return
+    }
+    if (node.replies?.length) {
+      for (const reply of node.replies) {
+        if (reply.$type === 'post' && reply.post.author.did === opDid) {
+          reply.isOPThread = true
+          walkReplies(reply)
+        }
+      }
+    }
+  }
+
+  walkReplies(thread)
+}
+
+export function sortThreadView({
   node,
   options,
   viewerDid,
   fetchedAt,
 }: {
-  node: ThreadNode
+  node: ThreadSlice
   options: ThreadViewPreferences
   viewerDid: string | undefined
   fetchedAt: number
-}): ThreadNode {
-  if (node.type !== 'post') {
+}): ThreadSlice {
+  if (node.$type !== 'post') {
     return node
   }
   if (node.replies) {
-    node.replies.sort((a: ThreadNode, b: ThreadNode) => {
-      if (a.type !== 'post') {
+    node.replies.sort((a: ThreadSlice, b: ThreadSlice) => {
+      if (a.$type !== 'post') {
         return 1
       }
-      if (b.type !== 'post') {
+      if (b.$type !== 'post') {
         return -1
       }
 
@@ -160,8 +288,8 @@ export function sortThread({
 
       // Split items from different fetches into separate generations.
       if (options.sort === 'hotness') {
-        const aHotness = getHotness(a, fetchedAt)
-        const bHotness = getHotness(b, fetchedAt)
+        const aHotness = getSliceHotness(a, fetchedAt)
+        const bHotness = getSliceHotness(b, fetchedAt)
         return bHotness - aHotness
       } else if (options.sort === 'oldest') {
         return a.post.indexedAt.localeCompare(b.post.indexedAt)
@@ -178,7 +306,7 @@ export function sortThread({
       }
     })
     node.replies.forEach((reply) =>
-      sortThread({
+      sortThreadView({
         node: reply,
         options,
         viewerDid,
@@ -189,15 +317,14 @@ export function sortThread({
   return node
 }
 
-// internal methods
-// =
-
 // Inspired by https://join-lemmy.org/docs/contributors/07-ranking-algo.html
 // We want to give recent comments a real chance (and not bury them deep below the fold)
 // while also surfacing well-liked comments from the past. In the future, we can explore
 // something more sophisticated, but we don't have much data on the client right now.
-function getHotness(threadPost: ThreadPost, fetchedAt: number) {
-  const { post, hasOPLike } = threadPost
+function getSliceHotness(thread: ThreadSlice, fetchedAt: number) {
+  if (thread.$type !== 'post') return 0
+
+  const { post, hasOPLike } = thread
   const hoursAgo = Math.max(
     0,
     (new Date(fetchedAt).getTime() - new Date(post.indexedAt).getTime()) /
@@ -208,223 +335,11 @@ function getHotness(threadPost: ThreadPost, fetchedAt: number) {
   const timePenaltyExponent = 1.5 + 1.5 / (1 + Math.log(1 + likeCount))
   const opLikeBoost = hasOPLike ? 0.8 : 1.0
   const timePenalty = Math.pow(hoursAgo + 2, timePenaltyExponent * opLikeBoost)
+
   return likeOrder / timePenalty
 }
 
-export function responseToThreadNodes(
-  node: ThreadViewNode,
-  depth = 0,
-  direction: 'up' | 'down' | 'start' = 'start',
-): ThreadNode {
-  if (
-    AppBskyFeedDefs.isThreadViewPost(node) &&
-    isPostRecord(node.post.record)
-  ) {
-    return {
-      type: 'post',
-      uri: node.post.uri,
-      post: node.post,
-      parent:
-        node.parent && direction !== 'down'
-          ? responseToThreadNodes(node.parent, depth - 1, 'up')
-          : undefined,
-      replies:
-        node.replies?.length && direction !== 'up'
-          ? node.replies
-              .map((reply) => responseToThreadNodes(reply, depth + 1, 'down'))
-              // do not show blocked posts in replies
-              .filter((node) => node.type !== 'blocked')
-          : undefined,
-      hasOPLike: Boolean(node?.threadContext?.rootAuthorLike),
-      depth,
-      isHighlighted: depth === 0,
-      isOPThread: false, // populated `annotateSelfThread`
-      // TODO reply depth?
-      hasUnhydratedReplies:
-        direction === 'down' &&
-        depth === REPLY_TREE_DEPTH &&
-        !node.replies?.length &&
-        !!node.post.replyCount,
-    }
-  } else if (AppBskyFeedDefs.isBlockedPost(node)) {
-    return { type: 'blocked', uri: node.uri, depth }
-  } else if (AppBskyFeedDefs.isNotFoundPost(node)) {
-    return { type: 'not-found', uri: node.uri, depth }
-  } else {
-    return { type: 'unknown', uri: '' }
-  }
-}
-
-function annotateSelfThread(
-  thread: ThreadNode,
-  {
-    opDid,
-  }: {
-    opDid: string
-  },
-) {
-  if (thread.type !== 'post') {
-    return
-  }
-  const parentsByOP: ThreadPost[] = [thread]
-
-  /*
-   * Walk up parents
-   */
-  let parent: ThreadNode | undefined = thread.parent
-  while (parent) {
-    if (parent.type !== 'post' || parent.post.author.did !== opDid) {
-      // not a self-thread
-      return
-    }
-    parentsByOP.unshift(parent)
-    parent = parent.parent
-  }
-
-  if (parentsByOP.length > 1) {
-    for (const node of parentsByOP) {
-      node.isOPThread = true
-    }
-  }
-
-  function walkReplies(node: ThreadNode) {
-    if (node.type !== 'post') {
-      return
-    }
-    if (node.replies?.length) {
-      for (const reply of node.replies) {
-        if (reply.type === 'post' && reply.post.author.did === opDid) {
-          reply.isOPThread = true
-          walkReplies(reply)
-        }
-      }
-    }
-  }
-
-  walkReplies(thread)
-}
-
-const REPLY_PROMPT = { _reactKey: '__reply__' }
-const LOAD_MORE = { _reactKey: '__load_more__' }
-const SHOW_HIDDEN_REPLIES = { _reactKey: '__show_hidden_replies__' }
-const SHOW_MUTED_REPLIES = { _reactKey: '__show_muted_replies__' }
-
-enum HiddenRepliesState {
-  Hide,
-  Show,
-  ShowAndOverridePostHider,
-}
-
-type YieldedItem =
-  | ThreadPost
-  | ThreadBlocked
-  | ThreadNotFound
-  | typeof SHOW_HIDDEN_REPLIES
-  | typeof SHOW_MUTED_REPLIES
-type RowItem =
-  | YieldedItem
-  // TODO: TS doesn't actually enforce it's one of these, it only enforces matching shape.
-  | typeof REPLY_PROMPT
-  | typeof LOAD_MORE
-
-type ThreadSkeletonParts = {
-  parents: YieldedItem[]
-  highlightedPost: ThreadNode
-  replies: YieldedItem[]
-}
-
-export function createThreadSkeleton(
-  node: ThreadNode,
-  viewerDid: string | undefined,
-  treeView: boolean,
-): ThreadSkeletonParts | null {
-  if (!node) return null
-
-  return {
-    parents: Array.from(flattenThreadParents(node, !!viewerDid)),
-    highlightedPost: node,
-    replies: Array.from(flattenThreadReplies(node, viewerDid, treeView)),
-  }
-}
-
-function* flattenThreadParents(
-  node: ThreadNode,
-  hasSession: boolean,
-): Generator<YieldedItem, void> {
-  if (node.type === 'post') {
-    if (node.parent) {
-      yield* flattenThreadParents(node.parent, hasSession)
-    }
-    if (!node.isHighlighted) {
-      yield node
-    }
-  } else if (node.type === 'not-found') {
-    yield node
-  } else if (node.type === 'blocked') {
-    yield node
-  }
-}
-
-// The enum is ordered to make them easy to merge
-enum HiddenReplyType {
-  None = 0,
-  Muted = 1,
-  Hidden = 2,
-}
-
-function* flattenThreadReplies(
-  node: ThreadNode,
-  viewerDid: string | undefined,
-  treeView: boolean,
-): Generator<YieldedItem, HiddenReplyType> {
-  if (node.type === 'post') {
-    // dont show pwi-opted-out posts to logged out users
-    if (!viewerDid && hasPwiOptOut(node)) {
-      return HiddenReplyType.None
-    }
-
-    if (!node.isHighlighted) {
-      yield node
-    }
-
-    if (node.replies?.length) {
-      let hiddenReplies = HiddenReplyType.None
-      for (const reply of node.replies) {
-        let hiddenReply = yield* flattenThreadReplies(
-          reply,
-          viewerDid,
-          treeView,
-        )
-        if (hiddenReply > hiddenReplies) {
-          hiddenReplies = hiddenReply
-        }
-        if (!treeView && !node.isHighlighted) {
-          break
-        }
-      }
-
-      // show control to enable hidden replies
-      if (node.depth === 0) {
-        if (hiddenReplies === HiddenReplyType.Muted) {
-          yield SHOW_MUTED_REPLIES
-        } else if (hiddenReplies === HiddenReplyType.Hidden) {
-          yield SHOW_HIDDEN_REPLIES
-        }
-      }
-    }
-  } else if (node.type === 'not-found') {
-    yield node
-  } else if (node.type === 'blocked') {
-    yield node
-  }
-  return HiddenReplyType.None
-}
-
-function hasPwiOptOut(node: ThreadPost) {
-  return !!node.post.author.labels?.find((l) => l.val === '!no-unauthenticated')
-}
-
-export function sandbox(
+export function run(
   data: AppBskyFeedGetPostThread.OutputSchema['thread'],
   {
     opDid,
@@ -438,9 +353,12 @@ export function sandbox(
     prioritizeFollowedUsers: ThreadViewPreferences['prioritizeFollowedUsers']
   },
 ) {
-  const thread = responseToThreadNodes(data)
-  annotateSelfThread(thread, { opDid })
-  const sorted = sortThread({
+  const thread = postThreadView({
+    thread: data,
+    depth: 0,
+  })
+  annotateOPThread(thread, { opDid })
+  const sorted = sortThreadView({
     node: thread,
     options: {
       sort,
@@ -449,6 +367,23 @@ export function sandbox(
     viewerDid,
     fetchedAt: Date.now(),
   })
-  const skeleton = createThreadSkeleton(sorted, viewerDid, false)
-  return skeleton
+  const parents = Array.from(
+    flattenThreadView({
+      thread: sorted,
+      isAuthenticated: !!viewerDid,
+      direction: 'up',
+    }),
+  )
+  const replies = Array.from(
+    flattenThreadView({
+      thread: sorted,
+      isAuthenticated: !!viewerDid,
+      direction: 'down',
+    }),
+  )
+  return {
+    parents,
+    highlightedPost: thread,
+    replies,
+  }
 }

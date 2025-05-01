@@ -6,11 +6,8 @@ import {
   seed as getPostThreadV2Seed,
   Seed,
 } from '../seed/get-post-thread-v2.seed'
-import {
-  mockClientData,
-  ThreadPost,
-} from './get-post-thread-v2-util/mock-v1-client'
-import { sandbox } from './get-post-thread-v2-util/v2-sandbox'
+import { mockClientData } from './get-post-thread-v2-util/mock-v1-client'
+import { run } from './get-post-thread-v2-util/v2-sandbox'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('appview thread views', () => {
@@ -30,12 +27,7 @@ describe('appview thread views', () => {
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
 
-    try {
-      seed = await getPostThreadV2Seed(sc)
-    } catch (e) {
-      console.error('Error seeding data:', e)
-      throw e
-    }
+    seed = await getPostThreadV2Seed(sc)
 
     const res = await agent.app.bsky.feed.getPostThread(
       { uri: seed.posts.root.ref.uriStr },
@@ -127,7 +119,7 @@ describe('appview thread views', () => {
     const v1 = mockClientData(data.thread, {
       ...params,
     })
-    const v2 = sandbox(data.thread, {
+    const v2 = run(data.thread, {
       // @ts-expect-error idk yet
       opDid: data.thread.post.author.did,
       ...params,
@@ -136,7 +128,7 @@ describe('appview thread views', () => {
     assert(v1)
     assert(v2)
     assert(v1.highlightedPost.type === 'post')
-    assert(v2.highlightedPost.type === 'post')
+    assert(v2.highlightedPost.$type === 'post')
     expect(v1.highlightedPost.post.record).toEqual(
       v2.highlightedPost.post.record,
     )
@@ -154,12 +146,12 @@ describe('appview thread views', () => {
       const v1node = v1.replies[i]
       const v2node = v2.replies[i]
 
-      if (!('type' in v1node) || !('type' in v2node)) continue
+      if (!('type' in v1node) || !('$type' in v2node)) continue
 
       expect(v1node.uri).toEqual(v2node.uri)
 
       if (v1node.ctx.isSelfThread) {
-        // @ts-expect-error types need improvement
+        assert(v2node.$type === 'post')
         expect(v2node.isOPThread).toBe(true)
       }
     }
@@ -179,7 +171,7 @@ describe('appview thread views', () => {
     const v1 = mockClientData(data.thread, {
       ...params,
     })
-    const v2 = sandbox(data.thread, {
+    const v2 = run(data.thread, {
       // @ts-expect-error idk yet
       opDid: data.thread.post.author.did,
       ...params,
@@ -188,7 +180,7 @@ describe('appview thread views', () => {
     assert(v1)
     assert(v2)
     assert(v1.highlightedPost.type === 'post')
-    assert(v2.highlightedPost.type === 'post')
+    assert(v2.highlightedPost.$type === 'post')
     expect(v1.highlightedPost.post.record).toEqual(
       v2.highlightedPost.post.record,
     )
@@ -206,12 +198,12 @@ describe('appview thread views', () => {
       const v1node = v1.replies[i]
       const v2node = v2.replies[i]
 
-      if (!('type' in v1node) || !('type' in v2node)) continue
+      if (!('type' in v1node) || !('$type' in v2node)) continue
 
       expect(v1node.uri).toEqual(v2node.uri)
 
       if (v1node.ctx.isSelfThread) {
-        // @ts-expect-error types need improvement
+        assert(v2node.$type === 'post')
         expect(v2node.isOPThread).toBe(true)
       }
     }
@@ -231,7 +223,7 @@ describe('appview thread views', () => {
     const v1 = mockClientData(data.thread, {
       ...params,
     })
-    const v2 = sandbox(data.thread, {
+    const v2 = run(data.thread, {
       // @ts-expect-error idk yet
       opDid: data.thread.post.author.did,
       ...params,
@@ -240,7 +232,7 @@ describe('appview thread views', () => {
     assert(v1)
     assert(v2)
     assert(v1.highlightedPost.type === 'post')
-    assert(v2.highlightedPost.type === 'post')
+    assert(v2.highlightedPost.$type === 'post')
     expect(v1.highlightedPost.post.record).toEqual(
       v2.highlightedPost.post.record,
     )
@@ -258,12 +250,12 @@ describe('appview thread views', () => {
       const v1node = v1.replies[i]
       const v2node = v2.replies[i]
 
-      if (!('type' in v1node) || !('type' in v2node)) continue
+      if (!('type' in v1node) || !('$type' in v2node)) continue
 
       expect(v1node.uri).toEqual(v2node.uri)
 
       if (v1node.ctx.isSelfThread) {
-        // @ts-expect-error types need improvement
+        assert(v2node.$type === 'post')
         expect(v2node.isOPThread).toBe(true)
       }
     }
