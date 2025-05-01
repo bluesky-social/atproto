@@ -1,11 +1,8 @@
 import assert from 'node:assert'
-import { AtpAgent, AppBskyFeedGetPostThread } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 
-import {
-  seed as getPostThreadV2Seed,
-  Seed,
-} from '../seed/get-post-thread-v2.seed'
+import * as seeds from '../seed/get-post-thread-v2.seed'
 import { mockClientData } from './get-post-thread-v2-util/mock-v1-client'
 import { run } from './get-post-thread-v2-util/v2-sandbox'
 import { ids } from '../../src/lexicon/lexicons'
@@ -13,251 +10,241 @@ import { ids } from '../../src/lexicon/lexicons'
 describe('appview thread views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
-
-  let seed: Seed
-  let data: AppBskyFeedGetPostThread.OutputSchema
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_get_post_thread_v_two',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
-
-    seed = await getPostThreadV2Seed(sc)
-
-    const res = await agent.app.bsky.feed.getPostThread(
-      { uri: seed.posts.root.ref.uriStr },
-      {
-        headers: await network.serviceHeaders(
-          seed.users.opp.did,
-          ids.AppBskyFeedGetPostThread,
-        ),
-      },
-    )
-    data = res.data
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  const cases = [
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'newest',
-        prioritizeFollowedUsers: false,
-      },
-    },
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'oldest',
-        prioritizeFollowedUsers: false,
-      },
-    },
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'hotness',
-        prioritizeFollowedUsers: false,
-      },
-    },
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'most-likes',
-        prioritizeFollowedUsers: false,
-      },
-    },
-    // with prioritizeFollowedUsers
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'newest',
-        prioritizeFollowedUsers: true,
-      },
-    },
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'oldest',
-        prioritizeFollowedUsers: true,
-      },
-    },
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'hotness',
-        prioritizeFollowedUsers: true,
-      },
-    },
-    {
-      params: {
-        viewerDid: undefined,
-        sort: 'most-likes',
-        prioritizeFollowedUsers: true,
-      },
-    },
-  ]
+  describe(`basic test cases`, () => {
+    let baseSeed: Awaited<ReturnType<typeof seeds.baseSeed>>
 
-  it.each(cases)(`root viewed by op — %j`, async ({ params }) => {
-    const { data } = await agent.app.bsky.feed.getPostThread(
-      { uri: seed.posts.root.ref.uriStr },
+    beforeAll(async () => {
+      baseSeed = await seeds.baseSeed(sc)
+    })
+
+    const cases = [
       {
-        headers: await network.serviceHeaders(
-          seed.users.opp.did,
-          ids.AppBskyFeedGetPostThread,
-        ),
+        params: {
+          viewerDid: undefined,
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
       },
-    )
-
-    const v1 = mockClientData(data.thread, {
-      ...params,
-    })
-    const v2 = run(data.thread, {
-      // @ts-expect-error idk yet
-      opDid: data.thread.post.author.did,
-      ...params,
-    })
-
-    assert(v1)
-    assert(v2)
-    assert(v1.highlightedPost.type === 'post')
-    assert(v2.highlightedPost.$type === 'post')
-    expect(v1.highlightedPost.post.record).toEqual(
-      v2.highlightedPost.post.record,
-    )
-    expect(v1.highlightedPost.parent?.uri).toEqual(
-      v2.highlightedPost.parent?.uri,
-    )
-    expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
-      v2.highlightedPost.isHighlighted,
-    )
-    expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
-    expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
-    expect(v1.replies.length).toEqual(v2.replies.length)
-
-    for (let i = 0; i < v1.replies.length; i++) {
-      const v1node = v1.replies[i]
-      const v2node = v2.replies[i]
-
-      if (!('type' in v1node) || !('$type' in v2node)) continue
-
-      expect(v1node.uri).toEqual(v2node.uri)
-
-      if (v1node.ctx.isSelfThread) {
-        assert(v2node.$type === 'post')
-        expect(v2node.isOPThread).toBe(true)
-      }
-    }
-  })
-
-  it.each(cases)(`root viewed by dan — %j`, async ({ params }) => {
-    const { data } = await agent.app.bsky.feed.getPostThread(
-      { uri: seed.posts.root.ref.uriStr },
       {
-        headers: await network.serviceHeaders(
-          seed.users.dan.did,
-          ids.AppBskyFeedGetPostThread,
-        ),
+        params: {
+          viewerDid: undefined,
+          sort: 'oldest',
+          prioritizeFollowedUsers: false,
+        },
       },
-    )
-
-    const v1 = mockClientData(data.thread, {
-      ...params,
-    })
-    const v2 = run(data.thread, {
-      // @ts-expect-error idk yet
-      opDid: data.thread.post.author.did,
-      ...params,
-    })
-
-    assert(v1)
-    assert(v2)
-    assert(v1.highlightedPost.type === 'post')
-    assert(v2.highlightedPost.$type === 'post')
-    expect(v1.highlightedPost.post.record).toEqual(
-      v2.highlightedPost.post.record,
-    )
-    expect(v1.highlightedPost.parent?.uri).toEqual(
-      v2.highlightedPost.parent?.uri,
-    )
-    expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
-      v2.highlightedPost.isHighlighted,
-    )
-    expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
-    expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
-    expect(v1.replies.length).toEqual(v2.replies.length)
-
-    for (let i = 0; i < v1.replies.length; i++) {
-      const v1node = v1.replies[i]
-      const v2node = v2.replies[i]
-
-      if (!('type' in v1node) || !('$type' in v2node)) continue
-
-      expect(v1node.uri).toEqual(v2node.uri)
-
-      if (v1node.ctx.isSelfThread) {
-        assert(v2node.$type === 'post')
-        expect(v2node.isOPThread).toBe(true)
-      }
-    }
-  })
-
-  it.each(cases)(`self thread viewed by op — %j`, async ({ params }) => {
-    const { data } = await agent.app.bsky.feed.getPostThread(
-      { uri: seed.posts.op1_0.ref.uriStr },
       {
-        headers: await network.serviceHeaders(
-          seed.users.opp.did,
-          ids.AppBskyFeedGetPostThread,
-        ),
+        params: {
+          viewerDid: undefined,
+          sort: 'hotness',
+          prioritizeFollowedUsers: false,
+        },
       },
-    )
+      {
+        params: {
+          viewerDid: undefined,
+          sort: 'most-likes',
+          prioritizeFollowedUsers: false,
+        },
+      },
+      // with prioritizeFollowedUsers
+      {
+        params: {
+          viewerDid: undefined,
+          sort: 'newest',
+          prioritizeFollowedUsers: true,
+        },
+      },
+      {
+        params: {
+          viewerDid: undefined,
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+      },
+      {
+        params: {
+          viewerDid: undefined,
+          sort: 'hotness',
+          prioritizeFollowedUsers: true,
+        },
+      },
+      {
+        params: {
+          viewerDid: undefined,
+          sort: 'most-likes',
+          prioritizeFollowedUsers: true,
+        },
+      },
+    ]
 
-    const v1 = mockClientData(data.thread, {
-      ...params,
-    })
-    const v2 = run(data.thread, {
-      // @ts-expect-error idk yet
-      opDid: data.thread.post.author.did,
-      ...params,
-    })
+    it.each(cases)(`root viewed by op — %j`, async ({ params }) => {
+      const { data } = await agent.app.bsky.feed.getPostThread(
+        { uri: baseSeed.posts.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.opp.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
 
-    assert(v1)
-    assert(v2)
-    assert(v1.highlightedPost.type === 'post')
-    assert(v2.highlightedPost.$type === 'post')
-    expect(v1.highlightedPost.post.record).toEqual(
-      v2.highlightedPost.post.record,
-    )
-    expect(v1.highlightedPost.parent?.uri).toEqual(
-      v2.highlightedPost.parent?.uri,
-    )
-    expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
-      v2.highlightedPost.isHighlighted,
-    )
-    expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
-    expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
-    expect(v1.replies.length).toEqual(v2.replies.length)
+      const v1 = mockClientData(data.thread, {
+        ...params,
+      })
+      const v2 = run(data.thread, {
+        // @ts-expect-error idk yet
+        opDid: data.thread.post.author.did,
+        ...params,
+      })
 
-    for (let i = 0; i < v1.replies.length; i++) {
-      const v1node = v1.replies[i]
-      const v2node = v2.replies[i]
+      assert(v1)
+      assert(v2)
+      assert(v1.highlightedPost.type === 'post')
+      assert(v2.highlightedPost.$type === 'post')
+      expect(v1.highlightedPost.post.record).toEqual(
+        v2.highlightedPost.post.record,
+      )
+      expect(v1.highlightedPost.parent?.uri).toEqual(
+        v2.highlightedPost.parent?.uri,
+      )
+      expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+        v2.highlightedPost.isHighlighted,
+      )
+      expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
+      expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
+      expect(v1.replies.length).toEqual(v2.replies.length)
 
-      if (!('type' in v1node) || !('$type' in v2node)) continue
+      for (let i = 0; i < v1.replies.length; i++) {
+        const v1node = v1.replies[i]
+        const v2node = v2.replies[i]
 
-      expect(v1node.uri).toEqual(v2node.uri)
+        if (!('type' in v1node) || !('$type' in v2node)) continue
 
-      if (v1node.ctx.isSelfThread) {
-        assert(v2node.$type === 'post')
-        expect(v2node.isOPThread).toBe(true)
+        expect(v1node.uri).toEqual(v2node.uri)
+
+        if (v1node.ctx.isSelfThread) {
+          assert(v2node.$type === 'post')
+          expect(v2node.isOPThread).toBe(true)
+        }
       }
-    }
+    })
+
+    it.each(cases)(`root viewed by dan — %j`, async ({ params }) => {
+      const { data } = await agent.app.bsky.feed.getPostThread(
+        { uri: baseSeed.posts.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.dan.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+
+      const v1 = mockClientData(data.thread, {
+        ...params,
+      })
+      const v2 = run(data.thread, {
+        // @ts-expect-error idk yet
+        opDid: data.thread.post.author.did,
+        ...params,
+      })
+
+      assert(v1)
+      assert(v2)
+      assert(v1.highlightedPost.type === 'post')
+      assert(v2.highlightedPost.$type === 'post')
+      expect(v1.highlightedPost.post.record).toEqual(
+        v2.highlightedPost.post.record,
+      )
+      expect(v1.highlightedPost.parent?.uri).toEqual(
+        v2.highlightedPost.parent?.uri,
+      )
+      expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+        v2.highlightedPost.isHighlighted,
+      )
+      expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
+      expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
+      expect(v1.replies.length).toEqual(v2.replies.length)
+
+      for (let i = 0; i < v1.replies.length; i++) {
+        const v1node = v1.replies[i]
+        const v2node = v2.replies[i]
+
+        if (!('type' in v1node) || !('$type' in v2node)) continue
+
+        expect(v1node.uri).toEqual(v2node.uri)
+
+        if (v1node.ctx.isSelfThread) {
+          assert(v2node.$type === 'post')
+          expect(v2node.isOPThread).toBe(true)
+        }
+      }
+    })
+
+    it.each(cases)(`self thread viewed by op — %j`, async ({ params }) => {
+      const { data } = await agent.app.bsky.feed.getPostThread(
+        { uri: baseSeed.posts.op1_0.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.opp.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+
+      const v1 = mockClientData(data.thread, {
+        ...params,
+      })
+      const v2 = run(data.thread, {
+        // @ts-expect-error idk yet
+        opDid: data.thread.post.author.did,
+        ...params,
+      })
+
+      assert(v1)
+      assert(v2)
+      assert(v1.highlightedPost.type === 'post')
+      assert(v2.highlightedPost.$type === 'post')
+      expect(v1.highlightedPost.post.record).toEqual(
+        v2.highlightedPost.post.record,
+      )
+      expect(v1.highlightedPost.parent?.uri).toEqual(
+        v2.highlightedPost.parent?.uri,
+      )
+      expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+        v2.highlightedPost.isHighlighted,
+      )
+      expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
+      expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
+      expect(v1.replies.length).toEqual(v2.replies.length)
+
+      for (let i = 0; i < v1.replies.length; i++) {
+        const v1node = v1.replies[i]
+        const v2node = v2.replies[i]
+
+        if (!('type' in v1node) || !('$type' in v2node)) continue
+
+        expect(v1node.uri).toEqual(v2node.uri)
+
+        if (v1node.ctx.isSelfThread) {
+          assert(v2node.$type === 'post')
+          expect(v2node.isOPThread).toBe(true)
+        }
+      }
+    })
   })
 })
