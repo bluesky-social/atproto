@@ -18,7 +18,7 @@ export type ThreadViewPreferences = Pick<
   lab_treeViewEnabled?: boolean
 }
 
-type ThreadSlice =
+export type ThreadSlice =
   | {
       $type: 'post'
       uri: string
@@ -110,7 +110,7 @@ export function postThreadView({
   }
 }
 
-function* flattenThreadView({
+export function* flattenThreadView({
   thread,
   isAuthenticated,
   direction,
@@ -171,7 +171,7 @@ function* flattenThreadView({
   }
 }
 
-function annotateOPThread(
+export function annotateOPThread(
   thread: ThreadSlice,
   {
     opDid,
@@ -321,7 +321,7 @@ export function sortThreadView({
 // We want to give recent comments a real chance (and not bury them deep below the fold)
 // while also surfacing well-liked comments from the past. In the future, we can explore
 // something more sophisticated, but we don't have much data on the client right now.
-function getSliceHotness(thread: ThreadSlice, fetchedAt: number) {
+export function getSliceHotness(thread: ThreadSlice, fetchedAt: number) {
   if (thread.$type !== 'post') return 0
 
   const { post, hasOPLike } = thread
