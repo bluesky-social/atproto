@@ -31,7 +31,7 @@
     },
     "live": {
       "type": "token",
-      "description": "Advertises and account as currently offering live content."
+      "description": "Advertises an account as currently offering live content."
     }
   }
 }

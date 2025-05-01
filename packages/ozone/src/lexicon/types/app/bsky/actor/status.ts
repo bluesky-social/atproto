@@ -36,5 +36,5 @@ export function validateRecord<V>(v: V) {
   return validate<Record & V>(v, id, hashRecord, true)
 }
 
-/** Advertises and account as currently offering live content. */
+/** Advertises an account as currently offering live content. */
 export const LIVE = `${id}#live`

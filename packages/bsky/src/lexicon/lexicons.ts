@@ -5649,7 +5649,7 @@ export const schemaDict = {
       live: {
         type: 'token',
         description:
-          'Advertises and account as currently offering live content.',
+          'Advertises an account as currently offering live content.',
       },
     },
   },
