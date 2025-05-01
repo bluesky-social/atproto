@@ -1,6 +1,7 @@
 import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
 import { VerificationMeta } from '../proto/bsky_pb'
 import {
@@ -27,6 +28,7 @@ export type Actor = {
   priorityNotifications: boolean
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
+  status?: RecordInfo<StatusRecord>
 }
 
 export type VerificationHydrationState = {
@@ -147,6 +149,10 @@ export class ActorHydrator {
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
+      const status = actor.statusRecord
+        ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedowns)
+        : undefined
+
       const verifications = mapDefined(
         Object.entries(actor.verifiedBy),
         ([actorDid, verificationMeta]) => {
@@ -184,6 +190,7 @@ export class ActorHydrator {
         priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,
+        status: status,
       })
     }, new HydrationMap<Actor>())
   }
@@ -194,6 +201,21 @@ export class ActorHydrator {
   ): Promise<ChatDeclarations> {
     if (!uris.length) return new HydrationMap<ChatDeclaration>()
     const res = await this.dataplane.getActorChatDeclarationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<ChatDeclarationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<ChatDeclaration>())
+  }
+
+  async getStatus(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<ChatDeclarations> {
+    if (!uris.length) return new HydrationMap<ChatDeclaration>()
+    const res = await this.dataplane.getStatusRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<ChatDeclarationRecord>(
         res.records[i],

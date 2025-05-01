@@ -1419,6 +1419,122 @@ export class GetActorChatDeclarationRecordsResponse extends Message<GetActorChat
 }
 
 /**
+ * @generated from message bsky.GetStatusRecordsRequest
+ */
+export class GetStatusRecordsRequest extends Message<GetStatusRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetStatusRecordsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStatusRecordsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStatusRecordsRequest {
+    return new GetStatusRecordsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStatusRecordsRequest {
+    return new GetStatusRecordsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStatusRecordsRequest {
+    return new GetStatusRecordsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetStatusRecordsRequest
+      | PlainMessage<GetStatusRecordsRequest>
+      | undefined,
+    b:
+      | GetStatusRecordsRequest
+      | PlainMessage<GetStatusRecordsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStatusRecordsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetStatusRecordsResponse
+ */
+export class GetStatusRecordsResponse extends Message<GetStatusRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = []
+
+  constructor(data?: PartialMessage<GetStatusRecordsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStatusRecordsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStatusRecordsResponse {
+    return new GetStatusRecordsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStatusRecordsResponse {
+    return new GetStatusRecordsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStatusRecordsResponse {
+    return new GetStatusRecordsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetStatusRecordsResponse
+      | PlainMessage<GetStatusRecordsResponse>
+      | undefined,
+    b:
+      | GetStatusRecordsResponse
+      | PlainMessage<GetStatusRecordsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStatusRecordsResponse, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.GetRepostRecordsRequest
  */
 export class GetRepostRecordsRequest extends Message<GetRepostRecordsRequest> {
@@ -5265,6 +5381,25 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   verifiedBy: { [key: string]: VerificationMeta } = {}
 
+  /**
+   * Tags being applied to the account itself
+   *
+   * @generated from field: repeated string tags = 15;
+   */
+  tags: string[] = []
+
+  /**
+   * Tags being applied to the profile record
+   *
+   * @generated from field: repeated string profile_tags = 16;
+   */
+  profileTags: string[] = []
+
+  /**
+   * @generated from field: bsky.Record status_record = 17;
+   */
+  statusRecord?: Record
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5318,6 +5453,21 @@ export class ActorInfo extends Message<ActorInfo> {
       K: 9 /* ScalarType.STRING */,
       V: { kind: 'message', T: VerificationMeta },
     },
+    {
+      no: 15,
+      name: 'tags',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    {
+      no: 16,
+      name: 'profile_tags',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 17, name: 'status_record', kind: 'message', T: Record },
   ])
 
   static fromBinary(
