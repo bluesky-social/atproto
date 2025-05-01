@@ -1,10 +1,13 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, AppBskyFeedDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 
 import * as seeds from '../seed/get-post-thread-v2.seed'
-import { mockClientData } from './get-post-thread-v2-util/mock-v1-client'
-import { run } from './get-post-thread-v2-util/v2-sandbox'
+import {
+  mockClientData,
+  responseToThreadNodes,
+} from './get-post-thread-v2-util/mock-v1-client'
+import { run, postThreadView } from './get-post-thread-v2-util/v2-sandbox'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('appview thread views', () => {
@@ -96,7 +99,7 @@ describe('appview thread views', () => {
         { uri: baseSeed.posts.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            baseSeed.users.opp.did,
+            baseSeed.users.op.did,
             ids.AppBskyFeedGetPostThread,
           ),
         },
@@ -200,7 +203,7 @@ describe('appview thread views', () => {
         { uri: baseSeed.posts.op1_0.ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            baseSeed.users.opp.did,
+            baseSeed.users.op.did,
             ids.AppBskyFeedGetPostThread,
           ),
         },
@@ -245,6 +248,138 @@ describe('appview thread views', () => {
           expect(v2node.isOPThread).toBe(true)
         }
       }
+    })
+  })
+
+  describe.only(`postThreadView`, () => {
+    let seed: Awaited<ReturnType<typeof seeds.threadViewSeed>>
+
+    beforeAll(async () => {
+      seed = await seeds.threadViewSeed(sc)
+    })
+
+    describe(`not found posts`, () => {
+      it(`deleted reply is omitted from replies[]`, async () => {
+        const { data } = await agent.app.bsky.feed.getPostThread(
+          { uri: seed.posts.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyFeedGetPostThread,
+            ),
+          },
+        )
+
+        const v1 = responseToThreadNodes(data.thread)
+        const v2 = postThreadView({
+          thread: data.thread,
+        })
+
+        assert(v1)
+        assert(v2)
+        assert(v1.type === 'post')
+        assert(v2.$type === 'post')
+
+        expect(v1.replies?.length).toEqual(v2.replies?.length)
+        assert(v1.replies)
+        expect(
+          v1.replies.find((r) => r.uri === seed.posts.root_a1.ref.uriStr),
+        ).toBeUndefined()
+        assert(v2.replies)
+        expect(
+          v2.replies.find((r) => r.uri === seed.posts.root_a1.ref.uriStr),
+        ).toBeUndefined()
+      })
+
+      it(`deleted reply parent is replaced by deleted view`, async () => {
+        const { data } = await agent.app.bsky.feed.getPostThread(
+          { uri: seed.posts.root_a1_a2.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyFeedGetPostThread,
+            ),
+          },
+        )
+
+        const v1 = responseToThreadNodes(data.thread)
+        const v2 = postThreadView({
+          thread: data.thread,
+        })
+
+        assert(v1)
+        assert(v2)
+        assert(v1.type === 'post')
+        assert(v2.$type === 'post')
+
+        assert(v1.parent)
+        assert(v2.parent)
+        expect(v1.parent.uri).toEqual(v2.parent.uri)
+        expect(v1.parent.type).toEqual('not-found')
+        expect(AppBskyFeedDefs.isNotFoundPost(v2.parent)).toEqual(true)
+        assert(v1.replies)
+        assert(v2.replies)
+        expect(v1.replies?.length).toEqual(v2.replies?.length)
+      })
+
+      it(`blocked reply parent is replaced by blocked view`, async () => {
+        const { data } = await agent.app.bsky.feed.getPostThread(
+          { uri: seed.posts.root_b1_a1.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.viewer.did,
+              ids.AppBskyFeedGetPostThread,
+            ),
+          },
+        )
+
+        const v1 = responseToThreadNodes(data.thread)
+        const v2 = postThreadView({
+          thread: data.thread,
+        })
+
+        assert(v1)
+        assert(v2)
+        assert(v1.type === 'post')
+        assert(v2.$type === 'post')
+
+        assert(v1.parent)
+        assert(v2.parent)
+        expect(v1.parent.uri).toEqual(v2.parent.uri)
+        expect(v1.parent.type).toEqual('blocked')
+        expect(AppBskyFeedDefs.isBlockedPost(v2.parent)).toEqual(true)
+      })
+
+      it(`blocked reply is omitted from replies[]`, async () => {
+        const { data } = await agent.app.bsky.feed.getPostThread(
+          { uri: seed.posts.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.viewer.did,
+              ids.AppBskyFeedGetPostThread,
+            ),
+          },
+        )
+
+        const v1 = responseToThreadNodes(data.thread)
+        const v2 = postThreadView({
+          thread: data.thread,
+        })
+
+        assert(v1)
+        assert(v2)
+        assert(v1.type === 'post')
+        assert(v2.$type === 'post')
+
+        assert(v1.replies)
+        assert(v2.replies)
+        expect(
+          v1.replies.find((r) => r.uri === seed.posts.root_b1.ref.uriStr),
+        ).toBeUndefined()
+        expect(
+          v2.replies.find((r) => r.uri === seed.posts.root_b1.ref.uriStr),
+        ).toBeUndefined()
+      })
     })
   })
 })

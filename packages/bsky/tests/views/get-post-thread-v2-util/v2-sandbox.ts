@@ -31,16 +31,8 @@ export type ThreadSlice =
       hasOPLike: boolean
       hasUnhydratedReplies: boolean
     }
-  | {
-      $type: 'postNotFound'
-      uri: string
-      depth: number
-    }
-  | {
-      $type: 'postBlocked'
-      uri: string
-      depth: number
-    }
+  | AppBskyFeedDefs.NotFoundPost
+  | AppBskyFeedDefs.BlockedPost
   | {
       $type: 'postNoUnauthenticated'
       uri: string
@@ -56,7 +48,7 @@ export function postThreadView({
   direction,
 }: {
   thread: AppBskyFeedGetPostThread.OutputSchema['thread']
-  depth: number
+  depth?: number
   direction?: 'up' | 'down'
 }): ThreadSlice {
   if (
@@ -75,7 +67,7 @@ export function postThreadView({
       $type: 'post',
       uri: thread.post.uri,
       post: thread.post,
-      parent: parent && parent.$type !== 'post' ? undefined : parent,
+      parent: parent && parent.$type !== 'unknown' ? parent : undefined,
       replies:
         thread.replies?.length && direction !== 'up'
           ? thread.replies
@@ -86,9 +78,14 @@ export function postThreadView({
                   direction: 'down',
                 }),
               )
-              // TODO only return posts?
-              .filter((thread) => thread.$type !== 'unknown')
-          : undefined,
+              .filter((thread) => thread.$type === 'post')
+          : /**
+             * TOOD
+             * We could return `BlockedView` here if we wanted to.
+             * 404s won't even hit this code.
+             */
+            // .filter((thread) => thread.$type !== 'unknown')
+            undefined,
       hasOPLike: Boolean(thread?.threadContext?.rootAuthorLike),
       depth,
       isHighlighted: depth === 0,
@@ -100,11 +97,9 @@ export function postThreadView({
         !!thread.post.replyCount,
     }
   } else if (AppBskyFeedDefs.isNotFoundPost(thread)) {
-    // TODO test 404
-    return { $type: 'postNotFound', uri: thread.uri, depth }
+    return thread
   } else if (AppBskyFeedDefs.isBlockedPost(thread)) {
-    // TODO test blocked
-    return { $type: 'postBlocked', uri: thread.uri, depth }
+    return thread
   } else {
     return { $type: 'unknown' }
   }
@@ -164,9 +159,9 @@ export function* flattenThreadView({
         }
       }
     }
-  } else if (thread.$type === 'postNotFound') {
+  } else if (AppBskyFeedDefs.isNotFoundPost(thread)) {
     yield thread
-  } else if (thread.$type === 'postBlocked') {
+  } else if (AppBskyFeedDefs.isBlockedPost(thread)) {
     yield thread
   }
 }
