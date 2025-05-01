@@ -123,3 +123,85 @@ export async function threadViewSeed(
     },
   }
 }
+
+// ignored so it's easier to read the seeds
+// prettier-ignore
+export async function annotateOPThreadSeed(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'fl', [
+    'op',
+    'alice',
+    'bob',
+  ] as const)
+
+  const root = await sc.post(users.op.did, 'root')
+
+  const root_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op1') // thread
+  const root_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1.ref, 'root_op1_op1') // thread
+  const root_op1_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1_op1.ref, 'root_op1_op1_op1') // thread
+  const root_a1 = await sc.reply(users.alice.did, root.ref, root.ref, 'root_a1')
+  const root_a1_a2 = await sc.reply(users.alice.did, root.ref, root_a1.ref, 'root_a1_a2')
+  const root_op2 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2') // thread
+  const root_op2_b1 = await sc.reply(users.bob.did, root.ref, root_op2.ref, 'root_op2_b1')
+  const root_op2_b1_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2_b1_op1') // not thread
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    posts: {
+      root,
+      root_op1,
+      root_op1_op1,
+      root_op1_op1_op1,
+      root_a1,
+      root_a1_a2,
+      root_op2,
+      root_op2_b1,
+      root_op2_b1_op1,
+    },
+  }
+}
+
+// ignored so it's easier to read the seeds
+// prettier-ignore
+export async function sortingSeed(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'fl', [
+    'op',
+    'alice',
+    'bob',
+  ] as const)
+
+  const root = await sc.post(users.op.did, 'root')
+
+  const root_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op1') // thread
+  const root_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1.ref, 'root_op1_op1') // thread
+  const root_op1_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1_op1.ref, 'root_op1_op1_op1') // thread
+  const root_a1 = await sc.reply(users.alice.did, root.ref, root.ref, 'root_a1')
+  const root_a1_a2 = await sc.reply(users.alice.did, root.ref, root_a1.ref, 'root_a1_a2')
+  const root_op2 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2') // thread
+  const root_op2_b1 = await sc.reply(users.bob.did, root.ref, root_op2.ref, 'root_op2_b1')
+  const root_op2_b1_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2_b1_op1') // not thread
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    posts: {
+      root,
+      root_op1,
+      root_op1_op1,
+      root_op1_op1_op1,
+      root_a1,
+      root_a1_a2,
+      root_op2,
+      root_op2_b1,
+      root_op2_b1_op1,
+    },
+  }
+}
