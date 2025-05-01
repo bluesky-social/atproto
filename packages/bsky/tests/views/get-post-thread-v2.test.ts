@@ -13,8 +13,8 @@ import {
   run,
   postThreadView,
   annotateOPThread,
-  ThreadSlice,
-  getSliceHotness,
+  ThreadTree,
+  getPostHotness,
 } from './get-post-thread-v2-util/v2-sandbox'
 import { ids } from '../../src/lexicon/lexicons'
 
@@ -101,6 +101,26 @@ describe('appview thread views', () => {
         },
       },
     ]
+
+    it.only(`works`, async () => {
+      const { data } = await agent.app.bsky.feed.getPostThread(
+        { uri: baseSeed.posts.op1_1_1_1_1.ref.uriStr, parentHeight: 3 },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.op.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+
+      const v1 = mockClientData(data.thread, {
+        viewerDid: undefined,
+        sort: 'newest',
+        prioritizeFollowedUsers: false,
+      })
+
+      console.log(JSON.stringify(v1, null, 2))
+    })
 
     it.each(cases)(`root viewed by op — %j`, async ({ params }) => {
       const { data } = await agent.app.bsky.feed.getPostThread(
@@ -451,7 +471,7 @@ describe('appview thread views', () => {
     })
   })
 
-  describe('getSliceHotness', () => {
+  describe('getPostHotness', () => {
     const NOW = Date.now()
 
     function createThreadSlice({
@@ -462,7 +482,7 @@ describe('appview thread views', () => {
       hoursAgo?: number
       likes?: number
       hasOPLike?: boolean
-    } = {}): Extract<ThreadSlice, { $type: 'post' }> {
+    } = {}): Extract<ThreadTree, { $type: 'post' }> {
       return {
         $type: 'post' as const,
         uri: 'at://did:plc:ay34zl7ko3x6jsazmka4kp2f/app.bsky.feed.post/3lo4zfmu6bs2y',
@@ -509,8 +529,8 @@ describe('appview thread views', () => {
       const newerPost = createThreadSlice({ hoursAgo: 1 })
       const olderPost = createThreadSlice({ hoursAgo: 10 })
 
-      const newerHotness = getSliceHotness(newerPost, now)
-      const olderHotness = getSliceHotness(olderPost, now)
+      const newerHotness = getPostHotness(newerPost, now)
+      const olderHotness = getPostHotness(olderPost, now)
 
       expect(newerHotness).toBeGreaterThan(olderHotness)
     })
@@ -520,8 +540,8 @@ describe('appview thread views', () => {
       const popularPost = createThreadSlice({ hoursAgo: 5, likes: 100 })
       const unpopularPost = createThreadSlice({ hoursAgo: 5, likes: 1 })
 
-      const popularHotness = getSliceHotness(popularPost, now)
-      const unpopularHotness = getSliceHotness(unpopularPost, now)
+      const popularHotness = getPostHotness(popularPost, now)
+      const unpopularHotness = getPostHotness(unpopularPost, now)
 
       expect(popularHotness).toBeGreaterThan(unpopularHotness)
     })
@@ -539,8 +559,8 @@ describe('appview thread views', () => {
         hasOPLike: false,
       })
 
-      const opLikedHotness = getSliceHotness(opLikedPost, now)
-      const normalHotness = getSliceHotness(normalPost, now)
+      const opLikedHotness = getPostHotness(opLikedPost, now)
+      const normalHotness = getPostHotness(normalPost, now)
 
       expect(opLikedHotness).toBeGreaterThan(normalHotness)
     })
@@ -554,7 +574,7 @@ describe('appview thread views', () => {
           likes: 10,
           hasOPLike: false,
         })
-        return getSliceHotness(post, now)
+        return getPostHotness(post, now)
       })
 
       // Hotness should be strictly decreasing
@@ -576,8 +596,8 @@ describe('appview thread views', () => {
         hasOPLike: false,
       })
 
-      const oldWithOpLikeHotness = getSliceHotness(oldWithOpLike, now)
-      const newerNoOpLikeHotness = getSliceHotness(newerNoOpLike, now)
+      const oldWithOpLikeHotness = getPostHotness(oldWithOpLike, now)
+      const newerNoOpLikeHotness = getPostHotness(newerNoOpLike, now)
 
       // The older post with OP like might still be less hot than a newer post without OP like,
       // but it should be closer than if we compared two posts without OP like at these ages
@@ -595,8 +615,8 @@ describe('appview thread views', () => {
         hasOPLike: false,
       })
 
-      const oldNoOpLikeHotness = getSliceHotness(oldNoOpLike, now)
-      const newerNoOpLike2Hotness = getSliceHotness(newerNoOpLike2, now)
+      const oldNoOpLikeHotness = getPostHotness(oldNoOpLike, now)
+      const newerNoOpLike2Hotness = getPostHotness(newerNoOpLike2, now)
 
       const withoutOpLikeRatio = oldNoOpLikeHotness / newerNoOpLike2Hotness
 
@@ -668,7 +688,7 @@ describe('appview thread views', () => {
 
       const results = testCases.map(({ label, ...rest }) => {
         const post = createThreadSlice(rest)
-        const hotness = getSliceHotness(post, now)
+        const hotness = getPostHotness(post, now)
         return { label, hotness }
       })
 

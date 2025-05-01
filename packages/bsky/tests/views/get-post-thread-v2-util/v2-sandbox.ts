@@ -18,13 +18,13 @@ export type ThreadViewPreferences = Pick<
   lab_treeViewEnabled?: boolean
 }
 
-export type ThreadSlice =
+export type ThreadTree =
   | {
       $type: 'post'
       uri: string
       post: AppBskyFeedDefs.PostView
-      parent: Exclude<ThreadSlice, { $type: 'unknown' }> | undefined
-      replies: Exclude<ThreadSlice, { $type: 'unknown' }>[] | undefined
+      parent: Exclude<ThreadTree, { $type: 'unknown' }> | undefined
+      replies: Exclude<ThreadTree, { $type: 'unknown' }>[] | undefined
       depth: number
       isHighlighted: boolean
       isOPThread: boolean
@@ -50,7 +50,7 @@ export function postThreadView({
   thread: AppBskyFeedGetPostThread.OutputSchema['thread']
   depth?: number
   direction?: 'up' | 'down'
-}): ThreadSlice {
+}): ThreadTree {
   if (
     AppBskyFeedDefs.isThreadViewPost(thread) &&
     isPostRecord(thread.post.record)
@@ -110,10 +110,10 @@ export function* flattenThreadView({
   isAuthenticated,
   direction,
 }: {
-  thread: ThreadSlice
+  thread: ThreadTree
   isAuthenticated: boolean
   direction: 'up' | 'down'
-}): Generator<Exclude<ThreadSlice, { $type: 'unknown' }>, void> {
+}): Generator<Exclude<ThreadTree, { $type: 'unknown' }>, void> {
   if (thread.$type === 'post') {
     if (direction === 'up') {
       if (thread.parent) {
@@ -166,17 +166,17 @@ export function* flattenThreadView({
   }
 }
 
-export function annotateOPThread(thread: ThreadSlice) {
+export function annotateOPThread(thread: ThreadTree) {
   if (thread.$type !== 'post') {
     return
   }
   const opDid = thread.post.author.did
-  const parentsByOP: Extract<ThreadSlice, { $type: 'post' }>[] = [thread]
+  const parentsByOP: Extract<ThreadTree, { $type: 'post' }>[] = [thread]
 
   /*
    * Walk up parents
    */
-  let parent: ThreadSlice | undefined = thread.parent
+  let parent: ThreadTree | undefined = thread.parent
   while (parent) {
     if (parent.$type !== 'post' || parent.post.author.did !== opDid) {
       // not a self-thread
@@ -192,7 +192,7 @@ export function annotateOPThread(thread: ThreadSlice) {
     }
   }
 
-  function walkReplies(node: ThreadSlice) {
+  function walkReplies(node: ThreadTree) {
     if (node.$type !== 'post') {
       return
     }
@@ -215,16 +215,16 @@ export function sortThreadView({
   viewerDid,
   fetchedAt,
 }: {
-  node: ThreadSlice
+  node: ThreadTree
   options: ThreadViewPreferences
   viewerDid: string | undefined
   fetchedAt: number
-}): ThreadSlice {
+}): ThreadTree {
   if (node.$type !== 'post') {
     return node
   }
   if (node.replies) {
-    node.replies.sort((a: ThreadSlice, b: ThreadSlice) => {
+    node.replies.sort((a: ThreadTree, b: ThreadTree) => {
       if (a.$type !== 'post') {
         return 1
       }
@@ -277,8 +277,8 @@ export function sortThreadView({
 
       // Split items from different fetches into separate generations.
       if (options.sort === 'hotness') {
-        const aHotness = getSliceHotness(a, fetchedAt)
-        const bHotness = getSliceHotness(b, fetchedAt)
+        const aHotness = getPostHotness(a, fetchedAt)
+        const bHotness = getPostHotness(b, fetchedAt)
         return bHotness - aHotness
       } else if (options.sort === 'oldest') {
         return a.post.indexedAt.localeCompare(b.post.indexedAt)
@@ -310,7 +310,7 @@ export function sortThreadView({
 // We want to give recent comments a real chance (and not bury them deep below the fold)
 // while also surfacing well-liked comments from the past. In the future, we can explore
 // something more sophisticated, but we don't have much data on the client right now.
-export function getSliceHotness(thread: ThreadSlice, fetchedAt: number) {
+export function getPostHotness(thread: ThreadTree, fetchedAt: number) {
   if (thread.$type !== 'post') return 0
 
   const { post, hasOPLike } = thread
