@@ -55,7 +55,6 @@ export const makePlugin = (
     notifsForInsert,
     notifsForDelete,
   })
-  processor.assertValidRecord = () => null
   return processor
 }
 

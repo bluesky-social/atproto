@@ -227,7 +227,7 @@ describe('pds profile views', () => {
     })
   })
 
-  describe.only('status', () => {
+  describe('status', () => {
     const embed: AppBskyEmbedExternal.External = {
       $type: 'app.bsky.embed.external#external',
       uri: 'https://example.com',

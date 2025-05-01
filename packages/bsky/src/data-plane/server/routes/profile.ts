@@ -115,6 +115,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         trustedVerifier: row?.trustedVerifier ?? false,
         verifiedBy,
         statusRecord: status,
+        tags: [],
+        profileTags: [],
       }
     })
     return { actors }

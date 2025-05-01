@@ -47,6 +47,9 @@ export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
 
 export type ChatDeclarations = HydrationMap<ChatDeclaration>
 
+export type Status = RecordInfo<StatusRecord>
+export type Statuses = HydrationMap<Status>
+
 export type ProfileViewerState = {
   muted?: boolean
   mutedByList?: string
@@ -210,19 +213,13 @@ export class ActorHydrator {
     }, new HydrationMap<ChatDeclaration>())
   }
 
-  async getStatus(
-    uris: string[],
-    includeTakedowns = false,
-  ): Promise<ChatDeclarations> {
-    if (!uris.length) return new HydrationMap<ChatDeclaration>()
+  async getStatus(uris: string[], includeTakedowns = false): Promise<Statuses> {
+    if (!uris.length) return new HydrationMap<Status>()
     const res = await this.dataplane.getStatusRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      const record = parseRecord<ChatDeclarationRecord>(
-        res.records[i],
-        includeTakedowns,
-      )
+      const record = parseRecord<StatusRecord>(res.records[i], includeTakedowns)
       return acc.set(uri, record ?? null)
-    }, new HydrationMap<ChatDeclaration>())
+    }, new HydrationMap<Status>())
   }
 
   // "naive" because this method does not verify the existence of the list itself
