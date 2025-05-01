@@ -1,64 +1,53 @@
 import { SeedClient, TestNetwork, TestNetworkNoAppView } from '@atproto/dev-env'
 
-import { createUserStub } from './util'
+import { createUsers } from './util'
 
 // ignored so it's easier to read the seeds
 // prettier-ignore
 export async function baseSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = structuredClone({
-    opp: createUserStub('opp'),
+  const users = await createUsers(sc, 'base', [
+    'op',
+    'alice',
+    'bob',
+    'carla',
+    'dan'
+  ] as const)
 
-    alice: createUserStub('alice'),
-    bob: createUserStub('bob'),
-    carla: createUserStub('carla'),
-    dan: createUserStub('dan'),
-  })
+  const root = await sc.post(users.op.did, 'root')
 
-  await sc.createAccount('opp', users.opp)
-  await sc.createAccount('alice', users.alice)
-  await sc.createAccount('bob', users.bob)
-  await sc.createAccount('carla', users.carla)
-  await sc.createAccount('dan', users.dan)
-
-  Object.values(users).forEach((user) => {
-    users[user.id].did = sc.dids[user.id]
-  })
-
-  const root = await sc.post(users.opp.did, 'root')
-
-  const op1_0 = await sc.reply(users.opp.did, root.ref, root.ref, '(opp) 1_0')
-  const op1_1 = await sc.reply(users.opp.did, root.ref, op1_0.ref, '(opp) 1_1')
-  const op1_1_1 = await sc.reply(users.opp.did, root.ref, op1_1.ref, '(opp) 1_1_1')
-  const op1_1_1_1 = await sc.reply(users.opp.did, root.ref, op1_1_1.ref, '(opp) 1_1_1_1')
-  const op1_1_1_1_1 = await sc.reply(users.opp.did, root.ref, op1_1_1_1.ref, '(opp) 1_1_1_1_1')
-  const op1_2 = await sc.reply(users.opp.did, root.ref, op1_1.ref, '(opp) 1_2')
+  const op1_0 = await sc.reply(users.op.did, root.ref, root.ref, '(op) 1_0')
+  const op1_1 = await sc.reply(users.op.did, root.ref, op1_0.ref, '(op) 1_1')
+  const op1_1_1 = await sc.reply(users.op.did, root.ref, op1_1.ref, '(op) 1_1_1')
+  const op1_1_1_1 = await sc.reply(users.op.did, root.ref, op1_1_1.ref, '(op) 1_1_1_1')
+  const op1_1_1_1_1 = await sc.reply(users.op.did, root.ref, op1_1_1_1.ref, '(op) 1_1_1_1_1')
+  const op1_2 = await sc.reply(users.op.did, root.ref, op1_1.ref, '(op) 1_2')
 
   const a1_0 = await sc.reply(users.alice.did, root.ref, root.ref, '(alice) 1_0')
   const b1_0 = await sc.reply(users.bob.did, root.ref, root.ref, '(bob) 1_0')
   const c1_0 = await sc.reply(users.carla.did, root.ref, root.ref, '(carla) 1_0')
 
-  const op2_0 = await sc.reply(users.opp.did, root.ref, root.ref, '(opp) 2_0')
-  const op2_1 = await sc.reply(users.opp.did, root.ref, op2_0.ref, '(opp) 2_1')
+  const op2_0 = await sc.reply(users.op.did, root.ref, root.ref, '(op) 2_0')
+  const op2_1 = await sc.reply(users.op.did, root.ref, op2_0.ref, '(op) 2_1')
   const a2_2 = await sc.reply(users.alice.did, root.ref, op2_1.ref, '(alice) 2_2')
-  const op2_3 = await sc.reply(users.opp.did, root.ref, a2_2.ref, '(opp) 2_3')
-  const op2_4 = await sc.reply(users.opp.did, root.ref, op2_3.ref, '(opp) 2_4')
+  const op2_3 = await sc.reply(users.op.did, root.ref, a2_2.ref, '(op) 2_3')
+  const op2_4 = await sc.reply(users.op.did, root.ref, op2_3.ref, '(op) 2_4')
 
   const a2_0 = await sc.reply(users.alice.did, root.ref, root.ref, '(alice) 2_0')
   const b2_0 = await sc.reply(users.bob.did, root.ref, root.ref, '(bob) 2_0')
   const c2_0 = await sc.reply(users.carla.did, root.ref, root.ref, '(carla) 2_0')
 
-  await sc.like(users.opp.did, a2_0.ref)
+  await sc.like(users.op.did, a2_0.ref)
   await sc.like(users.bob.did, a2_0.ref)
   await sc.like(users.carla.did, a2_0.ref)
   await sc.like(users.dan.did, a2_0.ref)
 
-  await sc.like(users.opp.did, b2_0.ref)
+  await sc.like(users.op.did, b2_0.ref)
   await sc.like(users.alice.did, b2_0.ref)
   await sc.like(users.carla.did, b2_0.ref)
 
-  await sc.like(users.opp.did, c2_0.ref)
+  await sc.like(users.op.did, c2_0.ref)
   await sc.like(users.bob.did, c2_0.ref)
 
   await sc.follow(users.dan.did, users.alice.did)
@@ -91,6 +80,46 @@ export async function baseSeed(
       a2_0,
       b2_0,
       c2_0,
+    },
+  }
+}
+
+// ignored so it's easier to read the seeds
+// prettier-ignore
+export async function threadViewSeed(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'tv', [
+    'op',
+    'alice',
+    'bob',
+    'viewer',
+  ] as const)
+
+  const root = await sc.post(users.op.did, 'root')
+
+  const root_a1 = await sc.reply(users.alice.did, root.ref, root.ref, 'root_a1') // deleted
+  const root_a1_a2 = await sc.reply(users.alice.did, root.ref, root_a1.ref, 'root_a1_a2')
+  const root_a1_a2_a3 = await sc.reply(users.alice.did, root.ref, root_a1_a2.ref, 'root_a1_a2_a3')
+
+  const root_b1 = await sc.reply(users.bob.did, root.ref, root.ref, 'root_b1') // blocks viewer
+  const root_b1_a1 = await sc.reply(users.alice.did, root.ref, root_b1.ref, 'root_b1_a1')
+
+  await sc.deletePost(users.alice.did, root_a1.ref.uri)
+  await sc.block(users.bob.did, users.viewer.did)
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    posts: {
+      root,
+      root_a1,
+      root_a1_a2,
+      root_a1_a2_a3,
+      root_b1,
+      root_b1_a1,
     },
   }
 }
