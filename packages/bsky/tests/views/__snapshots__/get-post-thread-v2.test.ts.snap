@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`appview thread views getSliceHotness snapshot of various hotness values 1`] = `
+Array [
+  Object {
+    "hotness": 0.13703980894291043,
+    "label": "brand new, no likes",
+  },
+  Object {
+    "hotness": 1.359968213418607,
+    "label": "brand new, many likes",
+  },
+  Object {
+    "hotness": 1.265986764197577,
+    "label": "brand new, some likes, with OP like",
+  },
+  Object {
+    "hotness": 0.009612958248879937,
+    "label": "12 hours old, few likes",
+  },
+  Object {
+    "hotness": 0.04085479072954339,
+    "label": "12 hours old, few likes, with OP like",
+  },
+  Object {
+    "hotness": 0.009307169537285928,
+    "label": "2 days old, very popular",
+  },
+  Object {
+    "hotness": 0.05062058369639504,
+    "label": "2 days old, very popular, with OP like",
+  },
+  Object {
+    "hotness": 0.00011988570262553715,
+    "label": "1 week old, some likes",
+  },
+  Object {
+    "hotness": 0.0012770199310035506,
+    "label": "1 week old, some likes, with OP like",
+  },
+]
+`;

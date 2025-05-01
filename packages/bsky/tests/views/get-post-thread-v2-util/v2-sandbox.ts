@@ -69,6 +69,12 @@ export function postThreadView({
       post: thread.post,
       parent: parent && parent.$type !== 'unknown' ? parent : undefined,
       replies:
+        /**
+         * TOOD
+         * We could return `BlockedView` here if we wanted to.
+         * 404s won't even hit this code.
+         *    .filter((thread) => thread.$type !== 'unknown')
+         */
         thread.replies?.length && direction !== 'up'
           ? thread.replies
               .map((reply) =>
@@ -79,13 +85,7 @@ export function postThreadView({
                 }),
               )
               .filter((thread) => thread.$type === 'post')
-          : /**
-             * TOOD
-             * We could return `BlockedView` here if we wanted to.
-             * 404s won't even hit this code.
-             */
-            // .filter((thread) => thread.$type !== 'unknown')
-            undefined,
+          : undefined,
       hasOPLike: Boolean(thread?.threadContext?.rootAuthorLike),
       depth,
       isHighlighted: depth === 0,
@@ -166,17 +166,11 @@ export function* flattenThreadView({
   }
 }
 
-export function annotateOPThread(
-  thread: ThreadSlice,
-  {
-    opDid,
-  }: {
-    opDid: string
-  },
-) {
+export function annotateOPThread(thread: ThreadSlice) {
   if (thread.$type !== 'post') {
     return
   }
+  const opDid = thread.post.author.did
   const parentsByOP: Extract<ThreadSlice, { $type: 'post' }>[] = [thread]
 
   /*
@@ -337,12 +331,10 @@ export function getSliceHotness(thread: ThreadSlice, fetchedAt: number) {
 export function run(
   data: AppBskyFeedGetPostThread.OutputSchema['thread'],
   {
-    opDid,
     viewerDid,
     sort,
     prioritizeFollowedUsers,
   }: {
-    opDid: string
     viewerDid: string | undefined
     sort: ThreadViewPreferences['sort']
     prioritizeFollowedUsers: ThreadViewPreferences['prioritizeFollowedUsers']
@@ -352,7 +344,7 @@ export function run(
     thread: data,
     depth: 0,
   })
-  annotateOPThread(thread, { opDid })
+  annotateOPThread(thread)
   const sorted = sortThreadView({
     node: thread,
     options: {

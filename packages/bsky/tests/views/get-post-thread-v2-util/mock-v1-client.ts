@@ -275,7 +275,7 @@ export function annotateSelfThread(thread: ThreadNode) {
   let node = thread
   for (let i = 0; i < 10; i++) {
     const reply = node.replies?.find(
-      (r) => r.type === 'post' && r.post.author.did === thread.post.author.did,
+      r => r.type === 'post' && r.post.author.did === thread.post.author.did,
     )
     if (reply?.type !== 'post') {
       break
