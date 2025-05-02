@@ -173,6 +173,25 @@ export function sortThreadTree({
   return node
 }
 
+export function flattenThread(anchorTree: ThreadTree) {
+  return Array.from([
+    ...Array.from(
+      // @ts-ignore
+      anchorTree.parent
+        ? flattenThreadTree({
+            // @ts-ignore
+            thread: anchorTree.parent,
+            isAuthenticated: false,
+            direction: 'up',
+          })
+        : [],
+    ),
+    ...Array.from(
+      flattenThreadTree({ thread: anchorTree, isAuthenticated: false }),
+    ),
+  ])
+}
+
 // Inspired by https://join-lemmy.org/docs/contributors/07-ranking-algo.html
 // We want to give recent comments a real chance (and not bury them deep below the fold)
 // while also surfacing well-liked comments from the past. In the future, we can explore
@@ -195,7 +214,7 @@ export function getPostHotness(thread: ThreadTree, fetchedAt: number) {
   return likeOrder / timePenalty
 }
 
-export function* flattenThreadTree({
+function* flattenThreadTree({
   thread,
   isAuthenticated,
   direction,

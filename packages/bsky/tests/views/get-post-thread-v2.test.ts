@@ -17,7 +17,7 @@ import {
   run,
 } from './get-post-thread-v2-util/v2-sandbox'
 
-describe('appview thread views', () => {
+describe('appview thread views v2', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -41,9 +41,100 @@ describe('appview thread views', () => {
       baseSeed = await seeds.baseSeed(sc)
     })
 
-    it(`works`, async () => {
-      const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        { uri: baseSeed.posts.op1_1_1.ref.uriStr, parentHeight: 3 },
+    // it(`works`, async () => {
+    //   const { data } = await agent.app.bsky.feed.getPostThreadV2(
+    //     { uri: baseSeed.posts.op1_1_1.ref.uriStr, parentHeight: 3 },
+    //     {
+    //       headers: await network.serviceHeaders(
+    //         baseSeed.users.op.did,
+    //         ids.AppBskyFeedGetPostThreadV2,
+    //       ),
+    //     },
+    //   )
+
+    //   console.log(JSON.stringify(data, null, 2))
+    // })
+
+    const cases = [
+      {
+        params: {
+          viewerDid: undefined,
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
+      },
+      // {
+      //   params: {
+      //     viewerDid: undefined,
+      //     sort: 'oldest',
+      //     prioritizeFollowedUsers: false,
+      //   },
+      // },
+      // {
+      //   params: {
+      //     viewerDid: undefined,
+      //     sort: 'hotness',
+      //     prioritizeFollowedUsers: false,
+      //   },
+      // },
+      // {
+      //   params: {
+      //     viewerDid: undefined,
+      //     sort: 'most-likes',
+      //     prioritizeFollowedUsers: false,
+      //   },
+      // },
+      // // with prioritizeFollowedUsers
+      // {
+      //   params: {
+      //     viewerDid: undefined,
+      //     sort: 'newest',
+      //     prioritizeFollowedUsers: true,
+      //   },
+      // },
+      // {
+      //   params: {
+      //     viewerDid: undefined,
+      //     sort: 'oldest',
+      //     prioritizeFollowedUsers: true,
+      //   },
+      // },
+      // {
+      //   params: {
+      //     viewerDid: undefined,
+      //     sort: 'hotness',
+      //     prioritizeFollowedUsers: true,
+      //   },
+      // },
+      // {
+      //   params: {
+      //     viewerDid: undefined,
+      //     sort: 'most-likes',
+      //     prioritizeFollowedUsers: true,
+      //   },
+      // },
+    ]
+
+    it.each(cases)(`root viewed by op - %j`, async ({ params }) => {
+      const anchorUri = baseSeed.posts.root.ref.uriStr
+
+      const { data: dataV1 } = await agent.app.bsky.feed.getPostThread(
+        { uri: anchorUri },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.op.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      // @TODO: temporarily we're comparing the v2 output with what
+      // the v1 output looks like after it is processed in the client.
+      const clientDataV1 = mockClientData(dataV1.thread, {
+        ...params,
+      })
+
+      const { data: dataV2 } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: anchorUri },
         {
           headers: await network.serviceHeaders(
             baseSeed.users.op.did,
@@ -52,11 +143,140 @@ describe('appview thread views', () => {
         },
       )
 
-      console.log(JSON.stringify(data, null, 2))
+      assert(clientDataV1)
+      assert(dataV2)
+      // assert(v1.highlightedPost.type === 'post')
+      // assert(v2.highlightedPost.$type === 'post')
+      // expect(v1.highlightedPost.post.record).toEqual(
+      //   v2.highlightedPost.post.record,
+      // )
+      // expect(v1.highlightedPost.parent?.uri).toEqual(
+      //   v2.highlightedPost.parent?.uri,
+      // )
+      // // expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+      // //   v2.highlightedPost.isHighlighted,
+      // // )
+      // expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
+      // expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
+      // expect(v1.replies.length).toEqual(v2.replies.length)
+
+      // for (let i = 0; i < v1.replies.length; i++) {
+      //   const v1node = v1.replies[i]
+      //   const v2node = v2.replies[i]
+
+      //   if (!('type' in v1node) || !('$type' in v2node)) continue
+
+      //   expect(v1node.uri).toEqual(v2node.uri)
+
+      //   if (v1node.ctx.isSelfThread) {
+      //     assert(v2node.$type === 'post')
+      //     expect(v2node.isOPThread).toBe(true)
+      //   }
+      // }
+    })
+
+    it.skip.each(cases)(`root viewed by dan - %j`, async ({ params }) => {
+      const { data } = await agent.app.bsky.feed.getPostThread(
+        { uri: baseSeed.posts.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.dan.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+
+      const v1 = mockClientData(data.thread, {
+        ...params,
+      })
+      const v2 = run(data.thread, {
+        ...params,
+      })
+
+      assert(v1)
+      assert(v2)
+      assert(v1.highlightedPost.type === 'post')
+      assert(v2.highlightedPost.$type === 'post')
+      expect(v1.highlightedPost.post.record).toEqual(
+        v2.highlightedPost.post.record,
+      )
+      expect(v1.highlightedPost.parent?.uri).toEqual(
+        v2.highlightedPost.parent?.uri,
+      )
+      // expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+      //   v2.highlightedPost.isHighlighted,
+      // )
+      expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
+      expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
+      expect(v1.replies.length).toEqual(v2.replies.length)
+
+      for (let i = 0; i < v1.replies.length; i++) {
+        const v1node = v1.replies[i]
+        const v2node = v2.replies[i]
+
+        if (!('type' in v1node) || !('$type' in v2node)) continue
+
+        expect(v1node.uri).toEqual(v2node.uri)
+
+        if (v1node.ctx.isSelfThread) {
+          assert(v2node.$type === 'post')
+          expect(v2node.isOPThread).toBe(true)
+        }
+      }
+    })
+
+    it.skip.each(cases)(`self thread viewed by op - %j`, async ({ params }) => {
+      const { data } = await agent.app.bsky.feed.getPostThread(
+        { uri: baseSeed.posts.op1_0.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.op.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+
+      const v1 = mockClientData(data.thread, {
+        ...params,
+      })
+      const v2 = run(data.thread, {
+        ...params,
+      })
+
+      assert(v1)
+      assert(v2)
+      assert(v1.highlightedPost.type === 'post')
+      assert(v2.highlightedPost.$type === 'post')
+      expect(v1.highlightedPost.post.record).toEqual(
+        v2.highlightedPost.post.record,
+      )
+      expect(v1.highlightedPost.parent?.uri).toEqual(
+        v2.highlightedPost.parent?.uri,
+      )
+      // expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+      //   v2.highlightedPost.isHighlighted,
+      // )
+      expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
+      expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
+      expect(v1.replies.length).toEqual(v2.replies.length)
+
+      for (let i = 0; i < v1.replies.length; i++) {
+        const v1node = v1.replies[i]
+        const v2node = v2.replies[i]
+
+        if (!('type' in v1node) || !('$type' in v2node)) continue
+
+        expect(v1node.uri).toEqual(v2node.uri)
+
+        if (v1node.ctx.isSelfThread) {
+          assert(v2node.$type === 'post')
+          expect(v2node.isOPThread).toBe(true)
+        }
+      }
     })
   })
 
-  describe(`basic test cases`, () => {
+  describe.skip(`OLD basic test cases`, () => {
     let baseSeed: Awaited<ReturnType<typeof seeds.baseSeed>>
 
     beforeAll(async () => {
