@@ -1266,6 +1266,7 @@ export class Views {
       state: HydrationState
       currentDepth?: number
     }): ThreadTree[] => {
+      // TODO confirm maxDepth handling
       const childrenUris = childrenByParentUri[parentUri] ?? []
 
       return mapDefined(childrenUris, (uri) => {
@@ -1358,11 +1359,21 @@ export class Views {
       viewerDid: undefined,
       fetchedAt: Date.now(),
     })
-    const slices = Array.from(
-      flattenThreadTree({ thread: sorted, isAuthenticated: false }),
-    )
-
-    console.log(JSON.stringify(slices, null, 2))
+    const slices = Array.from([
+      // @ts-ignore
+      ...Array.from(
+        sorted.parent
+          ? flattenThreadTree({
+              thread: sorted.parent,
+              isAuthenticated: false,
+              direction: 'up',
+            })
+          : [],
+      ),
+      ...Array.from(
+        flattenThreadTree({ thread: sorted, isAuthenticated: false }),
+      ),
+    ])
 
     return slices
   }
