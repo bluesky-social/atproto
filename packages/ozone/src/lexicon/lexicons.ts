@@ -7414,9 +7414,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['items'],
+            required: ['thread'],
             properties: {
-              items: {
+              thread: {
                 type: 'array',
                 description:
                   'A flat list of thread items. The depth of each item is indicated by the depth property inside the item.',

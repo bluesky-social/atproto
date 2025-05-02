@@ -1121,8 +1121,9 @@ export class Views {
     })
   }
 
-  // Thread V2
+  // Threads V2
   // ------------
+
   threadV2(
     skeleton: { anchor: string; uris: string[] },
     state: HydrationState,
@@ -1202,6 +1203,7 @@ export class Views {
       viewerDid: undefined,
       fetchedAt: Date.now(),
     })
+
     return flattenThread(anchorTreeSorted)
   }
 

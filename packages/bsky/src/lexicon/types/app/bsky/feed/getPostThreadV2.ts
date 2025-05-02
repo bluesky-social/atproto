@@ -30,7 +30,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
-  items: (
+  thread: (
     | $Typed<AppBskyFeedDefs.ThreadItemPost>
     | $Typed<AppBskyFeedDefs.ThreadItemNoUnauthenticated>
     | $Typed<AppBskyFeedDefs.ThreadItemNotFound>
