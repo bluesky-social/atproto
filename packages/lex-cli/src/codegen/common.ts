@@ -135,10 +135,15 @@ export function asPredicate<V extends Validator>(validate: V) {
 export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
   gen(project, '/lexicons.ts', async (file) => {
     const nsidToEnum = (nsid: string): string => {
-      return nsid
-        .split('.')
-        .map((word) => word[0].toUpperCase() + word.slice(1))
-        .join('')
+      const authority = nsid.split('.')
+      const name = authority.pop()
+      return (
+        authority
+          // kebab-case to camelCase
+          .map((segment) => segment.replace(/-./g, (s) => s[1].toUpperCase()))
+          .map((word) => word[0].toUpperCase() + word.slice(1))
+          .join('') + name
+      )
     }
 
     //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
