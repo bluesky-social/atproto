@@ -1123,38 +1123,6 @@ export class Views {
 
   // Thread V2
   // ------------
-
-  threadSliceNoUnauthenticated(
-    uri: string,
-  ): $Typed<ThreadSliceNoUnauthenticated> {
-    return {
-      $type: 'app.bsky.feed.defs#threadSliceNoUnauthenticated',
-      uri,
-    }
-  }
-
-  threadSliceNotFound(uri: string): $Typed<ThreadSliceNotFound> {
-    return {
-      $type: 'app.bsky.feed.defs#threadSliceNotFound',
-      uri,
-    }
-  }
-
-  threadSliceBlocked(
-    uri: string,
-    authorDid: string,
-    state: HydrationState,
-  ): $Typed<ThreadSliceBlocked> {
-    return {
-      $type: 'app.bsky.feed.defs#threadSliceBlocked',
-      uri,
-      author: {
-        did: authorDid,
-        viewer: this.blockedProfileViewer(authorDid, state),
-      },
-    }
-  }
-
   threadV2(
     skeleton: { anchor: string; uris: string[] },
     state: HydrationState,
@@ -1253,7 +1221,38 @@ export class Views {
     return slices
   }
 
-  threadV2Parent({
+  private threadSliceNoUnauthenticated(
+    uri: string,
+  ): $Typed<ThreadSliceNoUnauthenticated> {
+    return {
+      $type: 'app.bsky.feed.defs#threadSliceNoUnauthenticated',
+      uri,
+    }
+  }
+
+  private threadSliceNotFound(uri: string): $Typed<ThreadSliceNotFound> {
+    return {
+      $type: 'app.bsky.feed.defs#threadSliceNotFound',
+      uri,
+    }
+  }
+
+  private threadSliceBlocked(
+    uri: string,
+    authorDid: string,
+    state: HydrationState,
+  ): $Typed<ThreadSliceBlocked> {
+    return {
+      $type: 'app.bsky.feed.defs#threadSliceBlocked',
+      uri,
+      author: {
+        did: authorDid,
+        viewer: this.blockedProfileViewer(authorDid, state),
+      },
+    }
+  }
+
+  private threadV2Parent({
     childUri,
     rootUri,
     state,
@@ -1315,7 +1314,7 @@ export class Views {
     }
   }
 
-  threadV2Replies({
+  private threadV2Replies({
     parentUri,
     rootUri,
     childrenByParentUri,
