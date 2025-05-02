@@ -123,7 +123,7 @@ describe('appview thread views', () => {
       },
     ]
 
-    it.each(cases)(`root viewed by op — %j`, async ({ params }) => {
+    it.each(cases)(`root viewed by op - %j`, async ({ params }) => {
       const { data } = await agent.app.bsky.feed.getPostThread(
         { uri: baseSeed.posts.root.ref.uriStr },
         {
@@ -151,9 +151,9 @@ describe('appview thread views', () => {
       expect(v1.highlightedPost.parent?.uri).toEqual(
         v2.highlightedPost.parent?.uri,
       )
-      expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
-        v2.highlightedPost.isHighlighted,
-      )
+      // expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+      //   v2.highlightedPost.isHighlighted,
+      // )
       expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
       expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
       expect(v1.replies.length).toEqual(v2.replies.length)
@@ -173,7 +173,7 @@ describe('appview thread views', () => {
       }
     })
 
-    it.each(cases)(`root viewed by dan — %j`, async ({ params }) => {
+    it.each(cases)(`root viewed by dan - %j`, async ({ params }) => {
       const { data } = await agent.app.bsky.feed.getPostThread(
         { uri: baseSeed.posts.root.ref.uriStr },
         {
@@ -201,9 +201,9 @@ describe('appview thread views', () => {
       expect(v1.highlightedPost.parent?.uri).toEqual(
         v2.highlightedPost.parent?.uri,
       )
-      expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
-        v2.highlightedPost.isHighlighted,
-      )
+      // expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+      //   v2.highlightedPost.isHighlighted,
+      // )
       expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
       expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
       expect(v1.replies.length).toEqual(v2.replies.length)
@@ -223,7 +223,7 @@ describe('appview thread views', () => {
       }
     })
 
-    it.each(cases)(`self thread viewed by op — %j`, async ({ params }) => {
+    it.each(cases)(`self thread viewed by op - %j`, async ({ params }) => {
       const { data } = await agent.app.bsky.feed.getPostThread(
         { uri: baseSeed.posts.op1_0.ref.uriStr },
         {
@@ -251,9 +251,9 @@ describe('appview thread views', () => {
       expect(v1.highlightedPost.parent?.uri).toEqual(
         v2.highlightedPost.parent?.uri,
       )
-      expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
-        v2.highlightedPost.isHighlighted,
-      )
+      // expect(v1.highlightedPost.ctx.isHighlightedPost).toEqual(
+      //   v2.highlightedPost.isHighlighted,
+      // )
       expect(v1.highlightedPost.ctx.depth).toEqual(v2.highlightedPost.depth)
       expect(v1.highlightedPost.hasOPLike).toEqual(v2.highlightedPost.hasOPLike)
       expect(v1.replies.length).toEqual(v2.replies.length)
@@ -475,7 +475,7 @@ describe('appview thread views', () => {
   describe('getPostHotness', () => {
     const NOW = Date.now()
 
-    function createThreadSlice({
+    function createThreadItem({
       hoursAgo = 0,
       likes = 0,
       hasOPLike = false,
@@ -518,7 +518,7 @@ describe('appview thread views', () => {
         parent: undefined,
         replies: undefined,
         depth: 0,
-        isHighlighted: false,
+        // isHighlighted: false,
         isOPThread: false,
         hasOPLike: hasOPLike,
         hasUnhydratedReplies: false,
@@ -527,8 +527,8 @@ describe('appview thread views', () => {
 
     it('newer posts have higher hotness than older posts with same likes', () => {
       const now = Date.now()
-      const newerPost = createThreadSlice({ hoursAgo: 1 })
-      const olderPost = createThreadSlice({ hoursAgo: 10 })
+      const newerPost = createThreadItem({ hoursAgo: 1 })
+      const olderPost = createThreadItem({ hoursAgo: 10 })
 
       const newerHotness = getPostHotness(newerPost, now)
       const olderHotness = getPostHotness(olderPost, now)
@@ -538,8 +538,8 @@ describe('appview thread views', () => {
 
     it('posts with more likes have higher hotness than posts with fewer likes at same age', () => {
       const now = Date.now()
-      const popularPost = createThreadSlice({ hoursAgo: 5, likes: 100 })
-      const unpopularPost = createThreadSlice({ hoursAgo: 5, likes: 1 })
+      const popularPost = createThreadItem({ hoursAgo: 5, likes: 100 })
+      const unpopularPost = createThreadItem({ hoursAgo: 5, likes: 1 })
 
       const popularHotness = getPostHotness(popularPost, now)
       const unpopularHotness = getPostHotness(unpopularPost, now)
@@ -549,12 +549,12 @@ describe('appview thread views', () => {
 
     it('posts with OP like have higher hotness than posts without OP like with same age and likes', () => {
       const now = Date.now()
-      const opLikedPost = createThreadSlice({
+      const opLikedPost = createThreadItem({
         hoursAgo: 5,
         likes: 10,
         hasOPLike: true,
       })
-      const normalPost = createThreadSlice({
+      const normalPost = createThreadItem({
         hoursAgo: 5,
         likes: 10,
         hasOPLike: false,
@@ -570,7 +570,7 @@ describe('appview thread views', () => {
       const now = Date.now()
       const ages = [0, 1, 5, 24, 48, 72] // hours
       const hotness = ages.map((age) => {
-        const post = createThreadSlice({
+        const post = createThreadItem({
           hoursAgo: age,
           likes: 10,
           hasOPLike: false,
@@ -586,12 +586,12 @@ describe('appview thread views', () => {
 
     it('OP like reduces time penalty effect', () => {
       const now = Date.now()
-      const oldWithOpLike = createThreadSlice({
+      const oldWithOpLike = createThreadItem({
         hoursAgo: 24,
         likes: 10,
         hasOPLike: true,
       })
-      const newerNoOpLike = createThreadSlice({
+      const newerNoOpLike = createThreadItem({
         hoursAgo: 18,
         likes: 10,
         hasOPLike: false,
@@ -605,12 +605,12 @@ describe('appview thread views', () => {
       const withOpLikeRatio = oldWithOpLikeHotness / newerNoOpLikeHotness
 
       // Create two posts with the same age difference, neither with OP like
-      const oldNoOpLike = createThreadSlice({
+      const oldNoOpLike = createThreadItem({
         hoursAgo: 24,
         likes: 10,
         hasOPLike: false,
       })
-      const newerNoOpLike2 = createThreadSlice({
+      const newerNoOpLike2 = createThreadItem({
         hoursAgo: 18,
         likes: 10,
         hasOPLike: false,
@@ -688,7 +688,7 @@ describe('appview thread views', () => {
       ]
 
       const results = testCases.map(({ label, ...rest }) => {
-        const post = createThreadSlice(rest)
+        const post = createThreadItem(rest)
         const hotness = getPostHotness(post, now)
         return { label, hotness }
       })

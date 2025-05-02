@@ -26,7 +26,6 @@ export type ThreadTree =
       parent: Exclude<ThreadTree, { $type: 'unknown' }> | undefined
       replies: Exclude<ThreadTree, { $type: 'unknown' }>[] | undefined
       depth: number
-      isHighlighted: boolean
       isOPThread: boolean
       hasOPLike: boolean
       hasUnhydratedReplies: boolean

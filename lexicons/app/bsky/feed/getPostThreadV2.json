@@ -34,17 +34,18 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["slices"],
+          "required": ["items"],
           "properties": {
-            "slices": {
+            "items": {
               "type": "array",
+              "description": "A flat list of thread items. The depth of each item is indicated by the depth property inside the item.",
               "items": {
                 "type": "union",
                 "refs": [
-                  "app.bsky.feed.defs#threadSlice",
-                  "app.bsky.feed.defs#threadSliceNoUnauthenticated",
-                  "app.bsky.feed.defs#threadSliceNotFound",
-                  "app.bsky.feed.defs#threadSliceBlocked"
+                  "app.bsky.feed.defs#threadItemPost",
+                  "app.bsky.feed.defs#threadItemNoUnauthenticated",
+                  "app.bsky.feed.defs#threadItemNotFound",
+                  "app.bsky.feed.defs#threadItemBlocked"
                 ]
               }
             },

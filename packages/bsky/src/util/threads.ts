@@ -5,10 +5,10 @@ import {
 } from '@atproto/api'
 import {
   PostView,
-  ThreadSlice,
-  ThreadSliceBlocked,
-  ThreadSliceNoUnauthenticated,
-  ThreadSliceNotFound,
+  ThreadItemBlocked,
+  ThreadItemNoUnauthenticated,
+  ThreadItemNotFound,
+  ThreadItemPost,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { $Typed } from '../lexicon/util'
@@ -22,7 +22,6 @@ export type ThreadLeaf = {
   parent: ThreadTree | undefined
   replies: ThreadTree[] | undefined
   depth: number
-  isHighlighted: boolean
   isOPThread: boolean
   hasOPLike: boolean
   hasUnhydratedReplies: boolean
@@ -30,9 +29,9 @@ export type ThreadLeaf = {
 }
 export type ThreadTree =
   | ThreadLeaf
-  | $Typed<ThreadSliceNoUnauthenticated>
-  | $Typed<ThreadSliceNotFound>
-  | $Typed<ThreadSliceBlocked>
+  | $Typed<ThreadItemNoUnauthenticated>
+  | $Typed<ThreadItemNotFound>
+  | $Typed<ThreadItemBlocked>
 
 export function annotateThreadTree(tree: ThreadTree) {
   if (tree.$type !== 'threadLeaf') return
@@ -205,10 +204,10 @@ export function* flattenThreadTree({
   isAuthenticated: boolean
   direction?: 'up' | 'down'
 }): Generator<
-  | $Typed<ThreadSlice>
-  | $Typed<ThreadSliceNoUnauthenticated>
-  | $Typed<ThreadSliceNotFound>
-  | $Typed<ThreadSliceBlocked>,
+  | $Typed<ThreadItemPost>
+  | $Typed<ThreadItemNoUnauthenticated>
+  | $Typed<ThreadItemNotFound>
+  | $Typed<ThreadItemBlocked>,
   void
 > {
   if (thread.$type === 'threadLeaf') {
@@ -231,7 +230,7 @@ export function* flattenThreadTree({
         // TODO we exit early atm
         // return HiddenReplyType.None
         yield {
-          $type: 'app.bsky.feed.defs#threadSliceNoUnauthenticated',
+          $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
           uri: thread.uri,
         }
       }
@@ -246,26 +245,25 @@ export function* flattenThreadTree({
             direction: 'down',
           })
           // TODO what
-          if (!thread.isHighlighted) {
-            break
-          }
+          // if (!thread.isHighlighted) {
+          //   break
+          // }
         }
       }
     }
-  } else if (AppBskyFeedDefs.isThreadSliceNotFound(thread)) {
+  } else if (AppBskyFeedDefs.isThreadItemNotFound(thread)) {
     yield thread
-  } else if (AppBskyFeedDefs.isThreadSliceBlocked(thread)) {
+  } else if (AppBskyFeedDefs.isThreadItemBlocked(thread)) {
     yield thread
   }
 }
 
-export function threadLeafToSlice(leaf: ThreadLeaf): $Typed<ThreadSlice> {
+export function threadLeafToSlice(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
   return {
-    $type: 'app.bsky.feed.defs#threadSlice',
+    $type: 'app.bsky.feed.defs#threadItemPost',
     uri: leaf.uri,
     post: leaf.post,
     depth: leaf.depth,
-    isHighlighted: leaf.isHighlighted,
     isOPThread: leaf.isOPThread,
     hasOPLike: leaf.hasOPLike,
     hasUnhydratedReplies: leaf.hasUnhydratedReplies,

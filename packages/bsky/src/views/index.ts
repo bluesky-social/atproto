@@ -31,10 +31,10 @@ import {
   ReasonPin,
   ReasonRepost,
   ReplyRef,
-  ThreadSlice,
-  ThreadSliceBlocked,
-  ThreadSliceNoUnauthenticated,
-  ThreadSliceNotFound,
+  ThreadItemBlocked,
+  ThreadItemNoUnauthenticated,
+  ThreadItemNotFound,
+  ThreadItemPost,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
@@ -1128,19 +1128,19 @@ export class Views {
     state: HydrationState,
     opts: { height: number; depth: number },
   ): (
-    | $Typed<ThreadSlice>
-    | $Typed<ThreadSliceNoUnauthenticated>
-    | $Typed<ThreadSliceNotFound>
-    | $Typed<ThreadSliceBlocked>
+    | $Typed<ThreadItemPost>
+    | $Typed<ThreadItemNoUnauthenticated>
+    | $Typed<ThreadItemNotFound>
+    | $Typed<ThreadItemBlocked>
   )[] {
     const { anchor, uris } = skeleton
     const anchorPost = this.post(anchor, state)
     const anchorPostInfo = state.posts?.get(anchor)
     if (!anchorPostInfo || !anchorPost) {
-      return [this.threadSliceNotFound(anchor)]
+      return [this.threadItemNotFound(anchor)]
     }
     if (this.viewerBlockExists(anchorPost.author.did, state)) {
-      return [this.threadSliceBlocked(anchor, anchorPost.author.did, state)]
+      return [this.threadItemBlocked(anchor, anchorPost.author.did, state)]
     }
 
     // Groups children of each parent.
@@ -1159,7 +1159,7 @@ export class Views {
     const rootUri = getRootUri(anchor, anchorPostInfo)
     const anchorViolatesThreadGate = anchorPostInfo.violatesThreadGate
 
-    const tree: ThreadTree = {
+    const anchorTree: ThreadTree = {
       $type: 'threadLeaf',
       uri: anchor,
       post: {
@@ -1184,16 +1184,16 @@ export class Views {
             })
           : undefined,
       depth: 0,
-      isHighlighted: true,
       isOPThread: false, // annotated in next step
       hasOPLike: !!state.threadContexts?.get(anchorPost.uri)?.like,
       hasUnhydratedReplies: false,
       hasUnhydratedParents: false,
     }
 
-    annotateThreadTree(tree)
-    const sorted = sortThreadTree({
-      node: tree,
+    annotateThreadTree(anchorTree)
+
+    const anchorTreeSorted = sortThreadTree({
+      node: anchorTree,
       options: {
         sort: 'newest',
         prioritizeFollowedUsers: false,
@@ -1201,49 +1201,50 @@ export class Views {
       viewerDid: undefined,
       fetchedAt: Date.now(),
     })
-    const slices = Array.from([
+
+    const items = Array.from([
       ...Array.from(
         // @ts-ignore
-        sorted.parent
+        anchorTreeSorted.parent
           ? flattenThreadTree({
               // @ts-ignore
-              thread: sorted.parent,
+              thread: anchorTreeSorted.parent,
               isAuthenticated: false,
               direction: 'up',
             })
           : [],
       ),
       ...Array.from(
-        flattenThreadTree({ thread: sorted, isAuthenticated: false }),
+        flattenThreadTree({ thread: anchorTreeSorted, isAuthenticated: false }),
       ),
     ])
 
-    return slices
+    return items
   }
 
-  private threadSliceNoUnauthenticated(
+  private threadItemNoUnauthenticated(
     uri: string,
-  ): $Typed<ThreadSliceNoUnauthenticated> {
+  ): $Typed<ThreadItemNoUnauthenticated> {
     return {
-      $type: 'app.bsky.feed.defs#threadSliceNoUnauthenticated',
+      $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
       uri,
     }
   }
 
-  private threadSliceNotFound(uri: string): $Typed<ThreadSliceNotFound> {
+  private threadItemNotFound(uri: string): $Typed<ThreadItemNotFound> {
     return {
-      $type: 'app.bsky.feed.defs#threadSliceNotFound',
+      $type: 'app.bsky.feed.defs#threadItemNotFound',
       uri,
     }
   }
 
-  private threadSliceBlocked(
+  private threadItemBlocked(
     uri: string,
     authorDid: string,
     state: HydrationState,
-  ): $Typed<ThreadSliceBlocked> {
+  ): $Typed<ThreadItemBlocked> {
     return {
-      $type: 'app.bsky.feed.defs#threadSliceBlocked',
+      $type: 'app.bsky.feed.defs#threadItemBlocked',
       uri,
       author: {
         did: authorDid,
@@ -1273,22 +1274,18 @@ export class Views {
       !state.ctx?.include3pBlocks &&
       state.postBlocks?.get(childUri)?.parent
     ) {
-      return this.threadSliceBlocked(
-        parentUri,
-        creatorFromUri(parentUri),
-        state,
-      )
+      return this.threadItemBlocked(parentUri, creatorFromUri(parentUri), state)
     }
 
     const post = this.post(parentUri, state)
     const postInfo = state.posts?.get(parentUri)
 
-    if (!postInfo || !post) return this.threadSliceNotFound(parentUri)
+    if (!postInfo || !post) return this.threadItemNotFound(parentUri)
 
     if (rootUri !== getRootUri(parentUri, postInfo)) return // outside thread boundary
 
     if (this.viewerBlockExists(post.author.did, state)) {
-      return this.threadSliceBlocked(parentUri, post.author.did, state)
+      return this.threadItemBlocked(parentUri, post.author.did, state)
     }
 
     return {
@@ -1306,7 +1303,6 @@ export class Views {
       }),
       replies: undefined,
       depth: -1, // TODO
-      isHighlighted: false,
       isOPThread: false, // annotated in next step
       hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
       hasUnhydratedReplies: false, // not applicable to parents
@@ -1336,7 +1332,7 @@ export class Views {
         return undefined
       }
       if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
-        return this.threadSliceBlocked(uri, creatorFromUri(uri), state)
+        return this.threadItemBlocked(uri, creatorFromUri(uri), state)
       }
       const post = this.post(uri, state)
       if (!postInfo || !post) {
@@ -1344,11 +1340,11 @@ export class Views {
         // in the future we might consider keeping a placeholder for deleted
         // posts that have replies under them, but not supported at the moment.
         // this case is mostly likely hit when a takedown was applied to a post.
-        return this.threadSliceNotFound(uri)
+        return this.threadItemNotFound(uri)
       }
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
-        return this.threadSliceBlocked(uri, post.author.did, state)
+        return this.threadItemBlocked(uri, post.author.did, state)
       }
       if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
         return undefined
@@ -1369,7 +1365,6 @@ export class Views {
           currentDepth: currentDepth + 1,
         }),
         depth: currentDepth,
-        isHighlighted: false,
         isOPThread: false, // annotated in next step
         hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
         hasUnhydratedReplies: false, // TODO annotated in next step

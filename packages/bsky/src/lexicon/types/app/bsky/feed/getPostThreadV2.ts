@@ -29,11 +29,12 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  slices: (
-    | $Typed<AppBskyFeedDefs.ThreadSlice>
-    | $Typed<AppBskyFeedDefs.ThreadSliceNoUnauthenticated>
-    | $Typed<AppBskyFeedDefs.ThreadSliceNotFound>
-    | $Typed<AppBskyFeedDefs.ThreadSliceBlocked>
+  /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
+  items: (
+    | $Typed<AppBskyFeedDefs.ThreadItemPost>
+    | $Typed<AppBskyFeedDefs.ThreadItemNoUnauthenticated>
+    | $Typed<AppBskyFeedDefs.ThreadItemNotFound>
+    | $Typed<AppBskyFeedDefs.ThreadItemBlocked>
     | { $type: string }
   )[]
   threadgate?: AppBskyFeedDefs.ThreadgateView
