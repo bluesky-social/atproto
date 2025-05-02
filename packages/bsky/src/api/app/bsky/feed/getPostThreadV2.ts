@@ -104,7 +104,7 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const items = ctx.views.threadV2(skeleton, hydration, {
+  const thread = ctx.views.threadV2(skeleton, hydration, {
     height: params.parentHeight,
     depth: getDepth(ctx, skeleton.anchor, params),
   })
@@ -123,7 +123,7 @@ const presentation = (
     postUriToThreadgateUri(rootUri),
     hydration,
   )
-  return { items, threadgate }
+  return { thread, threadgate }
 }
 
 type Context = {
