@@ -1360,10 +1360,11 @@ export class Views {
       fetchedAt: Date.now(),
     })
     const slices = Array.from([
-      // @ts-ignore
       ...Array.from(
+        // @ts-ignore
         sorted.parent
           ? flattenThreadTree({
+              // @ts-ignore
               thread: sorted.parent,
               isAuthenticated: false,
               direction: 'up',
