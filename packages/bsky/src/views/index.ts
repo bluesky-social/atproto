@@ -476,7 +476,9 @@ export class Views {
     return {
       record: record,
       status: record.status,
-      embed: record.embed,
+      embed: isExternalEmbed(record.embed)
+        ? this.externalEmbed(did, record.embed)
+        : undefined,
       expiresAt,
       isActive,
     }

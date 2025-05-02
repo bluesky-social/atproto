@@ -473,10 +473,12 @@ Object {
 exports[`pds profile views status returns active status when within the duration 1`] = `
 Object {
   "embed": Object {
-    "$type": "app.bsky.embed.external#external",
-    "description": "testLink",
-    "title": "TestImage",
-    "uri": "https://example.com",
+    "$type": "app.bsky.embed.external#view",
+    "external": Object {
+      "description": "testLink",
+      "title": "TestImage",
+      "uri": "https://example.com",
+    },
   },
   "expiresAt": "1970-01-01T00:00:00.000Z",
   "isActive": true,
@@ -485,10 +487,12 @@ Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "durationMinutes": 10,
     "embed": Object {
-      "$type": "app.bsky.embed.external#external",
-      "description": "testLink",
-      "title": "TestImage",
-      "uri": "https://example.com",
+      "$type": "app.bsky.embed.external",
+      "external": Object {
+        "description": "testLink",
+        "title": "TestImage",
+        "uri": "https://example.com",
+      },
     },
     "status": "app.bsky.actor.status#live",
   },
@@ -499,10 +503,12 @@ Object {
 exports[`pds profile views status when outside the duration returns inactive status 1`] = `
 Object {
   "embed": Object {
-    "$type": "app.bsky.embed.external#external",
-    "description": "testLink",
-    "title": "TestImage",
-    "uri": "https://example.com",
+    "$type": "app.bsky.embed.external#view",
+    "external": Object {
+      "description": "testLink",
+      "title": "TestImage",
+      "uri": "https://example.com",
+    },
   },
   "expiresAt": "2021-01-01T01:10:00.000Z",
   "isActive": false,
@@ -511,10 +517,12 @@ Object {
     "createdAt": "2021-01-01T01:00:00.000Z",
     "durationMinutes": 10,
     "embed": Object {
-      "$type": "app.bsky.embed.external#external",
-      "description": "testLink",
-      "title": "TestImage",
-      "uri": "https://example.com",
+      "$type": "app.bsky.embed.external",
+      "external": Object {
+        "description": "testLink",
+        "title": "TestImage",
+        "uri": "https://example.com",
+      },
     },
     "status": "app.bsky.actor.status#live",
   },

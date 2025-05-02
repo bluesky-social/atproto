@@ -228,11 +228,13 @@ describe('pds profile views', () => {
   })
 
   describe('status', () => {
-    const embed: AppBskyEmbedExternal.External = {
-      $type: 'app.bsky.embed.external#external',
-      uri: 'https://example.com',
-      title: 'TestImage',
-      description: 'testLink',
+    const embed: AppBskyEmbedExternal.Main = {
+      $type: 'app.bsky.embed.external',
+      external: {
+        uri: 'https://example.com',
+        title: 'TestImage',
+        description: 'testLink',
+      },
     }
 
     it(`omits status if doesn't exist`, async () => {
