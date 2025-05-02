@@ -69,7 +69,7 @@ import { Notification } from '../proto/bsky_pb'
 import {
   ThreadTree,
   annotateThreadTree,
-  flattenThreadTree,
+  flattenThread,
   sortThreadTree,
 } from '../util/threads'
 import {
@@ -1191,35 +1191,18 @@ export class Views {
     }
 
     annotateThreadTree(anchorTree)
-
     const anchorTreeSorted = sortThreadTree({
       node: anchorTree,
       options: {
+        // @TODO: use parameter.
         sort: 'newest',
         prioritizeFollowedUsers: false,
       },
+      // @TODO: use parameter.
       viewerDid: undefined,
       fetchedAt: Date.now(),
     })
-
-    const items = Array.from([
-      ...Array.from(
-        // @ts-ignore
-        anchorTreeSorted.parent
-          ? flattenThreadTree({
-              // @ts-ignore
-              thread: anchorTreeSorted.parent,
-              isAuthenticated: false,
-              direction: 'up',
-            })
-          : [],
-      ),
-      ...Array.from(
-        flattenThreadTree({ thread: anchorTreeSorted, isAuthenticated: false }),
-      ),
-    ])
-
-    return items
+    return flattenThread(anchorTreeSorted)
   }
 
   private threadItemNoUnauthenticated(
