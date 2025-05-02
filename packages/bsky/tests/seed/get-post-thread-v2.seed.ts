@@ -1,5 +1,4 @@
 import { SeedClient, TestNetwork, TestNetworkNoAppView } from '@atproto/dev-env'
-
 import { createUsers } from './util'
 
 // ignored so it's easier to read the seeds

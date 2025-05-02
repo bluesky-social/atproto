@@ -1,22 +1,21 @@
 import assert from 'node:assert'
-import { AtpAgent, AppBskyFeedDefs } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { subHours } from 'date-fns'
-
+import { AppBskyFeedDefs, AtpAgent } from '@atproto/api'
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 import * as seeds from '../seed/get-post-thread-v2.seed'
 import {
+  annotateSelfThread,
   mockClientData,
   responseToThreadNodes,
-  annotateSelfThread,
 } from './get-post-thread-v2-util/mock-v1-client'
 import {
-  run,
-  postThreadView,
-  annotateOPThread,
   ThreadTree,
+  annotateOPThread,
   getPostHotness,
+  postThreadView,
+  run,
 } from './get-post-thread-v2-util/v2-sandbox'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('appview thread views', () => {
   let network: TestNetwork
@@ -33,6 +32,28 @@ describe('appview thread views', () => {
 
   afterAll(async () => {
     await network.close()
+  })
+
+  describe.only(`v2`, () => {
+    let baseSeed: Awaited<ReturnType<typeof seeds.baseSeed>>
+
+    beforeAll(async () => {
+      baseSeed = await seeds.baseSeed(sc)
+    })
+
+    it(`works`, async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: baseSeed.posts.root.ref.uriStr, parentHeight: 3 },
+        {
+          headers: await network.serviceHeaders(
+            baseSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      console.log(JSON.stringify(data, null, 2))
+    })
   })
 
   describe(`basic test cases`, () => {
@@ -101,26 +122,6 @@ describe('appview thread views', () => {
         },
       },
     ]
-
-    it.only(`works`, async () => {
-      const { data } = await agent.app.bsky.feed.getPostThread(
-        { uri: baseSeed.posts.op1_1_1_1_1.ref.uriStr, parentHeight: 3 },
-        {
-          headers: await network.serviceHeaders(
-            baseSeed.users.op.did,
-            ids.AppBskyFeedGetPostThread,
-          ),
-        },
-      )
-
-      const v1 = mockClientData(data.thread, {
-        viewerDid: undefined,
-        sort: 'newest',
-        prioritizeFollowedUsers: false,
-      })
-
-      console.log(JSON.stringify(v1, null, 2))
-    })
 
     it.each(cases)(`root viewed by op — %j`, async ({ params }) => {
       const { data } = await agent.app.bsky.feed.getPostThread(

@@ -2,11 +2,11 @@ import {
   AppBskyFeedDefs,
   AppBskyFeedGetPostThread,
   AppBskyFeedPost,
-  moderatePost,
+  BskyThreadViewPreference,
   ModerationDecision,
   ModerationOpts,
-  BskyThreadViewPreference,
   asPredicate,
+  moderatePost,
 } from '@atproto/api'
 
 const REPLY_TREE_DEPTH = 10
@@ -275,7 +275,7 @@ export function annotateSelfThread(thread: ThreadNode) {
   let node = thread
   for (let i = 0; i < 10; i++) {
     const reply = node.replies?.find(
-      r => r.type === 'post' && r.post.author.did === thread.post.author.did,
+      (r) => r.type === 'post' && r.post.author.did === thread.post.author.did,
     )
     if (reply?.type !== 'post') {
       break
@@ -300,16 +300,8 @@ export function annotateSelfThread(thread: ThreadNode) {
   }
 }
 
-const REPLY_PROMPT = { _reactKey: '__reply__' }
-const LOAD_MORE = { _reactKey: '__load_more__' }
 const SHOW_HIDDEN_REPLIES = { _reactKey: '__show_hidden_replies__' }
 const SHOW_MUTED_REPLIES = { _reactKey: '__show_muted_replies__' }
-
-enum HiddenRepliesState {
-  Hide,
-  Show,
-  ShowAndOverridePostHider,
-}
 
 type YieldedItem =
   | ThreadPost
@@ -317,11 +309,6 @@ type YieldedItem =
   | ThreadNotFound
   | typeof SHOW_HIDDEN_REPLIES
   | typeof SHOW_MUTED_REPLIES
-type RowItem =
-  | YieldedItem
-  // TODO: TS doesn't actually enforce it's one of these, it only enforces matching shape.
-  | typeof REPLY_PROMPT
-  | typeof LOAD_MORE
 
 type ThreadSkeletonParts = {
   parents: YieldedItem[]
@@ -386,7 +373,7 @@ function* flattenThreadReplies(
     if (node.replies?.length) {
       let hiddenReplies = HiddenReplyType.None
       for (const reply of node.replies) {
-        let hiddenReply = yield* flattenThreadReplies(
+        const hiddenReply = yield* flattenThreadReplies(
           reply,
           viewerDid,
           treeView,

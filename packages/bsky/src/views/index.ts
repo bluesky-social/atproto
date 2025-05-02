@@ -31,6 +31,10 @@ import {
   ReasonPin,
   ReasonRepost,
   ReplyRef,
+  ThreadSlice,
+  ThreadSliceBlocked,
+  ThreadSliceNoUnauthenticated,
+  ThreadSliceNotFound,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
@@ -62,6 +66,12 @@ import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
+import {
+  ThreadTree,
+  annotateThreadTree,
+  flattenThreadTree,
+  sortThreadTree,
+} from '../util/threads'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -1109,6 +1119,252 @@ export class Views {
         },
       }
     })
+  }
+
+  // Thread V2
+  // ------------
+
+  threadSliceNoUnauthenticated(
+    uri: string,
+  ): $Typed<ThreadSliceNoUnauthenticated> {
+    return {
+      $type: 'app.bsky.feed.defs#threadSliceNoUnauthenticated',
+      uri,
+    }
+  }
+
+  threadSliceNotFound(uri: string): $Typed<ThreadSliceNotFound> {
+    return {
+      $type: 'app.bsky.feed.defs#threadSliceNotFound',
+      uri,
+    }
+  }
+
+  threadSliceBlocked(
+    uri: string,
+    authorDid: string,
+    state: HydrationState,
+  ): $Typed<ThreadSliceBlocked> {
+    return {
+      $type: 'app.bsky.feed.defs#threadSliceBlocked',
+      uri,
+      author: {
+        did: authorDid,
+        viewer: this.blockedProfileViewer(authorDid, state),
+      },
+    }
+  }
+
+  threadV2(
+    skeleton: { anchor: string; uris: string[] },
+    state: HydrationState,
+    opts: { height: number; depth: number },
+  ): (
+    | $Typed<ThreadSlice>
+    | $Typed<ThreadSliceNoUnauthenticated>
+    | $Typed<ThreadSliceNotFound>
+    | $Typed<ThreadSliceBlocked>
+  )[] {
+    const { anchor, uris } = skeleton
+    const post = this.post(anchor, state)
+    const postInfo = state.posts?.get(anchor)
+
+    if (!postInfo || !post) return [this.threadSliceNotFound(anchor)]
+
+    if (this.viewerBlockExists(post.author.did, state)) {
+      return [this.threadSliceBlocked(anchor, post.author.did, state)]
+    }
+
+    const includedPosts = new Set<string>([anchor])
+    const childrenByParentUri: Record<string, string[]> = {}
+
+    uris.forEach((uri) => {
+      const post = state.posts?.get(uri)
+      const parentUri = post?.record.reply?.parent.uri
+      if (!parentUri) return
+      if (includedPosts.has(uri)) return
+      includedPosts.add(uri)
+      childrenByParentUri[parentUri] ??= []
+      childrenByParentUri[parentUri].push(uri)
+    })
+
+    const rootUri = getRootUri(anchor, postInfo)
+    const violatesThreadGate = postInfo.violatesThreadGate
+
+    const threadV2Parent = ({
+      childUri,
+      rootUri,
+      state,
+      height,
+    }: {
+      childUri: string
+      rootUri: string
+      state: HydrationState
+      height: number
+    }): ThreadTree | undefined => {
+      if (height < 1) return undefined
+
+      const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
+
+      if (!parentUri) return undefined
+
+      if (
+        !state.ctx?.include3pBlocks &&
+        state.postBlocks?.get(childUri)?.parent
+      ) {
+        return this.threadSliceBlocked(
+          parentUri,
+          creatorFromUri(parentUri),
+          state,
+        )
+      }
+
+      const post = this.post(parentUri, state)
+      const postInfo = state.posts?.get(parentUri)
+
+      if (!postInfo || !post) return this.threadSliceNotFound(parentUri)
+
+      if (rootUri !== getRootUri(parentUri, postInfo)) return // outside thread boundary
+
+      if (this.viewerBlockExists(post.author.did, state)) {
+        return this.threadSliceBlocked(parentUri, post.author.did, state)
+      }
+
+      return {
+        $type: 'threadLeaf',
+        uri: childUri,
+        post: {
+          $type: 'app.bsky.feed.defs#postView',
+          ...post,
+        },
+        parent: threadV2Parent({
+          childUri: parentUri,
+          rootUri,
+          state,
+          height: height - 1,
+        }),
+        replies: undefined,
+        depth: -1, // TODO
+        isHighlighted: false,
+        isOPThread: false, // annotated in next step
+        hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
+        hasUnhydratedReplies: false, // not applicable to parents
+        hasUnhydratedParents: false,
+      }
+    }
+
+    const threadV2Replies = ({
+      parentUri,
+      rootUri,
+      childrenByParentUri,
+      state,
+      currentDepth = 0,
+    }: {
+      parentUri: string
+      rootUri: string
+      childrenByParentUri: Record<string, string[]>
+      state: HydrationState
+      currentDepth?: number
+    }): ThreadTree[] => {
+      const childrenUris = childrenByParentUri[parentUri] ?? []
+
+      return mapDefined(childrenUris, (uri) => {
+        const postInfo = state.posts?.get(uri)
+        if (postInfo?.violatesThreadGate) {
+          return undefined
+        }
+        if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
+          return this.threadSliceBlocked(uri, creatorFromUri(uri), state)
+        }
+        const post = this.post(uri, state)
+        if (!postInfo || !post) {
+          // TODO
+          // in the future we might consider keeping a placeholder for deleted
+          // posts that have replies under them, but not supported at the moment.
+          // this case is mostly likely hit when a takedown was applied to a post.
+          return this.threadSliceNotFound(uri)
+        }
+        if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
+        if (this.viewerBlockExists(post.author.did, state)) {
+          return this.threadSliceBlocked(uri, post.author.did, state)
+        }
+        if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
+          return undefined
+        }
+        return {
+          $type: 'threadLeaf',
+          uri: uri,
+          post: {
+            $type: 'app.bsky.feed.defs#postView' as const,
+            ...post,
+          },
+          parent: undefined,
+          replies: threadV2Replies({
+            parentUri: uri,
+            rootUri,
+            childrenByParentUri,
+            state,
+            currentDepth: currentDepth + 1,
+          }),
+          depth: currentDepth,
+          isHighlighted: false,
+          isOPThread: false, // annotated in next step
+          hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
+          hasUnhydratedReplies: false, // TODO annotated in next step
+          hasUnhydratedParents: false,
+        }
+      })
+    }
+
+    const tree: ThreadTree = {
+      $type: 'threadLeaf',
+      uri: anchor,
+      post: {
+        $type: 'app.bsky.feed.defs#postView',
+        ...post,
+      },
+      parent: !violatesThreadGate
+        ? threadV2Parent({
+            childUri: anchor,
+            rootUri,
+            state,
+            height: opts.height,
+          })
+        : undefined,
+      replies:
+        !violatesThreadGate && opts.depth > 0
+          ? threadV2Replies({
+              parentUri: anchor,
+              rootUri,
+              childrenByParentUri,
+              state,
+            })
+          : undefined,
+      depth: 0,
+      isHighlighted: true,
+      isOPThread: false, // annotated in next step
+      hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
+      hasUnhydratedReplies: false,
+      hasUnhydratedParents: false,
+    }
+
+    annotateThreadTree(tree)
+    const sorted = sortThreadTree({
+      node: tree,
+      options: {
+        sort: 'newest',
+        prioritizeFollowedUsers: false,
+      },
+      viewerDid: undefined,
+      fetchedAt: Date.now(),
+    })
+    const slices = Array.from(
+      flattenThreadTree({ thread: sorted, isAuthenticated: false }),
+    )
+
+    console.log(JSON.stringify(slices, null, 2))
+
+    return slices
   }
 
   // Embeds
