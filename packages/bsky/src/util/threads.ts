@@ -221,9 +221,7 @@ export function* flattenThreadTree({
         })
       }
 
-      if (!thread.isHighlighted) {
-        yield threadLeafToSlice(thread)
-      }
+      yield threadLeafToSlice(thread)
     } else {
       // TODO could do this in views probably
       const isNoUnauthenticated = !!thread.post.author.labels?.find(
@@ -238,9 +236,7 @@ export function* flattenThreadTree({
         }
       }
 
-      if (!thread.isHighlighted) {
-        yield threadLeafToSlice(thread)
-      }
+      yield threadLeafToSlice(thread)
 
       if (thread.replies?.length) {
         for (const reply of thread.replies) {

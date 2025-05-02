@@ -43,7 +43,7 @@ describe('appview thread views', () => {
 
     it(`works`, async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        { uri: baseSeed.posts.root.ref.uriStr, parentHeight: 3 },
+        { uri: baseSeed.posts.op1_1_1.ref.uriStr, parentHeight: 3 },
         {
           headers: await network.serviceHeaders(
             baseSeed.users.op.did,
