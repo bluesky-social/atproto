@@ -124,13 +124,12 @@
         "threadContext": { "type": "ref", "ref": "#threadContext" }
       }
     },
-    "threadSlice": {
+    "threadItemPost": {
       "type": "object",
       "required": [
         "uri",
         "post",
         "depth",
-        "isHighlighted",
         "isOPThread",
         "hasOPLike",
         "hasUnhydratedReplies",
@@ -145,10 +144,6 @@
         "depth": {
           "type": "integer",
           "description": "Describes the nesting level of this post in the thread."
-        },
-        "isHighlighted": {
-          "type": "boolean",
-          "description": "Whether this post is highlighted in the thread."
         },
         "isOPThread": {
           "type": "boolean",
@@ -168,21 +163,21 @@
         }
       }
     },
-    "threadSliceNoUnauthenticated": {
+    "threadItemNoUnauthenticated": {
       "type": "object",
       "required": ["uri"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" }
       }
     },
-    "threadSliceNotFound": {
+    "threadItemNotFound": {
       "type": "object",
       "required": ["uri"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" }
       }
     },
-    "threadSliceBlocked": {
+    "threadItemBlocked": {
       "type": "object",
       "required": ["uri", "author"],
       "properties": {

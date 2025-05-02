@@ -6308,13 +6308,12 @@ export const schemaDict = {
           },
         },
       },
-      threadSlice: {
+      threadItemPost: {
         type: 'object',
         required: [
           'uri',
           'post',
           'depth',
-          'isHighlighted',
           'isOPThread',
           'hasOPLike',
           'hasUnhydratedReplies',
@@ -6333,10 +6332,6 @@ export const schemaDict = {
             type: 'integer',
             description:
               'Describes the nesting level of this post in the thread.',
-          },
-          isHighlighted: {
-            type: 'boolean',
-            description: 'Whether this post is highlighted in the thread.',
           },
           isOPThread: {
             type: 'boolean',
@@ -6359,7 +6354,7 @@ export const schemaDict = {
           },
         },
       },
-      threadSliceNoUnauthenticated: {
+      threadItemNoUnauthenticated: {
         type: 'object',
         required: ['uri'],
         properties: {
@@ -6369,7 +6364,7 @@ export const schemaDict = {
           },
         },
       },
-      threadSliceNotFound: {
+      threadItemNotFound: {
         type: 'object',
         required: ['uri'],
         properties: {
@@ -6379,7 +6374,7 @@ export const schemaDict = {
           },
         },
       },
-      threadSliceBlocked: {
+      threadItemBlocked: {
         type: 'object',
         required: ['uri', 'author'],
         properties: {
@@ -7419,17 +7414,19 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['slices'],
+            required: ['items'],
             properties: {
-              slices: {
+              items: {
                 type: 'array',
+                description:
+                  'A flat list of thread items. The depth of each item is indicated by the depth property inside the item.',
                 items: {
                   type: 'union',
                   refs: [
-                    'lex:app.bsky.feed.defs#threadSlice',
-                    'lex:app.bsky.feed.defs#threadSliceNoUnauthenticated',
-                    'lex:app.bsky.feed.defs#threadSliceNotFound',
-                    'lex:app.bsky.feed.defs#threadSliceBlocked',
+                    'lex:app.bsky.feed.defs#threadItemPost',
+                    'lex:app.bsky.feed.defs#threadItemNoUnauthenticated',
+                    'lex:app.bsky.feed.defs#threadItemNotFound',
+                    'lex:app.bsky.feed.defs#threadItemBlocked',
                   ],
                 },
               },

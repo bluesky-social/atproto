@@ -196,14 +196,12 @@ export function validateThreadViewPost<V>(v: V) {
   return validate<ThreadViewPost & V>(v, id, hashThreadViewPost)
 }
 
-export interface ThreadSlice {
-  $type?: 'app.bsky.feed.defs#threadSlice'
+export interface ThreadItemPost {
+  $type?: 'app.bsky.feed.defs#threadItemPost'
   uri: string
   post: PostView
   /** Describes the nesting level of this post in the thread. */
   depth: number
-  /** Whether this post is highlighted in the thread. */
-  isHighlighted: boolean
   /** Whether this post is part of a contiguous chain of OP replies. */
   isOPThread: boolean
   /** Whether this post has a like from the OP. */
@@ -214,64 +212,64 @@ export interface ThreadSlice {
   hasUnhydratedParents: boolean
 }
 
-const hashThreadSlice = 'threadSlice'
+const hashThreadItemPost = 'threadItemPost'
 
-export function isThreadSlice<V>(v: V) {
-  return is$typed(v, id, hashThreadSlice)
+export function isThreadItemPost<V>(v: V) {
+  return is$typed(v, id, hashThreadItemPost)
 }
 
-export function validateThreadSlice<V>(v: V) {
-  return validate<ThreadSlice & V>(v, id, hashThreadSlice)
+export function validateThreadItemPost<V>(v: V) {
+  return validate<ThreadItemPost & V>(v, id, hashThreadItemPost)
 }
 
-export interface ThreadSliceNoUnauthenticated {
-  $type?: 'app.bsky.feed.defs#threadSliceNoUnauthenticated'
+export interface ThreadItemNoUnauthenticated {
+  $type?: 'app.bsky.feed.defs#threadItemNoUnauthenticated'
   uri: string
 }
 
-const hashThreadSliceNoUnauthenticated = 'threadSliceNoUnauthenticated'
+const hashThreadItemNoUnauthenticated = 'threadItemNoUnauthenticated'
 
-export function isThreadSliceNoUnauthenticated<V>(v: V) {
-  return is$typed(v, id, hashThreadSliceNoUnauthenticated)
+export function isThreadItemNoUnauthenticated<V>(v: V) {
+  return is$typed(v, id, hashThreadItemNoUnauthenticated)
 }
 
-export function validateThreadSliceNoUnauthenticated<V>(v: V) {
-  return validate<ThreadSliceNoUnauthenticated & V>(
+export function validateThreadItemNoUnauthenticated<V>(v: V) {
+  return validate<ThreadItemNoUnauthenticated & V>(
     v,
     id,
-    hashThreadSliceNoUnauthenticated,
+    hashThreadItemNoUnauthenticated,
   )
 }
 
-export interface ThreadSliceNotFound {
-  $type?: 'app.bsky.feed.defs#threadSliceNotFound'
+export interface ThreadItemNotFound {
+  $type?: 'app.bsky.feed.defs#threadItemNotFound'
   uri: string
 }
 
-const hashThreadSliceNotFound = 'threadSliceNotFound'
+const hashThreadItemNotFound = 'threadItemNotFound'
 
-export function isThreadSliceNotFound<V>(v: V) {
-  return is$typed(v, id, hashThreadSliceNotFound)
+export function isThreadItemNotFound<V>(v: V) {
+  return is$typed(v, id, hashThreadItemNotFound)
 }
 
-export function validateThreadSliceNotFound<V>(v: V) {
-  return validate<ThreadSliceNotFound & V>(v, id, hashThreadSliceNotFound)
+export function validateThreadItemNotFound<V>(v: V) {
+  return validate<ThreadItemNotFound & V>(v, id, hashThreadItemNotFound)
 }
 
-export interface ThreadSliceBlocked {
-  $type?: 'app.bsky.feed.defs#threadSliceBlocked'
+export interface ThreadItemBlocked {
+  $type?: 'app.bsky.feed.defs#threadItemBlocked'
   uri: string
   author: BlockedAuthor
 }
 
-const hashThreadSliceBlocked = 'threadSliceBlocked'
+const hashThreadItemBlocked = 'threadItemBlocked'
 
-export function isThreadSliceBlocked<V>(v: V) {
-  return is$typed(v, id, hashThreadSliceBlocked)
+export function isThreadItemBlocked<V>(v: V) {
+  return is$typed(v, id, hashThreadItemBlocked)
 }
 
-export function validateThreadSliceBlocked<V>(v: V) {
-  return validate<ThreadSliceBlocked & V>(v, id, hashThreadSliceBlocked)
+export function validateThreadItemBlocked<V>(v: V) {
+  return validate<ThreadItemBlocked & V>(v, id, hashThreadItemBlocked)
 }
 
 export interface NotFoundPost {
