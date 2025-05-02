@@ -6308,6 +6308,91 @@ export const schemaDict = {
           },
         },
       },
+      threadSlice: {
+        type: 'object',
+        required: [
+          'uri',
+          'post',
+          'depth',
+          'isHighlighted',
+          'isOPThread',
+          'hasOPLike',
+          'hasUnhydratedReplies',
+          'hasUnhydratedParents',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'Describes the nesting level of this post in the thread.',
+          },
+          isHighlighted: {
+            type: 'boolean',
+            description: 'Whether this post is highlighted in the thread.',
+          },
+          isOPThread: {
+            type: 'boolean',
+            description:
+              'Whether this post is part of a contiguous chain of OP replies.',
+          },
+          hasOPLike: {
+            type: 'boolean',
+            description: 'Whether this post has a like from the OP.',
+          },
+          hasUnhydratedReplies: {
+            type: 'boolean',
+            description:
+              'Whether this post has replies that have not been included in the response.',
+          },
+          hasUnhydratedParents: {
+            type: 'boolean',
+            description:
+              'Whether this post has parents that have not been included in the response.',
+          },
+        },
+      },
+      threadSliceNoUnauthenticated: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      threadSliceNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      threadSliceBlocked: {
+        type: 'object',
+        required: ['uri', 'author'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
       notFoundPost: {
         type: 'object',
         required: ['uri', 'notFound'],
@@ -7231,48 +7316,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7334,6 +7377,116 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPostThreadV2: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPostThreadV2',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to post record.',
+            },
+            depth: {
+              type: 'integer',
+              description:
+                'How many levels of reply depth should be included in response.',
+              default: 6,
+              minimum: 0,
+              maximum: 1000,
+            },
+            parentHeight: {
+              type: 'integer',
+              description:
+                'How many levels of parent (and grandparent, etc) post to include.',
+              default: 80,
+              minimum: 0,
+              maximum: 1000,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['slices'],
+            properties: {
+              slices: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.feed.defs#threadSlice',
+                    'lex:app.bsky.feed.defs#threadSliceNoUnauthenticated',
+                    'lex:app.bsky.feed.defs#threadSliceNotFound',
+                    'lex:app.bsky.feed.defs#threadSliceBlocked',
+                  ],
+                },
+              },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -16257,8 +16410,9 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPostThreadV2: 'app.bsky.feed.getPostThreadV2',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',

@@ -124,6 +124,72 @@
         "threadContext": { "type": "ref", "ref": "#threadContext" }
       }
     },
+    "threadSlice": {
+      "type": "object",
+      "required": [
+        "uri",
+        "post",
+        "depth",
+        "isHighlighted",
+        "isOPThread",
+        "hasOPLike",
+        "hasUnhydratedReplies",
+        "hasUnhydratedParents"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        },
+        "post": { "type": "ref", "ref": "#postView" },
+        "depth": {
+          "type": "integer",
+          "description": "Describes the nesting level of this post in the thread."
+        },
+        "isHighlighted": {
+          "type": "boolean",
+          "description": "Whether this post is highlighted in the thread."
+        },
+        "isOPThread": {
+          "type": "boolean",
+          "description": "Whether this post is part of a contiguous chain of OP replies."
+        },
+        "hasOPLike": {
+          "type": "boolean",
+          "description": "Whether this post has a like from the OP."
+        },
+        "hasUnhydratedReplies": {
+          "type": "boolean",
+          "description": "Whether this post has replies that have not been included in the response."
+        },
+        "hasUnhydratedParents": {
+          "type": "boolean",
+          "description": "Whether this post has parents that have not been included in the response."
+        }
+      }
+    },
+    "threadSliceNoUnauthenticated": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "threadSliceNotFound": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "threadSliceBlocked": {
+      "type": "object",
+      "required": ["uri", "author"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "author": { "type": "ref", "ref": "#blockedAuthor" }
+      }
+    },
     "notFoundPost": {
       "type": "object",
       "required": ["uri", "notFound"],
