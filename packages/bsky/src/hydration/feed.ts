@@ -37,6 +37,7 @@ export type PostViewerState = {
 export type PostViewerStates = HydrationMap<PostViewerState>
 
 export type ThreadContext = {
+  // Whether the root author has liked the post.
   like?: string
 }
 
