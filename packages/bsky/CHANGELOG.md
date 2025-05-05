@@ -1,5 +1,24 @@
 # @atproto/bsky
 
+## 0.0.148
+
+### Patch Changes
+
+- [#3816](https://github.com/bluesky-social/atproto/pull/3816) [`ab4e72084`](https://github.com/bluesky-social/atproto/commit/ab4e72084dd0ea1eb12b45cbb913595434b88675) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Improve handle resolution mechanism
+
+- [#3700](https://github.com/bluesky-social/atproto/pull/3700) [`b5afb723b`](https://github.com/bluesky-social/atproto/commit/b5afb723be392d236799bbcb6a55956bd12316ba) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Consistenlty log errors
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`b5afb723b`](https://github.com/bluesky-social/atproto/commit/b5afb723be392d236799bbcb6a55956bd12316ba), [`3a65b68f7`](https://github.com/bluesky-social/atproto/commit/3a65b68f7dc63c8bfbea0ae615f8ae984272f2e4)]:
+  - @atproto/lexicon@0.4.11
+  - @atproto/xrpc-server@0.7.18
+  - @atproto/api@0.15.6
+  - @atproto/common@0.4.11
+  - @atproto/identity@0.4.8
+  - @atproto/repo@0.8.1
+  - @atproto-labs/xrpc-utils@0.0.14
+  - @atproto/sync@0.1.23
+  - @atproto/crypto@0.4.4
+
 ## 0.0.147
 
 ### Patch Changes
