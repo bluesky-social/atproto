@@ -20,7 +20,7 @@ export interface Record {
   /** The status for the account. */
   status: 'app.bsky.actor.status#live' | (string & {})
   embed?: $Typed<AppBskyEmbedExternal.Main> | { $type: string }
-  /** The duration of the status in minutes. Applications can choose to limit the duration. */
+  /** The duration of the status in minutes. Applications can choose to impose minimum and maximum limits. */
   durationMinutes?: number
   createdAt: string
   [k: string]: unknown

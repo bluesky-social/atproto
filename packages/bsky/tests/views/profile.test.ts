@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { AppBskyEmbedExternal, AtpAgent } from '@atproto/api'
-import { HOUR } from '@atproto/common'
+import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot, stripViewer } from '../_util'
@@ -282,7 +282,43 @@ describe('pds profile views', () => {
       expect(forSnapshot(data.status)).toMatchSnapshot()
     })
 
-    it('limits the duration', async () => {
+    it('limits the minimum duration', async () => {
+      await sc.agent.com.atproto.repo.putRecord(
+        {
+          repo: alice,
+          collection: ids.AppBskyActorStatus,
+          rkey: 'self',
+          record: {
+            status: 'app.bsky.actor.status#live',
+            embed,
+            durationMinutes: 1,
+            createdAt: new Date().toISOString(),
+          },
+        },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+
+      assert(data.status)
+      const createdAt = new Date(data.status.record.createdAt as string)
+      const expiresAt = new Date(data.status.expiresAt as string)
+      expect(expiresAt.getTime() - createdAt.getTime()).toBe(5 * MINUTE)
+    })
+
+    it('limits the maximum duration', async () => {
       await sc.agent.com.atproto.repo.putRecord(
         {
           repo: alice,
@@ -315,7 +351,7 @@ describe('pds profile views', () => {
       assert(data.status)
       const createdAt = new Date(data.status.record.createdAt as string)
       const expiresAt = new Date(data.status.expiresAt as string)
-      expect(expiresAt.getTime() - createdAt.getTime()).toBe(3 * HOUR)
+      expect(expiresAt.getTime() - createdAt.getTime()).toBe(4 * HOUR)
     })
 
     describe('when outside the duration', () => {

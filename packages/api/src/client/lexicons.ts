@@ -5636,7 +5636,7 @@ export const schemaDict = {
             durationMinutes: {
               type: 'integer',
               description:
-                'The duration of the status in minutes. Applications can choose to limit the duration.',
+                'The duration of the status in minutes. Applications can choose to impose minimum and maximum limits.',
               minimum: 1,
             },
             createdAt: {

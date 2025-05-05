@@ -462,10 +462,15 @@ export class Views {
     const { status } = actor
     const { record, sortedAt } = status
 
-    const maxDuration = 3 * HOUR
+    const minDuration = 5 * MINUTE
+    const maxDuration = 4 * HOUR
+
     const expiresAtMs = record.durationMinutes
       ? sortedAt.getTime() +
-        Math.min(record.durationMinutes * MINUTE, maxDuration)
+        Math.max(
+          Math.min(record.durationMinutes * MINUTE, maxDuration),
+          minDuration,
+        )
       : undefined
     const expiresAt = expiresAtMs
       ? new Date(expiresAtMs).toISOString()
