@@ -183,39 +183,6 @@ export class ModerationStatusHistory {
     return { statuses, cursor: keyset.packFromResult(statuses) }
   }
 
-  async getStatusesForAccount({
-    authorDid,
-    limit = 50,
-    cursor,
-    sortDirection = 'desc',
-  }: {
-    authorDid: string
-    limit: number
-    cursor?: string
-    sortDirection: 'asc' | 'desc'
-  }) {
-    const { ref } = this.db.db.dynamic
-
-    const builder = this.db.db
-      .selectFrom('moderation_subject_status')
-      .where('did', '=', authorDid)
-      .selectAll()
-
-    const keyset = new TimeIdKeyset(
-      ref(`moderation_subject_status.createdAt`),
-      ref('moderation_subject_status.id'),
-    )
-    const paginatedBuilder = paginate(builder, {
-      limit,
-      cursor,
-      keyset,
-      direction: sortDirection,
-    })
-
-    const statuses = await paginatedBuilder.execute()
-    return { statuses, cursor: keyset.packFromResult(statuses) }
-  }
-
   atUriFromStatus(
     status: Pick<PublicSubjectStatus, 'did' | 'recordPath'>,
   ): string {
