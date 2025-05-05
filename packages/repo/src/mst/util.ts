@@ -10,12 +10,8 @@ export const leadingZerosOnHash = async (key: string | Uint8Array) => {
   let leadingZeros = 0
   for (let i = 0; i < hash.length; i++) {
     const byte = hash[i]
-    if (byte < 64) leadingZeros++
-    if (byte < 16) leadingZeros++
-    if (byte < 4) leadingZeros++
-    if (byte === 0) {
-      leadingZeros++
-    } else {
+    leadingZeros += (Math.clz32(byte) >> 1) - 12
+    if (byte !== 0) {
       break
     }
   }
