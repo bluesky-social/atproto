@@ -10,6 +10,7 @@ import {
   ThreadItemNotFound,
   ThreadItemPost,
 } from '../lexicon/types/app/bsky/feed/defs'
+import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/feed/getPostThreadV2'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { $Typed } from '../lexicon/util'
 
@@ -83,7 +84,7 @@ export function sortThreadTree({
 }: {
   node: ThreadTree
   options: Omit<BskyThreadViewPreference, 'sort'> & {
-    sort: 'hotness' | 'oldest' | 'newest' | 'most-likes' | string
+    sorting: GetPostThreadV2QueryParams['sorting']
   }
   viewerDid?: string
   fetchedAt: number
@@ -143,15 +144,17 @@ export function sortThreadTree({
       }
 
       // Split items from different fetches into separate generations.
-      if (options.sort === 'hotness') {
+      if (options.sorting === 'app.bsky.feed.getPostThreadV2#hotness') {
         const aHotness = getPostHotness(a, fetchedAt)
         const bHotness = getPostHotness(b, fetchedAt)
         return bHotness - aHotness
-      } else if (options.sort === 'oldest') {
+      } else if (options.sorting === 'app.bsky.feed.getPostThreadV2#oldest') {
         return a.post.indexedAt.localeCompare(b.post.indexedAt)
-      } else if (options.sort === 'newest') {
+      } else if (options.sorting === 'app.bsky.feed.getPostThreadV2#newest') {
         return b.post.indexedAt.localeCompare(a.post.indexedAt)
-      } else if (options.sort === 'most-likes') {
+      } else if (
+        options.sorting === 'app.bsky.feed.getPostThreadV2#mostLikes'
+      ) {
         if (a.post.likeCount === b.post.likeCount) {
           return b.post.indexedAt.localeCompare(a.post.indexedAt) // newest
         } else {

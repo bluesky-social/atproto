@@ -43,7 +43,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
+      "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -91,7 +91,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 1,
+      "depth": 2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -139,7 +139,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
+      "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -187,7 +187,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
+      "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -235,7 +235,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 1,
+      "depth": 2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -283,7 +283,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
+      "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -424,7 +424,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
+      "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -479,7 +479,7 @@ Object {
   "thread": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
+      "depth": -2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -799,7 +799,7 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
+      "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
@@ -854,7 +854,7 @@ Object {
   "thread": Array [
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
+      "depth": -2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,

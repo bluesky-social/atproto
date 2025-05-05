@@ -107,6 +107,7 @@ const presentation = (
   const thread = ctx.views.threadV2(skeleton, hydration, {
     height: params.parentHeight,
     depth: getDepth(ctx, skeleton.anchor, params),
+    sorting: params.sorting,
   })
   const rootUri =
     hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
