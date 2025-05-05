@@ -339,24 +339,24 @@ describe('appview thread views v2', () => {
       }
 
       const cases: Case[] = [
-        { postKey: 'root' },
-        { postKey: 'op1_0' },
-        { postKey: 'op1_1' },
-        { postKey: 'op1_1_1' },
-        { postKey: 'op1_1_1_1' },
-        { postKey: 'op1_1_1_1_1' },
-        { postKey: 'op1_2' },
-        { postKey: 'a1_0' },
-        { postKey: 'b1_0' },
-        { postKey: 'c1_0' },
-        { postKey: 'op2_0' },
-        { postKey: 'op2_1' },
-        { postKey: 'a2_2' },
-        { postKey: 'op2_3' },
-        { postKey: 'op2_4' },
-        { postKey: 'a2_0' },
-        { postKey: 'b2_0' },
-        { postKey: 'c2_0' },
+        { postKey: 'p_0' },
+        { postKey: 'p_0_0' },
+        { postKey: 'p_0_0_0' },
+        { postKey: 'p_0_0_0_0' },
+        { postKey: 'p_0_0_0_0_0' },
+        { postKey: 'p_0_0_0_0_0_0' },
+        { postKey: 'p_0_0_0_1' },
+        { postKey: 'p_0_1' },
+        { postKey: 'p_0_2' },
+        { postKey: 'p_0_3' },
+        { postKey: 'p_0_4' },
+        { postKey: 'p_0_4_0' },
+        { postKey: 'p_0_4_0_0' },
+        { postKey: 'p_0_4_0_0_0' },
+        { postKey: 'p_0_4_0_0_0_0' },
+        { postKey: 'p_0_5' },
+        { postKey: 'p_0_6' },
+        { postKey: 'p_0_7' },
       ]
 
       it.each(cases)(
@@ -379,19 +379,22 @@ describe('appview thread views v2', () => {
           const { thread } = data
 
           const anchorIndex = thread.findIndex(
+            // TODO all of them should have URI, so I shouldn't need this type cast
             (i) => (i as ThreadItemPost).uri === post.ref.uriStr,
           )
-          // TODO all of them should have depth, so I shouldn't need these type casts
+          // TODO all of them should have depth, so I shouldn't need this type cast
           const anchorPost = thread[anchorIndex] as ThreadItemPost
 
           const parents = thread.slice(0, anchorIndex)
           const children = thread.slice(anchorIndex + 1, thread.length)
 
           parents.forEach((parent) => {
+            // TODO all of them should have depth, so I shouldn't need this type cast
             expect((parent as ThreadItemPost).depth).toBeLessThan(0)
           })
           expect(anchorPost.depth).toEqual(0)
           children.forEach((child) => {
+            // TODO all of them should have depth, so I shouldn't need this type cast
             expect((child as ThreadItemPost).depth).toBeGreaterThan(0)
           })
         },
@@ -592,7 +595,7 @@ describe('appview thread views v2', () => {
 
     it.each(cases)(`self thread viewed by op - %j`, async ({ params }) => {
       const { data } = await agent.app.bsky.feed.getPostThread(
-        { uri: baseSeed.posts.op1_0.ref.uriStr },
+        { uri: baseSeed.posts.p_0_0.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             baseSeed.users.op.did,
@@ -810,7 +813,7 @@ describe('appview thread views v2', () => {
 
     it.each(cases)(`self thread viewed by op - %j`, async ({ params }) => {
       const { data } = await agent.app.bsky.feed.getPostThread(
-        { uri: baseSeed.posts.op1_0.ref.uriStr },
+        { uri: baseSeed.posts.p_0_0.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             baseSeed.users.op.did,
