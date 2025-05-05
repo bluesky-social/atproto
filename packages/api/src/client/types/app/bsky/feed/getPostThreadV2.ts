@@ -23,6 +23,13 @@ export interface QueryParams {
   depth?: number
   /** How many levels of parent (and grandparent, etc) post to include. */
   parentHeight?: number
+  /** Sorting for the thread replies. */
+  sorting?:
+    | 'app.bsky.feed.getPostThreadV2#newest'
+    | 'app.bsky.feed.getPostThreadV2#oldest'
+    | 'app.bsky.feed.getPostThreadV2#hotness'
+    | 'app.bsky.feed.getPostThreadV2#mostLikes'
+    | (string & {})
 }
 
 export type InputSchema = undefined
@@ -63,3 +70,12 @@ export function toKnownErr(e: any) {
 
   return e
 }
+
+/** Newest-first thread sort order. */
+export const NEWEST = `${id}#newest`
+/** Oldest-first thread sort order. */
+export const OLDEST = `${id}#oldest`
+/** Hottest-first thread sort order. */
+export const HOTNESS = `${id}#hotness`
+/** Most-likes-first thread sort order. */
+export const MOSTLIKES = `${id}#mostLikes`

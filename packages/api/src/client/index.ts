@@ -560,6 +560,10 @@ export const APP_BSKY_FEED = {
   DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
   DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
   DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
+  GetPostThreadV2Newest: 'app.bsky.feed.getPostThreadV2#newest',
+  GetPostThreadV2Oldest: 'app.bsky.feed.getPostThreadV2#oldest',
+  GetPostThreadV2Hotness: 'app.bsky.feed.getPostThreadV2#hotness',
+  GetPostThreadV2MostLikes: 'app.bsky.feed.getPostThreadV2#mostLikes',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',

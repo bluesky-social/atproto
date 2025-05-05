@@ -39,6 +39,7 @@ import {
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
+import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/feed/getPostThreadV2'
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import {
   Record as PostRecord,
@@ -1127,7 +1128,11 @@ export class Views {
   threadV2(
     skeleton: { anchor: string; uris: string[] },
     state: HydrationState,
-    opts: { height: number; depth: number },
+    opts: {
+      height: number
+      depth: number
+      sorting: GetPostThreadV2QueryParams['sorting']
+    },
   ): (
     | $Typed<ThreadItemPost>
     | $Typed<ThreadItemNoUnauthenticated>
@@ -1186,7 +1191,7 @@ export class Views {
               currentDepth: 1,
             })
           : undefined,
-      depth: 0,
+      depth: 0, // The depth of the anchor post is always 0.
       isOPThread: false, // annotated in next step
       hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
       hasUnhydratedReplies: false,
@@ -1197,8 +1202,7 @@ export class Views {
     const anchorTreeSorted = sortThreadTree({
       node: anchorTree,
       options: {
-        // @TODO: use parameter.
-        sort: 'oldest',
+        sorting: opts.sorting,
         prioritizeFollowedUsers: false,
       },
       // @TODO: use parameter.
@@ -1265,7 +1269,7 @@ export class Views {
         currentDepth: currentDepth - 1,
       }),
       replies: undefined,
-      depth: -1, // TODO
+      depth: currentDepth,
       isOPThread: false, // annotated in next step
       hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
       hasUnhydratedReplies: false, // not applicable to parents

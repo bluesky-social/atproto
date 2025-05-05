@@ -7408,6 +7408,17 @@ export const schemaDict = {
               minimum: 0,
               maximum: 1000,
             },
+            sorting: {
+              type: 'string',
+              description: 'Sorting for the thread replies.',
+              knownValues: [
+                'app.bsky.feed.getPostThreadV2#newest',
+                'app.bsky.feed.getPostThreadV2#oldest',
+                'app.bsky.feed.getPostThreadV2#hotness',
+                'app.bsky.feed.getPostThreadV2#mostLikes',
+              ],
+              default: 'app.bsky.feed.getPostThreadV2#oldest',
+            },
           },
         },
         output: {
@@ -7442,6 +7453,22 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+      newest: {
+        type: 'token',
+        description: 'Newest-first thread sort order.',
+      },
+      oldest: {
+        type: 'token',
+        description: 'Oldest-first thread sort order.',
+      },
+      hotness: {
+        type: 'token',
+        description: 'Hottest-first thread sort order.',
+      },
+      mostLikes: {
+        type: 'token',
+        description: 'Most-likes-first thread sort order.',
       },
     },
   },
