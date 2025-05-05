@@ -228,22 +228,21 @@ export async function threadViewSeed(
 export async function annotateOPThreadSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'fl', [
+  const users = await createUsers(sc, 'opthread', [
     'op',
     'alice',
     'bob',
   ] as const)
 
-  const root = await sc.post(users.op.did, 'root')
-
-  const root_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op1') // thread
-  const root_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1.ref, 'root_op1_op1') // thread
-  const root_op1_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1_op1.ref, 'root_op1_op1_op1') // thread
-  const root_a1 = await sc.reply(users.alice.did, root.ref, root.ref, 'root_a1')
-  const root_a1_a2 = await sc.reply(users.alice.did, root.ref, root_a1.ref, 'root_a1_a2')
-  const root_op2 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2') // thread
-  const root_op2_b1 = await sc.reply(users.bob.did, root.ref, root_op2.ref, 'root_op2_b1')
-  const root_op2_b1_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2_b1_op1') // not thread
+  const p_0_o = await sc.post(users.op.did, 'p_0_o')
+  const p_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_o.ref, 'p_0_0_o') // thread
+  const p_0_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_0_o.ref, 'p_0_0_0_o') // thread
+  const p_0_0_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_0_0_o.ref, 'p_0_0_0_0_o') // thread
+  const p_0_1_a = await sc.reply(users.alice.did, p_0_o.ref, p_0_o.ref, 'p_0_1_a')
+  const p_0_1_0_a = await sc.reply(users.alice.did, p_0_o.ref, p_0_1_a.ref, 'p_0_1_0_a')
+  const p_0_2_o = await sc.reply(users.op.did, p_0_o.ref, p_0_o.ref, 'p_0_2_o') // thread
+  const p_0_2_0_b = await sc.reply(users.bob.did, p_0_o.ref, p_0_2_o.ref, 'p_0_2_0_b')
+  const p_0_2_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_2_0_b.ref, 'p_0_2_0_0_o') // not thread
 
   await sc.network.processAll()
 
@@ -251,15 +250,15 @@ export async function annotateOPThreadSeed(
     seedClient: sc,
     users,
     posts: {
-      root,
-      root_op1,
-      root_op1_op1,
-      root_op1_op1_op1,
-      root_a1,
-      root_a1_a2,
-      root_op2,
-      root_op2_b1,
-      root_op2_b1_op1,
+      p_0_o,
+      p_0_0_o,
+      p_0_0_0_o,
+      p_0_0_0_0_o,
+      p_0_1_a,
+      p_0_1_0_a,
+      p_0_2_o,
+      p_0_2_0_b,
+      p_0_2_0_0_o,
     },
   }
 }

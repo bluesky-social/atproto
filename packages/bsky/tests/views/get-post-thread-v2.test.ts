@@ -4,16 +4,15 @@ import { AppBskyFeedDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { OutputSchema } from '../../src/lexicon/types/app/bsky/feed/getPostThreadV2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
 import {
-  annotateSelfThread,
   mockClientData,
   responseToThreadNodes,
 } from './get-post-thread-v2-util/mock-v1-client'
 import {
   ThreadTree,
-  annotateOPThread,
   getPostHotness,
   postThreadView,
   run,
@@ -452,6 +451,58 @@ describe('appview thread views v2', () => {
       expect(last.uri).toBe(
         seed.posts.p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref.uriStr,
       )
+    })
+  })
+
+  describe(`annotateOPThread`, () => {
+    let seed: Awaited<ReturnType<typeof seeds.annotateOPThreadSeed>>
+
+    beforeAll(async () => {
+      seed = await seeds.annotateOPThreadSeed(sc)
+    })
+
+    it(`annotates all OP threads correctly`, async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: seed.posts.p_0_o.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(9)
+
+      // OP threads
+      const p_0_0_o = getPost(thread, seed.posts.p_0_0_o.ref.uriStr)
+      expect(p_0_0_o.isOPThread).toBe(true)
+
+      const p_0_0_0_o = getPost(thread, seed.posts.p_0_0_0_o.ref.uriStr)
+      expect(p_0_0_0_o.isOPThread).toBe(true)
+
+      const p_0_0_0_0_o = getPost(thread, seed.posts.p_0_0_0_0_o.ref.uriStr)
+      expect(p_0_0_0_0_o.isOPThread).toBe(true)
+
+      const p_0_2_o = getPost(thread, seed.posts.p_0_2_o.ref.uriStr)
+      expect(p_0_2_o.isOPThread).toBe(true)
+
+      // other posts
+      const p_0_1_a = getPost(thread, seed.posts.p_0_1_a.ref.uriStr)
+      expect(p_0_1_a.isOPThread).toBe(false)
+
+      const p_0_1_0_a = getPost(thread, seed.posts.p_0_1_0_a.ref.uriStr)
+      expect(p_0_1_0_a.isOPThread).toBe(false)
+
+      const p_0_2_0_b = getPost(thread, seed.posts.p_0_2_0_b.ref.uriStr)
+      expect(p_0_2_0_b.isOPThread).toBe(false)
+
+      const p_0_o = getPost(thread, seed.posts.p_0_o.ref.uriStr)
+      expect(p_0_o.isOPThread).toBe(false)
+
+      const p_0_2_0_0_o = getPost(thread, seed.posts.p_0_2_0_0_o.ref.uriStr)
+      expect(p_0_2_0_0_o.isOPThread).toBe(false)
     })
   })
 
@@ -1049,70 +1100,6 @@ describe('appview thread views v2', () => {
     })
   })
 
-  describe.skip(`annotateOPThread`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.annotateOPThreadSeed>>
-
-    beforeAll(async () => {
-      seed = await seeds.annotateOPThreadSeed(sc)
-    })
-
-    it(`annotates all OP threads correctly`, async () => {
-      const { data } = await agent.app.bsky.feed.getPostThread(
-        { uri: seed.posts.root.ref.uriStr },
-        {
-          headers: await network.serviceHeaders(
-            seed.users.op.did,
-            ids.AppBskyFeedGetPostThread,
-          ),
-        },
-      )
-
-      const v1 = responseToThreadNodes(data.thread)
-      const v2 = postThreadView({
-        thread: data.thread,
-      })
-
-      annotateSelfThread(v1)
-      annotateOPThread(v2)
-
-      assert(v1)
-      assert(v2)
-      assert(v1.type === 'post')
-      assert(v2.$type === 'post')
-
-      assert(v1.replies)
-      assert(v2.replies)
-
-      const root_op1 = v2.replies.find(
-        (r) => r.uri === seed.posts.root_op1.ref.uriStr,
-      )
-      assert(root_op1)
-      assert(root_op1.$type === 'post')
-      expect(root_op1.isOPThread).toEqual(true)
-      assert(root_op1.replies)
-      const root_op1_op1 = root_op1.replies.find(
-        (r) => r.uri === seed.posts.root_op1_op1.ref.uriStr,
-      )
-      assert(root_op1_op1)
-      assert(root_op1_op1.$type === 'post')
-      expect(root_op1_op1.isOPThread).toEqual(true)
-      assert(root_op1_op1.replies)
-      const root_op1_op1_op1 = root_op1_op1.replies.find(
-        (r) => r.uri === seed.posts.root_op1_op1_op1.ref.uriStr,
-      )
-      assert(root_op1_op1_op1)
-      assert(root_op1_op1_op1.$type === 'post')
-      expect(root_op1_op1_op1.isOPThread).toEqual(true)
-
-      const root_op2 = v2.replies.find(
-        (r) => r.uri === seed.posts.root_op2.ref.uriStr,
-      )
-      assert(root_op2)
-      assert(root_op2.$type === 'post')
-      expect(root_op2.isOPThread).toEqual(true)
-    })
-  })
-
   describe.skip('getPostHotness', () => {
     const NOW = Date.now()
 
@@ -1339,3 +1326,18 @@ describe('appview thread views v2', () => {
     })
   })
 })
+
+const getPost = (
+  thread: OutputSchema['thread'],
+  uri: string,
+): ThreadItemPost => {
+  const post = thread.find(
+    (i) => (i as ThreadItemPost).uri === uri,
+  ) as ThreadItemPost
+
+  if (!post) {
+    throw new Error(`Post with uri ${uri} not found in thread`)
+  }
+
+  return post
+}
