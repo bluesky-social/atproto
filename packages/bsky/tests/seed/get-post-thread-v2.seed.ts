@@ -3,14 +3,55 @@ import { createUsers } from './util'
 
 // ignored so it's easier to read the seeds
 // prettier-ignore
-export async function baseSeed(
+export async function simpleThreadSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'base', [
+  const users = await createUsers(sc, 'simple', [
     'op',
     'alice',
     'bob',
-    'carla',
+    'carol',
+    'dan'
+  ] as const)
+
+  const p_0 = await sc.post(users.op.did, 'p_0 (op)')
+
+  const p_0_0 = await sc.reply(users.op.did, p_0.ref, p_0.ref, 'p_0_0 (op)')
+  const p_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0.ref, 'p_0_0_0 (op)')
+
+  const p_0_1 = await sc.reply(users.alice.did, p_0.ref, p_0.ref, 'p_0_1 (alice)')
+  const p_0_2 = await sc.reply(users.bob.did, p_0.ref, p_0.ref, 'p_0_2 (bob)')
+  const p_0_3 = await sc.reply(users.carol.did, p_0.ref, p_0.ref, 'p_0_3 (carol)')
+
+  const p_0_2_0 = await sc.reply(users.alice.did, p_0.ref, p_0_2.ref, 'p_0_2_0 (alice)')
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    posts: {
+      p_0,
+      p_0_0,
+      p_0_0_0,
+      p_0_1,
+      p_0_2,
+      p_0_2_0,
+      p_0_3,
+    },
+  }
+}
+
+// ignored so it's easier to read the seeds
+// prettier-ignore
+export async function longSeed(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'long', [
+    'op',
+    'alice',
+    'bob',
+    'carol',
     'dan'
   ] as const)
 
@@ -25,7 +66,7 @@ export async function baseSeed(
 
   const a1_0 = await sc.reply(users.alice.did, root.ref, root.ref, '(alice) 1_0')
   const b1_0 = await sc.reply(users.bob.did, root.ref, root.ref, '(bob) 1_0')
-  const c1_0 = await sc.reply(users.carla.did, root.ref, root.ref, '(carla) 1_0')
+  const c1_0 = await sc.reply(users.carol.did, root.ref, root.ref, '(carol) 1_0')
 
   const op2_0 = await sc.reply(users.op.did, root.ref, root.ref, '(op) 2_0')
   const op2_1 = await sc.reply(users.op.did, root.ref, op2_0.ref, '(op) 2_1')
@@ -35,16 +76,16 @@ export async function baseSeed(
 
   const a2_0 = await sc.reply(users.alice.did, root.ref, root.ref, '(alice) 2_0')
   const b2_0 = await sc.reply(users.bob.did, root.ref, root.ref, '(bob) 2_0')
-  const c2_0 = await sc.reply(users.carla.did, root.ref, root.ref, '(carla) 2_0')
+  const c2_0 = await sc.reply(users.carol.did, root.ref, root.ref, '(carol) 2_0')
 
   await sc.like(users.op.did, a2_0.ref)
   await sc.like(users.bob.did, a2_0.ref)
-  await sc.like(users.carla.did, a2_0.ref)
+  await sc.like(users.carol.did, a2_0.ref)
   await sc.like(users.dan.did, a2_0.ref)
 
   await sc.like(users.op.did, b2_0.ref)
   await sc.like(users.alice.did, b2_0.ref)
-  await sc.like(users.carla.did, b2_0.ref)
+  await sc.like(users.carol.did, b2_0.ref)
 
   await sc.like(users.op.did, c2_0.ref)
   await sc.like(users.bob.did, c2_0.ref)
