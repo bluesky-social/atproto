@@ -1130,6 +1130,12 @@ export class Hydrator {
           uri,
         ) ?? undefined
       )
+    } else if (collection === ids.AppBskyActorStatus) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (await this.actor.getStatus([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
     } else if (collection === ids.AppBskyActorProfile) {
       const did = parsed.hostname
       const actor = (
