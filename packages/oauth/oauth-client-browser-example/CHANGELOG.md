@@ -1,5 +1,11 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.3
+
+### Patch Changes
+
+- [#3797](https://github.com/bluesky-social/atproto/pull/3797) [`a48b093f0`](https://github.com/bluesky-social/atproto/commit/a48b093f0ba3cf67b7abc50d309afcb336d8ead8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `pdsAgent` as global constant
+
 ## 0.0.2
 
 ### Patch Changes

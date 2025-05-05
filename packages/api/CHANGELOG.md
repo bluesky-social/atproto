@@ -1,5 +1,16 @@
 # @atproto/api
 
+## 0.15.6
+
+### Patch Changes
+
+- [#3824](https://github.com/bluesky-social/atproto/pull/3824) [`3a65b68f7`](https://github.com/bluesky-social/atproto/commit/3a65b68f7dc63c8bfbea0ae615f8ae984272f2e4) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add app.bsky.actor.status lexicon
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/common-web@0.4.2
+  - @atproto/xrpc@0.7.0
+  - @atproto/lexicon@0.4.11
+
 ## 0.15.5
 
 ### Patch Changes
