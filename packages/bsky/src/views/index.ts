@@ -1135,13 +1135,13 @@ export class Views {
     | $Typed<ThreadItemBlocked>
   )[] {
     const { anchor, uris } = skeleton
-    const anchorPost = this.post(anchor, state)
-    const anchorPostInfo = state.posts?.get(anchor)
-    if (!anchorPostInfo || !anchorPost) {
+    const postView = this.post(anchor, state)
+    const post = state.posts?.get(anchor)
+    if (!post || !postView) {
       return [this.threadItemNotFound(anchor)]
     }
-    if (this.viewerBlockExists(anchorPost.author.did, state)) {
-      return [this.threadItemBlocked(anchor, anchorPost.author.did, state)]
+    if (this.viewerBlockExists(postView.author.did, state)) {
+      return [this.threadItemBlocked(anchor, postView.author.did, state)]
     }
 
     // Groups children of each parent.
@@ -1157,15 +1157,15 @@ export class Views {
       childrenByParentUri[parentUri].push(uri)
     })
 
-    const rootUri = getRootUri(anchor, anchorPostInfo)
-    const anchorViolatesThreadGate = anchorPostInfo.violatesThreadGate
+    const rootUri = getRootUri(anchor, post)
+    const anchorViolatesThreadGate = post.violatesThreadGate
 
     const anchorTree: ThreadTree = {
       $type: 'threadLeaf',
       uri: anchor,
       post: {
         $type: 'app.bsky.feed.defs#postView',
-        ...anchorPost,
+        ...postView,
       },
       parent: !anchorViolatesThreadGate
         ? this.threadV2Parent({
@@ -1186,7 +1186,7 @@ export class Views {
           : undefined,
       depth: 0,
       isOPThread: false, // annotated in next step
-      hasOPLike: !!state.threadContexts?.get(anchorPost.uri)?.like,
+      hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
       hasUnhydratedReplies: false,
       hasUnhydratedParents: false,
     }
