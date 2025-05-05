@@ -1138,10 +1138,10 @@ export class Views {
     const postView = this.post(anchor, state)
     const post = state.posts?.get(anchor)
     if (!post || !postView) {
-      return [this.threadItemNotFound(anchor)]
+      return [this.threadV2ItemNotFound(anchor)]
     }
     if (this.viewerBlockExists(postView.author.did, state)) {
-      return [this.threadItemBlocked(anchor, postView.author.did, state)]
+      return [this.threadV2ItemBlocked(anchor, postView.author.did, state)]
     }
 
     // Groups children of each parent.
@@ -1196,7 +1196,7 @@ export class Views {
       node: anchorTree,
       options: {
         // @TODO: use parameter.
-        sort: 'newest',
+        sort: 'oldest',
         prioritizeFollowedUsers: false,
       },
       // @TODO: use parameter.
@@ -1205,37 +1205,6 @@ export class Views {
     })
 
     return flattenThread(anchorTreeSorted)
-  }
-
-  private threadItemNoUnauthenticated(
-    uri: string,
-  ): $Typed<ThreadItemNoUnauthenticated> {
-    return {
-      $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
-      uri,
-    }
-  }
-
-  private threadItemNotFound(uri: string): $Typed<ThreadItemNotFound> {
-    return {
-      $type: 'app.bsky.feed.defs#threadItemNotFound',
-      uri,
-    }
-  }
-
-  private threadItemBlocked(
-    uri: string,
-    authorDid: string,
-    state: HydrationState,
-  ): $Typed<ThreadItemBlocked> {
-    return {
-      $type: 'app.bsky.feed.defs#threadItemBlocked',
-      uri,
-      author: {
-        did: authorDid,
-        viewer: this.blockedProfileViewer(authorDid, state),
-      },
-    }
   }
 
   private threadV2Parent({
@@ -1259,18 +1228,22 @@ export class Views {
       !state.ctx?.include3pBlocks &&
       state.postBlocks?.get(childUri)?.parent
     ) {
-      return this.threadItemBlocked(parentUri, creatorFromUri(parentUri), state)
+      return this.threadV2ItemBlocked(
+        parentUri,
+        creatorFromUri(parentUri),
+        state,
+      )
     }
 
     const post = this.post(parentUri, state)
     const postInfo = state.posts?.get(parentUri)
 
-    if (!postInfo || !post) return this.threadItemNotFound(parentUri)
+    if (!postInfo || !post) return this.threadV2ItemNotFound(parentUri)
 
     if (rootUri !== getRootUri(parentUri, postInfo)) return // outside thread boundary
 
     if (this.viewerBlockExists(post.author.did, state)) {
-      return this.threadItemBlocked(parentUri, post.author.did, state)
+      return this.threadV2ItemBlocked(parentUri, post.author.did, state)
     }
 
     return {
@@ -1317,7 +1290,7 @@ export class Views {
         return undefined
       }
       if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
-        return this.threadItemBlocked(uri, creatorFromUri(uri), state)
+        return this.threadV2ItemBlocked(uri, creatorFromUri(uri), state)
       }
       const post = this.post(uri, state)
       if (!postInfo || !post) {
@@ -1325,11 +1298,11 @@ export class Views {
         // in the future we might consider keeping a placeholder for deleted
         // posts that have replies under them, but not supported at the moment.
         // this case is mostly likely hit when a takedown was applied to a post.
-        return this.threadItemNotFound(uri)
+        return this.threadV2ItemNotFound(uri)
       }
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
-        return this.threadItemBlocked(uri, post.author.did, state)
+        return this.threadV2ItemBlocked(uri, post.author.did, state)
       }
       if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
         return undefined
@@ -1356,6 +1329,37 @@ export class Views {
         hasUnhydratedParents: false,
       }
     })
+  }
+
+  private threadV2ItemNoUnauthenticated(
+    uri: string,
+  ): $Typed<ThreadItemNoUnauthenticated> {
+    return {
+      $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
+      uri,
+    }
+  }
+
+  private threadV2ItemNotFound(uri: string): $Typed<ThreadItemNotFound> {
+    return {
+      $type: 'app.bsky.feed.defs#threadItemNotFound',
+      uri,
+    }
+  }
+
+  private threadV2ItemBlocked(
+    uri: string,
+    authorDid: string,
+    state: HydrationState,
+  ): $Typed<ThreadItemBlocked> {
+    return {
+      $type: 'app.bsky.feed.defs#threadItemBlocked',
+      uri,
+      author: {
+        did: authorDid,
+        viewer: this.blockedProfileViewer(authorDid, state),
+      },
+    }
   }
 
   // Embeds

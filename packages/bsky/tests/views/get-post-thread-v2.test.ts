@@ -3,6 +3,8 @@ import { subHours } from 'date-fns'
 import { AppBskyFeedDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
 import {
   annotateSelfThread,
@@ -34,11 +36,186 @@ describe('appview thread views v2', () => {
     await network.close()
   })
 
-  describe.only(`v2`, () => {
-    let baseSeed: Awaited<ReturnType<typeof seeds.baseSeed>>
+  describe.only('simple thread', () => {
+    let simpleSeed: Awaited<ReturnType<typeof seeds.simpleThreadSeed>>
 
     beforeAll(async () => {
-      baseSeed = await seeds.baseSeed(sc)
+      simpleSeed = await seeds.simpleThreadSeed(sc)
+    })
+
+    it('returns thread anchored on p_0', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: simpleSeed.posts.p_0.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(7)
+      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
+      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_0 (op)',
+      )
+      expect((thread[2] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_0_0 (op)',
+      )
+      expect((thread[3] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_1 (alice)',
+      )
+      expect((thread[4] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_2 (bob)',
+      )
+      expect((thread[5] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_2_0 (alice)',
+      )
+      expect((thread[6] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_3 (carol)',
+      )
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+
+    it('returns thread anchored on p_0_0', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: simpleSeed.posts.p_0_0.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(3)
+      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
+      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_0 (op)',
+      )
+      expect((thread[2] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_0_0 (op)',
+      )
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+
+    it('returns thread anchored on p_0_0_0', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: simpleSeed.posts.p_0_0_0.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(3)
+      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
+      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_0 (op)',
+      )
+      expect((thread[2] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_0_0 (op)',
+      )
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+
+    it('returns thread anchored on p_0_1', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: simpleSeed.posts.p_0_1.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(2)
+      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
+      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_1 (alice)',
+      )
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+
+    it('returns thread anchored on p_0_2', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: simpleSeed.posts.p_0_2.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(3)
+      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
+      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_2 (bob)',
+      )
+      expect((thread[2] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_2_0 (alice)',
+      )
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+
+    it('returns thread anchored on p_0_2_0', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: simpleSeed.posts.p_0_2_0.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(3)
+      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
+      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_2 (bob)',
+      )
+      expect((thread[2] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_2_0 (alice)',
+      )
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+
+    it('returns thread anchored on p_0_3', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        { uri: simpleSeed.posts.p_0_3.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(2)
+      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
+      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
+        'p_0_3 (carol)',
+      )
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+  })
+
+  describe(`v2`, () => {
+    let baseSeed: Awaited<ReturnType<typeof seeds.longSeed>>
+
+    beforeAll(async () => {
+      baseSeed = await seeds.longSeed(sc)
     })
 
     // it(`works`, async () => {
@@ -277,10 +454,10 @@ describe('appview thread views v2', () => {
   })
 
   describe.skip(`OLD basic test cases`, () => {
-    let baseSeed: Awaited<ReturnType<typeof seeds.baseSeed>>
+    let baseSeed: Awaited<ReturnType<typeof seeds.longSeed>>
 
     beforeAll(async () => {
-      baseSeed = await seeds.baseSeed(sc)
+      baseSeed = await seeds.longSeed(sc)
     })
 
     const cases = [
