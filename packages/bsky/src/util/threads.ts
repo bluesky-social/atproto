@@ -266,10 +266,18 @@ function* flattenThreadTree({
             isAuthenticated,
             direction: 'down',
           })
+
           // TODO what
-          // if (!thread.isHighlighted) {
+          // if (thread.depth !== 0) {
           //   break
           // }
+          // commented:
+          // treeview? works
+          // linear? does not work
+
+          // uncommented:
+          // treeview? does not work
+          // linear? works
         }
       }
     }
