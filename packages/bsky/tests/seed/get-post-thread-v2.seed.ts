@@ -123,6 +123,68 @@ export async function longThreadSeed(
 
 // ignored so it's easier to read the seeds
 // prettier-ignore
+export async function deepThreadSeed(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'deep', [
+    'op',
+    'alice',
+    'bob',
+    'carol',
+    'dan'
+  ] as const)
+
+  const p_0 = await sc.post(users.op.did, 'p_0 (op)')
+  const p_0_0 = await sc.reply(users.op.did, p_0.ref, p_0.ref, 'p_0_0 (op)')
+  const p_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0.ref, 'p_0_0_0 (op)')
+  const p_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0.ref, 'p_0_0_0_0 (op)')
+  const p_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0.ref, 'p_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0.ref, 'p_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    posts: {
+      p_0,
+      p_0_0,
+      p_0_0_0,
+      p_0_0_0_0,
+      p_0_0_0_0_0,
+      p_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
+      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
+    },
+  }
+}
+
+// ignored so it's easier to read the seeds
+// prettier-ignore
 export async function threadViewSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {

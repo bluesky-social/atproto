@@ -360,7 +360,7 @@ describe('appview thread views v2', () => {
       ]
 
       it.each(cases)(
-        'calculates the depths starting at $postKey',
+        'calculates the depths anchored at $postKey',
         async ({ postKey }) => {
           const post = seed.posts[postKey]
           const { data } = await agent.app.bsky.feed.getPostThreadV2(
@@ -398,6 +398,59 @@ describe('appview thread views v2', () => {
             expect((child as ThreadItemPost).depth).toBeGreaterThan(0)
           })
         },
+      )
+    })
+  })
+
+  describe('deep thread', () => {
+    let seed: Awaited<ReturnType<typeof seeds.deepThreadSeed>>
+
+    beforeAll(async () => {
+      seed = await seeds.deepThreadSeed(sc)
+    })
+
+    it('respects the depth', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        {
+          uri: seed.posts.p_0.ref.uriStr,
+          depth: 10,
+        },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(11)
+      expect(thread)
+
+      const first = thread.at(0) as ThreadItemPost
+      expect(first.uri).toBe(seed.posts.p_0.ref.uriStr)
+    })
+
+    it('respects the parent height', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        {
+          uri: seed.posts.p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref.uriStr,
+          parentHeight: 10,
+        },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(11)
+
+      const last = thread.at(-1) as ThreadItemPost
+      expect(last.uri).toBe(
+        seed.posts.p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref.uriStr,
       )
     })
   })
