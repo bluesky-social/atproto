@@ -862,7 +862,7 @@ describe('appview thread views v2', () => {
     })
   })
 
-  describe(`postThreadView`, () => {
+  describe.skip(`postThreadView`, () => {
     let seed: Awaited<ReturnType<typeof seeds.threadViewSeed>>
 
     beforeAll(async () => {

@@ -108,6 +108,7 @@ const presentation = (
     height: params.parentHeight,
     depth: getDepth(ctx, skeleton.anchor, params),
     sorting: params.sorting,
+    viewerDid: params.hydrateCtx.viewer ?? undefined,
   })
   const rootUri =
     hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
