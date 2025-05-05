@@ -43,7 +43,7 @@ describe('appview thread views v2', () => {
       simpleSeed = await seeds.simpleThreadSeed(sc)
     })
 
-    it('returns thread anchored on p_0', async () => {
+    it('returns thread anchored on p_0 sorting by oldest', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
           uri: simpleSeed.posts.p_0.ref.uriStr,
@@ -87,6 +87,55 @@ describe('appview thread views v2', () => {
       expect(item5.depth).toEqual(2)
 
       expect(item6.post.record.text).toEqual('p_0_3 (carol)')
+      expect(item6.depth).toEqual(1)
+
+      expect(forSnapshot(data)).toMatchSnapshot()
+    })
+
+    it('returns thread anchored on p_0 sorting by newest', async () => {
+      const { data } = await agent.app.bsky.feed.getPostThreadV2(
+        {
+          uri: simpleSeed.posts.p_0.ref.uriStr,
+          sorting: 'app.bsky.feed.getPostThreadV2#newest',
+        },
+        {
+          headers: await network.serviceHeaders(
+            simpleSeed.users.op.did,
+            ids.AppBskyFeedGetPostThreadV2,
+          ),
+        },
+      )
+
+      const { thread } = data
+      expect(thread).toHaveLength(7)
+
+      const item0 = thread[0] as ThreadItemPost
+      const item1 = thread[1] as ThreadItemPost
+      const item2 = thread[2] as ThreadItemPost
+      const item3 = thread[3] as ThreadItemPost
+      const item4 = thread[4] as ThreadItemPost
+      const item5 = thread[5] as ThreadItemPost
+      const item6 = thread[6] as ThreadItemPost
+
+      expect(item0.post.record.text).toEqual('p_0 (op)')
+      expect(item0.depth).toEqual(0)
+
+      expect(item1.post.record.text).toEqual('p_0_0 (op)')
+      expect(item1.depth).toEqual(1)
+
+      expect(item2.post.record.text).toEqual('p_0_0_0 (op)')
+      expect(item2.depth).toEqual(2)
+
+      expect(item3.post.record.text).toEqual('p_0_3 (carol)')
+      expect(item3.depth).toEqual(1)
+
+      expect(item4.post.record.text).toEqual('p_0_2 (bob)')
+      expect(item4.depth).toEqual(1)
+
+      expect(item5.post.record.text).toEqual('p_0_2_0 (alice)')
+      expect(item5.depth).toEqual(2)
+
+      expect(item6.post.record.text).toEqual('p_0_1 (alice)')
       expect(item6.depth).toEqual(1)
 
       expect(forSnapshot(data)).toMatchSnapshot()
