@@ -1,10 +1,10 @@
 import { Generated } from 'kysely'
 import {
   MODACTIONLABEL,
+  MODACTIONPENDING,
   MODACTIONRESOLVE,
   MODACTIONSUSPEND,
   MODACTIONTAKEDOWN,
-  MODACTIONPENDING,
 } from '../../lexicon/types/tools/ozone/history/defs'
 
 export const publicSubjectStatusTableName = 'public_subject_status'

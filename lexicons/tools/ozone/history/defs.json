@@ -17,11 +17,11 @@
         "modAction": {
           "type": "string",
           "knownValues": [
-            "#modActionPending",
-            "#modActionLabel",
-            "#modActionResolve",
-            "#modActionSuspend",
-            "#modActionTakedown"
+            "tools.ozone.history.defs#modActionPending",
+            "tools.ozone.history.defs#modActionLabel",
+            "tools.ozone.history.defs#modActionResolve",
+            "tools.ozone.history.defs#modActionSuspend",
+            "tools.ozone.history.defs#modActionTakedown"
           ]
         },
         "subjectProfile": {

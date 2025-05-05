@@ -12594,11 +12594,11 @@ export const schemaDict = {
           modAction: {
             type: 'string',
             knownValues: [
-              'lex:tools.ozone.history.defs#modActionPending',
-              'lex:tools.ozone.history.defs#modActionLabel',
-              'lex:tools.ozone.history.defs#modActionResolve',
-              'lex:tools.ozone.history.defs#modActionSuspend',
-              'lex:tools.ozone.history.defs#modActionTakedown',
+              'tools.ozone.history.defs#modActionPending',
+              'tools.ozone.history.defs#modActionLabel',
+              'tools.ozone.history.defs#modActionResolve',
+              'tools.ozone.history.defs#modActionSuspend',
+              'tools.ozone.history.defs#modActionTakedown',
             ],
           },
           subjectProfile: {

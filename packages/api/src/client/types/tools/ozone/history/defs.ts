@@ -21,11 +21,11 @@ export interface SubjectBasicView {
   subject: string
   status: 'deactivated' | 'active' | 'deleted' | (string & {})
   modAction:
-    | 'lex:tools.ozone.history.defs#modActionPending'
-    | 'lex:tools.ozone.history.defs#modActionLabel'
-    | 'lex:tools.ozone.history.defs#modActionResolve'
-    | 'lex:tools.ozone.history.defs#modActionSuspend'
-    | 'lex:tools.ozone.history.defs#modActionTakedown'
+    | 'tools.ozone.history.defs#modActionPending'
+    | 'tools.ozone.history.defs#modActionLabel'
+    | 'tools.ozone.history.defs#modActionResolve'
+    | 'tools.ozone.history.defs#modActionSuspend'
+    | 'tools.ozone.history.defs#modActionTakedown'
     | (string & {})
   subjectProfile?: { $type: string }
   labels?: ComAtprotoLabelDefs.Label[]

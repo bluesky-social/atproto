@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { getReasonType } from '../api/util'
-import Database from '../db'
+import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { PublicSubjectStatus } from '../db/schema/public_subject_status'
