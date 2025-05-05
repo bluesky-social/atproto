@@ -1229,7 +1229,6 @@ export class Views {
     if (height < 1) return undefined
 
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
-
     if (!parentUri) return undefined
 
     if (
@@ -1256,7 +1255,7 @@ export class Views {
 
     return {
       $type: 'threadLeaf',
-      uri: childUri,
+      uri: parentUri,
       post: {
         $type: 'app.bsky.feed.defs#postView',
         ...post,
@@ -1318,7 +1317,7 @@ export class Views {
       }
       return {
         $type: 'threadLeaf',
-        uri: uri,
+        uri,
         post: {
           $type: 'app.bsky.feed.defs#postView' as const,
           ...post,

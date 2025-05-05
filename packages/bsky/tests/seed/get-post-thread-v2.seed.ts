@@ -44,7 +44,7 @@ export async function simpleThreadSeed(
 
 // ignored so it's easier to read the seeds
 // prettier-ignore
-export async function longSeed(
+export async function longThreadSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
   const users = await createUsers(sc, 'long', [
