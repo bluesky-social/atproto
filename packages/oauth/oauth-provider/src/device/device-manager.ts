@@ -1,90 +1,92 @@
-import { IncomingMessage, ServerResponse } from 'node:http'
-
-import { serialize as serializeCookie } from 'cookie'
-import type Keygrip from 'keygrip'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { z } from 'zod'
-
-import { appendHeader, parseHttpCookies } from '../lib/http/index.js'
-
 import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
+import { parseHttpCookies } from '../lib/http/index.js'
+import {
+  RequestMetadata,
+  extractRequestMetadata,
+  setCookie,
+} from '../lib/http/request.js'
 import { DeviceData } from './device-data.js'
-import { extractDeviceDetails } from './device-details.js'
-import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
+import {
+  DeviceId,
+  deviceIdSchema,
+  generateDeviceId,
+  isDeviceId,
+} from './device-id.js'
 import { DeviceStore } from './device-store.js'
 import { generateSessionId, sessionIdSchema } from './session-id.js'
 
-export const DEFAULT_OPTIONS = {
+/**
+ * @see {@link https://www.npmjs.com/package/keygrip | Keygrip}
+ */
+export const keygripSchema = z.object({
+  sign: z.function().args(z.any()).returns(z.string()),
+  verify: z.function().args(z.any(), z.string()).returns(z.boolean()),
+  index: z.function().args(z.any(), z.string()).returns(z.number()),
+})
+
+export const deviceManagerOptionsSchema = z.object({
   /**
    * Controls whether the IP address is read from the `X-Forwarded-For` header
    * (if `true`), or from the `req.socket.remoteAddress` property (if `false`).
-   *
-   * @default true // (nowadays, most requests are proxied)
    */
-  trustProxy: true,
+  trustProxy: z
+    .function()
+    .args<[addr: z.ZodString, i: z.ZodNumber]>(z.string(), z.number())
+    .returns(z.boolean())
+    .optional(),
 
   /**
    * Amount of time (in ms) after which session IDs will be rotated
    *
    * @default 300e3 // (5 minutes)
    */
-  rotationRate: 5 * 60e3,
-
+  rotationRate: z.number().default(300e3),
   /**
    * Cookie options
    */
-  cookie: {
-    keys: undefined as undefined | Keygrip,
+  cookie: z
+    .object({
+      keys: keygripSchema.optional(),
+      /**
+       * Amount of time (in ms) after which the session cookie will expire.
+       * If set to `null`, the cookie will be a session cookie (deleted when the
+       * browser is closed).
+       *
+       * @default 10 years
+       */
+      age: z
+        .number()
+        .nullable()
+        .default(10 * 365.2 * 24 * 60 * 60e3),
+      /**
+       * Controls whether the cookie is only sent over HTTPS (if `true`), or also
+       * over HTTP (if `false`). This should **NOT** be set to `false` in
+       * production.
+       */
+      secure: z.boolean().default(true),
+      /**
+       * Controls whether the cookie is sent along with cross-site requests.
+       *
+       * @default 'lax'
+       */
+      sameSite: z.enum(['lax', 'strict']).default('lax'),
+    })
+    .default({}),
+})
 
-    /**
-     * Name of the cookie used to identify the device
-     *
-     * @default 'session-id'
-     */
-    device: 'device-id',
+export type DeviceManagerOptions = z.input<typeof deviceManagerOptionsSchema>
 
-    /**
-     * Name of the cookie used to identify the session
-     *
-     * @default 'session-id'
-     */
-    session: 'session-id',
-
-    /**
-     * Url path for the cookie
-     *
-     * @default '/oauth/authorize'
-     */
-    path: '/oauth/authorize',
-
-    /**
-     * Amount of time (in ms) after which the session cookie will expire.
-     * If set to `null`, the cookie will be a session cookie (deleted when the
-     * browser is closed).
-     *
-     * @default 10 * 365.2 * 24 * 60 * 60e3 // 10 years (in ms)
-     */
-    age: <number | null>(10 * 365.2 * 24 * 60 * 60e3),
-
-    /**
-     * Controls whether the cookie is only sent over HTTPS (if `true`), or also
-     * over HTTP (if `false`). This should **NOT** be set to `false` in
-     * production.
-     */
-    secure: true,
-
-    /**
-     * Controls whether the cookie is sent along with cross-site requests.
-     *
-     * @default 'lax'
-     */
-    sameSite: 'lax' as 'lax' | 'strict',
-  },
+type CookieValue = {
+  deviceId: DeviceId
+  sessionId: string
 }
 
-export type DeviceDeviceManagerOptions = typeof DEFAULT_OPTIONS
-
-const cookieValueSchema = z.tuple([deviceIdSchema, sessionIdSchema])
-type CookieValue = z.infer<typeof cookieValueSchema>
+export type DeviceInfo = {
+  deviceId: DeviceId
+  deviceMetadata: RequestMetadata
+}
 
 /**
  * This class provides an abstraction for keeping track of DEVICE sessions. It
@@ -92,17 +94,21 @@ type CookieValue = z.infer<typeof cookieValueSchema>
  * identify the session.
  */
 export class DeviceManager {
+  private readonly options: z.infer<typeof deviceManagerOptionsSchema>
+
   constructor(
     private readonly store: DeviceStore,
-    private readonly options: DeviceDeviceManagerOptions = DEFAULT_OPTIONS,
-  ) {}
+    options: DeviceManagerOptions = {},
+  ) {
+    this.options = deviceManagerOptionsSchema.parse(options)
+  }
 
   public async load(
     req: IncomingMessage,
     res: ServerResponse,
     forceRotate = false,
-  ): Promise<{ deviceId: DeviceId }> {
-    const cookie = await this.getCookie(req)
+  ): Promise<DeviceInfo> {
+    const cookie = await this.getCookies(req, res)
     if (cookie) {
       return this.refresh(
         req,
@@ -118,8 +124,8 @@ export class DeviceManager {
   private async create(
     req: IncomingMessage,
     res: ServerResponse,
-  ): Promise<{ deviceId: DeviceId }> {
-    const { userAgent, ipAddress } = this.getDeviceDetails(req)
+  ): Promise<DeviceInfo> {
+    const deviceMetadata = this.getRequestMetadata(req)
 
     const [deviceId, sessionId] = await Promise.all([
       generateDeviceId(),
@@ -129,21 +135,21 @@ export class DeviceManager {
     await this.store.createDevice(deviceId, {
       sessionId,
       lastSeenAt: new Date(),
-      userAgent,
-      ipAddress,
+      userAgent: deviceMetadata.userAgent ?? null,
+      ipAddress: deviceMetadata.ipAddress,
     })
 
-    this.setCookie(res, [deviceId, sessionId])
+    await this.setCookies(req, res, { deviceId, sessionId })
 
-    return { deviceId }
+    return { deviceId, deviceMetadata }
   }
 
   private async refresh(
     req: IncomingMessage,
     res: ServerResponse,
-    [deviceId, sessionId]: CookieValue,
+    { deviceId, sessionId }: CookieValue,
     forceRotate = false,
-  ): Promise<{ deviceId: DeviceId }> {
+  ): Promise<DeviceInfo> {
     const data = await this.store.readDevice(deviceId)
     if (!data) return this.create(req, res)
 
@@ -162,24 +168,24 @@ export class DeviceManager {
       }
     }
 
-    const details = this.getDeviceDetails(req)
+    const deviceMetadata = this.getRequestMetadata(req)
 
     if (
       forceRotate ||
-      details.ipAddress !== data.ipAddress ||
-      details.userAgent !== data.userAgent ||
+      deviceMetadata.ipAddress !== data.ipAddress ||
+      deviceMetadata.userAgent !== data.userAgent ||
       age > this.options.rotationRate
     ) {
       await this.rotate(req, res, deviceId, {
-        ipAddress: details.ipAddress,
-        userAgent: details.userAgent || data.userAgent,
+        ipAddress: deviceMetadata.ipAddress,
+        userAgent: deviceMetadata.userAgent || data.userAgent,
       })
     }
 
-    return { deviceId }
+    return { deviceId, deviceMetadata }
   }
 
-  public async rotate(
+  private async rotate(
     req: IncomingMessage,
     res: ServerResponse,
     deviceId: DeviceId,
@@ -193,36 +199,56 @@ export class DeviceManager {
       lastSeenAt: new Date(),
     })
 
-    this.setCookie(res, [deviceId, sessionId])
+    await this.setCookies(req, res, { deviceId, sessionId })
   }
 
-  private async getCookie(
+  private async getCookies(
     req: IncomingMessage,
+    res: ServerResponse,
   ): Promise<{ value: CookieValue; mustRotate: boolean } | null> {
     const cookies = parseHttpCookies(req)
-    if (!cookies) return null
 
-    const device = this.parseCookie(
-      cookies,
-      this.options.cookie.device,
-      deviceIdSchema,
-    )
-    const session = this.parseCookie(
-      cookies,
-      this.options.cookie.session,
-      sessionIdSchema,
-    )
+    // Old cookies were set for the "/oauth/authorize" path while new cookies
+    // need to be set for the "/" path (in order to be valid on the api,
+    // authorization page and account page). This means that if a user has both
+    // cookies set, the browser would use the old cookie for the
+    // "/oauth/authorize" path and the new cookie for all other paths. Because
+    // of this, different "phantom" sessions would be created for the same
+    // device. To avoid this, we needed to change the cookie name. We can still
+    // attempt to read the old cookie in order to carry over the session from
+    // the "/oauth/authorize" path to the "/" path. This will only work if the
+    // user visits the "/oauth/authorize" path first.
+
+    const device =
+      this.parseCookie(cookies, `dev-id`, deviceIdSchema) ||
+      this.parseCookie(cookies, 'device-id', deviceIdSchema)
+    const session =
+      this.parseCookie(cookies, `ses-id`, sessionIdSchema) ||
+      this.parseCookie(cookies, 'session-id', sessionIdSchema)
+
+    const deviceId = device?.value
+    const sessionId = session?.value
+
+    // Clear the legacy cookies, if they are set.
+    if (isDeviceId(cookies['device-id']) && cookies['device-id'] !== deviceId) {
+      await this.store.deleteDevice(cookies['device-id'])
+    }
+    if (cookies['device-id'] || cookies['session-id']) {
+      const options = { path: '/oauth/authorize', maxAge: 0 } as const
+      setCookie(res, 'device-id', '', options)
+      setCookie(res, 'session-id', '', options)
+    }
 
     // Silently ignore invalid cookies
-    if (!device || !session) {
+    if (!deviceId || !sessionId) {
       // If the device cookie is valid, let's cleanup the DB
-      if (device) await this.store.deleteDevice(device.value)
+      if (deviceId) await this.store.deleteDevice(deviceId)
 
       return null
     }
 
     return {
-      value: [device.value, session.value],
+      value: { deviceId, sessionId },
       mustRotate: device.mustRotate || session.mustRotate,
     }
   }
@@ -232,16 +258,21 @@ export class DeviceManager {
     name: string,
     schema: z.ZodType<T> | z.ZodEffects<z.ZodTypeAny, T, string>,
   ): null | { value: T; mustRotate: boolean } {
-    const result = schema.safeParse(cookies[name], { path: ['cookie', name] })
+    const rawValue = Object.hasOwn(cookies, name) ? cookies[name] : null
+    if (!rawValue) return null
+
+    const result = schema.safeParse(rawValue, { path: ['cookie', name] })
     if (!result.success) return null
 
     const value = result.data
 
     if (this.options.cookie.keys) {
-      const hash = cookies[`${name}:hash`]
+      const hashName = `${name}:hash`
+
+      const hash = Object.hasOwn(cookies, hashName) ? cookies[hashName] : null
       if (!hash) return null
 
-      const idx = this.options.cookie.keys.index(value, hash)
+      const idx = this.options.cookie.keys.index(rawValue, hash)
       if (idx < 0) return null
 
       return { value, mustRotate: idx !== 0 }
@@ -250,9 +281,13 @@ export class DeviceManager {
     return { value, mustRotate: false }
   }
 
-  private setCookie(res: ServerResponse, cookieValue: null | CookieValue) {
-    this.writeCookie(res, this.options.cookie.device, cookieValue?.[0])
-    this.writeCookie(res, this.options.cookie.session, cookieValue?.[1])
+  private async setCookies(
+    req: IncomingMessage,
+    res: ServerResponse,
+    { deviceId, sessionId }: CookieValue,
+  ) {
+    this.writeCookie(res, `dev-id`, deviceId)
+    this.writeCookie(res, `ses-id`, sessionId)
   }
 
   private writeCookie(res: ServerResponse, name: string, value?: string) {
@@ -263,31 +298,20 @@ export class DeviceManager {
           : this.options.cookie.age / 1000
         : 0,
       httpOnly: true,
-      path: this.options.cookie.path,
+      path: '/',
       secure: this.options.cookie.secure !== false,
-      sameSite: this.options.cookie.sameSite === 'lax' ? 'lax' : 'strict',
+      sameSite: this.options.cookie.sameSite,
     } as const
 
-    appendHeader(
-      res,
-      'Set-Cookie',
-      serializeCookie(name, value || '', cookieOptions),
-    )
+    setCookie(res, name, value || '', cookieOptions)
 
     if (this.options.cookie.keys) {
-      appendHeader(
-        res,
-        'Set-Cookie',
-        serializeCookie(
-          `${name}:hash`,
-          value ? this.options.cookie.keys.sign(value) : '',
-          cookieOptions,
-        ),
-      )
+      const hash = value ? this.options.cookie.keys.sign(value) : ''
+      setCookie(res, `${name}:hash`, hash, cookieOptions)
     }
   }
 
-  private getDeviceDetails(req: IncomingMessage) {
-    return extractDeviceDetails(req, this.options.trustProxy)
+  public getRequestMetadata(req: IncomingMessage) {
+    return extractRequestMetadata(req, this.options)
   }
 }

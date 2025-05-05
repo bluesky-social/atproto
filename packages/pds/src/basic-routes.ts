@@ -1,9 +1,9 @@
-import express from 'express'
+import { Router } from 'express'
 import { sql } from 'kysely'
-import AppContext from './context'
+import { AppContext } from './context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/', function (req, res) {
     res.type('text/plain')
@@ -41,7 +41,7 @@ Most API routes are under /xrpc/
     try {
       await sql`select 1`.execute(ctx.accountManager.db.db)
     } catch (err) {
-      req.log.error(err, 'failed health check')
+      req.log.error({ err }, 'failed health check')
       res.status(503).send({ version, error: 'Service Unavailable' })
       return
     }

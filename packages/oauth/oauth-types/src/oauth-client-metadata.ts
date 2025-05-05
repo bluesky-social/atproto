@@ -1,6 +1,5 @@
-import { jwksPubSchema } from '@atproto/jwk'
 import { z } from 'zod'
-
+import { jwksPubSchema } from '@atproto/jwk'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthEndpointAuthMethod } from './oauth-endpoint-auth-method.js'
 import { oauthGrantTypeSchema } from './oauth-grant-type.js'
@@ -54,7 +53,7 @@ export const oauthClientMetadataSchema = z.object({
   client_uri: webUriSchema.optional(),
   policy_uri: webUriSchema.optional(),
   tos_uri: webUriSchema.optional(),
-  logo_uri: webUriSchema.optional(), // TODO: allow data: uri ?
+  logo_uri: webUriSchema.optional(), // @TODO: allow data: uri ?
 
   /**
    * Default Maximum Authentication Age. Specifies that the End-User MUST be

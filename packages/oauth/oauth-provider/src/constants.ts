@@ -29,6 +29,9 @@ const MONTH = YEAR / 12
 /** 7 days */
 export const AUTHENTICATION_MAX_AGE = 7 * DAY
 
+/** 15 minutes */
+export const EPHEMERAL_SESSION_MAX_AGE = 15 * MINUTE
+
 /** 60 minutes */
 export const TOKEN_MAX_AGE = 60 * MINUTE
 
@@ -53,7 +56,9 @@ export const PAR_EXPIRES_IN = 5 * MINUTE
 /**
  * 59 seconds (should be less than a minute)
  *
- * @see {@link https://datatracker.ietf.org/doc/html/rfc9101#section-10.2}
+ * > "A general guidance for the validity time would be less than a minute."
+ *
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc9101#section-10.2 | JWT-Secured Authorization Request (JAR) - Section 10.2 (d)}
  */
 export const JAR_MAX_AGE = 59 * SECOND
 

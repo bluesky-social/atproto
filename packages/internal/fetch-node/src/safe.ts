@@ -1,7 +1,7 @@
 import {
-  asRequest,
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
   Fetch,
+  asRequest,
   fetchMaxSizeProcessor,
   forbiddenDomainNameRequestTransform,
   protocolCheckRequestTransform,
@@ -11,7 +11,6 @@ import {
   toRequestTransformer,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-
 import { unicastFetchWrap } from './unicast.js'
 
 export type SafeFetchWrapOptions = NonNullable<

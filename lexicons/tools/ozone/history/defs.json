@@ -25,8 +25,8 @@
           ]
         },
         "subjectProfile": {
-          "type": "ref",
-          "ref": "app.bsky.actor.defs#profileViewBasic"
+          "type": "union",
+          "refs": []
         },
         "labels": {
           "type": "array",

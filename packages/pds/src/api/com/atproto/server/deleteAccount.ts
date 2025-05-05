@@ -1,9 +1,8 @@
 import { MINUTE } from '@atproto/common'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AccountStatus } from '../../../../account-manager/account-manager'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
-import { AccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.deleteAccount(
           input.body,
-          authPassthru(req, true),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }
@@ -49,8 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         AccountStatus.Deleted,
       )
-      const tombstoneSeq = await ctx.sequencer.sequenceTombstone(did)
-      await ctx.sequencer.deleteAllForUser(did, [accountSeq, tombstoneSeq])
+      await ctx.sequencer.deleteAllForUser(did, [accountSeq])
     },
   })
 }

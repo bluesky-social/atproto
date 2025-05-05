@@ -24,7 +24,7 @@ export function CredentialSignInForm({
   const [password, setPassword] = useState('')
   const [service, setService] = useState('http://localhost:2583')
 
-  // TODO: add auth factor support ?
+  // @TODO: add auth factor support ?
 
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -49,14 +49,14 @@ export function CredentialSignInForm({
   )
 
   return (
-    <form {...props} className="max-w-lg w-full" onSubmit={onSubmit}>
-      <fieldset className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
-        <div className="relative p-1 flex flex-col flex-wrap items-center justify-stretch">
+    <form {...props} className="w-full max-w-lg" onSubmit={onSubmit}>
+      <fieldset className="rounded-md border border-solid border-slate-200 text-neutral-700 dark:border-slate-700 dark:text-neutral-100">
+        <div className="relative flex flex-col flex-wrap items-center justify-stretch p-1">
           <input
             id="identifier"
             name="identifier"
             type="text"
-            className="relative m-0 block w-full flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
+            className="relative m-0 block w-full flex-auto bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base leading-[1.6] text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="@handle or email"
             aria-label="@handle or email"
             required
@@ -69,7 +69,7 @@ export function CredentialSignInForm({
             id="password"
             name="password"
             type="password"
-            className="relative m-0 block w-full flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
+            className="relative m-0 block w-full flex-auto bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base leading-[1.6] text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="Password"
             aria-label="Password"
             required
@@ -82,7 +82,7 @@ export function CredentialSignInForm({
             id="service"
             name="service"
             type="text"
-            className="relative m-0 block w-full flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
+            className="relative m-0 block w-full flex-auto bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base leading-[1.6] text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="Service"
             aria-label="Service"
             required
@@ -94,7 +94,7 @@ export function CredentialSignInForm({
           <button
             type="submit"
             disabled={loading}
-            className="bg-transparent text-blue-600 rounded-md py-1 px-3 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-inset"
+            className="rounded-md bg-transparent px-3 py-1 text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:ring-offset-2"
           >
             Login
           </button>

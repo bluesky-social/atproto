@@ -1,12 +1,12 @@
+import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
+import { AppContext } from '../context'
+import { Database } from '../db'
+import { createMuteOpChannel } from '../db/schema/mute_op'
 import { Service } from '../proto/bsync_connect'
 import { AddMuteOperationResponse, MuteOperation_Type } from '../proto/bsync_pb'
-import AppContext from '../context'
-import { createMuteOpChannel } from '../db/schema/mute_op'
 import { authWithApiKey } from './auth'
-import Database from '../db'
 import { isValidAtUri, isValidDid } from './util'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({

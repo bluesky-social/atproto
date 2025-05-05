@@ -2,10 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.identity.resolveHandle'
 
 export interface QueryParams {
   /** The handle to resolve. */
@@ -16,7 +24,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   did: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -30,6 +37,16 @@ export interface Response {
   data: OutputSchema
 }
 
+export class HandleNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'HandleNotFound') return new HandleNotFoundError(e)
+  }
+
   return e
 }

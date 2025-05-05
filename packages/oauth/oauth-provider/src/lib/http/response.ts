@@ -1,20 +1,13 @@
-import { Readable, pipeline } from 'node:stream'
-
-import { Handler, ServerResponse } from './types.js'
-
-export function appendHeader(
-  res: ServerResponse,
-  header: string,
-  value: string | readonly string[],
-): void {
-  const existing = res.getHeader(header)
-  if (existing == null) {
-    res.setHeader(header, value)
-  } else {
-    const arr = Array.isArray(existing) ? existing : [String(existing)]
-    res.setHeader(header, arr.concat(value))
-  }
-}
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { type Readable, pipeline } from 'node:stream'
+import createHttpError from 'http-errors'
+import { Awaitable } from '../util/type.js'
+import { negotiateResponseContent } from './request.js'
+import {
+  SecurityHeadersOptions,
+  setSecurityHeaders,
+} from './security-headers.js'
+import type { Handler, Middleware } from './types.js'
 
 export function writeRedirect(
   res: ServerResponse,
@@ -53,14 +46,19 @@ export function writeStream(
 export function writeBuffer(
   res: ServerResponse,
   chunk: string | Buffer,
-  {
-    status = 200,
-    contentType = 'application/octet-stream',
-  }: WriteResponseOptions = {},
+  opts: WriteResponseOptions,
 ): void {
-  res.statusCode = status
-  res.setHeader('content-type', contentType)
+  if (opts?.status != null) res.statusCode = opts.status
+  res.setHeader('content-type', opts?.contentType || 'application/octet-stream')
   res.end(chunk)
+}
+
+export function toJsonBuffer(value: unknown): Buffer {
+  try {
+    return Buffer.from(JSON.stringify(value))
+  } catch (cause) {
+    throw new Error(`Failed to serialize as JSON`, { cause })
+  }
 }
 
 export function writeJson(
@@ -68,7 +66,7 @@ export function writeJson(
   payload: unknown,
   { contentType = 'application/json', ...options }: WriteResponseOptions = {},
 ): void {
-  const buffer = Buffer.from(JSON.stringify(payload))
+  const buffer = toJsonBuffer(payload)
   writeBuffer(res, buffer, { ...options, contentType })
 }
 
@@ -76,17 +74,64 @@ export function staticJsonMiddleware(
   value: unknown,
   { contentType = 'application/json', ...options }: WriteResponseOptions = {},
 ): Handler<unknown> {
-  const buffer = Buffer.from(JSON.stringify(value))
+  const buffer = toJsonBuffer(value)
   const staticOptions: WriteResponseOptions = { ...options, contentType }
   return function (req, res) {
     writeBuffer(res, buffer, staticOptions)
   }
 }
 
+export type WriteHtmlOptions = WriteResponseOptions & SecurityHeadersOptions
+
 export function writeHtml(
   res: ServerResponse,
   html: Buffer | string,
-  { contentType = 'text/html', ...options }: WriteResponseOptions = {},
+  { contentType = 'text/html', ...options }: WriteHtmlOptions = {},
 ): void {
+  // HTML pages should always be served with safety protection headers
+  setSecurityHeaders(res, options)
   writeBuffer(res, html, { ...options, contentType })
+}
+
+export function cacheControlMiddleware(maxAge: number): Middleware<void> {
+  const header = `max-age=${maxAge}`
+  return function (req, res, next) {
+    res.setHeader('Cache-Control', header)
+    next()
+  }
+}
+
+export function jsonHandler<
+  T,
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
+>(
+  buildJson: (
+    this: T,
+    req: Req,
+    res: Res,
+  ) => Awaitable<{ payload: unknown; status?: number }>,
+): Middleware<T, Req, Res> {
+  return function (req, res, next) {
+    // Ensure we can agree on a content encoding & type before starting to
+    // build the JSON response.
+    if (negotiateResponseContent(req, ['application/json'])) {
+      // A middleware should not be async, so we wrap the async operation in a
+      // promise and return it.
+      void (async () => {
+        try {
+          const { payload, status = 200 } = await buildJson.call(this, req, res)
+          writeJson(res, payload, { status })
+        } catch (cause) {
+          const error =
+            cause instanceof Error
+              ? cause
+              : new Error('Failed to build JSON response', { cause })
+          next(error satisfies Error)
+        }
+      })()
+    } else {
+      next(createHttpError(406, 'Unsupported media type'))
+    }
+  }
 }

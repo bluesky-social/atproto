@@ -1,7 +1,7 @@
-import { Selectable } from 'kysely'
+import { type Selectable } from 'kysely'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
+import { ModEventView } from '../lexicon/types/tools/ozone/moderation/defs'
 import { ModSubject } from './subject'
 
 export type ModerationEventRow = Selectable<ModerationEvent>
@@ -18,22 +18,31 @@ export type ModerationEventRowWithHandle = ModerationEventRow & {
   creatorHandle?: string | null
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
-export type ModerationSubjectStatusRowWithHandle =
-  ModerationSubjectStatusRow & { handle: string | null }
+export type ModerationSubjectStatusRowWithStats = ModerationSubjectStatusRow & {
+  // account_events_stats
+  takedownCount: number | null
+  suspendCount: number | null
+  escalateCount: number | null
+  reportCount: number | null
+  appealCount: number | null
 
-export type ModEventType =
-  | ToolsOzoneModerationDefs.ModEventTakedown
-  | ToolsOzoneModerationDefs.ModEventAcknowledge
-  | ToolsOzoneModerationDefs.ModEventEscalate
-  | ToolsOzoneModerationDefs.ModEventComment
-  | ToolsOzoneModerationDefs.ModEventLabel
-  | ToolsOzoneModerationDefs.ModEventReport
-  | ToolsOzoneModerationDefs.ModEventMute
-  | ToolsOzoneModerationDefs.ModEventReverseTakedown
-  | ToolsOzoneModerationDefs.ModEventTag
-  | ToolsOzoneModerationDefs.AccountEvent
-  | ToolsOzoneModerationDefs.IdentityEvent
-  | ToolsOzoneModerationDefs.RecordEvent
+  // account_record_events_stats
+  totalReports: number | null
+  reportedCount: number | null
+  escalatedCount: number | null
+  appealedCount: number | null
+
+  // account_record_status_stats
+  subjectCount: number | null
+  pendingCount: number | null
+  processedCount: number | null
+  takendownCount: number | null
+}
+
+export type ModerationSubjectStatusRowWithHandle =
+  ModerationSubjectStatusRowWithStats & { handle: string | null }
+
+export type ModEventType = ModEventView['event']
 
 type AccountHostingView = {
   $type: 'tools.ozone.moderation.defs#accountHosting'
@@ -56,3 +65,26 @@ type RecordHostingView = {
 export type ModerationSubjectHostingView =
   | AccountHostingView
   | RecordHostingView
+
+export type ReporterStats = {
+  did: string
+  accountReportCount: number
+  recordReportCount: number
+  reportedAccountCount: number
+  reportedRecordCount: number
+  takendownAccountCount: number
+  takendownRecordCount: number
+  labeledAccountCount: number
+  labeledRecordCount: number
+}
+
+export type ReporterStatsResult = {
+  accountReportCount?: number
+  recordReportCount?: number
+  reportedAccountCount?: number
+  reportedRecordCount?: number
+  takendownAccountCount?: number
+  takendownRecordCount?: number
+  labeledAccountCount?: number
+  labeledRecordCount?: number
+}

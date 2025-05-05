@@ -82,6 +82,7 @@ message PostRecordMeta {
   bool violates_embedding_rules = 4;
   bool has_post_gate = 5;
   bool has_thread_gate = 6;
+  bool has_video = 7;
 }
 
 message GetPostRecordsRequest {
@@ -204,6 +205,65 @@ message GetFollowsResponse {
 }
 
 //
+// Verification
+//
+
+message VerificationMeta {
+  string rkey = 1;
+  string handle = 2;
+  string display_name = 3;
+  google.protobuf.Timestamp sorted_at = 4;
+}
+
+message GetVerificationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetVerificationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message VerificationIssued {
+  string actor_did = 1;
+  string rkey = 2;
+  string subject_did = 3;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp indexed_at = 8;
+  google.protobuf.Timestamp sorted_at = 9;
+}
+
+message GetVerificationsIssuedRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetVerificationsIssuedResponse {
+  repeated VerificationIssued verifications = 1;
+  string cursor = 2;
+}
+
+message VerificationReceived {
+  string actor_did = 1;
+  string rkey = 2;
+  string subject_did = 3;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp indexed_at = 8;
+  google.protobuf.Timestamp sorted_at = 9;
+}
+
+message GetVerificationsReceivedRequest {
+  string subject_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetVerificationsReceivedResponse {
+  repeated VerificationReceived verifications = 1;
+  string cursor = 2;
+}
+
+//
 // Likes
 //
 
@@ -276,6 +336,7 @@ message GetActorLikesResponse {
 //
 message GetInteractionCountsRequest {
   repeated RecordRef refs = 1;
+  repeated string skip_cache_for_dids = 2;
 }
 
 message GetInteractionCountsResponse {
@@ -380,6 +441,7 @@ message GetActorRepostsResponse {
 //     - should this include handles?  apply repo takedown?
 message GetActorsRequest {
   repeated string dids = 1;
+  repeated string skip_cache_for_dids = 2;
 }
 
 message ActorInfo {
@@ -394,6 +456,9 @@ message ActorInfo {
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
   bool priority_notifications = 11;
+  double pagerank = 12;
+  bool trusted_verifier = 13;
+  map<string, VerificationMeta> verified_by = 14;
 }
 
 message GetActorsResponse {
@@ -405,6 +470,7 @@ message GetActorsResponse {
 //     - answering queries where the query param is a handle
 message GetDidsByHandlesRequest {
   repeated string handles = 1;
+  bool lookup_unidirectional = 2;
 }
 
 message GetDidsByHandlesResponse {
@@ -788,6 +854,7 @@ enum FeedType {
   FEED_TYPE_POSTS_AND_AUTHOR_THREADS = 1;
   FEED_TYPE_POSTS_NO_REPLIES = 2;
   FEED_TYPE_POSTS_WITH_MEDIA = 3;
+  FEED_TYPE_POSTS_WITH_VIDEO = 4;
 }
 
 // - Returns recent posts authored by a given DID, paginated
@@ -811,6 +878,7 @@ message AuthorFeedItem {
   bool is_reply = 8;
   bool is_repost = 9;
   bool is_quote_post = 10;
+  bool posts_with_video = 11;
 }
 
 message GetAuthorFeedResponse {
@@ -952,20 +1020,6 @@ message GetSuggestedEntitiesRequest {
 message GetSuggestedEntitiesResponse {
   repeated SuggestedEntity entities = 1;
   string cursor = 2;
-}
-
-//
-// Posts
-//
-
-// - Return post reply count with uris A, B, C…
-//     - All feed hydration
-message GetPostReplyCountsRequest {
-  repeated RecordRef refs = 1;
-}
-
-message GetPostReplyCountsResponse {
-  repeated int32 counts = 1;
 }
 
 //
@@ -1125,6 +1179,11 @@ service Service {
   rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse);
   rpc GetFollows(GetFollowsRequest) returns (GetFollowsResponse);
 
+  // Verifications
+  rpc GetVerificationRecords(GetVerificationRecordsRequest) returns (GetVerificationRecordsResponse);
+  rpc GetVerificationsIssued(GetVerificationsIssuedRequest) returns (GetVerificationsIssuedResponse);
+  rpc GetVerificationsReceived(GetVerificationsReceivedRequest) returns (GetVerificationsReceivedResponse);
+
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
   rpc GetLikesBySubjectSorted(GetLikesBySubjectSortedRequest) returns (GetLikesBySubjectSortedResponse);
@@ -1209,9 +1268,6 @@ service Service {
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
   rpc GetSuggestedEntities(GetSuggestedEntitiesRequest) returns (GetSuggestedEntitiesResponse);
-
-  // Posts
-  rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
 
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);

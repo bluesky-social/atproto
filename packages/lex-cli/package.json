@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-cli",
-  "version": "0.5.5",
+  "version": "0.8.0",
   "license": "MIT",
   "description": "TypeScript codegen tool for atproto Lexicon schemas",
   "keywords": [
@@ -21,13 +21,16 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "chalk": "^4.1.2",
     "commander": "^9.4.0",
     "prettier": "^3.2.5",
-    "ts-morph": "^16.0.0",
+    "ts-morph": "^24.0.0",
     "yesno": "^0.4.0",
     "zod": "^3.23.8"
   },

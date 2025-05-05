@@ -1,14 +1,15 @@
+import { IncomingMessage } from 'node:http'
+import { Readable } from 'node:stream'
+import express from 'express'
+import { isHttpError } from 'http-errors'
+import { z } from 'zod'
 import {
   ResponseType,
-  ResponseTypeNames,
   ResponseTypeStrings,
   XRPCError as XRPCClientError,
+  httpResponseCodeToName,
+  httpResponseCodeToString,
 } from '@atproto/xrpc'
-import express from 'express'
-import { IncomingMessage } from 'http'
-import { isHttpError } from 'http-errors'
-import { Readable } from 'stream'
-import zod from 'zod'
 
 export type CatchallHandler = (
   req: express.Request,
@@ -29,6 +30,17 @@ export type Options = {
     global?: ServerRateLimitDescription[]
     shared?: ServerRateLimitDescription[]
   }
+  /**
+   * By default, errors are converted to {@link XRPCError} using
+   * {@link XRPCError.fromError} before being rendered. If method handlers throw
+   * error objects that are not properly rendered in the HTTP response, this
+   * function can be used to properly convert them to {@link XRPCError}. The
+   * provided function will typically fallback to the default error conversion
+   * (`return XRPCError.fromError(err)`) if the error is not recognized.
+   *
+   * @note This function should not throw errors.
+   */
+  errorParser?: (err: unknown) => XRPCError
 }
 
 export type UndecodedParams = (typeof express.request)['query']
@@ -36,60 +48,56 @@ export type UndecodedParams = (typeof express.request)['query']
 export type Primitive = string | number | boolean
 export type Params = Record<string, Primitive | Primitive[] | undefined>
 
-export const handlerInput = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
+export const handlerInput = z.object({
+  encoding: z.string(),
+  body: z.any(),
 })
-export type HandlerInput = zod.infer<typeof handlerInput>
+export type HandlerInput = z.infer<typeof handlerInput>
 
-export const handlerAuth = zod.object({
-  credentials: zod.any(),
-  artifacts: zod.any(),
+export const handlerAuth = z.object({
+  credentials: z.any(),
+  artifacts: z.any(),
 })
-export type HandlerAuth = zod.infer<typeof handlerAuth>
+export type HandlerAuth = z.infer<typeof handlerAuth>
 
-export const headersSchema = zod.record(zod.string())
+export const headersSchema = z.record(z.string())
 
-export const handlerSuccess = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
+export const handlerSuccess = z.object({
+  encoding: z.string(),
+  body: z.any(),
   headers: headersSchema.optional(),
 })
-export type HandlerSuccess = zod.infer<typeof handlerSuccess>
+export type HandlerSuccess = z.infer<typeof handlerSuccess>
 
-export const handlerPipeThroughBuffer = zod.object({
-  encoding: zod.string(),
-  buffer: zod.instanceof(Buffer),
-  headers: headersSchema.optional(),
-})
-
-export type HandlerPipeThroughBuffer = zod.infer<
-  typeof handlerPipeThroughBuffer
->
-
-export const handlerPipeThroughStream = zod.object({
-  encoding: zod.string(),
-  stream: zod.instanceof(Readable),
+export const handlerPipeThroughBuffer = z.object({
+  encoding: z.string(),
+  buffer: z.instanceof(Buffer),
   headers: headersSchema.optional(),
 })
 
-export type HandlerPipeThroughStream = zod.infer<
-  typeof handlerPipeThroughStream
->
+export type HandlerPipeThroughBuffer = z.infer<typeof handlerPipeThroughBuffer>
 
-export const handlerPipeThrough = zod.union([
+export const handlerPipeThroughStream = z.object({
+  encoding: z.string(),
+  stream: z.instanceof(Readable),
+  headers: headersSchema.optional(),
+})
+
+export type HandlerPipeThroughStream = z.infer<typeof handlerPipeThroughStream>
+
+export const handlerPipeThrough = z.union([
   handlerPipeThroughBuffer,
   handlerPipeThroughStream,
 ])
 
-export type HandlerPipeThrough = zod.infer<typeof handlerPipeThrough>
+export type HandlerPipeThrough = z.infer<typeof handlerPipeThrough>
 
-export const handlerError = zod.object({
-  status: zod.number(),
-  error: zod.string().optional(),
-  message: zod.string().optional(),
+export const handlerError = z.object({
+  status: z.number(),
+  error: z.string().optional(),
+  message: z.string().optional(),
 })
-export type HandlerError = zod.infer<typeof handlerError>
+export type HandlerError = z.infer<typeof handlerError>
 
 export type HandlerOutput = HandlerSuccess | HandlerPipeThrough | HandlerError
 
@@ -99,6 +107,7 @@ export type XRPCReqContext = {
   input: HandlerInput | undefined
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 
 export type XRPCHandler = (
@@ -136,12 +145,18 @@ export type CalcPointsFn = (ctx: XRPCReqContext) => number
 
 export interface RateLimiterI {
   consume: RateLimiterConsume
+  reset: RateLimiterReset
 }
 
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
 ) => Promise<RateLimiterStatus | RateLimitExceededError | null>
+
+export type RateLimiterReset = (
+  ctx: XRPCReqContext,
+  opts?: { calcKey?: CalcKeyFn },
+) => Promise<void>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
@@ -205,6 +220,41 @@ export type XRPCStreamHandlerConfig = {
   handler: XRPCStreamHandler
 }
 
+export { ResponseType }
+
+/**
+ * Converts an upstream XRPC {@link ResponseType} into a downstream {@link ResponseType}.
+ */
+function mapFromClientError(error: XRPCClientError): {
+  error: string
+  message: string
+  type: ResponseType
+} {
+  switch (error.status) {
+    case ResponseType.InvalidResponse:
+      // Upstream server returned an XRPC response that is not compatible with our internal lexicon definitions for that XRPC method.
+      // @NOTE This could be reflected as both a 500 ("we" are at fault) and 502 ("they" are at fault). Let's be gents about it.
+      return {
+        error: httpResponseCodeToName(ResponseType.InternalServerError),
+        message: httpResponseCodeToString(ResponseType.InternalServerError),
+        type: ResponseType.InternalServerError,
+      }
+    case ResponseType.Unknown:
+      // Typically a network error / unknown host
+      return {
+        error: httpResponseCodeToName(ResponseType.InternalServerError),
+        message: httpResponseCodeToString(ResponseType.InternalServerError),
+        type: ResponseType.InternalServerError,
+      }
+    default:
+      return {
+        error: error.error,
+        message: error.message,
+        type: error.status,
+      }
+  }
+}
+
 export class XRPCError extends Error {
   constructor(
     public type: ResponseType,
@@ -213,6 +263,19 @@ export class XRPCError extends Error {
     options?: ErrorOptions,
   ) {
     super(errorMessage, options)
+  }
+
+  get statusCode(): number {
+    const { type } = this
+
+    // Fool-proofing. `new XRPCError(123.5 as number, '')` does not generate a TypeScript error.
+    // Because of this, we can end-up with any numeric value instead of an actual `ResponseType`.
+    // For legacy reasons, the `type` argument is not checked in the constructor, so we check it here.
+    if (type < 400 || type >= 600 || !Number.isFinite(type)) {
+      return 500
+    }
+
+    return type
   }
 
   get payload() {
@@ -226,7 +289,7 @@ export class XRPCError extends Error {
   }
 
   get typeName(): string | undefined {
-    return ResponseTypeNames[this.type]
+    return ResponseType[this.type]
   }
 
   get typeStr(): string | undefined {
@@ -239,7 +302,8 @@ export class XRPCError extends Error {
     }
 
     if (cause instanceof XRPCClientError) {
-      return new XRPCError(cause.status, cause.message, cause.error, { cause })
+      const { error, message, type } = mapFromClientError(cause)
+      return new XRPCError(type, message, error, { cause })
     }
 
     if (isHttpError(cause)) {
@@ -313,13 +377,18 @@ export class AuthRequiredError extends XRPCError {
     customErrorName?: string,
     options?: ErrorOptions,
   ) {
-    super(ResponseType.AuthRequired, errorMessage, customErrorName, options)
+    super(
+      ResponseType.AuthenticationRequired,
+      errorMessage,
+      customErrorName,
+      options,
+    )
   }
 
   [Symbol.hasInstance](instance: unknown): boolean {
     return (
       instance instanceof XRPCError &&
-      instance.type === ResponseType.AuthRequired
+      instance.type === ResponseType.AuthenticationRequired
     )
   }
 }

@@ -1,16 +1,22 @@
 import { Kysely } from 'kysely'
+import * as accountEventsStats from './account_events_stats'
+import * as accountRecordEventsStats from './account_record_events_stats'
+import * as accountRecordStatusStats from './account_record_status_stats'
+import * as blobPushEvent from './blob_push_event'
+import * as communicationTemplate from './communication_template'
+import * as firehoseCursor from './firehose_cursor'
+import * as label from './label'
+import * as member from './member'
 import * as modEvent from './moderation_event'
 import * as modSubjectStatus from './moderation_subject_status'
-import * as repoPushEvent from './repo_push_event'
-import * as recordPushEvent from './record_push_event'
-import * as blobPushEvent from './blob_push_event'
-import * as label from './label'
-import * as signingKey from './signing_key'
-import * as communicationTemplate from './communication_template'
 import * as set from './ozone_set'
-import * as member from './member'
-import * as setting from './setting'
 import * as publicSubjectStatus from './public_subject_status'
+import * as recordEventsStats from './record_events_stats'
+import * as recordPushEvent from './record_push_event'
+import * as repoPushEvent from './repo_push_event'
+import * as setting from './setting'
+import * as signingKey from './signing_key'
+import * as verification from './verification'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -23,7 +29,13 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   set.PartialDB &
   member.PartialDB &
   setting.PartialDB &
-  publicSubjectStatus.PartialDB
+  publicSubjectStatus.PartialDB &
+  accountEventsStats.PartialDB &
+  recordEventsStats.PartialDB &
+  accountRecordEventsStats.PartialDB &
+  accountRecordStatusStats.PartialDB &
+  verification.PartialDB &
+  firehoseCursor.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

@@ -1,3 +1,4 @@
+import { Insertable, Selectable } from 'kysely'
 import {
   Code,
   FoundRequestResult,
@@ -5,16 +6,15 @@ import {
   RequestId,
   UpdateRequestData,
 } from '@atproto/oauth-provider'
+import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
 import { AccountDb, AuthorizationRequest } from '../db'
-import { fromDateISO, fromJsonObject, toDateISO, toJsonObject } from '../../db'
-import { Insertable, Selectable } from 'kysely'
 
 export const rowToRequestData = (
   row: Selectable<AuthorizationRequest>,
 ): RequestData => ({
   clientId: row.clientId,
-  clientAuth: fromJsonObject(row.clientAuth),
-  parameters: fromJsonObject(row.parameters),
+  clientAuth: fromJson(row.clientAuth),
+  parameters: fromJson(row.parameters),
   expiresAt: fromDateISO(row.expiresAt),
   deviceId: row.deviceId,
   sub: row.did,
@@ -37,8 +37,8 @@ const requestDataToRow = (
   deviceId: data.deviceId,
 
   clientId: data.clientId,
-  clientAuth: toJsonObject(data.clientAuth),
-  parameters: toJsonObject(data.parameters),
+  clientAuth: toJson(data.clientAuth),
+  parameters: toJson(data.parameters),
   expiresAt: toDateISO(data.expiresAt),
   code: data.code,
 })

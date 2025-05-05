@@ -1,5 +1,3 @@
-import { isString } from './util'
-
 const symbol = Symbol('Html.dangerouslyCreate')
 
 /**
@@ -7,34 +5,29 @@ const symbol = Symbol('Html.dangerouslyCreate')
  * or used as fragments to build a larger HTML document.
  */
 export class Html implements Iterable<string> {
-  #fragments: Iterable<Html | string>
+  readonly #fragments: readonly (Html | string)[]
 
   private constructor(fragments: Iterable<Html | string>, guard: symbol) {
     if (guard !== symbol) {
-      // Force developers to use `Html.dangerouslyCreate` to create an Html
+      // Forces developers to use `Html.dangerouslyCreate` to create an Html
       // instance, to make it clear that the content needs to be trusted.
       throw new TypeError(
         'Use Html.dangerouslyCreate() to create an Html instance',
       )
     }
 
-    this.#fragments = fragments
+    // Transform into an array in case iterable can be consumed only once
+    // (e.g. a generator function).
+    this.#fragments = Array.from(fragments)
   }
 
   toString(): string {
-    let result = ''
-    for (const fragment of this) result += fragment
-
-    // Cache result for future calls
-    if (
-      !Array.isArray(this.#fragments) ||
-      this.#fragments.length > 1 ||
-      !this.#fragments.every(isString)
-    ) {
-      this.#fragments = result ? [result] : []
-    }
-
-    return result
+    // More efficient than `return this.#fragments.join('')` because it avoids
+    // creating intermediate strings when items of this.#fragments are Html
+    // instances (as all their toString() would end-up being called, creating
+    // lots of intermediary strings). The approach here allows to do a full scan
+    // of all the child nodes and concatenate them in a single pass.
+    return Array.from(this).join('')
   }
 
   [Symbol.toPrimitive](hint): string {

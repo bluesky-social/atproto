@@ -1,9 +1,9 @@
-import express from 'express'
+import { Router } from 'express'
 import { sql } from 'kysely'
-import AppContext from '../context'
+import { AppContext } from '../context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/robots.txt', function (req, res) {
     res.type('text/plain')
@@ -17,7 +17,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
     try {
       await sql`select 1`.execute(ctx.db.db)
     } catch (err) {
-      req.log.error(err, 'failed health check')
+      req.log.error({ err }, 'failed health check')
       return res.status(503).send({ version, error: 'Service Unavailable' })
     }
     res.send({ version })

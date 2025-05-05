@@ -1,6 +1,7 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
-
+import * as jose from 'jose'
+import KeyEncoder from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
@@ -18,9 +19,7 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
-import { AccountManager } from './account-manager'
+import { AccountManager } from './account-manager/account-manager'
 import { softDeleted } from './db'
 
 type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
@@ -140,7 +139,7 @@ export class AuthVerifier {
 
   accessStandard =
     (opts: Partial<AccessOpts> = {}) =>
-    (ctx: ReqCtx): Promise<AccessOutput> => {
+    async (ctx: ReqCtx): Promise<AccessOutput> => {
       return this.validateAccessToken(
         ctx,
         [
@@ -529,18 +528,13 @@ export class AuthVerifier {
         )
       }
 
-      const isPrivileged = [
-        AuthScope.Access,
-        AuthScope.AppPassPrivileged,
-      ].includes(scopeEquivalent)
-
       return {
         credentials: {
           type: 'access',
           did: result.claims.sub,
           scope: scopeEquivalent,
           audience: this.dids.pds,
-          isPrivileged,
+          isPrivileged: scopeEquivalent === AuthScope.AppPassPrivileged,
         },
         artifacts: result.token,
       }

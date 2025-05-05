@@ -1,9 +1,0 @@
-{
-  "extends": ["../../../tsconfig/nodenext.json"],
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
-  },
-  "include": ["src"],
-  "exclude": ["src/assets/app"]
-}

@@ -2,13 +2,21 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
-import * as ToolsOzoneSignatureDefs from './defs'
+import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
+import type * as ToolsOzoneSignatureDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.signature.findRelatedAccounts'
 
 export interface QueryParams {
   did: string
@@ -21,7 +29,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   accounts: RelatedAccount[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -44,28 +51,24 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface RelatedAccount {
+  $type?: 'tools.ozone.signature.findRelatedAccounts#relatedAccount'
   account: ComAtprotoAdminDefs.AccountView
   similarities?: ToolsOzoneSignatureDefs.SigDetail[]
-  [k: string]: unknown
 }
 
-export function isRelatedAccount(v: unknown): v is RelatedAccount {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.signature.findRelatedAccounts#relatedAccount'
-  )
+const hashRelatedAccount = 'relatedAccount'
+
+export function isRelatedAccount<V>(v: V) {
+  return is$typed(v, id, hashRelatedAccount)
 }
 
-export function validateRelatedAccount(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'tools.ozone.signature.findRelatedAccounts#relatedAccount',
-    v,
-  )
+export function validateRelatedAccount<V>(v: V) {
+  return validate<RelatedAccount & V>(v, id, hashRelatedAccount)
 }

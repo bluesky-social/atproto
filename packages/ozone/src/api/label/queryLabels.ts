@@ -1,7 +1,7 @@
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { sql } from 'kysely'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../context'
+import { Server } from '../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ params }) => {

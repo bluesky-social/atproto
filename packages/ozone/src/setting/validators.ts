@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Setting } from '../db/schema/setting'
 import { PolicyListSettingKey, ProtectedTagSettingKey } from './constants'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export const settingValidators = new Map<
   string,

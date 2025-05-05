@@ -1,11 +1,11 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
-import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
-import { SettingService } from '../../setting/service'
-import { Member } from '../../db/schema/member'
-import { ToolsOzoneTeamDefs } from '@atproto/api'
 import assert from 'node:assert'
+import { ToolsOzoneTeamDefs } from '@atproto/api'
+import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
+import { AppContext } from '../../context'
+import { Member } from '../../db/schema/member'
+import { Server } from '../../lexicon'
+import { SettingService } from '../../setting/service'
 import { settingValidators } from '../../setting/validators'
 
 export default function (server: Server, ctx: AppContext) {
@@ -118,6 +118,7 @@ const getRolesForInstanceOption = (
     ToolsOzoneTeamDefs.ROLEADMIN,
     ToolsOzoneTeamDefs.ROLEMODERATOR,
     ToolsOzoneTeamDefs.ROLETRIAGE,
+    ToolsOzoneTeamDefs.ROLEVERIFIER,
   ]
   if (access.type === 'admin_token') {
     return fullPermission
@@ -129,6 +130,10 @@ const getRolesForInstanceOption = (
 
   if (access.isModerator) {
     return [ToolsOzoneTeamDefs.ROLEMODERATOR, ToolsOzoneTeamDefs.ROLETRIAGE]
+  }
+
+  if (access.isVerifier) {
+    return [ToolsOzoneTeamDefs.ROLEVERIFIER]
   }
 
   return [ToolsOzoneTeamDefs.ROLETRIAGE]
@@ -143,6 +148,8 @@ const getManagerRole = (role?: string) => {
     managerRole = ToolsOzoneTeamDefs.ROLEMODERATOR
   } else if (role === ToolsOzoneTeamDefs.ROLETRIAGE) {
     managerRole = ToolsOzoneTeamDefs.ROLETRIAGE
+  } else if (role === ToolsOzoneTeamDefs.ROLEVERIFIER) {
+    managerRole = ToolsOzoneTeamDefs.ROLEVERIFIER
   }
 
   return managerRole

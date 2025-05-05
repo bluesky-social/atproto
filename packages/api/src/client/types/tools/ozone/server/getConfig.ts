@@ -2,10 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.server.getConfig'
 
 export interface QueryParams {}
 
@@ -17,7 +25,8 @@ export interface OutputSchema {
   blobDivert?: ServiceConfig
   chat?: ServiceConfig
   viewer?: ViewerConfig
-  [k: string]: unknown
+  /** The did of the verifier used for verification. */
+  verifierDid?: string
 }
 
 export interface CallOptions {
@@ -36,39 +45,36 @@ export function toKnownErr(e: any) {
 }
 
 export interface ServiceConfig {
+  $type?: 'tools.ozone.server.getConfig#serviceConfig'
   url?: string
-  [k: string]: unknown
 }
 
-export function isServiceConfig(v: unknown): v is ServiceConfig {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.server.getConfig#serviceConfig'
-  )
+const hashServiceConfig = 'serviceConfig'
+
+export function isServiceConfig<V>(v: V) {
+  return is$typed(v, id, hashServiceConfig)
 }
 
-export function validateServiceConfig(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.server.getConfig#serviceConfig', v)
+export function validateServiceConfig<V>(v: V) {
+  return validate<ServiceConfig & V>(v, id, hashServiceConfig)
 }
 
 export interface ViewerConfig {
+  $type?: 'tools.ozone.server.getConfig#viewerConfig'
   role?:
     | 'tools.ozone.team.defs#roleAdmin'
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
+    | 'tools.ozone.team.defs#roleVerifier'
     | (string & {})
-  [k: string]: unknown
 }
 
-export function isViewerConfig(v: unknown): v is ViewerConfig {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.server.getConfig#viewerConfig'
-  )
+const hashViewerConfig = 'viewerConfig'
+
+export function isViewerConfig<V>(v: V) {
+  return is$typed(v, id, hashViewerConfig)
 }
 
-export function validateViewerConfig(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.server.getConfig#viewerConfig', v)
+export function validateViewerConfig<V>(v: V) {
+  return validate<ViewerConfig & V>(v, id, hashViewerConfig)
 }

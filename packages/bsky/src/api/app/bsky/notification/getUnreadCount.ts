@@ -1,7 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/getUnreadCount'
-import AppContext from '../../../../context'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -9,7 +10,6 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
@@ -76,6 +76,8 @@ type SkeletonState = {
 }
 
 const getPriority = async (ctx: Context, did: string) => {
-  const actors = await ctx.hydrator.actor.getActors([did])
+  const actors = await ctx.hydrator.actor.getActors([did], {
+    skipCacheForDids: [did],
+  })
   return !!actors.get(did)?.priorityNotifications
 }

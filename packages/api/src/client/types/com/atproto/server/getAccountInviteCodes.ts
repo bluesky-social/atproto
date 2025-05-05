@@ -2,11 +2,19 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoServerDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ComAtprotoServerDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.getAccountInviteCodes'
 
 export interface QueryParams {
   includeUsed?: boolean
@@ -18,7 +26,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   codes: ComAtprotoServerDefs.InviteCode[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

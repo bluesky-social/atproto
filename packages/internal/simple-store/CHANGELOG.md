@@ -1,5 +1,21 @@
 # @atproto-labs/simple-store
 
+## 0.2.0
+
+### Minor Changes
+
+- [#3776](https://github.com/bluesky-social/atproto/pull/3776) [`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `bind` method from `CachedGetter`
+
+### Patch Changes
+
+- [#3776](https://github.com/bluesky-social/atproto/pull/3776) [`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `context` getter option to `CachedGetter` class
+
+## 0.1.2
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
 ## 0.1.1
 
 ### Patch Changes

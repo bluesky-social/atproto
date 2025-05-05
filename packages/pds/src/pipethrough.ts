@@ -1,9 +1,7 @@
-import express from 'express'
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import { PassThrough, Readable } from 'node:stream'
+import express from 'express'
 import { Dispatcher } from 'undici'
-
-import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import {
   decodeStream,
   getServiceEndpoint,
@@ -17,11 +15,11 @@ import {
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
-  parseReqNsid,
   XRPCError as XRPCServerError,
+  parseReqNsid,
 } from '@atproto/xrpc-server'
-
-import AppContext from './context'
+import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
+import { AppContext } from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 
@@ -474,7 +472,7 @@ function* responseHeaders(
 // Utils
 // -------------------
 
-export const PRIVILEGED_METHODS = new Set([
+export const PRIVILEGED_METHODS = new Set<string>([
   ids.ChatBskyActorDeleteAccount,
   ids.ChatBskyActorExportAccountData,
   ids.ChatBskyConvoDeleteMessageForSelf,
@@ -495,7 +493,7 @@ export const PRIVILEGED_METHODS = new Set([
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
-export const PROTECTED_METHODS = new Set([
+export const PROTECTED_METHODS = new Set<string>([
   ids.ComAtprotoAdminSendEmail,
   ids.ComAtprotoIdentityRequestPlcOperationSignature,
   ids.ComAtprotoIdentitySignPlcOperation,
@@ -533,6 +531,9 @@ const defaultService = (
     case ids.ToolsOzoneModerationQueryEvents:
     case ids.ToolsOzoneModerationQueryStatuses:
     case ids.ToolsOzoneModerationSearchRepos:
+    case ids.ToolsOzoneVerificationListVerifications:
+    case ids.ToolsOzoneVerificationGrantVerifications:
+    case ids.ToolsOzoneVerificationRevokeVerifications:
       return ctx.cfg.modService
     case ids.ComAtprotoModerationCreateReport:
       return ctx.cfg.reportService

@@ -1,65 +1,73 @@
 import net from 'node:net'
-import { Insertable, SelectQueryBuilder, sql } from 'kysely'
+import { Insertable, RawBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtpAgent } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { AtpAgent } from '@atproto/api'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { getReviewState } from '../api/util'
+import { BackgroundQueue } from '../background'
+import { OzoneConfig } from '../config'
+import { EventPusher } from '../daemon'
 import { Database } from '../db'
-import { AuthHeaders, ModerationViews } from './views'
+import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
+import { BlobPushEvent } from '../db/schema/blob_push_event'
+import { LabelChannel } from '../db/schema/label'
+import { ModerationEvent } from '../db/schema/moderation_event'
+import { jsonb } from '../db/types'
+import {
+  ModerationStatusHistory,
+  ModerationStatusHistoryCreator,
+} from '../history/status'
+import { ImageInvalidator } from '../image-invalidator'
+import { ids } from '../lexicon/lexicons'
+import { RepoBlobRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
+import { Label } from '../lexicon/types/com/atproto/label/defs'
+import { ReasonType } from '../lexicon/types/com/atproto/moderation/defs'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 import {
-  isModEventComment,
-  isModEventLabel,
-  isModEventMute,
-  isModEventReport,
-  isModEventTakedown,
-  isModEventEmail,
-  isModEventTag,
-  isAccountEvent,
-  isIdentityEvent,
-  isRecordEvent,
   REVIEWESCALATED,
   REVIEWOPEN,
+  isAccountEvent,
+  isIdentityEvent,
   isModEventAcknowledge,
+  isModEventComment,
+  isModEventEmail,
+  isModEventLabel,
+  isModEventMute,
+  isModEventPriorityScore,
+  isModEventReport,
+  isModEventTag,
+  isModEventTakedown,
+  isRecordEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs'
-import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
+import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
+import { httpLogger as log } from '../logger'
+import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
+  moderationSubjectStatusQueryBuilder,
 } from './status'
-import {
-  ModEventType,
-  ModerationEventRow,
-  ModerationSubjectStatusRow,
-  ReversibleModerationEvent,
-} from './types'
-import { ModerationEvent } from '../db/schema/moderation_event'
-import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
-import { Label } from '../lexicon/types/com/atproto/label/defs'
 import {
   ModSubject,
   RecordSubject,
   RepoSubject,
   subjectFromStatusRow,
 } from './subject'
-import { jsonb } from '../db/types'
-import { LabelChannel } from '../db/schema/label'
-import { BlobPushEvent } from '../db/schema/blob_push_event'
-import { BackgroundQueue } from '../background'
-import { EventPusher } from '../daemon'
-import { formatLabel, formatLabelRow, signLabel } from './util'
-import { ImageInvalidator } from '../image-invalidator'
-import { httpLogger as log } from '../logger'
-import { OzoneConfig } from '../config'
-import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
-import { ids } from '../lexicon/lexicons'
 import {
-  ModerationStatusHistory,
-  ModerationStatusHistoryCreator,
-} from '../history/status'
+  ModEventType,
+  ModerationEventRow,
+  ModerationSubjectStatusRow,
+  ModerationSubjectStatusRowWithHandle,
+  ReporterStats,
+  ReporterStatsResult,
+  ReversibleModerationEvent,
+} from './types'
+import { formatLabel, formatLabelRow, signLabel } from './util'
+import { AuthHeaders, ModerationViews } from './views'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -406,7 +414,7 @@ export class ModerationService {
         ? event.negateLabelVals.join(' ')
         : undefined
 
-    const meta: Record<string, string | boolean> = {}
+    const meta: Record<string, string | number | boolean> = {}
 
     const addedTags = isModEventTag(event) ? jsonb(event.add) : null
     const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
@@ -430,6 +438,10 @@ export class ModerationService {
       meta.active = event.active
       meta.timestamp = event.timestamp
       if (event.status) meta.status = event.status
+    }
+
+    if (isModEventPriorityScore(event)) {
+      meta.priorityScore = event.score
     }
 
     if (isIdentityEvent(event)) {
@@ -469,7 +481,11 @@ export class ModerationService {
     const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
-        comment: event.comment ? `${event.comment}` : null,
+        comment:
+          ('comment' in event &&
+            typeof event.comment === 'string' &&
+            event.comment) ||
+          null,
         action: event.$type as ModerationEvent['action'],
         createdAt: createdAt.toISOString(),
         createdBy,
@@ -477,9 +493,10 @@ export class ModerationService {
         negateLabelVals,
         addedTags,
         removedTags,
-        durationInHours: event.durationInHours
-          ? Number(event.durationInHours)
-          : null,
+        durationInHours:
+          'durationInHours' in event && event.durationInHours
+            ? Number(event.durationInHours)
+            : null,
         meta: Object.assign(meta, subjectInfo.meta),
         expiresAt:
           (isModEventTakedown(event) || isModEventMute(event)) &&
@@ -718,7 +735,7 @@ export class ModerationService {
               this.eventPusher
                 .attemptBlobEvent(evt.id)
                 .catch((err) =>
-                  log.error({ err, ...evt }, 'failed to push blob event'),
+                  log.error({ ...evt, err }, 'failed to push blob event'),
                 ),
             ),
           )
@@ -782,7 +799,7 @@ export class ModerationService {
   }
 
   async report(info: {
-    reasonType: NonNullable<ModerationEventRow['meta']>['reportType']
+    reasonType: ReasonType
     reason?: string
     subject: ModSubject
     reportedBy: string
@@ -813,45 +830,6 @@ export class ModerationService {
     return result
   }
 
-  applyTagFilter = (
-    builder: SelectQueryBuilder<any, any, any>,
-    tags: string[],
-  ) => {
-    const { ref } = this.db.db.dynamic
-    // Build an array of conditions
-    const conditions = tags
-      .map((tag) => {
-        if (tag.includes('&&')) {
-          // Split by '&&' for AND logic
-          const subTags = tag
-            .split('&&')
-            // Make sure spaces on either sides of '&&' are trimmed
-            .map((subTag) => subTag.trim())
-            // Remove empty strings after trimming is applied
-            .filter(Boolean)
-
-          if (!subTags.length) return null
-
-          return sql`(${sql.join(
-            subTags.map(
-              (subTag) =>
-                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
-            ),
-            sql` AND `,
-          )})`
-        } else {
-          // Single tag condition
-          return sql`${ref('moderation_subject_status.tags')} ? ${tag}`
-        }
-      })
-      .filter(Boolean)
-
-    if (!conditions.length) return builder
-
-    // Combine all conditions with OR
-    return builder.where(sql`(${sql.join(conditions, sql` OR `)})`)
-  }
-
   async getSubjectStatuses({
     queueCount,
     queueIndex,
@@ -866,54 +844,32 @@ export class ModerationService {
     reviewedBefore,
     reportedAfter,
     reportedBefore,
-    includeMuted,
+    includeMuted = false,
     hostingDeletedBefore,
     hostingDeletedAfter,
     hostingUpdatedBefore,
     hostingUpdatedAfter,
     hostingStatuses,
-    onlyMuted,
+    onlyMuted = false,
     ignoreSubjects,
-    sortDirection,
+    sortDirection = 'desc',
     lastReviewedBy,
-    sortField,
+    sortField = 'lastReportedAt',
     subject,
     tags,
     excludeTags,
     collections,
     subjectType,
-  }: {
-    queueCount?: number
-    queueIndex?: number
-    queueSeed?: string
-    includeAllUserRecords?: boolean
+    minAccountSuspendCount,
+    minReportedRecordsCount,
+    minTakendownRecordsCount,
+    minPriorityScore,
+  }: QueryStatusParams): Promise<{
+    statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
-    limit?: number
-    takendown?: boolean
-    appealed?: boolean
-    reviewedBefore?: string
-    reviewState?: ModerationSubjectStatusRow['reviewState']
-    reviewedAfter?: string
-    reportedAfter?: string
-    reportedBefore?: string
-    includeMuted?: boolean
-    hostingDeletedBefore?: string
-    hostingDeletedAfter?: string
-    hostingUpdatedBefore?: string
-    hostingUpdatedAfter?: string
-    hostingStatuses?: string[]
-    onlyMuted?: boolean
-    subject?: string
-    ignoreSubjects?: string[]
-    sortDirection: 'asc' | 'desc'
-    lastReviewedBy?: string
-    sortField: 'lastReviewedAt' | 'lastReportedAt'
-    tags: string[]
-    excludeTags: string[]
-    collections: string[]
-    subjectType?: string
-  }) {
-    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
+  }> {
+    let builder = moderationSubjectStatusQueryBuilder(this.db.db)
+
     const { ref } = this.db.db.dynamic
 
     if (subject) {
@@ -927,14 +883,18 @@ export class ModerationService {
       if (!includeAllUserRecords) {
         builder = builder.where((qb) =>
           subjectInfo.recordPath
-            ? qb.where('recordPath', '=', subjectInfo.recordPath)
-            : qb.where('recordPath', '=', ''),
+            ? qb.where(
+                'moderation_subject_status.recordPath',
+                '=',
+                subjectInfo.recordPath,
+              )
+            : qb.where('moderation_subject_status.recordPath', '=', ''),
         )
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('recordPath', '=', '')
+      builder = builder.where('moderation_subject_status.recordPath', '=', '')
     } else if (subjectType === 'record') {
-      builder = builder.where('recordPath', '!=', '')
+      builder = builder.where('moderation_subject_status.recordPath', '!=', '')
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -948,118 +908,234 @@ export class ModerationService {
     ) {
       builder = builder.where(
         queueSeed
-          ? sql`ABS(HASHTEXT(${queueSeed} || did)) % ${queueCount}`
-          : sql`ABS(HASHTEXT(did)) % ${queueCount}`,
+          ? sql`ABS(HASHTEXT(${queueSeed} || moderation_subject_status.did)) % ${queueCount}`
+          : sql`ABS(HASHTEXT(moderation_subject_status.did)) % ${queueCount}`,
         '=',
         queueIndex,
       )
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
-    if (collections.length && subjectType !== 'account') {
-      builder = builder.where('recordPath', '!=', '').where((qb) => {
-        collections.forEach((collection) => {
-          qb = qb.orWhere('recordPath', 'like', `${collection}/%`)
+    if (subjectType !== 'account' && collections?.length) {
+      builder = builder
+        .where('moderation_subject_status.recordPath', '!=', '')
+        .where((qb) => {
+          for (const collection of collections) {
+            qb = qb.orWhere(
+              'moderation_subject_status.recordPath',
+              'like',
+              `${collection}/%`,
+            )
+          }
+          return qb
         })
-        return qb
-      })
     }
 
     if (ignoreSubjects?.length) {
       builder = builder
-        .where('did', 'not in', ignoreSubjects)
-        .where('recordPath', 'not in', ignoreSubjects)
+        .where('moderation_subject_status.did', 'not in', ignoreSubjects)
+        .where('moderation_subject_status.recordPath', 'not in', ignoreSubjects)
     }
 
-    if (reviewState) {
-      builder = builder.where('reviewState', '=', reviewState)
+    const reviewStateNormalized = getReviewState(reviewState)
+    if (reviewStateNormalized) {
+      builder = builder.where(
+        'moderation_subject_status.reviewState',
+        '=',
+        reviewStateNormalized,
+      )
     }
 
     if (lastReviewedBy) {
-      builder = builder.where('lastReviewedBy', '=', lastReviewedBy)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedBy',
+        '=',
+        lastReviewedBy,
+      )
     }
 
     if (reviewedAfter) {
-      builder = builder.where('lastReviewedAt', '>', reviewedAfter)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedAt',
+        '>',
+        reviewedAfter,
+      )
     }
 
     if (reviewedBefore) {
-      builder = builder.where('lastReviewedAt', '<', reviewedBefore)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedAt',
+        '<',
+        reviewedBefore,
+      )
     }
 
     if (hostingUpdatedAfter) {
-      builder = builder.where('hostingUpdatedAt', '>', hostingUpdatedAfter)
+      builder = builder.where(
+        'moderation_subject_status.hostingUpdatedAt',
+        '>',
+        hostingUpdatedAfter,
+      )
     }
 
     if (hostingUpdatedBefore) {
-      builder = builder.where('hostingUpdatedAt', '<', hostingUpdatedBefore)
+      builder = builder.where(
+        'moderation_subject_status.hostingUpdatedAt',
+        '<',
+        hostingUpdatedBefore,
+      )
     }
 
     if (hostingDeletedAfter) {
-      builder = builder.where('hostingDeletedAt', '>', hostingDeletedAfter)
+      builder = builder.where(
+        'moderation_subject_status.hostingDeletedAt',
+        '>',
+        hostingDeletedAfter,
+      )
     }
 
     if (hostingDeletedBefore) {
-      builder = builder.where('hostingDeletedAt', '<', hostingDeletedBefore)
+      builder = builder.where(
+        'moderation_subject_status.hostingDeletedAt',
+        '<',
+        hostingDeletedBefore,
+      )
     }
 
     if (hostingStatuses?.length) {
-      builder = builder.where('hostingStatus', 'in', hostingStatuses)
+      builder = builder.where(
+        'moderation_subject_status.hostingStatus',
+        'in',
+        hostingStatuses,
+      )
     }
 
     if (reportedAfter) {
-      builder = builder.where('lastReviewedAt', '>', reportedAfter)
+      builder = builder.where(
+        'moderation_subject_status.lastReviewedAt',
+        '>',
+        reportedAfter,
+      )
     }
 
     if (reportedBefore) {
-      builder = builder.where('lastReportedAt', '<', reportedBefore)
+      builder = builder.where(
+        'moderation_subject_status.lastReportedAt',
+        '<',
+        reportedBefore,
+      )
     }
 
     if (takendown) {
-      builder = builder.where('takendown', '=', true)
+      builder = builder.where('moderation_subject_status.takendown', '=', true)
     }
 
     if (appealed !== undefined) {
       builder =
         appealed === false
-          ? builder.where('appealed', 'is', null)
-          : builder.where('appealed', '=', appealed)
+          ? builder.where('moderation_subject_status.appealed', 'is', null)
+          : builder.where('moderation_subject_status.appealed', '=', appealed)
     }
 
     if (!includeMuted) {
       builder = builder.where((qb) =>
         qb
-          .where('muteUntil', '<', new Date().toISOString())
-          .orWhere('muteUntil', 'is', null),
+          .where(
+            'moderation_subject_status.muteUntil',
+            '<',
+            new Date().toISOString(),
+          )
+          .orWhere('moderation_subject_status.muteUntil', 'is', null),
       )
     }
 
     if (onlyMuted) {
       builder = builder.where((qb) =>
         qb
-          .where('muteUntil', '>', new Date().toISOString())
-          .orWhere('muteReportingUntil', '>', new Date().toISOString()),
+          .where(
+            'moderation_subject_status.muteUntil',
+            '>',
+            new Date().toISOString(),
+          )
+          .orWhere(
+            'moderation_subject_status.muteReportingUntil',
+            '>',
+            new Date().toISOString(),
+          ),
       )
     }
 
-    if (tags.length) {
-      builder = this.applyTagFilter(builder, tags)
+    // ["tag1", "tag2 && tag3", "tag4"] => [["tag1"], ["tag2", "tag3"], ["tag4"]]
+    const conditions = parseTags(tags)
+    if (conditions?.length) {
+      // [["tag1"], ["tag2", "tag3"], ["tag4"]] => (tags ? 'tag1') OR (tags ? 'tag2' AND tags ? 'tag3') OR (tags ? 'tag4')
+      builder = builder.where((qb) => {
+        for (const subTags of conditions) {
+          // OR between every conditions items (subTags)
+          qb = qb.orWhere((qb) => {
+            // AND between every subTags items (subTag)
+            for (const subTag of subTags) {
+              qb = qb.where(
+                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+              )
+            }
+            return qb
+          })
+        }
+        return qb
+      })
     }
 
-    if (excludeTags.length) {
+    if (excludeTags?.length) {
       builder = builder.where((qb) =>
         qb
           .where(
-            sql`NOT(${ref(
-              'moderation_subject_status.tags',
-            )} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
+            sql`NOT(${ref('moderation_subject_status.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
           )
           .orWhere('tags', 'is', null),
       )
     }
 
+    if (minAccountSuspendCount != null && minAccountSuspendCount > 0) {
+      builder = builder.where(
+        'account_events_stats.suspendCount',
+        '>=',
+        minAccountSuspendCount,
+      )
+    }
+
+    if (minTakendownRecordsCount != null && minTakendownRecordsCount > 0) {
+      builder = builder.where(
+        'account_record_status_stats.takendownCount',
+        '>=',
+        minTakendownRecordsCount,
+      )
+    }
+
+    if (minReportedRecordsCount != null && minReportedRecordsCount > 0) {
+      builder = builder.where(
+        'account_record_events_stats.reportedCount',
+        '>=',
+        minReportedRecordsCount,
+      )
+    }
+
+    if (minPriorityScore != null && minPriorityScore >= 0) {
+      builder = builder.where(
+        'moderation_subject_status.priorityScore',
+        '>=',
+        minPriorityScore,
+      )
+    }
+
     const keyset = new StatusKeyset(
-      ref(`moderation_subject_status.${sortField}`),
+      sortField === 'reportedRecordsCount'
+        ? ref(`account_record_events_stats.reportedCount`)
+        : sortField === 'takendownRecordsCount'
+          ? ref(`account_record_status_stats.takendownCount`)
+          : sortField === 'priorityScore'
+            ? ref(`moderation_subject_status.priorityScore`)
+            : ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {
@@ -1075,13 +1151,12 @@ export class ModerationService {
     const infos = await this.views.getAccoutInfosByDid(
       results.map((r) => r.did),
     )
-    const resultsWithHandles = results.map((r) => ({
-      ...r,
-      handle: infos.get(r.did)?.handle ?? INVALID_HANDLE,
-    }))
 
     return {
-      statuses: resultsWithHandles,
+      statuses: results.map((r) => ({
+        ...r,
+        handle: infos.get(r.did)?.handle ?? INVALID_HANDLE,
+      })),
       cursor: keyset.packFromResult(results),
     }
   }
@@ -1116,13 +1191,19 @@ export class ModerationService {
     uri: string,
     cid: string | null,
     labels: { create?: string[]; negate?: string[] },
+    durationInHours?: number,
   ): Promise<Label[]> {
+    const exp =
+      durationInHours !== undefined
+        ? addHoursToDate(durationInHours).toISOString()
+        : undefined
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
       src: this.cfg.service.did,
       uri,
       cid: cid ?? undefined,
       val,
+      exp,
       cts: new Date().toISOString(),
     }))
     const toNegate = negate.map((val) => ({
@@ -1201,7 +1282,196 @@ export class ModerationService {
       throw new InvalidRequestError('Email was accepted but not sent')
     }
   }
+
+  async buildModerationQuery(
+    subjectType: 'account' | 'record',
+    createdByDids: string[],
+    isActionQuery: boolean,
+  ): Promise<(Partial<ReporterStatsResult> & { did: string })[]> {
+    if (!createdByDids.length) return []
+
+    const actionTypes = [
+      'tools.ozone.moderation.defs#modEventTakedown',
+      'tools.ozone.moderation.defs#modEventLabel',
+    ] as const
+
+    const countAll = () => {
+      return sql<number>`COUNT(*)`
+    }
+    const countAllDistinctBy = (ref: RawBuilder) => {
+      return sql<number>`COUNT(DISTINCT ${ref})`
+    }
+    const countTakedownsDistinctBy = (ref: RawBuilder) => {
+      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
+        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventTakedown'
+      )`
+    }
+    const countLabelsDistinctBy = (ref: RawBuilder) => {
+      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
+        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventLabel'
+      )`
+    }
+
+    const query = this.db.db
+      .selectFrom('moderation_event as reports')
+      .where(
+        'reports.action',
+        '=',
+        'tools.ozone.moderation.defs#modEventReport',
+      )
+      .where(
+        'reports.subjectUri',
+        subjectType === 'account' ? 'is' : 'is not',
+        null,
+      )
+      .where('reports.createdBy', 'in', createdByDids)
+      .select(['reports.createdBy as did'])
+
+    if (!isActionQuery) {
+      if (subjectType === 'account') {
+        return query
+          .select([
+            () => countAll().as('accountReportCount'),
+            (eb) =>
+              countAllDistinctBy(eb.ref('reports.subjectDid')).as(
+                'reportedAccountCount',
+              ),
+          ])
+          .groupBy('reports.createdBy')
+          .execute()
+      } else {
+        return query
+          .select([
+            () => countAll().as('recordReportCount'),
+            (eb) =>
+              countAllDistinctBy(eb.ref('reports.subjectUri')).as(
+                'reportedRecordCount',
+              ),
+          ])
+          .groupBy('reports.createdBy')
+          .execute()
+      }
+    }
+
+    if (subjectType === 'account') {
+      return query
+        .leftJoin('moderation_event as actions', (join) =>
+          join
+            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
+            .on('actions.subjectUri', 'is', null)
+            .onRef('actions.createdAt', '>', 'reports.createdAt')
+            .on('actions.action', 'in', actionTypes),
+        )
+        .select([
+          (eb) =>
+            countTakedownsDistinctBy(eb.ref('actions.subjectDid')).as(
+              'takendownAccountCount',
+            ),
+          (eb) =>
+            countLabelsDistinctBy(eb.ref('actions.subjectDid')).as(
+              'labeledAccountCount',
+            ),
+        ])
+        .groupBy('reports.createdBy')
+        .execute()
+    } else {
+      return query
+        .leftJoin('moderation_event as actions', (join) =>
+          join
+            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
+            .onRef('actions.subjectUri', '=', 'reports.subjectUri')
+            .onRef('actions.createdAt', '>', 'reports.createdAt')
+            .on('actions.action', 'in', actionTypes),
+        )
+        .select([
+          (eb) =>
+            countTakedownsDistinctBy(eb.ref('actions.subjectUri')).as(
+              'takendownRecordCount',
+            ),
+          (eb) =>
+            countLabelsDistinctBy(eb.ref('actions.subjectUri')).as(
+              'labeledRecordCount',
+            ),
+        ])
+        .groupBy('reports.createdBy')
+        .execute()
+    }
+  }
+
+  async getReporterStats(dids: string[]) {
+    const [accountReports, recordReports, accountActions, recordActions] =
+      await Promise.all([
+        this.buildModerationQuery('account', dids, false),
+        this.buildModerationQuery('record', dids, false),
+        this.buildModerationQuery('account', dids, true),
+        this.buildModerationQuery('record', dids, true),
+      ])
+
+    // Create a map to hold the aggregated stats for each `did`
+    const statsMap = new Map<string, ReporterStats>()
+
+    // Helper function to ensure a `did` entry exists in the map
+    const ensureDidEntry = (did: string) => {
+      if (!statsMap.has(did)) {
+        statsMap.set(did, {
+          did,
+          accountReportCount: 0,
+          recordReportCount: 0,
+          reportedAccountCount: 0,
+          reportedRecordCount: 0,
+          takendownAccountCount: 0,
+          takendownRecordCount: 0,
+          labeledAccountCount: 0,
+          labeledRecordCount: 0,
+        })
+      }
+      return statsMap.get(did)!
+    }
+
+    // Merge accountReports
+    for (const report of accountReports) {
+      const entry = ensureDidEntry(report.did)
+      entry.accountReportCount = report.accountReportCount ?? 0
+      entry.reportedAccountCount = report.reportedAccountCount ?? 0
+    }
+
+    // Merge recordReports
+    for (const report of recordReports) {
+      const entry = ensureDidEntry(report.did)
+      entry.recordReportCount = report.recordReportCount ?? 0
+      entry.reportedRecordCount = report.reportedRecordCount ?? 0
+    }
+
+    // Merge accountActions
+    for (const action of accountActions) {
+      const entry = ensureDidEntry(action.did)
+      entry.takendownAccountCount = action.takendownAccountCount ?? 0
+      entry.labeledAccountCount = action.labeledAccountCount ?? 0
+    }
+
+    // Merge recordActions
+    for (const action of recordActions) {
+      const entry = ensureDidEntry(action.did)
+      entry.takendownRecordCount = action.takendownRecordCount ?? 0
+      entry.labeledRecordCount = action.labeledRecordCount ?? 0
+    }
+
+    // Convert map values to an array and return
+    return Array.from(statsMap.values())
+  }
 }
+
+const parseTags = (tags?: string[]) =>
+  tags
+    ?.map((tag) =>
+      tag
+        .split(/\s*&&\s*/g)
+        .map((subTag) => subTag.trim())
+        // Ignore invalid syntax ("", "tag1 &&", "&& tag2", "tag1 && && tag2", etc.)
+        .filter(Boolean),
+    )
+    // Ignore invalid items
+    .filter((subTags): subTags is [string, ...string[]] => subTags.length > 0)
 
 const isSafeUrl = (url: URL) => {
   if (url.protocol !== 'https:') return false

@@ -134,8 +134,6 @@ import {
   GetPostgateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
-  GetPostReplyCountsRequest,
-  GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
   GetQuotesBySubjectSortedRequest,
@@ -168,6 +166,12 @@ import {
   GetTimelineResponse,
   GetUnreadNotificationCountRequest,
   GetUnreadNotificationCountResponse,
+  GetVerificationRecordsRequest,
+  GetVerificationRecordsResponse,
+  GetVerificationsIssuedRequest,
+  GetVerificationsIssuedResponse,
+  GetVerificationsReceivedRequest,
+  GetVerificationsReceivedResponse,
   PingRequest,
   PingResponse,
   SearchActorsRequest,
@@ -371,6 +375,35 @@ export const Service = {
       name: 'GetFollows',
       I: GetFollowsRequest,
       O: GetFollowsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Verifications
+     *
+     * @generated from rpc bsky.Service.GetVerificationRecords
+     */
+    getVerificationRecords: {
+      name: 'GetVerificationRecords',
+      I: GetVerificationRecordsRequest,
+      O: GetVerificationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVerificationsIssued
+     */
+    getVerificationsIssued: {
+      name: 'GetVerificationsIssued',
+      I: GetVerificationsIssuedRequest,
+      O: GetVerificationsIssuedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVerificationsReceived
+     */
+    getVerificationsReceived: {
+      name: 'GetVerificationsReceived',
+      I: GetVerificationsReceivedRequest,
+      O: GetVerificationsReceivedResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -848,17 +881,6 @@ export const Service = {
       name: 'GetSuggestedEntities',
       I: GetSuggestedEntitiesRequest,
       O: GetSuggestedEntitiesResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * Posts
-     *
-     * @generated from rpc bsky.Service.GetPostReplyCounts
-     */
-    getPostReplyCounts: {
-      name: 'GetPostReplyCounts',
-      I: GetPostReplyCountsRequest,
-      O: GetPostReplyCountsResponse,
       kind: MethodKind.Unary,
     },
     /**

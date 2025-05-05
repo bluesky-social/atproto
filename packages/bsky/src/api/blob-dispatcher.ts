@@ -1,6 +1,5 @@
-import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { Agent, Dispatcher, Pool, RetryAgent } from 'undici'
-
+import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { ServerConfig } from '../config'
 import { RETRYABLE_HTTP_STATUS_CODES } from '../util/retry'
 

@@ -1,31 +1,42 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyLabelerDefs from './defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyLabelerDefs from './defs.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.labeler.service'
 
 export interface Record {
+  $type: 'app.bsky.labeler.service'
   policies: AppBskyLabelerDefs.LabelerPolicies
-  labels?:
-    | ComAtprotoLabelDefs.SelfLabels
-    | { $type: string; [k: string]: unknown }
+  labels?: $Typed<ComAtprotoLabelDefs.SelfLabels> | { $type: string }
   createdAt: string
+  /** The set of report reason 'codes' which are in-scope for this service to review and action. These usually align to policy categories. If not defined (distinct from empty array), all reason types are allowed. */
+  reasonTypes?: ComAtprotoModerationDefs.ReasonType[]
+  /** The set of subject types (account, record, etc) this service accepts reports on. */
+  subjectTypes?: ComAtprotoModerationDefs.SubjectType[]
+  /** Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is any record type. */
+  subjectCollections?: string[]
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.labeler.service#main' ||
-      v.$type === 'app.bsky.labeler.service')
-  )
+const hashRecord = 'main'
+
+export function isRecord<V>(v: V) {
+  return is$typed(v, id, hashRecord)
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.labeler.service#main', v)
+export function validateRecord<V>(v: V) {
+  return validate<Record & V>(v, id, hashRecord, true)
 }

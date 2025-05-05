@@ -2,11 +2,19 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneHistoryDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ToolsOzoneHistoryDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.history.getSubjectHistory'
 
 export interface QueryParams {
   subject: string
@@ -19,7 +27,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   events: ToolsOzoneHistoryDefs.EventView[]
   cursor?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {

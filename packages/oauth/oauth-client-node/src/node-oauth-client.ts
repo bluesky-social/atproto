@@ -1,9 +1,4 @@
 import { createHash, randomBytes } from 'node:crypto'
-
-import {
-  AtprotoHandleResolverNode,
-  AtprotoHandleResolverNodeOptions,
-} from '@atproto-labs/handle-resolver-node'
 import { JoseKey } from '@atproto/jwk-jose'
 import {
   OAuthClient,
@@ -12,7 +7,10 @@ import {
   RuntimeLock,
 } from '@atproto/oauth-client'
 import { OAuthResponseMode } from '@atproto/oauth-types'
-
+import {
+  AtprotoHandleResolverNode,
+  AtprotoHandleResolverNodeOptions,
+} from '@atproto-labs/handle-resolver-node'
 import {
   NodeSavedSessionStore,
   NodeSavedStateStore,

@@ -1,11 +1,11 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { ServiceImpl } from '@connectrpc/connect'
+import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { CreatedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
-import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorMutesActor(req) {
@@ -180,7 +180,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('rootUri', 'in', threadRoots)
       .execute()
     const byRootUri = keyBy(res, 'rootUri')
-    const muted = threadRoots.map((uri) => !!byRootUri[uri])
+    const muted = threadRoots.map((uri) => !!byRootUri.get(uri))
     return { muted }
   },
 })

@@ -1,26 +1,25 @@
-import {
-  cloneStream,
-  createDecoders,
-  isErrnoException,
-  VerifyCidError,
-  VerifyCidTransform,
-} from '@atproto/common'
-import { BlobNotFoundError } from '@atproto/repo'
-import createError, { isHttpError } from 'http-errors'
 import fsSync from 'node:fs'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { Duplex, Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-
-import { streamBlob, StreamBlobOptions } from '../api/blob-resolver'
-import AppContext from '../context'
+import createError, { isHttpError } from 'http-errors'
+import {
+  VerifyCidError,
+  VerifyCidTransform,
+  cloneStream,
+  createDecoders,
+  isErrnoException,
+} from '@atproto/common'
+import { BlobNotFoundError } from '@atproto/repo'
+import { StreamBlobOptions, streamBlob } from '../api/blob-resolver'
+import { AppContext } from '../context'
 import { Middleware, responseSignal } from '../util/http'
 import log from './logger'
 import { createImageProcessor, createImageUpscaler } from './sharp'
 import { BadPathError, ImageUriBuilder } from './uri'
-import { formatsToMimes, Options, SharpInfo } from './util'
+import { Options, SharpInfo, formatsToMimes } from './util'
 
 export function createMiddleware(
   ctx: AppContext,
@@ -103,7 +102,7 @@ export function createMiddleware(
         // Cache in the background
         cache
           .put(cacheKey, cloneStream(processor))
-          .catch((err) => log.error(err, 'failed to cache image'))
+          .catch((err) => log.error({ err }, 'failed to cache image'))
 
         res.statusCode = 200
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year

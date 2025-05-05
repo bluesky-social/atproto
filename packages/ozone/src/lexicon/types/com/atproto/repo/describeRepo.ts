@@ -2,11 +2,19 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.repo.describeRepo'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
@@ -19,12 +27,11 @@ export interface OutputSchema {
   handle: string
   did: string
   /** The complete DID document for this account. */
-  didDoc: {}
+  didDoc: { [_ in string]: unknown }
   /** List of all the collections (NSIDs) for which this repo contains at least one record. */
   collections: string[]
   /** Indicates if handle is currently valid (resolves bi-directionally) */
   handleIsCorrect: boolean
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -47,6 +54,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

@@ -1,8 +1,8 @@
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { SubjectBasicView } from '../../lexicon/types/tools/ozone/history/defs'
+import { AppContext } from '../../context'
+import { Server } from '../../lexicon'
 import * as ActorDefs from '../../lexicon/types/app/bsky/actor/defs'
+import { SubjectBasicView } from '../../lexicon/types/tools/ozone/history/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.history.getAccountActions({

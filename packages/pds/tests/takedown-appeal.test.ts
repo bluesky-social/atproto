@@ -1,7 +1,7 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
 import { ids } from '../src/lexicon/lexicons'
+import { forSubjectStatusSnapshot } from './_util'
 
 describe('appeal account takedown', () => {
   let network: TestNetwork
@@ -35,6 +35,7 @@ describe('appeal account takedown', () => {
       email: 'jeff@test.com',
       password: 'password',
     })
+    await network.processAll()
 
     // Emit a takedown event
     await network.ozone.getModClient().performTakedown({
@@ -59,6 +60,8 @@ describe('appeal account takedown', () => {
         headers: { authorization: network.pds.adminAuth() },
       },
     )
+
+    await network.processAll()
 
     // Verify user can not get session token without setting the optional param
     await expect(
@@ -97,7 +100,9 @@ describe('appeal account takedown', () => {
     )
 
     expect(result.subjectStatuses[0].appealed).toBe(true)
-    expect(forSnapshot(result.subjectStatuses[0])).toMatchSnapshot()
+    expect(
+      forSubjectStatusSnapshot(result.subjectStatuses[0]),
+    ).toMatchSnapshot()
   })
 
   it('takendown actor is not allowed to create reports.', async () => {

@@ -1,6 +1,6 @@
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../context'
+import { Server } from '../../lexicon'
 import * as ActorDefs from '../../lexicon/types/app/bsky/actor/defs'
 import { SubjectBasicView } from '../../lexicon/types/tools/ozone/history/defs'
 

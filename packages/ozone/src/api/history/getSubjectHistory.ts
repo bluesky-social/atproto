@@ -1,8 +1,8 @@
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
-import { EventView } from '../../lexicon/types/tools/ozone/history/defs'
-import { publishableModEvents } from '../../history/status'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../context'
+import { publishableModEvents } from '../../history/status'
+import { Server } from '../../lexicon'
+import { EventView } from '../../lexicon/types/tools/ozone/history/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.history.getSubjectHistory({

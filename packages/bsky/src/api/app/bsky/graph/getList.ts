@@ -1,34 +1,39 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getList'
-import AppContext from '../../../../context'
-import {
-  createPipeline,
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
-} from '../../../../pipeline'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getList'
+import {
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipeline,
+} from '../../../../pipeline'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
 import { uriToDid as didFromUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.graph.getList({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
       const result = await getList({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
@@ -128,7 +133,7 @@ const maybeGetBlocksForReferenceAndCurateList = async (input: {
     creator,
     listitems.map(({ did }) => did),
   )
-  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
+  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs, params.hydrateCtx)
 }
 
 type Context = {

@@ -2,11 +2,19 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../actor/defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.getRepostedBy'
 
 export interface QueryParams {
   /** Reference (AT-URI) of post record */
@@ -24,7 +32,6 @@ export interface OutputSchema {
   cid?: string
   cursor?: string
   repostedBy: AppBskyActorDefs.ProfileView[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

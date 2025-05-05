@@ -1,18 +1,17 @@
+import { Readable } from 'node:stream'
+import { finished, pipeline } from 'node:stream/promises'
+import { CID } from 'multiformats/cid'
+import * as undici from 'undici'
 import {
-  createDecoders,
-  getPdsEndpoint,
   VerifyCidTransform,
   allFulfilled,
+  createDecoders,
+  getPdsEndpoint,
 } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { CID } from 'multiformats/cid'
-import { Readable } from 'node:stream'
-import { finished, pipeline } from 'node:stream/promises'
-import * as undici from 'undici'
-
 import { BlobDivertConfig } from '../config'
-import Database from '../db'
+import { Database } from '../db'
 import { retryHttp } from '../util'
 
 export class BlobDiverter {
@@ -46,7 +45,7 @@ export class BlobDiverter {
       })
 
     if (blobResponse.statusCode !== 200) {
-      blobResponse.body.destroy()
+      await blobResponse.body.dump()
       throw new XRPCError(
         blobResponse.statusCode,
         undefined,
@@ -72,7 +71,7 @@ export class BlobDiverter {
       }
     } catch (err) {
       // Typically un-supported content encoding
-      blobResponse.body.destroy()
+      await blobResponse.body.dump()
       throw err
     }
   }
@@ -99,7 +98,7 @@ export class BlobDiverter {
       })
 
     if (result.statusCode !== 200) {
-      result.body.destroy()
+      await result.body.dump()
       throw new XRPCError(
         result.statusCode,
         undefined,

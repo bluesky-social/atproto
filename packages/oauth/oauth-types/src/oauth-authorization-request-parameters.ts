@@ -1,10 +1,10 @@
-import { signedJwtSchema } from '@atproto/jwk'
 import { z } from 'zod'
-
+import { signedJwtSchema } from '@atproto/jwk'
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthRedirectUriSchema } from './oauth-redirect-uri.js'
+import { oauthResponseModeSchema } from './oauth-response-mode.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oauthScopeSchema } from './oauth-scope.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
@@ -36,7 +36,7 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   // OIDC
 
   // Default depend on response_type
-  response_mode: z.enum(['query', 'fragment', 'form_post']).optional(),
+  response_mode: oauthResponseModeSchema.optional(),
 
   nonce: z.string().optional(),
 
@@ -67,7 +67,7 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
 
   ui_locales: z
     .string()
-    .regex(/^[a-z]{2}(-[A-Z]{2})?( [a-z]{2}(-[A-Z]{2})?)*$/) // fr-CA fr en
+    .regex(/^[a-z]{2,3}(-[A-Z]{2})?( [a-z]{2,3}(-[A-Z]{2})?)*$/) // fr-CA fr en
     .optional(),
 
   // Previous ID Token, should be provided when prompt=none is used

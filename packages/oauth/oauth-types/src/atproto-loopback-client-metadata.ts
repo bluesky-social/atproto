@@ -18,7 +18,6 @@ export function atprotoLoopbackClientMetadata(
     client_id: clientId as OAuthClientIdLoopback,
     scope,
     redirect_uris,
-    client_name: 'Loopback client',
     response_types: ['code'],
     grant_types: ['authorization_code', 'refresh_token'],
     token_endpoint_auth_method: 'none',

@@ -1,6 +1,6 @@
+import { constants } from 'node:fs'
+import fs from 'node:fs/promises'
 import { isErrnoException } from '@atproto/common-web'
-import { constants } from 'fs'
-import fs from 'fs/promises'
 
 export const fileExists = async (location: string): Promise<boolean> => {
   try {
@@ -33,6 +33,20 @@ export const rmIfExists = async (
 ): Promise<void> => {
   try {
     await fs.rm(filepath, { recursive })
+  } catch (err) {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
+      return
+    }
+    throw err
+  }
+}
+
+export const renameIfExists = async (
+  oldPath: string,
+  newPath: string,
+): Promise<void> => {
+  try {
+    await fs.rename(oldPath, newPath)
   } catch (err) {
     if (isErrnoException(err) && err.code === 'ENOENT') {
       return

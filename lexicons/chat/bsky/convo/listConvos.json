@@ -13,7 +13,15 @@
             "maximum": 100,
             "default": 50
           },
-          "cursor": { "type": "string" }
+          "cursor": { "type": "string" },
+          "readState": {
+            "type": "string",
+            "knownValues": ["unread"]
+          },
+          "status": {
+            "type": "string",
+            "knownValues": ["request", "accepted"]
+          }
         }
       },
       "output": {

@@ -1,9 +1,9 @@
-import { request } from 'undici'
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import { request } from 'undici'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { TestPds } from './pds'
+import { IdResolver } from '@atproto/identity'
 import { TestBsky } from './bsky'
+import { TestPds } from './pds'
 import { DidAndKey } from './types'
 
 export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
@@ -45,7 +45,7 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     try {
       const res = await request(url, { headers: { host: handle } })
       if (res.statusCode !== 200) {
-        res.body.destroy()
+        await res.body.dump()
         return undefined
       }
 

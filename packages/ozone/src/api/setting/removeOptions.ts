@@ -1,7 +1,7 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
+import { AppContext } from '../../context'
 import { Member } from '../../db/schema/member'
+import { Server } from '../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.removeOptions({
@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
           'tools.ozone.team.defs#roleModerator',
           'tools.ozone.team.defs#roleTriage',
           'tools.ozone.team.defs#roleAdmin',
+          'tools.ozone.team.defs#roleVerifier',
         ]
 
         if (access.type !== 'admin_token' && !access.isAdmin) {

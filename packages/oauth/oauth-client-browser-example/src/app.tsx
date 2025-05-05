@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react'
-import { useAuthContext } from './auth/auth-provider'
+import { useCallback, useEffect, useState } from 'react'
+import { Agent } from '@atproto/api'
 import { OAuthSession } from '@atproto/oauth-client'
+import { useAuthContext } from './auth/auth-provider.tsx'
 
 function App() {
   const { pdsAgent, signOut, refresh } = useAuthContext()
@@ -18,7 +19,7 @@ function App() {
   const [serviceAuth, setServiceAuth] = useState<unknown>(undefined)
   const loadServiceAuth = useCallback(async () => {
     const serviceAuth = await pdsAgent.com.atproto.server.getServiceAuth({
-      aud: pdsAgent.accountDid,
+      aud: pdsAgent.assertDid,
     })
     console.log('serviceAuth', serviceAuth)
     setServiceAuth(serviceAuth.data)
@@ -28,12 +29,22 @@ function App() {
   const [profile, setProfile] = useState<unknown>(undefined)
   const loadProfile = useCallback(async () => {
     const profile = await pdsAgent.com.atproto.repo.getRecord({
-      repo: pdsAgent.accountDid,
+      repo: pdsAgent.assertDid,
       collection: 'app.bsky.actor.profile',
       rkey: 'self',
     })
     console.log(profile)
     setProfile(profile.data)
+  }, [pdsAgent])
+
+  const global = window as { pdsAgent?: Agent }
+  useEffect(() => {
+    global.pdsAgent = pdsAgent
+    return () => {
+      if (global.pdsAgent === pdsAgent) {
+        delete global.pdsAgent
+      }
+    }
   }, [pdsAgent])
 
   return (
