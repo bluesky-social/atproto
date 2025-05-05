@@ -699,7 +699,7 @@ Object {
         },
         "replyCount": 4,
         "repostCount": 0,
-        "uri": "record(1)",
+        "uri": "record(0)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -736,24 +736,24 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_0 (op)",
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(0)",
+        "uri": "record(1)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
-      "uri": "record(0)",
+      "uri": "record(1)",
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
@@ -784,11 +784,11 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(1)",
-              "uri": "record(0)",
+              "uri": "record(1)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_0_0 (op)",
@@ -840,7 +840,7 @@ Object {
         },
         "replyCount": 4,
         "repostCount": 0,
-        "uri": "record(1)",
+        "uri": "record(0)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -877,24 +877,24 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_0 (op)",
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(0)",
+        "uri": "record(1)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
-      "uri": "record(2)",
+      "uri": "record(1)",
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
@@ -925,11 +925,11 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(1)",
-              "uri": "record(0)",
+              "uri": "record(1)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_0_0 (op)",
@@ -981,7 +981,7 @@ Object {
         },
         "replyCount": 4,
         "repostCount": 0,
-        "uri": "record(1)",
+        "uri": "record(0)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -1018,24 +1018,24 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_1 (alice)",
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(0)",
+        "uri": "record(1)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
-      "uri": "record(0)",
+      "uri": "record(1)",
     },
   ],
 }
@@ -1074,7 +1074,7 @@ Object {
         },
         "replyCount": 4,
         "repostCount": 0,
-        "uri": "record(1)",
+        "uri": "record(0)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -1111,24 +1111,24 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_2 (bob)",
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(0)",
+        "uri": "record(1)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
-      "uri": "record(0)",
+      "uri": "record(1)",
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
@@ -1159,11 +1159,11 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(1)",
-              "uri": "record(0)",
+              "uri": "record(1)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_2_0 (alice)",
@@ -1215,7 +1215,7 @@ Object {
         },
         "replyCount": 4,
         "repostCount": 0,
-        "uri": "record(1)",
+        "uri": "record(0)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -1252,24 +1252,24 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_2 (bob)",
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(0)",
+        "uri": "record(1)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
-      "uri": "record(2)",
+      "uri": "record(1)",
     },
     Object {
       "$type": "app.bsky.feed.defs#threadItemPost",
@@ -1300,11 +1300,11 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(1)",
-              "uri": "record(0)",
+              "uri": "record(1)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_2_0 (alice)",
@@ -1356,7 +1356,7 @@ Object {
         },
         "replyCount": 4,
         "repostCount": 0,
-        "uri": "record(1)",
+        "uri": "record(0)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -1393,24 +1393,24 @@ Object {
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
             "root": Object {
               "cid": "cids(0)",
-              "uri": "record(1)",
+              "uri": "record(0)",
             },
           },
           "text": "p_0_3 (carol)",
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(0)",
+        "uri": "record(1)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
-      "uri": "record(0)",
+      "uri": "record(1)",
     },
   ],
 }

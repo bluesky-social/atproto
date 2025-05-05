@@ -36,22 +36,22 @@ describe('appview thread views v2', () => {
     await network.close()
   })
 
-  describe.only('simple thread', () => {
-    let simpleSeed: Awaited<ReturnType<typeof seeds.simpleThreadSeed>>
+  describe('simple thread', () => {
+    let seed: Awaited<ReturnType<typeof seeds.simpleThreadSeed>>
 
     beforeAll(async () => {
-      simpleSeed = await seeds.simpleThreadSeed(sc)
+      seed = await seeds.simpleThreadSeed(sc)
     })
 
     it('returns thread anchored on p_0 sorting by oldest', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0.ref.uriStr,
+          uri: seed.posts.p_0.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#oldest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -95,12 +95,12 @@ describe('appview thread views v2', () => {
     it('returns thread anchored on p_0 sorting by newest', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0.ref.uriStr,
+          uri: seed.posts.p_0.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#newest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -144,12 +144,12 @@ describe('appview thread views v2', () => {
     it('returns thread anchored on p_0_0', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0_0.ref.uriStr,
+          uri: seed.posts.p_0_0.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#oldest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -177,12 +177,12 @@ describe('appview thread views v2', () => {
     it('returns thread anchored on p_0_0_0', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0_0_0.ref.uriStr,
+          uri: seed.posts.p_0_0_0.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#oldest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -210,12 +210,12 @@ describe('appview thread views v2', () => {
     it('returns thread anchored on p_0_1', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0_1.ref.uriStr,
+          uri: seed.posts.p_0_1.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#oldest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -239,12 +239,12 @@ describe('appview thread views v2', () => {
     it('returns thread anchored on p_0_2', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0_2.ref.uriStr,
+          uri: seed.posts.p_0_2.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#oldest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -272,12 +272,12 @@ describe('appview thread views v2', () => {
     it('returns thread anchored on p_0_2_0', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0_2_0.ref.uriStr,
+          uri: seed.posts.p_0_2_0.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#oldest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -305,12 +305,12 @@ describe('appview thread views v2', () => {
     it('returns thread anchored on p_0_3', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
         {
-          uri: simpleSeed.posts.p_0_3.ref.uriStr,
+          uri: seed.posts.p_0_3.ref.uriStr,
           sorting: 'app.bsky.feed.getPostThreadV2#oldest',
         },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
@@ -326,11 +326,84 @@ describe('appview thread views v2', () => {
     })
   })
 
-  describe.skip(`v2`, () => {
-    let baseSeed: Awaited<ReturnType<typeof seeds.longSeed>>
+  describe('long thread', () => {
+    let seed: Awaited<ReturnType<typeof seeds.longThreadSeed>>
 
     beforeAll(async () => {
-      baseSeed = await seeds.longSeed(sc)
+      seed = await seeds.longThreadSeed(sc)
+    })
+
+    describe('calculating depth', () => {
+      type Case = {
+        postKey: keyof Awaited<ReturnType<typeof seeds.longThreadSeed>>['posts']
+      }
+
+      const cases: Case[] = [
+        { postKey: 'root' },
+        { postKey: 'op1_0' },
+        { postKey: 'op1_1' },
+        { postKey: 'op1_1_1' },
+        { postKey: 'op1_1_1_1' },
+        { postKey: 'op1_1_1_1_1' },
+        { postKey: 'op1_2' },
+        { postKey: 'a1_0' },
+        { postKey: 'b1_0' },
+        { postKey: 'c1_0' },
+        { postKey: 'op2_0' },
+        { postKey: 'op2_1' },
+        { postKey: 'a2_2' },
+        { postKey: 'op2_3' },
+        { postKey: 'op2_4' },
+        { postKey: 'a2_0' },
+        { postKey: 'b2_0' },
+        { postKey: 'c2_0' },
+      ]
+
+      it.each(cases)(
+        'calculates the depths starting at $postKey',
+        async ({ postKey }) => {
+          const post = seed.posts[postKey]
+          const { data } = await agent.app.bsky.feed.getPostThreadV2(
+            {
+              uri: post.ref.uriStr,
+              sorting: 'app.bsky.feed.getPostThreadV2#oldest',
+            },
+            {
+              headers: await network.serviceHeaders(
+                seed.users.op.did,
+                ids.AppBskyFeedGetPostThreadV2,
+              ),
+            },
+          )
+
+          const { thread } = data
+
+          const anchorIndex = thread.findIndex(
+            (i) => (i as ThreadItemPost).uri === post.ref.uriStr,
+          )
+          // TODO all of them should have depth, so I shouldn't need these type casts
+          const anchorPost = thread[anchorIndex] as ThreadItemPost
+
+          const parents = thread.slice(0, anchorIndex)
+          const children = thread.slice(anchorIndex + 1, thread.length)
+
+          parents.forEach((parent) => {
+            expect((parent as ThreadItemPost).depth).toBeLessThan(0)
+          })
+          expect(anchorPost.depth).toEqual(0)
+          children.forEach((child) => {
+            expect((child as ThreadItemPost).depth).toBeGreaterThan(0)
+          })
+        },
+      )
+    })
+  })
+
+  describe.skip(`v2`, () => {
+    let baseSeed: Awaited<ReturnType<typeof seeds.longThreadSeed>>
+
+    beforeAll(async () => {
+      baseSeed = await seeds.longThreadSeed(sc)
     })
 
     // it(`works`, async () => {
@@ -569,10 +642,10 @@ describe('appview thread views v2', () => {
   })
 
   describe.skip(`OLD basic test cases`, () => {
-    let baseSeed: Awaited<ReturnType<typeof seeds.longSeed>>
+    let baseSeed: Awaited<ReturnType<typeof seeds.longThreadSeed>>
 
     beforeAll(async () => {
-      baseSeed = await seeds.longSeed(sc)
+      baseSeed = await seeds.longThreadSeed(sc)
     })
 
     const cases = [
