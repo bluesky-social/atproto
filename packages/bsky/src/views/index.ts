@@ -1132,6 +1132,7 @@ export class Views {
       height: number
       depth: number
       sorting: GetPostThreadV2QueryParams['sorting']
+      viewerDid?: string
     },
   ): (
     | $Typed<ThreadItemPost>
@@ -1205,8 +1206,7 @@ export class Views {
         sorting: opts.sorting,
         prioritizeFollowedUsers: false,
       },
-      // @TODO: use parameter.
-      viewerDid: undefined,
+      viewerDid: opts.viewerDid,
       fetchedAt: Date.now(),
     })
 
