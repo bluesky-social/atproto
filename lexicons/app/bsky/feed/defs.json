@@ -20,13 +20,19 @@
             "app.bsky.embed.video#view",
             "app.bsky.embed.external#view",
             "app.bsky.embed.record#view",
-            "app.bsky.embed.recordWithMedia#view"
+            "app.bsky.embed.recordWithMedia#view",
+            "app.bsky.embed.poll#view"
           ]
         },
         "replyCount": { "type": "integer" },
         "repostCount": { "type": "integer" },
         "likeCount": { "type": "integer" },
         "quoteCount": { "type": "integer" },
+        "pollAnswerCount": { "type": "integer" },
+        "pollAnswers": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
