@@ -1173,6 +1173,7 @@ export class Views {
             rootUri,
             state,
             height: opts.height,
+            currentDepth: -1,
           })
         : undefined,
       replies:
@@ -1182,6 +1183,7 @@ export class Views {
               rootUri,
               childrenByParentUri,
               state,
+              currentDepth: 1,
             })
           : undefined,
       depth: 0,
@@ -1212,11 +1214,13 @@ export class Views {
     rootUri,
     state,
     height,
+    currentDepth,
   }: {
     childUri: string
     rootUri: string
     state: HydrationState
     height: number
+    currentDepth: number
   }): ThreadTree | undefined {
     if (height < 1) return undefined
 
@@ -1258,6 +1262,7 @@ export class Views {
         rootUri,
         state,
         height: height - 1,
+        currentDepth: currentDepth - 1,
       }),
       replies: undefined,
       depth: -1, // TODO
@@ -1273,13 +1278,13 @@ export class Views {
     rootUri,
     childrenByParentUri,
     state,
-    currentDepth = 0,
+    currentDepth,
   }: {
     parentUri: string
     rootUri: string
     childrenByParentUri: Record<string, string[]>
     state: HydrationState
-    currentDepth?: number
+    currentDepth: number
   }): ThreadTree[] {
     // TODO confirm maxDepth handling
     const childrenUris = childrenByParentUri[parentUri] ?? []
