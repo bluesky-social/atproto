@@ -108,14 +108,6 @@ const presentation = (
     height: params.parentHeight,
     depth: getDepth(ctx, skeleton.anchor, params),
   })
-  // TODO
-  // if (isNotFoundPost(thread)) {
-  //   // @TODO technically this could be returned as a NotFoundPost based on lexicon
-  //   throw new InvalidRequestError(
-  //     `Post not found: ${skeleton.anchor}`,
-  //     'NotFound',
-  //   )
-  // }
   const rootUri =
     hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
     skeleton.anchor
