@@ -445,49 +445,111 @@ describe('appview thread views v2', () => {
       seed = await seeds.annotateOPThreadSeed(sc)
     })
 
-    it(`annotates all OP threads correctly`, async () => {
-      const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        { uri: seed.posts.p_0_o.ref.uriStr },
-        {
-          headers: await network.serviceHeaders(
-            seed.users.op.did,
-            ids.AppBskyFeedGetPostThreadV2,
-          ),
-        },
-      )
+    type PostKey = keyof Awaited<
+      ReturnType<typeof seeds.annotateOPThreadSeed>
+    >['posts']
+    type Case = {
+      postKey: PostKey
+      length: number
+      opThreadPosts: PostKey[]
+    }
 
-      const { thread } = data
-      expect(thread).toHaveLength(9)
+    const cases: Case[] = [
+      {
+        postKey: 'p_0_o',
+        length: 9,
+        opThreadPosts: [
+          // TODO: root is currently not marked as OP thread.
+          // 'p_0_o',
+          'p_0_0_o',
+          'p_0_0_0_o',
+          'p_0_0_0_0_o',
+          'p_0_2_o',
+        ],
+      },
+      {
+        postKey: 'p_0_0_o',
+        length: 4,
+        opThreadPosts: ['p_0_o', 'p_0_0_o', 'p_0_0_0_o', 'p_0_0_0_0_o'],
+      },
+      {
+        postKey: 'p_0_0_0_o',
+        length: 4,
+        opThreadPosts: ['p_0_o', 'p_0_0_o', 'p_0_0_0_o', 'p_0_0_0_0_o'],
+      },
+      {
+        postKey: 'p_0_0_0_0_o',
+        length: 4,
+        opThreadPosts: ['p_0_o', 'p_0_0_o', 'p_0_0_0_o', 'p_0_0_0_0_o'],
+      },
+      {
+        postKey: 'p_0_1_a',
+        length: 3,
+        // TODO: root is currently not marked as OP thread.
+        opThreadPosts: [
+          // 'p_0_o'
+        ],
+      },
+      {
+        postKey: 'p_0_1_0_a',
+        length: 3,
+        // TODO: root is currently not marked as OP thread.
+        opThreadPosts: [
+          // 'p_0_o'
+        ],
+      },
+      {
+        postKey: 'p_0_2_o',
+        length: 4,
+        opThreadPosts: ['p_0_o', 'p_0_2_o'],
+      },
+      {
+        postKey: 'p_0_2_0_b',
+        length: 4,
+        // TODO: root is currently not marked as OP thread.
+        opThreadPosts: [
+          // 'p_0_o',
+          // 'p_0_2_o',
+        ],
+      },
+      {
+        postKey: 'p_0_2_0_0_o',
+        length: 4,
+        // TODO: root is currently not marked as OP thread.
+        opThreadPosts: [
+          // 'p_0_o',
+          // 'p_0_2_o',
+        ],
+      },
+    ]
 
-      // OP threads
-      const p_0_0_o = getPost(thread, seed.posts.p_0_0_o.ref.uriStr)
-      expect(p_0_0_o.isOPThread).toBe(true)
+    it.each(cases)(
+      `annotates OP threads correctly anchored at $postKey`,
+      async ({ postKey, length, opThreadPosts }) => {
+        const post = seed.posts[postKey]
+        const { data } = await agent.app.bsky.feed.getPostThreadV2(
+          { uri: post.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyFeedGetPostThreadV2,
+            ),
+          },
+        )
 
-      const p_0_0_0_o = getPost(thread, seed.posts.p_0_0_0_o.ref.uriStr)
-      expect(p_0_0_0_o.isOPThread).toBe(true)
+        const opThreadPostsUris = new Set(
+          opThreadPosts.map((k) => seed.posts[k].ref.uriStr),
+        )
 
-      const p_0_0_0_0_o = getPost(thread, seed.posts.p_0_0_0_0_o.ref.uriStr)
-      expect(p_0_0_0_0_o.isOPThread).toBe(true)
+        const { thread } = data
+        expect(thread).toHaveLength(length)
 
-      const p_0_2_o = getPost(thread, seed.posts.p_0_2_o.ref.uriStr)
-      expect(p_0_2_o.isOPThread).toBe(true)
-
-      // other posts
-      const p_0_1_a = getPost(thread, seed.posts.p_0_1_a.ref.uriStr)
-      expect(p_0_1_a.isOPThread).toBe(false)
-
-      const p_0_1_0_a = getPost(thread, seed.posts.p_0_1_0_a.ref.uriStr)
-      expect(p_0_1_0_a.isOPThread).toBe(false)
-
-      const p_0_2_0_b = getPost(thread, seed.posts.p_0_2_0_b.ref.uriStr)
-      expect(p_0_2_0_b.isOPThread).toBe(false)
-
-      const p_0_o = getPost(thread, seed.posts.p_0_o.ref.uriStr)
-      expect(p_0_o.isOPThread).toBe(false)
-
-      const p_0_2_0_0_o = getPost(thread, seed.posts.p_0_2_0_0_o.ref.uriStr)
-      expect(p_0_2_0_0_o.isOPThread).toBe(false)
-    })
+        thread.forEach((i) => {
+          const p = i as ThreadItemPost
+          expect(p.isOPThread).toBe(opThreadPostsUris.has(p.uri))
+        })
+      },
+    )
   })
 
   describe(`sorting`, () => {
