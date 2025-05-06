@@ -394,6 +394,7 @@ export class SeedClient<
     text: string,
     facets?: AppBskyRichtextFacet.Main[],
     images?: ImageRef[],
+    overrides?: Partial<AppBskyFeedPost.Record>,
   ) {
     const embed = images
       ? {
@@ -412,6 +413,7 @@ export class SeedClient<
         facets,
         embed,
         createdAt: new Date().toISOString(),
+        ...overrides,
       },
       this.getHeaders(by),
     )

@@ -1,4 +1,10 @@
-import { SeedClient, TestNetwork, TestNetworkNoAppView } from '@atproto/dev-env'
+import { addHours, addMinutes, subHours } from 'date-fns'
+import {
+  RecordRef,
+  SeedClient,
+  TestNetwork,
+  TestNetworkNoAppView,
+} from '@atproto/dev-env'
 import { createUsers } from './util'
 
 // ignored so it's easier to read the seeds
@@ -265,25 +271,55 @@ export async function annotateOPThreadSeed(
 
 // ignored so it's easier to read the seeds
 // prettier-ignore
-export async function sortingSeed(
+export async function threadSortingSeedNoOpOrViewerReplies(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
   const users = await createUsers(sc, 'fl', [
     'op',
     'alice',
     'bob',
+    'carol',
   ] as const)
 
-  const root = await sc.post(users.op.did, 'root')
+  const tenHoursAgo = subHours(new Date(), 10)
+  const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
 
-  const root_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op1') // thread
-  const root_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1.ref, 'root_op1_op1') // thread
-  const root_op1_op1_op1 = await sc.reply(users.op.did, root.ref, root_op1_op1.ref, 'root_op1_op1_op1') // thread
-  const root_a1 = await sc.reply(users.alice.did, root.ref, root.ref, 'root_a1')
-  const root_a1_a2 = await sc.reply(users.alice.did, root.ref, root_a1.ref, 'root_a1_a2')
-  const root_op2 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2') // thread
-  const root_op2_b1 = await sc.reply(users.bob.did, root.ref, root_op2.ref, 'root_op2_b1')
-  const root_op2_b1_op1 = await sc.reply(users.op.did, root.ref, root.ref, 'root_op2_b1_op1') // not thread
+  const reply = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
+    return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
+  }
+
+  const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', addHours(tenHoursAgo, 1)) // 0 likes
+  const p_0_0_0_c = await reply(users.carol.did, p_0_0_a.ref, 'p_0_0_0_c', addHours(tenHoursAgo, 2)) // 0 likes
+  const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', addHours(tenHoursAgo, 3)) // 2 likes
+  const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', addHours(tenHoursAgo, 4)) // 1 like
+
+  const p_0_1_c = await reply(users.carol.did, p_0_o.ref, 'p_0_1_c', addHours(tenHoursAgo, 3)) // 3 likes
+  const p_0_1_0_b = await reply(users.bob.did, p_0_1_c.ref, 'p_0_1_0_b', addHours(tenHoursAgo, 4)) // 1 like
+  const p_0_1_1_c = await reply(users.carol.did, p_0_1_c.ref, 'p_0_1_1_c', addHours(tenHoursAgo, 5)) // 2 likes
+  const p_0_1_2_a = await reply(users.alice.did, p_0_1_c.ref, 'p_0_1_2_a', addHours(tenHoursAgo, 6)) // 0 likes
+
+  const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', addHours(tenHoursAgo, 5)) // 2 likes
+  const p_0_2_0_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_0_b', addHours(tenHoursAgo, 6)) // 2 likes
+  const p_0_2_1_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_1_a', addHours(tenHoursAgo, 7)) // 1 like
+  const p_0_2_2_c = await reply(users.carol.did, p_0_2_b.ref, 'p_0_2_2_c', addHours(tenHoursAgo, 8)) // 0 likes
+
+  // likes depth 1
+  await sc.like(users.alice.did, p_0_2_b.ref)
+  await sc.like(users.carol.did, p_0_2_b.ref)
+  await sc.like(users.alice.did, p_0_1_c.ref)
+  await sc.like(users.bob.did, p_0_1_c.ref)
+  await sc.like(users.carol.did, p_0_1_c.ref)
+
+  // likes depth 2
+  await sc.like(users.bob.did, p_0_0_1_a.ref)
+  await sc.like(users.carol.did, p_0_0_1_a.ref)
+  await sc.like(users.op.did, p_0_0_2_b.ref) // op like, bumps hotness.
+  await sc.like(users.bob.did, p_0_1_1_c.ref)
+  await sc.like(users.carol.did, p_0_1_1_c.ref)
+  await sc.like(users.bob.did, p_0_1_0_b.ref)
+  await sc.like(users.bob.did, p_0_2_0_b.ref)
+  await sc.like(users.carol.did, p_0_2_0_b.ref)
+  await sc.like(users.bob.did, p_0_2_1_a.ref)
 
   await sc.network.processAll()
 
@@ -291,15 +327,75 @@ export async function sortingSeed(
     seedClient: sc,
     users,
     posts: {
-      root,
-      root_op1,
-      root_op1_op1,
-      root_op1_op1_op1,
-      root_a1,
-      root_a1_a2,
-      root_op2,
-      root_op2_b1,
-      root_op2_b1_op1,
+      p_0_o,
+      p_0_0_a,
+      p_0_0_0_c,
+      p_0_0_1_a,
+      p_0_0_2_b,
+      p_0_1_c,
+      p_0_1_0_b,
+      p_0_1_1_c,
+      p_0_1_2_a,
+      p_0_2_b,
+      p_0_2_0_b,
+      p_0_2_1_a,
+      p_0_2_2_c,
     },
   }
 }
+
+// // ignored so it's easier to read the seeds
+// // prettier-ignore
+// export async function threadSortingSeedWithOpAndViewerReplies(
+//   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+// ) {
+//   const users = await createUsers(sc, 'fl', [
+//     'op',
+//     'alice',
+//     'bob',
+//   ] as const)
+
+//   const tenHoursAgo = subHours(new Date(), 10)
+//   const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
+
+//   const reply = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
+//     return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
+//   }
+
+//   const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', addHours(tenHoursAgo, 1))
+//   const p_0_0_0_o = await reply(users.op.did, p_0_0_a.ref, 'p_0_0_0_o', addHours(tenHoursAgo, 2))
+//   const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', addHours(tenHoursAgo, 3))
+//   const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', addHours(tenHoursAgo, 4))
+
+//   const p_0_1_o = await reply(users.op.did, p_0_o.ref, 'p_0_1_o', addHours(tenHoursAgo, 3))
+//   const p_0_1_0_b = await reply(users.bob.did, p_0_1_o.ref, 'p_0_1_0_b', addHours(tenHoursAgo, 4))
+//   const p_0_1_1_o = await reply(users.op.did, p_0_1_o.ref, 'p_0_1_1_o', addHours(tenHoursAgo, 5))
+//   const p_0_1_2_a = await reply(users.alice.did, p_0_1_o.ref, 'p_0_1_2_a', addHours(tenHoursAgo, 6))
+
+//   const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', addHours(tenHoursAgo, 5))
+//   const p_0_2_0_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_0_b', addHours(tenHoursAgo, 6))
+//   const p_0_2_1_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_1_a', addHours(tenHoursAgo, 7))
+//   const p_0_2_2_o = await reply(users.op.did, p_0_2_b.ref, 'p_0_2_2_o', addHours(tenHoursAgo, 8))
+
+//   await sc.network.processAll()
+
+//   return {
+//     seedClient: sc,
+//     users,
+//     posts: {
+//       p_0_o,
+//       p_0_0_a,
+//       p_0_0_0_o,
+//       p_0_0_1_a,
+//       p_0_0_2_b,
+//       p_0_1_o,
+//       p_0_1_0_b,
+//       p_0_1_1_o,
+//       p_0_1_2_a,
+//       p_0_2_b,
+//       p_0_2_0_b,
+//       p_0_2_1_a,
+//       p_0_2_2_o,
+//     },
+//   }
+// }

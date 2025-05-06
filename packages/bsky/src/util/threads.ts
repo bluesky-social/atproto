@@ -77,11 +77,13 @@ export function annotateThreadTree(tree: ThreadTree) {
 }
 
 export function sortThreadTree({
+  opDid,
   node,
   options,
   viewerDid,
   fetchedAt,
 }: {
+  opDid: string
   node: ThreadTree
   options: Omit<BskyThreadViewPreference, 'sort'> & {
     sorting: GetPostThreadV2QueryParams['sorting']
@@ -100,8 +102,8 @@ export function sortThreadTree({
         return -1
       }
 
-      const aIsByOp = a.post.author.did === node.post?.author.did
-      const bIsByOp = b.post.author.did === node.post?.author.did
+      const aIsByOp = a.post.author.did === opDid
+      const bIsByOp = b.post.author.did === opDid
       if (aIsByOp && bIsByOp) {
         return a.post.indexedAt.localeCompare(b.post.indexedAt) // oldest
       } else if (aIsByOp) {
@@ -166,6 +168,7 @@ export function sortThreadTree({
     })
     node.replies.forEach((reply) =>
       sortThreadTree({
+        opDid,
         node: reply,
         options,
         viewerDid,

@@ -1200,7 +1200,9 @@ export class Views {
     }
 
     annotateThreadTree(anchorTree)
+    const opDid = anchorTree.post.author.did
     const anchorTreeSorted = sortThreadTree({
+      opDid,
       node: anchorTree,
       options: {
         sorting: opts.sorting,
