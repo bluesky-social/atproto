@@ -459,8 +459,7 @@ describe('appview thread views v2', () => {
         postKey: 'p_0_o',
         length: 9,
         opThreadPosts: [
-          // TODO: root is currently not marked as OP thread.
-          // 'p_0_o',
+          'p_0_o',
           'p_0_0_o',
           'p_0_0_0_o',
           'p_0_0_0_0_o',
@@ -485,18 +484,12 @@ describe('appview thread views v2', () => {
       {
         postKey: 'p_0_1_a',
         length: 3,
-        // TODO: root is currently not marked as OP thread.
-        opThreadPosts: [
-          // 'p_0_o'
-        ],
+        opThreadPosts: ['p_0_o'],
       },
       {
         postKey: 'p_0_1_0_a',
         length: 3,
-        // TODO: root is currently not marked as OP thread.
-        opThreadPosts: [
-          // 'p_0_o'
-        ],
+        opThreadPosts: ['p_0_o'],
       },
       {
         postKey: 'p_0_2_o',
@@ -506,20 +499,12 @@ describe('appview thread views v2', () => {
       {
         postKey: 'p_0_2_0_b',
         length: 4,
-        // TODO: root is currently not marked as OP thread.
-        opThreadPosts: [
-          // 'p_0_o',
-          // 'p_0_2_o',
-        ],
+        opThreadPosts: ['p_0_o', 'p_0_2_o'],
       },
       {
         postKey: 'p_0_2_0_0_o',
         length: 4,
-        // TODO: root is currently not marked as OP thread.
-        opThreadPosts: [
-          // 'p_0_o',
-          // 'p_0_2_o',
-        ],
+        opThreadPosts: ['p_0_o', 'p_0_2_o'],
       },
     ]
 

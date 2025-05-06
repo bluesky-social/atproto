@@ -9,7 +9,7 @@ Object {
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
-      "isOPThread": false,
+      "isOPThread": true,
       "post": Object {
         "$type": "app.bsky.feed.defs#postView",
         "author": Object {
@@ -624,7 +624,7 @@ Object {
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
-      "isOPThread": false,
+      "isOPThread": true,
       "post": Object {
         "$type": "app.bsky.feed.defs#postView",
         "author": Object {
@@ -717,7 +717,7 @@ Object {
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
-      "isOPThread": false,
+      "isOPThread": true,
       "post": Object {
         "$type": "app.bsky.feed.defs#postView",
         "author": Object {
@@ -858,7 +858,7 @@ Object {
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
-      "isOPThread": false,
+      "isOPThread": true,
       "post": Object {
         "$type": "app.bsky.feed.defs#postView",
         "author": Object {
@@ -999,7 +999,7 @@ Object {
       "hasOPLike": false,
       "hasUnhydratedParents": false,
       "hasUnhydratedReplies": false,
-      "isOPThread": false,
+      "isOPThread": true,
       "post": Object {
         "$type": "app.bsky.feed.defs#postView",
         "author": Object {
