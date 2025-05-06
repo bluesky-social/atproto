@@ -34,48 +34,6 @@ export type ThreadTree =
   | $Typed<ThreadItemNotFound>
   | $Typed<ThreadItemBlocked>
 
-export function annotateThreadTree(tree: ThreadTree) {
-  if (tree.$type !== 'threadLeaf') return
-
-  const opDid = tree.post.author.did
-  const parentsByOP: ThreadLeaf[] = [tree]
-
-  /*
-   * Walk up parents
-   */
-  let parent: ThreadTree | undefined = tree.parent
-  while (parent) {
-    if (parent.$type !== 'threadLeaf' || parent.post.author.did !== opDid) {
-      // not a self-tree
-      return
-    }
-    parentsByOP.unshift(parent)
-    parent = parent.parent
-  }
-
-  if (parentsByOP.length > 1) {
-    for (const node of parentsByOP) {
-      node.isOPThread = true
-    }
-  }
-
-  function walkReplies(node: ThreadTree) {
-    if (node.$type !== 'threadLeaf') return
-
-    if (node.replies?.length) {
-      for (const reply of node.replies) {
-        if (reply.$type === 'threadLeaf' && reply.post.author.did === opDid) {
-          reply.isOPThread = true
-          // TODO has unhydrated replies
-          walkReplies(reply)
-        }
-      }
-    }
-  }
-
-  walkReplies(tree)
-}
-
 export function sortThreadTree({
   opDid,
   node,
