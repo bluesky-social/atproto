@@ -21,6 +21,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       'recordPath',
     ])
     .execute()
+
+  await db.schema
+    .createIndex('public_subject_status_viewer_did_author_idx')
+    .on('public_subject_status')
+    .columns(['viewerDid', 'isAuthor'])
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
