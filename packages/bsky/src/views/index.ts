@@ -1129,8 +1129,8 @@ export class Views {
     skeleton: { anchor: string; uris: string[] },
     state: HydrationState,
     opts: {
-      height: number
-      depth: number
+      above: number
+      below: number
       sorting: GetPostThreadV2QueryParams['sorting']
       viewerDid?: string
     },
@@ -1178,12 +1178,12 @@ export class Views {
             childUri: anchor,
             rootUri,
             state,
-            height: opts.height,
+            height: opts.above,
             currentDepth: -1,
           })
         : undefined,
       replies:
-        !anchorViolatesThreadGate && opts.depth > 0
+        !anchorViolatesThreadGate && opts.below > 0
           ? this.threadV2Replies({
               parentUri: anchor,
               rootUri,
@@ -1199,6 +1199,7 @@ export class Views {
       hasUnhydratedParents: false,
     }
 
+    // TODO: try to annotate in the same pass as the tree is built.
     annotateThreadTree(anchorTree)
     const opDid = anchorTree.post.author.did
     const anchorTreeSorted = sortThreadTree({

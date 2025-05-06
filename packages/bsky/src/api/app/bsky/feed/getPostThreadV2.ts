@@ -71,8 +71,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   try {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
-      above: params.parentHeight,
-      below: getDepth(ctx, anchor, params),
+      above: params.above,
+      below: calculateBelow(ctx, anchor, params),
     })
     return {
       anchor,
@@ -105,8 +105,8 @@ const presentation = (
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
   const thread = ctx.views.threadV2(skeleton, hydration, {
-    height: params.parentHeight,
-    depth: getDepth(ctx, skeleton.anchor, params),
+    above: params.above,
+    below: calculateBelow(ctx, skeleton.anchor, params),
     sorting: params.sorting,
     viewerDid: params.hydrateCtx.viewer ?? undefined,
   })
@@ -134,10 +134,10 @@ type Skeleton = {
   uris: string[]
 }
 
-const getDepth = (ctx: Context, anchor: string, params: Params) => {
+const calculateBelow = (ctx: Context, anchor: string, params: Params) => {
   let maxDepth = ctx.cfg.maxThreadDepth
   if (ctx.cfg.bigThreadUris.has(anchor) && ctx.cfg.bigThreadDepth) {
     maxDepth = ctx.cfg.bigThreadDepth
   }
-  return maxDepth ? Math.min(maxDepth, params.depth) : params.depth
+  return maxDepth ? Math.min(maxDepth, params.below) : params.below
 }

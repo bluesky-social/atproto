@@ -7392,19 +7392,18 @@ export const schemaDict = {
               format: 'at-uri',
               description: 'Reference (AT-URI) to post record.',
             },
-            depth: {
-              type: 'integer',
-              description:
-                'How many levels of reply depth should be included in response.',
-              default: 6,
-              minimum: 0,
-              maximum: 1000,
-            },
-            parentHeight: {
+            above: {
               type: 'integer',
               description:
                 'How many levels of parent (and grandparent, etc) post to include.',
               default: 80,
+              minimum: 0,
+              maximum: 1000,
+            },
+            below: {
+              type: 'integer',
+              description: 'How many levels of reply depth to include.',
+              default: 6,
               minimum: 0,
               maximum: 1000,
             },
