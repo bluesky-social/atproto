@@ -257,6 +257,7 @@ function* flattenThreadTree({
         yield {
           $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
           uri: thread.uri,
+          depth: thread.depth,
         }
       }
 

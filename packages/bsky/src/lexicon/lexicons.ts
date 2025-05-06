@@ -6306,8 +6306,8 @@ export const schemaDict = {
         type: 'object',
         required: [
           'uri',
-          'post',
           'depth',
+          'post',
           'isOPThread',
           'hasOPLike',
           'hasUnhydratedReplies',
@@ -6318,14 +6318,14 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
-          post: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
-          },
           depth: {
             type: 'integer',
             description:
-              'Describes the nesting level of this post in the thread.',
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
           },
           isOPThread: {
             type: 'boolean',
@@ -6350,31 +6350,46 @@ export const schemaDict = {
       },
       threadItemNoUnauthenticated: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'depth'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
           },
         },
       },
       threadItemNotFound: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'depth'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
           },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
         },
       },
       threadItemBlocked: {
         type: 'object',
-        required: ['uri', 'author'],
+        required: ['uri', 'depth', 'author'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
           },
           author: {
             type: 'ref',

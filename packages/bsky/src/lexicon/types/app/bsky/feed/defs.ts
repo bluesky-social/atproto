@@ -197,9 +197,9 @@ export function validateThreadViewPost<V>(v: V) {
 export interface ThreadItemPost {
   $type?: 'app.bsky.feed.defs#threadItemPost'
   uri: string
-  post: PostView
-  /** Describes the nesting level of this post in the thread. */
+  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
   depth: number
+  post: PostView
   /** Whether this post is part of a contiguous chain of OP replies. */
   isOPThread: boolean
   /** Whether this post has a like from the OP. */
@@ -223,6 +223,8 @@ export function validateThreadItemPost<V>(v: V) {
 export interface ThreadItemNoUnauthenticated {
   $type?: 'app.bsky.feed.defs#threadItemNoUnauthenticated'
   uri: string
+  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
+  depth: number
 }
 
 const hashThreadItemNoUnauthenticated = 'threadItemNoUnauthenticated'
@@ -242,6 +244,8 @@ export function validateThreadItemNoUnauthenticated<V>(v: V) {
 export interface ThreadItemNotFound {
   $type?: 'app.bsky.feed.defs#threadItemNotFound'
   uri: string
+  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
+  depth: number
 }
 
 const hashThreadItemNotFound = 'threadItemNotFound'
@@ -257,6 +261,8 @@ export function validateThreadItemNotFound<V>(v: V) {
 export interface ThreadItemBlocked {
   $type?: 'app.bsky.feed.defs#threadItemBlocked'
   uri: string
+  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
+  depth: number
   author: BlockedAuthor
 }
 
