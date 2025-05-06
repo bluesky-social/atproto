@@ -1144,10 +1144,10 @@ export class Views {
     const postView = this.post(anchor, state)
     const post = state.posts?.get(anchor)
     if (!post || !postView) {
-      return [this.threadV2ItemNotFound(anchor)]
+      return [this.threadV2ItemNotFound(anchor, 0)]
     }
     if (this.viewerBlockExists(postView.author.did, state)) {
-      return [this.threadV2ItemBlocked(anchor, postView.author.did, state)]
+      return [this.threadV2ItemBlocked(anchor, 0, postView.author.did, state)]
     }
 
     // Groups children of each parent.
@@ -1240,6 +1240,7 @@ export class Views {
     ) {
       return this.threadV2ItemBlocked(
         parentUri,
+        0,
         creatorFromUri(parentUri),
         state,
       )
@@ -1248,12 +1249,14 @@ export class Views {
     const post = this.post(parentUri, state)
     const postInfo = state.posts?.get(parentUri)
 
-    if (!postInfo || !post) return this.threadV2ItemNotFound(parentUri)
+    if (!postInfo || !post) {
+      return this.threadV2ItemNotFound(parentUri, currentDepth)
+    }
 
     if (rootUri !== getRootUri(parentUri, postInfo)) return // outside thread boundary
 
     if (this.viewerBlockExists(post.author.did, state)) {
-      return this.threadV2ItemBlocked(parentUri, post.author.did, state)
+      return this.threadV2ItemBlocked(parentUri, 0, post.author.did, state)
     }
 
     return {
@@ -1301,7 +1304,7 @@ export class Views {
         return undefined
       }
       if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
-        return this.threadV2ItemBlocked(uri, creatorFromUri(uri), state)
+        return this.threadV2ItemBlocked(uri, 0, creatorFromUri(uri), state)
       }
       const post = this.post(uri, state)
       if (!postInfo || !post) {
@@ -1309,11 +1312,11 @@ export class Views {
         // in the future we might consider keeping a placeholder for deleted
         // posts that have replies under them, but not supported at the moment.
         // this case is mostly likely hit when a takedown was applied to a post.
-        return this.threadV2ItemNotFound(uri)
+        return this.threadV2ItemNotFound(uri, currentDepth)
       }
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
-        return this.threadV2ItemBlocked(uri, post.author.did, state)
+        return this.threadV2ItemBlocked(uri, 0, post.author.did, state)
       }
       if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
         return undefined
@@ -1344,28 +1347,36 @@ export class Views {
 
   private threadV2ItemNoUnauthenticated(
     uri: string,
+    depth: number,
   ): $Typed<ThreadItemNoUnauthenticated> {
     return {
       $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
       uri,
+      depth,
     }
   }
 
-  private threadV2ItemNotFound(uri: string): $Typed<ThreadItemNotFound> {
+  private threadV2ItemNotFound(
+    uri: string,
+    depth: number,
+  ): $Typed<ThreadItemNotFound> {
     return {
       $type: 'app.bsky.feed.defs#threadItemNotFound',
       uri,
+      depth,
     }
   }
 
   private threadV2ItemBlocked(
     uri: string,
+    depth: number,
     authorDid: string,
     state: HydrationState,
   ): $Typed<ThreadItemBlocked> {
     return {
       $type: 'app.bsky.feed.defs#threadItemBlocked',
       uri,
+      depth,
       author: {
         did: authorDid,
         viewer: this.blockedProfileViewer(authorDid, state),
