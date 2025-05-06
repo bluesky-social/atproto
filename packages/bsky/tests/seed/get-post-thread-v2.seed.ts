@@ -1,4 +1,4 @@
-import { addHours, addMinutes, subHours } from 'date-fns'
+import { addHours, subHours } from 'date-fns'
 import {
   RecordRef,
   SeedClient,
@@ -306,7 +306,7 @@ export async function threadSortingSeedNoOpOrViewerReplies(
   // likes depth 1
   await sc.like(users.alice.did, p_0_2_b.ref)
   await sc.like(users.carol.did, p_0_2_b.ref)
-  await sc.like(users.alice.did, p_0_1_c.ref)
+  await sc.like(users.op.did, p_0_1_c.ref)  // op like, bumps hotness.
   await sc.like(users.bob.did, p_0_1_c.ref)
   await sc.like(users.carol.did, p_0_1_c.ref)
 

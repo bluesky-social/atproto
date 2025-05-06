@@ -319,22 +319,19 @@ describe('appview thread views v2', () => {
           const { thread } = data
 
           const anchorIndex = thread.findIndex(
-            // TODO all of them should have URI, so I shouldn't need this type cast
             (i) => (i as ThreadItemPost).uri === post.ref.uriStr,
           )
-          // TODO all of them should have depth, so I shouldn't need this type cast
+
           const anchorPost = thread[anchorIndex] as ThreadItemPost
 
           const parents = thread.slice(0, anchorIndex)
           const children = thread.slice(anchorIndex + 1, thread.length)
 
           parents.forEach((parent) => {
-            // TODO all of them should have depth, so I shouldn't need this type cast
             expect((parent as ThreadItemPost).depth).toBeLessThan(0)
           })
           expect(anchorPost.depth).toEqual(0)
           children.forEach((child) => {
-            // TODO all of them should have depth, so I shouldn't need this type cast
             expect((child as ThreadItemPost).depth).toBeGreaterThan(0)
           })
         },
@@ -522,7 +519,6 @@ describe('appview thread views v2', () => {
         const { thread } = data
         expect(thread).toHaveLength(13)
 
-        // TODO all of them should have URI, so I shouldn't need this type cast
         const item0 = thread[0] as ThreadItemPost
         const item1 = thread[1] as ThreadItemPost
         const item2 = thread[2] as ThreadItemPost
@@ -583,7 +579,6 @@ describe('appview thread views v2', () => {
         const { thread } = data
         expect(thread).toHaveLength(13)
 
-        // TODO all of them should have URI, so I shouldn't need this type cast
         const item0 = thread[0] as ThreadItemPost
         const item1 = thread[1] as ThreadItemPost
         const item2 = thread[2] as ThreadItemPost
@@ -644,7 +639,6 @@ describe('appview thread views v2', () => {
         const { thread } = data
         expect(thread).toHaveLength(13)
 
-        // TODO all of them should have URI, so I shouldn't need this type cast
         const item0 = thread[0] as ThreadItemPost
         const item1 = thread[1] as ThreadItemPost
         const item2 = thread[2] as ThreadItemPost
@@ -661,19 +655,19 @@ describe('appview thread views v2', () => {
 
         expect(item0.uri).toBe(seedNoOpOrViewer.posts.p_0_o.ref.uriStr)
         {
-          expect(item1.uri).toBe(seedNoOpOrViewer.posts.p_0_2_b.ref.uriStr)
+          expect(item1.uri).toBe(seedNoOpOrViewer.posts.p_0_1_c.ref.uriStr)
           {
-            expect(item2.uri).toBe(seedNoOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-            expect(item3.uri).toBe(seedNoOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(item4.uri).toBe(seedNoOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
+            expect(item2.uri).toBe(seedNoOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(item3.uri).toBe(seedNoOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(item4.uri).toBe(seedNoOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
           }
         }
         {
-          expect(item5.uri).toBe(seedNoOpOrViewer.posts.p_0_1_c.ref.uriStr)
+          expect(item5.uri).toBe(seedNoOpOrViewer.posts.p_0_2_b.ref.uriStr)
           {
-            expect(item6.uri).toBe(seedNoOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(item7.uri).toBe(seedNoOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(item8.uri).toBe(seedNoOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
+            expect(item6.uri).toBe(seedNoOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
+            expect(item7.uri).toBe(seedNoOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
+            expect(item8.uri).toBe(seedNoOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
           }
         }
         {
@@ -705,7 +699,6 @@ describe('appview thread views v2', () => {
         const { thread } = data
         expect(thread).toHaveLength(13)
 
-        // TODO all of them should have URI, so I shouldn't need this type cast
         const item0 = thread[0] as ThreadItemPost
         const item1 = thread[1] as ThreadItemPost
         const item2 = thread[2] as ThreadItemPost
