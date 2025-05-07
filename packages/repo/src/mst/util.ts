@@ -10,12 +10,12 @@ export const leadingZerosOnHash = async (key: string | Uint8Array) => {
   let leadingZeros = 0
   for (let i = 0; i < hash.length; i++) {
     const byte = hash[i]
-    leadingZeros += (Math.clz32(byte) >> 1) - 12
+    leadingZeros += Math.clz32(byte) - 24
     if (byte !== 0) {
       break
     }
   }
-  return leadingZeros
+  return leadingZeros >> 1
 }
 
 export const layerForEntries = async (
