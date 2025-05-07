@@ -1259,7 +1259,7 @@ export class Views {
       return {
         tree: this.threadV2ItemBlocked(
           parentUri,
-          0,
+          depth,
           creatorFromUri(parentUri),
           state,
         ),
@@ -1287,7 +1287,7 @@ export class Views {
     const authorDid = post.author.did
     if (this.viewerBlockExists(authorDid, state)) {
       return {
-        tree: this.threadV2ItemBlocked(parentUri, 0, authorDid, state),
+        tree: this.threadV2ItemBlocked(parentUri, depth, authorDid, state),
         isOPThread: false,
       }
     }
@@ -1353,7 +1353,7 @@ export class Views {
         return undefined
       }
       if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
-        return this.threadV2ItemBlocked(uri, 0, creatorFromUri(uri), state)
+        return this.threadV2ItemBlocked(uri, depth, creatorFromUri(uri), state)
       }
       const post = this.post(uri, state)
       if (!postInfo || !post) {
@@ -1366,7 +1366,7 @@ export class Views {
       const authorDid = post.author.did
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(authorDid, state)) {
-        return this.threadV2ItemBlocked(uri, 0, authorDid, state)
+        return this.threadV2ItemBlocked(uri, depth, authorDid, state)
       }
       if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
         return undefined
