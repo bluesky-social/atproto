@@ -111,31 +111,26 @@ export function sortThreadTree({
       }
 
       if (options.sorting === 'app.bsky.feed.getPostThreadV2#hotness') {
-        // TODO: cache hotness?
         const aHotness = getPostHotness(a, fetchedAt)
         const bHotness = getPostHotness(b, fetchedAt)
         return bHotness - aHotness
-      } else if (options.sorting === 'app.bsky.feed.getPostThreadV2#oldest') {
+      }
+      if (options.sorting === 'app.bsky.feed.getPostThreadV2#oldest') {
         return a.post.indexedAt.localeCompare(b.post.indexedAt)
-      } else if (options.sorting === 'app.bsky.feed.getPostThreadV2#newest') {
-        return b.post.indexedAt.localeCompare(a.post.indexedAt)
-      } else if (
-        options.sorting === 'app.bsky.feed.getPostThreadV2#mostLikes'
-      ) {
-        if (a.post.likeCount === b.post.likeCount) {
-          return b.post.indexedAt.localeCompare(a.post.indexedAt) // newest
-        } else {
-          return (b.post.likeCount || 0) - (a.post.likeCount || 0) // most likes
-        }
-      } else {
+      }
+      if (options.sorting === 'app.bsky.feed.getPostThreadV2#newest') {
         return b.post.indexedAt.localeCompare(a.post.indexedAt)
       }
+      if (options.sorting === 'app.bsky.feed.getPostThreadV2#mostLikes') {
+        if (a.post.likeCount === b.post.likeCount) {
+          return b.post.indexedAt.localeCompare(a.post.indexedAt) // newest
+        }
+        return (b.post.likeCount || 0) - (a.post.likeCount || 0) // most likes
+      }
+      return b.post.indexedAt.localeCompare(a.post.indexedAt)
     })
     if (options.branchingFactor > 0) {
-      node.replies = node.replies.slice(
-        0,
-        Math.min(node.replies.length, options.branchingFactor),
-      )
+      node.replies = node.replies.slice(0, options.branchingFactor)
     }
     node.replies.forEach((reply) =>
       sortThreadTree({
@@ -167,28 +162,6 @@ export function flattenThread(anchorTree: ThreadTree) {
       flattenThreadTree({ thread: anchorTree, isAuthenticated: false }),
     ),
   ])
-}
-
-// Inspired by https://join-lemmy.org/docs/contributors/07-ranking-algo.html
-// We want to give recent comments a real chance (and not bury them deep below the fold)
-// while also surfacing well-liked comments from the past. In the future, we can explore
-// something more sophisticated, but we don't have much data on the client right now.
-export function getPostHotness(thread: ThreadTree, fetchedAt: number) {
-  if (thread.$type !== 'threadLeaf') return 0
-
-  const { post, hasOPLike } = thread
-  const hoursAgo = Math.max(
-    0,
-    (new Date(fetchedAt).getTime() - new Date(post.indexedAt).getTime()) /
-      (1000 * 60 * 60),
-  )
-  const likeCount = post.likeCount ?? 0
-  const likeOrder = Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
-  const timePenaltyExponent = 1.5 + 1.5 / (1 + Math.log(1 + likeCount))
-  const opLikeBoost = hasOPLike ? 0.8 : 1.0
-  const timePenalty = Math.pow(hoursAgo + 2, timePenaltyExponent * opLikeBoost)
-
-  return likeOrder / timePenalty
 }
 
 function* flattenThreadTree({
@@ -241,18 +214,6 @@ function* flattenThreadTree({
             isAuthenticated,
             direction: 'down',
           })
-
-          // TODO what
-          // if (thread.depth !== 0) {
-          //   break
-          // }
-          // commented:
-          // treeview? works
-          // linear? does not work
-
-          // uncommented:
-          // treeview? does not work
-          // linear? works
         }
       }
     }
@@ -263,7 +224,7 @@ function* flattenThreadTree({
   }
 }
 
-export function threadLeafToSlice(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
+function threadLeafToSlice(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
   return {
     $type: 'app.bsky.feed.defs#threadItemPost',
     uri: leaf.uri,
@@ -274,4 +235,26 @@ export function threadLeafToSlice(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
     hasUnhydratedReplies: leaf.hasUnhydratedReplies,
     hasUnhydratedParents: leaf.hasUnhydratedParents,
   }
+}
+
+// Inspired by https://join-lemmy.org/docs/contributors/07-ranking-algo.html
+// We want to give recent comments a real chance (and not bury them deep below the fold)
+// while also surfacing well-liked comments from the past. In the future, we can explore
+// something more sophisticated, but we don't have much data on the client right now.
+export function getPostHotness(thread: ThreadTree, fetchedAt: number) {
+  if (thread.$type !== 'threadLeaf') return 0
+
+  const { post, hasOPLike } = thread
+  const hoursAgo = Math.max(
+    0,
+    (new Date(fetchedAt).getTime() - new Date(post.indexedAt).getTime()) /
+      (1000 * 60 * 60),
+  )
+  const likeCount = post.likeCount ?? 0
+  const likeOrder = Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
+  const timePenaltyExponent = 1.5 + 1.5 / (1 + Math.log(1 + likeCount))
+  const opLikeBoost = hasOPLike ? 0.8 : 1.0
+  const timePenalty = Math.pow(hoursAgo + 2, timePenaltyExponent * opLikeBoost)
+
+  return likeOrder / timePenalty
 }

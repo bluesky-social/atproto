@@ -1178,7 +1178,7 @@ export class Views {
             opDid,
             rootUri,
             state,
-            height: opts.above,
+            above: opts.above,
             depth: -1,
           })
         : { tree: undefined, isOPThread: false }
@@ -1234,17 +1234,17 @@ export class Views {
     opDid,
     rootUri,
     state,
-    height,
+    above,
     depth,
   }: {
     childUri: string
     opDid: string
     rootUri: string
     state: HydrationState
-    height: number
+    above: number
     depth: number
   }): { tree: ThreadTree | undefined; isOPThread: boolean } {
-    if (height < 1) {
+    if (Math.abs(depth) > above) {
       return {
         tree: undefined,
         isOPThread: false,
@@ -1305,7 +1305,7 @@ export class Views {
         opDid,
         rootUri,
         state,
-        height: height - 1,
+        above,
         depth: depth - 1,
       })
     const isOpPost = authorDid === opDid
