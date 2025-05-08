@@ -4,7 +4,6 @@ import { AppBskyFeedDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/feed/getPostThreadV2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
 import {
@@ -17,6 +16,11 @@ import {
   postThreadView,
   run,
 } from './get-post-thread-v2-util/v2-sandbox'
+
+// @TODO remove this helper
+const debugThread = (t: ThreadItemPost[]) => {
+  t.forEach((i) => console.log(i.post.record.text))
+}
 
 describe('appview thread views v2', () => {
   let network: TestNetwork
@@ -54,36 +58,29 @@ describe('appview thread views v2', () => {
       )
 
       const { thread } = data
-      expect(thread).toHaveLength(7)
+      const t = thread as ThreadItemPost[]
+      expect(t).toHaveLength(7)
 
-      const item0 = thread[0] as ThreadItemPost
-      const item1 = thread[1] as ThreadItemPost
-      const item2 = thread[2] as ThreadItemPost
-      const item3 = thread[3] as ThreadItemPost
-      const item4 = thread[4] as ThreadItemPost
-      const item5 = thread[5] as ThreadItemPost
-      const item6 = thread[6] as ThreadItemPost
+      expect(t[0].post.record.text).toEqual('p_0 (op)')
+      expect(t[0].depth).toEqual(0)
 
-      expect(item0.post.record.text).toEqual('p_0 (op)')
-      expect(item0.depth).toEqual(0)
+      expect(t[1].post.record.text).toEqual('p_0_0 (op)')
+      expect(t[1].depth).toEqual(1)
 
-      expect(item1.post.record.text).toEqual('p_0_0 (op)')
-      expect(item1.depth).toEqual(1)
+      expect(t[2].post.record.text).toEqual('p_0_0_0 (op)')
+      expect(t[2].depth).toEqual(2)
 
-      expect(item2.post.record.text).toEqual('p_0_0_0 (op)')
-      expect(item2.depth).toEqual(2)
+      expect(t[3].post.record.text).toEqual('p_0_1 (alice)')
+      expect(t[3].depth).toEqual(1)
 
-      expect(item3.post.record.text).toEqual('p_0_1 (alice)')
-      expect(item3.depth).toEqual(1)
+      expect(t[4].post.record.text).toEqual('p_0_2 (bob)')
+      expect(t[4].depth).toEqual(1)
 
-      expect(item4.post.record.text).toEqual('p_0_2 (bob)')
-      expect(item4.depth).toEqual(1)
+      expect(t[5].post.record.text).toEqual('p_0_2_0 (alice)')
+      expect(t[5].depth).toEqual(2)
 
-      expect(item5.post.record.text).toEqual('p_0_2_0 (alice)')
-      expect(item5.depth).toEqual(2)
-
-      expect(item6.post.record.text).toEqual('p_0_3 (carol)')
-      expect(item6.depth).toEqual(1)
+      expect(t[6].post.record.text).toEqual('p_0_3 (carol)')
+      expect(t[6].depth).toEqual(1)
 
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -102,20 +99,17 @@ describe('appview thread views v2', () => {
       )
 
       const { thread } = data
-      expect(thread).toHaveLength(3)
+      const t = thread as ThreadItemPost[]
+      expect(t).toHaveLength(3)
 
-      const item0 = thread[0] as ThreadItemPost
-      const item1 = thread[1] as ThreadItemPost
-      const item2 = thread[2] as ThreadItemPost
+      expect(t[0].post.record.text).toEqual('p_0 (op)')
+      expect(t[0].depth).toEqual(-1)
 
-      expect(item0.post.record.text).toEqual('p_0 (op)')
-      expect(item0.depth).toEqual(-1)
+      expect(t[1].post.record.text).toEqual('p_0_0 (op)')
+      expect(t[1].depth).toEqual(0)
 
-      expect(item1.post.record.text).toEqual('p_0_0 (op)')
-      expect(item1.depth).toEqual(0)
-
-      expect(item2.post.record.text).toEqual('p_0_0_0 (op)')
-      expect(item2.depth).toEqual(1)
+      expect(t[2].post.record.text).toEqual('p_0_0_0 (op)')
+      expect(t[2].depth).toEqual(1)
 
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -134,20 +128,17 @@ describe('appview thread views v2', () => {
       )
 
       const { thread } = data
-      expect(thread).toHaveLength(3)
+      const t = thread as ThreadItemPost[]
+      expect(t).toHaveLength(3)
 
-      const item0 = thread[0] as ThreadItemPost
-      const item1 = thread[1] as ThreadItemPost
-      const item2 = thread[2] as ThreadItemPost
+      expect(t[0].post.record.text).toEqual('p_0 (op)')
+      expect(t[0].depth).toEqual(-2)
 
-      expect(item0.post.record.text).toEqual('p_0 (op)')
-      expect(item0.depth).toEqual(-2)
+      expect(t[1].post.record.text).toEqual('p_0_0 (op)')
+      expect(t[1].depth).toEqual(-1)
 
-      expect(item1.post.record.text).toEqual('p_0_0 (op)')
-      expect(item1.depth).toEqual(-1)
-
-      expect(item2.post.record.text).toEqual('p_0_0_0 (op)')
-      expect(item2.depth).toEqual(0)
+      expect(t[2].post.record.text).toEqual('p_0_0_0 (op)')
+      expect(t[2].depth).toEqual(0)
 
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -166,16 +157,14 @@ describe('appview thread views v2', () => {
       )
 
       const { thread } = data
-      expect(thread).toHaveLength(2)
+      const t = thread as ThreadItemPost[]
+      expect(t).toHaveLength(2)
 
-      const item0 = thread[0] as ThreadItemPost
-      const item1 = thread[1] as ThreadItemPost
+      expect(t[0].post.record.text).toEqual('p_0 (op)')
+      expect(t[0].depth).toEqual(-1)
 
-      expect(item0.post.record.text).toEqual('p_0 (op)')
-      expect(item0.depth).toEqual(-1)
-
-      expect(item1.post.record.text).toEqual('p_0_1 (alice)')
-      expect(item1.depth).toEqual(0)
+      expect(t[1].post.record.text).toEqual('p_0_1 (alice)')
+      expect(t[1].depth).toEqual(0)
 
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -194,20 +183,17 @@ describe('appview thread views v2', () => {
       )
 
       const { thread } = data
-      expect(thread).toHaveLength(3)
+      const t = thread as ThreadItemPost[]
+      expect(t).toHaveLength(3)
 
-      const item0 = thread[0] as ThreadItemPost
-      const item1 = thread[1] as ThreadItemPost
-      const item2 = thread[2] as ThreadItemPost
+      expect(t[0].post.record.text).toEqual('p_0 (op)')
+      expect(t[0].depth).toEqual(-1)
 
-      expect(item0.post.record.text).toEqual('p_0 (op)')
-      expect(item0.depth).toEqual(-1)
+      expect(t[1].post.record.text).toEqual('p_0_2 (bob)')
+      expect(t[1].depth).toEqual(0)
 
-      expect(item1.post.record.text).toEqual('p_0_2 (bob)')
-      expect(item1.depth).toEqual(0)
-
-      expect(item2.post.record.text).toEqual('p_0_2_0 (alice)')
-      expect(item2.depth).toEqual(1)
+      expect(t[2].post.record.text).toEqual('p_0_2_0 (alice)')
+      expect(t[2].depth).toEqual(1)
 
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -226,20 +212,17 @@ describe('appview thread views v2', () => {
       )
 
       const { thread } = data
-      expect(thread).toHaveLength(3)
+      const t = thread as ThreadItemPost[]
+      expect(t).toHaveLength(3)
 
-      const item0 = thread[0] as ThreadItemPost
-      const item1 = thread[1] as ThreadItemPost
-      const item2 = thread[2] as ThreadItemPost
+      expect(t[0].post.record.text).toEqual('p_0 (op)')
+      expect(t[0].depth).toEqual(-2)
 
-      expect(item0.post.record.text).toEqual('p_0 (op)')
-      expect(item0.depth).toEqual(-2)
+      expect(t[1].post.record.text).toEqual('p_0_2 (bob)')
+      expect(t[1].depth).toEqual(-1)
 
-      expect(item1.post.record.text).toEqual('p_0_2 (bob)')
-      expect(item1.depth).toEqual(-1)
-
-      expect(item2.post.record.text).toEqual('p_0_2_0 (alice)')
-      expect(item2.depth).toEqual(0)
+      expect(t[2].post.record.text).toEqual('p_0_2_0 (alice)')
+      expect(t[2].depth).toEqual(0)
 
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -258,11 +241,11 @@ describe('appview thread views v2', () => {
       )
 
       const { thread } = data
-      expect(thread).toHaveLength(2)
-      expect((thread[0] as ThreadItemPost).post.record.text).toEqual('p_0 (op)')
-      expect((thread[1] as ThreadItemPost).post.record.text).toEqual(
-        'p_0_3 (carol)',
-      )
+      const t = thread as ThreadItemPost[]
+      expect(t).toHaveLength(2)
+
+      expect(t[0].post.record.text).toEqual('p_0 (op)')
+      expect(t[1].post.record.text).toEqual('p_0_3 (carol)')
       expect(forSnapshot(data)).toMatchSnapshot()
     })
   })
@@ -317,22 +300,20 @@ describe('appview thread views v2', () => {
           )
 
           const { thread } = data
+          const t = thread as ThreadItemPost[]
 
-          const anchorIndex = thread.findIndex(
-            (i) => (i as ThreadItemPost).uri === post.ref.uriStr,
-          )
+          const anchorIndex = t.findIndex((i) => i.uri === post.ref.uriStr)
+          const anchorPost = t[anchorIndex]
 
-          const anchorPost = thread[anchorIndex] as ThreadItemPost
-
-          const parents = thread.slice(0, anchorIndex)
-          const children = thread.slice(anchorIndex + 1, thread.length)
+          const parents = t.slice(0, anchorIndex)
+          const children = t.slice(anchorIndex + 1, t.length)
 
           parents.forEach((parent) => {
-            expect((parent as ThreadItemPost).depth).toBeLessThan(0)
+            expect(parent.depth).toBeLessThan(0)
           })
           expect(anchorPost.depth).toEqual(0)
           children.forEach((child) => {
-            expect((child as ThreadItemPost).depth).toBeGreaterThan(0)
+            expect(child.depth).toBeGreaterThan(0)
           })
         },
       )
@@ -362,10 +343,11 @@ describe('appview thread views v2', () => {
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(11)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(11)
 
-        const last = thread.at(-1) as ThreadItemPost
-        expect(last.uri).toBe(
+        const last = t.at(-1)
+        expect(last!.uri).toBe(
           seed.posts.p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref.uriStr,
         )
       })
@@ -385,10 +367,11 @@ describe('appview thread views v2', () => {
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(3)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(3)
 
-        const last = thread.at(-1) as ThreadItemPost
-        expect(last.uri).toBe(simpleSeed.posts.p_0_0_0.ref.uriStr)
+        const last = t.at(-1)
+        expect(last!.uri).toBe(simpleSeed.posts.p_0_0_0.ref.uriStr)
       })
     })
 
@@ -408,11 +391,12 @@ describe('appview thread views v2', () => {
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(11)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(11)
         expect(thread)
 
-        const first = thread.at(0) as ThreadItemPost
-        expect(first.uri).toBe(seed.posts.p_0.ref.uriStr)
+        const first = t.at(0)
+        expect(first!.uri).toBe(seed.posts.p_0.ref.uriStr)
       })
 
       it(`does not fulfill the below count if there are not enough items in the thread`, async () => {
@@ -430,10 +414,11 @@ describe('appview thread views v2', () => {
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(7)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(7)
 
-        const first = thread.at(0) as ThreadItemPost
-        expect(first.uri).toBe(simpleSeed.posts.p_0.ref.uriStr)
+        const first = t.at(0)
+        expect(first!.uri).toBe(simpleSeed.posts.p_0.ref.uriStr)
       })
     })
   })
@@ -527,262 +512,496 @@ describe('appview thread views v2', () => {
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(length)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(length)
 
-        thread.forEach((i) => {
-          const p = i as ThreadItemPost
-          expect(p.isOPThread).toBe(opThreadPostsUris.has(p.uri))
+        t.forEach((i) => {
+          expect(i.isOPThread).toBe(opThreadPostsUris.has(i.uri))
         })
       },
     )
   })
 
   describe(`sorting`, () => {
-    let seedNoOpOrViewer: Awaited<
+    let noOpOrViewer: Awaited<
       ReturnType<typeof seeds.threadSortingSeedNoOpOrViewerReplies>
+    >
+    let withOpAndViewer: Awaited<
+      ReturnType<typeof seeds.threadSortingSeedWithOpAndViewerReplies>
     >
 
     beforeAll(async () => {
-      seedNoOpOrViewer = await seeds.threadSortingSeedNoOpOrViewerReplies(sc)
+      noOpOrViewer = await seeds.threadSortingSeedNoOpOrViewerReplies(sc)
+      withOpAndViewer = await seeds.threadSortingSeedWithOpAndViewerReplies(sc)
     })
 
-    // TODO test sorting with OP and viewer posts
-
     describe('newest', () => {
-      it('sorts in all levels', async () => {
+      it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: seedNoOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#newest',
           },
           {
             headers: await network.serviceHeaders(
-              seedNoOpOrViewer.users.op.did,
+              noOpOrViewer.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(13)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(13)
 
-        const item0 = thread[0] as ThreadItemPost
-        const item1 = thread[1] as ThreadItemPost
-        const item2 = thread[2] as ThreadItemPost
-        const item3 = thread[3] as ThreadItemPost
-        const item4 = thread[4] as ThreadItemPost
-        const item5 = thread[5] as ThreadItemPost
-        const item6 = thread[6] as ThreadItemPost
-        const item7 = thread[7] as ThreadItemPost
-        const item8 = thread[8] as ThreadItemPost
-        const item9 = thread[9] as ThreadItemPost
-        const item10 = thread[10] as ThreadItemPost
-        const item11 = thread[11] as ThreadItemPost
-        const item12 = thread[12] as ThreadItemPost
-
-        expect(item0.uri).toBe(seedNoOpOrViewer.posts.p_0_o.ref.uriStr)
+        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
         {
-          expect(item1.uri).toBe(seedNoOpOrViewer.posts.p_0_2_b.ref.uriStr)
+          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
           {
-            expect(item2.uri).toBe(seedNoOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
-            expect(item3.uri).toBe(seedNoOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(item4.uri).toBe(seedNoOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
+            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
+            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
+            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
           }
         }
         {
-          expect(item5.uri).toBe(seedNoOpOrViewer.posts.p_0_1_c.ref.uriStr)
+          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
           {
-            expect(item6.uri).toBe(seedNoOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
-            expect(item7.uri).toBe(seedNoOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(item8.uri).toBe(seedNoOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
+            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
           }
         }
         {
-          expect(item9.uri).toBe(seedNoOpOrViewer.posts.p_0_0_a.ref.uriStr)
+          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
           {
-            expect(item10.uri).toBe(seedNoOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(item11.uri).toBe(seedNoOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(item12.uri).toBe(seedNoOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
+            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
+            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
+          }
+        }
+      })
+
+      it('sorts in all levels for the case with viewer and OP replies', async () => {
+        const { data } = await agent.app.bsky.feed.getPostThreadV2(
+          {
+            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            sorting: 'app.bsky.feed.getPostThreadV2#newest',
+          },
+          {
+            headers: await network.serviceHeaders(
+              withOpAndViewer.users.viewer.did,
+              ids.AppBskyFeedGetPostThreadV2,
+            ),
+          },
+        )
+
+        const { thread } = data
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(31)
+
+        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
+        {
+          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
+          {
+            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
+            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
+            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
+            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
+            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
+          }
+        }
+        {
+          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
+          {
+            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
+            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
+            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
+            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
+            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
+          }
+        }
+        {
+          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
+          {
+            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
+            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
+            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
+            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
+            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
+          }
+        }
+        {
+          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
+          {
+            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
+            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
+            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
+            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
+          }
+        }
+        {
+          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
+          {
+            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
+            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
+            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
+            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
           }
         }
       })
     })
 
     describe('oldest', () => {
-      it('sorts in all levels', async () => {
+      it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: seedNoOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#oldest',
           },
           {
             headers: await network.serviceHeaders(
-              seedNoOpOrViewer.users.op.did,
+              noOpOrViewer.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(13)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(13)
 
-        const item0 = thread[0] as ThreadItemPost
-        const item1 = thread[1] as ThreadItemPost
-        const item2 = thread[2] as ThreadItemPost
-        const item3 = thread[3] as ThreadItemPost
-        const item4 = thread[4] as ThreadItemPost
-        const item5 = thread[5] as ThreadItemPost
-        const item6 = thread[6] as ThreadItemPost
-        const item7 = thread[7] as ThreadItemPost
-        const item8 = thread[8] as ThreadItemPost
-        const item9 = thread[9] as ThreadItemPost
-        const item10 = thread[10] as ThreadItemPost
-        const item11 = thread[11] as ThreadItemPost
-        const item12 = thread[12] as ThreadItemPost
-
-        expect(item0.uri).toBe(seedNoOpOrViewer.posts.p_0_o.ref.uriStr)
+        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
         {
-          expect(item1.uri).toBe(seedNoOpOrViewer.posts.p_0_0_a.ref.uriStr)
+          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
           {
-            expect(item2.uri).toBe(seedNoOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
-            expect(item3.uri).toBe(seedNoOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(item4.uri).toBe(seedNoOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
+            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
+            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
           }
         }
         {
-          expect(item5.uri).toBe(seedNoOpOrViewer.posts.p_0_1_c.ref.uriStr)
+          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
           {
-            expect(item6.uri).toBe(seedNoOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(item7.uri).toBe(seedNoOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(item8.uri).toBe(seedNoOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
+            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
           }
         }
         {
-          expect(item9.uri).toBe(seedNoOpOrViewer.posts.p_0_2_b.ref.uriStr)
+          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
           {
-            expect(item10.uri).toBe(seedNoOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-            expect(item11.uri).toBe(seedNoOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(item12.uri).toBe(seedNoOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
+            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
+            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
+            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
+          }
+        }
+      })
+
+      it('sorts in all levels for the case with viewer and OP replies', async () => {
+        const { data } = await agent.app.bsky.feed.getPostThreadV2(
+          {
+            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            sorting: 'app.bsky.feed.getPostThreadV2#oldest',
+          },
+          {
+            headers: await network.serviceHeaders(
+              withOpAndViewer.users.viewer.did,
+              ids.AppBskyFeedGetPostThreadV2,
+            ),
+          },
+        )
+
+        const { thread } = data
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(31)
+
+        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
+        {
+          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
+          {
+            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
+            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
+            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
+            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
+            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
+          }
+        }
+        {
+          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
+          {
+            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
+            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
+            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
+            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
+            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
+          {
+            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
+            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
+            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
+            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
+          }
+        }
+        {
+          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
+          {
+            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
+            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
+            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
+          {
+            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
+            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
+            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
+            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
+            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
           }
         }
       })
     })
 
     describe('hotness', () => {
-      it('sorts in all levels', async () => {
+      it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: seedNoOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#hotness',
           },
           {
             headers: await network.serviceHeaders(
-              seedNoOpOrViewer.users.op.did,
+              noOpOrViewer.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(13)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(13)
 
-        const item0 = thread[0] as ThreadItemPost
-        const item1 = thread[1] as ThreadItemPost
-        const item2 = thread[2] as ThreadItemPost
-        const item3 = thread[3] as ThreadItemPost
-        const item4 = thread[4] as ThreadItemPost
-        const item5 = thread[5] as ThreadItemPost
-        const item6 = thread[6] as ThreadItemPost
-        const item7 = thread[7] as ThreadItemPost
-        const item8 = thread[8] as ThreadItemPost
-        const item9 = thread[9] as ThreadItemPost
-        const item10 = thread[10] as ThreadItemPost
-        const item11 = thread[11] as ThreadItemPost
-        const item12 = thread[12] as ThreadItemPost
-
-        expect(item0.uri).toBe(seedNoOpOrViewer.posts.p_0_o.ref.uriStr)
+        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
         {
-          expect(item1.uri).toBe(seedNoOpOrViewer.posts.p_0_1_c.ref.uriStr)
+          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
           {
-            expect(item2.uri).toBe(seedNoOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(item3.uri).toBe(seedNoOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(item4.uri).toBe(seedNoOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
+            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
           }
         }
         {
-          expect(item5.uri).toBe(seedNoOpOrViewer.posts.p_0_2_b.ref.uriStr)
+          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
           {
-            expect(item6.uri).toBe(seedNoOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-            expect(item7.uri).toBe(seedNoOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(item8.uri).toBe(seedNoOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
+            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
+            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
+            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
           }
         }
         {
-          expect(item9.uri).toBe(seedNoOpOrViewer.posts.p_0_0_a.ref.uriStr)
+          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
           {
-            expect(item10.uri).toBe(seedNoOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(item11.uri).toBe(seedNoOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(item12.uri).toBe(seedNoOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
+            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
+            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
+          }
+        }
+      })
+
+      it('sorts in all levels for the case with viewer and OP replies', async () => {
+        const { data } = await agent.app.bsky.feed.getPostThreadV2(
+          {
+            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            sorting: 'app.bsky.feed.getPostThreadV2#hotness',
+          },
+          {
+            headers: await network.serviceHeaders(
+              withOpAndViewer.users.viewer.did,
+              ids.AppBskyFeedGetPostThreadV2,
+            ),
+          },
+        )
+
+        const { thread } = data
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(31)
+
+        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
+        {
+          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
+          {
+            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
+            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
+            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
+            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
+            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
+          }
+        }
+        {
+          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
+          {
+            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
+            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
+            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
+            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
+            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
+          {
+            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
+            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
+            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
+          {
+            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
+            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
+            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
+            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
+            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
+          {
+            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
+            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
+            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
+            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
           }
         }
       })
     })
 
     describe('mostLikes', () => {
-      it('sorts in all levels', async () => {
+      it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: seedNoOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#mostLikes',
           },
           {
             headers: await network.serviceHeaders(
-              seedNoOpOrViewer.users.op.did,
+              noOpOrViewer.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
 
         const { thread } = data
-        expect(thread).toHaveLength(13)
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(13)
 
-        const item0 = thread[0] as ThreadItemPost
-        const item1 = thread[1] as ThreadItemPost
-        const item2 = thread[2] as ThreadItemPost
-        const item3 = thread[3] as ThreadItemPost
-        const item4 = thread[4] as ThreadItemPost
-        const item5 = thread[5] as ThreadItemPost
-        const item6 = thread[6] as ThreadItemPost
-        const item7 = thread[7] as ThreadItemPost
-        const item8 = thread[8] as ThreadItemPost
-        const item9 = thread[9] as ThreadItemPost
-        const item10 = thread[10] as ThreadItemPost
-        const item11 = thread[11] as ThreadItemPost
-        const item12 = thread[12] as ThreadItemPost
-
-        expect(item0.uri).toBe(seedNoOpOrViewer.posts.p_0_o.ref.uriStr)
+        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
         {
-          expect(item1.uri).toBe(seedNoOpOrViewer.posts.p_0_1_c.ref.uriStr)
+          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
           {
-            expect(item2.uri).toBe(seedNoOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(item3.uri).toBe(seedNoOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(item4.uri).toBe(seedNoOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
+            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
           }
         }
         {
-          expect(item5.uri).toBe(seedNoOpOrViewer.posts.p_0_2_b.ref.uriStr)
+          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
           {
-            expect(item6.uri).toBe(seedNoOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-            expect(item7.uri).toBe(seedNoOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(item8.uri).toBe(seedNoOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
+            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
+            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
+            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
           }
         }
         {
-          expect(item9.uri).toBe(seedNoOpOrViewer.posts.p_0_0_a.ref.uriStr)
+          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
           {
-            expect(item10.uri).toBe(seedNoOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(item11.uri).toBe(seedNoOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(item12.uri).toBe(seedNoOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
+            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
+            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
+          }
+        }
+      })
+
+      it('sorts in all levels for the case with viewer and OP replies', async () => {
+        const { data } = await agent.app.bsky.feed.getPostThreadV2(
+          {
+            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            sorting: 'app.bsky.feed.getPostThreadV2#mostLikes',
+          },
+          {
+            headers: await network.serviceHeaders(
+              withOpAndViewer.users.viewer.did,
+              ids.AppBskyFeedGetPostThreadV2,
+            ),
+          },
+        )
+
+        const { thread } = data
+        const t = thread as ThreadItemPost[]
+        expect(t).toHaveLength(31)
+
+        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
+        {
+          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
+          {
+            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
+            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
+            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
+            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
+            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
+          }
+        }
+        {
+          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
+          {
+            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
+            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
+            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
+            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
+            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
+          {
+            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
+            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
+            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
+            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
+            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
+          {
+            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
+            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
+            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
+            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
+            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
+          }
+        }
+        {
+          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
+          {
+            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
+            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
+            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
+            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
+            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
           }
         }
       })
@@ -1375,18 +1594,3 @@ describe('appview thread views v2', () => {
     })
   })
 })
-
-const getPost = (
-  thread: OutputSchema['thread'],
-  uri: string,
-): ThreadItemPost => {
-  const post = thread.find(
-    (i) => (i as ThreadItemPost).uri === uri,
-  ) as ThreadItemPost
-
-  if (!post) {
-    throw new Error(`Post with uri ${uri} not found in thread`)
-  }
-
-  return post
-}
