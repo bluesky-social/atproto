@@ -15347,7 +15347,7 @@ export const schemaDict = {
       reasonViolenceExtremistContent: {
         type: 'token',
         description:
-          'Extremist content. These reports will be sent to Bluesky only.',
+          "Extremist content. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonViolenceTrafficking: {
         type: 'token',
@@ -15388,12 +15388,12 @@ export const schemaDict = {
       reasonChildSafetyCSAM: {
         type: 'token',
         description:
-          'Child sexual abuse material (CSAM). These reports will be sent to Bluesky only.',
+          "Child sexual abuse material (CSAM). These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyGroom: {
         type: 'token',
         description:
-          'Grooming or predatory behavior. These reports will be sent to Bluesky only.',
+          "Grooming or predatory behavior. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyMinorPrivacy: {
         type: 'token',
@@ -15402,7 +15402,7 @@ export const schemaDict = {
       reasonChildSafetyEndangerment: {
         type: 'token',
         description:
-          'Child endangerment. These reports will be sent to Bluesky only.',
+          "Child endangerment. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyHarassment: {
         type: 'token',
@@ -15411,12 +15411,12 @@ export const schemaDict = {
       reasonChildSafetyPromotion: {
         type: 'token',
         description:
-          'Promotion of child exploitation. These reports will be sent to Bluesky only.',
+          "Promotion of child exploitation. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyOther: {
         type: 'token',
         description:
-          'Other child safety. These reports will be sent to Bluesky only.',
+          "Other child safety. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonHarassmentTroll: {
         type: 'token',
