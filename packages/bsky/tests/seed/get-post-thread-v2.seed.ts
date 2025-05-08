@@ -274,7 +274,7 @@ export async function annotateOPThreadSeed(
 export async function threadSortingSeedNoOpOrViewerReplies(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'fl', [
+  const users = await createUsers(sc, 'sort1', [
     'op',
     'alice',
     'bob',
@@ -344,58 +344,121 @@ export async function threadSortingSeedNoOpOrViewerReplies(
   }
 }
 
-// // ignored so it's easier to read the seeds
-// // prettier-ignore
-// export async function threadSortingSeedWithOpAndViewerReplies(
-//   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-// ) {
-//   const users = await createUsers(sc, 'fl', [
-//     'op',
-//     'alice',
-//     'bob',
-//   ] as const)
+// ignored so it's easier to read the seeds
+// prettier-ignore
+export async function threadSortingSeedWithOpAndViewerReplies(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'sort2', [
+    'op',
+    'viewer',
+    'alice',
+    'bob',
+    'carol',
+  ] as const)
 
-//   const tenHoursAgo = subHours(new Date(), 10)
-//   const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
+  const tenHoursAgo = subHours(new Date(), 10)
+  const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
 
-//   const reply = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
-//     return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
-//   }
+  const reply = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
+    return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
+  }
 
-//   const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', addHours(tenHoursAgo, 1))
-//   const p_0_0_0_o = await reply(users.op.did, p_0_0_a.ref, 'p_0_0_0_o', addHours(tenHoursAgo, 2))
-//   const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', addHours(tenHoursAgo, 3))
-//   const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', addHours(tenHoursAgo, 4))
+  const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', addHours(tenHoursAgo, 1)) // 1 like
+  const p_0_0_0_c = await reply(users.carol.did, p_0_0_a.ref, 'p_0_0_0_c', addHours(tenHoursAgo, 2)) // 0 likes
+  const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', addHours(tenHoursAgo, 3)) // 2 likes
+  const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', addHours(tenHoursAgo, 4)) // 1 like
+  const p_0_0_3_v = await reply(users.viewer.did, p_0_0_a.ref, 'p_0_0_3_v', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_0_4_o = await reply(users.op.did, p_0_0_a.ref, 'p_0_0_4_o', addHours(tenHoursAgo, 4)) // 0 likes
 
-//   const p_0_1_o = await reply(users.op.did, p_0_o.ref, 'p_0_1_o', addHours(tenHoursAgo, 3))
-//   const p_0_1_0_b = await reply(users.bob.did, p_0_1_o.ref, 'p_0_1_0_b', addHours(tenHoursAgo, 4))
-//   const p_0_1_1_o = await reply(users.op.did, p_0_1_o.ref, 'p_0_1_1_o', addHours(tenHoursAgo, 5))
-//   const p_0_1_2_a = await reply(users.alice.did, p_0_1_o.ref, 'p_0_1_2_a', addHours(tenHoursAgo, 6))
+  const p_0_1_c = await reply(users.carol.did, p_0_o.ref, 'p_0_1_c', addHours(tenHoursAgo, 3)) // 3 likes
+  const p_0_1_0_b = await reply(users.bob.did, p_0_1_c.ref, 'p_0_1_0_b', addHours(tenHoursAgo, 4)) // 1 like
+  const p_0_1_1_c = await reply(users.carol.did, p_0_1_c.ref, 'p_0_1_1_c', addHours(tenHoursAgo, 5)) // 2 likes
+  const p_0_1_2_o = await reply(users.op.did, p_0_1_c.ref, 'p_0_1_2_o', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_1_3_v = await reply(users.viewer.did, p_0_1_c.ref, 'p_0_1_3_v', addHours(tenHoursAgo, 4)) // 1 like
+  const p_0_1_4_a = await reply(users.alice.did, p_0_1_c.ref, 'p_0_1_4_a', addHours(tenHoursAgo, 6)) // 0 likes
 
-//   const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', addHours(tenHoursAgo, 5))
-//   const p_0_2_0_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_0_b', addHours(tenHoursAgo, 6))
-//   const p_0_2_1_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_1_a', addHours(tenHoursAgo, 7))
-//   const p_0_2_2_o = await reply(users.op.did, p_0_2_b.ref, 'p_0_2_2_o', addHours(tenHoursAgo, 8))
+  const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', addHours(tenHoursAgo, 5)) // 2 likes
+  const p_0_2_0_v = await reply(users.viewer.did, p_0_2_b.ref, 'p_0_2_0_v', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_2_1_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_1_b', addHours(tenHoursAgo, 6)) // 2 likes
+  const p_0_2_2_o = await reply(users.op.did, p_0_2_b.ref, 'p_0_2_2_o', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_2_3_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_3_a', addHours(tenHoursAgo, 7)) // 1 like
+  const p_0_2_4_c = await reply(users.carol.did, p_0_2_b.ref, 'p_0_2_4_c', addHours(tenHoursAgo, 8)) // 1 like
 
-//   await sc.network.processAll()
+  const p_0_3_o = await reply(users.op.did, p_0_o.ref, 'p_0_3_o', addHours(tenHoursAgo, 5)) // 0 likes
+  const p_0_3_0_v = await reply(users.viewer.did, p_0_3_o.ref, 'p_0_3_0_v', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_3_1_b = await reply(users.bob.did, p_0_3_o.ref, 'p_0_3_1_b', addHours(tenHoursAgo, 6)) // 0 likes
+  const p_0_3_2_o = await reply(users.op.did, p_0_3_o.ref, 'p_0_3_2_o', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_3_3_a = await reply(users.alice.did, p_0_3_o.ref, 'p_0_3_3_a', addHours(tenHoursAgo, 7)) // 0 likes
+  const p_0_3_4_c = await reply(users.carol.did, p_0_3_o.ref, 'p_0_3_4_c', addHours(tenHoursAgo, 8)) // 0 likes
 
-//   return {
-//     seedClient: sc,
-//     users,
-//     posts: {
-//       p_0_o,
-//       p_0_0_a,
-//       p_0_0_0_o,
-//       p_0_0_1_a,
-//       p_0_0_2_b,
-//       p_0_1_o,
-//       p_0_1_0_b,
-//       p_0_1_1_o,
-//       p_0_1_2_a,
-//       p_0_2_b,
-//       p_0_2_0_b,
-//       p_0_2_1_a,
-//       p_0_2_2_o,
-//     },
-//   }
-// }
+  const p_0_4_v = await reply(users.viewer.did, p_0_o.ref, 'p_0_4_v', addHours(tenHoursAgo, 3)) // 0 likes
+  const p_0_4_0_b = await reply(users.bob.did, p_0_4_v.ref, 'p_0_4_0_b', addHours(tenHoursAgo, 4)) // 1 like
+  const p_0_4_1_c = await reply(users.carol.did, p_0_4_v.ref, 'p_0_4_1_c', addHours(tenHoursAgo, 5)) // 1 like
+  const p_0_4_2_o = await reply(users.op.did, p_0_4_v.ref, 'p_0_4_2_o', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_4_3_v = await reply(users.viewer.did, p_0_4_v.ref, 'p_0_4_3_v', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_4_4_a = await reply(users.alice.did, p_0_4_v.ref, 'p_0_4_4_a', addHours(tenHoursAgo, 6)) // 0 likes
+
+  // likes depth 1
+  await sc.like(users.alice.did, p_0_2_b.ref)
+  await sc.like(users.carol.did, p_0_2_b.ref)
+  await sc.like(users.viewer.did, p_0_0_a.ref)
+  await sc.like(users.op.did, p_0_1_c.ref)  // op like, bumps hotness.
+  await sc.like(users.bob.did, p_0_1_c.ref)
+  await sc.like(users.carol.did, p_0_1_c.ref)
+
+  // likes depth 2
+  await sc.like(users.bob.did, p_0_0_1_a.ref)
+  await sc.like(users.carol.did, p_0_0_1_a.ref)
+  await sc.like(users.op.did, p_0_0_2_b.ref) // op like, bumps hotness.
+  await sc.like(users.bob.did, p_0_1_1_c.ref)
+  await sc.like(users.carol.did, p_0_1_1_c.ref)
+  await sc.like(users.bob.did, p_0_1_0_b.ref)
+  await sc.like(users.bob.did, p_0_2_1_b.ref)
+  await sc.like(users.carol.did, p_0_2_1_b.ref)
+  await sc.like(users.bob.did, p_0_1_3_v.ref)
+  await sc.like(users.bob.did, p_0_2_3_a.ref)
+  await sc.like(users.viewer.did, p_0_2_4_c.ref)
+  await sc.like(users.viewer.did, p_0_4_0_b.ref)
+  await sc.like(users.alice.did, p_0_4_1_c.ref)
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    posts: {
+      p_0_o,
+      p_0_0_a,
+      p_0_0_0_c,
+      p_0_0_1_a,
+      p_0_0_2_b,
+      p_0_0_3_v,
+      p_0_0_4_o,
+      p_0_1_c,
+      p_0_1_0_b,
+      p_0_1_1_c,
+      p_0_1_2_o,
+      p_0_1_3_v,
+      p_0_1_4_a,
+      p_0_2_b,
+      p_0_2_0_v,
+      p_0_2_1_b,
+      p_0_2_2_o,
+      p_0_2_3_a,
+      p_0_2_4_c,
+      p_0_3_o,
+      p_0_3_0_v,
+      p_0_3_1_b,
+      p_0_3_2_o,
+      p_0_3_3_a,
+      p_0_3_4_c,
+      p_0_4_v,
+      p_0_4_0_b,
+      p_0_4_1_c,
+      p_0_4_2_o,
+      p_0_4_3_v,
+      p_0_4_4_a,
+    },
+  }
+}

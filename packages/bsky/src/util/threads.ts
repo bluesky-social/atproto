@@ -60,6 +60,9 @@ export function sortThreadTree({
         return -1
       }
 
+      // Prioritization is applied first, then the selected sorting is applied.
+
+      // OP replies ⬆️.
       const aIsByOp = a.post.author.did === opDid
       const bIsByOp = b.post.author.did === opDid
       if (aIsByOp && bIsByOp) {
@@ -70,6 +73,7 @@ export function sortThreadTree({
         return 1 // op's own reply
       }
 
+      // Viewer replies ⬆️.
       const aIsBySelf = a.post.author.did === viewerDid
       const bIsBySelf = b.post.author.did === viewerDid
       if (aIsBySelf && bIsBySelf) {
@@ -80,6 +84,7 @@ export function sortThreadTree({
         return 1 // current account's reply
       }
 
+      // Pushpin-only posts ⬇️.
       if (isPostRecord(a.post.record) && isPostRecord(b.post.record)) {
         const aPin = Boolean(a.post.record.text.trim() === '📌')
         const bPin = Boolean(b.post.record.text.trim() === '📌')
@@ -93,6 +98,7 @@ export function sortThreadTree({
         }
       }
 
+      // Followers posts ⬆️.
       if (options.prioritizeFollowedUsers) {
         const af = a.post.author.viewer?.following
         const bf = b.post.author.viewer?.following
@@ -103,8 +109,8 @@ export function sortThreadTree({
         }
       }
 
-      // Split items from different fetches into separate generations.
       if (options.sorting === 'app.bsky.feed.getPostThreadV2#hotness') {
+        // TODO: cache hotness?
         const aHotness = getPostHotness(a, fetchedAt)
         const bHotness = getPostHotness(b, fetchedAt)
         return bHotness - aHotness
