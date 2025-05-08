@@ -9567,8 +9567,11 @@ export const schemaDict = {
               "The set of report reason 'codes' which are in-scope for this service to review and action. These usually align to policy categories. If not defined (distinct from empty array), all reason types are allowed.",
             type: 'array',
             items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.moderation.defs#reasonType',
+              type: 'union',
+              refs: [
+                'lex:com.atproto.moderation.defs#reasonType',
+                'lex:tools.ozone.report.defs#reasonType',
+              ],
             },
           },
           subjectTypes: {
@@ -9701,8 +9704,11 @@ export const schemaDict = {
                 "The set of report reason 'codes' which are in-scope for this service to review and action. These usually align to policy categories. If not defined (distinct from empty array), all reason types are allowed.",
               type: 'array',
               items: {
-                type: 'ref',
-                ref: 'lex:com.atproto.moderation.defs#reasonType',
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.moderation.defs#reasonType',
+                  'lex:tools.ozone.report.defs#reasonType',
+                ],
               },
             },
             subjectTypes: {

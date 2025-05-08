@@ -188,6 +188,42 @@ import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
 import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
+import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
+import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
+import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
+import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
+import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
+import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
+import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
+import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
+import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet.js'
+import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues.js'
+import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues.js'
+import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets.js'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet.js'
+import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions.js'
+import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions.js'
+import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption.js'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation.js'
+import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts.js'
+import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts.js'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember.js'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
+import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -222,6 +258,86 @@ export const APP_BSKY_GRAPH = {
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
+export const TOOLS_OZONE_MODERATION = {
+  DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
+  DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
+  DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
+  DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+}
+export const TOOLS_OZONE_REPORT = {
+  DefsReasonViolenceAnimalWelfare:
+    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+  DefsReasonViolenceThreats: 'tools.ozone.report.defs#reasonViolenceThreats',
+  DefsReasonViolenceGraphicContent:
+    'tools.ozone.report.defs#reasonViolenceGraphicContent',
+  DefsReasonViolenceSelfHarm: 'tools.ozone.report.defs#reasonViolenceSelfHarm',
+  DefsReasonViolenceGlorification:
+    'tools.ozone.report.defs#reasonViolenceGlorification',
+  DefsReasonViolenceExtremistContent:
+    'tools.ozone.report.defs#reasonViolenceExtremistContent',
+  DefsReasonViolenceTrafficking:
+    'tools.ozone.report.defs#reasonViolenceTrafficking',
+  DefsReasonViolenceOther: 'tools.ozone.report.defs#reasonViolenceOther',
+  DefsReasonSexualAbuseContent:
+    'tools.ozone.report.defs#reasonSexualAbuseContent',
+  DefsReasonSexualNCII: 'tools.ozone.report.defs#reasonSexualNCII',
+  DefsReasonSexualSextortion: 'tools.ozone.report.defs#reasonSexualSextortion',
+  DefsReasonSexualDeepfake: 'tools.ozone.report.defs#reasonSexualDeepfake',
+  DefsReasonSexualAnimal: 'tools.ozone.report.defs#reasonSexualAnimal',
+  DefsReasonSexualUnlabeled: 'tools.ozone.report.defs#reasonSexualUnlabeled',
+  DefsReasonSexualOther: 'tools.ozone.report.defs#reasonSexualOther',
+  DefsReasonChildSafetyCSAM: 'tools.ozone.report.defs#reasonChildSafetyCSAM',
+  DefsReasonChildSafetyGroom: 'tools.ozone.report.defs#reasonChildSafetyGroom',
+  DefsReasonChildSafetyMinorPrivacy:
+    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
+  DefsReasonChildSafetyEndangerment:
+    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+  DefsReasonChildSafetyHarassment:
+    'tools.ozone.report.defs#reasonChildSafetyHarassment',
+  DefsReasonChildSafetyPromotion:
+    'tools.ozone.report.defs#reasonChildSafetyPromotion',
+  DefsReasonChildSafetyOther: 'tools.ozone.report.defs#reasonChildSafetyOther',
+  DefsReasonHarassmentTroll: 'tools.ozone.report.defs#reasonHarassmentTroll',
+  DefsReasonHarassmentTargeted:
+    'tools.ozone.report.defs#reasonHarassmentTargeted',
+  DefsReasonHarassmentHateSpeech:
+    'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+  DefsReasonHarassmentDoxxing:
+    'tools.ozone.report.defs#reasonHarassmentDoxxing',
+  DefsReasonHarassmentOther: 'tools.ozone.report.defs#reasonHarassmentOther',
+  DefsReasonMisleadingBot: 'tools.ozone.report.defs#reasonMisleadingBot',
+  DefsReasonMisleadingImpersonation:
+    'tools.ozone.report.defs#reasonMisleadingImpersonation',
+  DefsReasonMisleadingSpam: 'tools.ozone.report.defs#reasonMisleadingSpam',
+  DefsReasonMisleadingScam: 'tools.ozone.report.defs#reasonMisleadingScam',
+  DefsReasonMisleadingSyntheticContent:
+    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
+  DefsReasonMisleadingMisinformation:
+    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+  DefsReasonMisleadingOther: 'tools.ozone.report.defs#reasonMisleadingOther',
+  DefsReasonRuleSiteSecurity: 'tools.ozone.report.defs#reasonRuleSiteSecurity',
+  DefsReasonRuleStolenContent:
+    'tools.ozone.report.defs#reasonRuleStolenContent',
+  DefsReasonRuleProhibitedSales:
+    'tools.ozone.report.defs#reasonRuleProhibitedSales',
+  DefsReasonRuleBanEvasion: 'tools.ozone.report.defs#reasonRuleBanEvasion',
+  DefsReasonRuleOther: 'tools.ozone.report.defs#reasonRuleOther',
+  DefsReasonCivicElectoralProcess:
+    'tools.ozone.report.defs#reasonCivicElectoralProcess',
+  DefsReasonCivicDisclosure: 'tools.ozone.report.defs#reasonCivicDisclosure',
+  DefsReasonCivicInterference:
+    'tools.ozone.report.defs#reasonCivicInterference',
+  DefsReasonCivicMisinformation:
+    'tools.ozone.report.defs#reasonCivicMisinformation',
+  DefsReasonCivicImpersonation:
+    'tools.ozone.report.defs#reasonCivicImpersonation',
+}
+export const TOOLS_OZONE_TEAM = {
+  DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
+  DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
+  DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
+  DefsRoleVerifier: 'tools.ozone.team.defs#roleVerifier',
+}
 
 export function createServer(options?: XrpcOptions): Server {
   return new Server(options)
@@ -232,12 +348,14 @@ export class Server {
   com: ComNS
   app: AppNS
   chat: ChatNS
+  tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
+    this.tools = new ToolsNS(this)
   }
 }
 
@@ -2476,6 +2594,510 @@ export class ChatBskyModerationNS {
     >,
   ) {
     const nsid = 'chat.bsky.moderation.updateActorAccess' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsNS {
+  _server: Server
+  ozone: ToolsOzoneNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.ozone = new ToolsOzoneNS(server)
+  }
+}
+
+export class ToolsOzoneNS {
+  _server: Server
+  communication: ToolsOzoneCommunicationNS
+  hosting: ToolsOzoneHostingNS
+  moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
+  set: ToolsOzoneSetNS
+  setting: ToolsOzoneSettingNS
+  signature: ToolsOzoneSignatureNS
+  team: ToolsOzoneTeamNS
+  verification: ToolsOzoneVerificationNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.communication = new ToolsOzoneCommunicationNS(server)
+    this.hosting = new ToolsOzoneHostingNS(server)
+    this.moderation = new ToolsOzoneModerationNS(server)
+    this.server = new ToolsOzoneServerNS(server)
+    this.set = new ToolsOzoneSetNS(server)
+    this.setting = new ToolsOzoneSettingNS(server)
+    this.signature = new ToolsOzoneSignatureNS(server)
+    this.team = new ToolsOzoneTeamNS(server)
+    this.verification = new ToolsOzoneVerificationNS(server)
+  }
+}
+
+export class ToolsOzoneCommunicationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationCreateTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationCreateTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.createTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationDeleteTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationDeleteTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.deleteTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listTemplates<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationListTemplates.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationListTemplates.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.listTemplates' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationUpdateTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationUpdateTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.updateTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneHostingNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAccountHistory<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHostingGetAccountHistory.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHostingGetAccountHistory.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.hosting.getAccountHistory' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneModerationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  emitEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationEmitEvent.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationEmitEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.emitEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetEvent.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRecord<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRecord.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRecord.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRecords<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRecords.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRecords.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRepo.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getReporterStats<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetReporterStats.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetReporterStats.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getReporterStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRepos.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRepos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubjects<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetSubjects.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetSubjects.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getSubjects' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryEvents<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationQueryEvents.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationQueryEvents.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.queryEvents' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryStatuses<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationQueryStatuses.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationQueryStatuses.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.queryStatuses' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationSearchRepos.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationSearchRepos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getConfig<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneServerGetConfig.Handler<ExtractAuth<AV>>,
+      ToolsOzoneServerGetConfig.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSetNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  addValues<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetAddValues.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetAddValues.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.addValues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteSet<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetDeleteSet.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetDeleteSet.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.deleteSet' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteValues<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetDeleteValues.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetDeleteValues.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.deleteValues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getValues<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetGetValues.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetGetValues.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.getValues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  querySets<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetQuerySets.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetQuerySets.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.querySets' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  upsertSet<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetUpsertSet.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetUpsertSet.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.set.upsertSet' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSettingNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  listOptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingListOptions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingListOptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.listOptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeOptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingRemoveOptions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingRemoveOptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.removeOptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  upsertOption<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingUpsertOption.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingUpsertOption.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.upsertOption' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSignatureNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  findCorrelation<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureFindCorrelation.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindCorrelation.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.findCorrelation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  findRelatedAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureFindRelatedAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureFindRelatedAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.findRelatedAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSignatureSearchAccounts.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSignatureSearchAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.signature.searchAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneTeamNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  addMember<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamAddMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamAddMember.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.addMember' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteMember<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamDeleteMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamDeleteMember.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.deleteMember' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamListMembers.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamListMembers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.listMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateMember<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamUpdateMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamUpdateMember.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.updateMember' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneVerificationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  grantVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationGrantVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationGrantVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.grantVerifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationListVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationListVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.listVerifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  revokeVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationRevokeVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationRevokeVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.revokeVerifications' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
