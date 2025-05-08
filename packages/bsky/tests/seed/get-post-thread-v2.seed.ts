@@ -463,3 +463,54 @@ export async function threadSortingSeedWithOpAndViewerReplies(
     },
   }
 }
+
+// ignored so it's easier to read the seeds
+// prettier-ignore
+export async function threadWithFollows(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'follow', [
+    'op',
+    'viewerF',
+    'viewerNoF',
+    'alice',
+    'bob',
+    'carol',
+  ] as const)
+
+  const tenHoursAgo = subHours(new Date(), 10)
+  const h = (h: number) => addHours(tenHoursAgo, h)
+
+  const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
+
+  const r = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
+    return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
+  }
+
+  const p_0_0_a = await r(users.alice.did, p_0_o.ref, 'p_0_0_a', h(0))
+  const p_0_1_b = await r(users.bob.did, p_0_o.ref, 'p_0_1_b', h(1))
+  const p_0_2_c = await r(users.carol.did, p_0_o.ref, 'p_0_2_c', h(2))
+  const p_0_3_o = await r(users.op.did, p_0_o.ref, 'p_0_3_o', h(3))
+  const p_0_4_f = await r(users.viewerF.did, p_0_o.ref, 'p_0_4_f', h(4))
+  const p_0_5_n = await r(users.viewerNoF.did, p_0_o.ref, 'p_0_5_n', h(5))
+
+  await sc.follow(users.viewerF.did, users.alice.did)
+  await sc.follow(users.viewerF.did, users.bob.did)
+  // Does not follow carol.
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    posts: {
+      p_0_o,
+      p_0_0_a,
+      p_0_1_b,
+      p_0_2_c,
+      p_0_3_o,
+      p_0_4_f,
+      p_0_5_n,
+    },
+  }
+}
