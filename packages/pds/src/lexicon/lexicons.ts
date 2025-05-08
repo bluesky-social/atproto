@@ -7422,6 +7422,14 @@ export const schemaDict = {
               minimum: 0,
               maximum: 1000,
             },
+            branchingFactor: {
+              type: 'integer',
+              description:
+                'Maximum of replies to include at each level of the thread.',
+              default: 10,
+              minimum: 0,
+              maximum: 1000,
+            },
             prioritizeFollowedUsers: {
               type: 'boolean',
               description: 'Whether to prioritize posts from followed users.',

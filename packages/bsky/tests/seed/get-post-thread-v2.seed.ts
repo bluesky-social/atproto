@@ -188,27 +188,110 @@ export async function deepThreadSeed(
 
 // ignored so it's easier to read the seeds
 // prettier-ignore
-export async function threadViewSeed(
+export async function branchingFactorSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'tv', [
+  const users = await createUsers(sc, 'wide', [
     'op',
     'alice',
     'bob',
-    'viewer',
+    'carol',
+    'dan'
   ] as const)
 
-  const root = await sc.post(users.op.did, 'root')
+  const aDid = users.alice.did
+  const p_0_o = await sc.post(users.op.did, 'p_0_o')
+  const r = (user: string, parent: { ref: RecordRef }, text: string) => {
+    return sc.reply(user, p_0_o.ref, parent.ref, text)
+  }
 
-  const root_a1 = await sc.reply(users.alice.did, root.ref, root.ref, 'root_a1') // deleted
-  const root_a1_a2 = await sc.reply(users.alice.did, root.ref, root_a1.ref, 'root_a1_a2')
-  const root_a1_a2_a3 = await sc.reply(users.alice.did, root.ref, root_a1_a2.ref, 'root_a1_a2_a3')
-
-  const root_b1 = await sc.reply(users.bob.did, root.ref, root.ref, 'root_b1') // blocks viewer
-  const root_b1_a1 = await sc.reply(users.alice.did, root.ref, root_b1.ref, 'root_b1_a1')
-
-  await sc.deletePost(users.alice.did, root_a1.ref.uri)
-  await sc.block(users.bob.did, users.viewer.did)
+  const p_0_0_a = await r(aDid, p_0_o, 'p_0_0_a')
+    const p_0_0_0_a = await r(aDid, p_0_0_a, 'p_0_0_0_a')
+      const p_0_0_0_0_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_0_a')
+      const p_0_0_0_1_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_1_a')
+      const p_0_0_0_2_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_2_a')
+      const p_0_0_0_3_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_3_a')
+    const p_0_0_1_a = await r(aDid, p_0_0_a, 'p_0_0_1_a')
+      const p_0_0_1_0_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_0_a')
+      const p_0_0_1_1_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_1_a')
+      const p_0_0_1_2_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_2_a')
+      const p_0_0_1_3_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_3_a')
+    const p_0_0_2_a = await r(aDid, p_0_0_a, 'p_0_0_2_a')
+      const p_0_0_2_0_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_0_a')
+      const p_0_0_2_1_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_1_a')
+      const p_0_0_2_2_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_2_a')
+      const p_0_0_2_3_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_3_a')
+    const p_0_0_3_a = await r(aDid, p_0_0_a, 'p_0_0_3_a')
+      const p_0_0_3_0_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_0_a')
+      const p_0_0_3_1_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_1_a')
+      const p_0_0_3_2_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_2_a')
+      const p_0_0_3_3_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_3_a')
+  const p_0_1_a = await r(aDid, p_0_o, 'p_0_1_a')
+    const p_0_1_0_a = await r(aDid, p_0_1_a, 'p_0_1_0_a')
+      const p_0_1_0_0_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_0_a')
+      const p_0_1_0_1_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_1_a')
+      const p_0_1_0_2_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_2_a')
+      const p_0_1_0_3_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_3_a')
+    const p_0_1_1_a = await r(aDid, p_0_1_a, 'p_0_1_1_a')
+      const p_0_1_1_0_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_0_a')
+      const p_0_1_1_1_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_1_a')
+      const p_0_1_1_2_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_2_a')
+      const p_0_1_1_3_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_3_a')
+    const p_0_1_2_a = await r(aDid, p_0_1_a, 'p_0_1_2_a')
+      const p_0_1_2_0_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_0_a')
+      const p_0_1_2_1_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_1_a')
+      const p_0_1_2_2_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_2_a')
+      const p_0_1_2_3_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_3_a')
+    const p_0_1_3_a = await r(aDid, p_0_1_a, 'p_0_1_3_a')
+      const p_0_1_3_0_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_0_a')
+      const p_0_1_3_1_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_1_a')
+      const p_0_1_3_2_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_2_a')
+      const p_0_1_3_3_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_3_a')
+  const p_0_2_a = await r(aDid, p_0_o, 'p_0_2_a')
+    const p_0_2_0_a = await r(aDid, p_0_2_a, 'p_0_2_0_a')
+      const p_0_2_0_0_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_0_a')
+      const p_0_2_0_1_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_1_a')
+      const p_0_2_0_2_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_2_a')
+      const p_0_2_0_3_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_3_a')
+    const p_0_2_1_a = await r(aDid, p_0_2_a, 'p_0_2_1_a')
+      const p_0_2_1_0_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_0_a')
+      const p_0_2_1_1_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_1_a')
+      const p_0_2_1_2_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_2_a')
+      const p_0_2_1_3_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_3_a')
+    const p_0_2_2_a = await r(aDid, p_0_2_a, 'p_0_2_2_a')
+      const p_0_2_2_0_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_0_a')
+      const p_0_2_2_1_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_1_a')
+      const p_0_2_2_2_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_2_a')
+      const p_0_2_2_3_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_3_a')
+    const p_0_2_3_a = await r(aDid, p_0_2_a, 'p_0_2_3_a')
+      const p_0_2_3_0_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_0_a')
+      const p_0_2_3_1_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_1_a')
+      const p_0_2_3_2_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_2_a')
+      const p_0_2_3_3_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_3_a')
+  const p_0_3_a = await r(aDid, p_0_o, 'p_0_3_a')
+    const p_0_3_0_a = await r(aDid, p_0_3_a, 'p_0_3_0_a')
+      const p_0_3_0_0_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_0_a')
+      const p_0_3_0_1_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_1_a')
+      const p_0_3_0_2_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_2_a')
+      const p_0_3_0_3_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_3_a')
+      // This is the only case in this seed where a reply has 5 replies instead of 4,
+      // to have cases of different lengths in the same tree.
+      const p_0_3_0_4_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_4_a')
+    const p_0_3_1_a = await r(aDid, p_0_3_a, 'p_0_3_1_a')
+      const p_0_3_1_0_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_0_a')
+      const p_0_3_1_1_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_1_a')
+      const p_0_3_1_2_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_2_a')
+      const p_0_3_1_3_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_3_a')
+    const p_0_3_2_a = await r(aDid, p_0_3_a, 'p_0_3_2_a')
+      const p_0_3_2_0_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_0_a')
+      const p_0_3_2_1_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_1_a')
+      const p_0_3_2_2_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_2_a')
+      const p_0_3_2_3_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_3_a')
+    const p_0_3_3_a = await r(aDid, p_0_3_a, 'p_0_3_3_a')
+      const p_0_3_3_0_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_0_a')
+      const p_0_3_3_1_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_1_a')
+      const p_0_3_3_2_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_2_a')
+      const p_0_3_3_3_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_3_a')
 
   await sc.network.processAll()
 
@@ -216,12 +299,93 @@ export async function threadViewSeed(
     seedClient: sc,
     users,
     posts: {
-      root,
-      root_a1,
-      root_a1_a2,
-      root_a1_a2_a3,
-      root_b1,
-      root_b1_a1,
+      p_0_o,
+      p_0_0_a,
+      p_0_0_0_a,
+      p_0_0_0_0_a,
+      p_0_0_0_1_a,
+      p_0_0_0_2_a,
+      p_0_0_0_3_a,
+      p_0_0_1_a,
+      p_0_0_1_0_a,
+      p_0_0_1_1_a,
+      p_0_0_1_2_a,
+      p_0_0_1_3_a,
+      p_0_0_2_a,
+      p_0_0_2_0_a,
+      p_0_0_2_1_a,
+      p_0_0_2_2_a,
+      p_0_0_2_3_a,
+      p_0_0_3_a,
+      p_0_0_3_0_a,
+      p_0_0_3_1_a,
+      p_0_0_3_2_a,
+      p_0_0_3_3_a,
+      p_0_1_a,
+      p_0_1_0_a,
+      p_0_1_0_0_a,
+      p_0_1_0_1_a,
+      p_0_1_0_2_a,
+      p_0_1_0_3_a,
+      p_0_1_1_a,
+      p_0_1_1_0_a,
+      p_0_1_1_1_a,
+      p_0_1_1_2_a,
+      p_0_1_1_3_a,
+      p_0_1_2_a,
+      p_0_1_2_0_a,
+      p_0_1_2_1_a,
+      p_0_1_2_2_a,
+      p_0_1_2_3_a,
+      p_0_1_3_a,
+      p_0_1_3_0_a,
+      p_0_1_3_1_a,
+      p_0_1_3_2_a,
+      p_0_1_3_3_a,
+      p_0_2_a,
+      p_0_2_0_a,
+      p_0_2_0_0_a,
+      p_0_2_0_1_a,
+      p_0_2_0_2_a,
+      p_0_2_0_3_a,
+      p_0_2_1_a,
+      p_0_2_1_0_a,
+      p_0_2_1_1_a,
+      p_0_2_1_2_a,
+      p_0_2_1_3_a,
+      p_0_2_2_a,
+      p_0_2_2_0_a,
+      p_0_2_2_1_a,
+      p_0_2_2_2_a,
+      p_0_2_2_3_a,
+      p_0_2_3_a,
+      p_0_2_3_0_a,
+      p_0_2_3_1_a,
+      p_0_2_3_2_a,
+      p_0_2_3_3_a,
+      p_0_3_a,
+      p_0_3_0_a,
+      p_0_3_0_0_a,
+      p_0_3_0_1_a,
+      p_0_3_0_2_a,
+      p_0_3_0_3_a,
+      p_0_3_0_4_a,
+      p_0_3_1_a,
+      p_0_3_1_0_a,
+      p_0_3_1_1_a,
+      p_0_3_1_2_a,
+      p_0_3_1_3_a,
+      p_0_3_2_a,
+      p_0_3_2_0_a,
+      p_0_3_2_1_a,
+      p_0_3_2_2_a,
+      p_0_3_2_3_a,
+      p_0_3_3_a,
+      p_0_3_3_0_a,
+      p_0_3_3_1_a,
+      p_0_3_3_2_a,
+      p_0_3_3_3_a,
+
     },
   }
 }
