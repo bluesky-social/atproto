@@ -67,7 +67,11 @@ import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
-import { ThreadTree, flattenThread, sortThreadTree } from '../util/threads'
+import {
+  ThreadTree,
+  flattenThread,
+  sortThreadTree as sortAndTrimThreadTree,
+} from '../util/threads'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -1126,6 +1130,7 @@ export class Views {
     opts: {
       above: number
       below: number
+      branchingFactor: number
       prioritizeFollowedUsers: boolean
       sorting: GetPostThreadV2QueryParams['sorting']
       viewerDid?: string
@@ -1209,10 +1214,11 @@ export class Views {
       hasUnhydratedParents: false,
     }
 
-    const anchorTreeSorted = sortThreadTree({
+    const anchorTreeSorted = sortAndTrimThreadTree({
       opDid,
       node: anchorTree,
       options: {
+        branchingFactor: opts.branchingFactor,
         sorting: opts.sorting,
         prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
       },

@@ -44,6 +44,7 @@ export function sortThreadTree({
   opDid: string
   node: ThreadTree
   options: Omit<BskyThreadViewPreference, 'sort'> & {
+    branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
     sorting: GetPostThreadV2QueryParams['sorting']
   }
   viewerDid?: string
@@ -130,6 +131,12 @@ export function sortThreadTree({
         return b.post.indexedAt.localeCompare(a.post.indexedAt)
       }
     })
+    if (options.branchingFactor > 0) {
+      node.replies = node.replies.slice(
+        0,
+        Math.min(node.replies.length, options.branchingFactor),
+      )
+    }
     node.replies.forEach((reply) =>
       sortThreadTree({
         opDid,

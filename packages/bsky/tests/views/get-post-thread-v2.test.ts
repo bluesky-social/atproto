@@ -6,6 +6,7 @@ import {
   PostView,
   ThreadItemPost,
 } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { QueryParams } from '../../src/lexicon/types/app/bsky/feed/getPostThreadV2'
 import { ThreadTree, getPostHotness } from '../../src/util/threads'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
@@ -414,6 +415,127 @@ describe('appview thread views v2', () => {
         expect(first!.uri).toBe(simpleSeed.posts.p_0.ref.uriStr)
       })
     })
+  })
+
+  describe('branching factor', () => {
+    let seed: Awaited<ReturnType<typeof seeds.branchingFactorSeed>>
+
+    beforeAll(async () => {
+      seed = await seeds.branchingFactorSeed(sc)
+    })
+
+    type PostKey = keyof Awaited<
+      ReturnType<typeof seeds.branchingFactorSeed>
+    >['posts']
+    type Case =
+      | {
+          branchingFactor: number
+          sorting: QueryParams['sorting']
+          posts: PostKey[]
+        }
+      | {
+          branchingFactor: number
+          sorting: QueryParams['sorting']
+          length: number // for higher branching factors it gets too verbose to write all posts.
+        }
+    const cases: Case[] = [
+      {
+        branchingFactor: 1,
+        sorting: 'app.bsky.feed.getPostThreadV2#oldest',
+        posts: ['p_0_o', 'p_0_0_a', 'p_0_0_0_a', 'p_0_0_0_0_a'],
+      },
+      {
+        branchingFactor: 1,
+        sorting: 'app.bsky.feed.getPostThreadV2#newest',
+        posts: ['p_0_o', 'p_0_3_a', 'p_0_3_3_a', 'p_0_3_3_3_a'],
+      },
+      {
+        branchingFactor: 2,
+        sorting: 'app.bsky.feed.getPostThreadV2#oldest',
+        posts: [
+          'p_0_o',
+          'p_0_0_a',
+          'p_0_0_0_a',
+          'p_0_0_0_0_a',
+          'p_0_0_0_1_a',
+          'p_0_0_1_a',
+          'p_0_0_1_0_a',
+          'p_0_0_1_1_a',
+          'p_0_1_a',
+          'p_0_1_0_a',
+          'p_0_1_0_0_a',
+          'p_0_1_0_1_a',
+          'p_0_1_1_a',
+          'p_0_1_1_0_a',
+          'p_0_1_1_1_a',
+        ],
+      },
+      {
+        branchingFactor: 2,
+        sorting: 'app.bsky.feed.getPostThreadV2#newest',
+        posts: [
+          'p_0_o',
+          'p_0_3_a',
+          'p_0_3_3_a',
+          'p_0_3_3_3_a',
+          'p_0_3_3_2_a',
+          'p_0_3_2_a',
+          'p_0_3_2_3_a',
+          'p_0_3_2_2_a',
+          'p_0_2_a',
+          'p_0_2_3_a',
+          'p_0_2_3_3_a',
+          'p_0_2_3_2_a',
+          'p_0_2_2_a',
+          'p_0_2_2_3_a',
+          'p_0_2_2_2_a',
+        ],
+      },
+      {
+        branchingFactor: 3,
+        sorting: 'app.bsky.feed.getPostThreadV2#newest',
+        length: 40,
+      },
+      {
+        branchingFactor: 4,
+        sorting: 'app.bsky.feed.getPostThreadV2#newest',
+        length: 85,
+      },
+      {
+        branchingFactor: 5,
+        sorting: 'app.bsky.feed.getPostThreadV2#newest',
+        length: 86, // The seeds have only 1 post with 5 replies, so it is only +1 compared to branchingFactor 4.
+      },
+    ]
+
+    it.each(cases)(
+      'limits to branching factor of $branchingFactor sorting by $sorting',
+      async (args) => {
+        const { data } = await agent.app.bsky.feed.getPostThreadV2(
+          {
+            uri: seed.posts.p_0_o.ref.uriStr,
+            sorting: 'sorting' in args ? args.sorting : undefined,
+            branchingFactor: args.branchingFactor,
+          },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyFeedGetPostThreadV2,
+            ),
+          },
+        )
+
+        const { thread } = data
+        const t = thread as ThreadItemPost[]
+        if ('length' in args) {
+          expect(data.thread).toHaveLength(args.length)
+        } else {
+          const tUris = t.map((i) => i.uri)
+          const postUris = args.posts.map((k) => seed.posts[k].ref.uriStr)
+          expect(tUris).toEqual(postUris)
+        }
+      },
+    )
   })
 
   describe(`annotateOPThread`, () => {
