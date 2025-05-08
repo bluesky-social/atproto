@@ -522,6 +522,10 @@ describe('appview thread views v2', () => {
     )
   })
 
+  // describe('followers', () => {
+
+  // })
+
   describe(`sorting`, () => {
     let noOpOrViewer: Awaited<
       ReturnType<typeof seeds.threadSortingSeedNoOpOrViewerReplies>
@@ -817,7 +821,7 @@ describe('appview thread views v2', () => {
         }
       })
 
-      it('sorts in all levels for the case with viewer and OP replies', async () => {
+      it.only('sorts in all levels for the case with viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
             uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
@@ -835,6 +839,8 @@ describe('appview thread views v2', () => {
         const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(31)
 
+        debugThread(t)
+
         expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
         {
           expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
@@ -851,9 +857,9 @@ describe('appview thread views v2', () => {
           {
             expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
             expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
-            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
-            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
-            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
+            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
+            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
+            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
           }
         }
         {
