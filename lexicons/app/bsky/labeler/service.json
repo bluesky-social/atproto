@@ -23,11 +23,8 @@
             "description": "The set of report reason 'codes' which are in-scope for this service to review and action. These usually align to policy categories. If not defined (distinct from empty array), all reason types are allowed.",
             "type": "array",
             "items": {
-              "type": "union",
-              "refs": [
-                "com.atproto.moderation.defs#reasonType",
-                "tools.ozone.report.defs#reasonType"
-              ]
+              "type": "ref",
+              "ref": "com.atproto.moderation.defs#reasonType"
             }
           },
           "subjectTypes": {
