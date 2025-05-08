@@ -5,250 +5,35 @@
     "reasonType": {
       "type": "string",
       "knownValues": [
-        "com.atproto.moderation.defs#reasonViolenceAnimalWelfare",
-        "com.atproto.moderation.defs#reasonViolenceThreats",
-        "com.atproto.moderation.defs#reasonViolenceGraphicContent",
-        "com.atproto.moderation.defs#reasonViolenceSelfHarm",
-        "com.atproto.moderation.defs#reasonViolenceGlorification",
-        "com.atproto.moderation.defs#reasonViolenceExtremistContent",
-        "com.atproto.moderation.defs#reasonViolenceTrafficking",
-        "com.atproto.moderation.defs#reasonViolenceOther",
-
-        "com.atproto.moderation.defs#reasonSexualAbuseContent",
-        "com.atproto.moderation.defs#reasonSexualNCII",
-        "com.atproto.moderation.defs#reasonSexualSextortion",
-        "com.atproto.moderation.defs#reasonSexualDeepfake",
-        "com.atproto.moderation.defs#reasonSexualAnimal",
-        "com.atproto.moderation.defs#reasonSexualUnlabeled",
-        "com.atproto.moderation.defs#reasonSexualOther",
-
-        "com.atproto.moderation.defs#reasonChildSafetyCSAM",
-        "com.atproto.moderation.defs#reasonChildSafetyGroom",
-        "com.atproto.moderation.defs#reasonChildSafetyMinorPrivacy",
-        "com.atproto.moderation.defs#reasonChildSafetyEndangerment",
-        "com.atproto.moderation.defs#reasonChildSafetyHarassment",
-        "com.atproto.moderation.defs#reasonChildSafetyPromotion",
-        "com.atproto.moderation.defs#reasonChildSafetyOther",
-
-        "com.atproto.moderation.defs#reasonHarassmentTroll",
-        "com.atproto.moderation.defs#reasonHarassmentTargeted",
-        "com.atproto.moderation.defs#reasonHarassmentHateSpeech",
-        "com.atproto.moderation.defs#reasonHarassmentDoxxing",
-        "com.atproto.moderation.defs#reasonHarassmentOther",
-
-        "com.atproto.moderation.defs#reasonMisleadingBot",
-        "com.atproto.moderation.defs#reasonMisleadingImpersonation",
-        "com.atproto.moderation.defs#reasonMisleadingSpam",
-        "com.atproto.moderation.defs#reasonMisleadingScam",
-        "com.atproto.moderation.defs#reasonMisleadingSyntheticContent",
-        "com.atproto.moderation.defs#reasonMisleadingMisinformation",
-        "com.atproto.moderation.defs#reasonMisleadingOther",
-
-        "com.atproto.moderation.defs#reasonBNRSiteSecurity",
-        "com.atproto.moderation.defs#reasonBNRStolenContent",
-        "com.atproto.moderation.defs#reasonBNRProhibitedSales",
-        "com.atproto.moderation.defs#reasonBNRBanEvasion",
-        "com.atproto.moderation.defs#reasonBNROther",
-
-        "com.atproto.moderation.defs#reasonCivicElectoralProcess",
-        "com.atproto.moderation.defs#reasonCivicDisclosure",
-        "com.atproto.moderation.defs#reasonCivicInterference",
-        "com.atproto.moderation.defs#reasonCivicMisinformation",
-        "com.atproto.moderation.defs#reasonCivicImpersonation",
-
-        "com.atproto.moderation.defs#reasonOther",
-        "com.atproto.moderation.defs#reasonAppeal",
-
         "com.atproto.moderation.defs#reasonSpam",
         "com.atproto.moderation.defs#reasonViolation",
         "com.atproto.moderation.defs#reasonMisleading",
         "com.atproto.moderation.defs#reasonSexual",
-        "com.atproto.moderation.defs#reasonRude"
+        "com.atproto.moderation.defs#reasonRude",
+        "com.atproto.moderation.defs#reasonOther",
+        "com.atproto.moderation.defs#reasonAppeal"
       ]
     },
-    "reasonViolenceAnimalWelfare": {
+    "reasonSpam": {
       "type": "token",
-      "description": "Animal welfare violations"
+      "description": "Spam: frequent unwanted promotion, replies, mentions. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingSpam`."
     },
-    "reasonViolenceThreats": {
+    "reasonViolation": {
       "type": "token",
-      "description": "Threats or incitement"
+      "description": "Direct violation of server rules, laws, terms of service. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`."
     },
-    "reasonViolenceGraphicContent": {
+    "reasonMisleading": {
       "type": "token",
-      "description": "Graphic violent content"
+      "description": "Misleading identity, affiliation, or content. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingOther`."
     },
-    "reasonViolenceSelfHarm": {
+    "reasonSexual": {
       "type": "token",
-      "description": "Self harm"
+      "description": "Unwanted or mislabeled sexual content. Prefer new lexicon definition `tools.ozone.report.defs#reasonSexualUnlabeled`."
     },
-    "reasonViolenceGlorification": {
+    "reasonRude": {
       "type": "token",
-      "description": "Glorification of violence"
+      "description": "Rude, harassing, explicit, or otherwise unwelcoming behavior. Prefer new lexicon definition `tools.ozone.report.defs#reasonHarassmentOther`."
     },
-    "reasonViolenceExtremistContent": {
-      "type": "token",
-      "description": "Extremist content. These reports will be sent to Bluesky only."
-    },
-    "reasonViolenceTrafficking": {
-      "type": "token",
-      "description": "Human trafficking"
-    },
-    "reasonViolenceOther": {
-      "type": "token",
-      "description": "Other violent content"
-    },
-
-    "reasonSexualAbuseContent": {
-      "type": "token",
-      "description": "Adult sexual abuse content"
-    },
-    "reasonSexualNCII": {
-      "type": "token",
-      "description": "Non-consensual intimate imagery"
-    },
-    "reasonSexualSextortion": {
-      "type": "token",
-      "description": "Sextortion"
-    },
-    "reasonSexualDeepfake": {
-      "type": "token",
-      "description": "Deepfake adult content"
-    },
-    "reasonSexualAnimal": {
-      "type": "token",
-      "description": "Animal sexual abuse"
-    },
-    "reasonSexualUnlabeled": {
-      "type": "token",
-      "description": "Unlabelled adult content"
-    },
-    "reasonSexualOther": {
-      "type": "token",
-      "description": "Other sexual violence content"
-    },
-
-    "reasonChildSafetyCSAM": {
-      "type": "token",
-      "description": "Child sexual abuse material (CSAM). These reports will be sent to Bluesky only."
-    },
-    "reasonChildSafetyGroom": {
-      "type": "token",
-      "description": "Grooming or predatory behavior. These reports will be sent to Bluesky only."
-    },
-    "reasonChildSafetyMinorPrivacy": {
-      "type": "token",
-      "description": "Privacy violation involving a minor"
-    },
-    "reasonChildSafetyEndangerment": {
-      "type": "token",
-      "description": "Child endangerment. These reports will be sent to Bluesky only."
-    },
-    "reasonChildSafetyHarassment": {
-      "type": "token",
-      "description": "Harassment or bullying of minors"
-    },
-    "reasonChildSafetyPromotion": {
-      "type": "token",
-      "description": "Promotion of child exploitation. These reports will be sent to Bluesky only."
-    },
-    "reasonChildSafetyOther": {
-      "type": "token",
-      "description": "Other child safety. These reports will be sent to Bluesky only."
-    },
-
-    "reasonHarassmentTroll": {
-      "type": "token",
-      "description": "Trolling"
-    },
-    "reasonHarassmentTargeted": {
-      "type": "token",
-      "description": "Targeted harassment"
-    },
-    "reasonHarassmentHateSpeech": {
-      "type": "token",
-      "description": "Hate speech"
-    },
-    "reasonHarassmentDoxxing": {
-      "type": "token",
-      "description": "Doxxing"
-    },
-    "reasonHarassmentOther": {
-      "type": "token",
-      "description": "Other harassing or hateful content"
-    },
-
-    "reasonMisleadingBot": {
-      "type": "token",
-      "description": "Fake account or bot"
-    },
-    "reasonMisleadingImpersonation": {
-      "type": "token",
-      "description": "Impersonation"
-    },
-    "reasonMisleadingSpam": {
-      "type": "token",
-      "description": "Spam"
-    },
-    "reasonMisleadingScam": {
-      "type": "token",
-      "description": "Scam"
-    },
-    "reasonMisleadingSyntheticContent": {
-      "type": "token",
-      "description": "Unlabelled gen-AI or synthetic content"
-    },
-    "reasonMisleadingMisinformation": {
-      "type": "token",
-      "description": "Harmful false claims"
-    },
-    "reasonMisleadingOther": {
-      "type": "token",
-      "description": "Other misleading content"
-    },
-
-    "reasonBNRSiteSecurity": {
-      "type": "token",
-      "description": "Hacking or system attacks"
-    },
-    "reasonBNRStolenContent": {
-      "type": "token",
-      "description": "Stolen content"
-    },
-    "reasonBNRProhibitedSales": {
-      "type": "token",
-      "description": "Promoting or selling prohibited items or services"
-    },
-    "reasonBNRBanEvasion": {
-      "type": "token",
-      "description": "Banned user returning"
-    },
-    "reasonBNROther": {
-      "type": "token",
-      "description": "Other"
-    },
-
-    "reasonCivicElectoralProcess": {
-      "type": "token",
-      "description": "Electoral process violations"
-    },
-    "reasonCivicDisclosure": {
-      "type": "token",
-      "description": "Disclosure & transparency violations"
-    },
-    "reasonCivicInterference": {
-      "type": "token",
-      "description": "Voter intimidation or interference"
-    },
-    "reasonCivicMisinformation": {
-      "type": "token",
-      "description": "Election misinformation"
-    },
-    "reasonCivicImpersonation": {
-      "type": "token",
-      "description": "Impersonation of electoral officials/entities"
-    },
-
     "reasonOther": {
       "type": "token",
       "description": "Other: reports not falling under another report category"
@@ -256,27 +41,6 @@
     "reasonAppeal": {
       "type": "token",
       "description": "Appeal: appeal a previously taken moderation action"
-    },
-
-    "reasonSpam": {
-      "type": "token",
-      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonMisleadingSpam` instead."
-    },
-    "reasonViolation": {
-      "type": "token",
-      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonBNROther` instead."
-    },
-    "reasonMisleading": {
-      "type": "token",
-      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonMisleadingOther` instead."
-    },
-    "reasonSexual": {
-      "type": "token",
-      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonSexualUnlabeled` instead."
-    },
-    "reasonRude": {
-      "type": "token",
-      "description": "(DEPRECATED) Please use `com.atproto.moderation.defs#reasonHarassmentOther` instead."
     },
     "subjectType": {
       "type": "string",
