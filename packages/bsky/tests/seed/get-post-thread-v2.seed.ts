@@ -96,9 +96,6 @@ export async function longThreadSeed(
   await sc.like(users.op.did, p_0_7.ref)
   await sc.like(users.bob.did, p_0_7.ref)
 
-  await sc.follow(users.dan.did, users.alice.did)
-  await sc.follow(users.dan.did, users.bob.did)
-
   await sc.network.processAll()
 
   return {
@@ -358,46 +355,48 @@ export async function threadSortingSeedWithOpAndViewerReplies(
   ] as const)
 
   const tenHoursAgo = subHours(new Date(), 10)
+  // TODO: throw if date becomes in the future?
+  const h = (h: number) => addHours(tenHoursAgo, h)
   const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
 
   const reply = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
     return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
   }
 
-  const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', addHours(tenHoursAgo, 1)) // 1 like
-  const p_0_0_0_c = await reply(users.carol.did, p_0_0_a.ref, 'p_0_0_0_c', addHours(tenHoursAgo, 2)) // 0 likes
-  const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', addHours(tenHoursAgo, 3)) // 2 likes
-  const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', addHours(tenHoursAgo, 4)) // 1 like
-  const p_0_0_3_v = await reply(users.viewer.did, p_0_0_a.ref, 'p_0_0_3_v', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_0_4_o = await reply(users.op.did, p_0_0_a.ref, 'p_0_0_4_o', addHours(tenHoursAgo, 4)) // 0 likes
+  const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', h(0)) // 1 like
+  const p_0_0_0_c = await reply(users.carol.did, p_0_0_a.ref, 'p_0_0_0_c', h(1)) // 0 likes
+  const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', h(2)) // 2 likes
+  const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', h(3)) // 1 like
+  const p_0_0_3_v = await reply(users.viewer.did, p_0_0_a.ref, 'p_0_0_3_v', h(4)) // 0 likes
+  const p_0_0_4_o = await reply(users.op.did, p_0_0_a.ref, 'p_0_0_4_o', h(5)) // 0 likes
 
-  const p_0_1_c = await reply(users.carol.did, p_0_o.ref, 'p_0_1_c', addHours(tenHoursAgo, 3)) // 3 likes
-  const p_0_1_0_b = await reply(users.bob.did, p_0_1_c.ref, 'p_0_1_0_b', addHours(tenHoursAgo, 4)) // 1 like
-  const p_0_1_1_c = await reply(users.carol.did, p_0_1_c.ref, 'p_0_1_1_c', addHours(tenHoursAgo, 5)) // 2 likes
-  const p_0_1_2_o = await reply(users.op.did, p_0_1_c.ref, 'p_0_1_2_o', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_1_3_v = await reply(users.viewer.did, p_0_1_c.ref, 'p_0_1_3_v', addHours(tenHoursAgo, 4)) // 1 like
-  const p_0_1_4_a = await reply(users.alice.did, p_0_1_c.ref, 'p_0_1_4_a', addHours(tenHoursAgo, 6)) // 0 likes
+  const p_0_1_c = await reply(users.carol.did, p_0_o.ref, 'p_0_1_c', h(1)) // 3 likes
+  const p_0_1_0_b = await reply(users.bob.did, p_0_1_c.ref, 'p_0_1_0_b', h(2)) // 1 like
+  const p_0_1_1_c = await reply(users.carol.did, p_0_1_c.ref, 'p_0_1_1_c', h(3)) // 2 likes
+  const p_0_1_2_o = await reply(users.op.did, p_0_1_c.ref, 'p_0_1_2_o', h(4)) // 0 likes
+  const p_0_1_3_v = await reply(users.viewer.did, p_0_1_c.ref, 'p_0_1_3_v', h(5)) // 1 like
+  const p_0_1_4_a = await reply(users.alice.did, p_0_1_c.ref, 'p_0_1_4_a', h(6)) // 0 likes
 
-  const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', addHours(tenHoursAgo, 5)) // 2 likes
-  const p_0_2_0_v = await reply(users.viewer.did, p_0_2_b.ref, 'p_0_2_0_v', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_2_1_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_1_b', addHours(tenHoursAgo, 6)) // 2 likes
-  const p_0_2_2_o = await reply(users.op.did, p_0_2_b.ref, 'p_0_2_2_o', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_2_3_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_3_a', addHours(tenHoursAgo, 7)) // 1 like
-  const p_0_2_4_c = await reply(users.carol.did, p_0_2_b.ref, 'p_0_2_4_c', addHours(tenHoursAgo, 8)) // 1 like
+  const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', h(2)) // 2 likes
+  const p_0_2_0_v = await reply(users.viewer.did, p_0_2_b.ref, 'p_0_2_0_v', h(3)) // 0 likes
+  const p_0_2_1_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_1_b', h(4)) // 4 likes
+  const p_0_2_2_o = await reply(users.op.did, p_0_2_b.ref, 'p_0_2_2_o', h(5)) // 0 likes
+  const p_0_2_3_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_3_a', h(6)) // 1 like
+  const p_0_2_4_c = await reply(users.carol.did, p_0_2_b.ref, 'p_0_2_4_c', h(7)) // 1 like
 
-  const p_0_3_o = await reply(users.op.did, p_0_o.ref, 'p_0_3_o', addHours(tenHoursAgo, 5)) // 0 likes
-  const p_0_3_0_v = await reply(users.viewer.did, p_0_3_o.ref, 'p_0_3_0_v', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_3_1_b = await reply(users.bob.did, p_0_3_o.ref, 'p_0_3_1_b', addHours(tenHoursAgo, 6)) // 0 likes
-  const p_0_3_2_o = await reply(users.op.did, p_0_3_o.ref, 'p_0_3_2_o', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_3_3_a = await reply(users.alice.did, p_0_3_o.ref, 'p_0_3_3_a', addHours(tenHoursAgo, 7)) // 0 likes
-  const p_0_3_4_c = await reply(users.carol.did, p_0_3_o.ref, 'p_0_3_4_c', addHours(tenHoursAgo, 8)) // 0 likes
+  const p_0_3_o = await reply(users.op.did, p_0_o.ref, 'p_0_3_o', h(3)) // 0 likes
+  const p_0_3_0_v = await reply(users.viewer.did, p_0_3_o.ref, 'p_0_3_0_v', h(4)) // 0 likes
+  const p_0_3_1_b = await reply(users.bob.did, p_0_3_o.ref, 'p_0_3_1_b', h(5)) // 0 likes
+  const p_0_3_2_o = await reply(users.op.did, p_0_3_o.ref, 'p_0_3_2_o', h(6)) // 0 likes
+  const p_0_3_3_a = await reply(users.alice.did, p_0_3_o.ref, 'p_0_3_3_a', h(7)) // 0 likes
+  const p_0_3_4_c = await reply(users.carol.did, p_0_3_o.ref, 'p_0_3_4_c', h(8)) // 0 likes
 
-  const p_0_4_v = await reply(users.viewer.did, p_0_o.ref, 'p_0_4_v', addHours(tenHoursAgo, 3)) // 0 likes
-  const p_0_4_0_b = await reply(users.bob.did, p_0_4_v.ref, 'p_0_4_0_b', addHours(tenHoursAgo, 4)) // 1 like
-  const p_0_4_1_c = await reply(users.carol.did, p_0_4_v.ref, 'p_0_4_1_c', addHours(tenHoursAgo, 5)) // 1 like
-  const p_0_4_2_o = await reply(users.op.did, p_0_4_v.ref, 'p_0_4_2_o', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_4_3_v = await reply(users.viewer.did, p_0_4_v.ref, 'p_0_4_3_v', addHours(tenHoursAgo, 4)) // 0 likes
-  const p_0_4_4_a = await reply(users.alice.did, p_0_4_v.ref, 'p_0_4_4_a', addHours(tenHoursAgo, 6)) // 0 likes
+  const p_0_4_v = await reply(users.viewer.did, p_0_o.ref, 'p_0_4_v', h(4)) // 0 likes
+  const p_0_4_0_b = await reply(users.bob.did, p_0_4_v.ref, 'p_0_4_0_b', h(5)) // 1 like
+  const p_0_4_1_c = await reply(users.carol.did, p_0_4_v.ref, 'p_0_4_1_c', h(6)) // 1 like
+  const p_0_4_2_o = await reply(users.op.did, p_0_4_v.ref, 'p_0_4_2_o', h(7)) // 0 likes
+  const p_0_4_3_v = await reply(users.viewer.did, p_0_4_v.ref, 'p_0_4_3_v', h(8)) // 0 likes
+  const p_0_4_4_a = await reply(users.alice.did, p_0_4_v.ref, 'p_0_4_4_a', h(9)) // 0 likes
 
   // likes depth 1
   await sc.like(users.alice.did, p_0_2_b.ref)
@@ -414,8 +413,10 @@ export async function threadSortingSeedWithOpAndViewerReplies(
   await sc.like(users.bob.did, p_0_1_1_c.ref)
   await sc.like(users.carol.did, p_0_1_1_c.ref)
   await sc.like(users.bob.did, p_0_1_0_b.ref)
+  await sc.like(users.alice.did, p_0_2_1_b.ref)
   await sc.like(users.bob.did, p_0_2_1_b.ref)
   await sc.like(users.carol.did, p_0_2_1_b.ref)
+  await sc.like(users.viewer.did, p_0_2_1_b.ref)
   await sc.like(users.bob.did, p_0_1_3_v.ref)
   await sc.like(users.bob.did, p_0_2_3_a.ref)
   await sc.like(users.viewer.did, p_0_2_4_c.ref)
