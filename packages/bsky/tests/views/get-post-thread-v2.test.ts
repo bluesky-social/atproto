@@ -522,10 +522,6 @@ describe('appview thread views v2', () => {
     )
   })
 
-  // describe('followers', () => {
-
-  // })
-
   describe(`sorting`, () => {
     let noOpOrViewer: Awaited<
       ReturnType<typeof seeds.threadSortingSeedNoOpOrViewerReplies>
@@ -533,10 +529,12 @@ describe('appview thread views v2', () => {
     let withOpAndViewer: Awaited<
       ReturnType<typeof seeds.threadSortingSeedWithOpAndViewerReplies>
     >
+    let withFollows: Awaited<ReturnType<typeof seeds.threadWithFollows>>
 
     beforeAll(async () => {
       noOpOrViewer = await seeds.threadSortingSeedNoOpOrViewerReplies(sc)
       withOpAndViewer = await seeds.threadSortingSeedWithOpAndViewerReplies(sc)
+      withFollows = await seeds.threadWithFollows(sc)
     })
 
     describe('newest', () => {
@@ -821,7 +819,7 @@ describe('appview thread views v2', () => {
         }
       })
 
-      it.only('sorts in all levels for the case with viewer and OP replies', async () => {
+      it('sorts in all levels for the case with viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
             uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
@@ -838,8 +836,6 @@ describe('appview thread views v2', () => {
         const { thread } = data
         const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(31)
-
-        debugThread(t)
 
         expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
         {
@@ -1010,6 +1006,93 @@ describe('appview thread views v2', () => {
             expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
           }
         }
+      })
+    })
+
+    describe('followers', () => {
+      const threadForPostAndViewer = async (
+        post: string,
+        viewer: string,
+        prioritizeFollowedUsers: boolean = false,
+      ) => {
+        const { data } = await agent.app.bsky.feed.getPostThreadV2(
+          {
+            uri: post,
+            sorting: 'app.bsky.feed.getPostThreadV2#newest',
+            prioritizeFollowedUsers,
+          },
+          {
+            headers: await network.serviceHeaders(
+              viewer,
+              ids.AppBskyFeedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread } = data
+        return thread as ThreadItemPost[]
+      }
+
+      it('prioritizes followed users if option is set', async () => {
+        const prioritizeFollowedUsers = true
+
+        const t1 = await threadForPostAndViewer(
+          withFollows.posts.p_0_o.ref.uriStr,
+          withFollows.users.viewerF.did,
+          prioritizeFollowedUsers,
+        )
+        expect(t1).toHaveLength(7)
+        expect(t1[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
+        expect(t1[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
+        expect(t1[2].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr) // viewer reply
+        expect(t1[3].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr) // newest followed reply
+        expect(t1[4].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr) // oldest followed reply
+        expect(t1[5].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr) // newest non-followed reply
+        expect(t1[6].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr) // oldest non-followed reply
+
+        const t2 = await threadForPostAndViewer(
+          withFollows.posts.p_0_o.ref.uriStr,
+          withFollows.users.viewerNoF.did,
+          prioritizeFollowedUsers,
+        )
+        expect(t2).toHaveLength(7)
+        expect(t2[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
+        expect(t2[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
+        expect(t2[2].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr) // viewer reply
+        // newest to oldest
+        expect(t2[3].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr)
+        expect(t2[4].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr)
+        expect(t2[5].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr)
+        expect(t2[6].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr)
+      })
+
+      it('does not prioritize followed users if option is not set', async () => {
+        const t1 = await threadForPostAndViewer(
+          withFollows.posts.p_0_o.ref.uriStr,
+          withFollows.users.viewerF.did,
+        )
+        expect(t1).toHaveLength(7)
+        expect(t1[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
+        expect(t1[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
+        expect(t1[2].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr) // viewer reply
+        // newest to oldest
+        expect(t1[3].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr)
+        expect(t1[4].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr)
+        expect(t1[5].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr)
+        expect(t1[6].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr)
+
+        const t2 = await threadForPostAndViewer(
+          withFollows.posts.p_0_o.ref.uriStr,
+          withFollows.users.viewerNoF.did,
+        )
+        expect(t2).toHaveLength(7)
+        expect(t2[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
+        expect(t2[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
+        expect(t2[2].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr) // viewer reply
+        // newest to oldest
+        expect(t2[3].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr)
+        expect(t2[4].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr)
+        expect(t2[5].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr)
+        expect(t2[6].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr)
       })
     })
   })

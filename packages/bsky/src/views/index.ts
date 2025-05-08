@@ -1126,6 +1126,7 @@ export class Views {
     opts: {
       above: number
       below: number
+      prioritizeFollowedUsers: boolean
       sorting: GetPostThreadV2QueryParams['sorting']
       viewerDid?: string
     },
@@ -1213,7 +1214,7 @@ export class Views {
       node: anchorTree,
       options: {
         sorting: opts.sorting,
-        prioritizeFollowedUsers: false,
+        prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
       },
       viewerDid: opts.viewerDid,
       fetchedAt: Date.now(),

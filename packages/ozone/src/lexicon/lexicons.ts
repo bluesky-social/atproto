@@ -7422,6 +7422,11 @@ export const schemaDict = {
               minimum: 0,
               maximum: 1000,
             },
+            prioritizeFollowedUsers: {
+              type: 'boolean',
+              description: 'Whether to prioritize posts from followed users.',
+              default: false,
+            },
             sorting: {
               type: 'string',
               description: 'Sorting for the thread replies.',

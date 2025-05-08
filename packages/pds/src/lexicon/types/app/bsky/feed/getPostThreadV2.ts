@@ -24,6 +24,8 @@ export interface QueryParams {
   above: number
   /** How many levels of reply depth to include. */
   below: number
+  /** Whether to prioritize posts from followed users. */
+  prioritizeFollowedUsers: boolean
   /** Sorting for the thread replies. */
   sorting:
     | 'app.bsky.feed.getPostThreadV2#newest'
