@@ -79,7 +79,7 @@
     },
     "reasonViolenceExtremistContent": {
       "type": "token",
-      "description": "Extremist content. These reports will be sent to Bluesky only."
+      "description": "Extremist content. These reports will be sent only be sent to the application's Moderation Authority."
     },
     "reasonViolenceTrafficking": {
       "type": "token",
@@ -121,11 +121,11 @@
 
     "reasonChildSafetyCSAM": {
       "type": "token",
-      "description": "Child sexual abuse material (CSAM). These reports will be sent to Bluesky only."
+      "description": "Child sexual abuse material (CSAM). These reports will be sent only be sent to the application's Moderation Authority."
     },
     "reasonChildSafetyGroom": {
       "type": "token",
-      "description": "Grooming or predatory behavior. These reports will be sent to Bluesky only."
+      "description": "Grooming or predatory behavior. These reports will be sent only be sent to the application's Moderation Authority."
     },
     "reasonChildSafetyMinorPrivacy": {
       "type": "token",
@@ -133,7 +133,7 @@
     },
     "reasonChildSafetyEndangerment": {
       "type": "token",
-      "description": "Child endangerment. These reports will be sent to Bluesky only."
+      "description": "Child endangerment. These reports will be sent only be sent to the application's Moderation Authority."
     },
     "reasonChildSafetyHarassment": {
       "type": "token",
@@ -141,11 +141,11 @@
     },
     "reasonChildSafetyPromotion": {
       "type": "token",
-      "description": "Promotion of child exploitation. These reports will be sent to Bluesky only."
+      "description": "Promotion of child exploitation. These reports will be sent only be sent to the application's Moderation Authority."
     },
     "reasonChildSafetyOther": {
       "type": "token",
-      "description": "Other child safety. These reports will be sent to Bluesky only."
+      "description": "Other child safety. These reports will be sent only be sent to the application's Moderation Authority."
     },
 
     "reasonHarassmentTroll": {

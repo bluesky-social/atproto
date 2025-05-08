@@ -71,7 +71,7 @@ export const REASONVIOLENCEGRAPHICCONTENT = `${id}#reasonViolenceGraphicContent`
 export const REASONVIOLENCESELFHARM = `${id}#reasonViolenceSelfHarm`
 /** Glorification of violence */
 export const REASONVIOLENCEGLORIFICATION = `${id}#reasonViolenceGlorification`
-/** Extremist content. These reports will be sent to Bluesky only. */
+/** Extremist content. These reports will be sent only be sent to the application's Moderation Authority. */
 export const REASONVIOLENCEEXTREMISTCONTENT = `${id}#reasonViolenceExtremistContent`
 /** Human trafficking */
 export const REASONVIOLENCETRAFFICKING = `${id}#reasonViolenceTrafficking`
@@ -91,19 +91,19 @@ export const REASONSEXUALANIMAL = `${id}#reasonSexualAnimal`
 export const REASONSEXUALUNLABELED = `${id}#reasonSexualUnlabeled`
 /** Other sexual violence content */
 export const REASONSEXUALOTHER = `${id}#reasonSexualOther`
-/** Child sexual abuse material (CSAM). These reports will be sent to Bluesky only. */
+/** Child sexual abuse material (CSAM). These reports will be sent only be sent to the application's Moderation Authority. */
 export const REASONCHILDSAFETYCSAM = `${id}#reasonChildSafetyCSAM`
-/** Grooming or predatory behavior. These reports will be sent to Bluesky only. */
+/** Grooming or predatory behavior. These reports will be sent only be sent to the application's Moderation Authority. */
 export const REASONCHILDSAFETYGROOM = `${id}#reasonChildSafetyGroom`
 /** Privacy violation involving a minor */
 export const REASONCHILDSAFETYMINORPRIVACY = `${id}#reasonChildSafetyMinorPrivacy`
-/** Child endangerment. These reports will be sent to Bluesky only. */
+/** Child endangerment. These reports will be sent only be sent to the application's Moderation Authority. */
 export const REASONCHILDSAFETYENDANGERMENT = `${id}#reasonChildSafetyEndangerment`
 /** Harassment or bullying of minors */
 export const REASONCHILDSAFETYHARASSMENT = `${id}#reasonChildSafetyHarassment`
-/** Promotion of child exploitation. These reports will be sent to Bluesky only. */
+/** Promotion of child exploitation. These reports will be sent only be sent to the application's Moderation Authority. */
 export const REASONCHILDSAFETYPROMOTION = `${id}#reasonChildSafetyPromotion`
-/** Other child safety. These reports will be sent to Bluesky only. */
+/** Other child safety. These reports will be sent only be sent to the application's Moderation Authority. */
 export const REASONCHILDSAFETYOTHER = `${id}#reasonChildSafetyOther`
 /** Trolling */
 export const REASONHARASSMENTTROLL = `${id}#reasonHarassmentTroll`
