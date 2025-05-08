@@ -24,15 +24,15 @@ export type ReasonType =
   | 'com.atproto.moderation.defs#reasonAppeal'
   | (string & {})
 
-/** Spam: frequent unwanted promotion, replies, mentions */
+/** Spam: frequent unwanted promotion, replies, mentions. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingSpam`. */
 export const REASONSPAM = `${id}#reasonSpam`
-/** Direct violation of server rules, laws, terms of service */
+/** Direct violation of server rules, laws, terms of service. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`. */
 export const REASONVIOLATION = `${id}#reasonViolation`
-/** Misleading identity, affiliation, or content */
+/** Misleading identity, affiliation, or content. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingOther`. */
 export const REASONMISLEADING = `${id}#reasonMisleading`
-/** Unwanted or mislabeled sexual content */
+/** Unwanted or mislabeled sexual content. Prefer new lexicon definition `tools.ozone.report.defs#reasonSexualUnlabeled`. */
 export const REASONSEXUAL = `${id}#reasonSexual`
-/** Rude, harassing, explicit, or otherwise unwelcoming behavior */
+/** Rude, harassing, explicit, or otherwise unwelcoming behavior. Prefer new lexicon definition `tools.ozone.report.defs#reasonHarassmentOther`. */
 export const REASONRUDE = `${id}#reasonRude`
 /** Other: reports not falling under another report category */
 export const REASONOTHER = `${id}#reasonOther`

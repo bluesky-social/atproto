@@ -1455,24 +1455,28 @@ export const schemaDict = {
       },
       reasonSpam: {
         type: 'token',
-        description: 'Spam: frequent unwanted promotion, replies, mentions',
+        description:
+          'Spam: frequent unwanted promotion, replies, mentions. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingSpam`.',
       },
       reasonViolation: {
         type: 'token',
-        description: 'Direct violation of server rules, laws, terms of service',
+        description:
+          'Direct violation of server rules, laws, terms of service. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`.',
       },
       reasonMisleading: {
         type: 'token',
-        description: 'Misleading identity, affiliation, or content',
+        description:
+          'Misleading identity, affiliation, or content. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingOther`.',
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mislabeled sexual content',
+        description:
+          'Unwanted or mislabeled sexual content. Prefer new lexicon definition `tools.ozone.report.defs#reasonSexualUnlabeled`.',
       },
       reasonRude: {
         type: 'token',
         description:
-          'Rude, harassing, explicit, or otherwise unwelcoming behavior',
+          'Rude, harassing, explicit, or otherwise unwelcoming behavior. Prefer new lexicon definition `tools.ozone.report.defs#reasonHarassmentOther`.',
       },
       reasonOther: {
         type: 'token',
