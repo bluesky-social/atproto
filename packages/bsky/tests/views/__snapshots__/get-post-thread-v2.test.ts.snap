@@ -1,6 +1,756 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`appview thread views v2 simple thread returns thread anchored on p_0 1`] = `
+exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] = `
+Object {
+  "thread": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(0)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "root",
+        },
+        "replyCount": 4,
+        "repostCount": 0,
+        "uri": "record(0)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 0,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": false,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(1)",
+          "handle": "simple-alice.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(1)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "1",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "uri": "record(1)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(1)",
+    },
+  ],
+}
+`;
+
+exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] = `
+Object {
+  "thread": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(0)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "root",
+        },
+        "replyCount": 4,
+        "repostCount": 0,
+        "uri": "record(0)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 0,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": false,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(1)",
+          "handle": "simple-bob.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(1)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "2",
+        },
+        "replyCount": 1,
+        "repostCount": 0,
+        "uri": "record(1)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(1)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": false,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(2)",
+          "handle": "simple-alice.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(2)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(1)",
+              "uri": "record(1)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "2_0",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "uri": "record(2)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(2)",
+    },
+  ],
+}
+`;
+
+exports[`appview thread views v2 simple thread returns thread anchored on 2_0 1`] = `
+Object {
+  "thread": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -2,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(0)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "root",
+        },
+        "replyCount": 4,
+        "repostCount": 0,
+        "uri": "record(0)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": false,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(1)",
+          "handle": "simple-bob.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(1)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "2",
+        },
+        "replyCount": 1,
+        "repostCount": 0,
+        "uri": "record(1)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(1)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 0,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": false,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(2)",
+          "handle": "simple-alice.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(2)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(1)",
+              "uri": "record(1)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "2_0",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "uri": "record(2)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(2)",
+    },
+  ],
+}
+`;
+
+exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] = `
+Object {
+  "thread": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(0)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "root",
+        },
+        "replyCount": 4,
+        "repostCount": 0,
+        "uri": "record(0)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 0,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": false,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(1)",
+          "handle": "simple-carol.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(1)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "3",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "uri": "record(1)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(1)",
+    },
+  ],
+}
+`;
+
+exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`] = `
+Object {
+  "thread": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(0)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "root",
+        },
+        "replyCount": 4,
+        "repostCount": 0,
+        "uri": "record(0)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 0,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(1)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "0",
+        },
+        "replyCount": 1,
+        "repostCount": 0,
+        "uri": "record(1)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(1)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(2)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(1)",
+              "uri": "record(1)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "0_0",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "uri": "record(2)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(2)",
+    },
+  ],
+}
+`;
+
+exports[`appview thread views v2 simple thread returns thread anchored on r 0_0 1`] = `
+Object {
+  "thread": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -2,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(0)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "root",
+        },
+        "replyCount": 4,
+        "repostCount": 0,
+        "uri": "record(0)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": -1,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(1)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "0",
+        },
+        "replyCount": 1,
+        "repostCount": 0,
+        "uri": "record(1)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(1)",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#threadItemPost",
+      "depth": 0,
+      "hasOPLike": false,
+      "hasUnhydratedParents": false,
+      "hasUnhydratedReplies": false,
+      "isOPThread": true,
+      "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "did": "user(0)",
+          "handle": "simple-op.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(2)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 0,
+        "quoteCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(1)",
+              "uri": "record(1)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "0_0",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "uri": "record(2)",
+        "viewer": Object {
+          "embeddingDisabled": false,
+          "threadMuted": false,
+        },
+      },
+      "uri": "record(2)",
+    },
+  ],
+}
+`;
+
+exports[`appview thread views v2 simple thread returns thread anchored on root 1`] = `
 Object {
   "thread": Array [
     Object {
@@ -29,7 +779,7 @@ Object {
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "text": "p_0 (op)",
+          "text": "root",
         },
         "replyCount": 4,
         "repostCount": 0,
@@ -77,7 +827,7 @@ Object {
               "uri": "record(0)",
             },
           },
-          "text": "p_0_0 (op)",
+          "text": "0",
         },
         "replyCount": 1,
         "repostCount": 0,
@@ -125,7 +875,7 @@ Object {
               "uri": "record(0)",
             },
           },
-          "text": "p_0_0_0 (op)",
+          "text": "0_0",
         },
         "replyCount": 0,
         "repostCount": 0,
@@ -173,7 +923,7 @@ Object {
               "uri": "record(0)",
             },
           },
-          "text": "p_0_1 (alice)",
+          "text": "1",
         },
         "replyCount": 0,
         "repostCount": 0,
@@ -221,7 +971,7 @@ Object {
               "uri": "record(0)",
             },
           },
-          "text": "p_0_2 (bob)",
+          "text": "2",
         },
         "replyCount": 1,
         "repostCount": 0,
@@ -269,7 +1019,7 @@ Object {
               "uri": "record(0)",
             },
           },
-          "text": "p_0_2_0 (alice)",
+          "text": "2_0",
         },
         "replyCount": 0,
         "repostCount": 0,
@@ -317,7 +1067,7 @@ Object {
               "uri": "record(0)",
             },
           },
-          "text": "p_0_3 (carol)",
+          "text": "3",
         },
         "replyCount": 0,
         "repostCount": 0,
@@ -328,756 +1078,6 @@ Object {
         },
       },
       "uri": "record(6)",
-    },
-  ],
-}
-`;
-
-exports[`appview thread views v2 simple thread returns thread anchored on p_0_0 1`] = `
-Object {
-  "thread": Array [
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(0)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "text": "p_0 (op)",
-        },
-        "replyCount": 4,
-        "repostCount": 0,
-        "uri": "record(0)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(0)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(1)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_0 (op)",
-        },
-        "replyCount": 1,
-        "repostCount": 0,
-        "uri": "record(1)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(1)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(2)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(1)",
-              "uri": "record(1)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_0_0 (op)",
-        },
-        "replyCount": 0,
-        "repostCount": 0,
-        "uri": "record(2)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(2)",
-    },
-  ],
-}
-`;
-
-exports[`appview thread views v2 simple thread returns thread anchored on p_0_0_0 1`] = `
-Object {
-  "thread": Array [
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -2,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(0)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "text": "p_0 (op)",
-        },
-        "replyCount": 4,
-        "repostCount": 0,
-        "uri": "record(0)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(0)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(1)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_0 (op)",
-        },
-        "replyCount": 1,
-        "repostCount": 0,
-        "uri": "record(1)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(1)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(2)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(1)",
-              "uri": "record(1)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_0_0 (op)",
-        },
-        "replyCount": 0,
-        "repostCount": 0,
-        "uri": "record(2)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(2)",
-    },
-  ],
-}
-`;
-
-exports[`appview thread views v2 simple thread returns thread anchored on p_0_1 1`] = `
-Object {
-  "thread": Array [
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(0)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "text": "p_0 (op)",
-        },
-        "replyCount": 4,
-        "repostCount": 0,
-        "uri": "record(0)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(0)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": false,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(1)",
-          "handle": "simple-alice.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(1)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_1 (alice)",
-        },
-        "replyCount": 0,
-        "repostCount": 0,
-        "uri": "record(1)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(1)",
-    },
-  ],
-}
-`;
-
-exports[`appview thread views v2 simple thread returns thread anchored on p_0_2 1`] = `
-Object {
-  "thread": Array [
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(0)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "text": "p_0 (op)",
-        },
-        "replyCount": 4,
-        "repostCount": 0,
-        "uri": "record(0)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(0)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": false,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(1)",
-          "handle": "simple-bob.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(1)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_2 (bob)",
-        },
-        "replyCount": 1,
-        "repostCount": 0,
-        "uri": "record(1)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(1)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": false,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(2)",
-          "handle": "simple-alice.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(2)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(1)",
-              "uri": "record(1)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_2_0 (alice)",
-        },
-        "replyCount": 0,
-        "repostCount": 0,
-        "uri": "record(2)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(2)",
-    },
-  ],
-}
-`;
-
-exports[`appview thread views v2 simple thread returns thread anchored on p_0_2_0 1`] = `
-Object {
-  "thread": Array [
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -2,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(0)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "text": "p_0 (op)",
-        },
-        "replyCount": 4,
-        "repostCount": 0,
-        "uri": "record(0)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(0)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": false,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(1)",
-          "handle": "simple-bob.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(1)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_2 (bob)",
-        },
-        "replyCount": 1,
-        "repostCount": 0,
-        "uri": "record(1)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(1)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": false,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(2)",
-          "handle": "simple-alice.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(2)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(1)",
-              "uri": "record(1)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_2_0 (alice)",
-        },
-        "replyCount": 0,
-        "repostCount": 0,
-        "uri": "record(2)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(2)",
-    },
-  ],
-}
-`;
-
-exports[`appview thread views v2 simple thread returns thread anchored on p_0_3 1`] = `
-Object {
-  "thread": Array [
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": -1,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": true,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(0)",
-          "handle": "simple-op.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(0)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "text": "p_0 (op)",
-        },
-        "replyCount": 4,
-        "repostCount": 0,
-        "uri": "record(0)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(0)",
-    },
-    Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
-      "depth": 0,
-      "hasOPLike": false,
-      "hasUnhydratedParents": false,
-      "hasUnhydratedReplies": false,
-      "isOPThread": false,
-      "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
-        "author": Object {
-          "did": "user(1)",
-          "handle": "simple-carol.test",
-          "labels": Array [],
-          "viewer": Object {
-            "blockedBy": false,
-            "muted": false,
-          },
-        },
-        "cid": "cids(1)",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "likeCount": 0,
-        "quoteCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
-          "reply": Object {
-            "parent": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-            "root": Object {
-              "cid": "cids(0)",
-              "uri": "record(0)",
-            },
-          },
-          "text": "p_0_3 (carol)",
-        },
-        "replyCount": 0,
-        "repostCount": 0,
-        "uri": "record(1)",
-        "viewer": Object {
-          "embeddingDisabled": false,
-          "threadMuted": false,
-        },
-      },
-      "uri": "record(1)",
     },
   ],
 }

@@ -1,438 +1,374 @@
 import { addHours, subHours } from 'date-fns'
+import { AppBskyFeedPost } from '@atproto/api'
 import {
   RecordRef,
   SeedClient,
   TestNetwork,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
-import { createUsers } from './util'
+import { User, createUsers } from './util'
 
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function simpleThreadSeed(
+type ReplyFn = (
+  replyAuthor: User,
+  overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+  maybeReplyCb?: ReplyCb,
+) => Promise<void>
+
+type ReplyCb = (r: ReplyFn) => Promise<void>
+
+const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
+  sc: SeedClient<T>,
+  root: RecordRef,
+  parent: RecordRef,
+  prevBreadcrumbs: string,
+  posts: Record<
+    string,
+    | Awaited<ReturnType<SeedClient['post']>>
+    | Awaited<ReturnType<SeedClient['reply']>>
+  >,
+): ReplyFn => {
+  let index = 0
+  return async (
+    replyAuthor: User,
+    overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+    maybeReplyCb?: ReplyCb,
+  ) => {
+    let overrides: Partial<AppBskyFeedPost.Record> | undefined
+    let replyCb: ReplyCb | undefined
+    if (overridesOrCb && typeof overridesOrCb === 'function') {
+      replyCb = overridesOrCb
+    } else {
+      overrides = overridesOrCb
+      replyCb = maybeReplyCb
+    }
+
+    const breadcrumbs = prevBreadcrumbs
+      ? `${prevBreadcrumbs}_${index++}`
+      : `${index++}`
+    const text = breadcrumbs
+    const reply = await sc.reply(
+      replyAuthor.did,
+      root,
+      parent,
+      text,
+      undefined,
+      undefined,
+      overrides,
+    )
+    posts[breadcrumbs] = reply
+    await replyCb?.(rootReplyFnBuilder(sc, root, reply.ref, breadcrumbs, posts))
+  }
+}
+
+const createThread = async <T extends TestNetworkNoAppView>(
+  sc: SeedClient<T>,
+  rootAuthor: User,
+  overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+  maybeReplyCb?: ReplyCb,
+) => {
+  let overrides: Partial<AppBskyFeedPost.Record> | undefined
+  let replyCb: ReplyCb | undefined
+  if (overridesOrCb && typeof overridesOrCb === 'function') {
+    replyCb = overridesOrCb
+  } else {
+    overrides = overridesOrCb
+    replyCb = maybeReplyCb
+  }
+
+  const replies: Record<string, Awaited<ReturnType<SeedClient['reply']>>> = {}
+  const breadcrumbs = ''
+  const text = 'root'
+  const root = await sc.post(
+    rootAuthor.did,
+    text,
+    undefined,
+    undefined,
+    undefined,
+    overrides,
+  )
+  await replyCb?.(
+    rootReplyFnBuilder(sc, root.ref, root.ref, breadcrumbs, replies),
+  )
+  return { root, replies }
+}
+
+export async function simple(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+  prefix = 'simple',
 ) {
-  const users = await createUsers(sc, 'simple', [
+  const users = await createUsers(sc, prefix, [
     'op',
     'alice',
     'bob',
     'carol',
-    'dan'
   ] as const)
+  const { op, alice, bob, carol } = users
 
-  const p_0 = await sc.post(users.op.did, 'p_0 (op)')
-
-  const p_0_0 = await sc.reply(users.op.did, p_0.ref, p_0.ref, 'p_0_0 (op)')
-  const p_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0.ref, 'p_0_0_0 (op)')
-
-  const p_0_1 = await sc.reply(users.alice.did, p_0.ref, p_0.ref, 'p_0_1 (alice)')
-  const p_0_2 = await sc.reply(users.bob.did, p_0.ref, p_0.ref, 'p_0_2 (bob)')
-  const p_0_3 = await sc.reply(users.carol.did, p_0.ref, p_0.ref, 'p_0_3 (carol)')
-
-  const p_0_2_0 = await sc.reply(users.alice.did, p_0.ref, p_0_2.ref, 'p_0_2_0 (alice)')
-
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(op, async (r) => {
+      await r(op)
+    })
+    await r(alice)
+    await r(bob, async (r) => {
+      await r(alice)
+    })
+    await r(carol)
+  })
   await sc.network.processAll()
 
   return {
     seedClient: sc,
     users,
-    posts: {
-      p_0,
-      p_0_0,
-      p_0_0_0,
-      p_0_1,
-      p_0_2,
-      p_0_2_0,
-      p_0_3,
-    },
+    root,
+    r,
   }
 }
 
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function longThreadSeed(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function long(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   const users = await createUsers(sc, 'long', [
     'op',
     'alice',
     'bob',
     'carol',
-    'dan'
+    'dan',
   ] as const)
+  const { op, alice, bob, carol, dan } = users
 
-  const p_0 = await sc.post(users.op.did, 'p_0 (op)')
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(op, async (r) => {
+      await r(op, async (r) => {
+        await r(op, async (r) => {
+          await r(op, async (r) => {
+            await r(op)
+          })
+        })
+        await r(op)
+      })
+    })
 
-  const p_0_0 = await sc.reply(users.op.did, p_0.ref, p_0.ref, 'p_0_0 (op)')
-  const p_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0.ref, 'p_0_0_0 (op)')
-  const p_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0.ref, 'p_0_0_0_0 (op)')
-  const p_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0.ref, 'p_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0.ref, 'p_0_0_0_0_0_0 (op)')
-  const p_0_0_0_1 = await sc.reply(users.op.did, p_0.ref, p_0_0_0.ref, 'p_0_0_0_1 (op)')
+    await r(alice)
+    await r(bob)
+    await r(carol)
 
-  const p_0_1 = await sc.reply(users.alice.did, p_0.ref, p_0.ref, 'p_0_1 (alice)')
-  const p_0_2 = await sc.reply(users.bob.did, p_0.ref, p_0.ref, 'p_0_2 (bob)')
-  const p_0_3 = await sc.reply(users.carol.did, p_0.ref, p_0.ref, 'p_0_3 (carol)')
+    await r(op, async (r) => {
+      await r(op, async (r) => {
+        await r(alice, async (r) => {
+          await r(op, async (r) => {
+            await r(op)
+          })
+        })
+      })
+    })
 
-  const p_0_4 = await sc.reply(users.op.did, p_0.ref, p_0.ref, 'p_0_4 (op)')
-  const p_0_4_0 = await sc.reply(users.op.did, p_0.ref, p_0_4.ref, 'p_0_4_0 (op)')
-  const p_0_4_0_0 = await sc.reply(users.alice.did, p_0.ref, p_0_4_0.ref, 'p_0_4_0_0 (alice)')
-  const p_0_4_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_4_0_0.ref, 'p_0_4_0_0_0 (op)')
-  const p_0_4_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_4_0_0_0.ref, 'p_0_4_0_0_0_0 (op)')
+    await r(alice)
+    await r(bob)
+    await r(carol)
+  })
+  await sc.network.processAll()
 
-  const p_0_5 = await sc.reply(users.alice.did, p_0.ref, p_0.ref, 'p_0_5 (alice)')
-  const p_0_6 = await sc.reply(users.bob.did, p_0.ref, p_0.ref, 'p_0_6 (bob)')
-  const p_0_7 = await sc.reply(users.carol.did, p_0.ref, p_0.ref, 'p_0_7 (carol)')
+  await sc.like(op.did, r['5'].ref)
+  await sc.like(bob.did, r['5'].ref)
+  await sc.like(carol.did, r['5'].ref)
+  await sc.like(dan.did, r['5'].ref)
 
-  await sc.like(users.op.did, p_0_5.ref)
-  await sc.like(users.bob.did, p_0_5.ref)
-  await sc.like(users.carol.did, p_0_5.ref)
-  await sc.like(users.dan.did, p_0_5.ref)
+  await sc.like(op.did, r['6'].ref)
+  await sc.like(alice.did, r['6'].ref)
+  await sc.like(carol.did, r['6'].ref)
 
-  await sc.like(users.op.did, p_0_6.ref)
-  await sc.like(users.alice.did, p_0_6.ref)
-  await sc.like(users.carol.did, p_0_6.ref)
-
-  await sc.like(users.op.did, p_0_7.ref)
-  await sc.like(users.bob.did, p_0_7.ref)
+  await sc.like(op.did, r['7'].ref)
+  await sc.like(bob.did, r['7'].ref)
 
   await sc.network.processAll()
 
   return {
     seedClient: sc,
     users,
-    posts: {
-      p_0,
-      p_0_0,
-      p_0_0_0,
-      p_0_0_0_0,
-      p_0_0_0_0_0,
-      p_0_0_0_0_0_0,
-      p_0_0_0_1,
-      p_0_1,
-      p_0_2,
-      p_0_3,
-      p_0_4,
-      p_0_4_0,
-      p_0_4_0_0,
-      p_0_4_0_0_0,
-      p_0_4_0_0_0_0,
-      p_0_5,
-      p_0_6,
-      p_0_7,
-    },
+    root,
+    r,
   }
 }
 
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function deepThreadSeed(
+export async function deep(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
+  const users = await createUsers(sc, 'deep', ['op'] as const)
+  const { op } = users
+
+  let counter = 0
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    const recursiveReply = async (rFn: ReplyFn) => {
+      if (counter < 18) {
+        counter++
+        await rFn(op, async (r) => recursiveReply(r))
+      }
+    }
+    await recursiveReply(r)
+  })
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}
+
+export async function branchingFactor(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'deep', [
-    'op',
-    'alice',
-    'bob',
-    'carol',
-    'dan'
-  ] as const)
+  const users = await createUsers(sc, 'bf', ['op', 'bob'] as const)
+  const { op, bob } = users
 
-  const p_0 = await sc.post(users.op.did, 'p_0 (op)')
-  const p_0_0 = await sc.reply(users.op.did, p_0.ref, p_0.ref, 'p_0_0 (op)')
-  const p_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0.ref, 'p_0_0_0 (op)')
-  const p_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0.ref, 'p_0_0_0_0 (op)')
-  const p_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0.ref, 'p_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0.ref, 'p_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-  const p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 = await sc.reply(users.op.did, p_0.ref, p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref, 'p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0 (op)')
-
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(bob, async (r) => {
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+    })
+    await r(bob, async (r) => {
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+    })
+    await r(bob, async (r) => {
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+    })
+    await r(bob, async (r) => {
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        // This is the only case in this seed where a reply has 5 replies instead of 4,
+        // to have cases of different lengths in the same tree.
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+      await r(bob, async (r) => {
+        await r(bob)
+        await r(bob)
+        await r(bob)
+        await r(bob)
+      })
+    })
+  })
   await sc.network.processAll()
 
   return {
     seedClient: sc,
     users,
-    posts: {
-      p_0,
-      p_0_0,
-      p_0_0_0,
-      p_0_0_0_0,
-      p_0_0_0_0_0,
-      p_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
-      p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0,
-    },
+    root,
+    r,
   }
 }
 
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function branchingFactorSeed(
+export async function annotateOP(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'wide', [
-    'op',
-    'alice',
-    'bob',
-    'carol',
-    'dan'
-  ] as const)
+  const users = await createUsers(sc, 'op', ['op', 'alice', 'bob'] as const)
+  const { op, alice, bob } = users
 
-  const aDid = users.alice.did
-  const p_0_o = await sc.post(users.op.did, 'p_0_o')
-  const r = (user: string, parent: { ref: RecordRef }, text: string) => {
-    return sc.reply(user, p_0_o.ref, parent.ref, text)
-  }
-
-  const p_0_0_a = await r(aDid, p_0_o, 'p_0_0_a')
-    const p_0_0_0_a = await r(aDid, p_0_0_a, 'p_0_0_0_a')
-      const p_0_0_0_0_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_0_a')
-      const p_0_0_0_1_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_1_a')
-      const p_0_0_0_2_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_2_a')
-      const p_0_0_0_3_a = await r(aDid, p_0_0_0_a, 'p_0_0_0_3_a')
-    const p_0_0_1_a = await r(aDid, p_0_0_a, 'p_0_0_1_a')
-      const p_0_0_1_0_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_0_a')
-      const p_0_0_1_1_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_1_a')
-      const p_0_0_1_2_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_2_a')
-      const p_0_0_1_3_a = await r(aDid, p_0_0_1_a, 'p_0_0_1_3_a')
-    const p_0_0_2_a = await r(aDid, p_0_0_a, 'p_0_0_2_a')
-      const p_0_0_2_0_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_0_a')
-      const p_0_0_2_1_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_1_a')
-      const p_0_0_2_2_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_2_a')
-      const p_0_0_2_3_a = await r(aDid, p_0_0_2_a, 'p_0_0_2_3_a')
-    const p_0_0_3_a = await r(aDid, p_0_0_a, 'p_0_0_3_a')
-      const p_0_0_3_0_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_0_a')
-      const p_0_0_3_1_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_1_a')
-      const p_0_0_3_2_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_2_a')
-      const p_0_0_3_3_a = await r(aDid, p_0_0_3_a, 'p_0_0_3_3_a')
-  const p_0_1_a = await r(aDid, p_0_o, 'p_0_1_a')
-    const p_0_1_0_a = await r(aDid, p_0_1_a, 'p_0_1_0_a')
-      const p_0_1_0_0_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_0_a')
-      const p_0_1_0_1_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_1_a')
-      const p_0_1_0_2_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_2_a')
-      const p_0_1_0_3_a = await r(aDid, p_0_1_0_a, 'p_0_1_0_3_a')
-    const p_0_1_1_a = await r(aDid, p_0_1_a, 'p_0_1_1_a')
-      const p_0_1_1_0_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_0_a')
-      const p_0_1_1_1_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_1_a')
-      const p_0_1_1_2_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_2_a')
-      const p_0_1_1_3_a = await r(aDid, p_0_1_1_a, 'p_0_1_1_3_a')
-    const p_0_1_2_a = await r(aDid, p_0_1_a, 'p_0_1_2_a')
-      const p_0_1_2_0_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_0_a')
-      const p_0_1_2_1_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_1_a')
-      const p_0_1_2_2_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_2_a')
-      const p_0_1_2_3_a = await r(aDid, p_0_1_2_a, 'p_0_1_2_3_a')
-    const p_0_1_3_a = await r(aDid, p_0_1_a, 'p_0_1_3_a')
-      const p_0_1_3_0_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_0_a')
-      const p_0_1_3_1_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_1_a')
-      const p_0_1_3_2_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_2_a')
-      const p_0_1_3_3_a = await r(aDid, p_0_1_3_a, 'p_0_1_3_3_a')
-  const p_0_2_a = await r(aDid, p_0_o, 'p_0_2_a')
-    const p_0_2_0_a = await r(aDid, p_0_2_a, 'p_0_2_0_a')
-      const p_0_2_0_0_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_0_a')
-      const p_0_2_0_1_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_1_a')
-      const p_0_2_0_2_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_2_a')
-      const p_0_2_0_3_a = await r(aDid, p_0_2_0_a, 'p_0_2_0_3_a')
-    const p_0_2_1_a = await r(aDid, p_0_2_a, 'p_0_2_1_a')
-      const p_0_2_1_0_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_0_a')
-      const p_0_2_1_1_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_1_a')
-      const p_0_2_1_2_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_2_a')
-      const p_0_2_1_3_a = await r(aDid, p_0_2_1_a, 'p_0_2_1_3_a')
-    const p_0_2_2_a = await r(aDid, p_0_2_a, 'p_0_2_2_a')
-      const p_0_2_2_0_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_0_a')
-      const p_0_2_2_1_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_1_a')
-      const p_0_2_2_2_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_2_a')
-      const p_0_2_2_3_a = await r(aDid, p_0_2_2_a, 'p_0_2_2_3_a')
-    const p_0_2_3_a = await r(aDid, p_0_2_a, 'p_0_2_3_a')
-      const p_0_2_3_0_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_0_a')
-      const p_0_2_3_1_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_1_a')
-      const p_0_2_3_2_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_2_a')
-      const p_0_2_3_3_a = await r(aDid, p_0_2_3_a, 'p_0_2_3_3_a')
-  const p_0_3_a = await r(aDid, p_0_o, 'p_0_3_a')
-    const p_0_3_0_a = await r(aDid, p_0_3_a, 'p_0_3_0_a')
-      const p_0_3_0_0_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_0_a')
-      const p_0_3_0_1_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_1_a')
-      const p_0_3_0_2_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_2_a')
-      const p_0_3_0_3_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_3_a')
-      // This is the only case in this seed where a reply has 5 replies instead of 4,
-      // to have cases of different lengths in the same tree.
-      const p_0_3_0_4_a = await r(aDid, p_0_3_0_a, 'p_0_3_0_4_a')
-    const p_0_3_1_a = await r(aDid, p_0_3_a, 'p_0_3_1_a')
-      const p_0_3_1_0_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_0_a')
-      const p_0_3_1_1_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_1_a')
-      const p_0_3_1_2_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_2_a')
-      const p_0_3_1_3_a = await r(aDid, p_0_3_1_a, 'p_0_3_1_3_a')
-    const p_0_3_2_a = await r(aDid, p_0_3_a, 'p_0_3_2_a')
-      const p_0_3_2_0_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_0_a')
-      const p_0_3_2_1_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_1_a')
-      const p_0_3_2_2_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_2_a')
-      const p_0_3_2_3_a = await r(aDid, p_0_3_2_a, 'p_0_3_2_3_a')
-    const p_0_3_3_a = await r(aDid, p_0_3_a, 'p_0_3_3_a')
-      const p_0_3_3_0_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_0_a')
-      const p_0_3_3_1_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_1_a')
-      const p_0_3_3_2_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_2_a')
-      const p_0_3_3_3_a = await r(aDid, p_0_3_3_a, 'p_0_3_3_3_a')
-
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(op, async (r) => {
+      await r(op, async (r) => {
+        await r(op)
+      })
+    })
+    await r(alice, async (r) => {
+      await r(alice)
+    })
+    await r(op, async (r) => {
+      await r(bob, async (r) => {
+        await r(op)
+      })
+    })
+  })
   await sc.network.processAll()
 
   return {
     seedClient: sc,
     users,
-    posts: {
-      p_0_o,
-      p_0_0_a,
-      p_0_0_0_a,
-      p_0_0_0_0_a,
-      p_0_0_0_1_a,
-      p_0_0_0_2_a,
-      p_0_0_0_3_a,
-      p_0_0_1_a,
-      p_0_0_1_0_a,
-      p_0_0_1_1_a,
-      p_0_0_1_2_a,
-      p_0_0_1_3_a,
-      p_0_0_2_a,
-      p_0_0_2_0_a,
-      p_0_0_2_1_a,
-      p_0_0_2_2_a,
-      p_0_0_2_3_a,
-      p_0_0_3_a,
-      p_0_0_3_0_a,
-      p_0_0_3_1_a,
-      p_0_0_3_2_a,
-      p_0_0_3_3_a,
-      p_0_1_a,
-      p_0_1_0_a,
-      p_0_1_0_0_a,
-      p_0_1_0_1_a,
-      p_0_1_0_2_a,
-      p_0_1_0_3_a,
-      p_0_1_1_a,
-      p_0_1_1_0_a,
-      p_0_1_1_1_a,
-      p_0_1_1_2_a,
-      p_0_1_1_3_a,
-      p_0_1_2_a,
-      p_0_1_2_0_a,
-      p_0_1_2_1_a,
-      p_0_1_2_2_a,
-      p_0_1_2_3_a,
-      p_0_1_3_a,
-      p_0_1_3_0_a,
-      p_0_1_3_1_a,
-      p_0_1_3_2_a,
-      p_0_1_3_3_a,
-      p_0_2_a,
-      p_0_2_0_a,
-      p_0_2_0_0_a,
-      p_0_2_0_1_a,
-      p_0_2_0_2_a,
-      p_0_2_0_3_a,
-      p_0_2_1_a,
-      p_0_2_1_0_a,
-      p_0_2_1_1_a,
-      p_0_2_1_2_a,
-      p_0_2_1_3_a,
-      p_0_2_2_a,
-      p_0_2_2_0_a,
-      p_0_2_2_1_a,
-      p_0_2_2_2_a,
-      p_0_2_2_3_a,
-      p_0_2_3_a,
-      p_0_2_3_0_a,
-      p_0_2_3_1_a,
-      p_0_2_3_2_a,
-      p_0_2_3_3_a,
-      p_0_3_a,
-      p_0_3_0_a,
-      p_0_3_0_0_a,
-      p_0_3_0_1_a,
-      p_0_3_0_2_a,
-      p_0_3_0_3_a,
-      p_0_3_0_4_a,
-      p_0_3_1_a,
-      p_0_3_1_0_a,
-      p_0_3_1_1_a,
-      p_0_3_1_2_a,
-      p_0_3_1_3_a,
-      p_0_3_2_a,
-      p_0_3_2_0_a,
-      p_0_3_2_1_a,
-      p_0_3_2_2_a,
-      p_0_3_2_3_a,
-      p_0_3_3_a,
-      p_0_3_3_0_a,
-      p_0_3_3_1_a,
-      p_0_3_3_2_a,
-      p_0_3_3_3_a,
-
-    },
+    root,
+    r,
   }
 }
 
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function annotateOPThreadSeed(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
-  const users = await createUsers(sc, 'opthread', [
-    'op',
-    'alice',
-    'bob',
-  ] as const)
-
-  const p_0_o = await sc.post(users.op.did, 'p_0_o')
-  const p_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_o.ref, 'p_0_0_o') // thread
-  const p_0_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_0_o.ref, 'p_0_0_0_o') // thread
-  const p_0_0_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_0_0_o.ref, 'p_0_0_0_0_o') // thread
-  const p_0_1_a = await sc.reply(users.alice.did, p_0_o.ref, p_0_o.ref, 'p_0_1_a')
-  const p_0_1_0_a = await sc.reply(users.alice.did, p_0_o.ref, p_0_1_a.ref, 'p_0_1_0_a')
-  const p_0_2_o = await sc.reply(users.op.did, p_0_o.ref, p_0_o.ref, 'p_0_2_o') // thread
-  const p_0_2_0_b = await sc.reply(users.bob.did, p_0_o.ref, p_0_2_o.ref, 'p_0_2_0_b')
-  const p_0_2_0_0_o = await sc.reply(users.op.did, p_0_o.ref, p_0_2_0_b.ref, 'p_0_2_0_0_o') // not thread
-
-  await sc.network.processAll()
-
-  return {
-    seedClient: sc,
-    users,
-    posts: {
-      p_0_o,
-      p_0_0_o,
-      p_0_0_0_o,
-      p_0_0_0_0_o,
-      p_0_1_a,
-      p_0_1_0_a,
-      p_0_2_o,
-      p_0_2_0_b,
-      p_0_2_0_0_o,
-    },
-  }
-}
-
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function threadSortingSeedNoOpOrViewerReplies(
+export async function sortingNoOpOrViewer(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
   const users = await createUsers(sc, 'sort1', [
@@ -441,73 +377,63 @@ export async function threadSortingSeedNoOpOrViewerReplies(
     'bob',
     'carol',
   ] as const)
+  const { op, alice, bob, carol } = users
 
-  const tenHoursAgo = subHours(new Date(), 10)
-  const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
+  const rootCreatedAt = subHours(new Date(), 10)
+  const ov = (hoursAfterRoot = 0) => ({
+    createdAt: addHours(rootCreatedAt, hoursAfterRoot).toISOString(),
+  })
 
-  const reply = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
-    return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
-  }
-
-  const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', addHours(tenHoursAgo, 1)) // 0 likes
-  const p_0_0_0_c = await reply(users.carol.did, p_0_0_a.ref, 'p_0_0_0_c', addHours(tenHoursAgo, 2)) // 0 likes
-  const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', addHours(tenHoursAgo, 3)) // 2 likes
-  const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', addHours(tenHoursAgo, 4)) // 1 like
-
-  const p_0_1_c = await reply(users.carol.did, p_0_o.ref, 'p_0_1_c', addHours(tenHoursAgo, 3)) // 3 likes
-  const p_0_1_0_b = await reply(users.bob.did, p_0_1_c.ref, 'p_0_1_0_b', addHours(tenHoursAgo, 4)) // 1 like
-  const p_0_1_1_c = await reply(users.carol.did, p_0_1_c.ref, 'p_0_1_1_c', addHours(tenHoursAgo, 5)) // 2 likes
-  const p_0_1_2_a = await reply(users.alice.did, p_0_1_c.ref, 'p_0_1_2_a', addHours(tenHoursAgo, 6)) // 0 likes
-
-  const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', addHours(tenHoursAgo, 5)) // 2 likes
-  const p_0_2_0_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_0_b', addHours(tenHoursAgo, 6)) // 2 likes
-  const p_0_2_1_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_1_a', addHours(tenHoursAgo, 7)) // 1 like
-  const p_0_2_2_c = await reply(users.carol.did, p_0_2_b.ref, 'p_0_2_2_c', addHours(tenHoursAgo, 8)) // 0 likes
+  const { root, replies: r } = await createThread(sc, op, ov(), async (r) => {
+    // 0 likes
+    await r(alice, ov(1), async (r) => {
+      await r(carol, ov(2)) // 0 likes
+      await r(alice, ov(3)) // 2 likes
+      await r(bob, ov(4)) // 1 like
+    })
+    // 3 likes
+    await r(carol, ov(3), async (r) => {
+      await r(bob, ov(4)) // 1 like
+      await r(carol, ov(5)) // 2 likes
+      await r(alice, ov(6)) // 0 likes
+    })
+    // 2 likes
+    await r(bob, ov(5), async (r) => {
+      await r(bob, ov(6)) // 2 likes
+      await r(alice, ov(7)) // 1 like
+      await r(carol, ov(8)) // 0 likes
+    })
+  })
 
   // likes depth 1
-  await sc.like(users.alice.did, p_0_2_b.ref)
-  await sc.like(users.carol.did, p_0_2_b.ref)
-  await sc.like(users.op.did, p_0_1_c.ref)  // op like, bumps hotness.
-  await sc.like(users.bob.did, p_0_1_c.ref)
-  await sc.like(users.carol.did, p_0_1_c.ref)
+  await sc.like(alice.did, r['2'].ref)
+  await sc.like(carol.did, r['2'].ref)
+  await sc.like(op.did, r['1'].ref) // op like, bumps hotness.
+  await sc.like(bob.did, r['1'].ref)
+  await sc.like(carol.did, r['1'].ref)
 
   // likes depth 2
-  await sc.like(users.bob.did, p_0_0_1_a.ref)
-  await sc.like(users.carol.did, p_0_0_1_a.ref)
-  await sc.like(users.op.did, p_0_0_2_b.ref) // op like, bumps hotness.
-  await sc.like(users.bob.did, p_0_1_1_c.ref)
-  await sc.like(users.carol.did, p_0_1_1_c.ref)
-  await sc.like(users.bob.did, p_0_1_0_b.ref)
-  await sc.like(users.bob.did, p_0_2_0_b.ref)
-  await sc.like(users.carol.did, p_0_2_0_b.ref)
-  await sc.like(users.bob.did, p_0_2_1_a.ref)
+  await sc.like(bob.did, r['0_1'].ref)
+  await sc.like(carol.did, r['0_1'].ref)
+  await sc.like(op.did, r['0_2'].ref) // op like, bumps hotness.
+  await sc.like(bob.did, r['1_1'].ref)
+  await sc.like(carol.did, r['1_1'].ref)
+  await sc.like(bob.did, r['1_0'].ref)
+  await sc.like(bob.did, r['2_0'].ref)
+  await sc.like(carol.did, r['2_0'].ref)
+  await sc.like(bob.did, r['2_1'].ref)
 
   await sc.network.processAll()
 
   return {
     seedClient: sc,
     users,
-    posts: {
-      p_0_o,
-      p_0_0_a,
-      p_0_0_0_c,
-      p_0_0_1_a,
-      p_0_0_2_b,
-      p_0_1_c,
-      p_0_1_0_b,
-      p_0_1_1_c,
-      p_0_1_2_a,
-      p_0_2_b,
-      p_0_2_0_b,
-      p_0_2_1_a,
-      p_0_2_2_c,
-    },
+    root,
+    r,
   }
 }
 
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function threadSortingSeedWithOpAndViewerReplies(
+export async function sortingWithOpAndViewer(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
   const users = await createUsers(sc, 'sort2', [
@@ -517,120 +443,92 @@ export async function threadSortingSeedWithOpAndViewerReplies(
     'bob',
     'carol',
   ] as const)
+  const { op, viewer, alice, bob, carol } = users
 
-  const tenHoursAgo = subHours(new Date(), 10)
-  // TODO: throw if date becomes in the future?
-  const h = (h: number) => addHours(tenHoursAgo, h)
-  const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
+  const rootCreatedAt = subHours(new Date(), 10)
+  const ov = (hoursAfterRoot = 0) => ({
+    createdAt: addHours(rootCreatedAt, hoursAfterRoot).toISOString(),
+  })
 
-  const reply = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
-    return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
-  }
-
-  const p_0_0_a = await reply(users.alice.did, p_0_o.ref, 'p_0_0_a', h(0)) // 1 like
-  const p_0_0_0_c = await reply(users.carol.did, p_0_0_a.ref, 'p_0_0_0_c', h(1)) // 0 likes
-  const p_0_0_1_a = await reply(users.alice.did, p_0_0_a.ref, 'p_0_0_1_a', h(2)) // 2 likes
-  const p_0_0_2_b = await reply(users.bob.did, p_0_0_a.ref, 'p_0_0_2_b', h(3)) // 1 like
-  const p_0_0_3_v = await reply(users.viewer.did, p_0_0_a.ref, 'p_0_0_3_v', h(4)) // 0 likes
-  const p_0_0_4_o = await reply(users.op.did, p_0_0_a.ref, 'p_0_0_4_o', h(5)) // 0 likes
-
-  const p_0_1_c = await reply(users.carol.did, p_0_o.ref, 'p_0_1_c', h(1)) // 3 likes
-  const p_0_1_0_b = await reply(users.bob.did, p_0_1_c.ref, 'p_0_1_0_b', h(2)) // 1 like
-  const p_0_1_1_c = await reply(users.carol.did, p_0_1_c.ref, 'p_0_1_1_c', h(3)) // 2 likes
-  const p_0_1_2_o = await reply(users.op.did, p_0_1_c.ref, 'p_0_1_2_o', h(4)) // 0 likes
-  const p_0_1_3_v = await reply(users.viewer.did, p_0_1_c.ref, 'p_0_1_3_v', h(5)) // 1 like
-  const p_0_1_4_a = await reply(users.alice.did, p_0_1_c.ref, 'p_0_1_4_a', h(6)) // 0 likes
-
-  const p_0_2_b = await reply(users.bob.did, p_0_o.ref, 'p_0_2_b', h(2)) // 2 likes
-  const p_0_2_0_v = await reply(users.viewer.did, p_0_2_b.ref, 'p_0_2_0_v', h(3)) // 0 likes
-  const p_0_2_1_b = await reply(users.bob.did, p_0_2_b.ref, 'p_0_2_1_b', h(4)) // 4 likes
-  const p_0_2_2_o = await reply(users.op.did, p_0_2_b.ref, 'p_0_2_2_o', h(5)) // 0 likes
-  const p_0_2_3_a = await reply(users.alice.did, p_0_2_b.ref, 'p_0_2_3_a', h(6)) // 1 like
-  const p_0_2_4_c = await reply(users.carol.did, p_0_2_b.ref, 'p_0_2_4_c', h(7)) // 1 like
-
-  const p_0_3_o = await reply(users.op.did, p_0_o.ref, 'p_0_3_o', h(3)) // 0 likes
-  const p_0_3_0_v = await reply(users.viewer.did, p_0_3_o.ref, 'p_0_3_0_v', h(4)) // 0 likes
-  const p_0_3_1_b = await reply(users.bob.did, p_0_3_o.ref, 'p_0_3_1_b', h(5)) // 0 likes
-  const p_0_3_2_o = await reply(users.op.did, p_0_3_o.ref, 'p_0_3_2_o', h(6)) // 0 likes
-  const p_0_3_3_a = await reply(users.alice.did, p_0_3_o.ref, 'p_0_3_3_a', h(7)) // 0 likes
-  const p_0_3_4_c = await reply(users.carol.did, p_0_3_o.ref, 'p_0_3_4_c', h(8)) // 0 likes
-
-  const p_0_4_v = await reply(users.viewer.did, p_0_o.ref, 'p_0_4_v', h(4)) // 0 likes
-  const p_0_4_0_b = await reply(users.bob.did, p_0_4_v.ref, 'p_0_4_0_b', h(5)) // 1 like
-  const p_0_4_1_c = await reply(users.carol.did, p_0_4_v.ref, 'p_0_4_1_c', h(6)) // 1 like
-  const p_0_4_2_o = await reply(users.op.did, p_0_4_v.ref, 'p_0_4_2_o', h(7)) // 0 likes
-  const p_0_4_3_v = await reply(users.viewer.did, p_0_4_v.ref, 'p_0_4_3_v', h(8)) // 0 likes
-  const p_0_4_4_a = await reply(users.alice.did, p_0_4_v.ref, 'p_0_4_4_a', h(9)) // 0 likes
+  const { root, replies: r } = await createThread(sc, op, ov(), async (r) => {
+    // 1 like
+    await r(alice, ov(0), async (r) => {
+      await r(carol, ov(1)) // 0 likes
+      await r(alice, ov(2)) // 2 likes
+      await r(bob, ov(3)) // 1 like
+      await r(viewer, ov(4)) // 0 likes
+      await r(op, ov(5)) // 0 likes
+    })
+    // 3 likes
+    await r(carol, ov(1), async (r) => {
+      await r(bob, ov(2)) // 1 like
+      await r(carol, ov(3)) // 2 likes
+      await r(op, ov(4)) // 0 likes
+      await r(viewer, ov(5)) // 1 like
+      await r(alice, ov(6)) // 0 likes
+    })
+    // 2 likes
+    await r(bob, ov(2), async (r) => {
+      await r(viewer, ov(3)) // 0 likes
+      await r(bob, ov(4)) // 4 likes
+      await r(op, ov(5)) // 0 likes
+      await r(alice, ov(6)) // 1 like
+      await r(carol, ov(7)) // 1 like
+    })
+    // 0 likes
+    await r(op, ov(3), async (r) => {
+      await r(viewer, ov(4)) // 0 likes
+      await r(bob, ov(5)) // 0 likes
+      await r(op, ov(6)) // 0 likes
+      await r(alice, ov(7)) // 0 likes
+      await r(carol, ov(8)) // 0 likes
+    })
+    // 0 likes
+    await r(viewer, ov(4), async (r) => {
+      await r(bob, ov(5)) // 1 like
+      await r(carol, ov(6)) // 1 like
+      await r(op, ov(7)) // 0 likes
+      await r(viewer, ov(8)) // 0 likes
+      await r(alice, ov(9)) // 0 likes
+    })
+  })
 
   // likes depth 1
-  await sc.like(users.alice.did, p_0_2_b.ref)
-  await sc.like(users.carol.did, p_0_2_b.ref)
-  await sc.like(users.viewer.did, p_0_0_a.ref)
-  await sc.like(users.op.did, p_0_1_c.ref)  // op like, bumps hotness.
-  await sc.like(users.bob.did, p_0_1_c.ref)
-  await sc.like(users.carol.did, p_0_1_c.ref)
+  await sc.like(alice.did, r['2'].ref)
+  await sc.like(carol.did, r['2'].ref)
+  await sc.like(viewer.did, r['0'].ref)
+  await sc.like(op.did, r['1'].ref) // op like, bumps hotness.
+  await sc.like(bob.did, r['1'].ref)
+  await sc.like(carol.did, r['1'].ref)
 
   // likes depth 2
-  await sc.like(users.bob.did, p_0_0_1_a.ref)
-  await sc.like(users.carol.did, p_0_0_1_a.ref)
-  await sc.like(users.op.did, p_0_0_2_b.ref) // op like, bumps hotness.
-  await sc.like(users.bob.did, p_0_1_1_c.ref)
-  await sc.like(users.carol.did, p_0_1_1_c.ref)
-  await sc.like(users.bob.did, p_0_1_0_b.ref)
-  await sc.like(users.alice.did, p_0_2_1_b.ref)
-  await sc.like(users.bob.did, p_0_2_1_b.ref)
-  await sc.like(users.carol.did, p_0_2_1_b.ref)
-  await sc.like(users.viewer.did, p_0_2_1_b.ref)
-  await sc.like(users.bob.did, p_0_1_3_v.ref)
-  await sc.like(users.bob.did, p_0_2_3_a.ref)
-  await sc.like(users.viewer.did, p_0_2_4_c.ref)
-  await sc.like(users.viewer.did, p_0_4_0_b.ref)
-  await sc.like(users.alice.did, p_0_4_1_c.ref)
+  await sc.like(bob.did, r['0_1'].ref)
+  await sc.like(carol.did, r['0_1'].ref)
+  await sc.like(op.did, r['0_2'].ref) // op like, bumps hotness.
+  await sc.like(bob.did, r['1_1'].ref)
+  await sc.like(carol.did, r['1_1'].ref)
+  await sc.like(bob.did, r['1_0'].ref)
+  await sc.like(alice.did, r['2_1'].ref)
+  await sc.like(bob.did, r['2_1'].ref)
+  await sc.like(carol.did, r['2_1'].ref)
+  await sc.like(viewer.did, r['2_1'].ref)
+  await sc.like(bob.did, r['1_3'].ref)
+  await sc.like(bob.did, r['2_3'].ref)
+  await sc.like(viewer.did, r['2_4'].ref)
+  await sc.like(viewer.did, r['4_0'].ref)
+  await sc.like(alice.did, r['4_1'].ref)
 
   await sc.network.processAll()
 
   return {
     seedClient: sc,
     users,
-    posts: {
-      p_0_o,
-      p_0_0_a,
-      p_0_0_0_c,
-      p_0_0_1_a,
-      p_0_0_2_b,
-      p_0_0_3_v,
-      p_0_0_4_o,
-      p_0_1_c,
-      p_0_1_0_b,
-      p_0_1_1_c,
-      p_0_1_2_o,
-      p_0_1_3_v,
-      p_0_1_4_a,
-      p_0_2_b,
-      p_0_2_0_v,
-      p_0_2_1_b,
-      p_0_2_2_o,
-      p_0_2_3_a,
-      p_0_2_4_c,
-      p_0_3_o,
-      p_0_3_0_v,
-      p_0_3_1_b,
-      p_0_3_2_o,
-      p_0_3_3_a,
-      p_0_3_4_c,
-      p_0_4_v,
-      p_0_4_0_b,
-      p_0_4_1_c,
-      p_0_4_2_o,
-      p_0_4_3_v,
-      p_0_4_4_a,
-    },
+    root,
+    r,
   }
 }
 
-// ignored so it's easier to read the seeds
-// prettier-ignore
-export async function threadWithFollows(
+export async function sortingWithFollows(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
   const users = await createUsers(sc, 'follow', [
@@ -642,24 +540,24 @@ export async function threadWithFollows(
     'carol',
   ] as const)
 
-  const tenHoursAgo = subHours(new Date(), 10)
-  const h = (h: number) => addHours(tenHoursAgo, h)
+  const { op, viewerF, viewerNoF, alice, bob, carol } = users
 
-  const p_0_o = await sc.post(users.op.did, 'p_0_o', undefined, undefined, undefined, { createdAt: tenHoursAgo.toISOString()} )
+  const rootCreatedAt = subHours(new Date(), 10)
+  const ov = (hoursAfterRoot = 0) => ({
+    createdAt: addHours(rootCreatedAt, hoursAfterRoot).toISOString(),
+  })
 
-  const r = (user: string, parent: RecordRef, text: string, createdAt?: Date) => {
-    return sc.reply(user, p_0_o.ref, parent, text, undefined, undefined, createdAt ? { createdAt: createdAt.toISOString()} : undefined)
-  }
+  const { root, replies: r } = await createThread(sc, op, ov(), async (r) => {
+    await r(alice, ov(0))
+    await r(bob, ov(1))
+    await r(carol, ov(2))
+    await r(op, ov(3))
+    await r(viewerF, ov(4))
+    await r(viewerNoF, ov(5))
+  })
 
-  const p_0_0_a = await r(users.alice.did, p_0_o.ref, 'p_0_0_a', h(0))
-  const p_0_1_b = await r(users.bob.did, p_0_o.ref, 'p_0_1_b', h(1))
-  const p_0_2_c = await r(users.carol.did, p_0_o.ref, 'p_0_2_c', h(2))
-  const p_0_3_o = await r(users.op.did, p_0_o.ref, 'p_0_3_o', h(3))
-  const p_0_4_f = await r(users.viewerF.did, p_0_o.ref, 'p_0_4_f', h(4))
-  const p_0_5_n = await r(users.viewerNoF.did, p_0_o.ref, 'p_0_5_n', h(5))
-
-  await sc.follow(users.viewerF.did, users.alice.did)
-  await sc.follow(users.viewerF.did, users.bob.did)
+  await sc.follow(viewerF.did, alice.did)
+  await sc.follow(viewerF.did, bob.did)
   // Does not follow carol.
 
   await sc.network.processAll()
@@ -667,14 +565,7 @@ export async function threadWithFollows(
   return {
     seedClient: sc,
     users,
-    posts: {
-      p_0_o,
-      p_0_0_a,
-      p_0_1_b,
-      p_0_2_c,
-      p_0_3_o,
-      p_0_4_f,
-      p_0_5_n,
-    },
+    root,
+    r,
   }
 }

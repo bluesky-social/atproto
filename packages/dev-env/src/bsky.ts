@@ -73,6 +73,7 @@ export class TestBsky {
       serverDid,
       alternateAudienceDids: [],
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
+      // dataplaneUrls: [`https://giga1.internal.pop1.bsky.network:6101`],
       dataplaneHttpVersion: '1.1',
       bsyncUrl: `http://localhost:${bsyncPort}`,
       bsyncHttpVersion: '1.1',
