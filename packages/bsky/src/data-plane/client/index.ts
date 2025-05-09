@@ -99,12 +99,12 @@ const createBaseClient = (
   baseUrl: string,
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ): DataPlaneClient => {
-  const { httpVersion = '2' } = opts
+  const { httpVersion = '2', rejectUnauthorized = true } = opts
   const transport = createGrpcTransport({
     baseUrl,
     httpVersion,
     acceptCompression: [],
-    nodeOptions: { rejectUnauthorized: false },
+    nodeOptions: { rejectUnauthorized },
   })
   return createPromiseClient(Service, transport)
 }
