@@ -67,11 +67,7 @@ import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
-import {
-  ThreadTree,
-  flattenThread,
-  sortAndTrimThreadTree,
-} from '../util/threads'
+import { ThreadTree, sortTrimFlattenThreadTree } from '../util/threads'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -1214,7 +1210,7 @@ export class Views {
       hasUnhydratedParents: false,
     }
 
-    const anchorTreeSorted = sortAndTrimThreadTree({
+    return sortTrimFlattenThreadTree({
       opDid,
       node: anchorTree,
       options: {
@@ -1225,8 +1221,6 @@ export class Views {
       viewerDid: opts.viewerDid,
       fetchedAt: Date.now(),
     })
-
-    return flattenThread(anchorTreeSorted)
   }
 
   private threadV2Parent({
@@ -1324,7 +1318,7 @@ export class Views {
         },
         parent,
         replies: undefined,
-        depth: depth,
+        depth,
         isOPThread,
         hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
         hasUnhydratedReplies: false, // not applicable to parents
@@ -1397,7 +1391,7 @@ export class Views {
           state,
           depth: depth + 1,
         }),
-        depth: depth,
+        depth,
         isOPThread,
         hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
         hasUnhydratedReplies: false, // TODO annotated in next step

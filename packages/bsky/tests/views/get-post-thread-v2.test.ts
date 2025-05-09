@@ -11,11 +11,6 @@ import { ThreadTree, getPostHotness } from '../../src/util/threads'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
 
-// @TODO remove this helper
-const debugThread = (t: ThreadItemPost[]) => {
-  t.forEach((i) => console.log(i.post.indexedAt, i.post.record.text))
-}
-
 describe('appview thread views v2', () => {
   let network: TestNetwork
   let agent: AtpAgent
