@@ -70,7 +70,7 @@ import { Notification } from '../proto/bsky_pb'
 import {
   ThreadTree,
   flattenThread,
-  sortThreadTree as sortAndTrimThreadTree,
+  sortAndTrimThreadTree,
 } from '../util/threads'
 import {
   postUriToPostgateUri,

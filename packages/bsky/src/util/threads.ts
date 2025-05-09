@@ -34,7 +34,7 @@ export type ThreadTree =
   | $Typed<ThreadItemNotFound>
   | $Typed<ThreadItemBlocked>
 
-export function sortThreadTree({
+export function sortAndTrimThreadTree({
   opDid,
   node,
   options,
@@ -133,7 +133,7 @@ export function sortThreadTree({
       node.replies = node.replies.slice(0, options.branchingFactor)
     }
     node.replies.forEach((reply) =>
-      sortThreadTree({
+      sortAndTrimThreadTree({
         opDid,
         node: reply,
         options,

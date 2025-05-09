@@ -13,7 +13,7 @@ import * as seeds from '../seed/get-post-thread-v2.seed'
 
 // @TODO remove this helper
 const debugThread = (t: ThreadItemPost[]) => {
-  t.forEach((i) => console.log(i.post.record.text))
+  t.forEach((i) => console.log(i.post.indexedAt, i.post.record.text))
 }
 
 describe('appview thread views v2', () => {
@@ -21,16 +21,12 @@ describe('appview thread views v2', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let simpleSeed: Awaited<ReturnType<typeof seeds.simpleThreadSeed>>
-
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_get_post_thread_v_two',
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
-
-    simpleSeed = await seeds.simpleThreadSeed(sc)
   })
 
   afterAll(async () => {
@@ -38,253 +34,201 @@ describe('appview thread views v2', () => {
   })
 
   describe('simple thread', () => {
-    it('returns thread anchored on p_0', async () => {
+    let seed: Awaited<ReturnType<typeof seeds.simple>>
+
+    beforeAll(async () => {
+      seed = await seeds.simple(sc)
+    })
+
+    it('returns thread anchored on root', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        {
-          uri: simpleSeed.posts.p_0.ref.uriStr,
-        },
+        { uri: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
       )
-
       const { thread } = data
       const t = thread as ThreadItemPost[]
-      expect(t).toHaveLength(7)
 
-      expect(t[0].post.record.text).toEqual('p_0 (op)')
-      expect(t[0].depth).toEqual(0)
-
-      expect(t[1].post.record.text).toEqual('p_0_0 (op)')
-      expect(t[1].depth).toEqual(1)
-
-      expect(t[2].post.record.text).toEqual('p_0_0_0 (op)')
-      expect(t[2].depth).toEqual(2)
-
-      expect(t[3].post.record.text).toEqual('p_0_1 (alice)')
-      expect(t[3].depth).toEqual(1)
-
-      expect(t[4].post.record.text).toEqual('p_0_2 (bob)')
-      expect(t[4].depth).toEqual(1)
-
-      expect(t[5].post.record.text).toEqual('p_0_2_0 (alice)')
-      expect(t[5].depth).toEqual(2)
-
-      expect(t[6].post.record.text).toEqual('p_0_3 (carol)')
-      expect(t[6].depth).toEqual(1)
-
+      expect(t).toEqual([
+        expect.objectContaining({ depth: 0, uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['0'].ref.uriStr }),
+        expect.objectContaining({ depth: 2, uri: seed.r['0_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['1'].ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['2'].ref.uriStr }),
+        expect.objectContaining({ depth: 2, uri: seed.r['2_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['3'].ref.uriStr }),
+      ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on p_0_0', async () => {
+    it('returns thread anchored on r 0', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        {
-          uri: simpleSeed.posts.p_0_0.ref.uriStr,
-        },
+        { uri: seed.r['0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
       )
-
       const { thread } = data
       const t = thread as ThreadItemPost[]
-      expect(t).toHaveLength(3)
 
-      expect(t[0].post.record.text).toEqual('p_0 (op)')
-      expect(t[0].depth).toEqual(-1)
-
-      expect(t[1].post.record.text).toEqual('p_0_0 (op)')
-      expect(t[1].depth).toEqual(0)
-
-      expect(t[2].post.record.text).toEqual('p_0_0_0 (op)')
-      expect(t[2].depth).toEqual(1)
-
+      expect(t).toEqual([
+        expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['0'].ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['0_0'].ref.uriStr }),
+      ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on p_0_0_0', async () => {
+    it('returns thread anchored on r 0_0', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        {
-          uri: simpleSeed.posts.p_0_0_0.ref.uriStr,
-        },
+        { uri: seed.r['0_0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
       )
-
       const { thread } = data
       const t = thread as ThreadItemPost[]
-      expect(t).toHaveLength(3)
 
-      expect(t[0].post.record.text).toEqual('p_0 (op)')
-      expect(t[0].depth).toEqual(-2)
-
-      expect(t[1].post.record.text).toEqual('p_0_0 (op)')
-      expect(t[1].depth).toEqual(-1)
-
-      expect(t[2].post.record.text).toEqual('p_0_0_0 (op)')
-      expect(t[2].depth).toEqual(0)
-
+      expect(t).toEqual([
+        expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ depth: -1, uri: seed.r['0'].ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['0_0'].ref.uriStr }),
+      ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on p_0_1', async () => {
+    it('returns thread anchored on 1', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        {
-          uri: simpleSeed.posts.p_0_1.ref.uriStr,
-        },
+        { uri: seed.r['1'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
       )
-
       const { thread } = data
       const t = thread as ThreadItemPost[]
-      expect(t).toHaveLength(2)
 
-      expect(t[0].post.record.text).toEqual('p_0 (op)')
-      expect(t[0].depth).toEqual(-1)
-
-      expect(t[1].post.record.text).toEqual('p_0_1 (alice)')
-      expect(t[1].depth).toEqual(0)
-
+      expect(t).toEqual([
+        expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['1'].ref.uriStr }),
+      ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on p_0_2', async () => {
+    it('returns thread anchored on 2', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        {
-          uri: simpleSeed.posts.p_0_2.ref.uriStr,
-        },
+        { uri: seed.r['2'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
       )
-
       const { thread } = data
       const t = thread as ThreadItemPost[]
-      expect(t).toHaveLength(3)
 
-      expect(t[0].post.record.text).toEqual('p_0 (op)')
-      expect(t[0].depth).toEqual(-1)
-
-      expect(t[1].post.record.text).toEqual('p_0_2 (bob)')
-      expect(t[1].depth).toEqual(0)
-
-      expect(t[2].post.record.text).toEqual('p_0_2_0 (alice)')
-      expect(t[2].depth).toEqual(1)
-
+      expect(t).toEqual([
+        expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['2'].ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['2_0'].ref.uriStr }),
+      ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on p_0_2_0', async () => {
+    it('returns thread anchored on 2_0', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        {
-          uri: simpleSeed.posts.p_0_2_0.ref.uriStr,
-        },
+        { uri: seed.r['2_0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
       )
-
       const { thread } = data
       const t = thread as ThreadItemPost[]
-      expect(t).toHaveLength(3)
 
-      expect(t[0].post.record.text).toEqual('p_0 (op)')
-      expect(t[0].depth).toEqual(-2)
-
-      expect(t[1].post.record.text).toEqual('p_0_2 (bob)')
-      expect(t[1].depth).toEqual(-1)
-
-      expect(t[2].post.record.text).toEqual('p_0_2_0 (alice)')
-      expect(t[2].depth).toEqual(0)
-
+      expect(t).toEqual([
+        expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ depth: -1, uri: seed.r['2'].ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['2_0'].ref.uriStr }),
+      ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on p_0_3', async () => {
+    it('returns thread anchored on 3', async () => {
       const { data } = await agent.app.bsky.feed.getPostThreadV2(
-        {
-          uri: simpleSeed.posts.p_0_3.ref.uriStr,
-        },
+        { uri: seed.r['3'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
-            simpleSeed.users.op.did,
+            seed.users.op.did,
             ids.AppBskyFeedGetPostThreadV2,
           ),
         },
       )
-
       const { thread } = data
       const t = thread as ThreadItemPost[]
-      expect(t).toHaveLength(2)
 
-      expect(t[0].post.record.text).toEqual('p_0 (op)')
-      expect(t[1].post.record.text).toEqual('p_0_3 (carol)')
+      expect(t).toEqual([
+        expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['3'].ref.uriStr }),
+      ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
   })
 
   describe('long thread', () => {
-    let seed: Awaited<ReturnType<typeof seeds.longThreadSeed>>
+    let seed: Awaited<ReturnType<typeof seeds.long>>
 
     beforeAll(async () => {
-      seed = await seeds.longThreadSeed(sc)
+      seed = await seeds.long(sc)
     })
 
     describe('calculating depth', () => {
       type Case = {
-        postKey: keyof Awaited<ReturnType<typeof seeds.longThreadSeed>>['posts']
+        postKey: string
       }
 
       const cases: Case[] = [
-        { postKey: 'p_0' },
-        { postKey: 'p_0_0' },
-        { postKey: 'p_0_0_0' },
-        { postKey: 'p_0_0_0_0' },
-        { postKey: 'p_0_0_0_0_0' },
-        { postKey: 'p_0_0_0_0_0_0' },
-        { postKey: 'p_0_0_0_1' },
-        { postKey: 'p_0_1' },
-        { postKey: 'p_0_2' },
-        { postKey: 'p_0_3' },
-        { postKey: 'p_0_4' },
-        { postKey: 'p_0_4_0' },
-        { postKey: 'p_0_4_0_0' },
-        { postKey: 'p_0_4_0_0_0' },
-        { postKey: 'p_0_4_0_0_0_0' },
-        { postKey: 'p_0_5' },
-        { postKey: 'p_0_6' },
-        { postKey: 'p_0_7' },
+        { postKey: 'root' },
+        { postKey: '0' },
+        { postKey: '0_0' },
+        { postKey: '0_0_0' },
+        { postKey: '0_0_0_0' },
+        { postKey: '0_0_0_0_0' },
+        { postKey: '0_0_1' },
+        { postKey: '1' },
+        { postKey: '2' },
+        { postKey: '3' },
+        { postKey: '4' },
+        { postKey: '4_0' },
+        { postKey: '4_0_0' },
+        { postKey: '4_0_0_0' },
+        { postKey: '4_0_0_0_0' },
+        { postKey: '5' },
+        { postKey: '6' },
+        { postKey: '7' },
       ]
 
       it.each(cases)(
         'calculates the depths anchored at $postKey',
         async ({ postKey }) => {
-          const post = seed.posts[postKey]
+          const post = postKey === 'root' ? seed.root : seed.r[postKey]
           const { data } = await agent.app.bsky.feed.getPostThreadV2(
-            {
-              uri: post.ref.uriStr,
-            },
+            { uri: post.ref.uriStr },
             {
               headers: await network.serviceHeaders(
                 seed.users.op.did,
@@ -315,17 +259,19 @@ describe('appview thread views v2', () => {
   })
 
   describe('deep thread', () => {
-    let seed: Awaited<ReturnType<typeof seeds.deepThreadSeed>>
+    let seed: Awaited<ReturnType<typeof seeds.deep>>
+    let simple: Awaited<ReturnType<typeof seeds.simple>>
 
     beforeAll(async () => {
-      seed = await seeds.deepThreadSeed(sc)
+      seed = await seeds.deep(sc)
+      simple = await seeds.simple(sc, 'simple2')
     })
 
     describe('above', () => {
       it('limits to the above count', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: seed.posts.p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref.uriStr,
+            uri: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
             above: 10,
           },
           {
@@ -342,14 +288,14 @@ describe('appview thread views v2', () => {
 
         const last = t.at(-1)
         expect(last!.uri).toBe(
-          seed.posts.p_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.ref.uriStr,
+          seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
         )
       })
 
       it(`does not fulfill the above count if there are not enough items in the thread`, async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: simpleSeed.posts.p_0_0_0.ref.uriStr,
+            uri: simple.r['0_0'].ref.uriStr,
             above: 10,
           },
           {
@@ -363,9 +309,8 @@ describe('appview thread views v2', () => {
         const { thread } = data
         const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(3)
-
         const last = t.at(-1)
-        expect(last!.uri).toBe(simpleSeed.posts.p_0_0_0.ref.uriStr)
+        expect(last!.uri).toBe(simple.r['0_0'].ref.uriStr)
       })
     })
 
@@ -373,7 +318,7 @@ describe('appview thread views v2', () => {
       it('limits to the below count', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: seed.posts.p_0.ref.uriStr,
+            uri: seed.root.ref.uriStr,
             below: 10,
           },
           {
@@ -387,16 +332,14 @@ describe('appview thread views v2', () => {
         const { thread } = data
         const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(11)
-        expect(thread)
-
         const first = t.at(0)
-        expect(first!.uri).toBe(seed.posts.p_0.ref.uriStr)
+        expect(first!.uri).toBe(seed.root.ref.uriStr)
       })
 
       it(`does not fulfill the below count if there are not enough items in the thread`, async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: simpleSeed.posts.p_0.ref.uriStr,
+            uri: simple.root.ref.uriStr,
             below: 10,
           },
           {
@@ -412,26 +355,23 @@ describe('appview thread views v2', () => {
         expect(t).toHaveLength(7)
 
         const first = t.at(0)
-        expect(first!.uri).toBe(simpleSeed.posts.p_0.ref.uriStr)
+        expect(first!.uri).toBe(simple.root.ref.uriStr)
       })
     })
   })
 
   describe('branching factor', () => {
-    let seed: Awaited<ReturnType<typeof seeds.branchingFactorSeed>>
+    let seed: Awaited<ReturnType<typeof seeds.branchingFactor>>
 
     beforeAll(async () => {
-      seed = await seeds.branchingFactorSeed(sc)
+      seed = await seeds.branchingFactor(sc)
     })
 
-    type PostKey = keyof Awaited<
-      ReturnType<typeof seeds.branchingFactorSeed>
-    >['posts']
     type Case =
       | {
           branchingFactor: number
           sorting: QueryParams['sorting']
-          posts: PostKey[]
+          postKeys: string[]
         }
       | {
           branchingFactor: number
@@ -442,53 +382,53 @@ describe('appview thread views v2', () => {
       {
         branchingFactor: 1,
         sorting: 'app.bsky.feed.getPostThreadV2#oldest',
-        posts: ['p_0_o', 'p_0_0_a', 'p_0_0_0_a', 'p_0_0_0_0_a'],
+        postKeys: ['root', '0', '0_0', '0_0_0'],
       },
       {
         branchingFactor: 1,
         sorting: 'app.bsky.feed.getPostThreadV2#newest',
-        posts: ['p_0_o', 'p_0_3_a', 'p_0_3_3_a', 'p_0_3_3_3_a'],
+        postKeys: ['root', '3', '3_3', '3_3_3'],
       },
       {
         branchingFactor: 2,
         sorting: 'app.bsky.feed.getPostThreadV2#oldest',
-        posts: [
-          'p_0_o',
-          'p_0_0_a',
-          'p_0_0_0_a',
-          'p_0_0_0_0_a',
-          'p_0_0_0_1_a',
-          'p_0_0_1_a',
-          'p_0_0_1_0_a',
-          'p_0_0_1_1_a',
-          'p_0_1_a',
-          'p_0_1_0_a',
-          'p_0_1_0_0_a',
-          'p_0_1_0_1_a',
-          'p_0_1_1_a',
-          'p_0_1_1_0_a',
-          'p_0_1_1_1_a',
+        postKeys: [
+          'root',
+          '0',
+          '0_0',
+          '0_0_0',
+          '0_0_1',
+          '0_1',
+          '0_1_0',
+          '0_1_1',
+          '1',
+          '1_0',
+          '1_0_0',
+          '1_0_1',
+          '1_1',
+          '1_1_0',
+          '1_1_1',
         ],
       },
       {
         branchingFactor: 2,
         sorting: 'app.bsky.feed.getPostThreadV2#newest',
-        posts: [
-          'p_0_o',
-          'p_0_3_a',
-          'p_0_3_3_a',
-          'p_0_3_3_3_a',
-          'p_0_3_3_2_a',
-          'p_0_3_2_a',
-          'p_0_3_2_3_a',
-          'p_0_3_2_2_a',
-          'p_0_2_a',
-          'p_0_2_3_a',
-          'p_0_2_3_3_a',
-          'p_0_2_3_2_a',
-          'p_0_2_2_a',
-          'p_0_2_2_3_a',
-          'p_0_2_2_2_a',
+        postKeys: [
+          'root',
+          '3',
+          '3_3',
+          '3_3_3',
+          '3_3_2',
+          '3_2',
+          '3_2_3',
+          '3_2_2',
+          '2',
+          '2_3',
+          '2_3_3',
+          '2_3_2',
+          '2_2',
+          '2_2_3',
+          '2_2_2',
         ],
       },
       {
@@ -504,7 +444,7 @@ describe('appview thread views v2', () => {
       {
         branchingFactor: 5,
         sorting: 'app.bsky.feed.getPostThreadV2#newest',
-        length: 86, // The seeds have only 1 post with 5 replies, so it is only +1 compared to branchingFactor 4.
+        length: 86, // The seeds have 1 post with 5 replies, so it is +1 compared to branchingFactor 4.
       },
     ]
 
@@ -513,7 +453,7 @@ describe('appview thread views v2', () => {
       async (args) => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: seed.posts.p_0_o.ref.uriStr,
+            uri: seed.root.ref.uriStr,
             sorting: 'sorting' in args ? args.sorting : undefined,
             branchingFactor: args.branchingFactor,
           },
@@ -524,94 +464,87 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
+
         if ('length' in args) {
           expect(data.thread).toHaveLength(args.length)
         } else {
           const tUris = t.map((i) => i.uri)
-          const postUris = args.posts.map((k) => seed.posts[k].ref.uriStr)
+          const postUris = args.postKeys.map((k) =>
+            k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
+          )
           expect(tUris).toEqual(postUris)
         }
       },
     )
   })
 
-  describe(`annotateOPThread`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.annotateOPThreadSeed>>
+  describe(`annotate OP thread`, () => {
+    let seed: Awaited<ReturnType<typeof seeds.annotateOP>>
 
     beforeAll(async () => {
-      seed = await seeds.annotateOPThreadSeed(sc)
+      seed = await seeds.annotateOP(sc)
     })
 
-    type PostKey = keyof Awaited<
-      ReturnType<typeof seeds.annotateOPThreadSeed>
-    >['posts']
     type Case = {
-      postKey: PostKey
+      postKey: string
       length: number
-      opThreadPosts: PostKey[]
+      opThreadPostKeys: string[]
     }
 
     const cases: Case[] = [
       {
-        postKey: 'p_0_o',
+        postKey: 'root',
         length: 9,
-        opThreadPosts: [
-          'p_0_o',
-          'p_0_0_o',
-          'p_0_0_0_o',
-          'p_0_0_0_0_o',
-          'p_0_2_o',
-        ],
+        opThreadPostKeys: ['root', '0', '0_0', '0_0_0', '2'],
       },
       {
-        postKey: 'p_0_0_o',
+        postKey: '0',
         length: 4,
-        opThreadPosts: ['p_0_o', 'p_0_0_o', 'p_0_0_0_o', 'p_0_0_0_0_o'],
+        opThreadPostKeys: ['root', '0', '0_0', '0_0_0'],
       },
       {
-        postKey: 'p_0_0_0_o',
+        postKey: '0_0',
         length: 4,
-        opThreadPosts: ['p_0_o', 'p_0_0_o', 'p_0_0_0_o', 'p_0_0_0_0_o'],
+        opThreadPostKeys: ['root', '0', '0_0', '0_0_0'],
       },
       {
-        postKey: 'p_0_0_0_0_o',
+        postKey: '0_0_0',
         length: 4,
-        opThreadPosts: ['p_0_o', 'p_0_0_o', 'p_0_0_0_o', 'p_0_0_0_0_o'],
+        opThreadPostKeys: ['root', '0', '0_0', '0_0_0'],
       },
       {
-        postKey: 'p_0_1_a',
+        postKey: '1',
         length: 3,
-        opThreadPosts: ['p_0_o'],
+        opThreadPostKeys: ['root'],
       },
       {
-        postKey: 'p_0_1_0_a',
+        postKey: '1_0',
         length: 3,
-        opThreadPosts: ['p_0_o'],
+        opThreadPostKeys: ['root'],
       },
       {
-        postKey: 'p_0_2_o',
+        postKey: '2',
         length: 4,
-        opThreadPosts: ['p_0_o', 'p_0_2_o'],
+        opThreadPostKeys: ['root', '2'],
       },
       {
-        postKey: 'p_0_2_0_b',
+        postKey: '2_0',
         length: 4,
-        opThreadPosts: ['p_0_o', 'p_0_2_o'],
+        opThreadPostKeys: ['root', '2'],
       },
       {
-        postKey: 'p_0_2_0_0_o',
+        postKey: '2_0_0',
         length: 4,
-        opThreadPosts: ['p_0_o', 'p_0_2_o'],
+        opThreadPostKeys: ['root', '2'],
       },
     ]
 
     it.each(cases)(
       `annotates OP threads correctly anchored at $postKey`,
-      async ({ postKey, length, opThreadPosts }) => {
-        const post = seed.posts[postKey]
+      async ({ postKey, length, opThreadPostKeys: opThreadPosts }) => {
+        const post = postKey === 'root' ? seed.root : seed.r[postKey]
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           { uri: post.ref.uriStr },
           {
@@ -621,15 +554,16 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-
-        const opThreadPostsUris = new Set(
-          opThreadPosts.map((k) => seed.posts[k].ref.uriStr),
-        )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(length)
 
+        const opThreadPostsUris = new Set(
+          opThreadPosts.map((k) =>
+            k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
+          ),
+        )
+
+        expect(t).toHaveLength(length)
         t.forEach((i) => {
           expect(i.isOPThread).toBe(opThreadPostsUris.has(i.uri))
         })
@@ -638,135 +572,99 @@ describe('appview thread views v2', () => {
   })
 
   describe(`sorting`, () => {
-    let noOpOrViewer: Awaited<
-      ReturnType<typeof seeds.threadSortingSeedNoOpOrViewerReplies>
-    >
-    let withOpAndViewer: Awaited<
-      ReturnType<typeof seeds.threadSortingSeedWithOpAndViewerReplies>
-    >
-    let withFollows: Awaited<ReturnType<typeof seeds.threadWithFollows>>
+    let s1: Awaited<ReturnType<typeof seeds.sortingNoOpOrViewer>>
+    let s2: Awaited<ReturnType<typeof seeds.sortingWithOpAndViewer>>
+    let s3: Awaited<ReturnType<typeof seeds.sortingWithFollows>>
 
     beforeAll(async () => {
-      noOpOrViewer = await seeds.threadSortingSeedNoOpOrViewerReplies(sc)
-      withOpAndViewer = await seeds.threadSortingSeedWithOpAndViewerReplies(sc)
-      withFollows = await seeds.threadWithFollows(sc)
+      s1 = await seeds.sortingNoOpOrViewer(sc)
+      s2 = await seeds.sortingWithOpAndViewer(sc)
+      s3 = await seeds.sortingWithFollows(sc)
     })
 
     describe('newest', () => {
       it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: s1.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#newest',
           },
           {
             headers: await network.serviceHeaders(
-              noOpOrViewer.users.op.did,
+              s1.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(13)
 
-        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
-            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
-            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s1.root.ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_0'].ref.uriStr }),
+        ])
       })
 
       it('sorts in all levels for the case with viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            uri: s2.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#newest',
           },
           {
             headers: await network.serviceHeaders(
-              withOpAndViewer.users.viewer.did,
+              s2.users.viewer.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(31)
 
-        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
-            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
-            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
-            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
-            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
-          {
-            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
-            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
-            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
-            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
-            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
-            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
-            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
-            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
-            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
-            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
-            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
-            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
-            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
-            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s2.root.ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_0'].ref.uriStr }),
+        ])
       })
     })
 
@@ -774,117 +672,85 @@ describe('appview thread views v2', () => {
       it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: s1.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#oldest',
           },
           {
             headers: await network.serviceHeaders(
-              noOpOrViewer.users.op.did,
+              s1.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(13)
 
-        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
-            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s1.root.ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_2'].ref.uriStr }),
+        ])
       })
 
       it('sorts in all levels for the case with viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            uri: s2.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#oldest',
           },
           {
             headers: await network.serviceHeaders(
-              withOpAndViewer.users.viewer.did,
+              s2.users.viewer.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(31)
 
-        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
-            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
-            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
-            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
-            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
-          }
-        }
-        {
-          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
-          {
-            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
-            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
-            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
-            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
-            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
-            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
-            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
-            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
-            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
-            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
-            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
-            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
-            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
-            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s2.root.ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_4'].ref.uriStr }),
+        ])
       })
     })
 
@@ -892,117 +758,85 @@ describe('appview thread views v2', () => {
       it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: s1.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#hotness',
           },
           {
             headers: await network.serviceHeaders(
-              noOpOrViewer.users.op.did,
+              s1.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(13)
 
-        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
-          }
-        }
-        {
-          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s1.root.ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_0'].ref.uriStr }),
+        ])
       })
 
       it('sorts in all levels for the case with viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            uri: s2.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#hotness',
           },
           {
             headers: await network.serviceHeaders(
-              withOpAndViewer.users.viewer.did,
+              s2.users.viewer.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(31)
 
-        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
-            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
-            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
-            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
-            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
-          {
-            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
-            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
-            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
-            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
-            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
-            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
-            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
-            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
-            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
-            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
-            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
-            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
-            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s2.root.ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_0'].ref.uriStr }),
+        ])
       })
     })
 
@@ -1010,117 +844,85 @@ describe('appview thread views v2', () => {
       it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: noOpOrViewer.posts.p_0_o.ref.uriStr,
+            uri: s1.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#mostLikes',
           },
           {
             headers: await network.serviceHeaders(
-              noOpOrViewer.users.op.did,
+              s1.users.op.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(13)
 
-        expect(t[0].uri).toBe(noOpOrViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(noOpOrViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(noOpOrViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[3].uri).toBe(noOpOrViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(t[4].uri).toBe(noOpOrViewer.posts.p_0_1_2_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[5].uri).toBe(noOpOrViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[6].uri).toBe(noOpOrViewer.posts.p_0_2_0_b.ref.uriStr)
-            expect(t[7].uri).toBe(noOpOrViewer.posts.p_0_2_1_a.ref.uriStr)
-            expect(t[8].uri).toBe(noOpOrViewer.posts.p_0_2_2_c.ref.uriStr)
-          }
-        }
-        {
-          expect(t[9].uri).toBe(noOpOrViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[10].uri).toBe(noOpOrViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[11].uri).toBe(noOpOrViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(t[12].uri).toBe(noOpOrViewer.posts.p_0_0_0_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s1.root.ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['2_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s1.r['0_0'].ref.uriStr }),
+        ])
       })
 
       it('sorts in all levels for the case with viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.feed.getPostThreadV2(
           {
-            uri: withOpAndViewer.posts.p_0_o.ref.uriStr,
+            uri: s2.root.ref.uriStr,
             sorting: 'app.bsky.feed.getPostThreadV2#mostLikes',
           },
           {
             headers: await network.serviceHeaders(
-              withOpAndViewer.users.viewer.did,
+              s2.users.viewer.did,
               ids.AppBskyFeedGetPostThreadV2,
             ),
           },
         )
-
         const { thread } = data
         const t = thread as ThreadItemPost[]
-        expect(t).toHaveLength(31)
 
-        expect(t[0].uri).toBe(withOpAndViewer.posts.p_0_o.ref.uriStr)
-        {
-          expect(t[1].uri).toBe(withOpAndViewer.posts.p_0_3_o.ref.uriStr)
-          {
-            expect(t[2].uri).toBe(withOpAndViewer.posts.p_0_3_2_o.ref.uriStr)
-            expect(t[3].uri).toBe(withOpAndViewer.posts.p_0_3_0_v.ref.uriStr)
-            expect(t[4].uri).toBe(withOpAndViewer.posts.p_0_3_4_c.ref.uriStr)
-            expect(t[5].uri).toBe(withOpAndViewer.posts.p_0_3_3_a.ref.uriStr)
-            expect(t[6].uri).toBe(withOpAndViewer.posts.p_0_3_1_b.ref.uriStr)
-          }
-        }
-        {
-          expect(t[7].uri).toBe(withOpAndViewer.posts.p_0_4_v.ref.uriStr)
-          {
-            expect(t[8].uri).toBe(withOpAndViewer.posts.p_0_4_2_o.ref.uriStr)
-            expect(t[9].uri).toBe(withOpAndViewer.posts.p_0_4_3_v.ref.uriStr)
-            expect(t[10].uri).toBe(withOpAndViewer.posts.p_0_4_1_c.ref.uriStr)
-            expect(t[11].uri).toBe(withOpAndViewer.posts.p_0_4_0_b.ref.uriStr)
-            expect(t[12].uri).toBe(withOpAndViewer.posts.p_0_4_4_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[13].uri).toBe(withOpAndViewer.posts.p_0_1_c.ref.uriStr)
-          {
-            expect(t[14].uri).toBe(withOpAndViewer.posts.p_0_1_2_o.ref.uriStr)
-            expect(t[15].uri).toBe(withOpAndViewer.posts.p_0_1_3_v.ref.uriStr)
-            expect(t[16].uri).toBe(withOpAndViewer.posts.p_0_1_1_c.ref.uriStr)
-            expect(t[17].uri).toBe(withOpAndViewer.posts.p_0_1_0_b.ref.uriStr)
-            expect(t[18].uri).toBe(withOpAndViewer.posts.p_0_1_4_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[19].uri).toBe(withOpAndViewer.posts.p_0_2_b.ref.uriStr)
-          {
-            expect(t[20].uri).toBe(withOpAndViewer.posts.p_0_2_2_o.ref.uriStr)
-            expect(t[21].uri).toBe(withOpAndViewer.posts.p_0_2_0_v.ref.uriStr)
-            expect(t[22].uri).toBe(withOpAndViewer.posts.p_0_2_1_b.ref.uriStr)
-            expect(t[23].uri).toBe(withOpAndViewer.posts.p_0_2_4_c.ref.uriStr)
-            expect(t[24].uri).toBe(withOpAndViewer.posts.p_0_2_3_a.ref.uriStr)
-          }
-        }
-        {
-          expect(t[25].uri).toBe(withOpAndViewer.posts.p_0_0_a.ref.uriStr)
-          {
-            expect(t[26].uri).toBe(withOpAndViewer.posts.p_0_0_4_o.ref.uriStr)
-            expect(t[27].uri).toBe(withOpAndViewer.posts.p_0_0_3_v.ref.uriStr)
-            expect(t[28].uri).toBe(withOpAndViewer.posts.p_0_0_1_a.ref.uriStr)
-            expect(t[29].uri).toBe(withOpAndViewer.posts.p_0_0_2_b.ref.uriStr)
-            expect(t[30].uri).toBe(withOpAndViewer.posts.p_0_0_0_c.ref.uriStr)
-          }
-        }
+        expect(t).toEqual([
+          expect.objectContaining({ uri: s2.root.ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['3_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['4_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['1_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['2_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_4'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_3'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_1'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_2'].ref.uriStr }),
+          expect.objectContaining({ uri: s2.r['0_0'].ref.uriStr }),
+        ])
       })
     })
 
@@ -1151,63 +953,65 @@ describe('appview thread views v2', () => {
         const prioritizeFollowedUsers = true
 
         const t1 = await threadForPostAndViewer(
-          withFollows.posts.p_0_o.ref.uriStr,
-          withFollows.users.viewerF.did,
+          s3.root.ref.uriStr,
+          s3.users.viewerF.did,
           prioritizeFollowedUsers,
         )
-        expect(t1).toHaveLength(7)
-        expect(t1[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
-        expect(t1[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
-        expect(t1[2].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr) // viewer reply
-        expect(t1[3].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr) // newest followed reply
-        expect(t1[4].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr) // oldest followed reply
-        expect(t1[5].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr) // newest non-followed reply
-        expect(t1[6].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr) // oldest non-followed reply
+        expect(t1).toEqual([
+          expect.objectContaining({ uri: s3.root.ref.uriStr }), // root
+          expect.objectContaining({ uri: s3.r['3'].ref.uriStr }), // op reply
+          expect.objectContaining({ uri: s3.r['4'].ref.uriStr }), // viewer reply
+          expect.objectContaining({ uri: s3.r['1'].ref.uriStr }), // newest followed reply
+          expect.objectContaining({ uri: s3.r['0'].ref.uriStr }), // oldest followed reply
+          expect.objectContaining({ uri: s3.r['5'].ref.uriStr }), // newest non-followed reply
+          expect.objectContaining({ uri: s3.r['2'].ref.uriStr }), // oldest non-followed reply
+        ])
 
         const t2 = await threadForPostAndViewer(
-          withFollows.posts.p_0_o.ref.uriStr,
-          withFollows.users.viewerNoF.did,
+          s3.root.ref.uriStr,
+          s3.users.viewerNoF.did,
           prioritizeFollowedUsers,
         )
-        expect(t2).toHaveLength(7)
-        expect(t2[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
-        expect(t2[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
-        expect(t2[2].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr) // viewer reply
-        // newest to oldest
-        expect(t2[3].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr)
-        expect(t2[4].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr)
-        expect(t2[5].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr)
-        expect(t2[6].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr)
+        expect(t2).toEqual([
+          expect.objectContaining({ uri: s3.root.ref.uriStr }), // root
+          expect.objectContaining({ uri: s3.r['3'].ref.uriStr }), // op reply
+          expect.objectContaining({ uri: s3.r['5'].ref.uriStr }), // viewer reply
+          // newest to oldest
+          expect.objectContaining({ uri: s3.r['4'].ref.uriStr }),
+          expect.objectContaining({ uri: s3.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: s3.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: s3.r['0'].ref.uriStr }),
+        ])
       })
 
       it('does not prioritize followed users if option is not set', async () => {
         const t1 = await threadForPostAndViewer(
-          withFollows.posts.p_0_o.ref.uriStr,
-          withFollows.users.viewerF.did,
+          s3.root.ref.uriStr,
+          s3.users.viewerF.did,
         )
         expect(t1).toHaveLength(7)
-        expect(t1[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
-        expect(t1[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
-        expect(t1[2].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr) // viewer reply
+        expect(t1[0].uri).toBe(s3.root.ref.uriStr) // root
+        expect(t1[1].uri).toBe(s3.r['3'].ref.uriStr) // op reply
+        expect(t1[2].uri).toBe(s3.r['4'].ref.uriStr) // viewer reply
         // newest to oldest
-        expect(t1[3].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr)
-        expect(t1[4].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr)
-        expect(t1[5].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr)
-        expect(t1[6].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr)
+        expect(t1[3].uri).toBe(s3.r['5'].ref.uriStr)
+        expect(t1[4].uri).toBe(s3.r['2'].ref.uriStr)
+        expect(t1[5].uri).toBe(s3.r['1'].ref.uriStr)
+        expect(t1[6].uri).toBe(s3.r['0'].ref.uriStr)
 
         const t2 = await threadForPostAndViewer(
-          withFollows.posts.p_0_o.ref.uriStr,
-          withFollows.users.viewerNoF.did,
+          s3.root.ref.uriStr,
+          s3.users.viewerNoF.did,
         )
         expect(t2).toHaveLength(7)
-        expect(t2[0].uri).toBe(withFollows.posts.p_0_o.ref.uriStr) // root
-        expect(t2[1].uri).toBe(withFollows.posts.p_0_3_o.ref.uriStr) // op reply
-        expect(t2[2].uri).toBe(withFollows.posts.p_0_5_n.ref.uriStr) // viewer reply
+        expect(t2[0].uri).toBe(s3.root.ref.uriStr) // root
+        expect(t2[1].uri).toBe(s3.r['3'].ref.uriStr) // op reply
+        expect(t2[2].uri).toBe(s3.r['5'].ref.uriStr) // viewer reply
         // newest to oldest
-        expect(t2[3].uri).toBe(withFollows.posts.p_0_4_f.ref.uriStr)
-        expect(t2[4].uri).toBe(withFollows.posts.p_0_2_c.ref.uriStr)
-        expect(t2[5].uri).toBe(withFollows.posts.p_0_1_b.ref.uriStr)
-        expect(t2[6].uri).toBe(withFollows.posts.p_0_0_a.ref.uriStr)
+        expect(t2[3].uri).toBe(s3.r['4'].ref.uriStr)
+        expect(t2[4].uri).toBe(s3.r['2'].ref.uriStr)
+        expect(t2[5].uri).toBe(s3.r['1'].ref.uriStr)
+        expect(t2[6].uri).toBe(s3.r['0'].ref.uriStr)
       })
     })
   })
@@ -1432,7 +1236,7 @@ describe('appview thread views v2', () => {
     describe(`deletions`, () => {
       it(`deleted reply is omitted from replies[]`, async () => {
         // const { data } = await agent.app.bsky.feed.getPostThread(
-        //   { uri: seed.posts.root.ref.uriStr },
+        //   { uri: seed.root.ref.uriStr },
         //   {
         //     headers: await network.serviceHeaders(
         //       seed.users.op.did,
@@ -1516,7 +1320,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked reply is omitted from replies[]`, async () => {
         // const { data } = await agent.app.bsky.feed.getPostThread(
-        //   { uri: seed.posts.root.ref.uriStr },
+        //   { uri: seed.root.ref.uriStr },
         //   {
         //     headers: await network.serviceHeaders(
         //       seed.users.viewer.did,
