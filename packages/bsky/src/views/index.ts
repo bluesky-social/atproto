@@ -1210,14 +1210,11 @@ export class Views {
       hasUnhydratedParents: false,
     }
 
-    return sortTrimFlattenThreadTree({
+    return sortTrimFlattenThreadTree(anchorTree, {
       opDid,
-      node: anchorTree,
-      options: {
-        branchingFactor: opts.branchingFactor,
-        sorting: opts.sorting,
-        prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
-      },
+      branchingFactor: opts.branchingFactor,
+      sorting: opts.sorting,
+      prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
       viewerDid: opts.viewerDid,
       fetchedAt: Date.now(),
     })
