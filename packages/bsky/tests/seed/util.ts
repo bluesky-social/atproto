@@ -11,7 +11,7 @@ export type User = {
   selfLabels: undefined
 }
 
-export function createUserStub(name: string): User {
+function createUserStub(name: string): User {
   return {
     id: name,
     // @ts-ignore overwritten during seeding

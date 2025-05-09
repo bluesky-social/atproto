@@ -1,8 +1,4 @@
-import {
-  AppBskyFeedDefs,
-  BskyThreadViewPreference,
-  asPredicate,
-} from '@atproto/api'
+import { AppBskyFeedDefs, asPredicate } from '@atproto/api'
 import {
   PostView,
   ThreadItemBlocked,
@@ -14,9 +10,7 @@ import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { $Typed } from '../lexicon/util'
 
-const isPostRecord = asPredicate(validatePostRecord)
-
-export type ThreadLeaf = {
+type ThreadLeaf = {
   $type: 'threadLeaf'
   uri: string
   post: $Typed<PostView>
@@ -28,28 +22,39 @@ export type ThreadLeaf = {
   hasUnhydratedReplies: boolean
   hasUnhydratedParents: boolean
 }
+
 export type ThreadTree =
   | ThreadLeaf
   | $Typed<ThreadItemNoUnauthenticated>
   | $Typed<ThreadItemNotFound>
   | $Typed<ThreadItemBlocked>
 
-export function sortAndTrimThreadTree({
+export function sortTrimFlattenThreadTree(sortInput: SortInput) {
+  const sortedTree = sortTrimThreadTree(sortInput)
+  return flattenThread(sortedTree)
+}
+
+type SortInput = {
+  opDid: string
+  node: ThreadTree
+  options: {
+    branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
+    sorting: GetPostThreadV2QueryParams['sorting']
+    prioritizeFollowedUsers: boolean
+  }
+  viewerDid?: string
+  fetchedAt: number
+}
+
+const isPostRecord = asPredicate(validatePostRecord)
+
+function sortTrimThreadTree({
   opDid,
   node,
   options,
   viewerDid,
   fetchedAt,
-}: {
-  opDid: string
-  node: ThreadTree
-  options: Omit<BskyThreadViewPreference, 'sort'> & {
-    branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
-    sorting: GetPostThreadV2QueryParams['sorting']
-  }
-  viewerDid?: string
-  fetchedAt: number
-}): ThreadTree {
+}: SortInput): ThreadTree {
   if (node.$type !== 'threadLeaf') return node
 
   if (node.replies) {
@@ -133,7 +138,7 @@ export function sortAndTrimThreadTree({
       node.replies = node.replies.slice(0, options.branchingFactor)
     }
     node.replies.forEach((reply) =>
-      sortAndTrimThreadTree({
+      sortTrimThreadTree({
         opDid,
         node: reply,
         options,
@@ -145,7 +150,7 @@ export function sortAndTrimThreadTree({
   return node
 }
 
-export function flattenThread(anchorTree: ThreadTree) {
+function flattenThread(anchorTree: ThreadTree) {
   return Array.from([
     ...Array.from(
       // @ts-ignore
