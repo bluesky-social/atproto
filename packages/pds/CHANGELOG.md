@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.136
+
+### Patch Changes
+
+- [#3840](https://github.com/bluesky-social/atproto/pull/3840) [`088d06204`](https://github.com/bluesky-social/atproto/commit/088d06204f779412b94ae3363ff548a6c8d1299a) Thanks [@devinivy](https://github.com/devinivy)! - fix account management migration 005.
+
 ## 0.4.135
 
 ### Patch Changes
