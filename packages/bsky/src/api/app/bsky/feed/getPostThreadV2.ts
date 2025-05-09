@@ -1,10 +1,10 @@
-// import { InvalidRequestError } from '@atproto/xrpc-server'
+import { isNotFoundPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-// import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
   OutputSchema,
   QueryParams,
@@ -112,6 +112,12 @@ const presentation = (
     sorting: params.sorting,
     viewerDid: params.hydrateCtx.viewer ?? undefined,
   })
+  if (isNotFoundPost(thread)) {
+    throw new InvalidRequestError(
+      `Post not found: ${skeleton.anchor}`,
+      'NotFound',
+    )
+  }
   const rootUri =
     hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
     skeleton.anchor
