@@ -29,32 +29,36 @@ export type ThreadTree =
   | $Typed<ThreadItemNotFound>
   | $Typed<ThreadItemBlocked>
 
-export function sortTrimFlattenThreadTree(sortInput: SortInput) {
-  const sortedTree = sortTrimThreadTree(sortInput)
-  return flattenThread(sortedTree)
+export function sortTrimFlattenThreadTree(
+  anchorTree: ThreadTree,
+  options: SortTrimFlattenOptions,
+) {
+  const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
+  return flattenThread(sortedAnchorTree, options)
 }
 
-type SortInput = {
-  opDid: string
-  node: ThreadTree
-  options: {
-    branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
-    sorting: GetPostThreadV2QueryParams['sorting']
-    prioritizeFollowedUsers: boolean
-  }
-  viewerDid?: string
+type SortTrimFlattenOptions = {
+  branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
   fetchedAt: number
+  opDid: string
+  prioritizeFollowedUsers: boolean
+  sorting: GetPostThreadV2QueryParams['sorting']
+  viewerDid?: string
 }
 
 const isPostRecord = asPredicate(validatePostRecord)
 
-function sortTrimThreadTree({
-  opDid,
-  node,
-  options,
-  viewerDid,
-  fetchedAt,
-}: SortInput): ThreadTree {
+function sortTrimThreadTree(
+  node: ThreadTree,
+  {
+    branchingFactor,
+    fetchedAt,
+    opDid,
+    prioritizeFollowedUsers,
+    sorting,
+    viewerDid,
+  }: SortTrimFlattenOptions,
+): ThreadTree {
   if (node.$type !== 'threadLeaf') return node
 
   if (node.replies) {
@@ -105,7 +109,7 @@ function sortTrimThreadTree({
       }
 
       // Followers posts ⬆️.
-      if (options.prioritizeFollowedUsers) {
+      if (prioritizeFollowedUsers) {
         const af = a.post.author.viewer?.following
         const bf = b.post.author.viewer?.following
         if (af && !bf) {
@@ -115,18 +119,18 @@ function sortTrimThreadTree({
         }
       }
 
-      if (options.sorting === 'app.bsky.feed.getPostThreadV2#hotness') {
+      if (sorting === 'app.bsky.feed.getPostThreadV2#hotness') {
         const aHotness = getPostHotness(a, fetchedAt)
         const bHotness = getPostHotness(b, fetchedAt)
         return bHotness - aHotness
       }
-      if (options.sorting === 'app.bsky.feed.getPostThreadV2#oldest') {
+      if (sorting === 'app.bsky.feed.getPostThreadV2#oldest') {
         return a.post.indexedAt.localeCompare(b.post.indexedAt)
       }
-      if (options.sorting === 'app.bsky.feed.getPostThreadV2#newest') {
+      if (sorting === 'app.bsky.feed.getPostThreadV2#newest') {
         return b.post.indexedAt.localeCompare(a.post.indexedAt)
       }
-      if (options.sorting === 'app.bsky.feed.getPostThreadV2#mostLikes') {
+      if (sorting === 'app.bsky.feed.getPostThreadV2#mostLikes') {
         if (a.post.likeCount === b.post.likeCount) {
           return b.post.indexedAt.localeCompare(a.post.indexedAt) // newest
         }
@@ -134,37 +138,45 @@ function sortTrimThreadTree({
       }
       return b.post.indexedAt.localeCompare(a.post.indexedAt)
     })
-    if (options.branchingFactor > 0) {
-      node.replies = node.replies.slice(0, options.branchingFactor)
+    if (branchingFactor > 0) {
+      node.replies = node.replies.slice(0, branchingFactor)
     }
     node.replies.forEach((reply) =>
-      sortTrimThreadTree({
-        opDid,
-        node: reply,
-        options,
-        viewerDid,
+      sortTrimThreadTree(reply, {
+        branchingFactor,
         fetchedAt,
+        opDid,
+        prioritizeFollowedUsers,
+        sorting,
+        viewerDid,
       }),
     )
   }
   return node
 }
 
-function flattenThread(anchorTree: ThreadTree) {
+function flattenThread(
+  anchorTree: ThreadTree,
+  options: SortTrimFlattenOptions,
+) {
+  const isAuthenticated = Boolean(options.viewerDid)
+
   return Array.from([
     ...Array.from(
-      // @ts-ignore
-      anchorTree.parent
+      'parent' in anchorTree && anchorTree.parent
         ? flattenThreadTree({
-            // @ts-ignore
             thread: anchorTree.parent,
-            isAuthenticated: false,
+            isAuthenticated,
             direction: 'up',
           })
         : [],
     ),
     ...Array.from(
-      flattenThreadTree({ thread: anchorTree, isAuthenticated: false }),
+      flattenThreadTree({
+        thread: anchorTree,
+        isAuthenticated,
+        direction: 'down',
+      }),
     ),
   ])
 }
@@ -176,7 +188,7 @@ function* flattenThreadTree({
 }: {
   thread: ThreadTree
   isAuthenticated: boolean
-  direction?: 'up' | 'down'
+  direction: 'up' | 'down'
 }): Generator<
   | $Typed<ThreadItemPost>
   | $Typed<ThreadItemNoUnauthenticated>
@@ -194,7 +206,7 @@ function* flattenThreadTree({
         })
       }
 
-      yield threadLeafToSlice(thread)
+      yield threadLeafToItemPost(thread)
     } else {
       // TODO could do this in views probably
       const isNoUnauthenticated = !!thread.post.author.labels?.find(
@@ -210,7 +222,7 @@ function* flattenThreadTree({
         }
       }
 
-      yield threadLeafToSlice(thread)
+      yield threadLeafToItemPost(thread)
 
       if (thread.replies?.length) {
         for (const reply of thread.replies) {
@@ -229,7 +241,7 @@ function* flattenThreadTree({
   }
 }
 
-function threadLeafToSlice(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
+function threadLeafToItemPost(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
   return {
     $type: 'app.bsky.feed.defs#threadItemPost',
     uri: leaf.uri,

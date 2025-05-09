@@ -40,26 +40,31 @@ export default function (server: Server, ctx: AppContext) {
         include3pBlocks,
       })
 
-      let result: OutputSchema
       try {
-        result = await getPostThread({ ...params, hydrateCtx }, ctx)
-      } catch (err) {
-        const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-        if (repoRev) {
-          res.setHeader(ATPROTO_REPO_REV, repoRev)
+        let result: OutputSchema
+        try {
+          result = await getPostThread({ ...params, hydrateCtx }, ctx)
+        } catch (err) {
+          const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+          if (repoRev) {
+            res.setHeader(ATPROTO_REPO_REV, repoRev)
+          }
+          throw err
         }
-        throw err
-      }
 
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+        const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
-      return {
-        encoding: 'application/json',
-        body: result,
-        headers: resHeaders({
-          repoRev,
-          labelers: hydrateCtx.labelers,
-        }),
+        return {
+          encoding: 'application/json',
+          body: result,
+          headers: resHeaders({
+            repoRev,
+            labelers: hydrateCtx.labelers,
+          }),
+        }
+      } catch (error) {
+        console.log('### error', error)
+        throw error
       }
     },
   })
