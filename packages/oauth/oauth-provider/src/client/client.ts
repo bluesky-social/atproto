@@ -1,6 +1,6 @@
 import {
+  type JWTHeaderParameters,
   type JWTPayload,
-  type JWTVerifyGetKey,
   type JWTVerifyOptions,
   type JWTVerifyResult,
   type KeyLike,
@@ -28,6 +28,7 @@ import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
+import { Awaitable } from '../lib/util/type.js'
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'
@@ -40,7 +41,9 @@ export class Client {
    */
   static readonly AUTH_METHODS_SUPPORTED = ['none', 'private_key_jwt'] as const
 
-  private readonly keyGetter: JWTVerifyGetKey
+  private readonly keyGetter: (
+    protectedHeader: JWTHeaderParameters,
+  ) => Awaitable<KeyLike | Uint8Array>
 
   constructor(
     public readonly id: ClientId,
@@ -205,13 +208,10 @@ export class Client {
         return false
       }
       try {
-        const key = await this.keyGetter(
-          {
-            kid: clientAuth.kid,
-            alg: clientAuth.alg,
-          },
-          { payload: '', signature: '' },
-        )
+        const key = await this.keyGetter({
+          kid: clientAuth.kid,
+          alg: clientAuth.alg,
+        })
         const jtk = await authJwkThumbprint(key)
 
         return jtk === clientAuth.jkt

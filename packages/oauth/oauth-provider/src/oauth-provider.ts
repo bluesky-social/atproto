@@ -855,15 +855,17 @@ export class OAuthProvider extends OAuthVerifier {
   ) {
     // > The authorization server first validates the client credentials (in
     // > case of a confidential client)
-    const [client, clientAuth] = await this.authenticateClient(credentials)
+    const [client] = await this.authenticateClient(credentials)
 
     const tokenInfo = await this.tokenManager.findToken(token)
 
     // > [...] and then verifies whether the token was issued to the client
-    // > making the revocation request. If this validation fails, the request is
-    // > refused and the client is informed of the error by the authorization
-    // > server as described below.
-    await this.tokenManager.validateAccess(client, clientAuth, tokenInfo)
+    // > making the revocation request.
+    if (client.id !== tokenInfo.data.clientId) {
+      // > If this validation fails, the request is refused and the client is
+      // > informed of the error by the authorization server as described below.
+      throw new InvalidGrantError(`Token was not issued to this client`)
+    }
 
     // > In the next step, the authorization server invalidates the token. The
     // > invalidation takes place immediately, and the token cannot be used
