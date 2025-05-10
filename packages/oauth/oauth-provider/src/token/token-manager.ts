@@ -305,11 +305,32 @@ export class TokenManager {
       throw new InvalidGrantError(`Token was not issued to this client`)
     }
 
-    if (tokenInfo.data.clientAuth.method !== clientAuth.method) {
-      throw new InvalidGrantError(`Client authentication method mismatch`)
+    const initialClientAuth = tokenInfo.data.clientAuth
+
+    switch (initialClientAuth.method) {
+      case CLIENT_ASSERTION_TYPE_JWT_BEARER:
+        if (
+          clientAuth.method !== initialClientAuth.method ||
+          clientAuth.jkt !== initialClientAuth.jkt
+        ) {
+          throw new InvalidGrantError(`Client authentication mismatch`)
+        }
+        break
+      case 'none':
+        if (clientAuth.method !== initialClientAuth.method) {
+          throw new InvalidGrantError(`Client authentication mismatch`)
+        }
+        break
+      default:
+        throw new InvalidGrantError(
+          // @ts-expect-error (future proof, backwards compatibility)
+          `Invalid method "${initialClientAuth.method}"`,
+        )
     }
 
-    if (!(await client.validateClientAuth(tokenInfo.data.clientAuth))) {
+    // Ensure that the initial auth is still valid (public key still present).
+    // No need
+    if (!(await client.validateClientAuth(initialClientAuth))) {
       throw new InvalidGrantError(`Client authentication mismatch`)
     }
   }
