@@ -1,5 +1,5 @@
 /**
- * Javascript uses utf16-encoded strings while most environments and specs
+ * JavaScript uses utf16-encoded strings while most environments and specs
  * have standardized around utf8 (including JSON).
  *
  * After some lengthy debated we decided that richtext facets need to use
