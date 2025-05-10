@@ -1167,17 +1167,19 @@ export class Views {
     const anchorViolatesThreadGate = post.violatesThreadGate
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
+    const parentTree = !anchorViolatesThreadGate
+      ? this.threadV2Parent({
+          childUri: anchor,
+          opDid,
+          rootUri,
+          state,
+          above: opts.above,
+          depth: -1,
+        })
+      : undefined
+
     const { tree: parent, isOPThread: isOpThreadFromRootToParent } =
-      !anchorViolatesThreadGate
-        ? this.threadV2Parent({
-            childUri: anchor,
-            opDid,
-            rootUri,
-            state,
-            above: opts.above,
-            depth: -1,
-          })
-        : { tree: undefined, isOPThread: false }
+      parentTree ?? { tree: undefined, isOPThread: false }
 
     const isOPThread = parent
       ? isOpThreadFromRootToParent && isOpPost
@@ -1191,18 +1193,18 @@ export class Views {
         ...postView,
       },
       parent,
-      replies:
-        !anchorViolatesThreadGate && opts.below > 0
-          ? this.threadV2Replies({
-              parentUri: anchor,
-              isOPThread,
-              opDid,
-              rootUri,
-              childrenByParentUri,
-              state,
-              depth: 1,
-            })
-          : undefined,
+      replies: !anchorViolatesThreadGate
+        ? this.threadV2Replies({
+            parentUri: anchor,
+            isOPThread,
+            opDid,
+            rootUri,
+            childrenByParentUri,
+            state,
+            below: opts.below,
+            depth: 1,
+          })
+        : undefined,
       depth: 0, // The depth of the anchor post is always 0.
       isOPThread,
       hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
@@ -1234,20 +1236,14 @@ export class Views {
     state: HydrationState
     above: number
     depth: number
-  }): { tree: ThreadTree | undefined; isOPThread: boolean } {
+  }): { tree: ThreadTree; isOPThread: boolean } | undefined {
     if (Math.abs(depth) > above) {
-      return {
-        tree: undefined,
-        isOPThread: false,
-      }
+      return undefined
     }
 
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) {
-      return {
-        tree: undefined,
-        isOPThread: false,
-      }
+      return undefined
     }
 
     if (
@@ -1267,7 +1263,6 @@ export class Views {
 
     const post = this.post(parentUri, state)
     const postInfo = state.posts?.get(parentUri)
-
     if (!postInfo || !post) {
       return {
         tree: this.threadV2ItemNotFound(parentUri, depth),
@@ -1276,10 +1271,7 @@ export class Views {
     }
 
     if (rootUri !== getRootUri(parentUri, postInfo)) {
-      return {
-        tree: undefined,
-        isOPThread: false,
-      }
+      return undefined
     }
 
     const authorDid = post.author.did
@@ -1290,15 +1282,17 @@ export class Views {
       }
     }
 
+    const parentTree = this.threadV2Parent({
+      childUri: parentUri,
+      opDid,
+      rootUri,
+      state,
+      above,
+      depth: depth - 1,
+    })
     const { tree: parent, isOPThread: isOpThreadFromRootToParent } =
-      this.threadV2Parent({
-        childUri: parentUri,
-        opDid,
-        rootUri,
-        state,
-        above,
-        depth: depth - 1,
-      })
+      parentTree ?? { tree: undefined, isOPThread: false }
+
     const isOpPost = authorDid === opDid
 
     const isOPThread = parent
@@ -1332,6 +1326,7 @@ export class Views {
     rootUri,
     childrenByParentUri,
     state,
+    below,
     depth,
   }: {
     parentUri: string
@@ -1340,9 +1335,13 @@ export class Views {
     rootUri: string
     childrenByParentUri: Record<string, string[]>
     state: HydrationState
+    below: number
     depth: number
-  }): ThreadTree[] {
-    // TODO confirm maxDepth handling
+  }): ThreadTree[] | undefined {
+    if (depth > below) {
+      return undefined
+    }
+
     const childrenUris = childrenByParentUri[parentUri] ?? []
 
     return mapDefined(childrenUris, (uri) => {
@@ -1386,6 +1385,7 @@ export class Views {
           rootUri,
           childrenByParentUri,
           state,
+          below,
           depth: depth + 1,
         }),
         depth,
