@@ -164,7 +164,7 @@ function flattenThread(
   return Array.from([
     ...Array.from(
       'parent' in anchorTree && anchorTree.parent
-        ? flattenThreadTree({
+        ? flattenInDirection({
             thread: anchorTree.parent,
             isAuthenticated,
             direction: 'up',
@@ -172,7 +172,7 @@ function flattenThread(
         : [],
     ),
     ...Array.from(
-      flattenThreadTree({
+      flattenInDirection({
         thread: anchorTree,
         isAuthenticated,
         direction: 'down',
@@ -181,7 +181,7 @@ function flattenThread(
   ])
 }
 
-function* flattenThreadTree({
+function* flattenInDirection({
   thread,
   isAuthenticated,
   direction,
@@ -199,7 +199,7 @@ function* flattenThreadTree({
   if (thread.$type === 'threadLeaf') {
     if (direction === 'up') {
       if (thread.parent) {
-        yield* flattenThreadTree({
+        yield* flattenInDirection({
           thread: thread.parent,
           isAuthenticated,
           direction: 'up',
@@ -226,7 +226,7 @@ function* flattenThreadTree({
 
       if (thread.replies?.length) {
         for (const reply of thread.replies) {
-          yield* flattenThreadTree({
+          yield* flattenInDirection({
             thread: reply,
             isAuthenticated,
             direction: 'down',
