@@ -129,6 +129,7 @@ import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkelet
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPostThreadV2 from './types/app/bsky/feed/getPostThreadV2.js'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
@@ -390,6 +391,7 @@ export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkelet
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+export * as AppBskyFeedGetPostThreadV2 from './types/app/bsky/feed/getPostThreadV2.js'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
@@ -558,6 +560,10 @@ export const APP_BSKY_FEED = {
   DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
   DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
   DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
+  GetPostThreadV2Newest: 'app.bsky.feed.getPostThreadV2#newest',
+  GetPostThreadV2Oldest: 'app.bsky.feed.getPostThreadV2#oldest',
+  GetPostThreadV2Hotness: 'app.bsky.feed.getPostThreadV2#hotness',
+  GetPostThreadV2MostLikes: 'app.bsky.feed.getPostThreadV2#mostLikes',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -2111,6 +2117,17 @@ export class AppBskyFeedNS {
       .call('app.bsky.feed.getPostThread', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetPostThread.toKnownErr(e)
+      })
+  }
+
+  getPostThreadV2(
+    params?: AppBskyFeedGetPostThreadV2.QueryParams,
+    opts?: AppBskyFeedGetPostThreadV2.CallOptions,
+  ): Promise<AppBskyFeedGetPostThreadV2.Response> {
+    return this._client
+      .call('app.bsky.feed.getPostThreadV2', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetPostThreadV2.toKnownErr(e)
       })
   }
 

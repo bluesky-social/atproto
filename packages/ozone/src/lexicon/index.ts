@@ -109,6 +109,7 @@ import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkelet
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPostThreadV2 from './types/app/bsky/feed/getPostThreadV2.js'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
@@ -248,6 +249,10 @@ export const APP_BSKY_FEED = {
   DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
   DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
   DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
+  GetPostThreadV2Newest: 'app.bsky.feed.getPostThreadV2#newest',
+  GetPostThreadV2Oldest: 'app.bsky.feed.getPostThreadV2#oldest',
+  GetPostThreadV2Hotness: 'app.bsky.feed.getPostThreadV2#hotness',
+  GetPostThreadV2MostLikes: 'app.bsky.feed.getPostThreadV2#mostLikes',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -1555,6 +1560,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThreadV2<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetPostThreadV2.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetPostThreadV2.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPostThreadV2' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
