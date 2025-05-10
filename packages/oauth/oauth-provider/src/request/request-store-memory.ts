@@ -1,7 +1,7 @@
 import { Code } from './code.js'
 import { RequestData } from './request-data.js'
 import { RequestId } from './request-id.js'
-import { RequestStore } from './request-store.js'
+import { FoundRequestResult, RequestStore } from './request-store.js'
 
 export class RequestStoreMemory implements RequestStore {
   #requests = new Map<RequestId, RequestData>()
@@ -28,11 +28,9 @@ export class RequestStoreMemory implements RequestStore {
     this.#requests.delete(id)
   }
 
-  async findRequestByCode(
-    code: Code,
-  ): Promise<{ id: RequestId; data: RequestData } | null> {
-    for (const [id, data] of this.#requests) {
-      if (data.code === code) return { id, data }
+  async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
+    for (const [requestId, data] of this.#requests) {
+      if (data.code === code) return { requestId, data }
     }
     return null
   }
