@@ -15863,6 +15863,7 @@ export const schemaDict = {
           },
           createdAt: {
             type: 'string',
+            format: 'datetime',
             description:
               'Timestamp for verification record. Defaults to current time when not specified.',
           },
