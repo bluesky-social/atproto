@@ -34,7 +34,8 @@
               "app.bsky.embed.video",
               "app.bsky.embed.external",
               "app.bsky.embed.record",
-              "app.bsky.embed.recordWithMedia"
+              "app.bsky.embed.recordWithMedia",
+              "app.bsky.embed.code"
             ]
           },
           "langs": {
