@@ -12938,6 +12938,7 @@ export const schemaDict = {
             refs: [
               'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
+              'lex:chat.bsky.convo.defs#messageRef',
             ],
           },
           hosting: {
