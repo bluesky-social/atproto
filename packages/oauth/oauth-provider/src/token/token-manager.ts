@@ -329,7 +329,6 @@ export class TokenManager {
     }
 
     // Ensure that the initial auth is still valid (public key still present).
-    // No need
     if (!(await client.validateClientAuth(initialClientAuth))) {
       throw new InvalidGrantError(`Client authentication mismatch`)
     }
