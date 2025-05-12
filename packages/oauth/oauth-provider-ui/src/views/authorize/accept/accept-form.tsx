@@ -148,6 +148,12 @@ function ScopeDescription({ scope }: ScopeDescriptionProps) {
       return <Trans>Access your account data (except chat messages)</Trans>
     case 'transition:chat.bsky':
       return <Trans>Access your chat messages</Trans>
+    case 'transition:access':
+      return (
+        <Trans>
+          Full access to your account, including destructive actions
+        </Trans>
+      )
     default:
       return scope
   }

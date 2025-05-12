@@ -507,9 +507,14 @@ export class AuthVerifier {
         )
       }
 
-      const scopeEquivalent: AuthScope = tokenScopes.has('transition:chat.bsky')
-        ? AuthScope.AppPassPrivileged
-        : AuthScope.AppPass
+      let scopeEquivalent: AuthScope
+      if (tokenScopes.has('transition:access')) {
+        scopeEquivalent = AuthScope.Access
+      } else {
+        scopeEquivalent = tokenScopes.has('transition:chat.bsky')
+          ? AuthScope.AppPassPrivileged
+          : AuthScope.AppPass
+      }
 
       if (!scopes.includes(scopeEquivalent)) {
         // AppPassPrivileged is sufficient but was not provided "transition:chat.bsky"
@@ -520,8 +525,7 @@ export class AuthVerifier {
           )
         }
 
-        // AuthScope.Access and AuthScope.SignupQueued do not have an OAuth
-        // scope equivalent.
+        // AuthScope.SignupQueued does not have an OAuth scope equivalent.
         throw new InvalidRequestError(
           'DPoP access token cannot be used for this request',
           'InvalidToken',
