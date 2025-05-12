@@ -1,5 +1,5 @@
 import { AtprotoDid } from '@atproto/did'
-import { Key, Keyset } from '@atproto/jwk'
+import { Key } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestPar,
@@ -17,7 +17,6 @@ import {
   AtprotoTokenResponse,
   atprotoTokenResponseSchema,
 } from './atproto-token-response.js'
-import { FALLBACK_ALG } from './constants.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import { OAuthResolver } from './oauth-resolver.js'
@@ -42,18 +41,39 @@ export type TokenSet = {
 export type DpopNonceCache = SimpleStore<string, string>
 
 export class OAuthServerAgent {
-  protected dpopFetch: Fetch<unknown>
+  protected readonly dpopFetch: Fetch<unknown>
+  protected readonly authAlg?: string
 
   constructor(
     readonly dpopKey: Key,
+    readonly authKey: Key | null,
     readonly serverMetadata: OAuthAuthorizationServerMetadata,
     readonly clientMetadata: ClientMetadata,
     readonly dpopNonces: DpopNonceCache,
     readonly oauthResolver: OAuthResolver,
     readonly runtime: Runtime,
-    readonly keyset?: Keyset,
     fetch?: Fetch,
   ) {
+    if (authKey != null) {
+      // Pre-compute the algorithm that will be used to sign "private_key_jwt"
+      // tokens, failing early if none is found.
+      const alg = authKey.algorithms.find(
+        (alg) =>
+          serverMetadata[
+            `token_endpoint_auth_signing_alg_values_supported`
+          ]?.includes(alg) ?? true,
+      )
+
+      // @NOTE this should never happen as the calling code should already have
+      // enforced this. We re-negotiate the "alg" here because we will need it
+      // in "buildClientAuth" bellow.
+      if (!alg) {
+        throw new Error('No supported algorithm available')
+      }
+
+      this.authAlg = alg
+    }
+
     this.dpopFetch = dpopFetchWrapper<void>({
       fetch: bindFetch(fetch),
       iss: clientMetadata.client_id,
@@ -205,7 +225,7 @@ export class OAuthServerAgent {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
-    const auth = await this.buildClientAuth(endpoint)
+    const auth = await this.buildClientAuth()
 
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
@@ -227,70 +247,37 @@ export class OAuthServerAgent {
     }
   }
 
-  async buildClientAuth(endpoint: OAuthEndpointName): Promise<{
+  protected async buildClientAuth(): Promise<{
     headers?: Record<string, string>
     payload: OAuthClientCredentials
   }> {
-    const methodSupported =
-      this.serverMetadata[`token_endpoint_auth_methods_supported`]
+    // If a key is provider, we will use the "private_key_jwt" method
+    if (this.authKey) {
+      // if `authKey` is defined, so is `authAlg`
+      const alg = this.authAlg!
 
-    const method = this.clientMetadata[`token_endpoint_auth_method`]
-
-    if (
-      method === 'private_key_jwt' ||
-      (this.keyset &&
-        !method &&
-        (methodSupported?.includes('private_key_jwt') ?? false))
-    ) {
-      if (!this.keyset) throw new Error('No keyset available')
-
-      try {
-        const alg =
-          this.serverMetadata[
-            `token_endpoint_auth_signing_alg_values_supported`
-          ] ?? FALLBACK_ALG
-
-        // If jwks is defined, make sure to only sign using a key that exists in
-        // the jwks. If jwks_uri is defined, we can't be sure that the key we're
-        // looking for is in there so we will just assume it is.
-        const kid = this.clientMetadata.jwks?.keys
-          .map(({ kid }) => kid)
-          .filter((v): v is string => typeof v === 'string')
-
-        return {
-          payload: {
-            client_id: this.clientMetadata.client_id,
-            client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
-            client_assertion: await this.keyset.createJwt(
-              { alg, kid },
-              {
-                iss: this.clientMetadata.client_id,
-                sub: this.clientMetadata.client_id,
-                aud: this.serverMetadata.issuer,
-                jti: await this.runtime.generateNonce(),
-                iat: Math.floor(Date.now() / 1000),
-              },
-            ),
-          },
-        }
-      } catch (err) {
-        if (method === 'private_key_jwt') throw err
-
-        // Else try next method
+      return {
+        payload: {
+          client_id: this.clientMetadata.client_id,
+          client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
+          client_assertion: await this.authKey.createJwt(
+            { alg },
+            {
+              iss: this.clientMetadata.client_id,
+              sub: this.clientMetadata.client_id,
+              aud: this.serverMetadata.issuer,
+              jti: await this.runtime.generateNonce(),
+              iat: Math.floor(Date.now() / 1000),
+            },
+          ),
+        },
       }
-    }
-
-    if (
-      method === 'none' ||
-      (!method && (methodSupported?.includes('none') ?? true))
-    ) {
+    } else {
       return {
         payload: {
           client_id: this.clientMetadata.client_id,
         },
       }
     }
-
-    throw new Error(`Unsupported ${endpoint} authentication method`)
   }
 }

@@ -16,6 +16,7 @@ import { CustomEventTarget, combineSignals, timeoutSignal } from './util.js'
 
 export type Session = {
   dpopKey: Key
+  authKid?: null | string
   tokenSet: TokenSet
 }
 
@@ -73,7 +74,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         // concurrent access (which, normally, should not happen if a proper
         // runtime lock was provided).
 
-        const { dpopKey, tokenSet } = storedSession
+        const { dpopKey, authKid, tokenSet } = storedSession
 
         if (sub !== tokenSet.sub) {
           // Fool-proofing (e.g. against invalid session storage)
@@ -94,7 +95,11 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         // always possible. If no lock implementation is provided, we will use
         // the store to check if a concurrent refresh occurred.
 
-        const server = await serverFactory.fromIssuer(tokenSet.iss, dpopKey)
+        const server = await serverFactory.fromIssuer(
+          tokenSet.iss,
+          dpopKey,
+          authKid,
+        )
 
         // Because refresh tokens can only be used once, we must not use the
         // "signal" to abort the refresh, or throw any abort error beyond this
@@ -111,7 +116,13 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
             throw new TokenRefreshError(sub, 'Token set sub mismatch')
           }
 
-          return { dpopKey, tokenSet: newTokenSet }
+          return {
+            dpopKey,
+            // Do not use the value from the store, as it might be undefined
+            // for legacy reasons.
+            authKid: server.authKey?.kid ?? null,
+            tokenSet: newTokenSet,
+          }
         } catch (cause) {
           // If the refresh token is invalid, let's try to recover from
           // concurrency issues, or make sure the session is deleted by throwing
@@ -173,9 +184,13 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
                 30e3 * Math.random()
           )
         },
-        onStoreError: async (err, sub, { tokenSet, dpopKey }) => {
+        onStoreError: async (err, sub, { tokenSet, dpopKey, authKid }) => {
           // If the token data cannot be stored, let's revoke it
-          const server = await serverFactory.fromIssuer(tokenSet.iss, dpopKey)
+          const server = await serverFactory.fromIssuer(
+            tokenSet.iss,
+            dpopKey,
+            authKid,
+          )
           await server.revoke(tokenSet.refresh_token ?? tokenSet.access_token)
           throw err
         },

@@ -1,6 +1,7 @@
 import { Key, Keyset } from '@atproto/jwk'
 import {
   OAuthAuthorizationRequestParameters,
+  OAuthAuthorizationServerMetadata,
   OAuthClientIdDiscoverable,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
@@ -249,6 +250,19 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         }
       })
     }
+
+    // @NOTE we could rely on "jkt" (as that's what the server uses under the
+    // hood) but for convenience (and because it is a good practice), we require
+    // a "kid" on all singing public keys.
+    if (this.keyset) {
+      for (const key of this.keyset.list({ use: 'sig' })) {
+        if (!key.isPrivate && !key.kid) {
+          throw new Error(
+            'Please make sure that all (signing) keys have a "kid"',
+          )
+        }
+      }
+    }
   }
 
   // Exposed as public API for convenience
@@ -290,11 +304,15 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       metadata.dpop_signing_alg_values_supported || [FALLBACK_ALG],
     )
 
+    const authKey = this.negotiateAuthKey(metadata)
+    const authKid = authKey?.kid ?? null
+
     const state = await this.runtime.generateNonce()
 
     await this.stateStore.set(state, {
       iss: metadata.issuer,
       dpopKey,
+      authKid,
       verifier: pkce.verifier,
       appState: options?.state,
     })
@@ -329,7 +347,11 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     }
 
     if (metadata.pushed_authorization_request_endpoint) {
-      const server = await this.serverFactory.fromMetadata(metadata, dpopKey)
+      const server = await this.serverFactory.fromMetadata(
+        metadata,
+        dpopKey,
+        authKid,
+      )
       const parResponse = await server.request(
         'pushed_authorization_request',
         parameters,
@@ -426,6 +448,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       const server = await this.serverFactory.fromIssuer(
         stateData.iss,
         stateData.dpopKey,
+        stateData.authKid,
       )
 
       if (issuerParam != null) {
@@ -457,6 +480,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       try {
         await this.sessionGetter.setStored(tokenSet.sub, {
           dpopKey: stateData.dpopKey,
+          authKid: stateData.authKid,
           tokenSet,
         })
 
@@ -488,15 +512,20 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     // sub arg is lightly typed for convenience of library user
     assertAtprotoDid(sub)
 
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+    const { dpopKey, authKid, tokenSet } = await this.sessionGetter.get(sub, {
       noCache: refresh === true,
       allowStale: refresh === false,
     })
 
-    const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey, {
-      noCache: refresh === true,
-      allowStale: refresh === false,
-    })
+    const server = await this.serverFactory.fromIssuer(
+      tokenSet.iss,
+      dpopKey,
+      authKid,
+      {
+        noCache: refresh === true,
+        allowStale: refresh === false,
+      },
+    )
 
     return this.createSession(server, sub)
   }
@@ -505,7 +534,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     // sub arg is lightly typed for convenience of library user
     assertAtprotoDid(sub)
 
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+    const { dpopKey, authKid, tokenSet } = await this.sessionGetter.get(sub, {
       allowStale: true,
     })
 
@@ -513,7 +542,11 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     // the tokens to be deleted even if it was not possible to fetch the issuer
     // data.
     try {
-      const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
+      const server = await this.serverFactory.fromIssuer(
+        tokenSet.iss,
+        dpopKey,
+        authKid,
+      )
       await server.revoke(tokenSet.access_token)
     } finally {
       await this.sessionGetter.delStored(sub, new TokenRevokedError(sub))
@@ -525,5 +558,46 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     sub: AtprotoDid,
   ): OAuthSession {
     return new OAuthSession(server, sub, this.sessionGetter, this.fetch)
+  }
+
+  protected negotiateAuthKey(
+    metadata: OAuthAuthorizationServerMetadata,
+  ): Key | null {
+    // @NOTE we don't store the authAlg as the list of supported algorithms
+    // by the server might change over time.
+    const [authKey] =
+      // Prefer using "private_key_jwt" is the server supports it (and the client has a keyset)
+      this.keyset &&
+      metadata['token_endpoint_auth_methods_supported']?.includes(
+        'private_key_jwt',
+      )
+        ? (() => {
+            try {
+              return this.keyset.findKey({
+                use: 'sig',
+                alg: metadata[
+                  'token_endpoint_auth_signing_alg_values_supported'
+                ],
+              })
+            } catch {
+              // We should only return "null" here if the server supports "none",
+              // but that check will be performed hereafter.
+              return [null]
+            }
+          })()
+        : [null]
+
+    if (
+      !authKey &&
+      metadata['token_endpoint_auth_methods_supported']?.includes('none') ===
+        false
+    ) {
+      // Server explicitly forbids use of "none"
+      throw new Error(
+        `The server requires a client authentication method that is not supported by the provided keyset. Please provide a key suitable for the following authentication methods ${metadata['token_endpoint_auth_methods_supported']}`,
+      )
+    }
+
+    return authKey
   }
 }

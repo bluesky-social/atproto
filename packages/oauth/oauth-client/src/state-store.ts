@@ -4,6 +4,7 @@ import { SimpleStore } from '@atproto-labs/simple-store'
 export type InternalStateData = {
   iss: string
   dpopKey: Key
+  authKid: null | string
   verifier?: string
   appState?: string
 }
