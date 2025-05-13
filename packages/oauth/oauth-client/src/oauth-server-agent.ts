@@ -1,10 +1,8 @@
 import { AtprotoDid } from '@atproto/did'
-import { Key } from '@atproto/jwk'
+import { Key, Keyset } from '@atproto/jwk'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestPar,
   OAuthAuthorizationServerMetadata,
-  OAuthClientCredentials,
   OAuthEndpointName,
   OAuthParResponse,
   OAuthTokenRequest,
@@ -19,6 +17,11 @@ import {
 } from './atproto-token-response.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
+import {
+  ClientAuthMethod,
+  ClientAuthenticator,
+  buildClientAuthenticator,
+} from './oauth-client-auth.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { Runtime } from './runtime.js'
@@ -41,38 +44,27 @@ export type TokenSet = {
 export type DpopNonceCache = SimpleStore<string, string>
 
 export class OAuthServerAgent {
-  protected readonly dpopFetch: Fetch<unknown>
-  protected readonly authAlg?: string
+  readonly dpopFetch: Fetch<unknown>
+  protected readonly clientAuthenticator: ClientAuthenticator
 
   constructor(
+    readonly authMethod: ClientAuthMethod,
     readonly dpopKey: Key,
-    readonly authKey: Key | null,
     readonly serverMetadata: OAuthAuthorizationServerMetadata,
     readonly clientMetadata: ClientMetadata,
     readonly dpopNonces: DpopNonceCache,
     readonly oauthResolver: OAuthResolver,
     readonly runtime: Runtime,
+    readonly keyset?: Keyset,
     fetch?: Fetch,
   ) {
-    if (authKey != null) {
-      // Pre-compute the algorithm that will be used to sign "private_key_jwt"
-      // tokens, failing early if none is found.
-      const alg = authKey.algorithms.find(
-        (alg) =>
-          serverMetadata[
-            `token_endpoint_auth_signing_alg_values_supported`
-          ]?.includes(alg) ?? true,
-      )
-
-      // @NOTE this should never happen as the calling code should already have
-      // enforced this. We re-negotiate the "alg" here because we will need it
-      // in "buildClientAuth" bellow.
-      if (!alg) {
-        throw new Error('No supported algorithm available')
-      }
-
-      this.authAlg = alg
-    }
+    this.clientAuthenticator = buildClientAuthenticator(
+      authMethod,
+      serverMetadata,
+      clientMetadata,
+      runtime,
+      keyset,
+    )
 
     this.dpopFetch = dpopFetchWrapper<void>({
       fetch: bindFetch(fetch),
@@ -225,12 +217,12 @@ export class OAuthServerAgent {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
-    const auth = await this.buildClientAuth()
+    const credentials = await this.clientAuthenticator()
 
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
-      headers: { ...auth.headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, ...auth.payload }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, ...credentials }),
     }).then(fetchJsonProcessor())
 
     if (response.ok) {
@@ -244,40 +236,6 @@ export class OAuthServerAgent {
       }
     } else {
       throw new OAuthResponseError(response, json)
-    }
-  }
-
-  protected async buildClientAuth(): Promise<{
-    headers?: Record<string, string>
-    payload: OAuthClientCredentials
-  }> {
-    // If a key is provider, we will use the "private_key_jwt" method
-    if (this.authKey) {
-      // if `authKey` is defined, so is `authAlg`
-      const alg = this.authAlg!
-
-      return {
-        payload: {
-          client_id: this.clientMetadata.client_id,
-          client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
-          client_assertion: await this.authKey.createJwt(
-            { alg },
-            {
-              iss: this.clientMetadata.client_id,
-              sub: this.clientMetadata.client_id,
-              aud: this.serverMetadata.issuer,
-              jti: await this.runtime.generateNonce(),
-              iat: Math.floor(Date.now() / 1000),
-            },
-          ),
-        },
-      }
-    } else {
-      return {
-        payload: {
-          client_id: this.clientMetadata.client_id,
-        },
-      }
     }
   }
 }

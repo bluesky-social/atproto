@@ -8,19 +8,29 @@ import {
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
+import { ClientAuthMethod } from './oauth-client-auth.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { Runtime } from './runtime.js'
 import { CustomEventTarget, combineSignals, timeoutSignal } from './util.js'
 
-export type Session = {
+/**
+ * Previous implementation of this lib did not define an `authMethod`
+ */
+export type LegacySession = {
   dpopKey: Key
-  authKid?: null | string
+  authMethod?: ClientAuthMethod
   tokenSet: TokenSet
 }
 
-export type SessionStore = SimpleStore<string, Session>
+export type Session = {
+  dpopKey: Key
+  authMethod: ClientAuthMethod
+  tokenSet: TokenSet
+}
+
+export type SessionStore = SimpleStore<string, LegacySession>
 
 export type SessionEventMap = {
   updated: {
@@ -43,7 +53,7 @@ export type SessionEventListener<
  * contains the logic for reading from the cache which, if the cache is based on
  * localStorage/indexedDB, will sync across multiple tabs (for a given sub).
  */
-export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
+export class SessionGetter extends CachedGetter<AtprotoDid, LegacySession> {
   private readonly eventTarget = new CustomEventTarget<SessionEventMap>()
 
   constructor(
@@ -52,7 +62,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
     private readonly runtime: Runtime,
   ) {
     super(
-      async (sub, options, storedSession): Promise<Session> => {
+      async (sub, options, storedSession) => {
         // There needs to be a previous session to be able to refresh. If
         // storedSession is undefined, it means that the store does not contain
         // a session for the given sub.
@@ -74,7 +84,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         // concurrent access (which, normally, should not happen if a proper
         // runtime lock was provided).
 
-        const { dpopKey, authKid, tokenSet } = storedSession
+        const { dpopKey, authMethod = 'legacy', tokenSet } = storedSession
 
         if (sub !== tokenSet.sub) {
           // Fool-proofing (e.g. against invalid session storage)
@@ -98,7 +108,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         const server = await serverFactory.fromIssuer(
           tokenSet.iss,
           dpopKey,
-          authKid,
+          authMethod,
         )
 
         // Because refresh tokens can only be used once, we must not use the
@@ -118,10 +128,8 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
 
           return {
             dpopKey,
-            // Do not use the value from the store, as it might be undefined
-            // for legacy reasons.
-            authKid: server.authKey?.kid ?? null,
             tokenSet: newTokenSet,
+            authMethod: server.authMethod,
           }
         } catch (cause) {
           // If the refresh token is invalid, let's try to recover from
@@ -184,12 +192,16 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
                 30e3 * Math.random()
           )
         },
-        onStoreError: async (err, sub, { tokenSet, dpopKey, authKid }) => {
+        onStoreError: async (
+          err,
+          sub,
+          { tokenSet, dpopKey, authMethod = 'legacy' as const },
+        ) => {
           // If the token data cannot be stored, let's revoke it
           const server = await serverFactory.fromIssuer(
             tokenSet.iss,
             dpopKey,
-            authKid,
+            authMethod,
           )
           await server.revoke(tokenSet.refresh_token ?? tokenSet.access_token)
           throw err
@@ -253,7 +265,10 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
     })
   }
 
-  async get(sub: AtprotoDid, options?: GetCachedOptions): Promise<Session> {
+  async get(
+    sub: AtprotoDid,
+    options?: GetCachedOptions,
+  ): Promise<LegacySession> {
     const session = await this.runtime.usingLock(
       `@atproto-oauth-client-${sub}`,
       async () => {

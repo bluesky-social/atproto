@@ -45,7 +45,12 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
   authorization_endpoint: webUriSchema, // .optional(),
 
   token_endpoint: webUriSchema, // .optional(),
-  token_endpoint_auth_methods_supported: z.array(z.string()).optional(),
+  // https://www.rfc-editor.org/rfc/rfc8414.html#section-2
+  token_endpoint_auth_methods_supported: z
+    .array(z.string())
+    // > If omitted, the default is "client_secret_basic" [...].
+    .default(['client_secret_basic'])
+    .optional(),
   token_endpoint_auth_signing_alg_values_supported: z
     .array(z.string())
     .optional(),
