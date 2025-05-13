@@ -366,7 +366,7 @@ export class AppContext {
             scopes_supported: [
               'transition:generic',
               'transition:chat.bsky',
-              'transition:access',
+              'transition:identity',
             ],
           },
           // If the PDS is both an authorization server & resource server (no

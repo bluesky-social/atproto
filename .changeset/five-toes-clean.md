@@ -3,4 +3,4 @@
 "@atproto/pds": minor
 ---
 
-add transitional full access oauth scope
+add transitional identity oauth scope for account actions

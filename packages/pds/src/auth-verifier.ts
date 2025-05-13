@@ -30,6 +30,7 @@ export enum AuthScope {
   Refresh = 'com.atproto.refresh',
   AppPass = 'com.atproto.appPass',
   AppPassPrivileged = 'com.atproto.appPassPrivileged',
+  AppPassIdentity = 'com.atproto.appPassIdentity',
   SignupQueued = 'com.atproto.signupQueued',
   Takendown = 'com.atproto.takendown',
 }
@@ -146,6 +147,7 @@ export class AuthVerifier {
           AuthScope.Access,
           AuthScope.AppPassPrivileged,
           AuthScope.AppPass,
+          AuthScope.AppPassIdentity,
           ...(opts.additional ?? []),
         ],
         opts,
@@ -508,8 +510,10 @@ export class AuthVerifier {
       }
 
       let scopeEquivalent: AuthScope
-      if (tokenScopes.has('transition:access')) {
-        scopeEquivalent = AuthScope.Access
+      if (tokenScopes.has('transition:identity')) {
+        scopeEquivalent = tokenScopes.has('transition:chat.bsky')
+          ? AuthScope.Access
+          : AuthScope.AppPassIdentity
       } else {
         scopeEquivalent = tokenScopes.has('transition:chat.bsky')
           ? AuthScope.AppPassPrivileged

@@ -25,6 +25,10 @@ msgstr "2FA Confirmation"
 msgid "A second authentication factor is required"
 msgstr "A second authentication factor is required"
 
+#: src/views/authorize/accept/accept-form.tsx:153
+msgid "Access to actions that affect your account, including destructive actions which require email confirmation."
+msgstr "Access to actions that affect your account, including destructive actions which require email confirmation."
+
 #: src/views/authorize/accept/accept-form.tsx:148
 msgid "Access your account data (except chat messages)"
 msgstr "Access your account data (except chat messages)"
@@ -188,10 +192,6 @@ msgstr "Forgot Password"
 #: src/views/authorize/sign-in/sign-in-form.tsx:181
 msgid "Forgot?"
 msgstr "Forgot?"
-
-#: src/views/authorize/accept/accept-form.tsx:153
-msgid "Full access to your account, including destructive actions"
-msgstr "Full access to your account, including destructive actions"
 
 #. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/views/authorize/accept/accept-view.tsx:40

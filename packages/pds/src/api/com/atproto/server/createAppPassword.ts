@@ -1,3 +1,4 @@
+import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -6,6 +7,7 @@ import { resultPassthru } from '../../../proxy'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAppPassword({
     auth: ctx.authVerifier.accessFull({
+      additional: [AuthScope.AppPassIdentity],
       checkTakedown: true,
     }),
     handler: async ({ auth, input, req }) => {
