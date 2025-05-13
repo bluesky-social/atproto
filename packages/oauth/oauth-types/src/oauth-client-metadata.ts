@@ -37,8 +37,7 @@ export const oauthClientMetadataSchema = z.object({
   // https://www.rfc-editor.org/rfc/rfc7591.html#section-2
   token_endpoint_auth_method: oauthEndpointAuthMethod
     // > If unspecified or omitted, the default is "client_secret_basic" [...].
-    .default('client_secret_basic')
-    .optional(),
+    .default('client_secret_basic'),
   token_endpoint_auth_signing_alg: z.string().optional(),
   userinfo_signed_response_alg: z.string().optional(),
   userinfo_encrypted_response_alg: z.string().optional(),

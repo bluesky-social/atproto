@@ -746,21 +746,12 @@ export class ClientManager {
     }
 
     const method = metadata[`token_endpoint_auth_method`]
-    switch (method) {
-      case 'none':
-      case 'private_key_jwt':
-      case undefined:
-        break
-      case 'client_secret_post':
-      case 'client_secret_basic':
-      case 'client_secret_jwt':
-        throw new InvalidClientMetadataError(
-          `Client authentication method "${method}" is not allowed for discoverable clients`,
-        )
-      default:
-        throw new InvalidClientMetadataError(
-          `Unsupported client authentication method "${method}"`,
-        )
+    if (
+      !(Client.AUTH_METHODS_SUPPORTED as readonly string[]).includes(method)
+    ) {
+      throw new InvalidClientMetadataError(
+        `Unsupported client authentication method "${method}". Make sure "token_endpoint_auth_method" is set to "${Client.AUTH_METHODS_SUPPORTED.join('", "')}" in your client metadata document.`,
+      )
     }
 
     for (const redirectUri of metadata.redirect_uris) {
