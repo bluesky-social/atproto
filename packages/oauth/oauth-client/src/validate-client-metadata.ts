@@ -4,6 +4,7 @@ import {
   assertOAuthDiscoverableClientId,
   assertOAuthLoopbackClientId,
 } from '@atproto/oauth-types'
+import { FALLBACK_ALG } from './constants.js'
 import { ClientMetadata, clientMetadataSchema } from './types.js'
 
 const TOKEN_ENDPOINT_AUTH_METHOD = `token_endpoint_auth_method`
@@ -13,22 +14,17 @@ export function validateClientMetadata(
   input: OAuthClientMetadataInput,
   keyset?: Keyset,
 ): ClientMetadata {
-  if (input.jwks) {
-    if (!keyset) {
-      throw new TypeError(`Keyset must not be provided when jwks is provided`)
-    }
-    for (const key of input.jwks.keys) {
-      if (!key.kid) {
-        throw new TypeError(`Key must have a "kid" property`)
-      } else if (!keyset.has(key.kid)) {
-        throw new TypeError(`Key with kid "${key.kid}" not found in keyset`)
-      }
-    }
-  }
-
   // Allow to pass a keyset and omit the jwks/jwks_uri properties
   if (!input.jwks && !input.jwks_uri && keyset?.size) {
     input = { ...input, jwks: keyset.toJSON() }
+  }
+
+  if (input.jwks) {
+    for (const { kid } of input.jwks.keys) {
+      if (!kid) {
+        throw new TypeError(`Every key in the JWKS must have a "kid" property`)
+      }
+    }
   }
 
   const metadata = clientMetadataSchema.parse(input)
@@ -55,8 +51,6 @@ export function validateClientMetadata(
 
   const method = metadata[TOKEN_ENDPOINT_AUTH_METHOD]
   switch (method) {
-    case undefined:
-      throw new TypeError(`${TOKEN_ENDPOINT_AUTH_METHOD} must be provided`)
     case 'none':
       if (metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
         throw new TypeError(
@@ -65,9 +59,29 @@ export function validateClientMetadata(
       }
       break
     case 'private_key_jwt':
-      if (!keyset?.size) {
+      if (!keyset) {
         throw new TypeError(
-          `A non-empty keyset must be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
+          `A keyset must be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
+        )
+      }
+      if (!metadata.jwks_uri && !metadata.jwks?.keys.length) {
+        throw new TypeError(
+          `Client authentication method "${method}" requires a JWKS with at least one public key`,
+        )
+      }
+      // Make sure all the signing keys that could end-up being used are
+      // advertised in the JWKS.
+      for (const { kid } of keyset.list({ use: 'sig' })) {
+        if (!kid) {
+          throw new TypeError(`The keyset contains a signing key with no "kid"`)
+        }
+        if (input.jwks && !input.jwks.keys.some((k) => k.kid === kid)) {
+          throw new TypeError(`Key with kid "${kid}" not found in jwks`)
+        }
+      }
+      if (!Array.from(keyset.list({ use: 'sig', alg: FALLBACK_ALG })).length) {
+        throw new TypeError(
+          `Client authentication method "${method}" requires at least one "${FALLBACK_ALG}" signing key with a "kid" property`,
         )
       }
       if (!metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
@@ -78,7 +92,7 @@ export function validateClientMetadata(
       break
     default:
       throw new TypeError(
-        `Invalid "token_endpoint_auth_method" value: ${method}`,
+        `Invalid "${TOKEN_ENDPOINT_AUTH_METHOD}" value: ${method}`,
       )
   }
 

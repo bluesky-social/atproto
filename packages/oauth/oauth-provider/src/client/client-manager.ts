@@ -318,8 +318,7 @@ export class ClientManager {
       )
     }
 
-    const method = metadata[`token_endpoint_auth_method`]
-    switch (method) {
+    switch (metadata[`token_endpoint_auth_method`]) {
       case 'none':
         if (metadata.token_endpoint_auth_signing_alg) {
           throw new InvalidClientMetadataError(
@@ -348,7 +347,7 @@ export class ClientManager {
 
       default:
         throw new InvalidClientMetadataError(
-          `${method} is not a supported "token_endpoint_auth_method". Use "private_key_jwt" or "none".`,
+          `Unsupported client authentication method "${metadata[`token_endpoint_auth_method`]}". Make sure "token_endpoint_auth_method" is set to one of: "${Client.AUTH_METHODS_SUPPORTED.join('", "')}"`,
         )
     }
 
@@ -738,15 +737,6 @@ export class ClientManager {
           )
         }
       }
-    }
-
-    const method = metadata[`token_endpoint_auth_method`]
-    if (
-      !(Client.AUTH_METHODS_SUPPORTED as readonly string[]).includes(method)
-    ) {
-      throw new InvalidClientMetadataError(
-        `Unsupported client authentication method "${method}". Make sure "token_endpoint_auth_method" is set to "${Client.AUTH_METHODS_SUPPORTED.join('", "')}" in your client metadata document.`,
-      )
     }
 
     for (const redirectUri of metadata.redirect_uris) {

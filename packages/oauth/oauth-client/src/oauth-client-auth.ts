@@ -3,7 +3,6 @@ import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationServerMetadata,
   OAuthClientCredentials,
-  OauthEndpointAuthMethod,
 } from '@atproto/oauth-types'
 import { FALLBACK_ALG } from './constants.js'
 import { Runtime } from './runtime.js'
@@ -19,35 +18,35 @@ export function negotiateClientAuthMethod(
   clientMetadata: ClientMetadata,
   keyset?: Keyset,
 ): ClientAuthMethod {
-  const declaredMethod = clientMetadata['token_endpoint_auth_method']
-  const supportedMethods =
-    serverMetadata['token_endpoint_auth_methods_supported']
-
-  // Invalid client config
-  if (declaredMethod === 'client_secret_jwt' && !keyset) {
-    throw new Error(`A keyset is required for "client_secret_jwt" method`)
-  }
+  const method = clientMetadata['token_endpoint_auth_method']
 
   // No possible fit
-  if (declaredMethod && supportedMethods?.includes(declaredMethod) === false) {
+  const methodsSupported =
+    serverMetadata['token_endpoint_auth_methods_supported']
+  if (!methodsSupported.includes(method)) {
     throw new Error(
-      `The client requires a client authentication method that is not supported by the server. Please provide a key suitable for the following authentication methods: ${supportedMethods.join(', ')}`,
+      `The server does not support "${method}" authentication. Supported methods are: ${methodsSupported.join(
+        ', ',
+      )}.`,
     )
   }
 
-  if (methodAllowed(serverMetadata, clientMetadata, 'client_secret_jwt')) {
-    if (keyset) {
-      for (const { kid } of keyset.list({
-        use: 'sig',
-        alg: supportedAlgs(serverMetadata),
-      })) {
-        if (kid) return { method: 'client_secret_jwt', kid }
-      }
+  if (method === 'client_secret_jwt') {
+    // Mainly required for type safety reasons
+    if (!keyset) {
+      throw new Error(`A keyset is required for "client_secret_jwt" method`)
+    }
+
+    for (const { kid } of keyset.list({
+      use: 'sig',
+      alg: supportedAlgs(serverMetadata),
+    })) {
+      if (kid) return { method: 'client_secret_jwt', kid }
     }
   }
 
   // @NOTE last to prioritize "confidential" methods
-  if (methodAllowed(serverMetadata, clientMetadata, 'none')) {
+  if (method === 'none') {
     return { method: 'none' }
   }
 
@@ -105,22 +104,5 @@ function supportedAlgs(
       // @TODO Make sure that this fallback is reflected in the spec
       FALLBACK_ALG,
     ]
-  )
-}
-
-function methodAllowed(
-  serverMetadata: OAuthAuthorizationServerMetadata,
-  clientMetadata: ClientMetadata,
-  method: OauthEndpointAuthMethod,
-): boolean {
-  const declaredMethod = clientMetadata['token_endpoint_auth_method']
-  const supportedMethods =
-    serverMetadata['token_endpoint_auth_methods_supported']
-
-  return (
-    (!declaredMethod || declaredMethod === method) &&
-    // https://www.rfc-editor.org/rfc/rfc8414.html
-    // > If omitted, the default is "client_secret_basic"
-    (supportedMethods?.includes(method) ?? method === 'client_secret_basic')
   )
 }
