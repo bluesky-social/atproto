@@ -320,11 +320,6 @@ export class ClientManager {
 
     const method = metadata[`token_endpoint_auth_method`]
     switch (method) {
-      case undefined:
-        throw new InvalidClientMetadataError(
-          'Missing token_endpoint_auth_method client metadata',
-        )
-
       case 'none':
         if (metadata.token_endpoint_auth_signing_alg) {
           throw new InvalidClientMetadataError(
