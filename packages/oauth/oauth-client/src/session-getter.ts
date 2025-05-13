@@ -15,22 +15,16 @@ import { OAuthServerFactory } from './oauth-server-factory.js'
 import { Runtime } from './runtime.js'
 import { CustomEventTarget, combineSignals, timeoutSignal } from './util.js'
 
-/**
- * Previous implementation of this lib did not define an `authMethod`
- */
-export type LegacySession = {
+export type Session = {
   dpopKey: Key
+  /**
+   * Previous implementation of this lib did not define an `authMethod`
+   */
   authMethod?: ClientAuthMethod
   tokenSet: TokenSet
 }
 
-export type Session = {
-  dpopKey: Key
-  authMethod: ClientAuthMethod
-  tokenSet: TokenSet
-}
-
-export type SessionStore = SimpleStore<string, LegacySession>
+export type SessionStore = SimpleStore<string, Session>
 
 export type SessionEventMap = {
   updated: {
@@ -53,7 +47,7 @@ export type SessionEventListener<
  * contains the logic for reading from the cache which, if the cache is based on
  * localStorage/indexedDB, will sync across multiple tabs (for a given sub).
  */
-export class SessionGetter extends CachedGetter<AtprotoDid, LegacySession> {
+export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
   private readonly eventTarget = new CustomEventTarget<SessionEventMap>()
 
   constructor(
@@ -265,10 +259,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, LegacySession> {
     })
   }
 
-  async get(
-    sub: AtprotoDid,
-    options?: GetCachedOptions,
-  ): Promise<LegacySession> {
+  async get(sub: AtprotoDid, options?: GetCachedOptions): Promise<Session> {
     const session = await this.runtime.usingLock(
       `@atproto-oauth-client-${sub}`,
       async () => {
