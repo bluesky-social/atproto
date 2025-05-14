@@ -20,7 +20,10 @@ export function negotiateClientAuthMethod(
 ): ClientAuthMethod {
   const method = clientMetadata['token_endpoint_auth_method']
 
-  // No possible fit
+  // @NOTE ATproto spec requires that AS support both "none" and
+  // "client_secret_jwt", and that clients use one of the other. The following
+  // check ensures that the AS is indeed compliant with this client's
+  // configuration.
   const methodsSupported =
     serverMetadata['token_endpoint_auth_methods_supported']
   if (!methodsSupported.includes(method)) {
@@ -32,11 +35,10 @@ export function negotiateClientAuthMethod(
   }
 
   if (method === 'client_secret_jwt') {
-    // Mainly required for type safety reasons
-    if (!keyset) {
-      throw new Error(`A keyset is required for "client_secret_jwt" method`)
-    }
+    if (!keyset) throw new Error('A keyset is required for client_secret_jwt')
 
+    // Use the first key from the key set that matches the server's supported
+    // algorithms.
     for (const { kid } of keyset.list({
       use: 'sig',
       alg: supportedAlgs(serverMetadata),
@@ -45,12 +47,16 @@ export function negotiateClientAuthMethod(
     }
   }
 
-  // @NOTE last to prioritize "confidential" methods
   if (method === 'none') {
     return { method: 'none' }
   }
 
-  throw new Error(`Unable to negotiate authentication method with server`)
+  throw new Error(
+    `The ATProto OAuth spec requires that client use either "none" or "client_secret_jwt" authentication method.` +
+      (method === 'client_secret_basic'
+        ? ' You might want to explicitly set "token_endpoint_auth_method" to one of those values in the client metadata document.'
+        : ` You set "${method}" which is not allowed.`),
+  )
 }
 
 export type ClientAuthenticator = () => Awaitable<OAuthClientCredentials>
@@ -70,6 +76,7 @@ export function buildClientAuthenticator(
   if (authMethod.method === 'client_secret_jwt') {
     if (!keyset) throw new Error('A keyset is required for client_secret_jwt')
 
+    // @NOTE throws if the key is no longer present in the keyset
     const [key, alg] = keyset.findKey({
       use: 'sig',
       kid: authMethod.kid,

@@ -217,12 +217,12 @@ export class OAuthServerAgent {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
-    const credentials = await this.clientAuthenticator()
+    const assertions = await this.clientAuthenticator()
 
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, ...credentials }),
+      body: JSON.stringify({ ...payload, ...assertions }),
     }).then(fetchJsonProcessor())
 
     if (response.ok) {

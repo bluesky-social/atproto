@@ -72,9 +72,15 @@ export function validateClientMetadata(
       // Make sure all the signing keys that could end-up being used are
       // advertised in the JWKS.
       for (const { kid } of keyset.list({ use: 'sig' })) {
+        // @NOTE we could rely on "jkt" (as that's what the server uses under
+        // the hood) but for convenience (and because it is a good practice), we
+        // require a "kid" on all singing public keys.
         if (!kid) {
           throw new TypeError(`The keyset contains a signing key with no "kid"`)
         }
+        // @NOTE we only check for key defined in the client metadata document
+        // itself, not for keys defined in the document located at "jwks_uri" as
+        // we do not whish to download that file (for efficiency reasons).
         if (input.jwks && !input.jwks.keys.some((k) => k.kid === kid)) {
           throw new TypeError(`Key with kid "${kid}" not found in jwks`)
         }

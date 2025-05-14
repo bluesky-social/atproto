@@ -250,19 +250,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         }
       })
     }
-
-    // @NOTE we could rely on "jkt" (as that's what the server uses under the
-    // hood) but for convenience (and because it is a good practice), we require
-    // a "kid" on all singing public keys.
-    if (this.keyset) {
-      for (const key of this.keyset.list({ use: 'sig' })) {
-        if (!key.isPrivate && !key.kid) {
-          throw new Error(
-            'Please make sure that all (signing) keys have a "kid"',
-          )
-        }
-      }
-    }
   }
 
   // Exposed as public API for convenience
