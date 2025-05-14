@@ -1,4 +1,5 @@
 import {
+  JWTClaimVerificationOptions,
   type JWTHeaderParameters,
   type JWTPayload,
   type JWTVerifyOptions,
@@ -12,6 +13,7 @@ import {
   errors,
   jwtVerify,
 } from 'jose'
+import { ZodError } from 'zod'
 import { Jwks } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -19,6 +21,7 @@ import {
   OAuthClientCredentials,
   OAuthClientMetadata,
   OAuthRedirectUri,
+  oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
@@ -58,25 +61,92 @@ export class Client {
         : createRemoteJWKSet(new URL(metadata.jwks_uri), {})
   }
 
-  public async decodeRequestObject(jar: string) {
+  public async parseRequestObject(jar: string, audience: string) {
+    // https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2
+    // > If signed, the Authorization Request Object SHOULD contain the Claims
+    // > iss (issuer) and aud (audience) as members with their semantics being
+    // > the same as defined in the JWT [RFC7519] specification. The value of
+    // > aud should be the value of the authorization server (AS) issuer, as
+    // > defined in RFC 8414 [RFC8414].
+    const result = await this.decodeRequestObject(jar, audience)
+
+    if (!result.payload.jti) {
+      throw new InvalidRequestError(
+        'Request object payload must contain a "jti" claim',
+      )
+    }
+
+    if ('protectedHeader' in result && !result.protectedHeader.kid) {
+      throw new InvalidRequestError(
+        'Request object header must contain a "kid" claim',
+      )
+    }
+
+    const parameters = await oauthAuthorizationRequestParametersSchema
+      .parseAsync(result.payload)
+      .catch((err) => {
+        const message =
+          err instanceof ZodError
+            ? `Invalid request parameters: ${err.message}`
+            : `Invalid "request" object`
+        throw InvalidRequestError.from(err, message)
+      })
+
+    return {
+      nonce: result.payload.jti,
+      parameters,
+      signatureMetadata:
+        'protectedHeader' in result
+          ? {
+              kid: result.protectedHeader.kid!,
+              alg: result.protectedHeader.alg,
+              jkt: await authJwkThumbprint(result.key).catch((err) => {
+                throw new InvalidRequestError(
+                  'Unable to compute JWK thumbprint',
+                  err,
+                )
+              }),
+            }
+          : null,
+    }
+  }
+
+  protected async decodeRequestObject(jar: string, audience: string) {
     try {
       switch (this.metadata.request_object_signing_alg) {
-        case 'none':
-          return await this.jwtVerifyUnsecured(jar, {
+        case 'none': {
+          // @NOTE there is no point in verifying the issuer and audience claims
+          // of an un-signed request object. rfc9101 only requires that the
+          // "iss" and "aud" claims are present if the request object is signed.
+          const result = await this.jwtVerifyUnsecured(jar, {
+            // "audience" will be checked hereafter only if provided.
             maxTokenAge: JAR_MAX_AGE / 1000,
           })
-        case undefined:
+
+          if (result.payload.aud && result.payload.aud !== audience) {
+            throw new JOSEError(
+              `Invalid "aud" claim "${result.payload.aud}" (expected ${audience})`,
+            )
+          }
+
+          return result
+        }
+        case undefined: {
           // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
           // > The default, if omitted, is that any algorithm supported by the OP
           // > and the RP MAY be used.
           return await this.jwtVerify(jar, {
+            audience,
             maxTokenAge: JAR_MAX_AGE / 1000,
           })
-        default:
+        }
+        default: {
           return await this.jwtVerify(jar, {
+            audience,
             maxTokenAge: JAR_MAX_AGE / 1000,
             algorithms: [this.metadata.request_object_signing_alg],
           })
+        }
       }
     } catch (err) {
       const message =
@@ -84,18 +154,24 @@ export class Client {
           ? `Invalid "request" object: ${err.message}`
           : `Invalid "request" object`
 
-      throw new InvalidRequestError(message, err)
+      throw InvalidRequestError.from(err, message)
     }
   }
 
   protected async jwtVerifyUnsecured<PayloadType = JWTPayload>(
     token: string,
-    options?: Omit<JWTVerifyOptions, 'issuer'>,
+    options?: JWTClaimVerificationOptions,
   ): Promise<UnsecuredResult<PayloadType>> {
-    return UnsecuredJWT.decode(token, {
-      ...options,
-      issuer: this.id,
-    })
+    const result = await UnsecuredJWT.decode<PayloadType>(token, options)
+    // Ensure that the issuer, if present, matches the client id. There is no
+    // point in forcing its presence in an unsigned token as they can be easily
+    // forged.
+    if (result.payload.iss && result.payload.iss !== this.id) {
+      throw new JOSEError(
+        `Invalid "iss" claim "${result.payload.iss}" (expected ${this.id})`,
+      )
+    }
+    return result
   }
 
   protected async jwtVerify<PayloadType = JWTPayload>(

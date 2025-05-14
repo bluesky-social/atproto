@@ -20,7 +20,6 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
-  oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
@@ -33,7 +32,7 @@ import {
   DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
-import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
+import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import {
   ClientManager,
@@ -59,7 +58,6 @@ import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
-import { InvalidParametersError } from './errors/invalid-parameters-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
@@ -398,58 +396,15 @@ export class OAuthProvider extends OAuthVerifier {
   protected async decodeJAR(
     client: Client,
     input: OAuthAuthorizationRequestJar,
-  ): Promise<
-    | {
-        payload: OAuthAuthorizationRequestParameters
-      }
-    | {
-        payload: OAuthAuthorizationRequestParameters
-        protectedHeader: { kid: string; alg: string }
-        jkt: string
-      }
-  > {
-    const result = await client.decodeRequestObject(input.request)
-    const payload = oauthAuthorizationRequestParametersSchema.parse(
-      result.payload,
-    )
+  ) {
+    const { parameters, signatureMetadata, nonce } =
+      await client.parseRequestObject(input.request, this.issuer)
 
-    if (!result.payload.jti) {
-      throw new InvalidParametersError(
-        payload,
-        'Request object must contain a jti claim',
-      )
+    if (!(await this.replayManager.uniqueJar(nonce, client.id))) {
+      throw new InvalidRequestError('Request object jti is not unique')
     }
 
-    if (!(await this.replayManager.uniqueJar(result.payload.jti, client.id))) {
-      throw new InvalidParametersError(
-        payload,
-        'Request object jti is not unique',
-      )
-    }
-
-    if ('protectedHeader' in result) {
-      if (!result.protectedHeader.kid) {
-        throw new InvalidParametersError(payload, 'Missing "kid" in header')
-      }
-
-      return {
-        jkt: await authJwkThumbprint(result.key),
-        payload,
-        protectedHeader: result.protectedHeader as {
-          alg: string
-          kid: string
-        },
-      }
-    }
-
-    if ('header' in result) {
-      return {
-        payload,
-      }
-    }
-
-    // Should never happen
-    throw new Error('Invalid request object')
+    return { parameters, signatureMetadata }
   }
 
   /**
@@ -463,10 +418,10 @@ export class OAuthProvider extends OAuthVerifier {
     try {
       const [client, clientAuth] = await this.authenticateClient(credentials)
 
-      const { payload: parameters } =
+      const { parameters } =
         'request' in authorizationRequest // Handle JAR
           ? await this.decodeJAR(client, authorizationRequest)
-          : { payload: authorizationRequest }
+          : { parameters: authorizationRequest }
 
       const { uri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
@@ -498,6 +453,7 @@ export class OAuthProvider extends OAuthVerifier {
     deviceId: DeviceId,
     query: OAuthAuthorizationRequestQuery,
   ): Promise<RequestInfo> {
+    // PAR
     if ('request_uri' in query) {
       const requestUri = await requestUriSchema
         .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
@@ -511,37 +467,34 @@ export class OAuthProvider extends OAuthVerifier {
       return this.requestManager.get(requestUri, deviceId, client.id)
     }
 
+    // JAR
     if ('request' in query) {
-      const requestObject = await this.decodeJAR(client, query)
+      const { parameters, signatureMetadata } = await this.decodeJAR(
+        client,
+        query,
+      )
 
-      if ('protectedHeader' in requestObject && requestObject.protectedHeader) {
-        // Allow using signed JAR during "/authorize" as client authentication.
-        // This allows clients to skip PAR to initiate trusted sessions.
-        const clientAuth: ClientAuth = {
-          method: CLIENT_ASSERTION_TYPE_JWT_BEARER,
-          kid: requestObject.protectedHeader.kid,
-          alg: requestObject.protectedHeader.alg,
-          jkt: requestObject.jkt,
-        }
-
-        return this.requestManager.createAuthorizationRequest(
-          client,
-          clientAuth,
-          requestObject.payload,
-          deviceId,
-          null,
-        )
-      }
+      // If the client used a signed JAR, use the signature metadata as client
+      // authentication method. This essentially allows clients to use JAR
+      // instead of PAR and still be able to initiate an authenticated request
+      // for a confidential client.
+      //
+      // @NOTE this is not part of the ATProto spec.
+      const clientAuth: ClientAuth = signatureMetadata
+        ? { method: CLIENT_ASSERTION_TYPE_JWT_BEARER, ...signatureMetadata }
+        : { method: 'none' }
 
       return this.requestManager.createAuthorizationRequest(
         client,
-        { method: 'none' },
-        requestObject.payload,
+        clientAuth,
+        parameters,
         deviceId,
         null,
       )
     }
 
+    // "Regular" authorization request (created on the fly by directing the user
+    // to the authorization endpoint with all the parameters in the url).
     return this.requestManager.createAuthorizationRequest(
       client,
       { method: 'none' },
