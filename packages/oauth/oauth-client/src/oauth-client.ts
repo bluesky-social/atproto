@@ -26,6 +26,7 @@ import {
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { FALLBACK_ALG } from './constants.js'
+import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
   AuthorizationServerMetadataCache,
@@ -338,8 +339,8 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     if (metadata.pushed_authorization_request_endpoint) {
       const server = await this.serverFactory.fromMetadata(
         metadata,
-        dpopKey,
         authMethod,
+        dpopKey,
       )
       const parResponse = await server.request(
         'pushed_authorization_request',
@@ -436,8 +437,8 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const server = await this.serverFactory.fromIssuer(
         stateData.iss,
-        stateData.dpopKey,
         stateData.authMethod ?? 'legacy',
+        stateData.dpopKey,
       )
 
       if (issuerParam != null) {
@@ -510,17 +511,25 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       allowStale: refresh === false,
     })
 
-    const server = await this.serverFactory.fromIssuer(
-      tokenSet.iss,
-      dpopKey,
-      authMethod,
-      {
-        noCache: refresh === true,
-        allowStale: refresh === false,
-      },
-    )
+    try {
+      const server = await this.serverFactory.fromIssuer(
+        tokenSet.iss,
+        authMethod,
+        dpopKey,
+        {
+          noCache: refresh === true,
+          allowStale: refresh === false,
+        },
+      )
 
-    return this.createSession(server, sub)
+      return this.createSession(server, sub)
+    } catch (err) {
+      if (err instanceof AuthMethodUnsatisfiableError) {
+        await this.sessionGetter.delStored(sub, err)
+      }
+
+      throw err
+    }
   }
 
   async revoke(sub: string) {
@@ -541,8 +550,8 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     try {
       const server = await this.serverFactory.fromIssuer(
         tokenSet.iss,
-        dpopKey,
         authMethod,
+        dpopKey,
       )
       await server.revoke(tokenSet.access_token)
     } finally {

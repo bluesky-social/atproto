@@ -5,6 +5,7 @@ import {
   OAuthClientCredentials,
 } from '@atproto/oauth-types'
 import { FALLBACK_ALG } from './constants.js'
+import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { Runtime } from './runtime.js'
 import { ClientMetadata } from './types.js'
 import { Awaitable } from './util.js'
@@ -24,26 +25,33 @@ export function negotiateClientAuthMethod(
   // "client_secret_jwt", and that clients use one of the other. The following
   // check ensures that the AS is indeed compliant with this client's
   // configuration.
-  const methodsSupported =
-    serverMetadata['token_endpoint_auth_methods_supported']
-  if (!methodsSupported.includes(method)) {
+  const methods = supportedMethods(serverMetadata)
+  if (!methods.includes(method)) {
     throw new Error(
-      `The server does not support "${method}" authentication. Supported methods are: ${methodsSupported.join(
+      `The server does not support "${method}" authentication. Supported methods are: ${methods.join(
         ', ',
       )}.`,
     )
   }
 
   if (method === 'client_secret_jwt') {
+    // Invalid client configuration. This should not happen as
+    // "validateClientMetadata" already check this.
     if (!keyset) throw new Error('A keyset is required for client_secret_jwt')
 
-    // Use the first key from the key set that matches the server's supported
-    // algorithms.
-    for (const { kid } of keyset.list({
+    // @NOTE we can't use `keyset.findPrivateKey` here because we can't enforce
+    // that the returned key contains a "kid". The following implementation is
+    // more robust against keysets containing poorly defined keys.
+    for (const key of keyset.list({
       use: 'sig',
       alg: supportedAlgs(serverMetadata),
     })) {
-      if (kid) return { method: 'client_secret_jwt', kid }
+      // We need a private key to be able to sign the JWT.
+      if (!key.isPrivate) continue
+
+      // Return the first key from the key set that matches the server's
+      // supported algorithms.
+      if (key.kid) return { method: 'client_secret_jwt', kid: key.kid }
     }
   }
 
@@ -59,14 +67,27 @@ export function negotiateClientAuthMethod(
   )
 }
 
-export type ClientAuthenticator = () => Awaitable<OAuthClientCredentials>
-export function buildClientAuthenticator(
+export type ClientCredentialsGetter = () => Awaitable<OAuthClientCredentials>
+
+/**
+ * @throws {AuthMethodUnsatisfiableError} if the authentication method is no
+ * long usable (either because the AS changed, of because the key is no longer
+ * available in the keyset).
+ */
+export function buildClientCredentialsGetter(
   authMethod: ClientAuthMethod,
   serverMetadata: OAuthAuthorizationServerMetadata,
   clientMetadata: ClientMetadata,
   runtime: Runtime,
   keyset?: Keyset,
-): ClientAuthenticator {
+): ClientCredentialsGetter {
+  // Ensure the AS still supports the auth method.
+  if (!supportedMethods(serverMetadata).includes(authMethod.method)) {
+    throw new AuthMethodUnsatisfiableError(
+      `Client authentication method "${authMethod.method}" no longer supported`,
+    )
+  }
+
   if (authMethod.method === 'none') {
     return () => ({
       client_id: clientMetadata.client_id,
@@ -74,38 +95,48 @@ export function buildClientAuthenticator(
   }
 
   if (authMethod.method === 'client_secret_jwt') {
-    if (!keyset) throw new Error('A keyset is required for client_secret_jwt')
+    try {
+      // The client used to be a confidential client but no longer has a keyset.
+      if (!keyset) throw new Error('A keyset is required for client_secret_jwt')
 
-    // @NOTE throws if the key is no longer present in the keyset
-    const [key, alg] = keyset.findKey({
-      use: 'sig',
-      kid: authMethod.kid,
-      alg: supportedAlgs(serverMetadata),
-    })
+      const [key, alg] = keyset.findPrivateKey({
+        use: 'sig',
+        kid: authMethod.kid,
+        alg: supportedAlgs(serverMetadata),
+      })
 
-    return async () => ({
-      client_id: clientMetadata.client_id,
-      client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
-      client_assertion: await key.createJwt(
-        { alg },
-        {
-          iss: clientMetadata.client_id,
-          sub: clientMetadata.client_id,
-          aud: serverMetadata.issuer,
-          jti: await runtime.generateNonce(),
-          iat: Math.floor(Date.now() / 1000),
-        },
-      ),
-    })
+      return async () => ({
+        client_id: clientMetadata.client_id,
+        client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
+        client_assertion: await key.createJwt(
+          { alg },
+          {
+            iss: clientMetadata.client_id,
+            sub: clientMetadata.client_id,
+            aud: serverMetadata.issuer,
+            jti: await runtime.generateNonce(),
+            iat: Math.floor(Date.now() / 1000),
+          },
+        ),
+      })
+    } catch (cause) {
+      throw new AuthMethodUnsatisfiableError('Failed to load private key', {
+        cause,
+      })
+    }
   }
 
-  // @ts-expect-error
-  throw new Error(`Unsupported auth method ${authMethod.method}`)
+  throw new AuthMethodUnsatisfiableError(
+    // @ts-expect-error
+    `Unsupported auth method ${authMethod.method}`,
+  )
 }
 
-function supportedAlgs(
-  serverMetadata: OAuthAuthorizationServerMetadata,
-): string[] {
+function supportedMethods(serverMetadata: OAuthAuthorizationServerMetadata) {
+  return serverMetadata['token_endpoint_auth_methods_supported']
+}
+
+function supportedAlgs(serverMetadata: OAuthAuthorizationServerMetadata) {
   return (
     serverMetadata['token_endpoint_auth_signing_alg_values_supported'] ?? [
       // @TODO Make sure that this fallback is reflected in the spec

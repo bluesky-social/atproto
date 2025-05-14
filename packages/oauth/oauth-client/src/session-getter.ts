@@ -5,6 +5,7 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
+import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
@@ -101,8 +102,8 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
 
         const server = await serverFactory.fromIssuer(
           tokenSet.iss,
-          dpopKey,
           authMethod,
+          dpopKey,
         )
 
         // Because refresh tokens can only be used once, we must not use the
@@ -191,20 +192,31 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
           sub,
           { tokenSet, dpopKey, authMethod = 'legacy' as const },
         ) => {
-          // If the token data cannot be stored, let's revoke it
-          const server = await serverFactory.fromIssuer(
-            tokenSet.iss,
-            dpopKey,
-            authMethod,
-          )
-          await server.revoke(tokenSet.refresh_token ?? tokenSet.access_token)
+          if (!(err instanceof AuthMethodUnsatisfiableError)) {
+            // If the error was an AuthMethodUnsatisfiableError, there is no
+            // point in trying to call `fromIssuer`.
+            try {
+              // If the token data cannot be stored, let's revoke it
+              const server = await serverFactory.fromIssuer(
+                tokenSet.iss,
+                authMethod,
+                dpopKey,
+              )
+              await server.revoke(
+                tokenSet.refresh_token ?? tokenSet.access_token,
+              )
+            } catch {
+              // Let the original error propagate
+            }
+          }
+
           throw err
         },
         deleteOnError: async (err) =>
-          // Optimization: More likely to happen first
           err instanceof TokenRefreshError ||
           err instanceof TokenRevokedError ||
-          err instanceof TokenInvalidError,
+          err instanceof TokenInvalidError ||
+          err instanceof AuthMethodUnsatisfiableError,
       },
     )
   }

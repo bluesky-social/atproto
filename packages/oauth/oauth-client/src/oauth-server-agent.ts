@@ -19,8 +19,8 @@ import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import {
   ClientAuthMethod,
-  ClientAuthenticator,
-  buildClientAuthenticator,
+  ClientCredentialsGetter,
+  buildClientCredentialsGetter,
 } from './oauth-client-auth.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
@@ -44,9 +44,12 @@ export type TokenSet = {
 export type DpopNonceCache = SimpleStore<string, string>
 
 export class OAuthServerAgent {
-  readonly dpopFetch: Fetch<unknown>
-  protected readonly clientAuthenticator: ClientAuthenticator
+  protected dpopFetch: Fetch<unknown>
+  protected buildClientCredentials: ClientCredentialsGetter
 
+  /**
+   * @throws see {@link buildClientCredentialsGetter}
+   */
   constructor(
     readonly authMethod: ClientAuthMethod,
     readonly dpopKey: Key,
@@ -58,7 +61,7 @@ export class OAuthServerAgent {
     readonly keyset?: Keyset,
     fetch?: Fetch,
   ) {
-    this.clientAuthenticator = buildClientAuthenticator(
+    this.buildClientCredentials = buildClientCredentialsGetter(
       authMethod,
       serverMetadata,
       clientMetadata,
@@ -217,12 +220,12 @@ export class OAuthServerAgent {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
-    const assertions = await this.clientAuthenticator()
+    const credentials = await this.buildClientCredentials()
 
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, ...assertions }),
+      body: JSON.stringify({ ...payload, ...credentials }),
     }).then(fetchJsonProcessor())
 
     if (response.ok) {

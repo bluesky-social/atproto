@@ -27,11 +27,13 @@ export class OAuthServerFactory {
    * that case, we will use the first key from the keyset.
    *
    * Support for this might be removed in the future.
+   *
+   * @throws see {@link OAuthServerFactory.fromMetadata}
    */
   async fromIssuer(
     issuer: string,
-    dpopKey: Key,
     authMethod: 'legacy' | ClientAuthMethod,
+    dpopKey: Key,
     options?: GetCachedOptions,
   ) {
     const serverMetadata = await this.resolver.getAuthorizationServerMetadata(
@@ -40,21 +42,23 @@ export class OAuthServerFactory {
     )
 
     if (authMethod === 'legacy') {
-      const authMethod = negotiateClientAuthMethod(
+      authMethod = negotiateClientAuthMethod(
         serverMetadata,
         this.clientMetadata,
         this.keyset,
       )
-      return this.fromMetadata(serverMetadata, dpopKey, authMethod)
     }
 
-    return this.fromMetadata(serverMetadata, dpopKey, authMethod)
+    return this.fromMetadata(serverMetadata, authMethod, dpopKey)
   }
 
+  /**
+   * @throws see {@link OAuthServerAgent}
+   */
   async fromMetadata(
     serverMetadata: OAuthAuthorizationServerMetadata,
-    dpopKey: Key,
     authMethod: ClientAuthMethod,
+    dpopKey: Key,
   ) {
     return new OAuthServerAgent(
       authMethod,
