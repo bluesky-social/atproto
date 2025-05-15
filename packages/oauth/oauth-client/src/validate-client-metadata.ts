@@ -43,51 +43,60 @@ export function validateClientMetadata(
 
   const method = metadata[TOKEN_ENDPOINT_AUTH_METHOD]
   switch (method) {
-    case 'none':
+    case 'none': {
       if (metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
         throw new TypeError(
           `${TOKEN_ENDPOINT_AUTH_SIGNING_ALG} must not be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
         )
       }
       break
-    case 'private_key_jwt':
-      if (!keyset) {
-        throw new TypeError(
-          `A keyset must be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
-        )
-      }
-      if (!metadata.jwks_uri && !metadata.jwks?.keys.length) {
-        throw new TypeError(
-          `Client authentication method "${method}" requires a JWKS with at least one public key`,
-        )
-      }
-      // Make sure all the signing keys that could end-up being used are
-      // advertised in the JWKS.
-      if (input.jwks) {
-        // @NOTE we only check for key defined in the client metadata document
-        // itself, not for keys defined in the document located at "jwks_uri" as
-        // we do not whish to download that file (for efficiency reasons).
-        for (const { kid } of keyset.list({ use: 'sig' })) {
-          if (kid && !input.jwks.keys.some((k) => k.kid === kid)) {
-            throw new TypeError(`Key with kid "${kid}" not found in jwks`)
-          }
-        }
-      }
-      if (!Array.from(keyset.list({ use: 'sig', alg: FALLBACK_ALG })).length) {
-        throw new TypeError(
-          `Client authentication method "${method}" requires at least one "${FALLBACK_ALG}" signing key with a "kid" property`,
-        )
-      }
+    }
+
+    case 'private_key_jwt': {
       if (!metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
         throw new TypeError(
           `${TOKEN_ENDPOINT_AUTH_SIGNING_ALG} must be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
         )
       }
+
+      const signingKeys = keyset
+        ? Array.from(keyset.list({ use: 'sig' })).filter(
+            (key) => key.isPrivate && key.kid,
+          )
+        : null
+
+      if (!signingKeys?.some((key) => key.algorithms.includes(FALLBACK_ALG))) {
+        throw new TypeError(
+          `Client authentication method "${method}" requires at least one "${FALLBACK_ALG}" signing key with a "kid" property`,
+        )
+      }
+
+      if (metadata.jwks) {
+        // Ensure that all the signing keys that could end-up being used are
+        // advertised in the JWKS.
+        for (const key of signingKeys) {
+          if (!metadata.jwks.keys.some((k) => k.kid === key.kid)) {
+            throw new TypeError(`Key with kid "${key.kid}" not found in jwks`)
+          }
+        }
+      } else if (metadata.jwks_uri) {
+        // @NOTE we only ensure that all the signing keys are referenced in JWKS
+        // when it is available (see previous "if") as we don't want to download
+        // that file here (for efficiency reasons).
+      } else {
+        throw new TypeError(
+          `Client authentication method "${method}" requires a JWKS`,
+        )
+      }
+
       break
-    default:
+    }
+
+    default: {
       throw new TypeError(
         `Invalid "${TOKEN_ENDPOINT_AUTH_METHOD}" value: ${method}`,
       )
+    }
   }
 
   return metadata

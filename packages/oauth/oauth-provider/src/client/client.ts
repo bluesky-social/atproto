@@ -62,12 +62,6 @@ export class Client {
   }
 
   public async parseRequestObject(jar: string, audience: string) {
-    // https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2
-    // > If signed, the Authorization Request Object SHOULD contain the Claims
-    // > iss (issuer) and aud (audience) as members with their semantics being
-    // > the same as defined in the JWT [RFC7519] specification. The value of
-    // > aud should be the value of the authorization server (AS) issuer, as
-    // > defined in RFC 8414 [RFC8414].
     const result = await this.decodeRequestObject(jar, audience)
 
     if (!result.payload.jti) {
@@ -111,7 +105,15 @@ export class Client {
     }
   }
 
+  /**
+   * @see {@link https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2}
+   */
   protected async decodeRequestObject(jar: string, audience: string) {
+    // > If signed, the Authorization Request Object SHOULD contain the Claims
+    // > iss (issuer) and aud (audience) as members with their semantics being
+    // > the same as defined in the JWT [RFC7519] specification. The value of
+    // > aud should be the value of the authorization server (AS) issuer, as
+    // > defined in RFC 8414 [RFC8414].
     try {
       switch (this.metadata.request_object_signing_alg) {
         case 'none': {
@@ -131,22 +133,25 @@ export class Client {
 
           return result
         }
-        case undefined: {
+
+        case undefined:
           // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
+          //
           // > The default, if omitted, is that any algorithm supported by the OP
           // > and the RP MAY be used.
+          //
+          // @TODO we could actually support unsigned JARs here
           return await this.jwtVerify(jar, {
             audience,
             maxTokenAge: JAR_MAX_AGE / 1000,
           })
-        }
-        default: {
+
+        default:
           return await this.jwtVerify(jar, {
             audience,
             maxTokenAge: JAR_MAX_AGE / 1000,
             algorithms: [this.metadata.request_object_signing_alg],
           })
-        }
       }
     } catch (err) {
       const message =
@@ -154,7 +159,7 @@ export class Client {
           ? `Invalid "request" object: ${err.message}`
           : `Invalid "request" object`
 
-      throw InvalidRequestError.from(err, message)
+      throw new InvalidRequestError(message, err)
     }
   }
 
