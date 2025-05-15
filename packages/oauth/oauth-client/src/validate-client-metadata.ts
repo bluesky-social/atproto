@@ -43,14 +43,13 @@ export function validateClientMetadata(
 
   const method = metadata[TOKEN_ENDPOINT_AUTH_METHOD]
   switch (method) {
-    case 'none': {
+    case 'none':
       if (metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
         throw new TypeError(
           `${TOKEN_ENDPOINT_AUTH_SIGNING_ALG} must not be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
         )
       }
       break
-    }
 
     case 'private_key_jwt': {
       if (!metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
@@ -92,11 +91,10 @@ export function validateClientMetadata(
       break
     }
 
-    default: {
+    default:
       throw new TypeError(
         `Invalid "${TOKEN_ENDPOINT_AUTH_METHOD}" value: ${method}`,
       )
-    }
   }
 
   return metadata
