@@ -2,7 +2,7 @@
   "name": "atp",
   "version": "0.0.1",
   "repository": "git@github.com:bluesky-social/atproto.git",
-  "author": "Bluesky PBC <hello@blueskyweb.xyz>",
+  "author": "Bluesky Social PBC <hello@blueskyweb.xyz>",
   "license": "MIT",
   "private": true,
   "engines": {

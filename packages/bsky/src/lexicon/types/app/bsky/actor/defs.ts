@@ -14,6 +14,7 @@ import type * as AppBskyGraphDefs from '../graph/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as AppBskyFeedThreadgate from '../feed/threadgate.js'
 import type * as AppBskyFeedPostgate from '../feed/postgate.js'
+import type * as AppBskyEmbedExternal from '../embed/external.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -30,6 +31,7 @@ export interface ProfileViewBasic {
   labels?: ComAtprotoLabelDefs.Label[]
   createdAt?: string
   verification?: VerificationState
+  status?: StatusView
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -55,6 +57,7 @@ export interface ProfileView {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   verification?: VerificationState
+  status?: StatusView
 }
 
 const hashProfileView = 'profileView'
@@ -86,6 +89,7 @@ export interface ProfileViewDetailed {
   labels?: ComAtprotoLabelDefs.Label[]
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   verification?: VerificationState
+  status?: StatusView
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
@@ -591,4 +595,26 @@ export function validatePostInteractionSettingsPref<V>(v: V) {
     id,
     hashPostInteractionSettingsPref,
   )
+}
+
+export interface StatusView {
+  $type?: 'app.bsky.actor.defs#statusView'
+  /** The status for the account. */
+  status: 'app.bsky.actor.status#live' | (string & {})
+  record: { [_ in string]: unknown }
+  embed?: $Typed<AppBskyEmbedExternal.View> | { $type: string }
+  /** The date when this status will expire. The application might choose to no longer return the status after expiration. */
+  expiresAt?: string
+  /** True if the status is not expired, false if it is expired. Only present if expiration was set. */
+  isActive?: boolean
+}
+
+const hashStatusView = 'statusView'
+
+export function isStatusView<V>(v: V) {
+  return is$typed(v, id, hashStatusView)
+}
+
+export function validateStatusView<V>(v: V) {
+  return validate<StatusView & V>(v, id, hashStatusView)
 }

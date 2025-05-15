@@ -4568,6 +4568,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
           },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
+          },
         },
       },
       profileView: {
@@ -4622,6 +4626,10 @@ export const schemaDict = {
           verification: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
           },
         },
       },
@@ -4698,6 +4706,10 @@ export const schemaDict = {
           verification: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
           },
         },
       },
@@ -5240,6 +5252,36 @@ export const schemaDict = {
           },
         },
       },
+      statusView: {
+        type: 'object',
+        required: ['status', 'record'],
+        properties: {
+          status: {
+            type: 'string',
+            description: 'The status for the account.',
+            knownValues: ['app.bsky.actor.status#live'],
+          },
+          record: {
+            type: 'unknown',
+          },
+          embed: {
+            type: 'union',
+            description: 'An optional embed associated with the status.',
+            refs: ['lex:app.bsky.embed.external#view'],
+          },
+          expiresAt: {
+            type: 'string',
+            description:
+              'The date when this status will expire. The application might choose to no longer return the status after expiration.',
+            format: 'datetime',
+          },
+          isActive: {
+            type: 'boolean',
+            description:
+              'True if the status is not expired, false if it is expired. Only present if expiration was set.',
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
@@ -5566,6 +5608,48 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyActorStatus: {
+    lexicon: 1,
+    id: 'app.bsky.actor.status',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of a Bluesky account status.',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['status', 'createdAt'],
+          properties: {
+            status: {
+              type: 'string',
+              description: 'The status for the account.',
+              knownValues: ['app.bsky.actor.status#live'],
+            },
+            embed: {
+              type: 'union',
+              description: 'An optional embed associated with the status.',
+              refs: ['lex:app.bsky.embed.external'],
+            },
+            durationMinutes: {
+              type: 'integer',
+              description:
+                'The duration of the status in minutes. Applications can choose to impose minimum and maximum limits.',
+              minimum: 1,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      live: {
+        type: 'token',
+        description:
+          'Advertises an account as currently offering live content.',
       },
     },
   },
@@ -16113,6 +16197,7 @@ export const ids = {
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyActorStatus: 'app.bsky.actor.status',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
