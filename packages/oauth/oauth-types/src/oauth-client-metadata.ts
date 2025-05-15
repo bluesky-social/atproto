@@ -43,11 +43,11 @@ export const oauthClientMetadataSchema = z.object({
   userinfo_encrypted_response_alg: z.string().optional(),
   jwks_uri: webUriSchema.optional(),
   jwks: jwksPubSchema.optional(),
-  application_type: z.enum(['web', 'native']).default('web').optional(), // default, per spec, is "web"
-  subject_type: z.enum(['public', 'pairwise']).default('public').optional(),
+  application_type: z.enum(['web', 'native']).default('web'), // default, per spec, is "web"
+  subject_type: z.enum(['public', 'pairwise']).default('public'),
   request_object_signing_alg: z.string().optional(),
   id_token_signed_response_alg: z.string().optional(),
-  authorization_signed_response_alg: z.string().default('RS256').optional(),
+  authorization_signed_response_alg: z.string().default('RS256'),
   authorization_encrypted_response_enc: z.enum(['A128CBC-HS256']).optional(),
   authorization_encrypted_response_alg: z.string().optional(),
   client_id: oauthClientIdSchema.optional(),

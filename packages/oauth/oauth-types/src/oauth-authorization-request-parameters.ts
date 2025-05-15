@@ -24,9 +24,7 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   // PKCE
 
   code_challenge: z.string().optional(),
-  code_challenge_method: oauthCodeChallengeMethodSchema
-    .default('S256')
-    .optional(),
+  code_challenge_method: oauthCodeChallengeMethodSchema.default('S256'),
 
   // DPOP
 
