@@ -274,38 +274,6 @@ export class Client {
   }
 
   /**
-   * Ensures that a {@link ClientAuth} generated in the past is still valid wrt
-   * the current client metadata & jwks. This is used to invalidate tokens when
-   * the client stops advertising the key that it used to authenticate itself
-   * during the initial token request.
-   */
-  public async validateClientAuth(clientAuth: ClientAuth): Promise<boolean> {
-    if (clientAuth.method === 'none') {
-      return this.metadata[`token_endpoint_auth_method`] === 'none'
-    }
-
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-      if (this.metadata[`token_endpoint_auth_method`] !== 'private_key_jwt') {
-        return false
-      }
-      try {
-        const key = await this.keyGetter({
-          kid: clientAuth.kid,
-          alg: clientAuth.alg,
-        })
-        const jtk = await authJwkThumbprint(key)
-
-        return jtk === clientAuth.jkt
-      } catch (e) {
-        return false
-      }
-    }
-
-    // @ts-expect-error
-    throw new Error(`Invalid method "${clientAuth.method}"`)
-  }
-
-  /**
    * Validates the request parameters against the client metadata.
    */
   public validateRequest(

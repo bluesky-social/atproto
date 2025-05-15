@@ -13,6 +13,7 @@ import {
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { AccessTokenMode } from '../access-token/access-token-mode.js'
+import { clientAuthCheck } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import {
@@ -296,44 +297,6 @@ export class TokenManager {
     }
   }
 
-  public async validateAccess(
-    client: Client,
-    clientAuth: ClientAuth,
-    tokenInfo: TokenInfo,
-  ) {
-    if (tokenInfo.data.clientId !== client.id) {
-      throw new InvalidGrantError(`Token was not issued to this client`)
-    }
-
-    const initialClientAuth = tokenInfo.data.clientAuth
-
-    switch (initialClientAuth.method) {
-      case CLIENT_ASSERTION_TYPE_JWT_BEARER:
-        if (
-          clientAuth.method !== initialClientAuth.method ||
-          clientAuth.jkt !== initialClientAuth.jkt
-        ) {
-          throw new InvalidGrantError(`Client authentication mismatch`)
-        }
-        break
-      case 'none':
-        if (clientAuth.method !== initialClientAuth.method) {
-          throw new InvalidGrantError(`Client authentication mismatch`)
-        }
-        break
-      default:
-        throw new InvalidGrantError(
-          // @ts-expect-error (future proof, backwards compatibility)
-          `Invalid method "${initialClientAuth.method}"`,
-        )
-    }
-
-    // Ensure that the initial auth is still valid (public key still present).
-    if (!(await client.validateClientAuth(initialClientAuth))) {
-      throw new InvalidGrantError(`Client authentication mismatch`)
-    }
-  }
-
   public async validateRefresh(
     client: Client,
     clientAuth: ClientAuth,
@@ -390,7 +353,7 @@ export class TokenManager {
     const { parameters } = data
 
     try {
-      await this.validateAccess(client, clientAuth, tokenInfo)
+      clientAuthCheck(client, clientAuth, tokenInfo.data)
       await this.validateRefresh(client, clientAuth, tokenInfo)
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {

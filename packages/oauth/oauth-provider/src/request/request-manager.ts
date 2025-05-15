@@ -4,6 +4,7 @@ import {
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
+import { clientAuthCheck } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -25,10 +26,7 @@ import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
-import {
-  RequestDataAuthorized,
-  isRequestDataAuthorized,
-} from './request-data.js'
+import { isRequestDataAuthorized } from './request-data.js'
 import { generateRequestId } from './request-id.js'
 import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
@@ -440,7 +438,11 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     code: Code,
-  ): Promise<RequestDataAuthorized & { requestUri: RequestUri }> {
+  ): Promise<{
+    parameters: OAuthAuthorizationRequestParameters
+    sub: string
+    deviceId: DeviceId
+  }> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
@@ -469,16 +471,13 @@ export class RequestManager {
         // authenticated (`clientAuth`), we allow "upgrading" the authentication
         // method (the token created will be bound to the current clientAuth).
       } else {
-        if (clientAuth.method !== data.clientAuth.method) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
-
-        if (!(await client.validateClientAuth(data.clientAuth))) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
+        // Otherwise, the authentication method currently used must match the
+        // one that was used to initiate the session.
+        clientAuthCheck(client, clientAuth, data)
       }
 
-      return { ...data, requestUri: encodeRequestUri(id) }
+      const { sub, deviceId, parameters } = data
+      return { sub, deviceId, parameters }
     } finally {
       // A "code" can only be used once
       await this.store.deleteRequest(id)
