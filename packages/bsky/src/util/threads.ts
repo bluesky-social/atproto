@@ -138,9 +138,12 @@ function sortTrimThreadTree(
       }
       return b.post.indexedAt.localeCompare(a.post.indexedAt)
     })
-    if (branchingFactor > 0) {
+
+    // Applies branching factor to all levels of replies but the direct replies to the anchor.
+    if (node.depth !== 0 && branchingFactor > 0) {
       node.replies = node.replies.slice(0, branchingFactor)
     }
+
     node.replies.forEach((reply) =>
       sortTrimThreadTree(reply, {
         branchingFactor,

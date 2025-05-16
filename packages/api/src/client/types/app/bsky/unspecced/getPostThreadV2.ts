@@ -24,7 +24,7 @@ export interface QueryParams {
   above?: number
   /** How many levels of reply depth to include. */
   below?: number
-  /** Maximum of replies to include at each level of the thread. */
+  /** Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are all returned. */
   branchingFactor?: number
   /** Whether to prioritize posts from followed users. */
   prioritizeFollowedUsers?: boolean
