@@ -2,4 +2,4 @@
 "@atproto/api": patch
 ---
 
-Add app.bsky.unspecced.getLiveNowConfig
+Add liveNow to app.bsky.unspecced.getConfig
