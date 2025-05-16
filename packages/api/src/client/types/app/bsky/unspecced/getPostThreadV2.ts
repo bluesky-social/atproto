@@ -10,11 +10,12 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyFeedDefs from './defs.js'
+import type * as AppBskyUnspeccedDefs from './defs.js'
+import type * as AppBskyFeedDefs from '../feed/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.feed.getPostThreadV2'
+const id = 'app.bsky.unspecced.getPostThreadV2'
 
 export interface QueryParams {
   /** Reference (AT-URI) to post record. */
@@ -29,10 +30,10 @@ export interface QueryParams {
   prioritizeFollowedUsers?: boolean
   /** Sorting for the thread replies. */
   sorting?:
-    | 'app.bsky.feed.getPostThreadV2#newest'
-    | 'app.bsky.feed.getPostThreadV2#oldest'
-    | 'app.bsky.feed.getPostThreadV2#hotness'
-    | 'app.bsky.feed.getPostThreadV2#mostLikes'
+    | 'app.bsky.unspecced.getPostThreadV2#newest'
+    | 'app.bsky.unspecced.getPostThreadV2#oldest'
+    | 'app.bsky.unspecced.getPostThreadV2#hotness'
+    | 'app.bsky.unspecced.getPostThreadV2#mostLikes'
     | (string & {})
 }
 
@@ -41,10 +42,10 @@ export type InputSchema = undefined
 export interface OutputSchema {
   /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
   thread: (
-    | $Typed<AppBskyFeedDefs.ThreadItemPost>
-    | $Typed<AppBskyFeedDefs.ThreadItemNoUnauthenticated>
-    | $Typed<AppBskyFeedDefs.ThreadItemNotFound>
-    | $Typed<AppBskyFeedDefs.ThreadItemBlocked>
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemPost>
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemNoUnauthenticated>
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemNotFound>
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemBlocked>
     | { $type: string }
   )[]
   threadgate?: AppBskyFeedDefs.ThreadgateView

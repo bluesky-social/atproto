@@ -1,13 +1,13 @@
-import { AppBskyFeedDefs, asPredicate } from '@atproto/api'
+import { AppBskyUnspeccedDefs, asPredicate } from '@atproto/api'
+import { PostView } from '../lexicon/types/app/bsky/feed/defs'
+import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
-  PostView,
   ThreadItemBlocked,
   ThreadItemNoUnauthenticated,
   ThreadItemNotFound,
   ThreadItemPost,
-} from '../lexicon/types/app/bsky/feed/defs'
-import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/feed/getPostThreadV2'
-import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
+} from '../lexicon/types/app/bsky/unspecced/defs'
+import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { $Typed } from '../lexicon/util'
 
 type ThreadLeaf = {
@@ -119,18 +119,18 @@ function sortTrimThreadTree(
         }
       }
 
-      if (sorting === 'app.bsky.feed.getPostThreadV2#hotness') {
+      if (sorting === 'app.bsky.unspecced.getPostThreadV2#hotness') {
         const aHotness = getPostHotness(a, fetchedAt)
         const bHotness = getPostHotness(b, fetchedAt)
         return bHotness - aHotness
       }
-      if (sorting === 'app.bsky.feed.getPostThreadV2#oldest') {
+      if (sorting === 'app.bsky.unspecced.getPostThreadV2#oldest') {
         return a.post.indexedAt.localeCompare(b.post.indexedAt)
       }
-      if (sorting === 'app.bsky.feed.getPostThreadV2#newest') {
+      if (sorting === 'app.bsky.unspecced.getPostThreadV2#newest') {
         return b.post.indexedAt.localeCompare(a.post.indexedAt)
       }
-      if (sorting === 'app.bsky.feed.getPostThreadV2#mostLikes') {
+      if (sorting === 'app.bsky.unspecced.getPostThreadV2#mostLikes') {
         if (a.post.likeCount === b.post.likeCount) {
           return b.post.indexedAt.localeCompare(a.post.indexedAt) // newest
         }
@@ -216,7 +216,7 @@ function* flattenInDirection({
         // TODO we exit early atm
         // return HiddenReplyType.None
         yield {
-          $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
+          $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
           uri: thread.uri,
           depth: thread.depth,
         }
@@ -234,16 +234,16 @@ function* flattenInDirection({
         }
       }
     }
-  } else if (AppBskyFeedDefs.isThreadItemNotFound(thread)) {
+  } else if (AppBskyUnspeccedDefs.isThreadItemNotFound(thread)) {
     yield thread
-  } else if (AppBskyFeedDefs.isThreadItemBlocked(thread)) {
+  } else if (AppBskyUnspeccedDefs.isThreadItemBlocked(thread)) {
     yield thread
   }
 }
 
 function threadLeafToItemPost(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
   return {
-    $type: 'app.bsky.feed.defs#threadItemPost',
+    $type: 'app.bsky.unspecced.defs#threadItemPost',
     uri: leaf.uri,
     post: leaf.post,
     depth: leaf.depth,

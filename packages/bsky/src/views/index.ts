@@ -31,15 +31,10 @@ import {
   ReasonPin,
   ReasonRepost,
   ReplyRef,
-  ThreadItemBlocked,
-  ThreadItemNoUnauthenticated,
-  ThreadItemNotFound,
-  ThreadItemPost,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
-import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/feed/getPostThreadV2'
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import {
   Record as PostRecord,
@@ -64,6 +59,13 @@ import {
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
 import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
+import {
+  ThreadItemBlocked,
+  ThreadItemNoUnauthenticated,
+  ThreadItemNotFound,
+  ThreadItemPost,
+} from '../lexicon/types/app/bsky/unspecced/defs'
+import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
@@ -1402,7 +1404,7 @@ export class Views {
     depth: number,
   ): $Typed<ThreadItemNoUnauthenticated> {
     return {
-      $type: 'app.bsky.feed.defs#threadItemNoUnauthenticated',
+      $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
       uri,
       depth,
     }
@@ -1413,7 +1415,7 @@ export class Views {
     depth: number,
   ): $Typed<ThreadItemNotFound> {
     return {
-      $type: 'app.bsky.feed.defs#threadItemNotFound',
+      $type: 'app.bsky.unspecced.defs#threadItemNotFound',
       uri,
       depth,
     }
@@ -1426,7 +1428,7 @@ export class Views {
     state: HydrationState,
   ): $Typed<ThreadItemBlocked> {
     return {
-      $type: 'app.bsky.feed.defs#threadItemBlocked',
+      $type: 'app.bsky.unspecced.defs#threadItemBlocked',
       uri,
       depth,
       author: {

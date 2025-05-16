@@ -6308,101 +6308,6 @@ export const schemaDict = {
           },
         },
       },
-      threadItemPost: {
-        type: 'object',
-        required: [
-          'uri',
-          'depth',
-          'post',
-          'isOPThread',
-          'hasOPLike',
-          'hasUnhydratedReplies',
-          'hasUnhydratedParents',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-          post: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
-          },
-          isOPThread: {
-            type: 'boolean',
-            description:
-              'Whether this post is part of a contiguous chain of OP replies.',
-          },
-          hasOPLike: {
-            type: 'boolean',
-            description: 'Whether this post has a like from the OP.',
-          },
-          hasUnhydratedReplies: {
-            type: 'boolean',
-            description:
-              'Whether this post has replies that have not been included in the response.',
-          },
-          hasUnhydratedParents: {
-            type: 'boolean',
-            description:
-              'Whether this post has parents that have not been included in the response.',
-          },
-        },
-      },
-      threadItemNoUnauthenticated: {
-        type: 'object',
-        required: ['uri', 'depth'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-        },
-      },
-      threadItemNotFound: {
-        type: 'object',
-        required: ['uri', 'depth'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-        },
-      },
-      threadItemBlocked: {
-        type: 'object',
-        required: ['uri', 'depth', 'author'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
-          },
-        },
-      },
       notFoundPost: {
         type: 'object',
         required: ['uri', 'notFound'],
@@ -7326,6 +7231,48 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7387,157 +7334,6 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
-      },
-    },
-  },
-  AppBskyFeedGetPostThreadV2: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPostThreadV2',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.',
-        parameters: {
-          type: 'params',
-          required: ['uri'],
-          properties: {
-            uri: {
-              type: 'string',
-              format: 'at-uri',
-              description: 'Reference (AT-URI) to post record.',
-            },
-            above: {
-              type: 'integer',
-              description:
-                'How many levels of parent (and grandparent, etc) post to include.',
-              default: 80,
-              minimum: 0,
-              maximum: 1000,
-            },
-            below: {
-              type: 'integer',
-              description: 'How many levels of reply depth to include.',
-              default: 6,
-              minimum: 0,
-              maximum: 1000,
-            },
-            branchingFactor: {
-              type: 'integer',
-              description:
-                'Maximum of replies to include at each level of the thread.',
-              default: 10,
-              minimum: 0,
-              maximum: 1000,
-            },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description: 'Whether to prioritize posts from followed users.',
-              default: false,
-            },
-            sorting: {
-              type: 'string',
-              description: 'Sorting for the thread replies.',
-              knownValues: [
-                'app.bsky.feed.getPostThreadV2#newest',
-                'app.bsky.feed.getPostThreadV2#oldest',
-                'app.bsky.feed.getPostThreadV2#hotness',
-                'app.bsky.feed.getPostThreadV2#mostLikes',
-              ],
-              default: 'app.bsky.feed.getPostThreadV2#oldest',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['thread'],
-            properties: {
-              thread: {
-                type: 'array',
-                description:
-                  'A flat list of thread items. The depth of each item is indicated by the depth property inside the item.',
-                items: {
-                  type: 'union',
-                  refs: [
-                    'lex:app.bsky.feed.defs#threadItemPost',
-                    'lex:app.bsky.feed.defs#threadItemNoUnauthenticated',
-                    'lex:app.bsky.feed.defs#threadItemNotFound',
-                    'lex:app.bsky.feed.defs#threadItemBlocked',
-                  ],
-                },
-              },
-              threadgate: {
-                type: 'ref',
-                ref: 'lex:app.bsky.feed.defs#threadgateView',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'NotFound',
-          },
-        ],
-      },
-      newest: {
-        type: 'token',
-        description: 'Newest-first thread sort order.',
-      },
-      oldest: {
-        type: 'token',
-        description: 'Oldest-first thread sort order.',
-      },
-      hotness: {
-        type: 'token',
-        description: 'Hottest-first thread sort order.',
-      },
-      mostLikes: {
-        type: 'token',
-        description: 'Most-likes-first thread sort order.',
-      },
-    },
-  },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -10387,6 +10183,101 @@ export const schemaDict = {
           },
         },
       },
+      threadItemPost: {
+        type: 'object',
+        required: [
+          'uri',
+          'depth',
+          'post',
+          'isOPThread',
+          'hasOPLike',
+          'hasUnhydratedReplies',
+          'hasUnhydratedParents',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          isOPThread: {
+            type: 'boolean',
+            description:
+              'Whether this post is part of a contiguous chain of OP replies.',
+          },
+          hasOPLike: {
+            type: 'boolean',
+            description: 'Whether this post has a like from the OP.',
+          },
+          hasUnhydratedReplies: {
+            type: 'boolean',
+            description:
+              'Whether this post has replies that have not been included in the response.',
+          },
+          hasUnhydratedParents: {
+            type: 'boolean',
+            description:
+              'Whether this post has parents that have not been included in the response.',
+          },
+        },
+      },
+      threadItemNoUnauthenticated: {
+        type: 'object',
+        required: ['uri', 'depth'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+        },
+      },
+      threadItemNotFound: {
+        type: 'object',
+        required: ['uri', 'depth'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+        },
+      },
+      threadItemBlocked: {
+        type: 'object',
+        required: ['uri', 'depth', 'author'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -10477,6 +10368,115 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyUnspeccedGetPostThreadV2: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPostThreadV2',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          '[NOTE: this endpoint is under development and it might change without notice]. Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to post record.',
+            },
+            above: {
+              type: 'integer',
+              description:
+                'How many levels of parent (and grandparent, etc) post to include.',
+              default: 80,
+              minimum: 0,
+              maximum: 1000,
+            },
+            below: {
+              type: 'integer',
+              description: 'How many levels of reply depth to include.',
+              default: 6,
+              minimum: 0,
+              maximum: 1000,
+            },
+            branchingFactor: {
+              type: 'integer',
+              description:
+                'Maximum of replies to include at each level of the thread.',
+              default: 10,
+              minimum: 0,
+              maximum: 1000,
+            },
+            prioritizeFollowedUsers: {
+              type: 'boolean',
+              description: 'Whether to prioritize posts from followed users.',
+              default: false,
+            },
+            sorting: {
+              type: 'string',
+              description: 'Sorting for the thread replies.',
+              knownValues: [
+                'app.bsky.unspecced.getPostThreadV2#newest',
+                'app.bsky.unspecced.getPostThreadV2#oldest',
+                'app.bsky.unspecced.getPostThreadV2#hotness',
+                'app.bsky.unspecced.getPostThreadV2#mostLikes',
+              ],
+              default: 'app.bsky.unspecced.getPostThreadV2#oldest',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['thread'],
+            properties: {
+              thread: {
+                type: 'array',
+                description:
+                  'A flat list of thread items. The depth of each item is indicated by the depth property inside the item.',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.unspecced.defs#threadItemPost',
+                    'lex:app.bsky.unspecced.defs#threadItemNoUnauthenticated',
+                    'lex:app.bsky.unspecced.defs#threadItemNotFound',
+                    'lex:app.bsky.unspecced.defs#threadItemBlocked',
+                  ],
+                },
+              },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+        ],
+      },
+      newest: {
+        type: 'token',
+        description: 'Newest-first thread sort order.',
+      },
+      oldest: {
+        type: 'token',
+        description: 'Oldest-first thread sort order.',
+      },
+      hotness: {
+        type: 'token',
+        description: 'Hottest-first thread sort order.',
+      },
+      mostLikes: {
+        type: 'token',
+        description: 'Most-likes-first thread sort order.',
       },
     },
   },
@@ -16461,9 +16461,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
-  AppBskyFeedGetPostThreadV2: 'app.bsky.feed.getPostThreadV2',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
@@ -16520,6 +16519,7 @@ export const ids = {
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetPostThreadV2: 'app.bsky.unspecced.getPostThreadV2',
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
   AppBskyUnspeccedGetSuggestedFeedsSkeleton:
     'app.bsky.unspecced.getSuggestedFeedsSkeleton',

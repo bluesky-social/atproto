@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.getPostThreadV2",
+  "id": "app.bsky.unspecced.getPostThreadV2",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+      "description": "[NOTE: this endpoint is under development and it might change without notice]. Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
       "parameters": {
         "type": "params",
         "required": ["uri"],
@@ -44,12 +44,12 @@
             "type": "string",
             "description": "Sorting for the thread replies.",
             "knownValues": [
-              "app.bsky.feed.getPostThreadV2#newest",
-              "app.bsky.feed.getPostThreadV2#oldest",
-              "app.bsky.feed.getPostThreadV2#hotness",
-              "app.bsky.feed.getPostThreadV2#mostLikes"
+              "app.bsky.unspecced.getPostThreadV2#newest",
+              "app.bsky.unspecced.getPostThreadV2#oldest",
+              "app.bsky.unspecced.getPostThreadV2#hotness",
+              "app.bsky.unspecced.getPostThreadV2#mostLikes"
             ],
-            "default": "app.bsky.feed.getPostThreadV2#oldest"
+            "default": "app.bsky.unspecced.getPostThreadV2#oldest"
           }
         }
       },
@@ -65,10 +65,10 @@
               "items": {
                 "type": "union",
                 "refs": [
-                  "app.bsky.feed.defs#threadItemPost",
-                  "app.bsky.feed.defs#threadItemNoUnauthenticated",
-                  "app.bsky.feed.defs#threadItemNotFound",
-                  "app.bsky.feed.defs#threadItemBlocked"
+                  "app.bsky.unspecced.defs#threadItemPost",
+                  "app.bsky.unspecced.defs#threadItemNoUnauthenticated",
+                  "app.bsky.unspecced.defs#threadItemNotFound",
+                  "app.bsky.unspecced.defs#threadItemBlocked"
                 ]
               }
             },
