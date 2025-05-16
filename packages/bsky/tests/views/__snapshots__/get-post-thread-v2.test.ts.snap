@@ -4,7 +4,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] 
 Object {
   "thread": Array [
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -42,7 +42,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 0,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -97,7 +97,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] 
 Object {
   "thread": Array [
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -135,7 +135,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 0,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -183,7 +183,7 @@ Object {
       "uri": "record(1)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -238,7 +238,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 2_0 1`
 Object {
   "thread": Array [
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -276,7 +276,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -324,7 +324,7 @@ Object {
       "uri": "record(1)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 0,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -379,7 +379,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] 
 Object {
   "thread": Array [
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -417,7 +417,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 0,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -472,7 +472,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`
 Object {
   "thread": Array [
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -510,7 +510,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 0,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -558,7 +558,7 @@ Object {
       "uri": "record(1)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -613,7 +613,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on r 0_0 
 Object {
   "thread": Array [
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -651,7 +651,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": -1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -699,7 +699,7 @@ Object {
       "uri": "record(1)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 0,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -754,7 +754,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on root 1
 Object {
   "thread": Array [
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 0,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -792,7 +792,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -840,7 +840,7 @@ Object {
       "uri": "record(1)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -888,7 +888,7 @@ Object {
       "uri": "record(2)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -936,7 +936,7 @@ Object {
       "uri": "record(3)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -984,7 +984,7 @@ Object {
       "uri": "record(4)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 2,
       "hasOPLike": false,
       "hasUnhydratedParents": false,
@@ -1032,7 +1032,7 @@ Object {
       "uri": "record(5)",
     },
     Object {
-      "$type": "app.bsky.feed.defs#threadItemPost",
+      "$type": "app.bsky.unspecced.defs#threadItemPost",
       "depth": 1,
       "hasOPLike": false,
       "hasUnhydratedParents": false,

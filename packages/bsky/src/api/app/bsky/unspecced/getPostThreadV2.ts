@@ -8,7 +8,7 @@ import { Server } from '../../../../lexicon'
 import {
   OutputSchema,
   QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getPostThreadV2'
+} from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
-  server.app.bsky.feed.getPostThreadV2({
+  server.app.bsky.unspecced.getPostThreadV2({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
       const { viewer, includeTakedowns, include3pBlocks } =
