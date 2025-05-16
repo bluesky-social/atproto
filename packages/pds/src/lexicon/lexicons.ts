@@ -10183,38 +10183,18 @@ export const schemaDict = {
               checkEmailConfirmed: {
                 type: 'boolean',
               },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyUnspeccedGetLiveNowConfig: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.getLiveNowConfig',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "This endpoint is unspecced and likely to be removed or changed without notice. It returns the 'Live now' configuration.",
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['config'],
-            properties: {
-              config: {
+              liveNow: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.unspecced.getLiveNowConfig#liveNowUserConfig',
+                  ref: 'lex:app.bsky.unspecced.getConfig#liveNowConfig',
                 },
               },
             },
           },
         },
       },
-      liveNowUserConfig: {
+      liveNowConfig: {
         type: 'object',
         required: ['did', 'domains'],
         properties: {
@@ -16315,7 +16295,6 @@ export const ids = {
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
-  AppBskyUnspeccedGetLiveNowConfig: 'app.bsky.unspecced.getLiveNowConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',

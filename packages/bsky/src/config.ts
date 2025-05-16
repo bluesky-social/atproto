@@ -91,7 +91,12 @@ export class ServerConfig {
     let liveNowConfig: LiveNowConfig | undefined
     if (process.env.BSKY_LIVE_NOW_CONFIG) {
       try {
-        liveNowConfig = JSON.parse(process.env.BSKY_LIVE_NOW_CONFIG)
+        const parsed = JSON.parse(process.env.BSKY_LIVE_NOW_CONFIG)
+        if (isLiveNowConfig(parsed)) {
+          liveNowConfig = parsed
+        } else {
+          throw new Error('Live Now config failed format validation')
+        }
       } catch (err) {
         log.error({ err }, 'Invalid BSKY_LIVE_NOW_CONFIG')
       }
@@ -501,4 +506,18 @@ function stripUndefineds(
 function envList(str: string | undefined): string[] {
   if (str === undefined || str.length === 0) return []
   return str.split(',')
+}
+
+function isLiveNowConfig(data: any): data is LiveNowConfig {
+  return (
+    Array.isArray(data) &&
+    data.every(
+      (item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof item.did === 'string' &&
+        Array.isArray(item.domains) &&
+        item.domains.every((domain: any) => typeof domain === 'string'),
+    )
+  )
 }

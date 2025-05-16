@@ -1,7 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 
-describe('live now config', () => {
+describe('get config', () => {
   describe('when live now is NOT configured', () => {
     let network: TestNetwork
     let agent: AtpAgent
@@ -19,10 +19,10 @@ describe('live now config', () => {
       await network.close()
     })
 
-    it(`does not set up the endpoint`, async () => {
-      await expect(agent.app.bsky.unspecced.getLiveNowConfig()).rejects.toThrow(
-        'XRPCNotSupported',
-      )
+    it('omits the live now config', async () => {
+      const res = await agent.app.bsky.unspecced.getConfig()
+
+      expect(res.data).not.toHaveProperty('liveNow')
     })
   })
 
@@ -58,9 +58,9 @@ describe('live now config', () => {
     })
 
     it(`returns the config`, async () => {
-      const res = await agent.app.bsky.unspecced.getLiveNowConfig()
+      const res = await agent.app.bsky.unspecced.getConfig()
 
-      expect(res.data.config).toEqual(liveNowConfig)
+      expect(res.data.liveNow).toEqual(liveNowConfig)
     })
   })
 })

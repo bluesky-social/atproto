@@ -48,7 +48,6 @@ import putPreferences from './app/bsky/notification/putPreferences'
 import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import getConfig from './app/bsky/unspecced/getConfig'
-import getLiveNowConfig from './app/bsky/unspecced/getLiveNowConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
@@ -125,7 +124,6 @@ export default function (server: Server, ctx: AppContext) {
   putPreferences(server, ctx)
   registerPush(server, ctx)
   getConfig(server, ctx)
-  getLiveNowConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
   // com.atproto

@@ -182,7 +182,6 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
-import * as AppBskyUnspeccedGetLiveNowConfig from './types/app/bsky/unspecced/getLiveNowConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
@@ -444,7 +443,6 @@ export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
-export * as AppBskyUnspeccedGetLiveNowConfig from './types/app/bsky/unspecced/getLiveNowConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
@@ -3423,18 +3421,6 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetConfig.Response> {
     return this._client.call(
       'app.bsky.unspecced.getConfig',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getLiveNowConfig(
-    params?: AppBskyUnspeccedGetLiveNowConfig.QueryParams,
-    opts?: AppBskyUnspeccedGetLiveNowConfig.CallOptions,
-  ): Promise<AppBskyUnspeccedGetLiveNowConfig.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getLiveNowConfig',
       params,
       undefined,
       opts,
