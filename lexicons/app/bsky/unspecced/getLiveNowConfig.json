@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.getLiveNowConfig",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "This endpoint is unspecced and likely to be removed or changed without notice. It returns the 'Live now' configuration.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["config"],
+          "properties": {
+            "config": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#liveNowUserConfig" }
+            }
+          }
+        }
+      }
+    },
+    "liveNowUserConfig": {
+      "type": "object",
+      "required": ["did", "domains"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

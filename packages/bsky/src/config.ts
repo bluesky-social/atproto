@@ -1,4 +1,10 @@
 import assert from 'node:assert'
+import { subLogger as log } from './logger'
+
+type LiveNowConfig = {
+  did: string
+  domains: string[]
+}[]
 
 export interface ServerConfigValues {
   // service
@@ -9,6 +15,7 @@ export interface ServerConfigValues {
   serverDid: string
   alternateAudienceDids: string[]
   entrywayJwtPublicKeyHex?: string
+  liveNowConfig?: LiveNowConfig
   // external services
   etcdHosts: string[]
   dataplaneUrls: string[]
@@ -81,6 +88,14 @@ export class ServerConfig {
     const alternateAudienceDids = envList(process.env.BSKY_ALT_AUDIENCE_DIDS)
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
+    let liveNowConfig: LiveNowConfig | undefined
+    if (process.env.BSKY_LIVE_NOW_CONFIG) {
+      try {
+        liveNowConfig = JSON.parse(process.env.BSKY_LIVE_NOW_CONFIG)
+      } catch (err) {
+        log.error({ err }, 'Invalid BSKY_LIVE_NOW_CONFIG')
+      }
+    }
     const handleResolveNameservers = envList(
       process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
     )
@@ -200,6 +215,7 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      liveNowConfig,
       etcdHosts,
       dataplaneUrls,
       dataplaneUrlsEtcdKeyPrefix,
@@ -283,6 +299,10 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get liveNowConfig() {
+    return this.cfg.liveNowConfig
   }
 
   get etcdHosts() {
