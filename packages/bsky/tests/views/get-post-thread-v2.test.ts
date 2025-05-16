@@ -369,18 +369,47 @@ describe('appview thread views v2', () => {
       | {
           branchingFactor: number
           sorting: QueryParams['sorting']
-          length: number // for higher branching factors it gets too verbose to write all posts.
+          // For higher branching factors it gets too verbose to write all posts.
+          length: number
         }
     const cases: Case[] = [
       {
         branchingFactor: 1,
         sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
-        postKeys: ['root', '0', '0_0', '0_0_0'],
+        postKeys: [
+          'root',
+          '0',
+          '0_0',
+          '0_0_0',
+          '1',
+          '1_0',
+          '1_0_0',
+          '2',
+          '2_0',
+          '2_0_0',
+          '3',
+          '3_0',
+          '3_0_0',
+        ],
       },
       {
         branchingFactor: 1,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
-        postKeys: ['root', '3', '3_3', '3_3_3'],
+        postKeys: [
+          'root',
+          '3',
+          '3_3',
+          '3_3_3',
+          '2',
+          '2_3',
+          '2_3_3',
+          '1',
+          '1_3',
+          '1_3_3',
+          '0',
+          '0_3',
+          '0_3_3',
+        ],
       },
       {
         branchingFactor: 2,
@@ -401,6 +430,20 @@ describe('appview thread views v2', () => {
           '1_1',
           '1_1_0',
           '1_1_1',
+          '2',
+          '2_0',
+          '2_0_0',
+          '2_0_1',
+          '2_1',
+          '2_1_0',
+          '2_1_1',
+          '3',
+          '3_0',
+          '3_0_0',
+          '3_0_1',
+          '3_1',
+          '3_1_0',
+          '3_1_1',
         ],
       },
       {
@@ -422,12 +465,26 @@ describe('appview thread views v2', () => {
           '2_2',
           '2_2_3',
           '2_2_2',
+          '1',
+          '1_3',
+          '1_3_3',
+          '1_3_2',
+          '1_2',
+          '1_2_3',
+          '1_2_2',
+          '0',
+          '0_3',
+          '0_3_3',
+          '0_3_2',
+          '0_2',
+          '0_2_3',
+          '0_2_2',
         ],
       },
       {
         branchingFactor: 3,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
-        length: 40,
+        length: 53,
       },
       {
         branchingFactor: 4,
@@ -437,12 +494,13 @@ describe('appview thread views v2', () => {
       {
         branchingFactor: 5,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
-        length: 86, // The seeds have 1 post with 5 replies, so it is +1 compared to branchingFactor 4.
+        // The seeds have 1 post with 5 replies, so it is +1 compared to branchingFactor 4.
+        length: 86,
       },
     ]
 
     it.each(cases)(
-      'limits to branching factor of $branchingFactor sorting by $sorting',
+      'returns all top-level replies and limits nested to branching factor of $branchingFactor when sorting by $sorting',
       async (args) => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {

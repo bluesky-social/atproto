@@ -19,18 +19,18 @@
             "description": "How many levels of parent (and grandparent, etc) post to include.",
             "default": 80,
             "minimum": 0,
-            "maximum": 1000
+            "maximum": 100
           },
           "below": {
             "type": "integer",
             "description": "How many levels of reply depth to include.",
             "default": 6,
             "minimum": 0,
-            "maximum": 1000
+            "maximum": 100
           },
           "branchingFactor": {
             "type": "integer",
-            "description": "Maximum of replies to include at each level of the thread.",
+            "description": "Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are all returned.",
             "default": 10,
             "minimum": 0,
             "maximum": 1000
