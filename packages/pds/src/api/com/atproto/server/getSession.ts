@@ -4,7 +4,6 @@ import { formatAccountStatus } from '../../../../account-manager/account-manager
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -24,12 +23,23 @@ export default function (server: Server, ctx: AppContext) {
               )
             : ctx.entrywayPassthruHeaders(req)
 
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.getSession(
-            undefined,
-            headers,
-          ),
+        const res = await ctx.entrywayAgent.com.atproto.server.getSession(
+          undefined,
+          headers,
         )
+
+        if (
+          auth.credentials.type === 'oauth' &&
+          !auth.credentials.oauthScopes.includes('transition:email')
+        ) {
+          delete res.data.email
+          delete res.data.emailConfirmed
+        }
+
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
       }
 
       const did = auth.credentials.did
