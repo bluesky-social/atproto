@@ -16,6 +16,7 @@ import {
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
+import createError from 'http-errors'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -27,6 +28,10 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
+      // case-sensitive match on this specific endpoint name
+      if (!req.url?.startsWith('/xrpc/app.bsky.feed.searchPosts')) {
+        throw createError(404, 'Unknown Endpoint')
+      }
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
