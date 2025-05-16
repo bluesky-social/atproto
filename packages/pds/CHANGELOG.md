@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.137
+
+### Patch Changes
+
+- [#3850](https://github.com/bluesky-social/atproto/pull/3850) [`efc64ba92`](https://github.com/bluesky-social/atproto/commit/efc64ba92511933c2100b45c0e7f4bcae9199240) Thanks [@devinivy](https://github.com/devinivy)! - calculate client ip relative to trusted ips, e.g. for rate limiting purposes
+
+- Updated dependencies [[`86b315388`](https://github.com/bluesky-social/atproto/commit/86b3153884099ceeb0cfdb9d2bfdd447c39fb35a)]:
+  - @atproto/api@0.15.7
+
 ## 0.4.136
 
 ### Patch Changes
