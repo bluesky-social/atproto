@@ -4,7 +4,6 @@ import { formatAccountStatus } from '../../../../account-manager/account-manager
 import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -14,12 +13,33 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.getSession(
-            undefined,
-            ctx.entrywayPassthruHeaders(req),
-          ),
+        // Allow proxying of dpop bound requests by using service auth instead
+        const headers =
+          req.headers.authorization?.split(' ')[0].toLowerCase() === 'dpop'
+            ? await ctx.entrywayAuthHeaders(
+                req,
+                auth.credentials.did,
+                'com.atproto.server.getSession',
+              )
+            : ctx.entrywayPassthruHeaders(req)
+
+        const res = await ctx.entrywayAgent.com.atproto.server.getSession(
+          undefined,
+          headers,
         )
+
+        if (
+          auth.credentials.type === 'oauth' &&
+          !auth.credentials.oauthScopes.includes('transition:email')
+        ) {
+          delete res.data.email
+          delete res.data.emailConfirmed
+        }
+
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
       }
 
       const did = auth.credentials.did

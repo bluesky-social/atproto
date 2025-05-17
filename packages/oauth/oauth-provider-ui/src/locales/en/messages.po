@@ -25,11 +25,11 @@ msgstr "2FA Confirmation"
 msgid "A second authentication factor is required"
 msgstr "A second authentication factor is required"
 
-#: src/views/authorize/accept/accept-form.tsx:148
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your account data (except chat messages)"
 msgstr "Access your account data (except chat messages)"
 
-#: src/views/authorize/accept/accept-form.tsx:150
+#: src/views/authorize/accept/accept-form.tsx:152
 msgid "Access your chat messages"
 msgstr "Access your chat messages"
 
@@ -451,6 +451,10 @@ msgstr "Valid"
 #: src/views/authorize/sign-up/sign-up-view.tsx:135
 msgid "Verify you are human"
 msgstr "Verify you are human"
+
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "View your email address"
+msgstr "View your email address"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:193
 msgid "Warning"
