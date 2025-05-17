@@ -54,11 +54,19 @@ export class RequestManager {
   async createAuthorizationRequest(
     client: Client,
     clientAuth: ClientAuth,
-    input: Readonly<OAuthAuthorizationRequestParameters>,
+    parameters: OAuthAuthorizationRequestParameters,
     deviceId: null | DeviceId,
     dpopJkt: null | string,
   ): Promise<RequestInfo> {
-    const parameters = await this.validate(client, clientAuth, input, dpopJkt)
+    parameters = await this.validate(client, clientAuth, parameters, dpopJkt)
+
+    parameters =
+      (await callAsync(this.hooks.onAuthorizationRequest, {
+        client,
+        clientAuth,
+        parameters,
+      })) ?? parameters
+
     return this.create(client, clientAuth, parameters, deviceId)
   }
 
@@ -69,9 +77,9 @@ export class RequestManager {
     deviceId: null | DeviceId = null,
   ): Promise<RequestInfo> {
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
-    const id = await generateRequestId()
+    const requestId = await generateRequestId()
 
-    await this.store.createRequest(id, {
+    await this.store.createRequest(requestId, {
       clientId: client.id,
       clientAuth,
       parameters,
@@ -81,8 +89,14 @@ export class RequestManager {
       code: null,
     })
 
-    const uri = encodeRequestUri(id)
-    return { id, uri, expiresAt, parameters, clientId: client.id, clientAuth }
+    return {
+      requestId,
+      requestUri: encodeRequestUri(requestId),
+      expiresAt,
+      parameters,
+      clientId: client.id,
+      clientAuth,
+    }
   }
 
   protected async validate(
@@ -134,20 +148,6 @@ export class RequestManager {
         `Unsupported grant_type "authorization_code"`,
         'invalid_request',
       )
-    }
-
-    if (parameters.scope) {
-      for (const scope of parameters.scope.split(' ')) {
-        // Currently, the implementation requires all the scopes to be statically
-        // defined in the server metadata. In the future, we might add support
-        // for dynamic scopes.
-        if (!this.metadata.scopes_supported?.includes(scope)) {
-          throw new InvalidParametersError(
-            parameters,
-            `Scope "${scope}" is not supported by this server`,
-          )
-        }
-      }
     }
 
     if (parameters.authorization_details) {
@@ -307,13 +307,13 @@ export class RequestManager {
   }
 
   async get(
-    uri: RequestUri,
+    requestUri: RequestUri,
     deviceId: DeviceId,
     clientId?: ClientId,
   ): Promise<RequestInfo> {
-    const id = decodeRequestUri(uri)
+    const requestId = decodeRequestUri(requestUri)
 
-    const data = await this.store.readRequest(id)
+    const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     const updates: UpdateRequestData = {}
@@ -352,17 +352,17 @@ export class RequestManager {
         )
       }
     } catch (err) {
-      await this.store.deleteRequest(id)
+      await this.store.deleteRequest(requestId)
       throw err
     }
 
     if (Object.keys(updates).length > 0) {
-      await this.store.updateRequest(id, updates)
+      await this.store.updateRequest(requestId, updates)
     }
 
     return {
-      id,
-      uri,
+      requestId,
+      requestUri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
       clientId: data.clientId,
@@ -371,13 +371,13 @@ export class RequestManager {
   }
 
   async setAuthorized(
-    uri: RequestUri,
+    requestUri: RequestUri,
     client: Client,
     account: Account,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<Code> {
-    const requestId = decodeRequestUri(uri)
+    const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
@@ -444,7 +444,7 @@ export class RequestManager {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
-    const { id, data } = result
+    const { requestId, data } = result
     try {
       if (!isRequestDataAuthorized(data)) {
         // Should never happen: maybe the store implementation is faulty ?
@@ -478,15 +478,15 @@ export class RequestManager {
         }
       }
 
-      return { ...data, requestUri: encodeRequestUri(id) }
+      return { ...data, requestUri: encodeRequestUri(requestId) }
     } finally {
       // A "code" can only be used once
-      await this.store.deleteRequest(id)
+      await this.store.deleteRequest(requestId)
     }
   }
 
-  async delete(uri: RequestUri): Promise<void> {
-    const id = decodeRequestUri(uri)
-    await this.store.deleteRequest(id)
+  async delete(requestUri: RequestUri): Promise<void> {
+    const requestId = decodeRequestUri(requestUri)
+    await this.store.deleteRequest(requestId)
   }
 }

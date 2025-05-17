@@ -8,7 +8,7 @@ export type AuthorizationResultAuthorizePage = {
   client: Client
   parameters: OAuthAuthorizationRequestParameters
 
-  uri: RequestUri
-  scopeDetails?: ScopeDetail[]
+  requestUri: RequestUri
+  scopeDetails: ScopeDetail[]
   sessions: readonly Session[]
 }

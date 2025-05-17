@@ -3,7 +3,7 @@ import { CreateRedisOptions, createRedis } from '../lib/redis.js'
 import { Code } from './code.js'
 import { RequestData } from './request-data.js'
 import { RequestId, requestIdSchema } from './request-id.js'
-import { RequestStore } from './request-store.js'
+import { FoundRequestResult, RequestStore } from './request-store.js'
 
 export type { CreateRedisOptions, Redis }
 
@@ -57,15 +57,13 @@ export class RequestStoreRedis implements RequestStore {
     return parsed.data
   }
 
-  async findRequestByCode(
-    code: Code,
-  ): Promise<{ id: RequestId; data: RequestData } | null> {
-    const id = await this.findRequestIdByCode(code)
-    if (!id) return null
+  async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
+    const requestId = await this.findRequestIdByCode(code)
+    if (!requestId) return null
 
-    const data = await this.readRequest(id)
+    const data = await this.readRequest(requestId)
     if (!data) return null
 
-    return { id, data }
+    return { requestId, data }
   }
 }
