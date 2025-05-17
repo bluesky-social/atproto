@@ -17,6 +17,7 @@ import {
   fetchJsonZodProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
+import { isLocalHostname } from '@atproto-labs/fetch-node'
 import { pipe } from '@atproto-labs/pipe'
 import {
   CachedGetter,
@@ -26,11 +27,6 @@ import {
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { callAsync } from '../lib/util/function.js'
-import {
-  isInternetHost,
-  isInternetUrl,
-  parseUrlPublicSuffix,
-} from '../lib/util/hostname.js'
 import { Awaitable } from '../lib/util/type.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { ClientId } from './client-id.js'
@@ -243,11 +239,8 @@ export class ClientManager {
     const clientUriUrl = metadata.client_uri
       ? new URL(metadata.client_uri)
       : null
-    const clientUriDomain = clientUriUrl
-      ? parseUrlPublicSuffix(clientUriUrl)
-      : null
 
-    if (clientUriUrl && !clientUriDomain) {
+    if (clientUriUrl && isLocalHostname(clientUriUrl.hostname)) {
       throw new InvalidClientMetadataError('client_uri hostname is invalid')
     }
 
@@ -546,9 +539,9 @@ export class ClientManager {
         }
 
         case url.protocol === 'https:': {
-          if (!isInternetUrl(url)) {
+          if (isLocalHostname(url.hostname)) {
             throw new InvalidRedirectUriError(
-              `Redirect URI "${url}"'s domain name must belong to the Public Suffix List (PSL)`,
+              `Redirect URI "${url}"'s domain name must not be a local hostname`,
             )
           }
 
@@ -615,9 +608,9 @@ export class ClientManager {
 
           const urlDomain = reverseDomain(url.protocol.slice(0, -1))
 
-          if (!isInternetHost(urlDomain)) {
+          if (isLocalHostname(urlDomain)) {
             throw new InvalidRedirectUriError(
-              `Private-use URI Scheme redirect URI must be based on a valid domain name`,
+              `Private-use URI Scheme redirect URI must not be a local hostname`,
             )
           }
 
