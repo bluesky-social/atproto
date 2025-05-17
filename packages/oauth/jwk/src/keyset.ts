@@ -153,11 +153,11 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
   }
 
-  findKey({ kid, alg, use }: KeySearch): [key: Key, alg: string] {
+  findPrivateKey({ kid, alg, use }: KeySearch): [key: Key, alg: string] {
     const matchingKeys: Key[] = []
 
     for (const key of this.list({ kid, alg, use })) {
-      // Not a signing key
+      // Not a private key
       if (!key.isPrivate) continue
 
       // Skip negotiation if a specific "alg" was provided
@@ -186,7 +186,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
 
     throw new JwkError(
-      `No signing key found for ${kid || alg || use || '<unknown>'}`,
+      `No private key found for ${kid || alg || use || '<unknown>'}`,
       ERR_JWK_NOT_FOUND,
     )
   }
@@ -200,7 +200,11 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     payload: JwtPayload | JwtPayloadGetter,
   ): Promise<SignedJwt> {
     try {
-      const [key, alg] = this.findKey({ alg: sAlg, kid: sKid, use: 'sig' })
+      const [key, alg] = this.findPrivateKey({
+        alg: sAlg,
+        kid: sKid,
+        use: 'sig',
+      })
       const protectedHeader = { ...header, alg, kid: key.kid }
 
       if (typeof payload === 'function') {
