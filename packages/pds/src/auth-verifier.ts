@@ -30,6 +30,7 @@ export enum AuthScope {
   Refresh = 'com.atproto.refresh',
   AppPass = 'com.atproto.appPass',
   AppPassPrivileged = 'com.atproto.appPassPrivileged',
+  AppPassIdentity = 'com.atproto.appPassIdentity',
   SignupQueued = 'com.atproto.signupQueued',
   Takendown = 'com.atproto.takendown',
 }
@@ -146,6 +147,7 @@ export class AuthVerifier {
           AuthScope.Access,
           AuthScope.AppPassPrivileged,
           AuthScope.AppPass,
+          AuthScope.AppPassIdentity,
           ...(opts.additional ?? []),
         ],
         opts,
@@ -507,9 +509,16 @@ export class AuthVerifier {
         )
       }
 
-      const scopeEquivalent: AuthScope = tokenScopes.has('transition:chat.bsky')
-        ? AuthScope.AppPassPrivileged
-        : AuthScope.AppPass
+      let scopeEquivalent: AuthScope
+      if (tokenScopes.has('transition:identity')) {
+        scopeEquivalent = tokenScopes.has('transition:chat.bsky')
+          ? AuthScope.Access
+          : AuthScope.AppPassIdentity
+      } else {
+        scopeEquivalent = tokenScopes.has('transition:chat.bsky')
+          ? AuthScope.AppPassPrivileged
+          : AuthScope.AppPass
+      }
 
       if (!scopes.includes(scopeEquivalent)) {
         // AppPassPrivileged is sufficient but was not provided "transition:chat.bsky"
@@ -520,8 +529,7 @@ export class AuthVerifier {
           )
         }
 
-        // AuthScope.Access and AuthScope.SignupQueued do not have an OAuth
-        // scope equivalent.
+        // AuthScope.SignupQueued does not have an OAuth scope equivalent.
         throw new InvalidRequestError(
           'DPoP access token cannot be used for this request',
           'InvalidToken',

@@ -25,6 +25,10 @@ msgstr "2FA Confirmation"
 msgid "A second authentication factor is required"
 msgstr "A second authentication factor is required"
 
+#: src/views/authorize/accept/accept-form.tsx:153
+msgid "Access to actions that affect your account, including destructive actions which require email confirmation."
+msgstr "Access to actions that affect your account, including destructive actions which require email confirmation."
+
 #: src/views/authorize/accept/accept-form.tsx:148
 msgid "Access your account data (except chat messages)"
 msgstr "Access your account data (except chat messages)"

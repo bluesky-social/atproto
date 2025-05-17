@@ -12,12 +12,14 @@ import {
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
+import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
     auth: ctx.authVerifier.accessFull({
+      additional: [AuthScope.AppPassIdentity],
       checkTakedown: true,
     }),
     handler: async ({ input, auth }) => {
