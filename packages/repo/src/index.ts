@@ -1,6 +1,7 @@
 export * from './block-map'
 export * from './cid-set'
 export * from './repo'
+export * from './readable-repo'
 export * from './mst'
 export * from './parse'
 export * from './storage'
