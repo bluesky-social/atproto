@@ -117,6 +117,7 @@ export interface SubjectStatusView {
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>
+    | $Typed<ChatBskyConvoDefs.MessageRef>
     | { $type: string }
   hosting?: $Typed<AccountHosting> | $Typed<RecordHosting> | { $type: string }
   subjectBlobCids?: string[]
