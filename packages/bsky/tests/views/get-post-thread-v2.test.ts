@@ -1,10 +1,14 @@
+import assert from 'node:assert'
 import { subHours } from 'date-fns'
 import { $Typed, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { PostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { ThreadTree, getPostHotness } from '../../src/util/threads'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
@@ -43,8 +47,8 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread } = data
-      const t = thread as ThreadItemPost[]
+      const { thread: t } = data
+      assertThreadItemPostArray(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: 0, uri: seed.root.ref.uriStr }),
@@ -68,8 +72,8 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread } = data
-      const t = thread as ThreadItemPost[]
+      const { thread: t } = data
+      assertThreadItemPostArray(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -89,8 +93,8 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread } = data
-      const t = thread as ThreadItemPost[]
+      const { thread: t } = data
+      assertThreadItemPostArray(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
@@ -110,8 +114,8 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread } = data
-      const t = thread as ThreadItemPost[]
+      const { thread: t } = data
+      assertThreadItemPostArray(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -130,8 +134,8 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread } = data
-      const t = thread as ThreadItemPost[]
+      const { thread: t } = data
+      assertThreadItemPostArray(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -151,8 +155,8 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread } = data
-      const t = thread as ThreadItemPost[]
+      const { thread: t } = data
+      assertThreadItemPostArray(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
@@ -172,8 +176,8 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread } = data
-      const t = thread as ThreadItemPost[]
+      const { thread: t } = data
+      assertThreadItemPostArray(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -229,9 +233,8 @@ describe('appview thread views v2', () => {
               ),
             },
           )
-
-          const { thread } = data
-          const t = thread as ThreadItemPost[]
+          const { thread: t } = data
+          assertThreadItemPostArray(t)
 
           const anchorIndex = t.findIndex((i) => i.uri === post.ref.uriStr)
           const anchorPost = t[anchorIndex]
@@ -274,9 +277,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(11)
 
         const last = t.at(-1)
@@ -298,9 +301,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(3)
         const last = t.at(-1)
         expect(last!.uri).toBe(simple.r['0_0'].ref.uriStr)
@@ -321,9 +324,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(11)
         const first = t.at(0)
         expect(first!.uri).toBe(seed.root.ref.uriStr)
@@ -342,9 +345,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
         expect(t).toHaveLength(7)
 
         const first = t.at(0)
@@ -515,8 +518,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         if ('length' in args) {
           expect(data.thread).toHaveLength(args.length)
@@ -605,8 +608,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         const opThreadPostsUris = new Set(
           opThreadPosts.map((k) =>
@@ -647,8 +650,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
@@ -680,8 +683,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
@@ -733,8 +736,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
@@ -766,8 +769,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
@@ -819,8 +822,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
@@ -852,8 +855,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
@@ -905,8 +908,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
@@ -938,8 +941,8 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        const t = thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
 
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
@@ -996,8 +999,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread } = data
-        return thread as ThreadItemPost[]
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
+        return t
       }
 
       it('prioritizes followed users if option is set', async () => {
@@ -1277,125 +1281,125 @@ describe('appview thread views v2', () => {
     })
   })
 
-  describe.skip(`postThreadView`, () => {
-    // let seed: Awaited<ReturnType<typeof seeds.threadViewSeed>>
+  describe(`blocks and deletions`, () => {
+    let seed: Awaited<ReturnType<typeof seeds.blockAndDeletion>>
 
-    // beforeAll(async () => {
-    //   seed = await seeds.threadViewSeed(sc)
-    // })
-
-    describe(`deletions`, () => {
-      it(`deleted reply is omitted from replies[]`, async () => {
-        // const { data } = await agent.app.bsky.feed.getPostThread(
-        //   { uri: seed.root.ref.uriStr },
-        //   {
-        //     headers: await network.serviceHeaders(
-        //       seed.users.op.did,
-        //       ids.AppBskyFeedGetPostThread,
-        //     ),
-        //   },
-        // )
-        // const v1 = responseToThreadNodes(data.thread)
-        // const v2 = postThreadView({
-        //   thread: data.thread,
-        // })
-        // assert(v1)
-        // assert(v2)
-        // assert(v1.type === 'post')
-        // assert(v2.$type === 'post')
-        // expect(v1.replies?.length).toEqual(v2.replies?.length)
-        // assert(v1.replies)
-        // expect(
-        //   v1.replies.find((r) => r.uri === seed.posts.root_a1.ref.uriStr),
-        // ).toBeUndefined()
-        // assert(v2.replies)
-        // expect(
-        //   v2.replies.find((r) => r.uri === seed.posts.root_a1.ref.uriStr),
-        // ).toBeUndefined()
-      })
-
-      it(`deleted reply parent is replaced by deleted view`, async () => {
-        // const { data } = await agent.app.bsky.feed.getPostThread(
-        //   { uri: seed.posts.root_a1_a2.ref.uriStr },
-        //   {
-        //     headers: await network.serviceHeaders(
-        //       seed.users.op.did,
-        //       ids.AppBskyFeedGetPostThread,
-        //     ),
-        //   },
-        // )
-        // const v1 = responseToThreadNodes(data.thread)
-        // const v2 = postThreadView({
-        //   thread: data.thread,
-        // })
-        // assert(v1)
-        // assert(v2)
-        // assert(v1.type === 'post')
-        // assert(v2.$type === 'post')
-        // assert(v1.parent)
-        // assert(v2.parent)
-        // expect(v1.parent.uri).toEqual(v2.parent.uri)
-        // expect(v1.parent.type).toEqual('not-found')
-        // expect(AppBskyFeedDefs.isNotFoundPost(v2.parent)).toEqual(true)
-        // assert(v1.replies)
-        // assert(v2.replies)
-        // expect(v1.replies?.length).toEqual(v2.replies?.length)
-      })
+    beforeAll(async () => {
+      seed = await seeds.blockAndDeletion(sc)
     })
 
     describe(`blocks`, () => {
-      it(`blocked reply parent is replaced by blocked view`, async () => {
-        // const { data } = await agent.app.bsky.feed.getPostThread(
-        //   { uri: seed.posts.root_b1_a1.ref.uriStr },
-        //   {
-        //     headers: await network.serviceHeaders(
-        //       seed.users.viewer.did,
-        //       ids.AppBskyFeedGetPostThread,
-        //     ),
-        //   },
-        // )
-        // const v1 = responseToThreadNodes(data.thread)
-        // const v2 = postThreadView({
-        //   thread: data.thread,
-        // })
-        // assert(v1)
-        // assert(v2)
-        // assert(v1.type === 'post')
-        // assert(v2.$type === 'post')
-        // assert(v1.parent)
-        // assert(v2.parent)
-        // expect(v1.parent.uri).toEqual(v2.parent.uri)
-        // expect(v1.parent.type).toEqual('blocked')
-        // expect(AppBskyFeedDefs.isBlockedPost(v2.parent)).toEqual(true)
+      it(`blocked reply is omitted from replies`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Use `viewer`, who was blocked by `bob`.
+              seed.users.viewer.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
+
+        expect(t).toEqual([
+          expect.objectContaining({ uri: seed.root.ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
+        ])
       })
 
-      it(`blocked reply is omitted from replies[]`, async () => {
-        // const { data } = await agent.app.bsky.feed.getPostThread(
-        //   { uri: seed.root.ref.uriStr },
-        //   {
-        //     headers: await network.serviceHeaders(
-        //       seed.users.viewer.did,
-        //       ids.AppBskyFeedGetPostThread,
-        //     ),
-        //   },
-        // )
-        // const v1 = responseToThreadNodes(data.thread)
-        // const v2 = postThreadView({
-        //   thread: data.thread,
-        // })
-        // assert(v1)
-        // assert(v2)
-        // assert(v1.type === 'post')
-        // assert(v2.$type === 'post')
-        // assert(v1.replies)
-        // assert(v2.replies)
-        // expect(
-        //   v1.replies.find((r) => r.uri === seed.posts.root_b1.ref.uriStr),
-        // ).toBeUndefined()
-        // expect(
-        //   v2.replies.find((r) => r.uri === seed.posts.root_b1.ref.uriStr),
-        // ).toBeUndefined()
+      it(`blocked reply parent is replaced by blocked view`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['1_0'].ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Use `viewer`, who was blocked by `bob`.
+              seed.users.viewer.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            $type: 'app.bsky.unspecced.defs#threadItemBlocked',
+            uri: seed.r['1'].ref.uriStr,
+            depth: -1,
+          }),
+          expect.objectContaining({
+            $type: 'app.bsky.unspecced.defs#threadItemPost',
+            uri: seed.r['1_0'].ref.uriStr,
+            depth: 0,
+          }),
+        ])
+      })
+    })
+
+    describe(`deletions`, () => {
+      it(`deleted reply is omitted from replies`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+        assertThreadItemPostArray(t)
+
+        expect(t).toEqual([
+          expect.objectContaining({ uri: seed.root.ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
+        ])
+      })
+
+      it(`deleted reply parent is replaced by deleted view`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['0_0'].ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            $type: 'app.bsky.unspecced.defs#threadItemNotFound',
+            uri: seed.r['0'].ref.uriStr,
+            depth: -1,
+          }),
+          expect.objectContaining({
+            $type: 'app.bsky.unspecced.defs#threadItemPost',
+            uri: seed.r['0_0'].ref.uriStr,
+            depth: 0,
+          }),
+          expect.objectContaining({
+            $type: 'app.bsky.unspecced.defs#threadItemPost',
+            uri: seed.r['0_0_0'].ref.uriStr,
+            depth: 1,
+          }),
+        ])
       })
     })
   })
 })
+
+function assertThreadItemPostArray(
+  t: OutputSchema['thread'],
+): asserts t is $Typed<ThreadItemPost>[] {
+  t.forEach((i) => {
+    assert(
+      i.$type === 'app.bsky.unspecced.defs#threadItemPost',
+      `Expected thread item to be of type 'app.bsky.unspecced.defs#threadItemPost'`,
+    )
+  })
+}

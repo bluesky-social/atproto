@@ -569,3 +569,46 @@ export async function sortingWithFollows(
     r,
   }
 }
+
+export async function blockAndDeletion(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'bd', [
+    'op',
+    'alice',
+    'bob',
+    'carol',
+    'viewer',
+  ] as const)
+
+  const { op, alice, bob, viewer, carol } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    // Deleted (not visible for all).
+    await r(alice, async (r) => {
+      await r(alice, async (r) => {
+        await r(alice)
+      })
+    })
+
+    // Blocked for `viewer` (not visible only for `viewer`).
+    await r(bob, async (r) => {
+      await r(alice)
+    })
+
+    // Not blocked or deleted (visible for everyone).
+    await r(carol)
+  })
+
+  await sc.deletePost(alice.did, r['0'].ref.uri)
+  await sc.block(bob.did, viewer.did)
+
+  await sc.network.processAll()
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}

@@ -1263,20 +1263,20 @@ export class Views {
       }
     }
 
-    const post = this.post(parentUri, state)
-    const postInfo = state.posts?.get(parentUri)
-    if (!postInfo || !post) {
+    const postView = this.post(parentUri, state)
+    const post = state.posts?.get(parentUri)
+    if (!post || !postView) {
       return {
         tree: this.threadV2ItemNotFound(parentUri, depth),
         isOPThread: false,
       }
     }
 
-    if (rootUri !== getRootUri(parentUri, postInfo)) {
+    if (rootUri !== getRootUri(parentUri, post)) {
       return undefined
     }
 
-    const authorDid = post.author.did
+    const authorDid = postView.author.did
     if (this.viewerBlockExists(authorDid, state)) {
       return {
         tree: this.threadV2ItemBlocked(parentUri, depth, authorDid, state),
@@ -1307,13 +1307,13 @@ export class Views {
         uri: parentUri,
         post: {
           $type: 'app.bsky.feed.defs#postView',
-          ...post,
+          ...postView,
         },
         parent,
         replies: undefined,
         depth,
         isOPThread,
-        hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         hasUnhydratedReplies: false, // not applicable to parents
         hasUnhydratedParents: false,
       },
@@ -1347,25 +1347,32 @@ export class Views {
     const childrenUris = childrenByParentUri[parentUri] ?? []
 
     return mapDefined(childrenUris, (uri) => {
-      const postInfo = state.posts?.get(uri)
-      if (postInfo?.violatesThreadGate) {
+      const post = state.posts?.get(uri)
+      if (post?.violatesThreadGate) {
         return undefined
       }
       if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
+        // @TODO: Return undefined in v2?
         return this.threadV2ItemBlocked(uri, depth, creatorFromUri(uri), state)
       }
-      const post = this.post(uri, state)
-      if (!postInfo || !post) {
+      const postView = this.post(uri, state)
+
+      if (!post || !postView) {
         // TODO
         // in the future we might consider keeping a placeholder for deleted
         // posts that have replies under them, but not supported at the moment.
         // this case is mostly likely hit when a takedown was applied to a post.
         return this.threadV2ItemNotFound(uri, depth)
       }
-      const authorDid = post.author.did
-      if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
+      const authorDid = postView.author.did
+      if (rootUri !== getRootUri(uri, post)) {
+        // outside thread boundary
+        return
+      }
       if (this.viewerBlockExists(authorDid, state)) {
-        return this.threadV2ItemBlocked(uri, depth, authorDid, state)
+        // @TODO: v1 returns a blocked item for this case.
+        // return this.threadV2ItemBlocked(uri, depth, authorDid, state)
+        return undefined
       }
       if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
         return undefined
@@ -1377,7 +1384,7 @@ export class Views {
         uri,
         post: {
           $type: 'app.bsky.feed.defs#postView' as const,
-          ...post,
+          ...postView,
         },
         parent: undefined,
         replies: this.threadV2Replies({
@@ -1392,7 +1399,7 @@ export class Views {
         }),
         depth,
         isOPThread,
-        hasOPLike: !!state.threadContexts?.get(post.uri)?.like,
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         hasUnhydratedReplies: false, // TODO annotated in next step
         hasUnhydratedParents: false,
       }
