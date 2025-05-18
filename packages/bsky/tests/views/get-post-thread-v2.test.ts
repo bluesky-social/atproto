@@ -1,21 +1,26 @@
 import assert from 'node:assert'
 import { subHours } from 'date-fns'
-import { $Typed, AtpAgent } from '@atproto/api'
+import { $Typed, AppBskyUnspeccedGetPostThreadV2, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { PostView } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
 import {
   OutputSchema,
   QueryParams,
+  ThreadContentPost,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import { ThreadTree, getPostHotness } from '../../src/views/threadsV2'
+import {
+  ThreadItemContentPost,
+  ThreadTree,
+  getPostHotness,
+} from '../../src/views/threadsV2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
 
 describe('appview thread views v2', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let labelerDid: string
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -24,6 +29,8 @@ describe('appview thread views v2', () => {
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
+    labelerDid = network.bsky.ctx.cfg.modServiceDid
+    await network.processAll()
   })
 
   afterAll(async () => {
@@ -35,6 +42,7 @@ describe('appview thread views v2', () => {
 
     beforeAll(async () => {
       seed = await seeds.simple(sc)
+      await network.processAll()
     })
 
     it('returns thread anchored on root', async () => {
@@ -48,7 +56,7 @@ describe('appview thread views v2', () => {
         },
       )
       const { thread: t } = data
-      assertThreadItemPostArray(t)
+      assertPosts(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: 0, uri: seed.root.ref.uriStr }),
@@ -73,7 +81,7 @@ describe('appview thread views v2', () => {
         },
       )
       const { thread: t } = data
-      assertThreadItemPostArray(t)
+      assertPosts(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -94,7 +102,7 @@ describe('appview thread views v2', () => {
         },
       )
       const { thread: t } = data
-      assertThreadItemPostArray(t)
+      assertPosts(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
@@ -115,7 +123,7 @@ describe('appview thread views v2', () => {
         },
       )
       const { thread: t } = data
-      assertThreadItemPostArray(t)
+      assertPosts(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -135,7 +143,7 @@ describe('appview thread views v2', () => {
         },
       )
       const { thread: t } = data
-      assertThreadItemPostArray(t)
+      assertPosts(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -156,7 +164,7 @@ describe('appview thread views v2', () => {
         },
       )
       const { thread: t } = data
-      assertThreadItemPostArray(t)
+      assertPosts(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
@@ -177,7 +185,7 @@ describe('appview thread views v2', () => {
         },
       )
       const { thread: t } = data
-      assertThreadItemPostArray(t)
+      assertPosts(t)
 
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
@@ -192,6 +200,7 @@ describe('appview thread views v2', () => {
 
     beforeAll(async () => {
       seed = await seeds.long(sc)
+      await network.processAll()
     })
 
     describe('calculating depth', () => {
@@ -234,8 +243,8 @@ describe('appview thread views v2', () => {
             },
           )
           const { thread: t } = data
-          assertThreadItemPostArray(t)
 
+          assertPosts(t)
           const anchorIndex = t.findIndex((i) => i.uri === post.ref.uriStr)
           const anchorPost = t[anchorIndex]
 
@@ -261,6 +270,7 @@ describe('appview thread views v2', () => {
     beforeAll(async () => {
       seed = await seeds.deep(sc)
       simple = await seeds.simple(sc, 'simple2')
+      await network.processAll()
     })
 
     describe('above', () => {
@@ -278,8 +288,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toHaveLength(11)
 
         const last = t.at(-1)
@@ -302,8 +312,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toHaveLength(3)
         const last = t.at(-1)
         expect(last!.uri).toBe(simple.r['0_0'].ref.uriStr)
@@ -325,8 +335,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toHaveLength(11)
         const first = t.at(0)
         expect(first!.uri).toBe(seed.root.ref.uriStr)
@@ -346,8 +356,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toHaveLength(7)
 
         const first = t.at(0)
@@ -361,6 +371,7 @@ describe('appview thread views v2', () => {
 
     beforeAll(async () => {
       seed = await seeds.nestedBranchingFactor(sc)
+      await network.processAll()
     })
 
     type Case =
@@ -518,8 +529,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         if ('length' in args) {
           expect(data.thread).toHaveLength(args.length)
         } else {
@@ -538,6 +549,7 @@ describe('appview thread views v2', () => {
 
     beforeAll(async () => {
       seed = await seeds.annotateOP(sc)
+      await network.processAll()
     })
 
     type Case = {
@@ -608,8 +620,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         const opThreadPostsUris = new Set(
           opThreadPosts.map((k) =>
             k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
@@ -618,7 +630,7 @@ describe('appview thread views v2', () => {
 
         expect(t).toHaveLength(length)
         t.forEach((i) => {
-          expect(i.isOPThread).toBe(opThreadPostsUris.has(i.uri))
+          expect(i.content.isOPThread).toBe(opThreadPostsUris.has(i.uri))
         })
       },
     )
@@ -633,6 +645,7 @@ describe('appview thread views v2', () => {
       s1 = await seeds.sortingNoOpOrViewer(sc)
       s2 = await seeds.sortingWithOpAndViewer(sc)
       s3 = await seeds.sortingWithFollows(sc)
+      await network.processAll()
     })
 
     describe('newest', () => {
@@ -650,8 +663,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
           expect.objectContaining({ uri: s1.r['2'].ref.uriStr }),
@@ -683,8 +696,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
           expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
@@ -736,8 +749,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
           expect.objectContaining({ uri: s1.r['0'].ref.uriStr }),
@@ -769,8 +782,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
           expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
@@ -822,8 +835,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
           expect.objectContaining({ uri: s1.r['1'].ref.uriStr }),
@@ -855,8 +868,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
           expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
@@ -908,8 +921,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s1.root.ref.uriStr }),
           expect.objectContaining({ uri: s1.r['1'].ref.uriStr }),
@@ -941,8 +954,8 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: s2.root.ref.uriStr }),
           expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
@@ -999,7 +1012,7 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
+        assertPosts(t)
         return t
       }
 
@@ -1073,7 +1086,10 @@ describe('appview thread views v2', () => {
   describe('utils', () => {
     describe('getPostHotness', () => {
       const NOW = Date.now()
-      type ThreadTreeLeaf = Extract<ThreadTree, { $type: 'threadLeaf' }>
+      type ThreadPostNode = Extract<
+        ThreadTree,
+        { replies: ThreadTree[] | undefined }
+      >
 
       function createThreadItem({
         hoursAgo = 0,
@@ -1083,20 +1099,24 @@ describe('appview thread views v2', () => {
         hoursAgo?: number
         likes?: number
         hasOPLike?: boolean
-      } = {}): ThreadTreeLeaf {
+      } = {}): ThreadPostNode {
         return {
-          $type: 'threadLeaf' as const,
-          uri: 'at://did:plc:ay34zl7ko3x6jsazmka4kp2f/app.bsky.feed.post/3lo4zfmu6bs2y',
-          post: {
-            likeCount: likes,
-            indexedAt: subHours(NOW, hoursAgo).toISOString(),
-          } as $Typed<PostView>,
+          item: {
+            uri: 'at://did:plc:ay34zl7ko3x6jsazmka4kp2f/app.bsky.feed.post/3lo4zfmu6bs2y',
+            depth: 0,
+            content: {
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+              post: {
+                likeCount: likes,
+                indexedAt: subHours(NOW, hoursAgo).toISOString(),
+              } as $Typed<PostView>,
+              isOPThread: false,
+              hasOPLike: hasOPLike,
+            } as $Typed<ThreadContentPost>,
+          },
           parent: undefined,
           replies: undefined,
-          depth: 0,
-          isOPThread: false,
-          hasOPLike: hasOPLike,
-        } as ThreadTreeLeaf
+        }
       }
 
       it('newer posts have higher hotness than older posts with same likes', () => {
@@ -1280,11 +1300,18 @@ describe('appview thread views v2', () => {
     })
   })
 
-  describe(`blocks and deletions`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.blockAndDeletion>>
+  describe(`blocks, deletions, no-unauthenticated`, () => {
+    let seed: Awaited<ReturnType<typeof seeds.blockDeletionAuth>>
 
     beforeAll(async () => {
-      seed = await seeds.blockAndDeletion(sc)
+      seed = await seeds.blockDeletionAuth(sc)
+      await createLabel({
+        src: labelerDid,
+        uri: seed.users.auth.did,
+        cid: '',
+        val: '!no-unauthenticated',
+      })
+      await network.processAll()
     })
 
     describe(`blocks`, () => {
@@ -1293,28 +1320,30 @@ describe('appview thread views v2', () => {
           { uri: seed.root.ref.uriStr },
           {
             headers: await network.serviceHeaders(
-              // Use `viewer`, who was blocked by `bob`.
-              seed.users.viewer.did,
+              // Use `blocked`, who was blocked by `blocker`, author of '0'.
+              seed.users.blocked.did,
               ids.AppBskyUnspeccedGetPostThreadV2,
             ),
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
           expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['2_0_0'].ref.uriStr }),
         ])
       })
 
-      it(`blocked reply parent is replaced by blocked view`, async () => {
+      it(`blocked anchor returns lone blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['1_0'].ref.uriStr },
+          { uri: seed.r['0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
-              // Use `viewer`, who was blocked by `bob`.
-              seed.users.viewer.did,
+              // Use `blocked`, who was blocked by `blocker`, author of '0'.
+              seed.users.blocked.did,
               ids.AppBskyUnspeccedGetPostThreadV2,
             ),
           },
@@ -1323,20 +1352,48 @@ describe('appview thread views v2', () => {
 
         expect(t).toEqual([
           expect.objectContaining({
-            $type: 'app.bsky.unspecced.defs#threadItemBlocked',
-            uri: seed.r['1'].ref.uriStr,
+            uri: seed.r['0'].ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+            }),
+          }),
+        ])
+      })
+
+      it(`blocked parent is replaced by blocked view`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['0_0'].ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Use `blocked`, who was blocked by `blocker`, author of '0'.
+              seed.users.blocked.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.r['0'].ref.uriStr,
             depth: -1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+            }),
           }),
           expect.objectContaining({
-            $type: 'app.bsky.unspecced.defs#threadItemPost',
-            uri: seed.r['1_0'].ref.uriStr,
+            uri: seed.r['0_0'].ref.uriStr,
             depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
           }),
         ])
       })
     })
 
-    describe(`deletions`, () => {
+    describe(`deleted posts`, () => {
       it(`deleted reply is omitted from replies`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           { uri: seed.root.ref.uriStr },
@@ -1348,19 +1405,21 @@ describe('appview thread views v2', () => {
           },
         )
         const { thread: t } = data
-        assertThreadItemPostArray(t)
 
+        assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['1'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['1_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0_0'].ref.uriStr }),
           expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['2_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['2_0_0'].ref.uriStr }),
         ])
       })
 
-      it(`deleted reply parent is replaced by deleted view`, async () => {
+      it(`deleted anchor returns lone not found view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['0_0'].ref.uriStr },
+          { uri: seed.r['1'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -1372,33 +1431,189 @@ describe('appview thread views v2', () => {
 
         expect(t).toEqual([
           expect.objectContaining({
-            $type: 'app.bsky.unspecced.defs#threadItemNotFound',
-            uri: seed.r['0'].ref.uriStr,
-            depth: -1,
-          }),
-          expect.objectContaining({
-            $type: 'app.bsky.unspecced.defs#threadItemPost',
-            uri: seed.r['0_0'].ref.uriStr,
+            uri: seed.r['1'].ref.uriStr,
             depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
+            }),
+          }),
+        ])
+      })
+
+      it(`deleted parent is replaced by not found view`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['1_0'].ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.r['1'].ref.uriStr,
+            depth: -1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
+            }),
           }),
           expect.objectContaining({
-            $type: 'app.bsky.unspecced.defs#threadItemPost',
-            uri: seed.r['0_0_0'].ref.uriStr,
+            uri: seed.r['1_0'].ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+        ])
+      })
+    })
+
+    describe('no-unauthenticated', () => {
+      it(`no-unauthenticated reply is omitted from replies`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.root.ref.uriStr },
+          {
+            headers: {
+              'atproto-accept-labelers': `${labelerDid}`,
+            },
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.root.ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['0'].ref.uriStr,
             depth: 1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['0_0'].ref.uriStr,
+            depth: 2,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+        ])
+      })
+
+      it(`no-unauthenticated anchor returns no-unauthenticated view without breaking the parent chain`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['2'].ref.uriStr },
+          {
+            headers: {
+              'atproto-accept-labelers': `${labelerDid}`,
+            },
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.root.ref.uriStr,
+            depth: -1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['2'].ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type:
+                'app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated',
+            }),
+          }),
+        ])
+      })
+
+      it(`no-unauthenticated parent is replaced by no-unauthenticated view without breaking the parent chain`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['2_0_0'].ref.uriStr },
+          {
+            headers: {
+              'atproto-accept-labelers': `${labelerDid}`,
+            },
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.root.ref.uriStr,
+            depth: -3,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['2'].ref.uriStr,
+            depth: -2,
+            content: expect.objectContaining({
+              $type:
+                'app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['2_0'].ref.uriStr,
+            depth: -1,
+            content: expect.objectContaining({
+              $type:
+                'app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['2_0_0'].ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
           }),
         ])
       })
     })
   })
+
+  const createLabel = async (opts: {
+    src?: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  }) => {
+    await network.bsky.db.db
+      .insertInto('label')
+      .values({
+        uri: opts.uri,
+        cid: opts.cid,
+        val: opts.val,
+        cts: new Date().toISOString(),
+        exp: opts.exp ?? null,
+        neg: false,
+        src: opts.src ?? labelerDid,
+      })
+      .execute()
+  }
 })
 
-function assertThreadItemPostArray(
+function assertPosts(
   t: OutputSchema['thread'],
-): asserts t is $Typed<ThreadItemPost>[] {
+): asserts t is ThreadItemContentPost[] {
   t.forEach((i) => {
     assert(
-      i.$type === 'app.bsky.unspecced.defs#threadItemPost',
-      `Expected thread item to be of type 'app.bsky.unspecced.defs#threadItemPost'`,
+      AppBskyUnspeccedGetPostThreadV2.isThreadContentPost(i.content),
+      `Expected thread item to have a post as content`,
     )
   })
 }

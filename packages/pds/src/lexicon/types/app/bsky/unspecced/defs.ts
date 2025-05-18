@@ -10,7 +10,6 @@ import {
   type OmitKey,
 } from '../../../../util'
 import type * as AppBskyActorDefs from '../actor/defs.js'
-import type * as AppBskyFeedDefs from '../feed/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -125,86 +124,4 @@ export function isTrendView<V>(v: V) {
 
 export function validateTrendView<V>(v: V) {
   return validate<TrendView & V>(v, id, hashTrendView)
-}
-
-export interface ThreadItemPost {
-  $type?: 'app.bsky.unspecced.defs#threadItemPost'
-  uri: string
-  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
-  depth: number
-  post: AppBskyFeedDefs.PostView
-  /** Whether this post is part of a contiguous chain of OP replies. */
-  isOPThread: boolean
-  /** Whether this post has a like from the OP. */
-  hasOPLike: boolean
-  /** Whether this post has replies that have not been included in the response. */
-  hasUnhydratedReplies: boolean
-  /** Whether this post has parents that have not been included in the response. */
-  hasUnhydratedParents: boolean
-}
-
-const hashThreadItemPost = 'threadItemPost'
-
-export function isThreadItemPost<V>(v: V) {
-  return is$typed(v, id, hashThreadItemPost)
-}
-
-export function validateThreadItemPost<V>(v: V) {
-  return validate<ThreadItemPost & V>(v, id, hashThreadItemPost)
-}
-
-export interface ThreadItemNoUnauthenticated {
-  $type?: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated'
-  uri: string
-  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
-  depth: number
-}
-
-const hashThreadItemNoUnauthenticated = 'threadItemNoUnauthenticated'
-
-export function isThreadItemNoUnauthenticated<V>(v: V) {
-  return is$typed(v, id, hashThreadItemNoUnauthenticated)
-}
-
-export function validateThreadItemNoUnauthenticated<V>(v: V) {
-  return validate<ThreadItemNoUnauthenticated & V>(
-    v,
-    id,
-    hashThreadItemNoUnauthenticated,
-  )
-}
-
-export interface ThreadItemNotFound {
-  $type?: 'app.bsky.unspecced.defs#threadItemNotFound'
-  uri: string
-  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
-  depth: number
-}
-
-const hashThreadItemNotFound = 'threadItemNotFound'
-
-export function isThreadItemNotFound<V>(v: V) {
-  return is$typed(v, id, hashThreadItemNotFound)
-}
-
-export function validateThreadItemNotFound<V>(v: V) {
-  return validate<ThreadItemNotFound & V>(v, id, hashThreadItemNotFound)
-}
-
-export interface ThreadItemBlocked {
-  $type?: 'app.bsky.unspecced.defs#threadItemBlocked'
-  uri: string
-  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
-  depth: number
-  author: AppBskyFeedDefs.BlockedAuthor
-}
-
-const hashThreadItemBlocked = 'threadItemBlocked'
-
-export function isThreadItemBlocked<V>(v: V) {
-  return is$typed(v, id, hashThreadItemBlocked)
-}
-
-export function validateThreadItemBlocked<V>(v: V) {
-  return validate<ThreadItemBlocked & V>(v, id, hashThreadItemBlocked)
 }

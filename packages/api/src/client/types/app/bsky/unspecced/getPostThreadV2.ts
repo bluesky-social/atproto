@@ -10,7 +10,6 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyUnspeccedDefs from './defs.js'
 import type * as AppBskyFeedDefs from '../feed/defs.js'
 
 const is$typed = _is$typed,
@@ -41,13 +40,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
-  thread: (
-    | $Typed<AppBskyUnspeccedDefs.ThreadItemPost>
-    | $Typed<AppBskyUnspeccedDefs.ThreadItemNoUnauthenticated>
-    | $Typed<AppBskyUnspeccedDefs.ThreadItemNotFound>
-    | $Typed<AppBskyUnspeccedDefs.ThreadItemBlocked>
-    | { $type: string }
-  )[]
+  thread: ThreadItem[]
   threadgate?: AppBskyFeedDefs.ThreadgateView
 }
 
@@ -84,3 +77,96 @@ export const OLDEST = `${id}#oldest`
 export const HOTNESS = `${id}#hotness`
 /** Most-likes-first thread sort order. */
 export const MOSTLIKES = `${id}#mostLikes`
+
+export interface ThreadItem {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadItem'
+  uri: string
+  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
+  depth: number
+  content:
+    | $Typed<ThreadContentPost>
+    | $Typed<ThreadContentNoUnauthenticated>
+    | $Typed<ThreadContentNotFound>
+    | $Typed<ThreadContentBlocked>
+    | { $type: string }
+}
+
+const hashThreadItem = 'threadItem'
+
+export function isThreadItem<V>(v: V) {
+  return is$typed(v, id, hashThreadItem)
+}
+
+export function validateThreadItem<V>(v: V) {
+  return validate<ThreadItem & V>(v, id, hashThreadItem)
+}
+
+export interface ThreadContentPost {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentPost'
+  post: AppBskyFeedDefs.PostView
+  /** Whether this post is part of a contiguous chain of OP replies. */
+  isOPThread: boolean
+  /** Whether this post has a like from the OP. */
+  hasOPLike: boolean
+  /** Whether this post has replies that have not been included in the response. */
+  hasUnhydratedReplies: boolean
+  /** Whether this post has parents that have not been included in the response. */
+  hasUnhydratedParents: boolean
+}
+
+const hashThreadContentPost = 'threadContentPost'
+
+export function isThreadContentPost<V>(v: V) {
+  return is$typed(v, id, hashThreadContentPost)
+}
+
+export function validateThreadContentPost<V>(v: V) {
+  return validate<ThreadContentPost & V>(v, id, hashThreadContentPost)
+}
+
+export interface ThreadContentNoUnauthenticated {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated'
+}
+
+const hashThreadContentNoUnauthenticated = 'threadContentNoUnauthenticated'
+
+export function isThreadContentNoUnauthenticated<V>(v: V) {
+  return is$typed(v, id, hashThreadContentNoUnauthenticated)
+}
+
+export function validateThreadContentNoUnauthenticated<V>(v: V) {
+  return validate<ThreadContentNoUnauthenticated & V>(
+    v,
+    id,
+    hashThreadContentNoUnauthenticated,
+  )
+}
+
+export interface ThreadContentNotFound {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound'
+}
+
+const hashThreadContentNotFound = 'threadContentNotFound'
+
+export function isThreadContentNotFound<V>(v: V) {
+  return is$typed(v, id, hashThreadContentNotFound)
+}
+
+export function validateThreadContentNotFound<V>(v: V) {
+  return validate<ThreadContentNotFound & V>(v, id, hashThreadContentNotFound)
+}
+
+export interface ThreadContentBlocked {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked'
+  author: AppBskyFeedDefs.BlockedAuthor
+}
+
+const hashThreadContentBlocked = 'threadContentBlocked'
+
+export function isThreadContentBlocked<V>(v: V) {
+  return is$typed(v, id, hashThreadContentBlocked)
+}
+
+export function validateThreadContentBlocked<V>(v: V) {
+  return validate<ThreadContentBlocked & V>(v, id, hashThreadContentBlocked)
+}

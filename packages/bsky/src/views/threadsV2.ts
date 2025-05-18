@@ -1,33 +1,76 @@
-import { AppBskyUnspeccedDefs, asPredicate } from '@atproto/api'
-import { PostView } from '../lexicon/types/app/bsky/feed/defs'
+import { AppBskyUnspeccedGetPostThreadV2, asPredicate } from '@atproto/api'
+import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
-  ThreadItemBlocked,
-  ThreadItemNoUnauthenticated,
-  ThreadItemNotFound,
-  ThreadItemPost,
-} from '../lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+  QueryParams as GetPostThreadV2QueryParams,
+  ThreadContentBlocked,
+  ThreadContentNoUnauthenticated,
+  ThreadContentNotFound,
+  ThreadContentPost,
+  ThreadItem,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { $Typed } from '../lexicon/util'
 
-type ThreadLeaf = {
-  $type: 'threadLeaf'
-  uri: string
-  post: $Typed<PostView>
-  parent: ThreadTree | undefined
-  replies: ThreadTree[] | undefined
-  depth: number
-  isOPThread: boolean
-  hasOPLike: boolean
-  hasUnhydratedReplies: boolean
-  hasUnhydratedParents: boolean
+type ThreadItemContent<T extends ThreadItem['content']> = Omit<
+  ThreadItem,
+  'content'
+> & {
+  content: T
 }
 
+export type ThreadItemContentBlocked = ThreadItemContent<
+  $Typed<ThreadContentBlocked>
+>
+
+export type ThreadItemContentNoUnauthenticated = ThreadItemContent<
+  $Typed<ThreadContentNoUnauthenticated>
+>
+
+export type ThreadItemContentNotFound = ThreadItemContent<
+  $Typed<ThreadContentNotFound>
+>
+
+export type ThreadItemContentPost = ThreadItemContent<$Typed<ThreadContentPost>>
+
+type ThreadBlockedNode = {
+  item: ThreadItemContentBlocked
+}
+type ThreadNoUnauthenticatedNode = {
+  parent: ThreadTree | undefined
+  item: ThreadItemContentNoUnauthenticated
+}
+
+type ThreadNotFoundNode = {
+  item: ThreadItemContentNotFound
+}
+
+type ThreadPostNode = {
+  item: ThreadItemContentPost
+  parent: ThreadTree | undefined
+  replies: ThreadTree[] | undefined
+}
+
+const isThreadBlockedNode = (node: ThreadTree): node is ThreadBlockedNode =>
+  AppBskyUnspeccedGetPostThreadV2.isThreadContentBlocked(node.item.content)
+
+const isThreadNotFoundNode = (node: ThreadTree): node is ThreadNotFoundNode =>
+  AppBskyUnspeccedGetPostThreadV2.isThreadContentNotFound(node.item.content)
+
+const isThreadNoUnauthenticatedNode = (
+  node: ThreadTree,
+): node is ThreadNoUnauthenticatedNode =>
+  AppBskyUnspeccedGetPostThreadV2.isThreadContentNoUnauthenticated(
+    node.item.content,
+  )
+
+const isThreadPostNode = (node: ThreadTree): node is ThreadPostNode =>
+  AppBskyUnspeccedGetPostThreadV2.isThreadContentPost(node.item.content)
+
 export type ThreadTree =
-  | ThreadLeaf
-  | $Typed<ThreadItemNoUnauthenticated>
-  | $Typed<ThreadItemNotFound>
-  | $Typed<ThreadItemBlocked>
+  | ThreadBlockedNode
+  | ThreadNoUnauthenticatedNode
+  | ThreadNotFoundNode
+  | ThreadPostNode
 
 export function sortTrimFlattenThreadTree(
   anchorTree: ThreadTree,
@@ -43,7 +86,7 @@ type SortTrimFlattenOptions = {
   opDid: string
   prioritizeFollowedUsers: boolean
   sorting: GetPostThreadV2QueryParams['sorting']
-  viewerDid?: string
+  viewer: HydrateCtx['viewer']
 }
 
 const isPostRecord = asPredicate(validatePostRecord)
@@ -56,27 +99,31 @@ function sortTrimThreadTree(
     opDid,
     prioritizeFollowedUsers,
     sorting,
-    viewerDid,
+    viewer,
   }: SortTrimFlattenOptions,
 ): ThreadTree {
-  if (node.$type !== 'threadLeaf') return node
+  if (!isThreadPostNode(node)) {
+    return node
+  }
 
   if (node.replies) {
     node.replies.sort((a: ThreadTree, b: ThreadTree) => {
-      if (a.$type !== 'threadLeaf') {
+      if (!isThreadPostNode(a)) {
         return 1
       }
-      if (b.$type !== 'threadLeaf') {
+      if (!isThreadPostNode(b)) {
         return -1
       }
+      const aPost = a.item.content.post
+      const bPost = b.item.content.post
 
       // Prioritization is applied first, then the selected sorting is applied.
 
       // OP replies ⬆️.
-      const aIsByOp = a.post.author.did === opDid
-      const bIsByOp = b.post.author.did === opDid
+      const aIsByOp = aPost.author.did === opDid
+      const bIsByOp = bPost.author.did === opDid
       if (aIsByOp && bIsByOp) {
-        return a.post.indexedAt.localeCompare(b.post.indexedAt) // oldest
+        return aPost.indexedAt.localeCompare(bPost.indexedAt) // oldest
       } else if (aIsByOp) {
         return -1 // op's own reply
       } else if (bIsByOp) {
@@ -84,10 +131,10 @@ function sortTrimThreadTree(
       }
 
       // Viewer replies ⬆️.
-      const aIsBySelf = a.post.author.did === viewerDid
-      const bIsBySelf = b.post.author.did === viewerDid
+      const aIsBySelf = aPost.author.did === viewer
+      const bIsBySelf = bPost.author.did === viewer
       if (aIsBySelf && bIsBySelf) {
-        return a.post.indexedAt.localeCompare(b.post.indexedAt) // oldest
+        return aPost.indexedAt.localeCompare(bPost.indexedAt) // oldest
       } else if (aIsBySelf) {
         return -1 // current account's reply
       } else if (bIsBySelf) {
@@ -95,9 +142,9 @@ function sortTrimThreadTree(
       }
 
       // Pushpin-only posts ⬇️.
-      if (isPostRecord(a.post.record) && isPostRecord(b.post.record)) {
-        const aPin = Boolean(a.post.record.text.trim() === '📌')
-        const bPin = Boolean(b.post.record.text.trim() === '📌')
+      if (isPostRecord(aPost.record) && isPostRecord(bPost.record)) {
+        const aPin = Boolean(aPost.record.text.trim() === '📌')
+        const bPin = Boolean(bPost.record.text.trim() === '📌')
         if (aPin !== bPin) {
           if (aPin) {
             return 1
@@ -110,8 +157,8 @@ function sortTrimThreadTree(
 
       // Followers posts ⬆️.
       if (prioritizeFollowedUsers) {
-        const af = a.post.author.viewer?.following
-        const bf = b.post.author.viewer?.following
+        const af = aPost.author.viewer?.following
+        const bf = bPost.author.viewer?.following
         if (af && !bf) {
           return -1
         } else if (!af && bf) {
@@ -125,22 +172,22 @@ function sortTrimThreadTree(
         return bHotness - aHotness
       }
       if (sorting === 'app.bsky.unspecced.getPostThreadV2#oldest') {
-        return a.post.indexedAt.localeCompare(b.post.indexedAt)
+        return aPost.indexedAt.localeCompare(bPost.indexedAt)
       }
       if (sorting === 'app.bsky.unspecced.getPostThreadV2#newest') {
-        return b.post.indexedAt.localeCompare(a.post.indexedAt)
+        return bPost.indexedAt.localeCompare(aPost.indexedAt)
       }
       if (sorting === 'app.bsky.unspecced.getPostThreadV2#mostLikes') {
-        if (a.post.likeCount === b.post.likeCount) {
-          return b.post.indexedAt.localeCompare(a.post.indexedAt) // newest
+        if (aPost.likeCount === bPost.likeCount) {
+          return bPost.indexedAt.localeCompare(aPost.indexedAt) // newest
         }
-        return (b.post.likeCount || 0) - (a.post.likeCount || 0) // most likes
+        return (bPost.likeCount || 0) - (aPost.likeCount || 0) // most likes
       }
-      return b.post.indexedAt.localeCompare(a.post.indexedAt)
+      return bPost.indexedAt.localeCompare(aPost.indexedAt)
     })
 
     // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
-    if (node.depth !== 0 && nestedBranchingFactor > 0) {
+    if (node.item.depth !== 0 && nestedBranchingFactor > 0) {
       node.replies = node.replies.slice(0, nestedBranchingFactor)
     }
 
@@ -151,7 +198,7 @@ function sortTrimThreadTree(
         opDid,
         prioritizeFollowedUsers,
         sorting,
-        viewerDid,
+        viewer,
       }),
     )
   }
@@ -162,7 +209,7 @@ function flattenThread(
   anchorTree: ThreadTree,
   options: SortTrimFlattenOptions,
 ) {
-  const isAuthenticated = Boolean(options.viewerDid)
+  const isAuthenticated = Boolean(options.viewer)
 
   return Array.from([
     // All parents above.
@@ -194,24 +241,20 @@ function* flattenInDirection({
   thread: ThreadTree
   isAuthenticated: boolean
   direction: 'up' | 'down'
-}): Generator<
-  | $Typed<ThreadItemPost>
-  | $Typed<ThreadItemNoUnauthenticated>
-  | $Typed<ThreadItemNotFound>
-  | $Typed<ThreadItemBlocked>,
-  void
-> {
-  if (AppBskyUnspeccedDefs.isThreadItemNotFound(thread)) {
-    yield thread
+}): Generator<ThreadItem, void> {
+  // Blocked items don't yield further items up or down.
+  if (isThreadBlockedNode(thread)) {
+    yield thread.item
     return
   }
 
-  if (AppBskyUnspeccedDefs.isThreadItemBlocked(thread)) {
-    yield thread
+  // Not found items don't yield further items up or down.
+  if (isThreadNotFoundNode(thread)) {
+    yield thread.item
     return
   }
 
-  if (thread.$type === 'threadLeaf') {
+  if (isThreadNoUnauthenticatedNode(thread)) {
     if (direction === 'up') {
       if (thread.parent) {
         // Unfold all parents above.
@@ -223,24 +266,30 @@ function* flattenInDirection({
       }
 
       // Yield, starting from the top parent.
-      yield threadLeafToItemPost(thread)
+      yield thread.item
     } else {
-      // TODO could do this in views probably
-      const isNoUnauthenticated = !!thread.post.author.labels?.find(
-        (l) => l.val === '!no-unauthenticated',
-      )
-      if (!isAuthenticated && isNoUnauthenticated) {
-        // TODO we exit early atm
-        // return HiddenReplyType.None
-        yield {
-          $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
-          uri: thread.uri,
-          depth: thread.depth,
-        }
+      // Yield the no unauthenticated item, but not its children.
+      yield thread.item
+    }
+    return
+  }
+
+  if (isThreadPostNode(thread)) {
+    if (direction === 'up') {
+      if (thread.parent) {
+        // Unfold all parents above.
+        yield* flattenInDirection({
+          thread: thread.parent,
+          isAuthenticated,
+          direction: 'up',
+        })
       }
 
+      // Yield, starting from the top parent.
+      yield thread.item
+    } else {
       // Yield the item itself (either the anchor or a reply).
-      yield threadLeafToItemPost(thread)
+      yield thread.item
 
       // Unfold all replies below.
       if (thread.replies?.length) {
@@ -256,27 +305,18 @@ function* flattenInDirection({
   }
 }
 
-function threadLeafToItemPost(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
-  return {
-    $type: 'app.bsky.unspecced.defs#threadItemPost',
-    uri: leaf.uri,
-    post: leaf.post,
-    depth: leaf.depth,
-    isOPThread: leaf.isOPThread,
-    hasOPLike: leaf.hasOPLike,
-    hasUnhydratedReplies: leaf.hasUnhydratedReplies,
-    hasUnhydratedParents: leaf.hasUnhydratedParents,
-  }
-}
-
 // Exported for testing.
 // Inspired by https://join-lemmy.org/docs/contributors/07-ranking-algo.html
 // We want to give recent comments a real chance (and not bury them deep below the fold)
 // while also surfacing well-liked comments from the past.
-export function getPostHotness(thread: ThreadTree, fetchedAt: number) {
-  if (thread.$type !== 'threadLeaf') return 0
+export function getPostHotness(thread: ThreadPostNode, fetchedAt: number) {
+  if (!isThreadPostNode(thread)) return 0
 
-  const { post, hasOPLike } = thread
+  const {
+    item: { content },
+  } = thread
+  const { post, hasOPLike } = content
+
   const hoursAgo = Math.max(
     0,
     (new Date(fetchedAt).getTime() - new Date(post.indexedAt).getTime()) /

@@ -3,7 +3,7 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
-import { HydrationState } from '../hydration/hydrator'
+import { HydrateCtx, HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
 import { RecordInfo } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
@@ -60,12 +60,9 @@ import {
 } from '../lexicon/types/app/bsky/labeler/service'
 import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
 import {
-  ThreadItemBlocked,
-  ThreadItemNoUnauthenticated,
-  ThreadItemNotFound,
-  ThreadItemPost,
-} from '../lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+  QueryParams as GetPostThreadV2QueryParams,
+  ThreadItem,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
@@ -76,7 +73,14 @@ import {
   uriToDid,
   uriToDid as creatorFromUri,
 } from '../util/uris'
-import { ThreadTree, sortTrimFlattenThreadTree } from './threadsV2'
+import {
+  ThreadItemContentBlocked,
+  ThreadItemContentNoUnauthenticated,
+  ThreadItemContentNotFound,
+  ThreadItemContentPost,
+  ThreadTree,
+  sortTrimFlattenThreadTree,
+} from './threadsV2'
 import {
   Embed,
   EmbedBlocked,
@@ -151,6 +155,13 @@ export class Views {
     if (actor?.upstreamStatus === 'suspended') return true
     if (state.labels?.get(did)?.isTakendown) return true
     return false
+  }
+
+  noUnauthenticatedPost(viewer: HydrateCtx['viewer'], post: PostView): boolean {
+    const isNoUnauthenticated = !!post.author.labels?.find(
+      (l) => l.val === '!no-unauthenticated',
+    )
+    return !viewer && isNoUnauthenticated
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
@@ -1131,22 +1142,34 @@ export class Views {
       nestedBranchingFactor: number
       prioritizeFollowedUsers: boolean
       sorting: GetPostThreadV2QueryParams['sorting']
-      viewerDid?: string
+      viewer: HydrateCtx['viewer']
     },
-  ): (
-    | $Typed<ThreadItemPost>
-    | $Typed<ThreadItemNoUnauthenticated>
-    | $Typed<ThreadItemNotFound>
-    | $Typed<ThreadItemBlocked>
-  )[] {
+  ): ThreadItem[] {
     const { anchor, uris } = skeleton
+    const { viewer } = opts
+
+    // Not found.
     const postView = this.post(anchor, state)
     const post = state.posts?.get(anchor)
     if (!post || !postView) {
-      return [this.threadV2ItemNotFound(anchor, 0)]
+      return [
+        this.threadV2ItemNotFound({
+          uri: anchor,
+          depth: 0,
+        }),
+      ]
     }
+
+    // Blocked.
     if (this.viewerBlockExists(postView.author.did, state)) {
-      return [this.threadV2ItemBlocked(anchor, 0, postView.author.did, state)]
+      return [
+        this.threadV2ItemBlocked({
+          uri: anchor,
+          depth: 0,
+          authorDid: postView.author.did,
+          state,
+        }),
+      ]
     }
 
     // Groups children of each parent.
@@ -1172,6 +1195,7 @@ export class Views {
     const parentTree = !anchorViolatesThreadGate
       ? this.threadV2Parent({
           childUri: anchor,
+          viewer,
           opDid,
           rootUri,
           state,
@@ -1187,31 +1211,41 @@ export class Views {
       ? isOpThreadFromRootToParent && isOpPost
       : isOpPost
 
-    const anchorTree: ThreadTree = {
-      $type: 'threadLeaf',
-      uri: anchor,
-      post: {
-        $type: 'app.bsky.feed.defs#postView',
-        ...postView,
-      },
-      parent,
-      replies: !anchorViolatesThreadGate
-        ? this.threadV2Replies({
-            parentUri: anchor,
-            isOPThread,
-            opDid,
-            rootUri,
-            childrenByParentUri,
-            state,
-            below: opts.below,
-            depth: 1,
-          })
-        : undefined,
-      depth: 0, // The depth of the anchor post is always 0.
-      isOPThread,
-      hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-      hasUnhydratedReplies: false,
-      hasUnhydratedParents: false,
+    let anchorTree: ThreadTree
+    if (this.noUnauthenticatedPost(viewer, postView)) {
+      anchorTree = {
+        item: this.threadV2ItemNoUnauthenticated({
+          uri: anchor,
+          depth: 0,
+        }),
+        parent,
+      }
+    } else {
+      anchorTree = {
+        item: this.threadV2ItemPost({
+          uri: anchor,
+          depth: 0, // The depth of the anchor post is always 0.
+          postView,
+          isOPThread,
+          hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+          hasUnhydratedReplies: false, // @TODO
+          hasUnhydratedParents: false, // @TODO
+        }),
+        parent,
+        replies: !anchorViolatesThreadGate
+          ? this.threadV2Replies({
+              parentUri: anchor,
+              viewer: viewer,
+              isOPThread,
+              opDid,
+              rootUri,
+              childrenByParentUri,
+              state,
+              below: opts.below,
+              depth: 1,
+            })
+          : undefined,
+      }
     }
 
     return sortTrimFlattenThreadTree(anchorTree, {
@@ -1219,13 +1253,14 @@ export class Views {
       nestedBranchingFactor: opts.nestedBranchingFactor,
       sorting: opts.sorting,
       prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
-      viewerDid: opts.viewerDid,
+      viewer: viewer,
       fetchedAt: Date.now(),
     })
   }
 
   private threadV2Parent({
     childUri,
+    viewer,
     opDid,
     rootUri,
     state,
@@ -1233,59 +1268,71 @@ export class Views {
     depth,
   }: {
     childUri: string
+    viewer: HydrateCtx['viewer']
     opDid: string
     rootUri: string
     state: HydrationState
     above: number
     depth: number
   }): { tree: ThreadTree; isOPThread: boolean } | undefined {
+    // Reached the `above` limit.
     if (Math.abs(depth) > above) {
       return undefined
     }
 
-    const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
-    if (!parentUri) {
+    // Not found.
+    const uri = state.posts?.get(childUri)?.record.reply?.parent.uri
+    if (!uri) {
+      return undefined
+    }
+    const postView = this.post(uri, state)
+    const post = state.posts?.get(uri)
+    if (!post || !postView) {
+      return {
+        tree: {
+          item: this.threadV2ItemNotFound({ uri, depth }),
+        },
+        isOPThread: false,
+      }
+    }
+    if (rootUri !== getRootUri(uri, post)) {
+      // Outside thread boundary.
       return undefined
     }
 
+    // Blocked.
     if (
       !state.ctx?.include3pBlocks &&
       state.postBlocks?.get(childUri)?.parent
     ) {
       return {
-        tree: this.threadV2ItemBlocked(
-          parentUri,
-          depth,
-          creatorFromUri(parentUri),
-          state,
-        ),
+        tree: {
+          item: this.threadV2ItemBlocked({
+            uri,
+            depth,
+            authorDid: creatorFromUri(uri),
+            state,
+          }),
+        },
         isOPThread: false,
       }
     }
-
-    const postView = this.post(parentUri, state)
-    const post = state.posts?.get(parentUri)
-    if (!post || !postView) {
-      return {
-        tree: this.threadV2ItemNotFound(parentUri, depth),
-        isOPThread: false,
-      }
-    }
-
-    if (rootUri !== getRootUri(parentUri, post)) {
-      return undefined
-    }
-
+    // @TODO: unify the 2 cheks and test.
     const authorDid = postView.author.did
     if (this.viewerBlockExists(authorDid, state)) {
       return {
-        tree: this.threadV2ItemBlocked(parentUri, depth, authorDid, state),
+        tree: {
+          item: this.threadV2ItemBlocked({ uri, depth, authorDid, state }),
+        },
+
         isOPThread: false,
       }
     }
 
+    // Recurse up.
     const parentTree = this.threadV2Parent({
-      childUri: parentUri,
+      childUri: uri,
+      viewer,
       opDid,
       rootUri,
       state,
@@ -1296,26 +1343,37 @@ export class Views {
       parentTree ?? { tree: undefined, isOPThread: false }
 
     const isOpPost = authorDid === opDid
-
     const isOPThread = parent
       ? isOpThreadFromRootToParent && isOpPost
       : isOpPost
 
+    if (this.noUnauthenticatedPost(viewer, postView)) {
+      return {
+        tree: {
+          item: this.threadV2ItemNoUnauthenticated({
+            uri,
+            depth,
+          }),
+          parent,
+          replies: undefined,
+        },
+        isOPThread,
+      }
+    }
+
     return {
       tree: {
-        $type: 'threadLeaf',
-        uri: parentUri,
-        post: {
-          $type: 'app.bsky.feed.defs#postView',
-          ...postView,
-        },
+        item: this.threadV2ItemPost({
+          uri,
+          depth,
+          postView,
+          isOPThread,
+          hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+          hasUnhydratedReplies: false, // @TODO
+          hasUnhydratedParents: false, // @TODO
+        }),
         parent,
         replies: undefined,
-        depth,
-        isOPThread,
-        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-        hasUnhydratedReplies: false, // not applicable to parents
-        hasUnhydratedParents: false,
       },
       isOPThread,
     }
@@ -1323,6 +1381,7 @@ export class Views {
 
   private threadV2Replies({
     parentUri,
+    viewer,
     isOPThread: isOpThreadFromRootToParent,
     opDid,
     rootUri,
@@ -1332,6 +1391,7 @@ export class Views {
     depth,
   }: {
     parentUri: string
+    viewer: HydrateCtx['viewer']
     isOPThread: boolean
     opDid: string
     rootUri: string
@@ -1340,107 +1400,165 @@ export class Views {
     below: number
     depth: number
   }): ThreadTree[] | undefined {
+    // Reached the `below` limit.
     if (depth > below) {
       return undefined
     }
 
     const childrenUris = childrenByParentUri[parentUri] ?? []
-
     return mapDefined(childrenUris, (uri) => {
+      // Not found.
       const post = state.posts?.get(uri)
       if (post?.violatesThreadGate) {
         return undefined
       }
-      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
-        // @TODO: Return undefined in v2?
-        return this.threadV2ItemBlocked(uri, depth, creatorFromUri(uri), state)
-      }
       const postView = this.post(uri, state)
-
       if (!post || !postView) {
-        // TODO
-        // in the future we might consider keeping a placeholder for deleted
-        // posts that have replies under them, but not supported at the moment.
-        // this case is mostly likely hit when a takedown was applied to a post.
-        return this.threadV2ItemNotFound(uri, depth)
+        return undefined
+        // @TODO: Should I return the below or undefined?
+        // return this.threadV2ItemNotFound(uri, depth)
       }
       const authorDid = postView.author.did
       if (rootUri !== getRootUri(uri, post)) {
         // outside thread boundary
-        return
+        return undefined
+      }
+
+      // Blocked.
+      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
+        return undefined
       }
       if (this.viewerBlockExists(authorDid, state)) {
-        // @TODO: v1 returns a blocked item for this case.
-        // return this.threadV2ItemBlocked(uri, depth, authorDid, state)
         return undefined
       }
       if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
         return undefined
       }
 
-      const isOPThread = isOpThreadFromRootToParent && authorDid === opDid
-      return {
-        $type: 'threadLeaf',
-        uri,
-        post: {
-          $type: 'app.bsky.feed.defs#postView' as const,
-          ...postView,
-        },
-        parent: undefined,
-        replies: this.threadV2Replies({
-          parentUri: uri,
-          isOPThread,
-          opDid,
-          rootUri,
-          childrenByParentUri,
-          state,
-          below,
-          depth: depth + 1,
-        }),
-        depth,
-        isOPThread,
-        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-        hasUnhydratedReplies: false, // TODO annotated in next step
-        hasUnhydratedParents: false,
+      // No unauthenticated.
+      if (this.noUnauthenticatedPost(viewer, postView)) {
+        return undefined
       }
+
+      // Recurse down.
+      const isOPThread = isOpThreadFromRootToParent && authorDid === opDid
+      const replies = this.threadV2Replies({
+        parentUri: uri,
+        viewer,
+        isOPThread,
+        opDid,
+        rootUri,
+        childrenByParentUri,
+        state,
+        below,
+        depth: depth + 1,
+      })
+
+      const tree: ThreadTree = {
+        item: this.threadV2ItemPost({
+          uri,
+          depth,
+          postView,
+          isOPThread,
+          hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+          hasUnhydratedReplies: false, // @TODO
+          hasUnhydratedParents: false, // @TODO
+        }),
+        parent: undefined,
+        replies,
+      }
+
+      return tree
     })
   }
 
-  private threadV2ItemNoUnauthenticated(
-    uri: string,
-    depth: number,
-  ): $Typed<ThreadItemNoUnauthenticated> {
+  private threadV2ItemPost({
+    uri,
+    depth,
+    postView,
+    isOPThread,
+    hasOPLike,
+    hasUnhydratedReplies,
+    hasUnhydratedParents,
+  }: {
+    uri: string
+    depth: number
+    postView: PostView
+    isOPThread: boolean
+    hasOPLike: boolean
+    hasUnhydratedReplies: boolean
+    hasUnhydratedParents: boolean
+  }): ThreadItemContentPost {
     return {
-      $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
       uri,
       depth,
+      content: {
+        $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+        post: {
+          $type: 'app.bsky.feed.defs#postView',
+          ...postView,
+        },
+        isOPThread,
+        hasOPLike,
+        hasUnhydratedReplies,
+        hasUnhydratedParents,
+      },
     }
   }
 
-  private threadV2ItemNotFound(
-    uri: string,
-    depth: number,
-  ): $Typed<ThreadItemNotFound> {
+  private threadV2ItemNoUnauthenticated({
+    uri,
+    depth,
+  }: {
+    uri: string
+    depth: number
+  }): ThreadItemContentNoUnauthenticated {
     return {
-      $type: 'app.bsky.unspecced.defs#threadItemNotFound',
       uri,
       depth,
+      content: {
+        $type:
+          'app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated',
+      },
     }
   }
 
-  private threadV2ItemBlocked(
-    uri: string,
-    depth: number,
-    authorDid: string,
-    state: HydrationState,
-  ): $Typed<ThreadItemBlocked> {
+  private threadV2ItemNotFound({
+    uri,
+    depth,
+  }: {
+    uri: string
+    depth: number
+  }): ThreadItemContentNotFound {
     return {
-      $type: 'app.bsky.unspecced.defs#threadItemBlocked',
       uri,
       depth,
-      author: {
-        did: authorDid,
-        viewer: this.blockedProfileViewer(authorDid, state),
+      content: {
+        $type: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
+      },
+    }
+  }
+
+  private threadV2ItemBlocked({
+    uri,
+    depth,
+    authorDid,
+    state,
+  }: {
+    uri: string
+    depth: number
+    authorDid: string
+    state: HydrationState
+  }): ThreadItemContentBlocked {
+    return {
+      uri,
+      depth,
+      content: {
+        $type: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+        author: {
+          did: authorDid,
+          viewer: this.blockedProfileViewer(authorDid, state),
+        },
       },
     }
   }

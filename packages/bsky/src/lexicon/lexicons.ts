@@ -10183,101 +10183,6 @@ export const schemaDict = {
           },
         },
       },
-      threadItemPost: {
-        type: 'object',
-        required: [
-          'uri',
-          'depth',
-          'post',
-          'isOPThread',
-          'hasOPLike',
-          'hasUnhydratedReplies',
-          'hasUnhydratedParents',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-          post: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
-          },
-          isOPThread: {
-            type: 'boolean',
-            description:
-              'Whether this post is part of a contiguous chain of OP replies.',
-          },
-          hasOPLike: {
-            type: 'boolean',
-            description: 'Whether this post has a like from the OP.',
-          },
-          hasUnhydratedReplies: {
-            type: 'boolean',
-            description:
-              'Whether this post has replies that have not been included in the response.',
-          },
-          hasUnhydratedParents: {
-            type: 'boolean',
-            description:
-              'Whether this post has parents that have not been included in the response.',
-          },
-        },
-      },
-      threadItemNoUnauthenticated: {
-        type: 'object',
-        required: ['uri', 'depth'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-        },
-      },
-      threadItemNotFound: {
-        type: 'object',
-        required: ['uri', 'depth'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-        },
-      },
-      threadItemBlocked: {
-        type: 'object',
-        required: ['uri', 'depth', 'author'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          depth: {
-            type: 'integer',
-            description:
-              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
-          },
-        },
-      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -10440,13 +10345,8 @@ export const schemaDict = {
                 description:
                   'A flat list of thread items. The depth of each item is indicated by the depth property inside the item.',
                 items: {
-                  type: 'union',
-                  refs: [
-                    'lex:app.bsky.unspecced.defs#threadItemPost',
-                    'lex:app.bsky.unspecced.defs#threadItemNoUnauthenticated',
-                    'lex:app.bsky.unspecced.defs#threadItemNotFound',
-                    'lex:app.bsky.unspecced.defs#threadItemBlocked',
-                  ],
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getPostThreadV2#threadItem',
                 },
               },
               threadgate: {
@@ -10477,6 +10377,83 @@ export const schemaDict = {
       mostLikes: {
         type: 'token',
         description: 'Most-likes-first thread sort order.',
+      },
+      threadItem: {
+        type: 'object',
+        required: ['uri', 'depth', 'content'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          content: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.unspecced.getPostThreadV2#threadContentPost',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+            ],
+          },
+        },
+      },
+      threadContentPost: {
+        type: 'object',
+        required: [
+          'post',
+          'isOPThread',
+          'hasOPLike',
+          'hasUnhydratedReplies',
+          'hasUnhydratedParents',
+        ],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          isOPThread: {
+            type: 'boolean',
+            description:
+              'Whether this post is part of a contiguous chain of OP replies.',
+          },
+          hasOPLike: {
+            type: 'boolean',
+            description: 'Whether this post has a like from the OP.',
+          },
+          hasUnhydratedReplies: {
+            type: 'boolean',
+            description:
+              'Whether this post has replies that have not been included in the response.',
+          },
+          hasUnhydratedParents: {
+            type: 'boolean',
+            description:
+              'Whether this post has parents that have not been included in the response.',
+          },
+        },
+      },
+      threadContentNoUnauthenticated: {
+        type: 'object',
+        properties: {},
+      },
+      threadContentNotFound: {
+        type: 'object',
+        properties: {},
+      },
+      threadContentBlocked: {
+        type: 'object',
+        required: ['author'],
+        properties: {
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
       },
     },
   },

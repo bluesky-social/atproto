@@ -569,38 +569,42 @@ export async function sortingWithFollows(
   }
 }
 
-export async function blockAndDeletion(
+export async function blockDeletionAuth(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'bd', [
+  const users = await createUsers(sc, 'bda', [
     'op',
     'alice',
-    'bob',
-    'carol',
-    'viewer',
+    'auth',
+    'blocker',
+    'blocked',
   ] as const)
 
-  const { op, alice, bob, viewer, carol } = users
+  const { op, alice, auth, blocker, blocked } = users
 
   const { root, replies: r } = await createThread(sc, op, async (r) => {
-    // Deleted (not visible for all).
-    await r(alice, async (r) => {
-      await r(alice, async (r) => {
-        await r(alice)
-      })
-    })
-
-    // Blocked for `viewer` (not visible only for `viewer`).
-    await r(bob, async (r) => {
+    // Blocked, hidden for `blocked`.
+    await r(blocker, async (r) => {
       await r(alice)
     })
 
-    // Not blocked or deleted (visible for everyone).
-    await r(carol)
+    // Deleted, hidden for all.
+    await r(alice, async (r) => {
+      await r(alice)
+    })
+
+    // User configured to only be seend by authenticated users.
+    // Requires the test sets a `!no-unauthenticated` label for this user.
+    await r(auth, async (r) => {
+      // Another auth-only to show that the parent chain is preserved in the thread.
+      await r(auth, async (r) => {
+        await r(alice)
+      })
+    })
   })
 
-  await sc.deletePost(alice.did, r['0'].ref.uri)
-  await sc.block(bob.did, viewer.did)
+  await sc.deletePost(alice.did, r['1'].ref.uri)
+  await sc.block(blocker.did, blocked.did)
 
   await sc.network.processAll()
 

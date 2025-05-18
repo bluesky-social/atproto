@@ -110,7 +110,7 @@ const presentation = (
     nestedBranchingFactor: params.nestedBranchingFactor,
     prioritizeFollowedUsers: params.prioritizeFollowedUsers,
     sorting: params.sorting,
-    viewerDid: params.hydrateCtx.viewer ?? undefined,
+    viewer: params.hydrateCtx.viewer,
   })
   if (isNotFoundPost(thread)) {
     throw new InvalidRequestError(
