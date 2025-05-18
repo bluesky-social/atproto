@@ -1128,7 +1128,7 @@ export class Views {
     opts: {
       above: number
       below: number
-      branchingFactor: number
+      nestedBranchingFactor: number
       prioritizeFollowedUsers: boolean
       sorting: GetPostThreadV2QueryParams['sorting']
       viewerDid?: string
@@ -1216,7 +1216,7 @@ export class Views {
 
     return sortTrimFlattenThreadTree(anchorTree, {
       opDid,
-      branchingFactor: opts.branchingFactor,
+      nestedBranchingFactor: opts.nestedBranchingFactor,
       sorting: opts.sorting,
       prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
       viewerDid: opts.viewerDid,

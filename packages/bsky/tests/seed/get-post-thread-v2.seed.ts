@@ -212,10 +212,10 @@ export async function deep(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   }
 }
 
-export async function branchingFactor(
+export async function nestedBranchingFactor(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'bf', ['op', 'bob'] as const)
+  const users = await createUsers(sc, 'nbf', ['op', 'bob'] as const)
   const { op, bob } = users
 
   const { root, replies: r } = await createThread(sc, op, async (r) => {
@@ -247,9 +247,8 @@ export async function branchingFactor(
     })
     await r(bob, async (r) => {
       await r(bob, async (r) => {
-        await r(bob)
-        await r(bob)
-        await r(bob)
+        // This is the only case in this seed where a reply has 1 reply instead of 4,
+        // to have cases of different lengths in the same tree.
         await r(bob)
       })
       await r(bob, async (r) => {

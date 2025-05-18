@@ -107,7 +107,7 @@ const presentation = (
   const thread = ctx.views.threadV2(skeleton, hydration, {
     above: params.above,
     below: calculateBelow(ctx, skeleton.anchor, params),
-    branchingFactor: params.branchingFactor,
+    nestedBranchingFactor: params.nestedBranchingFactor,
     prioritizeFollowedUsers: params.prioritizeFollowedUsers,
     sorting: params.sorting,
     viewerDid: params.hydrateCtx.viewer ?? undefined,

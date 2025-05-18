@@ -28,7 +28,7 @@
             "minimum": 0,
             "maximum": 100
           },
-          "branchingFactor": {
+          "nestedBranchingFactor": {
             "type": "integer",
             "description": "Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are all returned.",
             "default": 10,
