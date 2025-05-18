@@ -257,10 +257,10 @@ function threadLeafToItemPost(leaf: ThreadLeaf): $Typed<ThreadItemPost> {
   }
 }
 
+// Exported for testing.
 // Inspired by https://join-lemmy.org/docs/contributors/07-ranking-algo.html
 // We want to give recent comments a real chance (and not bury them deep below the fold)
-// while also surfacing well-liked comments from the past. In the future, we can explore
-// something more sophisticated, but we don't have much data on the client right now.
+// while also surfacing well-liked comments from the past.
 export function getPostHotness(thread: ThreadTree, fetchedAt: number) {
   if (thread.$type !== 'threadLeaf') return 0
 

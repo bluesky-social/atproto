@@ -9,7 +9,7 @@ import {
   OutputSchema,
   QueryParams,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import { ThreadTree, getPostHotness } from '../../src/util/threads'
+import { ThreadTree, getPostHotness } from '../../src/views/threadsV2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/get-post-thread-v2.seed'
 

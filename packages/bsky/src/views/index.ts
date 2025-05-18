@@ -69,7 +69,6 @@ import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
-import { ThreadTree, sortTrimFlattenThreadTree } from '../util/threads'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -77,6 +76,7 @@ import {
   uriToDid,
   uriToDid as creatorFromUri,
 } from '../util/uris'
+import { ThreadTree, sortTrimFlattenThreadTree } from './threadsV2'
 import {
   Embed,
   EmbedBlocked,
