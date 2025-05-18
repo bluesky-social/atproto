@@ -139,7 +139,7 @@ function sortTrimThreadTree(
       return b.post.indexedAt.localeCompare(a.post.indexedAt)
     })
 
-    // Applies branching factor to all levels of replies but the direct replies to the anchor.
+    // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
     if (node.depth !== 0 && nestedBranchingFactor > 0) {
       node.replies = node.replies.slice(0, nestedBranchingFactor)
     }
@@ -165,6 +165,7 @@ function flattenThread(
   const isAuthenticated = Boolean(options.viewerDid)
 
   return Array.from([
+    // All parents above.
     ...Array.from(
       'parent' in anchorTree && anchorTree.parent
         ? flattenInDirection({
@@ -174,6 +175,7 @@ function flattenThread(
           })
         : [],
     ),
+    // The anchor and all children below.
     ...Array.from(
       flattenInDirection({
         thread: anchorTree,
@@ -199,9 +201,20 @@ function* flattenInDirection({
   | $Typed<ThreadItemBlocked>,
   void
 > {
+  if (AppBskyUnspeccedDefs.isThreadItemNotFound(thread)) {
+    yield thread
+    return
+  }
+
+  if (AppBskyUnspeccedDefs.isThreadItemBlocked(thread)) {
+    yield thread
+    return
+  }
+
   if (thread.$type === 'threadLeaf') {
     if (direction === 'up') {
       if (thread.parent) {
+        // Unfold all parents above.
         yield* flattenInDirection({
           thread: thread.parent,
           isAuthenticated,
@@ -209,6 +222,7 @@ function* flattenInDirection({
         })
       }
 
+      // Yield, starting from the top parent.
       yield threadLeafToItemPost(thread)
     } else {
       // TODO could do this in views probably
@@ -225,8 +239,10 @@ function* flattenInDirection({
         }
       }
 
+      // Yield the item itself (either the anchor or a reply).
       yield threadLeafToItemPost(thread)
 
+      // Unfold all replies below.
       if (thread.replies?.length) {
         for (const reply of thread.replies) {
           yield* flattenInDirection({
@@ -237,10 +253,6 @@ function* flattenInDirection({
         }
       }
     }
-  } else if (AppBskyUnspeccedDefs.isThreadItemNotFound(thread)) {
-    yield thread
-  } else if (AppBskyUnspeccedDefs.isThreadItemBlocked(thread)) {
-    yield thread
   }
 }
 
