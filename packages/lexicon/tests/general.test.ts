@@ -352,6 +352,18 @@ describe('General validation', () => {
     })
     expect(result.success).toBe(true)
 
+    result = lexicon.validate('com.example.testUnionWithRecordRef', {
+      union: {
+        $type: 'com.example.recordType',
+        // Test that the record type is validated against the record schema
+        test: 123,
+      },
+    })
+    expect(result.success).toBe(false)
+    expect(result['error']?.message).toBe(
+      'Object/union/record/test must be a string',
+    )
+
     result = lexicon.validate('com.example.testUnionWithUnkownRef', {
       union: {
         $type: 'com.example.unknownType',
