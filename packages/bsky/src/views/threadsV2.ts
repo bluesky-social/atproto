@@ -77,7 +77,7 @@ export function sortTrimFlattenThreadTree(
   options: SortTrimFlattenOptions,
 ) {
   const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
-  return flattenThread(sortedAnchorTree, options)
+  return flattenThread(sortedAnchorTree)
 }
 
 type SortTrimFlattenOptions = {
@@ -205,19 +205,13 @@ function sortTrimThreadTree(
   return node
 }
 
-function flattenThread(
-  anchorTree: ThreadTree,
-  options: SortTrimFlattenOptions,
-) {
-  const isAuthenticated = Boolean(options.viewer)
-
+function flattenThread(anchorTree: ThreadTree) {
   return Array.from([
     // All parents above.
     ...Array.from(
       'parent' in anchorTree && anchorTree.parent
         ? flattenInDirection({
             thread: anchorTree.parent,
-            isAuthenticated,
             direction: 'up',
           })
         : [],
@@ -226,7 +220,6 @@ function flattenThread(
     ...Array.from(
       flattenInDirection({
         thread: anchorTree,
-        isAuthenticated,
         direction: 'down',
       }),
     ),
@@ -235,11 +228,9 @@ function flattenThread(
 
 function* flattenInDirection({
   thread,
-  isAuthenticated,
   direction,
 }: {
   thread: ThreadTree
-  isAuthenticated: boolean
   direction: 'up' | 'down'
 }): Generator<ThreadItem, void> {
   // Blocked items don't yield further items up or down.
@@ -260,7 +251,6 @@ function* flattenInDirection({
         // Unfold all parents above.
         yield* flattenInDirection({
           thread: thread.parent,
-          isAuthenticated,
           direction: 'up',
         })
       }
@@ -280,7 +270,6 @@ function* flattenInDirection({
         // Unfold all parents above.
         yield* flattenInDirection({
           thread: thread.parent,
-          isAuthenticated,
           direction: 'up',
         })
       }
@@ -296,7 +285,6 @@ function* flattenInDirection({
         for (const reply of thread.replies) {
           yield* flattenInDirection({
             thread: reply,
-            isAuthenticated,
             direction: 'down',
           })
         }
