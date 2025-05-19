@@ -15,7 +15,7 @@ import {
   getPostHotness,
 } from '../../src/views/threadsV2'
 import { forSnapshot } from '../_util'
-import * as seeds from '../seed/get-post-thread-v2.seed'
+import * as seeds from '../seed/thread-v2'
 
 describe('appview thread views v2', () => {
   let network: TestNetwork
@@ -25,7 +25,7 @@ describe('appview thread views v2', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_get_post_thread_v_two',
+      dbPostgresSchema: 'bsky_views_thread_v_two',
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
