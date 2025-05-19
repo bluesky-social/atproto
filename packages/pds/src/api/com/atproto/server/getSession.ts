@@ -1,7 +1,8 @@
+import { ComAtprotoServerGetSession } from '@atproto/api'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
-import { AuthScope } from '../../../../auth-verifier'
+import { AccessOutput, AuthScope, OAuthOutput } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
@@ -28,17 +29,9 @@ export default function (server: Server, ctx: AppContext) {
           headers,
         )
 
-        if (
-          auth.credentials.type === 'oauth' &&
-          !auth.credentials.oauthScopes.includes('transition:email')
-        ) {
-          delete res.data.email
-          delete res.data.emailConfirmed
-        }
-
         return {
           encoding: 'application/json',
-          body: res.data,
+          body: render(auth, res.data),
         }
       }
 
@@ -57,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: {
+        body: render(auth, {
           handle: user.handle ?? INVALID_HANDLE,
           did: user.did,
           email: user.email ?? undefined,
@@ -65,8 +58,15 @@ export default function (server: Server, ctx: AppContext) {
           emailConfirmed: !!user.emailConfirmedAt,
           active,
           status,
-        },
+        }),
       }
     },
   })
+}
+
+function render(
+  auth: AccessOutput | OAuthOutput,
+  data: ComAtprotoServerGetSession.OutputSchema,
+): ComAtprotoServerGetSession.OutputSchema {
+  return data
 }

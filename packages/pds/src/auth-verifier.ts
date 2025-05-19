@@ -46,17 +46,17 @@ export enum RoleStatus {
   Missing,
 }
 
-type NullOutput = {
+export type NullOutput = {
   credentials: null
 }
 
-type AdminTokenOutput = {
+export type AdminTokenOutput = {
   credentials: {
     type: 'admin_token'
   }
 }
 
-type ModServiceOutput = {
+export type ModServiceOutput = {
   credentials: {
     type: 'mod_service'
     aud: string
@@ -64,7 +64,7 @@ type ModServiceOutput = {
   }
 }
 
-type AccessOutput = {
+export type AccessOutput = {
   credentials: {
     type: 'access'
     did: string
@@ -73,7 +73,7 @@ type AccessOutput = {
   }
 }
 
-type OAuthOutput = {
+export type OAuthOutput = {
   credentials: {
     type: 'oauth'
     did: string
@@ -83,7 +83,7 @@ type OAuthOutput = {
   }
 }
 
-type RefreshOutput = {
+export type RefreshOutput = {
   credentials: {
     type: 'refresh'
     did: string
@@ -92,7 +92,7 @@ type RefreshOutput = {
   }
 }
 
-type UserServiceAuthOutput = {
+export type UserServiceAuthOutput = {
   credentials: {
     type: 'user_service_auth'
     aud: string
