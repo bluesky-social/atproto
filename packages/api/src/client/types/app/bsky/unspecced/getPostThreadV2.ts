@@ -83,11 +83,11 @@ export interface ThreadItem {
   uri: string
   /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
   depth: number
-  content:
-    | $Typed<ThreadContentPost>
-    | $Typed<ThreadContentNoUnauthenticated>
-    | $Typed<ThreadContentNotFound>
-    | $Typed<ThreadContentBlocked>
+  value:
+    | $Typed<ThreadItemPost>
+    | $Typed<ThreadItemNoUnauthenticated>
+    | $Typed<ThreadItemNotFound>
+    | $Typed<ThreadItemBlocked>
     | { $type: string }
 }
 
@@ -101,8 +101,8 @@ export function validateThreadItem<V>(v: V) {
   return validate<ThreadItem & V>(v, id, hashThreadItem)
 }
 
-export interface ThreadContentPost {
-  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentPost'
+export interface ThreadItemPost {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemPost'
   post: AppBskyFeedDefs.PostView
   /** Whether this post is part of a contiguous chain of OP replies. */
   isOPThread: boolean
@@ -110,59 +110,59 @@ export interface ThreadContentPost {
   hasOPLike: boolean
 }
 
-const hashThreadContentPost = 'threadContentPost'
+const hashThreadItemPost = 'threadItemPost'
 
-export function isThreadContentPost<V>(v: V) {
-  return is$typed(v, id, hashThreadContentPost)
+export function isThreadItemPost<V>(v: V) {
+  return is$typed(v, id, hashThreadItemPost)
 }
 
-export function validateThreadContentPost<V>(v: V) {
-  return validate<ThreadContentPost & V>(v, id, hashThreadContentPost)
+export function validateThreadItemPost<V>(v: V) {
+  return validate<ThreadItemPost & V>(v, id, hashThreadItemPost)
 }
 
-export interface ThreadContentNoUnauthenticated {
-  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated'
+export interface ThreadItemNoUnauthenticated {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated'
 }
 
-const hashThreadContentNoUnauthenticated = 'threadContentNoUnauthenticated'
+const hashThreadItemNoUnauthenticated = 'threadItemNoUnauthenticated'
 
-export function isThreadContentNoUnauthenticated<V>(v: V) {
-  return is$typed(v, id, hashThreadContentNoUnauthenticated)
+export function isThreadItemNoUnauthenticated<V>(v: V) {
+  return is$typed(v, id, hashThreadItemNoUnauthenticated)
 }
 
-export function validateThreadContentNoUnauthenticated<V>(v: V) {
-  return validate<ThreadContentNoUnauthenticated & V>(
+export function validateThreadItemNoUnauthenticated<V>(v: V) {
+  return validate<ThreadItemNoUnauthenticated & V>(
     v,
     id,
-    hashThreadContentNoUnauthenticated,
+    hashThreadItemNoUnauthenticated,
   )
 }
 
-export interface ThreadContentNotFound {
-  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound'
+export interface ThreadItemNotFound {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemNotFound'
 }
 
-const hashThreadContentNotFound = 'threadContentNotFound'
+const hashThreadItemNotFound = 'threadItemNotFound'
 
-export function isThreadContentNotFound<V>(v: V) {
-  return is$typed(v, id, hashThreadContentNotFound)
+export function isThreadItemNotFound<V>(v: V) {
+  return is$typed(v, id, hashThreadItemNotFound)
 }
 
-export function validateThreadContentNotFound<V>(v: V) {
-  return validate<ThreadContentNotFound & V>(v, id, hashThreadContentNotFound)
+export function validateThreadItemNotFound<V>(v: V) {
+  return validate<ThreadItemNotFound & V>(v, id, hashThreadItemNotFound)
 }
 
-export interface ThreadContentBlocked {
-  $type?: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked'
+export interface ThreadItemBlocked {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked'
   author: AppBskyFeedDefs.BlockedAuthor
 }
 
-const hashThreadContentBlocked = 'threadContentBlocked'
+const hashThreadItemBlocked = 'threadItemBlocked'
 
-export function isThreadContentBlocked<V>(v: V) {
-  return is$typed(v, id, hashThreadContentBlocked)
+export function isThreadItemBlocked<V>(v: V) {
+  return is$typed(v, id, hashThreadItemBlocked)
 }
 
-export function validateThreadContentBlocked<V>(v: V) {
-  return validate<ThreadContentBlocked & V>(v, id, hashThreadContentBlocked)
+export function validateThreadItemBlocked<V>(v: V) {
+  return validate<ThreadItemBlocked & V>(v, id, hashThreadItemBlocked)
 }

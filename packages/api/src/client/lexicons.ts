@@ -10380,7 +10380,7 @@ export const schemaDict = {
       },
       threadItem: {
         type: 'object',
-        required: ['uri', 'depth', 'content'],
+        required: ['uri', 'depth', 'value'],
         properties: {
           uri: {
             type: 'string',
@@ -10391,18 +10391,18 @@ export const schemaDict = {
             description:
               'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
           },
-          content: {
+          value: {
             type: 'union',
             refs: [
-              'lex:app.bsky.unspecced.getPostThreadV2#threadContentPost',
-              'lex:app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated',
-              'lex:app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
-              'lex:app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
             ],
           },
         },
       },
-      threadContentPost: {
+      threadItemPost: {
         type: 'object',
         required: ['post', 'isOPThread', 'hasOPLike'],
         properties: {
@@ -10421,15 +10421,15 @@ export const schemaDict = {
           },
         },
       },
-      threadContentNoUnauthenticated: {
+      threadItemNoUnauthenticated: {
         type: 'object',
         properties: {},
       },
-      threadContentNotFound: {
+      threadItemNotFound: {
         type: 'object',
         properties: {},
       },
-      threadContentBlocked: {
+      threadItemBlocked: {
         type: 'object',
         required: ['author'],
         properties: {

@@ -74,10 +74,10 @@ import {
   uriToDid as creatorFromUri,
 } from '../util/uris'
 import {
-  ThreadItemContentBlocked,
-  ThreadItemContentNoUnauthenticated,
-  ThreadItemContentNotFound,
-  ThreadItemContentPost,
+  ThreadItemValueBlocked,
+  ThreadItemValueNoUnauthenticated,
+  ThreadItemValueNotFound,
+  ThreadItemValuePost,
   ThreadTree,
   sortTrimFlattenThreadTree,
 } from './threadsV2'
@@ -1466,12 +1466,12 @@ export class Views {
     postView: PostView
     isOPThread: boolean
     hasOPLike: boolean
-  }): ThreadItemContentPost {
+  }): ThreadItemValuePost {
     return {
       uri,
       depth,
-      content: {
-        $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+      value: {
+        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
         post: {
           $type: 'app.bsky.feed.defs#postView',
           ...postView,
@@ -1488,13 +1488,12 @@ export class Views {
   }: {
     uri: string
     depth: number
-  }): ThreadItemContentNoUnauthenticated {
+  }): ThreadItemValueNoUnauthenticated {
     return {
       uri,
       depth,
-      content: {
-        $type:
-          'app.bsky.unspecced.getPostThreadV2#threadContentNoUnauthenticated',
+      value: {
+        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
       },
     }
   }
@@ -1505,12 +1504,12 @@ export class Views {
   }: {
     uri: string
     depth: number
-  }): ThreadItemContentNotFound {
+  }): ThreadItemValueNotFound {
     return {
       uri,
       depth,
-      content: {
-        $type: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
+      value: {
+        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
       },
     }
   }
@@ -1525,12 +1524,12 @@ export class Views {
     depth: number
     authorDid: string
     state: HydrationState
-  }): ThreadItemContentBlocked {
+  }): ThreadItemValueBlocked {
     return {
       uri,
       depth,
-      content: {
-        $type: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+      value: {
+        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
         author: {
           did: authorDid,
           viewer: this.blockedProfileViewer(authorDid, state),

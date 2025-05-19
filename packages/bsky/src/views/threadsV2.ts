@@ -3,49 +3,47 @@ import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
   QueryParams as GetPostThreadV2QueryParams,
-  ThreadContentBlocked,
-  ThreadContentNoUnauthenticated,
-  ThreadContentNotFound,
-  ThreadContentPost,
   ThreadItem,
+  ThreadItemBlocked,
+  ThreadItemNoUnauthenticated,
+  ThreadItemNotFound,
+  ThreadItemPost,
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { $Typed } from '../lexicon/util'
 
-type ThreadItemContent<T extends ThreadItem['content']> = Omit<
+type ThreadItemValue<T extends ThreadItem['value']> = Omit<
   ThreadItem,
-  'content'
+  'value'
 > & {
-  content: T
+  value: T
 }
 
-export type ThreadItemContentBlocked = ThreadItemContent<
-  $Typed<ThreadContentBlocked>
+export type ThreadItemValueBlocked = ThreadItemValue<$Typed<ThreadItemBlocked>>
+
+export type ThreadItemValueNoUnauthenticated = ThreadItemValue<
+  $Typed<ThreadItemNoUnauthenticated>
 >
 
-export type ThreadItemContentNoUnauthenticated = ThreadItemContent<
-  $Typed<ThreadContentNoUnauthenticated>
+export type ThreadItemValueNotFound = ThreadItemValue<
+  $Typed<ThreadItemNotFound>
 >
 
-export type ThreadItemContentNotFound = ThreadItemContent<
-  $Typed<ThreadContentNotFound>
->
-
-export type ThreadItemContentPost = ThreadItemContent<$Typed<ThreadContentPost>>
+export type ThreadItemValuePost = ThreadItemValue<$Typed<ThreadItemPost>>
 
 type ThreadBlockedNode = {
-  item: ThreadItemContentBlocked
+  item: ThreadItemValueBlocked
 }
 type ThreadNoUnauthenticatedNode = {
   parent: ThreadTree | undefined
-  item: ThreadItemContentNoUnauthenticated
+  item: ThreadItemValueNoUnauthenticated
 }
 
 type ThreadNotFoundNode = {
-  item: ThreadItemContentNotFound
+  item: ThreadItemValueNotFound
 }
 
 type ThreadPostNode = {
-  item: ThreadItemContentPost
+  item: ThreadItemValuePost
   parent: ThreadTree | undefined
   replies: ThreadTree[] | undefined
 }
@@ -53,12 +51,10 @@ type ThreadPostNode = {
 const isThreadNoUnauthenticatedNode = (
   node: ThreadTree,
 ): node is ThreadNoUnauthenticatedNode =>
-  AppBskyUnspeccedGetPostThreadV2.isThreadContentNoUnauthenticated(
-    node.item.content,
-  )
+  AppBskyUnspeccedGetPostThreadV2.isThreadItemNoUnauthenticated(node.item.value)
 
 const isThreadPostNode = (node: ThreadTree): node is ThreadPostNode =>
-  AppBskyUnspeccedGetPostThreadV2.isThreadContentPost(node.item.content)
+  AppBskyUnspeccedGetPostThreadV2.isThreadItemPost(node.item.value)
 
 export type ThreadTree =
   | ThreadBlockedNode
@@ -108,8 +104,8 @@ function sortTrimThreadTree(
       if (!isThreadPostNode(b)) {
         return -1
       }
-      const aPost = a.item.content.post
-      const bPost = b.item.content.post
+      const aPost = a.item.value.post
+      const bPost = b.item.value.post
 
       // Prioritization is applied first, then the selected sorting is applied.
 
@@ -264,9 +260,9 @@ export function getPostHotness(thread: ThreadPostNode, fetchedAt: number) {
   if (!isThreadPostNode(thread)) return 0
 
   const {
-    item: { content },
+    item: { value },
   } = thread
-  const { post, hasOPLike } = content
+  const { post, hasOPLike } = value
 
   const hoursAgo = Math.max(
     0,

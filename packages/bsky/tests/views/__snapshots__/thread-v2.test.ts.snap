@@ -4,8 +4,10 @@ exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] 
 Object {
   "thread": Array [
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -1,
+      "uri": "record(0)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -38,12 +40,12 @@ Object {
           },
         },
       },
-      "depth": -1,
-      "uri": "record(0)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 0,
+      "uri": "record(1)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -86,8 +88,6 @@ Object {
           },
         },
       },
-      "depth": 0,
-      "uri": "record(1)",
     },
   ],
 }
@@ -97,8 +97,10 @@ exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] 
 Object {
   "thread": Array [
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -1,
+      "uri": "record(0)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -131,12 +133,12 @@ Object {
           },
         },
       },
-      "depth": -1,
-      "uri": "record(0)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 0,
+      "uri": "record(1)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -179,12 +181,12 @@ Object {
           },
         },
       },
-      "depth": 0,
-      "uri": "record(1)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 1,
+      "uri": "record(2)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -227,8 +229,6 @@ Object {
           },
         },
       },
-      "depth": 1,
-      "uri": "record(2)",
     },
   ],
 }
@@ -238,8 +238,10 @@ exports[`appview thread views v2 simple thread returns thread anchored on 2_0 1`
 Object {
   "thread": Array [
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -2,
+      "uri": "record(0)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -272,12 +274,12 @@ Object {
           },
         },
       },
-      "depth": -2,
-      "uri": "record(0)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -1,
+      "uri": "record(1)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -320,12 +322,12 @@ Object {
           },
         },
       },
-      "depth": -1,
-      "uri": "record(1)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 0,
+      "uri": "record(2)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -368,8 +370,6 @@ Object {
           },
         },
       },
-      "depth": 0,
-      "uri": "record(2)",
     },
   ],
 }
@@ -379,8 +379,10 @@ exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] 
 Object {
   "thread": Array [
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -1,
+      "uri": "record(0)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -413,12 +415,12 @@ Object {
           },
         },
       },
-      "depth": -1,
-      "uri": "record(0)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 0,
+      "uri": "record(1)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -461,8 +463,6 @@ Object {
           },
         },
       },
-      "depth": 0,
-      "uri": "record(1)",
     },
   ],
 }
@@ -472,8 +472,10 @@ exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`
 Object {
   "thread": Array [
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -1,
+      "uri": "record(0)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -506,12 +508,12 @@ Object {
           },
         },
       },
-      "depth": -1,
-      "uri": "record(0)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 0,
+      "uri": "record(1)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -554,12 +556,12 @@ Object {
           },
         },
       },
-      "depth": 0,
-      "uri": "record(1)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 1,
+      "uri": "record(2)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -602,8 +604,6 @@ Object {
           },
         },
       },
-      "depth": 1,
-      "uri": "record(2)",
     },
   ],
 }
@@ -613,8 +613,10 @@ exports[`appview thread views v2 simple thread returns thread anchored on r 0_0 
 Object {
   "thread": Array [
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -2,
+      "uri": "record(0)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -647,12 +649,12 @@ Object {
           },
         },
       },
-      "depth": -2,
-      "uri": "record(0)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": -1,
+      "uri": "record(1)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -695,12 +697,12 @@ Object {
           },
         },
       },
-      "depth": -1,
-      "uri": "record(1)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 0,
+      "uri": "record(2)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -743,8 +745,6 @@ Object {
           },
         },
       },
-      "depth": 0,
-      "uri": "record(2)",
     },
   ],
 }
@@ -754,8 +754,10 @@ exports[`appview thread views v2 simple thread returns thread anchored on root 1
 Object {
   "thread": Array [
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 0,
+      "uri": "record(0)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -788,12 +790,12 @@ Object {
           },
         },
       },
-      "depth": 0,
-      "uri": "record(0)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 1,
+      "uri": "record(1)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -836,12 +838,12 @@ Object {
           },
         },
       },
-      "depth": 1,
-      "uri": "record(1)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 2,
+      "uri": "record(2)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": true,
         "post": Object {
@@ -884,12 +886,12 @@ Object {
           },
         },
       },
-      "depth": 2,
-      "uri": "record(2)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 1,
+      "uri": "record(3)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -932,12 +934,12 @@ Object {
           },
         },
       },
-      "depth": 1,
-      "uri": "record(3)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 1,
+      "uri": "record(4)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -980,12 +982,12 @@ Object {
           },
         },
       },
-      "depth": 1,
-      "uri": "record(4)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 2,
+      "uri": "record(5)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -1028,12 +1030,12 @@ Object {
           },
         },
       },
-      "depth": 2,
-      "uri": "record(5)",
     },
     Object {
-      "content": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
+      "depth": 1,
+      "uri": "record(6)",
+      "value": Object {
+        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "isOPThread": false,
         "post": Object {
@@ -1076,8 +1078,6 @@ Object {
           },
         },
       },
-      "depth": 1,
-      "uri": "record(6)",
     },
   ],
 }
