@@ -56,6 +56,8 @@ const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
       overrides,
     )
     posts[breadcrumbs] = reply
+    // Await for this post to be processed before replying to it.
+    replyCb && (await sc.network.processAll())
     await replyCb?.(rootReplyFnBuilder(sc, root, reply.ref, breadcrumbs, posts))
   }
 }
@@ -86,6 +88,8 @@ const createThread = async <T extends TestNetworkNoAppView>(
     undefined,
     overrides,
   )
+  // Await for this post to be processed before replying to it.
+  replyCb && (await sc.network.processAll())
   await replyCb?.(
     rootReplyFnBuilder(sc, root.ref, root.ref, breadcrumbs, replies),
   )
@@ -114,7 +118,6 @@ export async function simple(
     })
     await r(carol)
   })
-  await sc.network.processAll()
 
   return {
     seedClient: sc,
@@ -164,7 +167,6 @@ export async function long(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
     await r(bob)
     await r(carol)
   })
-  await sc.network.processAll()
 
   await sc.like(op.did, r['5'].ref)
   await sc.like(bob.did, r['5'].ref)
@@ -177,8 +179,6 @@ export async function long(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
 
   await sc.like(op.did, r['7'].ref)
   await sc.like(bob.did, r['7'].ref)
-
-  await sc.network.processAll()
 
   return {
     seedClient: sc,
@@ -202,7 +202,6 @@ export async function deep(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
     }
     await recursiveReply(r)
   })
-  await sc.network.processAll()
 
   return {
     seedClient: sc,
@@ -326,7 +325,6 @@ export async function nestedBranchingFactor(
       })
     })
   })
-  await sc.network.processAll()
 
   return {
     seedClient: sc,
@@ -357,7 +355,6 @@ export async function annotateOP(
       })
     })
   })
-  await sc.network.processAll()
 
   return {
     seedClient: sc,
@@ -421,8 +418,6 @@ export async function sortingNoOpOrViewer(
   await sc.like(bob.did, r['2_0'].ref)
   await sc.like(carol.did, r['2_0'].ref)
   await sc.like(bob.did, r['2_1'].ref)
-
-  await sc.network.processAll()
 
   return {
     seedClient: sc,
@@ -517,8 +512,6 @@ export async function sortingWithOpAndViewer(
   await sc.like(viewer.did, r['4_0'].ref)
   await sc.like(alice.did, r['4_1'].ref)
 
-  await sc.network.processAll()
-
   return {
     seedClient: sc,
     users,
@@ -558,8 +551,6 @@ export async function sortingWithFollows(
   await sc.follow(viewerF.did, alice.did)
   await sc.follow(viewerF.did, bob.did)
   // Does not follow carol.
-
-  await sc.network.processAll()
 
   return {
     seedClient: sc,
@@ -613,8 +604,6 @@ export async function blockDeletionAuth(
   await sc.deletePost(alice.did, r['2'].ref.uri)
   await sc.block(blocker.did, blocked.did)
   await sc.block(op.did, opBlocked.did)
-
-  await sc.network.processAll()
 
   return {
     seedClient: sc,

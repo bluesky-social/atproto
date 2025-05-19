@@ -50,12 +50,6 @@ type ThreadPostNode = {
   replies: ThreadTree[] | undefined
 }
 
-const isThreadBlockedNode = (node: ThreadTree): node is ThreadBlockedNode =>
-  AppBskyUnspeccedGetPostThreadV2.isThreadContentBlocked(node.item.content)
-
-const isThreadNotFoundNode = (node: ThreadTree): node is ThreadNotFoundNode =>
-  AppBskyUnspeccedGetPostThreadV2.isThreadContentNotFound(node.item.content)
-
 const isThreadNoUnauthenticatedNode = (
   node: ThreadTree,
 ): node is ThreadNoUnauthenticatedNode =>
@@ -77,7 +71,7 @@ export function sortTrimFlattenThreadTree(
   options: SortTrimFlattenOptions,
 ) {
   const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
-  return flattenThread(sortedAnchorTree)
+  return flattenThree(sortedAnchorTree)
 }
 
 type SortTrimFlattenOptions = {
@@ -205,21 +199,23 @@ function sortTrimThreadTree(
   return node
 }
 
-function flattenThread(anchorTree: ThreadTree) {
+function flattenThree(tree: ThreadTree) {
   return Array.from([
     // All parents above.
     ...Array.from(
-      'parent' in anchorTree && anchorTree.parent
-        ? flattenInDirection({
-            thread: anchorTree.parent,
-            direction: 'up',
-          })
-        : [],
+      flattenInDirection({
+        tree,
+        direction: 'up',
+      }),
     ),
-    // The anchor and all children below.
+
+    // The anchor.
+    tree.item,
+
+    // All replies below.
     ...Array.from(
       flattenInDirection({
-        thread: anchorTree,
+        tree,
         direction: 'down',
       }),
     ),
@@ -227,66 +223,32 @@ function flattenThread(anchorTree: ThreadTree) {
 }
 
 function* flattenInDirection({
-  thread,
+  tree,
   direction,
 }: {
-  thread: ThreadTree
+  tree: ThreadTree
   direction: 'up' | 'down'
 }): Generator<ThreadItem, void> {
-  // Blocked items don't yield further items up or down.
-  if (isThreadBlockedNode(thread)) {
-    yield thread.item
-    return
-  }
-
-  // Not found items don't yield further items up or down.
-  if (isThreadNotFoundNode(thread)) {
-    yield thread.item
-    return
-  }
-
-  if (isThreadNoUnauthenticatedNode(thread)) {
+  if (isThreadNoUnauthenticatedNode(tree)) {
     if (direction === 'up') {
-      if (thread.parent) {
+      if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenInDirection({
-          thread: thread.parent,
-          direction: 'up',
-        })
+        yield* flattenThree(tree.parent)
       }
-
-      // Yield, starting from the top parent.
-      yield thread.item
-    } else {
-      // Yield the no unauthenticated item, but not its children.
-      yield thread.item
     }
-    return
   }
 
-  if (isThreadPostNode(thread)) {
+  if (isThreadPostNode(tree)) {
     if (direction === 'up') {
-      if (thread.parent) {
+      if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenInDirection({
-          thread: thread.parent,
-          direction: 'up',
-        })
+        yield* flattenThree(tree.parent)
       }
-
-      // Yield, starting from the top parent.
-      yield thread.item
     } else {
-      // Yield the item itself (either the anchor or a reply).
-      yield thread.item
-
       // Unfold all replies below.
-      if (thread.replies?.length) {
-        for (const reply of thread.replies) {
-          yield* flattenInDirection({
-            thread: reply,
-            direction: 'down',
-          })
+      if (tree.replies?.length) {
+        for (const reply of tree.replies) {
+          yield* flattenThree(reply)
         }
       }
     }
