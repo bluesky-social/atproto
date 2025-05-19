@@ -9,17 +9,19 @@ import {
   ENV,
   HANDLE_RESOLVER_URL,
   PLC_DIRECTORY_URL,
+  SCOPE,
   SIGN_UP_URL,
 } from './constants.ts'
 
 const clientId = `http://localhost?${new URLSearchParams({
-  scope: 'atproto transition:generic',
+  scope: 'atproto transition:generic transition:email',
   redirect_uri: Object.assign(new URL(window.location.origin), {
     hostname: '127.0.0.1',
     search: new URLSearchParams({
       env: ENV,
       handle_resolver: HANDLE_RESOLVER_URL,
       sign_up_url: SIGN_UP_URL,
+      scope: SCOPE,
       ...(PLC_DIRECTORY_URL && { plc_directory_url: PLC_DIRECTORY_URL }),
     }).toString(),
   }).href,
