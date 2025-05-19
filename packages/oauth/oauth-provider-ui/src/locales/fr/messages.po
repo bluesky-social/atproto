@@ -64,7 +64,7 @@ msgstr "Authoriser l'accès"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:68
 msgid "Avatar"
-msgstr ""
+msgstr "Photo de profile"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/views/authorize/sign-in/sign-in-form.tsx:130
@@ -320,7 +320,7 @@ msgstr "Politique de Confidentialité"
 
 #: src/views/authorize/accept/accept-form.tsx:148
 msgid "Read your email address"
-msgstr ""
+msgstr "Lire votre adresse email"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:205
 #: src/views/authorize/sign-in/sign-in-form.tsx:210
