@@ -574,17 +574,24 @@ export async function blockDeletionAuth(
 ) {
   const users = await createUsers(sc, 'bda', [
     'op',
+    'opBlocked',
     'alice',
     'auth',
     'blocker',
     'blocked',
   ] as const)
 
-  const { op, alice, auth, blocker, blocked } = users
+  const { op, opBlocked, alice, auth, blocker, blocked } = users
 
   const { root, replies: r } = await createThread(sc, op, async (r) => {
-    // Blocked, hidden for `blocked`.
+    // 1p block, hidden for `blocked`.
     await r(blocker, async (r) => {
+      await r(alice)
+    })
+
+    // 3p block, hidden for all.
+    await r(opBlocked, async (r) => {
+      await r(op)
       await r(alice)
     })
 
@@ -603,8 +610,9 @@ export async function blockDeletionAuth(
     })
   })
 
-  await sc.deletePost(alice.did, r['1'].ref.uri)
+  await sc.deletePost(alice.did, r['2'].ref.uri)
   await sc.block(blocker.did, blocked.did)
+  await sc.block(op.did, opBlocked.did)
 
   await sc.network.processAll()
 

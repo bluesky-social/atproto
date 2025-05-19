@@ -17,6 +17,14 @@ import {
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 
+const debugThread = (t: any[]) => {
+  // t.forEach((i) => {
+  //   console.log('### i', i.content.post.record.text)
+  // })
+  console.log('### t', JSON.stringify(t, null, 2))
+  console.log('### t.length', t.length)
+}
+
 describe('appview thread views v2', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -1314,7 +1322,7 @@ describe('appview thread views v2', () => {
       await network.processAll()
     })
 
-    describe(`blocks`, () => {
+    describe(`1p blocks`, () => {
       it(`blocked reply is omitted from replies`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           { uri: seed.root.ref.uriStr },
@@ -1331,9 +1339,9 @@ describe('appview thread views v2', () => {
         assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['2_0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['2_0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3_0_0'].ref.uriStr }),
         ])
       })
 
@@ -1393,6 +1401,140 @@ describe('appview thread views v2', () => {
       })
     })
 
+    describe(`3p blocks`, () => {
+      it(`blocked reply is omitted from replies`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Use `alice` who is a 3rd party between `op` and `opBlocked`.
+              seed.users.alice.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        assertPosts(t)
+        expect(t).toEqual([
+          expect.objectContaining({ uri: seed.root.ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3_0_0'].ref.uriStr }),
+        ])
+      })
+
+      it(`blocked anchor returns post with blocked parent and non-blocked descendants`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['1'].ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Use `alice` who is a 3rd party between `op` and `opBlocked`.
+              seed.users.alice.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.root.ref.uriStr,
+            depth: -1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['1'].ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+          // 1_0 is blocked, but 1_1 is not
+          expect.objectContaining({
+            uri: seed.r['1_1'].ref.uriStr,
+            depth: 1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+        ])
+      })
+
+      it(`blocked parent is replaced by blocked view`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['1_0'].ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Use `alice` who is a 3rd party between `op` and `opBlocked`.
+              seed.users.alice.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.r['1'].ref.uriStr,
+            depth: -1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['1_0'].ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+        ])
+      })
+
+      it(`blocked root is replaced by blocked view`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { uri: seed.r['1_1'].ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Use `alice` who is a 3rd party between `op` and `opBlocked`.
+              seed.users.alice.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.root.ref.uriStr,
+            depth: -2,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentBlocked',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['1'].ref.uriStr,
+            depth: -1,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+          expect.objectContaining({
+            uri: seed.r['1_1'].ref.uriStr,
+            depth: 0,
+            content: expect.objectContaining({
+              $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
+            }),
+          }),
+        ])
+      })
+    })
+
     describe(`deleted posts`, () => {
       it(`deleted reply is omitted from replies`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
@@ -1411,15 +1553,15 @@ describe('appview thread views v2', () => {
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
           expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
           expect.objectContaining({ uri: seed.r['0_0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['2_0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['2_0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3_0_0'].ref.uriStr }),
         ])
       })
 
       it(`deleted anchor returns lone not found view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['1'].ref.uriStr },
+          { uri: seed.r['2'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -1431,7 +1573,7 @@ describe('appview thread views v2', () => {
 
         expect(t).toEqual([
           expect.objectContaining({
-            uri: seed.r['1'].ref.uriStr,
+            uri: seed.r['2'].ref.uriStr,
             depth: 0,
             content: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
@@ -1442,7 +1584,7 @@ describe('appview thread views v2', () => {
 
       it(`deleted parent is replaced by not found view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['1_0'].ref.uriStr },
+          { uri: seed.r['2_0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -1454,14 +1596,14 @@ describe('appview thread views v2', () => {
 
         expect(t).toEqual([
           expect.objectContaining({
-            uri: seed.r['1'].ref.uriStr,
+            uri: seed.r['2'].ref.uriStr,
             depth: -1,
             content: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadContentNotFound',
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['1_0'].ref.uriStr,
+            uri: seed.r['2_0'].ref.uriStr,
             depth: 0,
             content: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',
@@ -1510,7 +1652,7 @@ describe('appview thread views v2', () => {
 
       it(`no-unauthenticated anchor returns no-unauthenticated view without breaking the parent chain`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['2'].ref.uriStr },
+          { uri: seed.r['3'].ref.uriStr },
           {
             headers: {
               'atproto-accept-labelers': `${labelerDid}`,
@@ -1528,7 +1670,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['2'].ref.uriStr,
+            uri: seed.r['3'].ref.uriStr,
             depth: 0,
             content: expect.objectContaining({
               $type:
@@ -1540,7 +1682,7 @@ describe('appview thread views v2', () => {
 
       it(`no-unauthenticated parent is replaced by no-unauthenticated view without breaking the parent chain`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['2_0_0'].ref.uriStr },
+          { uri: seed.r['3_0_0'].ref.uriStr },
           {
             headers: {
               'atproto-accept-labelers': `${labelerDid}`,
@@ -1558,7 +1700,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['2'].ref.uriStr,
+            uri: seed.r['3'].ref.uriStr,
             depth: -2,
             content: expect.objectContaining({
               $type:
@@ -1566,7 +1708,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['2_0'].ref.uriStr,
+            uri: seed.r['3_0'].ref.uriStr,
             depth: -1,
             content: expect.objectContaining({
               $type:
@@ -1574,7 +1716,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['2_0_0'].ref.uriStr,
+            uri: seed.r['3_0_0'].ref.uriStr,
             depth: 0,
             content: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadContentPost',

@@ -1160,7 +1160,7 @@ export class Views {
       ]
     }
 
-    // Blocked.
+    // Blocked (only 1p for anchor).
     if (this.viewerBlockExists(postView.author.did, state)) {
       return [
         this.threadV2ItemBlocked({
@@ -1300,31 +1300,21 @@ export class Views {
       return undefined
     }
 
-    // Blocked.
-    if (
-      !state.ctx?.include3pBlocks &&
-      state.postBlocks?.get(childUri)?.parent
-    ) {
+    // Blocked (1p and 3p for parent).
+    const authorDid = postView.author.did
+    const has1pBlock = this.viewerBlockExists(authorDid, state)
+    const has3pBlock =
+      !state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.parent
+    if (has1pBlock || has3pBlock) {
       return {
         tree: {
           item: this.threadV2ItemBlocked({
             uri,
             depth,
-            authorDid: creatorFromUri(uri),
+            authorDid,
             state,
           }),
         },
-        isOPThread: false,
-      }
-    }
-    // @TODO: unify the 2 cheks and test.
-    const authorDid = postView.author.did
-    if (this.viewerBlockExists(authorDid, state)) {
-      return {
-        tree: {
-          item: this.threadV2ItemBlocked({ uri, depth, authorDid, state }),
-        },
-
         isOPThread: false,
       }
     }
@@ -1415,8 +1405,6 @@ export class Views {
       const postView = this.post(uri, state)
       if (!post || !postView) {
         return undefined
-        // @TODO: Should I return the below or undefined?
-        // return this.threadV2ItemNotFound(uri, depth)
       }
       const authorDid = postView.author.did
       if (rootUri !== getRootUri(uri, post)) {
@@ -1424,11 +1412,11 @@ export class Views {
         return undefined
       }
 
-      // Blocked.
-      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
-        return undefined
-      }
-      if (this.viewerBlockExists(authorDid, state)) {
+      // Blocked (1p and 3p for replies).
+      const has1pBlock = this.viewerBlockExists(authorDid, state)
+      const has3pBlock =
+        !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
+      if (has1pBlock || has3pBlock) {
         return undefined
       }
       if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
