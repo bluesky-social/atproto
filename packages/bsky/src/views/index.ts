@@ -1478,6 +1478,7 @@ export class Views {
         },
         isOPThread,
         hasOPLike,
+        hasReplies: (postView.replyCount ?? 0) > 0,
       },
     }
   }

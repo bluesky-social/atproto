@@ -108,6 +108,8 @@ export interface ThreadItemPost {
   isOPThread: boolean
   /** Whether this post has a like from the OP. */
   hasOPLike: boolean
+  /** Whether this post has replies. Note the replies may not be included in the thread if they are too deep. */
+  hasReplies: boolean
 }
 
 const hashThreadItemPost = 'threadItemPost'

@@ -117,7 +117,7 @@
     },
     "threadItemPost": {
       "type": "object",
-      "required": ["post", "isOPThread", "hasOPLike"],
+      "required": ["post", "isOPThread", "hasOPLike", "hasReplies"],
       "properties": {
         "post": { "type": "ref", "ref": "app.bsky.feed.defs#postView" },
         "isOPThread": {
@@ -127,6 +127,10 @@
         "hasOPLike": {
           "type": "boolean",
           "description": "Whether this post has a like from the OP."
+        },
+        "hasReplies": {
+          "type": "boolean",
+          "description": "Whether this post has replies. Note the replies may not be included in the thread if they are too deep."
         }
       }
     },

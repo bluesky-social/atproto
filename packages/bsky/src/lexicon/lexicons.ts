@@ -10404,7 +10404,7 @@ export const schemaDict = {
       },
       threadItemPost: {
         type: 'object',
-        required: ['post', 'isOPThread', 'hasOPLike'],
+        required: ['post', 'isOPThread', 'hasOPLike', 'hasReplies'],
         properties: {
           post: {
             type: 'ref',
@@ -10418,6 +10418,11 @@ export const schemaDict = {
           hasOPLike: {
             type: 'boolean',
             description: 'Whether this post has a like from the OP.',
+          },
+          hasReplies: {
+            type: 'boolean',
+            description:
+              'Whether this post has replies. Note the replies may not be included in the thread if they are too deep.',
           },
         },
       },
