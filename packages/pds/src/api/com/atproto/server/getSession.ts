@@ -65,8 +65,15 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function render(
-  auth: AccessOutput | OAuthOutput,
+  { credentials }: AccessOutput | OAuthOutput,
   data: ComAtprotoServerGetSession.OutputSchema,
 ): ComAtprotoServerGetSession.OutputSchema {
+  if (
+    credentials.type !== 'access' &&
+    !credentials.oauthScopes.has('transition:email')
+  ) {
+    const { email, emailAuthFactor, emailConfirmed, ...rest } = data
+    return rest
+  }
   return data
 }

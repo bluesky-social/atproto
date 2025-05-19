@@ -79,7 +79,7 @@ export type OAuthOutput = {
     did: string
     scope: AuthScope
     isPrivileged: boolean
-    oauthScopes: string[]
+    oauthScopes: Set<string>
   }
 }
 
@@ -537,7 +537,7 @@ export class AuthVerifier {
           type: 'oauth',
           did: result.claims.sub,
           scope: scopeEquivalent,
-          oauthScopes: Array.from(oauthScopes),
+          oauthScopes,
           isPrivileged: scopeEquivalent === AuthScope.AppPassPrivileged,
         },
       }
