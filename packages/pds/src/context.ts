@@ -364,6 +364,7 @@ export class AppContext {
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
             scopes_supported: [
+              'transition:email',
               'transition:generic',
               'transition:chat.bsky',
               'transition:identity',

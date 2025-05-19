@@ -144,6 +144,8 @@ function ScopeDescription({ scope }: ScopeDescriptionProps) {
   switch (scope) {
     case 'atproto':
       return <Trans>Uniquely identify you</Trans>
+    case 'transition:email':
+      return <Trans>Read your email address</Trans>
     case 'transition:generic':
       return <Trans>Access your account data (except chat messages)</Trans>
     case 'transition:chat.bsky':

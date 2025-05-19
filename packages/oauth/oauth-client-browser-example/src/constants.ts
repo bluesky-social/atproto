@@ -16,3 +16,9 @@ export const HANDLE_RESOLVER_URL: string =
 export const SIGN_UP_URL: string =
   searchParams.get('sign_up_url') ??
   (ENV === 'development' ? 'http://localhost:2583' : 'https://bsky.social')
+
+export const OAUTH_SCOPE: string =
+  searchParams.get('scope') ??
+  (ENV === 'development'
+    ? 'atproto transition:generic transition:email transition:chat.bsky'
+    : 'atproto transition:generic')
