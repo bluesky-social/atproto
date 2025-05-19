@@ -6221,6 +6221,12 @@ export const schemaDict = {
               'Context provided by feed generator that may be passed back alongside interactions.',
             maxLength: 2000,
           },
+          recId: {
+            type: 'string',
+            description:
+              'Unique identiifer per request that may be passed back alongside interactions.',
+            maxLength: 100,
+          },
         },
       },
       replyRef: {
@@ -6448,6 +6454,12 @@ export const schemaDict = {
               'Context that will be passed through to client and may be passed to feed generator back alongside interactions.',
             maxLength: 2000,
           },
+          recId: {
+            type: 'string',
+            description:
+              'Unique identiifer per request that may be passed back alongside interactions.',
+            maxLength: 100,
+          },
         },
       },
       skeletonReasonRepost: {
@@ -6516,6 +6528,12 @@ export const schemaDict = {
             description:
               'Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.',
             maxLength: 2000,
+          },
+          recId: {
+            type: 'string',
+            description:
+              'Unique identiifer per request that may be passed back alongside interactions.',
+            maxLength: 100,
           },
         },
       },
