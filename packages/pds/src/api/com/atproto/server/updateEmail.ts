@@ -2,7 +2,6 @@ import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
-import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -10,7 +9,7 @@ import { ids } from '../../../../lexicon/lexicons'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
     auth: ctx.authVerifier.accessFull({
-      additional: [AuthScope.AppPassIdentity],
+      additionalOauthScopes: ['transition:identity'],
       checkTakedown: true,
     }),
     handler: async ({ auth, input, req }) => {

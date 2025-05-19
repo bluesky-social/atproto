@@ -1,6 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
-import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -9,10 +8,7 @@ import { genInvCodes } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
-    auth: ctx.authVerifier.accessFull({
-      additional: [AuthScope.AppPassIdentity],
-      checkTakedown: true,
-    }),
+    auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
     handler: async ({ params, auth, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(

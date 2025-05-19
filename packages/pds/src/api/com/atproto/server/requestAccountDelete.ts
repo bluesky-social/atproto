@@ -1,6 +1,5 @@
 import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -20,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     auth: ctx.authVerifier.accessFull({
-      additional: [AuthScope.AppPassIdentity],
+      additionalOauthScopes: ['transition:identity'],
       checkTakedown: true,
     }),
     handler: async ({ auth, req }) => {
