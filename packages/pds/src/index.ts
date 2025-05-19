@@ -122,7 +122,14 @@ export class PDS {
     server = API(server, ctx)
 
     const app = express()
-    app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])
+    app.set('trust proxy', [
+      // e.g. load balancer
+      'loopback',
+      'linklocal',
+      'uniquelocal',
+      // e.g. trust x-forwarded-for via entryway ip
+      ...getTrustedIps(cfg),
+    ])
     app.use(loggerMiddleware)
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
@@ -161,3 +168,8 @@ export class PDS {
 }
 
 export default PDS
+
+const getTrustedIps = (cfg: ServerConfig) => {
+  if (!cfg.rateLimits.enabled) return []
+  return cfg.rateLimits.bypassIps ?? []
+}
