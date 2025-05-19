@@ -1,5 +1,6 @@
 ---
 "@atproto/oauth-provider-ui": patch
+"@atproto/oauth-provider": patch
 "@atproto/pds": patch
 ---
 

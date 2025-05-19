@@ -2,4 +2,4 @@
 "@atproto/oauth-client-browser-example": patch
 ---
 
-Show `getSession` data
+Add `com.atproto.server.getSession` query.
