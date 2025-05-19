@@ -160,6 +160,7 @@ function sortTrimThreadTree(
         }
       }
 
+      // Applies the selected sorting.
       if (sorting === 'app.bsky.unspecced.getPostThreadV2#hotness') {
         const aHotness = getPostHotness(a, fetchedAt)
         const bHotness = getPostHotness(b, fetchedAt)
