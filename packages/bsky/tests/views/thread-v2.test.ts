@@ -17,14 +17,6 @@ import {
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 
-const debugThread = (t: any[]) => {
-  // t.forEach((i) => {
-  //   console.log('### i', i.content.post.record.text)
-  // })
-  console.log('### t', JSON.stringify(t, null, 2))
-  console.log('### t.length', t.length)
-}
-
 describe('appview thread views v2', () => {
   let network: TestNetwork
   let agent: AtpAgent
