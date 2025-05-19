@@ -67,20 +67,20 @@ export function negotiateClientAuthMethod(
   )
 }
 
-export type ClientCredentialsGetter = () => Awaitable<OAuthClientCredentials>
+export type ClientCredentialsFactory = () => Awaitable<OAuthClientCredentials>
 
 /**
  * @throws {AuthMethodUnsatisfiableError} if the authentication method is no
  * long usable (either because the AS changed, of because the key is no longer
  * available in the keyset).
  */
-export function buildClientCredentialsGetter(
+export function createClientCredentialsFactory(
   authMethod: ClientAuthMethod,
   serverMetadata: OAuthAuthorizationServerMetadata,
   clientMetadata: ClientMetadata,
   runtime: Runtime,
   keyset?: Keyset,
-): ClientCredentialsGetter {
+): ClientCredentialsFactory {
   // Ensure the AS still supports the auth method.
   if (!supportedMethods(serverMetadata).includes(authMethod.method)) {
     throw new AuthMethodUnsatisfiableError(

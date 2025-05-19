@@ -19,8 +19,8 @@ import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import {
   ClientAuthMethod,
-  ClientCredentialsGetter,
-  buildClientCredentialsGetter,
+  ClientCredentialsFactory,
+  createClientCredentialsFactory,
 } from './oauth-client-auth.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
@@ -45,10 +45,10 @@ export type DpopNonceCache = SimpleStore<string, string>
 
 export class OAuthServerAgent {
   protected dpopFetch: Fetch<unknown>
-  protected buildClientCredentials: ClientCredentialsGetter
+  protected clientCredentialsFactory: ClientCredentialsFactory
 
   /**
-   * @throws see {@link buildClientCredentialsGetter}
+   * @throws see {@link createClientCredentialsFactory}
    */
   constructor(
     readonly authMethod: ClientAuthMethod,
@@ -61,7 +61,7 @@ export class OAuthServerAgent {
     readonly keyset?: Keyset,
     fetch?: Fetch,
   ) {
-    this.buildClientCredentials = buildClientCredentialsGetter(
+    this.clientCredentialsFactory = createClientCredentialsFactory(
       authMethod,
       serverMetadata,
       clientMetadata,
@@ -220,7 +220,7 @@ export class OAuthServerAgent {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
-    const credentials = await this.buildClientCredentials()
+    const credentials = await this.clientCredentialsFactory()
 
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
