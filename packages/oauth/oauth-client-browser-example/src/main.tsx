@@ -8,20 +8,20 @@ import { AuthProvider } from './auth/auth-provider.tsx'
 import {
   ENV,
   HANDLE_RESOLVER_URL,
+  OAUTH_SCOPE,
   PLC_DIRECTORY_URL,
-  SCOPE,
   SIGN_UP_URL,
 } from './constants.ts'
 
 const clientId = `http://localhost?${new URLSearchParams({
-  scope: 'atproto transition:generic transition:email',
+  scope: OAUTH_SCOPE,
   redirect_uri: Object.assign(new URL(window.location.origin), {
     hostname: '127.0.0.1',
     search: new URLSearchParams({
       env: ENV,
       handle_resolver: HANDLE_RESOLVER_URL,
       sign_up_url: SIGN_UP_URL,
-      scope: SCOPE,
+      scope: OAUTH_SCOPE,
       ...(PLC_DIRECTORY_URL && { plc_directory_url: PLC_DIRECTORY_URL }),
     }).toString(),
   }).href,

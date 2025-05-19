@@ -60,7 +60,7 @@ msgstr "Authoriser l'accès"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:68
 msgid "Avatar"
-msgstr ""
+msgstr "Photo de profile"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/views/authorize/sign-in/sign-in-form.tsx:130
@@ -314,6 +314,10 @@ msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre m
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
 
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "Read your email address"
+msgstr "Lire votre adresse email"
+
 #: src/views/authorize/sign-in/sign-in-form.tsx:205
 #: src/views/authorize/sign-in/sign-in-form.tsx:210
 msgid "Remember this account on this device"
@@ -451,10 +455,6 @@ msgstr "Valide"
 #: src/views/authorize/sign-up/sign-up-view.tsx:135
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
-
-#: src/views/authorize/accept/accept-form.tsx:148
-msgid "View your email address"
-msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:193
 msgid "Warning"

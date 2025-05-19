@@ -314,6 +314,10 @@ msgstr "Please verify the domain name of the website before entering your passwo
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "Read your email address"
+msgstr "Read your email address"
+
 #: src/views/authorize/sign-in/sign-in-form.tsx:205
 #: src/views/authorize/sign-in/sign-in-form.tsx:210
 msgid "Remember this account on this device"
@@ -451,10 +455,6 @@ msgstr "Valid"
 #: src/views/authorize/sign-up/sign-up-view.tsx:135
 msgid "Verify you are human"
 msgstr "Verify you are human"
-
-#: src/views/authorize/accept/accept-form.tsx:148
-msgid "View your email address"
-msgstr "View your email address"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:193
 msgid "Warning"

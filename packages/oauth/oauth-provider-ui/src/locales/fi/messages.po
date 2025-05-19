@@ -314,6 +314,10 @@ msgstr ""
 msgid "Privacy Policy"
 msgstr ""
 
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "Read your email address"
+msgstr ""
+
 #: src/views/authorize/sign-in/sign-in-form.tsx:205
 #: src/views/authorize/sign-in/sign-in-form.tsx:210
 msgid "Remember this account on this device"
@@ -450,10 +454,6 @@ msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:135
 msgid "Verify you are human"
-msgstr ""
-
-#: src/views/authorize/accept/accept-form.tsx:148
-msgid "View your email address"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:193
