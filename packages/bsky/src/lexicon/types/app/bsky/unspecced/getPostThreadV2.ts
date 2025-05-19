@@ -111,10 +111,6 @@ export interface ThreadContentPost {
   isOPThread: boolean
   /** Whether this post has a like from the OP. */
   hasOPLike: boolean
-  /** Whether this post has replies that have not been included in the response. */
-  hasUnhydratedReplies: boolean
-  /** Whether this post has parents that have not been included in the response. */
-  hasUnhydratedParents: boolean
 }
 
 const hashThreadContentPost = 'threadContentPost'

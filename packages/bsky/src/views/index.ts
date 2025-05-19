@@ -1228,8 +1228,6 @@ export class Views {
           postView,
           isOPThread,
           hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-          hasUnhydratedReplies: false, // @TODO
-          hasUnhydratedParents: false, // @TODO
         }),
         parent,
         replies: !anchorViolatesThreadGate
@@ -1359,8 +1357,6 @@ export class Views {
           postView,
           isOPThread,
           hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-          hasUnhydratedReplies: false, // @TODO
-          hasUnhydratedParents: false, // @TODO
         }),
         parent,
         replies: undefined,
@@ -1449,8 +1445,6 @@ export class Views {
           postView,
           isOPThread,
           hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-          hasUnhydratedReplies: false, // @TODO
-          hasUnhydratedParents: false, // @TODO
         }),
         parent: undefined,
         replies,
@@ -1466,16 +1460,12 @@ export class Views {
     postView,
     isOPThread,
     hasOPLike,
-    hasUnhydratedReplies,
-    hasUnhydratedParents,
   }: {
     uri: string
     depth: number
     postView: PostView
     isOPThread: boolean
     hasOPLike: boolean
-    hasUnhydratedReplies: boolean
-    hasUnhydratedParents: boolean
   }): ThreadItemContentPost {
     return {
       uri,
@@ -1488,8 +1478,6 @@ export class Views {
         },
         isOPThread,
         hasOPLike,
-        hasUnhydratedReplies,
-        hasUnhydratedParents,
       },
     }
   }

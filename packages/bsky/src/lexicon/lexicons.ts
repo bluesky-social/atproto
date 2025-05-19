@@ -10404,13 +10404,7 @@ export const schemaDict = {
       },
       threadContentPost: {
         type: 'object',
-        required: [
-          'post',
-          'isOPThread',
-          'hasOPLike',
-          'hasUnhydratedReplies',
-          'hasUnhydratedParents',
-        ],
+        required: ['post', 'isOPThread', 'hasOPLike'],
         properties: {
           post: {
             type: 'ref',
@@ -10424,16 +10418,6 @@ export const schemaDict = {
           hasOPLike: {
             type: 'boolean',
             description: 'Whether this post has a like from the OP.',
-          },
-          hasUnhydratedReplies: {
-            type: 'boolean',
-            description:
-              'Whether this post has replies that have not been included in the response.',
-          },
-          hasUnhydratedParents: {
-            type: 'boolean',
-            description:
-              'Whether this post has parents that have not been included in the response.',
           },
         },
       },

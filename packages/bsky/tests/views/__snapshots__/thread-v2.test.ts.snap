@@ -7,8 +7,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -47,8 +45,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -104,8 +100,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -144,8 +138,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -194,8 +186,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -251,8 +241,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -291,8 +279,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -341,8 +327,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -398,8 +382,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -438,8 +420,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -495,8 +475,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -535,8 +513,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -585,8 +561,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -642,8 +616,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -682,8 +654,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -732,8 +702,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -789,8 +757,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -829,8 +795,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -879,8 +843,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -929,8 +891,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -979,8 +939,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -1029,8 +987,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -1079,8 +1035,6 @@ Object {
       "content": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadContentPost",
         "hasOPLike": false,
-        "hasUnhydratedParents": false,
-        "hasUnhydratedReplies": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
