@@ -68,12 +68,20 @@ function render(
   { credentials }: AccessOutput | OAuthOutput,
   data: ComAtprotoServerGetSession.OutputSchema,
 ): ComAtprotoServerGetSession.OutputSchema {
-  if (
-    credentials.type !== 'access' &&
-    !credentials.oauthScopes.has('transition:email')
-  ) {
-    const { email, emailAuthFactor, emailConfirmed, ...rest } = data
-    return rest
+  switch (credentials.type) {
+    case 'access':
+      return data
+
+    case 'oauth':
+      if (!credentials.oauthScopes.has('transition:email')) {
+        const { email, emailAuthFactor, emailConfirmed, ...rest } = data
+        return rest
+      }
+
+      return data
+
+    default:
+      // @ts-expect-error
+      throw new Error(`Unknown credentials type: ${credentials.type}`)
   }
-  return data
 }
