@@ -6221,10 +6221,10 @@ export const schemaDict = {
               'Context provided by feed generator that may be passed back alongside interactions.',
             maxLength: 2000,
           },
-          recId: {
+          reqId: {
             type: 'string',
             description:
-              'Unique identiifer per request that may be passed back alongside interactions.',
+              'Unique identifier per request that may be passed back alongside interactions.',
             maxLength: 100,
           },
         },
@@ -6454,12 +6454,6 @@ export const schemaDict = {
               'Context that will be passed through to client and may be passed to feed generator back alongside interactions.',
             maxLength: 2000,
           },
-          recId: {
-            type: 'string',
-            description:
-              'Unique identiifer per request that may be passed back alongside interactions.',
-            maxLength: 100,
-          },
         },
       },
       skeletonReasonRepost: {
@@ -6529,10 +6523,10 @@ export const schemaDict = {
               'Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.',
             maxLength: 2000,
           },
-          recId: {
+          reqId: {
             type: 'string',
             description:
-              'Unique identiifer per request that may be passed back alongside interactions.',
+              'Unique identifier per request that may be passed back alongside interactions.',
             maxLength: 100,
           },
         },
@@ -7082,6 +7076,12 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
                 },
+              },
+              reqId: {
+                type: 'string',
+                description:
+                  'Unique identifier per request that may be passed back alongside interactions.',
+                maxLength: 100,
               },
             },
           },
