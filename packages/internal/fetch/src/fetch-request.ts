@@ -126,10 +126,18 @@ export function protocolCheckRequestTransform(protocols: {
   }
 }
 
-export function redirectCheckRequestTransform() {
-  return (input: Request | string | URL, init?: RequestInit) => {
+export function explicitRedirectCheckRequestTransform() {
+  return (input: Request | string | URL, init?: RequestInit): Request => {
     const request = asRequest(input, init)
 
+    // We want to avoid the case where the user of this code forgot to explicit
+    // a redirect strategy.
+    if (init?.redirect != null) return request
+
+    // Sadly, if the `input` is a request, and `init` was omitted, there is no
+    // way to tell if the `redirect === 'follow'` value comes from the user, or
+    // fetch's default. In order to prevent accidental omission, this case is
+    // forbidden.
     if (request.redirect === 'follow') {
       throw new FetchRequestError(
         request,

@@ -503,6 +503,7 @@ export const PROTECTED_METHODS = new Set<string>([
   ids.ComAtprotoServerCreateAppPassword,
   ids.ComAtprotoServerDeactivateAccount,
   ids.ComAtprotoServerGetAccountInviteCodes,
+  ids.ComAtprotoServerGetSession,
   ids.ComAtprotoServerListAppPasswords,
   ids.ComAtprotoServerRequestAccountDelete,
   ids.ComAtprotoServerRequestEmailConfirmation,
