@@ -25,11 +25,11 @@ msgstr "Confirmation 2FA"
 msgid "A second authentication factor is required"
 msgstr "Un second facteur d'authentification est requis"
 
-#: src/views/authorize/accept/accept-form.tsx:148
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your account data (except chat messages)"
 msgstr "Accéder aux données de votre compte (sauf les messages de chat)"
 
-#: src/views/authorize/accept/accept-form.tsx:150
+#: src/views/authorize/accept/accept-form.tsx:152
 msgid "Access your chat messages"
 msgstr "Accéder à vos messages de chat"
 
@@ -60,7 +60,7 @@ msgstr "Authoriser l'accès"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:68
 msgid "Avatar"
-msgstr ""
+msgstr "Photo de profile"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:47
 #: src/views/authorize/sign-in/sign-in-form.tsx:130
@@ -313,6 +313,10 @@ msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre m
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
+
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "Read your email address"
+msgstr "Lire votre adresse email"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:205
 #: src/views/authorize/sign-in/sign-in-form.tsx:210

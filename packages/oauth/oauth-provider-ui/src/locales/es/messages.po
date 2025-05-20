@@ -25,11 +25,11 @@ msgstr ""
 msgid "A second authentication factor is required"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:148
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your account data (except chat messages)"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:150
+#: src/views/authorize/accept/accept-form.tsx:152
 msgid "Access your chat messages"
 msgstr ""
 
@@ -312,6 +312,10 @@ msgstr ""
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
+msgstr ""
+
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "Read your email address"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:205

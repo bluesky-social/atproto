@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { UseQueryResult, useQuery } from '@tanstack/react-query'
+import { JSX, useEffect } from 'react'
+import ReactJson from 'react-json-view'
 import { Agent } from '@atproto/api'
 import { OAuthSession } from '@atproto/oauth-client'
 import { useAuthContext } from './auth/auth-provider.tsx'
@@ -6,37 +8,7 @@ import { useAuthContext } from './auth/auth-provider.tsx'
 function App() {
   const { pdsAgent, signOut, refresh } = useAuthContext()
 
-  const hasTokenInfo = pdsAgent.sessionManager instanceof OAuthSession
-
-  const [tokeninfo, setTokeninfo] = useState<unknown>(undefined)
-  const loadTokeninfo = useCallback(async () => {
-    if (pdsAgent.sessionManager instanceof OAuthSession) {
-      setTokeninfo(await pdsAgent.sessionManager.getTokenInfo())
-    }
-  }, [pdsAgent])
-
-  // A call that requires to be authenticated
-  const [serviceAuth, setServiceAuth] = useState<unknown>(undefined)
-  const loadServiceAuth = useCallback(async () => {
-    const serviceAuth = await pdsAgent.com.atproto.server.getServiceAuth({
-      aud: pdsAgent.assertDid,
-    })
-    console.log('serviceAuth', serviceAuth)
-    setServiceAuth(serviceAuth.data)
-  }, [pdsAgent])
-
-  // This call does not require authentication
-  const [profile, setProfile] = useState<unknown>(undefined)
-  const loadProfile = useCallback(async () => {
-    const profile = await pdsAgent.com.atproto.repo.getRecord({
-      repo: pdsAgent.assertDid,
-      collection: 'app.bsky.actor.profile',
-      rkey: 'self',
-    })
-    console.log(profile)
-    setProfile(profile.data)
-  }, [pdsAgent])
-
+  // Expose agent globally
   const global = window as { pdsAgent?: Agent }
   useEffect(() => {
     global.pdsAgent = pdsAgent
@@ -49,42 +21,144 @@ function App() {
 
   return (
     <div>
-      <p>Logged in!</p>
+      <p>
+        Logged in!
+        <div className="ml-2 inline-flex flex-wrap space-x-2">
+          <Button onClick={refresh}>Refresh tokens</Button>
+          <Button onClick={signOut}>Sign-out</Button>
+        </div>
+      </p>
 
-      {hasTokenInfo && (
-        <>
-          <button onClick={loadTokeninfo}>Load token info</button>
-          <code>
-            <pre>
-              {tokeninfo !== undefined
-                ? JSON.stringify(tokeninfo, undefined, 2)
-                : null}
-            </pre>
-          </code>
-        </>
-      )}
-
-      <button onClick={loadProfile}>Load profile</button>
-      <code>
-        <pre>
-          {profile !== undefined ? JSON.stringify(profile, undefined, 2) : null}
-        </pre>
-      </code>
-
-      <button onClick={loadServiceAuth}>Load service auth</button>
-      <code>
-        <pre>
-          {serviceAuth !== undefined
-            ? JSON.stringify(serviceAuth, undefined, 2)
-            : null}
-        </pre>
-      </code>
-
-      <button onClick={refresh}>Refresh tokens</button>
-      <br />
-      <button onClick={signOut}>Sign-out</button>
+      {pdsAgent.sessionManager instanceof OAuthSession && <TokenInfo />}
+      <SessionInfo />
+      <ProfileInfo />
     </div>
   )
 }
 
 export default App
+
+function TokenInfo() {
+  const { pdsAgent } = useAuthContext()
+  const { sessionManager } = pdsAgent
+
+  const oauthSession =
+    sessionManager instanceof OAuthSession ? sessionManager : null
+
+  const result = useQuery({
+    queryKey: ['tokeninfo', pdsAgent.assertDid],
+    queryFn: async () => oauthSession?.getTokenInfo(),
+  })
+
+  return (
+    <div>
+      <h2>
+        Token info
+        <Button
+          className="ml-2"
+          onClick={() => result.refetch({ throwOnError: false })}
+        >
+          refresh
+        </Button>
+      </h2>
+      <QueryResult result={result} />
+    </div>
+  )
+}
+
+function ProfileInfo() {
+  const { pdsAgent } = useAuthContext()
+
+  const result = useQuery({
+    queryKey: ['profile', pdsAgent.assertDid],
+    queryFn: async () => {
+      const { data } = await pdsAgent.com.atproto.repo.getRecord({
+        repo: pdsAgent.assertDid,
+        collection: 'app.bsky.actor.profile',
+        rkey: 'self',
+      })
+      return data
+    },
+  })
+
+  return (
+    <div>
+      <h2>
+        Profile
+        <Button
+          className="ml-2"
+          onClick={() => result.refetch({ throwOnError: false })}
+        >
+          refresh
+        </Button>
+      </h2>
+      <QueryResult result={result} />
+    </div>
+  )
+}
+
+function SessionInfo() {
+  const { pdsAgent } = useAuthContext()
+
+  const result = useQuery({
+    queryKey: ['session', pdsAgent.assertDid],
+    queryFn: async () => {
+      const { data } = await pdsAgent.com.atproto.server.getSession()
+      return data
+    },
+  })
+
+  return (
+    <div>
+      <h2>
+        getSession
+        <Button
+          className="ml-2"
+          onClick={() => result.refetch({ throwOnError: false })}
+        >
+          refresh
+        </Button>
+      </h2>
+      <QueryResult result={result} />
+    </div>
+  )
+}
+
+function QueryResult({ result }: { result: UseQueryResult }) {
+  return (
+    <div>
+      {result.data !== undefined ? (
+        result.data === null ? (
+          'null'
+        ) : (
+          <ReactJson
+            src={result.data}
+            indentWidth={2}
+            displayDataTypes={false}
+          />
+        )
+      ) : result.isLoading ? (
+        <p>Loading...</p>
+      ) : result.isError ? (
+        <p>Error: {String(result.error)}</p>
+      ) : (
+        <p>Error: no-data</p>
+      )}
+    </div>
+  )
+}
+
+function Button({
+  children,
+  className,
+  ...props
+}: JSX.IntrinsicElements['button']) {
+  return (
+    <button
+      {...props}
+      className={`inline-block transform rounded bg-cyan-300 px-2 py-1 text-black shadow-lg transition duration-300 ease-in-out hover:scale-105 hover:bg-cyan-500 ${className || ''}`}
+    >
+      {children}
+    </button>
+  )
+}

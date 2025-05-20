@@ -25,11 +25,11 @@ msgstr "2FA Confirmation"
 msgid "A second authentication factor is required"
 msgstr "A second authentication factor is required"
 
-#: src/views/authorize/accept/accept-form.tsx:148
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your account data (except chat messages)"
 msgstr "Access your account data (except chat messages)"
 
-#: src/views/authorize/accept/accept-form.tsx:150
+#: src/views/authorize/accept/accept-form.tsx:152
 msgid "Access your chat messages"
 msgstr "Access your chat messages"
 
@@ -313,6 +313,10 @@ msgstr "Please verify the domain name of the website before entering your passwo
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
+
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "Read your email address"
+msgstr "Read your email address"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:205
 #: src/views/authorize/sign-in/sign-in-form.tsx:210
