@@ -3,4 +3,4 @@
 "@atproto/api": patch
 ---
 
-add `recId` to feed interactions
+add `reqId` to feed interactions
