@@ -1,5 +1,20 @@
 # @atproto/pds
 
+## 0.4.138
+
+### Patch Changes
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow access to `com.atproto.server.getSession` when authenticated using oauth credentials. Email info (`email`, `emailConfirmed`) will only be exposed if the credentials were issued with the `transition:email` scope.
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `transition:email` oauth scope
+
+- [#3868](https://github.com/bluesky-social/atproto/pull/3868) [`eab7c9fb8`](https://github.com/bluesky-social/atproto/commit/eab7c9fb8a9fed4017455ea06666c919aea61336) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use the PDS's hostname as fallback PDS "name" in the auth screen
+
+- Updated dependencies [[`80f402f36`](https://github.com/bluesky-social/atproto/commit/80f402f3663af08fd048300738d04c67aa2b9cb8), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`36dbd4155`](https://github.com/bluesky-social/atproto/commit/36dbd41551f74052a3f584719a1a7edd86eca201), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`43861a452`](https://github.com/bluesky-social/atproto/commit/43861a452b70268e738ef12033297cddacbe25d4), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337)]:
+  - @atproto/api@0.15.8
+  - @atproto-labs/fetch-node@0.1.9
+  - @atproto/oauth-provider@0.7.7
+
 ## 0.4.137
 
 ### Patch Changes
