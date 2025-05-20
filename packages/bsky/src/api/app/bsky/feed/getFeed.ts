@@ -257,6 +257,7 @@ const skeletonFromFeedGen = async (
       ? { uri: item.reason.repost }
       : undefined,
     feedContext: item.feedContext,
+    recId: item.recId,
   }))
 
   return { ...skele, resHeaders, feedItems }
@@ -270,4 +271,5 @@ export type AlgoResponse = {
 
 export type AlgoResponseItem = FeedItem & {
   feedContext?: string
+  recId?: string
 }
