@@ -231,12 +231,12 @@ export class Client {
           maxTokenAge: CLIENT_ASSERTION_MAX_AGE / 1000,
           requiredClaims: ['jti'],
         }).catch((err) => {
-          if (err instanceof JOSEError) {
-            const msg = `Validation of "client_assertion" failed: ${err.message}`
-            throw new InvalidClientError(msg, err)
-          }
+          const msg =
+            err instanceof JOSEError
+              ? `Validation of "client_assertion" failed: ${err.message}`
+              : `Unable to verify "client_assertion" JWT`
 
-          throw err
+          throw new InvalidClientError(msg, err)
         })
 
         if (!result.protectedHeader.kid) {
