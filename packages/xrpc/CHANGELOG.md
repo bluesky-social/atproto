@@ -1,5 +1,20 @@
 # @atproto/xrpc
 
+## 0.7.0
+
+### Minor Changes
+
+- [#3792](https://github.com/bluesky-social/atproto/pull/3792) [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `ResponseType.AuthRequired` into `ResponseType.AuthenticationRequired` to match actual error name.
+
+- [#3792](https://github.com/bluesky-social/atproto/pull/3792) [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove un-necessary `ResponseTypeNames` in favor of `ResponseType`.
+
+### Patch Changes
+
+- [#3792](https://github.com/bluesky-social/atproto/pull/3792) [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing `NotAcceptable` key in `ResponseTypeStrings`
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/lexicon@0.4.11
+
 ## 0.6.12
 
 ### Patch Changes

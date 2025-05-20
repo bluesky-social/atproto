@@ -134,8 +134,6 @@ import {
   GetPostgateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
-  GetPostReplyCountsRequest,
-  GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
   GetQuotesBySubjectSortedRequest,
@@ -154,6 +152,8 @@ import {
   GetStarterPackCountsResponse,
   GetStarterPackRecordsRequest,
   GetStarterPackRecordsResponse,
+  GetStatusRecordsRequest,
+  GetStatusRecordsResponse,
   GetSuggestedEntitiesRequest,
   GetSuggestedEntitiesResponse,
   GetSuggestedFeedsRequest,
@@ -303,6 +303,15 @@ export const Service = {
       name: 'GetActorChatDeclarationRecords',
       I: GetActorChatDeclarationRecordsRequest,
       O: GetActorChatDeclarationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetStatusRecords
+     */
+    getStatusRecords: {
+      name: 'GetStatusRecords',
+      I: GetStatusRecordsRequest,
+      O: GetStatusRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -883,17 +892,6 @@ export const Service = {
       name: 'GetSuggestedEntities',
       I: GetSuggestedEntitiesRequest,
       O: GetSuggestedEntitiesResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * Posts
-     *
-     * @generated from rpc bsky.Service.GetPostReplyCounts
-     */
-    getPostReplyCounts: {
-      name: 'GetPostReplyCounts',
-      I: GetPostReplyCountsRequest,
-      O: GetPostReplyCountsResponse,
       kind: MethodKind.Unary,
     },
     /**

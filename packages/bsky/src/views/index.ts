@@ -1,4 +1,4 @@
-import { mapDefined } from '@atproto/common'
+import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
@@ -13,6 +13,7 @@ import {
   ProfileView,
   ProfileViewBasic,
   ProfileViewDetailed,
+  StatusView,
   VerificationState,
   VerificationView,
   ViewerState as ProfileViewer,
@@ -145,20 +146,20 @@ export class Views {
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
-    const actor = state.profileViewers?.get(did)
-    if (!actor) return false
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
     return !!(
-      actor.blockedBy ||
-      actor.blocking ||
-      this.blockedByList(actor, state) ||
-      this.blockingByList(actor, state)
+      viewer.blockedBy ||
+      viewer.blocking ||
+      this.blockedByList(viewer, state) ||
+      this.blockingByList(viewer, state)
     )
   }
 
   viewerMuteExists(did: string, state: HydrationState): boolean {
-    const actor = state.profileViewers?.get(did)
-    if (!actor) return false
-    return !!(actor.muted || this.mutedByList(actor, state))
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!(viewer.muted || this.mutedByList(viewer, state))
   }
 
   blockingByList(viewer: ProfileViewerState, state: HydrationState) {
@@ -330,6 +331,7 @@ export class Views {
       labels,
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
+      status: this.status(did, state),
     }
   }
 
@@ -386,7 +388,7 @@ export class Views {
       if (this.viewerBlockExists(followerDid, state)) {
         return undefined
       }
-      if (blocks?.get(followerDid) === true) {
+      if (blocks?.get(followerDid)) {
         return undefined
       }
       if (this.actorIsNoHosted(followerDid, state)) {
@@ -450,6 +452,40 @@ export class Views {
       verifications,
       verifiedStatus,
       trustedVerifierStatus,
+    }
+  }
+
+  status(did: string, state: HydrationState): StatusView | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor?.status) return
+
+    const { status } = actor
+    const { record, sortedAt } = status
+
+    const minDuration = 5 * MINUTE
+    const maxDuration = 4 * HOUR
+
+    const expiresAtMs = record.durationMinutes
+      ? sortedAt.getTime() +
+        Math.max(
+          Math.min(record.durationMinutes * MINUTE, maxDuration),
+          minDuration,
+        )
+      : undefined
+    const expiresAt = expiresAtMs
+      ? new Date(expiresAtMs).toISOString()
+      : undefined
+
+    const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
+
+    return {
+      record: record,
+      status: record.status,
+      embed: isExternalEmbed(record.embed)
+        ? this.externalEmbed(did, record.embed)
+        : undefined,
+      expiresAt,
+      isActive,
     }
   }
 

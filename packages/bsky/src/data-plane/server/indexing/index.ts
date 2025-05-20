@@ -31,6 +31,7 @@ import * as Postgate from './plugins/post-gate'
 import * as Profile from './plugins/profile'
 import * as Repost from './plugins/repost'
 import * as StarterPack from './plugins/starter-pack'
+import * as Status from './plugins/status'
 import * as Threadgate from './plugins/thread-gate'
 import * as Verification from './plugins/verification'
 import { RecordProcessor } from './processor'
@@ -53,6 +54,7 @@ export class IndexingService {
     labeler: Labeler.PluginType
     chatDeclaration: ChatDeclaration.PluginType
     verification: Verification.PluginType
+    status: Status.PluginType
   }
 
   constructor(
@@ -77,6 +79,7 @@ export class IndexingService {
       labeler: Labeler.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
       verification: Verification.makePlugin(this.db, this.background),
+      status: Status.makePlugin(this.db, this.background),
     }
   }
 

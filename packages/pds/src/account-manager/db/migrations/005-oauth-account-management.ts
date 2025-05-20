@@ -3,8 +3,19 @@ import { HOUR } from '@atproto/common'
 import { ClientId, DeviceId } from '@atproto/oauth-provider'
 import { DateISO, JsonEncoded, toDateISO } from '../../../db'
 
+// @NOTE this migration has been updated to be idempotent through
+// the insertInto('account_device') step. this allows users to roll
+// forward if the migration partially succeeded on first run, failing
+// on a fk constraint during the insertInto('account_device') step.
+// this previously occurred under the following conditions:
+//  a. a user was deleted
+//  b. this user used oauth functionality with "remember me" selected.
+
 export async function up(
   db: Kysely<{
+    account: {
+      did: string
+    }
     device_account: {
       did: string
       deviceId: DeviceId
@@ -23,6 +34,7 @@ export async function up(
   }>,
 ): Promise<void> {
   // Security: Delete any leftover device accounts that are not remembered
+  // @NOTE idempotent, see note at top of migration.
   await db
     .deleteFrom('device_account')
     .where('remember', '=', 0)
@@ -30,8 +42,10 @@ export async function up(
     .execute()
 
   // replaces "device_account"
+  // @NOTE idempotent from ifNotExists(), see note at top of migration.
   await db.schema
     .createTable('account_device')
+    .ifNotExists()
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('deviceId', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
@@ -59,6 +73,7 @@ export async function up(
     .execute()
 
   // Migrate "device_account" to "account_device"
+  // @NOTE idempotent from onConflict(): see note at top of migration.
   await db
     .insertInto('account_device')
     .columns(['did', 'deviceId', 'createdAt', 'updatedAt'])
@@ -69,7 +84,15 @@ export async function up(
         .select('deviceId')
         .select('authenticatedAt as createdAt') // Best we can do
         .select('authenticatedAt as updatedAt')
-        .where('remember', '=', 1),
+        .where('remember', '=', 1)
+        .whereExists((qb) =>
+          // device_account does not have fkey on account.did,
+          // so we satisfy account_device_did_fk with this condition.
+          qb
+            .selectFrom('account')
+            .selectAll()
+            .whereRef('account.did', '=', 'device_account.did'),
+        ),
     )
     .onConflict((oc) => oc.doNothing())
     .execute()

@@ -133,7 +133,7 @@ const maybeGetBlocksForReferenceAndCurateList = async (input: {
     creator,
     listitems.map(({ did }) => did),
   )
-  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
+  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs, params.hydrateCtx)
 }
 
 type Context = {

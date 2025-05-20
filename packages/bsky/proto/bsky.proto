@@ -110,6 +110,14 @@ message GetActorChatDeclarationRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetStatusRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetStatusRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetRepostRecordsRequest {
   repeated string uris = 1;
 }
@@ -336,6 +344,7 @@ message GetActorLikesResponse {
 //
 message GetInteractionCountsRequest {
   repeated RecordRef refs = 1;
+  repeated string skip_cache_for_dids = 2;
 }
 
 message GetInteractionCountsResponse {
@@ -458,6 +467,11 @@ message ActorInfo {
   double pagerank = 12;
   bool trusted_verifier = 13;
   map<string, VerificationMeta> verified_by = 14;
+  // Tags being applied to the account itself
+  repeated string tags = 15;
+  // Tags being applied to the profile record
+  repeated string profile_tags = 16;
+  Record status_record = 17;
 }
 
 message GetActorsResponse {
@@ -469,6 +483,7 @@ message GetActorsResponse {
 //     - answering queries where the query param is a handle
 message GetDidsByHandlesRequest {
   repeated string handles = 1;
+  bool lookup_unidirectional = 2;
 }
 
 message GetDidsByHandlesResponse {
@@ -1021,20 +1036,6 @@ message GetSuggestedEntitiesResponse {
 }
 
 //
-// Posts
-//
-
-// - Return post reply count with uris A, B, C…
-//     - All feed hydration
-message GetPostReplyCountsRequest {
-  repeated RecordRef refs = 1;
-}
-
-message GetPostReplyCountsResponse {
-  repeated int32 counts = 1;
-}
-
-//
 // Labels
 //
 
@@ -1180,6 +1181,7 @@ service Service {
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
+  rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
   rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
@@ -1280,9 +1282,6 @@ service Service {
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
   rpc GetSuggestedEntities(GetSuggestedEntitiesRequest) returns (GetSuggestedEntitiesResponse);
-
-  // Posts
-  rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
 
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);

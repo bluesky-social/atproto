@@ -4568,6 +4568,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
           },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
+          },
         },
       },
       profileView: {
@@ -4622,6 +4626,10 @@ export const schemaDict = {
           verification: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
           },
         },
       },
@@ -4698,6 +4706,10 @@ export const schemaDict = {
           verification: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
           },
         },
       },
@@ -5240,6 +5252,36 @@ export const schemaDict = {
           },
         },
       },
+      statusView: {
+        type: 'object',
+        required: ['status', 'record'],
+        properties: {
+          status: {
+            type: 'string',
+            description: 'The status for the account.',
+            knownValues: ['app.bsky.actor.status#live'],
+          },
+          record: {
+            type: 'unknown',
+          },
+          embed: {
+            type: 'union',
+            description: 'An optional embed associated with the status.',
+            refs: ['lex:app.bsky.embed.external#view'],
+          },
+          expiresAt: {
+            type: 'string',
+            description:
+              'The date when this status will expire. The application might choose to no longer return the status after expiration.',
+            format: 'datetime',
+          },
+          isActive: {
+            type: 'boolean',
+            description:
+              'True if the status is not expired, false if it is expired. Only present if expiration was set.',
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
@@ -5566,6 +5608,48 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyActorStatus: {
+    lexicon: 1,
+    id: 'app.bsky.actor.status',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of a Bluesky account status.',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['status', 'createdAt'],
+          properties: {
+            status: {
+              type: 'string',
+              description: 'The status for the account.',
+              knownValues: ['app.bsky.actor.status#live'],
+            },
+            embed: {
+              type: 'union',
+              description: 'An optional embed associated with the status.',
+              refs: ['lex:app.bsky.embed.external'],
+            },
+            durationMinutes: {
+              type: 'integer',
+              description:
+                'The duration of the status in minutes. Applications can choose to impose minimum and maximum limits.',
+              minimum: 1,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      live: {
+        type: 'token',
+        description:
+          'Advertises an account as currently offering live content.',
       },
     },
   },
@@ -7129,6 +7213,48 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7190,48 +7316,6 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
-      },
-    },
-  },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -10099,6 +10183,29 @@ export const schemaDict = {
               checkEmailConfirmed: {
                 type: 'boolean',
               },
+              liveNow: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getConfig#liveNowConfig',
+                },
+              },
+            },
+          },
+        },
+      },
+      liveNowConfig: {
+        type: 'object',
+        required: ['did', 'domains'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          domains: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
         },
@@ -12497,6 +12604,7 @@ export const ids = {
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyActorStatus: 'app.bsky.actor.status',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
@@ -12515,8 +12623,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',

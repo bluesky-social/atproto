@@ -42,6 +42,7 @@ const importRepo = async (
 
   const { roots, blocks } = await readCarStream(incomingCar)
   if (roots.length !== 1) {
+    await blocks.dump()
     throw new InvalidRequestError('expected one root')
   }
   const blockMap = new BlockMap()

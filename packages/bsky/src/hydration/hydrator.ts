@@ -37,6 +37,7 @@ import {
   Threadgates,
 } from './feed'
 import {
+  BlockEntry,
   Follows,
   GraphHydrator,
   ListAggs,
@@ -265,7 +266,7 @@ export class Hydrator {
     const [state, profileAggs, bidirectionalBlocks] = await Promise.all([
       this.hydrateProfiles(allDids, ctx),
       this.actor.getProfileAggregates(dids),
-      this.hydrateBidirectionalBlocks(subjectsToKnownFollowersMap),
+      this.hydrateBidirectionalBlocks(subjectsToKnownFollowersMap, ctx),
     ])
     const starterPackUriSet = new Set<string>()
     state.actors?.forEach((actor) => {
@@ -486,12 +487,12 @@ export class Hydrator {
       starterPackState,
       postgates,
     ] = await Promise.all([
-      this.feed.getPostAggregates(allRefs),
+      this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
-      this.hydratePostBlocks(posts),
+      this.hydratePostBlocks(posts, ctx),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
@@ -522,7 +523,10 @@ export class Hydrator {
     )
   }
 
-  private async hydratePostBlocks(posts: Posts): Promise<PostBlocks> {
+  private async hydratePostBlocks(
+    posts: Posts,
+    ctx: HydrateCtx,
+  ): Promise<PostBlocks> {
     const postBlocks = new HydrationMap<PostBlock>()
     const postBlocksPairs = new Map<string, PostBlockPairs>()
     const relationships: RelationshipPair[] = []
@@ -557,6 +561,7 @@ export class Hydrator {
     // replace embed/parent/root pairs with block state
     const blocks = await this.hydrateBidirectionalBlocks(
       pairsToMap(relationships),
+      ctx,
     )
     for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
@@ -683,7 +688,10 @@ export class Hydrator {
     const [feedgens, feedgenAggs, feedgenViewers, profileState, labels] =
       await Promise.all([
         this.feed.getFeedGens(uris, ctx.includeTakedowns),
-        this.feed.getFeedGenAggregates(uris.map((uri) => ({ uri }))),
+        this.feed.getFeedGenAggregates(
+          uris.map((uri) => ({ uri })),
+          ctx.viewer,
+        ),
         ctx.viewer
           ? this.feed.getFeedGenViewerStates(uris, ctx.viewer)
           : undefined,
@@ -782,6 +790,7 @@ export class Hydrator {
     )
     const blocks = await this.hydrateBidirectionalBlocks(
       pairsToMap(listCreatorMemberPairs),
+      ctx,
     )
     // sample top list items per starter pack based on their follows
     const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
@@ -839,7 +848,7 @@ export class Hydrator {
         pairs.push([authorDid, didFromUri(uri)])
       }
     }
-    const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs))
+    const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs), ctx)
     const likeBlocks = new HydrationMap<LikeBlock>()
     for (const [uri, like] of likes) {
       if (like) {
@@ -925,7 +934,10 @@ export class Hydrator {
   }
 
   // provides partial hydration state within getFollows / getFollowers, mainly for applying rules
-  async hydrateFollows(uris: string[]): Promise<HydrationState> {
+  async hydrateFollows(
+    uris: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
     const follows = await this.graph.getFollows(uris)
     const pairs: RelationshipPair[] = []
     for (const [uri, follow] of follows) {
@@ -933,7 +945,7 @@ export class Hydrator {
         pairs.push([didFromUri(uri), follow.record.subject])
       }
     }
-    const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs))
+    const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs), ctx)
     const followBlocks = new HydrationMap<FollowBlock>()
     for (const [uri, follow] of follows) {
       if (follow) {
@@ -950,6 +962,7 @@ export class Hydrator {
 
   async hydrateBidirectionalBlocks(
     didMap: Map<string, string[]>, // DID -> DID[]
+    ctx: HydrateCtx,
   ): Promise<BidirectionalBlocks> {
     const pairs: RelationshipPair[] = []
     for (const [source, targets] of didMap) {
@@ -958,32 +971,56 @@ export class Hydrator {
       }
     }
 
-    const result = new HydrationMap<HydrationMap<boolean>>()
     const blocks = await this.graph.getBidirectionalBlocks(pairs)
-
-    // lookup list authors to apply takedown status to blocklists
-    const listAuthorDids = new Set<string>()
+    const listUrisSet = new Set<string>()
     for (const [source, targets] of didMap) {
       for (const target of targets) {
         const block = blocks.get(source, target)
         if (block?.blockListUri) {
-          listAuthorDids.add(uriToDid(block.blockListUri))
+          listUrisSet.add(block.blockListUri)
+        }
+      }
+    }
+    const listUris = [...listUrisSet]
+
+    // if a list no longer exists or is not a mod list, then remove from block entry
+    const listState = await this.hydrateListsBasic(listUris, ctx)
+    for (const [source, targets] of didMap) {
+      for (const target of targets) {
+        const block = blocks.get(source, target)
+        if (!isModList(block?.blockListUri, listState)) {
+          delete block?.blockListUri
         }
       }
     }
 
-    const activeListAuthors = await this.actor.getActors([...listAuthorDids])
-
+    const result: BidirectionalBlocks = new HydrationMap<
+      HydrationMap<boolean>
+    >()
     for (const [source, targets] of didMap) {
       const didBlocks = new HydrationMap<boolean>()
       for (const target of targets) {
         const block = blocks.get(source, target)
-        const isBlocked = !!(
-          block?.blockUri ||
-          (block?.blockListUri &&
-            activeListAuthors.get(uriToDid(block.blockListUri)))
+
+        // If a list no longer exists or is not a mod list, then remove from block entry.
+        // isModList confirms the list exists in listState, which ensures it wasn't taken down.
+        if (!isModList(block?.blockListUri, listState)) {
+          delete block?.blockListUri
+        }
+
+        const blockEntry: BlockEntry = {
+          blockUri: block?.blockUri,
+          blockListUri:
+            block?.blockListUri &&
+            listState.actors?.get(uriToDid(block.blockListUri))
+              ? block.blockListUri
+              : undefined,
+        }
+
+        didBlocks.set(
+          target,
+          !!blockEntry.blockUri || !!blockEntry.blockListUri,
         )
-        didBlocks.set(target, isBlocked)
       }
       result.set(source, didBlocks)
     }
@@ -1002,7 +1039,7 @@ export class Hydrator {
     const [labelers, labelerAggs, labelerViewers, profileState] =
       await Promise.all([
         this.label.getLabelers(dids, ctx.includeTakedowns),
-        this.label.getLabelerAggregates(dids),
+        this.label.getLabelerAggregates(dids, ctx.viewer),
         ctx.viewer
           ? this.label.getLabelerViewerStates(dids, ctx.viewer)
           : undefined,
@@ -1092,6 +1129,12 @@ export class Hydrator {
         (await this.actor.getChatDeclarations([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
+      )
+    } else if (collection === ids.AppBskyActorStatus) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (await this.actor.getStatus([uri], includeTakedowns)).get(uri) ??
+        undefined
       )
     } else if (collection === ids.AppBskyActorProfile) {
       const did = parsed.hostname
@@ -1251,7 +1294,7 @@ const getListUrisFromThreadgates = (gates: Threadgates) => {
 }
 
 const isBlocked = (blocks: BidirectionalBlocks, [a, b]: RelationshipPair) => {
-  return blocks.get(a)?.get(b) ?? null
+  return blocks.get(a)?.get(b) ?? false
 }
 
 const pairsToMap = (pairs: RelationshipPair[]): Map<string, string[]> => {

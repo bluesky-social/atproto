@@ -206,9 +206,15 @@ export class FeedHydrator {
     }, new HydrationMap<ThreadContext>())
   }
 
-  async getPostAggregates(refs: ItemRef[]): Promise<PostAggs> {
+  async getPostAggregates(
+    refs: ItemRef[],
+    viewer: string | null,
+  ): Promise<PostAggs> {
     if (!refs.length) return new HydrationMap<PostAgg>()
-    const counts = await this.dataplane.getInteractionCounts({ refs })
+    const counts = await this.dataplane.getInteractionCounts({
+      refs,
+      skipCacheForDids: viewer ? [viewer] : undefined,
+    })
     return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
         likes: counts.likes[i] ?? 0,
@@ -250,9 +256,15 @@ export class FeedHydrator {
     }, new HydrationMap<FeedGenViewerState>())
   }
 
-  async getFeedGenAggregates(refs: ItemRef[]): Promise<FeedGenAggs> {
+  async getFeedGenAggregates(
+    refs: ItemRef[],
+    viewer: string | null,
+  ): Promise<FeedGenAggs> {
     if (!refs.length) return new HydrationMap<FeedGenAgg>()
-    const counts = await this.dataplane.getInteractionCounts({ refs })
+    const counts = await this.dataplane.getInteractionCounts({
+      refs,
+      skipCacheForDids: viewer ? [viewer] : undefined,
+    })
     return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
         likes: counts.likes[i] ?? 0,

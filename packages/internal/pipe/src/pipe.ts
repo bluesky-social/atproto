@@ -1,33 +1,33 @@
-import { Transformer } from './transformer.js'
+import { Fn, Transformer } from './type.js'
 
-type PipelineInput<T extends readonly Transformer<any>[]> = T extends [
-  Transformer<infer I, any>,
+type PipelineArgs<T> = T extends [
+  Fn<infer A extends readonly unknown[], any>,
   ...any[],
 ]
-  ? I
-  : T extends Transformer<infer I, any>[]
-    ? I
-    : never
+  ? A
+  : never
 
-type PipelineOutput<T extends readonly Transformer<any>[]> = T extends [
-  ...any[],
-  Transformer<any, infer O>,
-]
-  ? O
-  : T extends Transformer<any, infer O>[]
-    ? O
-    : never
+type PipelineOutput<T> = T extends [...any[], Fn<any, infer O>] ? O : never
 
-type Pipeline<
+type PipelineRecursive<
   F extends readonly Transformer<any>[],
-  Acc extends readonly Transformer<any>[] = [],
-> = F extends [Transformer<infer I, infer O>]
+  Acc extends any[],
+> = F extends readonly [Transformer<infer I, infer O>]
   ? [...Acc, Transformer<I, O>]
-  : F extends [Transformer<infer A, any>, ...infer Tail]
-    ? Tail extends [Transformer<infer B, any>, ...any[]]
-      ? Pipeline<Tail, [...Acc, Transformer<A, B>]>
-      : Acc
-    : Acc
+  : F extends readonly [Transformer<infer A, any>, ...infer Tail]
+    ? Tail extends readonly [Transformer<infer B, any>, ...any[]]
+      ? PipelineRecursive<Tail, [...Acc, Transformer<A, B>]>
+      : never
+    : never
+
+type Pipeline<F extends readonly [Fn<any, any>, ...Transformer<any>[]]> =
+  F extends readonly [Fn<infer A, infer O>]
+    ? [Fn<A, O>]
+    : F extends readonly [Fn<infer A, any>, ...infer Tail]
+      ? Tail extends readonly [Transformer<infer B, any>, ...any[]]
+        ? PipelineRecursive<Tail, [Fn<A, B>]>
+        : never
+      : never
 
 /**
  * This utility function allows to properly type a pipeline of transformers.
@@ -45,19 +45,17 @@ type Pipeline<
  * )
  * ```
  */
-export function pipe(): never
-export function pipe<T extends readonly Transformer<any>[]>(
+export function pipe<T extends readonly [Fn<any, any>, ...Transformer<any>[]]>(
   ...pipeline: Pipeline<T> extends T ? T : Pipeline<T>
-): (input: PipelineInput<T>) => Promise<PipelineOutput<T>>
-export function pipe<T extends readonly Transformer<any>[]>(
-  ...pipeline: Pipeline<T> extends T ? T : Pipeline<T>
-): (input: PipelineInput<T>) => Promise<PipelineOutput<T>> {
-  return pipeline.reduce(pipeTwo)
+) {
+  return pipeline.reduce(pipeTwo) as (
+    ...args: PipelineArgs<T>
+  ) => Promise<PipelineOutput<T>>
 }
 
-export function pipeTwo<I, O, X = unknown>(
-  first: Transformer<I, X>,
+export function pipeTwo<A extends readonly unknown[], O, X = unknown>(
+  first: Fn<A, X>,
   second: Transformer<X, O>,
-): (input: I) => Promise<O> {
-  return async (input) => second(await first(input))
+): (...args: A) => Promise<O> {
+  return async (...args) => second(await first(...args))
 }

@@ -108,8 +108,8 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -193,6 +193,9 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
+export const APP_BSKY_ACTOR = {
+  StatusLive: 'app.bsky.actor.status#live',
 }
 export const APP_BSKY_FEED = {
   DefsRequestLess: 'app.bsky.feed.defs#requestLess',
@@ -1494,17 +1497,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getPostThread<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyFeedGetPostThread.Handler<ExtractAuth<AV>>,
-      AppBskyFeedGetPostThread.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getPosts<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1513,6 +1505,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetPostThread.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetPostThread.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

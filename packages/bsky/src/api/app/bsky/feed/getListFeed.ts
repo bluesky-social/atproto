@@ -129,7 +129,7 @@ const getBlocks = async (input: {
     uriToDid(params.list),
     skeleton.items.map((item) => uriToDid(item.post.uri)),
   )
-  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
+  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs, params.hydrateCtx)
 }
 
 type Context = {
