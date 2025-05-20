@@ -147,7 +147,7 @@ const presentation = (
     }
   })
   return {
-    feed: feed.map((fi) => ({...fi, reqId: skeleton.reqId})),
+    feed: feed.map((fi) => ({ ...fi, reqId: skeleton.reqId })),
     cursor: skeleton.cursor,
     timerSkele: skeleton.timerSkele,
     timerHydr: skeleton.timerHydr,
