@@ -2,4 +2,4 @@
 "@atproto/oauth-provider": patch
 ---
 
-Verify the presence of a "kid" in singed JAR headers
+Verify the presence of a "kid" in signed JAR headers
