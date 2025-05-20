@@ -1,5 +1,13 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.4
+
+### Patch Changes
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `com.atproto.server.getSession` query.
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow configuration of loopback client id scope through query param
+
 ## 0.0.3
 
 ### Patch Changes

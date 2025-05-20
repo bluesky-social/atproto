@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.1.5
+
+### Patch Changes
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `transition:email` oauth scope
+
 ## 0.1.4
 
 ### Patch Changes
