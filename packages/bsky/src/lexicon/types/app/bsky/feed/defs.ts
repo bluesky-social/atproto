@@ -100,6 +100,8 @@ export interface FeedViewPost {
   reason?: $Typed<ReasonRepost> | $Typed<ReasonPin> | { $type: string }
   /** Context provided by feed generator that may be passed back alongside interactions. */
   feedContext?: string
+  /** Unique identifier per request that may be passed back alongside interactions. */
+  reqId?: string
 }
 
 const hashFeedViewPost = 'feedViewPost'
@@ -376,6 +378,8 @@ export interface Interaction {
     | (string & {})
   /** Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton. */
   feedContext?: string
+  /** Unique identifier per request that may be passed back alongside interactions. */
+  reqId?: string
 }
 
 const hashInteraction = 'interaction'

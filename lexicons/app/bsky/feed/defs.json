@@ -66,6 +66,11 @@
           "type": "string",
           "description": "Context provided by feed generator that may be passed back alongside interactions.",
           "maxLength": 2000
+        },
+        "reqId": {
+          "type": "string",
+          "description": "Unique identifier per request that may be passed back alongside interactions.",
+          "maxLength": 100
         }
       }
     },
@@ -250,6 +255,11 @@
           "type": "string",
           "description": "Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.",
           "maxLength": 2000
+        },
+        "reqId": {
+          "type": "string",
+          "description": "Unique identifier per request that may be passed back alongside interactions.",
+          "maxLength": 100
         }
       }
     },

@@ -36,6 +36,11 @@
                 "type": "ref",
                 "ref": "app.bsky.feed.defs#skeletonFeedPost"
               }
+            },
+            "reqId": {
+              "type": "string",
+              "description": "Unique identifier per request that may be passed back alongside interactions.",
+              "maxLength": 100
             }
           }
         }
