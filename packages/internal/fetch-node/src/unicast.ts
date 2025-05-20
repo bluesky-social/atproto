@@ -114,25 +114,27 @@ export function unicastFetchWrap<C = FetchContext>({
             },
           })
 
-          const headers = new Headers(init?.headers)
-          headers.set('connection', 'close') // Proactively close the connection
-
           try {
-            return await fetch.call(this, input, {
+            const headers = new Headers(init?.headers)
+            headers.set('connection', 'close') // Proactively close the connection
+
+            const response = await fetch.call(this, input, {
               ...init,
               headers,
               // @ts-expect-error non-standard option
               dispatcher,
             })
-          } finally {
-            // Free resources (we cannot await here since the response was not
-            // consumed yet).
-            void dispatcher.close().catch((err) => {
-              // No biggie, but let's still log it
-              console.warn('Failed to close dispatcher', err)
-            })
 
             if (!didLookup) {
+              // We need to ensure that the body is discarded. We can either
+              // consume the whole body (for await loop) in order to keep the
+              // socket alive, or cancel the request. Since we sent "connection:
+              // close", there is no point in consuming the whole response
+              // (which would cause un-necessary bandwidth).
+              //
+              // https://undici.nodejs.org/#/?id=garbage-collection
+              await response.body?.cancel()
+
               // If you encounter this error, either upgrade to Node.js >=21 or
               // make sure that the dispatcher passed through the requestInit
               // object ends up being used to make the request.
@@ -144,6 +146,15 @@ export function unicastFetchWrap<C = FetchContext>({
                 'Unable to enforce SSRF protection',
               )
             }
+
+            return response
+          } finally {
+            // Free resources (we cannot await here since the response was not
+            // consumed yet).
+            void dispatcher.close().catch((err) => {
+              // No biggie, but let's still log it
+              console.warn('Failed to close dispatcher', err)
+            })
           }
         }
       }
