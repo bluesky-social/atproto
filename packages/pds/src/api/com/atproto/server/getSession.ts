@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         // Allow proxying of dpop bound requests by using service auth instead
         const headers =
-          req.headers.authorization?.split(' ')[0].toLowerCase() === 'dpop'
+          auth.credentials.type === 'oauth' // DPoP bound tokens cannot be proxied
             ? await ctx.entrywayAuthHeaders(
                 req,
                 auth.credentials.did,
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
 
         return {
           encoding: 'application/json',
-          body: render(auth, res.data),
+          body: output(auth, res.data),
         }
       }
 
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: render(auth, {
+        body: output(auth, {
           handle: user.handle ?? INVALID_HANDLE,
           did: user.did,
           email: user.email ?? undefined,
@@ -64,7 +64,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-function render(
+function output(
   { credentials }: AccessOutput | OAuthOutput,
   data: ComAtprotoServerGetSession.OutputSchema,
 ): ComAtprotoServerGetSession.OutputSchema {
