@@ -274,5 +274,4 @@ export type AlgoResponse = {
 
 export type AlgoResponseItem = FeedItem & {
   feedContext?: string
-  reqId?: string
 }
