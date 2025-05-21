@@ -1,6 +1,6 @@
 import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
-import { validateLanguage, utf8Len } from '@atproto/common-web'
+import { utf8Len, validateLanguage } from '@atproto/common-web'
 import {
   ensureValidAtUri,
   ensureValidDid,
