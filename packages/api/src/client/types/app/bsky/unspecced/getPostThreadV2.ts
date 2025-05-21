@@ -104,12 +104,14 @@ export function validateThreadItem<V>(v: V) {
 export interface ThreadItemPost {
   $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemPost'
   post: AppBskyFeedDefs.PostView
-  /** Whether this post is part of a contiguous chain of OP replies. */
-  isOPThread: boolean
   /** Whether this post has a like from the OP. */
   hasOPLike: boolean
   /** Whether this post has replies. Note the replies may not be included in the thread if they are too deep. */
   hasReplies: boolean
+  /** Whether this post is muted. */
+  isMuted: boolean
+  /** Whether this post is part of a contiguous chain of OP replies. */
+  isOPThread: boolean
 }
 
 const hashThreadItemPost = 'threadItemPost'

@@ -612,3 +612,39 @@ export async function blockDeletionAuth(
     r,
   }
 }
+
+export async function mutes(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'mutes', [
+    'op',
+    'opMuted',
+    'alice',
+    'muted',
+    'muter',
+  ] as const)
+
+  const { op, opMuted, alice, muted, muter } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(opMuted, async (r) => {
+      await r(alice)
+      await r(muted)
+    })
+
+    await r(muted, async (r) => {
+      await r(opMuted)
+      await r(alice)
+    })
+  })
+
+  await sc.mute(op.did, opMuted.did)
+  await sc.mute(muter.did, muted.did)
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}

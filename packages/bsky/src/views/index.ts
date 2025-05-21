@@ -1222,13 +1222,16 @@ export class Views {
       }
     } else {
       anchorTree = {
-        item: this.threadV2ItemPost({
-          uri: anchor,
-          depth: 0, // The depth of the anchor post is always 0.
-          postView,
-          isOPThread,
-          hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-        }),
+        item: this.threadV2ItemPost(
+          {
+            uri: anchor,
+            depth: 0, // The depth of the anchor post is always 0.
+            postView,
+            isOPThread,
+            hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+          },
+          state,
+        ),
         parent,
         replies: !anchorViolatesThreadGate
           ? this.threadV2Replies({
@@ -1351,13 +1354,16 @@ export class Views {
 
     return {
       tree: {
-        item: this.threadV2ItemPost({
-          uri,
-          depth,
-          postView,
-          isOPThread,
-          hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-        }),
+        item: this.threadV2ItemPost(
+          {
+            uri,
+            depth,
+            postView,
+            isOPThread,
+            hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+          },
+          state,
+        ),
         parent,
         replies: undefined,
       },
@@ -1419,6 +1425,11 @@ export class Views {
         return undefined
       }
 
+      // Muted (omits replies except for anchor replies)
+      if (depth > 1 && this.viewerMuteExists(authorDid, state)) {
+        return undefined
+      }
+
       // No unauthenticated.
       if (this.noUnauthenticatedPost(viewer, postView)) {
         return undefined
@@ -1439,13 +1450,16 @@ export class Views {
       })
 
       const tree: ThreadTree = {
-        item: this.threadV2ItemPost({
-          uri,
-          depth,
-          postView,
-          isOPThread,
-          hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
-        }),
+        item: this.threadV2ItemPost(
+          {
+            uri,
+            depth,
+            postView,
+            isOPThread,
+            hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+          },
+          state,
+        ),
         parent: undefined,
         replies,
       }
@@ -1454,19 +1468,24 @@ export class Views {
     })
   }
 
-  private threadV2ItemPost({
-    uri,
-    depth,
-    postView,
-    isOPThread,
-    hasOPLike,
-  }: {
-    uri: string
-    depth: number
-    postView: PostView
-    isOPThread: boolean
-    hasOPLike: boolean
-  }): ThreadItemValuePost {
+  private threadV2ItemPost(
+    {
+      uri,
+      depth,
+      postView,
+      isOPThread,
+      hasOPLike,
+    }: {
+      uri: string
+      depth: number
+      postView: PostView
+      isOPThread: boolean
+      hasOPLike: boolean
+    },
+    state: HydrationState,
+  ): ThreadItemValuePost {
+    const authorDid = creatorFromUri(uri)
+
     return {
       uri,
       depth,
@@ -1476,9 +1495,10 @@ export class Views {
           $type: 'app.bsky.feed.defs#postView',
           ...postView,
         },
-        isOPThread,
         hasOPLike,
         hasReplies: (postView.replyCount ?? 0) > 0,
+        isOPThread,
+        isMuted: this.viewerMuteExists(authorDid, state),
       },
     }
   }

@@ -10404,16 +10404,11 @@ export const schemaDict = {
       },
       threadItemPost: {
         type: 'object',
-        required: ['post', 'isOPThread', 'hasOPLike', 'hasReplies'],
+        required: ['post', 'hasOPLike', 'hasReplies', 'isMuted', 'isOPThread'],
         properties: {
           post: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#postView',
-          },
-          isOPThread: {
-            type: 'boolean',
-            description:
-              'Whether this post is part of a contiguous chain of OP replies.',
           },
           hasOPLike: {
             type: 'boolean',
@@ -10423,6 +10418,15 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'Whether this post has replies. Note the replies may not be included in the thread if they are too deep.',
+          },
+          isMuted: {
+            type: 'boolean',
+            description: 'Whether this post is muted.',
+          },
+          isOPThread: {
+            type: 'boolean',
+            description:
+              'Whether this post is part of a contiguous chain of OP replies.',
           },
         },
       },

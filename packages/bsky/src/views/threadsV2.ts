@@ -131,6 +131,20 @@ function sortTrimThreadTree(
         return 1 // current account's reply
       }
 
+      // Muted posts ⬇️.
+      if (isPostRecord(aPost.record) && isPostRecord(bPost.record)) {
+        const aMuted = a.item.value.isMuted
+        const bMuted = b.item.value.isMuted
+        if (aMuted !== bMuted) {
+          if (aMuted) {
+            return 1
+          }
+          if (bMuted) {
+            return -1
+          }
+        }
+      }
+
       // Pushpin-only posts ⬇️.
       if (isPostRecord(aPost.record) && isPostRecord(bPost.record)) {
         const aPin = Boolean(aPost.record.text.trim() === '📌')

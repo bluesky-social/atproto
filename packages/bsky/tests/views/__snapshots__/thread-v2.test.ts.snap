@@ -10,6 +10,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -49,6 +50,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -105,6 +107,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -144,6 +147,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -193,6 +197,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -249,6 +254,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -288,6 +294,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -337,6 +344,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -393,6 +401,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -432,6 +441,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -488,6 +498,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -527,6 +538,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -576,6 +588,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -632,6 +645,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -671,6 +685,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -720,6 +735,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -776,6 +792,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -815,6 +832,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -864,6 +882,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -913,6 +932,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -962,6 +982,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -1011,6 +1032,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -1060,6 +1082,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isMuted": false,
         "isOPThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
