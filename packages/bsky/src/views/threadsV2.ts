@@ -171,18 +171,14 @@ function sortTrimThreadTree(
       }
 
       // Applies the selected sorting.
-      if (sorting === 'app.bsky.unspecced.getPostThreadV2#hotness') {
-        const aHotness = getPostHotness(a, fetchedAt)
-        const bHotness = getPostHotness(b, fetchedAt)
-        return bHotness - aHotness
-      }
       if (sorting === 'app.bsky.unspecced.getPostThreadV2#oldest') {
         return aPost.indexedAt.localeCompare(bPost.indexedAt)
       }
       if (sorting === 'app.bsky.unspecced.getPostThreadV2#newest') {
         return bPost.indexedAt.localeCompare(aPost.indexedAt)
       }
-      if (sorting === 'app.bsky.unspecced.getPostThreadV2#mostLikes') {
+      if (sorting === 'app.bsky.unspecced.getPostThreadV2#top') {
+        // Currently it is just a comparison of likes.
         if (aPost.likeCount === bPost.likeCount) {
           return bPost.indexedAt.localeCompare(aPost.indexedAt) // newest
         }
@@ -264,30 +260,4 @@ function* flattenInDirection({
       }
     }
   }
-}
-
-// Exported for testing.
-// Inspired by https://join-lemmy.org/docs/contributors/07-ranking-algo.html
-// We want to give recent comments a real chance (and not bury them deep below the fold)
-// while also surfacing well-liked comments from the past.
-export function getPostHotness(thread: ThreadPostNode, fetchedAt: number) {
-  if (!isThreadPostNode(thread)) return 0
-
-  const {
-    item: { value },
-  } = thread
-  const { post, hasOPLike } = value
-
-  const hoursAgo = Math.max(
-    0,
-    (new Date(fetchedAt).getTime() - new Date(post.indexedAt).getTime()) /
-      (1000 * 60 * 60),
-  )
-  const likeCount = post.likeCount ?? 0
-  const likeOrder = Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
-  const timePenaltyExponent = 1.5 + 1.5 / (1 + Math.log(1 + likeCount))
-  const opLikeBoost = hasOPLike ? 0.8 : 1.0
-  const timePenalty = Math.pow(hoursAgo + 2, timePenaltyExponent * opLikeBoost)
-
-  return likeOrder / timePenalty
 }

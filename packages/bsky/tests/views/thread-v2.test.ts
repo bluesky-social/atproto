@@ -1,19 +1,12 @@
 import assert from 'node:assert'
-import { subHours } from 'date-fns'
-import { $Typed, AppBskyUnspeccedGetPostThreadV2, AtpAgent } from '@atproto/api'
+import { AppBskyUnspeccedGetPostThreadV2, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { PostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import {
   OutputSchema,
   QueryParams,
-  ThreadItemPost,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import {
-  ThreadItemValuePost,
-  ThreadTree,
-  getPostHotness,
-} from '../../src/views/threadsV2'
+import { ThreadItemValuePost } from '../../src/views/threadsV2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 
@@ -820,98 +813,12 @@ describe('appview thread views v2', () => {
       })
     })
 
-    describe('hotness', () => {
+    describe('top', () => {
       it('sorts in all levels for the case without viewer and OP replies', async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
             uri: s1.root.ref.uriStr,
-            sorting: 'app.bsky.unspecced.getPostThreadV2#hotness',
-          },
-          {
-            headers: await network.serviceHeaders(
-              s1.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
-            ),
-          },
-        )
-        const { thread: t } = data
-
-        assertPosts(t)
-        expect(t).toEqual([
-          expect.objectContaining({ uri: s1.root.ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['1'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['1_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['1_0'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['1_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['2'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['2_0'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['2_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['2_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['0'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['0_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['0_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s1.r['0_0'].ref.uriStr }),
-        ])
-      })
-
-      it('sorts in all levels for the case with viewer and OP replies', async () => {
-        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          {
-            uri: s2.root.ref.uriStr,
-            sorting: 'app.bsky.unspecced.getPostThreadV2#hotness',
-          },
-          {
-            headers: await network.serviceHeaders(
-              s2.users.viewer.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
-            ),
-          },
-        )
-        const { thread: t } = data
-
-        assertPosts(t)
-        expect(t).toEqual([
-          expect.objectContaining({ uri: s2.root.ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['3'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['3_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['3_0'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['3_4'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['3_3'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['3_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['4'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['4_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['4_3'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['4_4'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['4_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['4_0'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['1'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['1_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['1_3'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['1_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['1_0'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['1_4'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['2'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['2_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['2_0'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['2_4'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['2_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['2_3'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['0'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['0_4'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['0_3'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['0_2'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['0_1'].ref.uriStr }),
-          expect.objectContaining({ uri: s2.r['0_0'].ref.uriStr }),
-        ])
-      })
-    })
-
-    describe('mostLikes', () => {
-      it('sorts in all levels for the case without viewer and OP replies', async () => {
-        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          {
-            uri: s1.root.ref.uriStr,
-            sorting: 'app.bsky.unspecced.getPostThreadV2#mostLikes',
+            sorting: 'app.bsky.unspecced.getPostThreadV2#top',
           },
           {
             headers: await network.serviceHeaders(
@@ -944,7 +851,7 @@ describe('appview thread views v2', () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
             uri: s2.root.ref.uriStr,
-            sorting: 'app.bsky.unspecced.getPostThreadV2#mostLikes',
+            sorting: 'app.bsky.unspecced.getPostThreadV2#top',
           },
           {
             headers: await network.serviceHeaders(
@@ -1080,223 +987,6 @@ describe('appview thread views v2', () => {
         expect(t2[5].uri).toBe(s3.r['1'].ref.uriStr)
         expect(t2[6].uri).toBe(s3.r['0'].ref.uriStr)
       })
-    })
-  })
-
-  describe('utils', () => {
-    describe('getPostHotness', () => {
-      const NOW = Date.now()
-      type ThreadPostNode = Extract<
-        ThreadTree,
-        { replies: ThreadTree[] | undefined }
-      >
-
-      function createThreadItem({
-        hoursAgo = 0,
-        likes = 0,
-        hasOPLike = false,
-      }: {
-        hoursAgo?: number
-        likes?: number
-        hasOPLike?: boolean
-      } = {}): ThreadPostNode {
-        return {
-          item: {
-            uri: 'at://did:plc:ay34zl7ko3x6jsazmka4kp2f/app.bsky.feed.post/3lo4zfmu6bs2y',
-            depth: 0,
-            value: {
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
-              post: {
-                likeCount: likes,
-                indexedAt: subHours(NOW, hoursAgo).toISOString(),
-              } as $Typed<PostView>,
-              isOPThread: false,
-              hasOPLike: hasOPLike,
-            } as $Typed<ThreadItemPost>,
-          },
-          parent: undefined,
-          replies: undefined,
-        }
-      }
-
-      it('newer posts have higher hotness than older posts with same likes', () => {
-        const now = Date.now()
-        const newerPost = createThreadItem({ hoursAgo: 1 })
-        const olderPost = createThreadItem({ hoursAgo: 10 })
-
-        const newerHotness = getPostHotness(newerPost, now)
-        const olderHotness = getPostHotness(olderPost, now)
-
-        expect(newerHotness).toBeGreaterThan(olderHotness)
-      })
-
-      it('posts with more likes have higher hotness than posts with fewer likes at same age', () => {
-        const now = Date.now()
-        const popularPost = createThreadItem({ hoursAgo: 5, likes: 100 })
-        const unpopularPost = createThreadItem({ hoursAgo: 5, likes: 1 })
-
-        const popularHotness = getPostHotness(popularPost, now)
-        const unpopularHotness = getPostHotness(unpopularPost, now)
-
-        expect(popularHotness).toBeGreaterThan(unpopularHotness)
-      })
-
-      it('posts with OP like have higher hotness than posts without OP like with same age and likes', () => {
-        const now = Date.now()
-        const opLikedPost = createThreadItem({
-          hoursAgo: 5,
-          likes: 10,
-          hasOPLike: true,
-        })
-        const normalPost = createThreadItem({
-          hoursAgo: 5,
-          likes: 10,
-          hasOPLike: false,
-        })
-
-        const opLikedHotness = getPostHotness(opLikedPost, now)
-        const normalHotness = getPostHotness(normalPost, now)
-
-        expect(opLikedHotness).toBeGreaterThan(normalHotness)
-      })
-
-      it('time penalty increases with post age', () => {
-        const now = Date.now()
-        const ages = [0, 1, 5, 24, 48, 72] // hours
-        const hotness = ages.map((age) => {
-          const post = createThreadItem({
-            hoursAgo: age,
-            likes: 10,
-            hasOPLike: false,
-          })
-          return getPostHotness(post, now)
-        })
-
-        // Hotness should be strictly decreasing
-        for (let i = 1; i < hotness.length; i++) {
-          expect(hotness[i]).toBeLessThan(hotness[i - 1])
-        }
-      })
-
-      it('OP like reduces time penalty effect', () => {
-        const now = Date.now()
-        const oldWithOpLike = createThreadItem({
-          hoursAgo: 24,
-          likes: 10,
-          hasOPLike: true,
-        })
-        const newerNoOpLike = createThreadItem({
-          hoursAgo: 18,
-          likes: 10,
-          hasOPLike: false,
-        })
-
-        const oldWithOpLikeHotness = getPostHotness(oldWithOpLike, now)
-        const newerNoOpLikeHotness = getPostHotness(newerNoOpLike, now)
-
-        // The older post with OP like might still be less hot than a newer post without OP like,
-        // but it should be closer than if we compared two posts without OP like at these ages
-        const withOpLikeRatio = oldWithOpLikeHotness / newerNoOpLikeHotness
-
-        // Create two posts with the same age difference, neither with OP like
-        const oldNoOpLike = createThreadItem({
-          hoursAgo: 24,
-          likes: 10,
-          hasOPLike: false,
-        })
-        const newerNoOpLike2 = createThreadItem({
-          hoursAgo: 18,
-          likes: 10,
-          hasOPLike: false,
-        })
-
-        const oldNoOpLikeHotness = getPostHotness(oldNoOpLike, now)
-        const newerNoOpLike2Hotness = getPostHotness(newerNoOpLike2, now)
-
-        const withoutOpLikeRatio = oldNoOpLikeHotness / newerNoOpLike2Hotness
-
-        // The ratio should be higher (closer to 1) with OP like than without
-        expect(withOpLikeRatio).toBeGreaterThan(withoutOpLikeRatio)
-      })
-
-      const testCases = [
-        {
-          hoursAgo: 0,
-          likes: 0,
-          hasOPLike: false,
-          label: 'brand new, no likes',
-          expected: 0.13679929689098982,
-        },
-        {
-          hoursAgo: 0,
-          likes: 100,
-          hasOPLike: false,
-          label: 'brand new, many likes',
-          expected: 1.3585617635466951,
-        },
-        {
-          hoursAgo: 0,
-          likes: 10,
-          hasOPLike: true,
-          label: 'brand new, some likes, with OP like',
-          expected: 1.2648359689243216,
-        },
-        {
-          hoursAgo: 12,
-          likes: 5,
-          hasOPLike: false,
-          label: '12 hours old, few likes',
-          expected: 0.00961131881253479,
-        },
-        {
-          hoursAgo: 12,
-          likes: 5,
-          hasOPLike: true,
-          label: '12 hours old, few likes, with OP like',
-          expected: 0.04084921658935257,
-        },
-        {
-          hoursAgo: 48,
-          likes: 1000,
-          hasOPLike: false,
-          label: '2 days old, very popular',
-          expected: 0.00930680087227178,
-        },
-        {
-          hoursAgo: 48,
-          likes: 1000,
-          hasOPLike: true,
-          label: '2 days old, very popular, with OP like',
-          expected: 0.05061897959005076,
-        },
-        {
-          hoursAgo: 168,
-          likes: 10,
-          hasOPLike: false,
-          label: '1 week old, some likes',
-          expected: 0.00011988409773059021,
-        },
-        {
-          hoursAgo: 168,
-          likes: 10,
-          hasOPLike: true,
-          label: '1 week old, some likes, with OP like',
-          expected: 0.0012770062547400216,
-        },
-      ]
-
-      it.each(testCases)(
-        'has correct hotness for: $label',
-        ({ hoursAgo, likes, hasOPLike, expected }) => {
-          // This test creates a range of posts with different properties and captures
-          // their hotness values as a snapshot for regression testing
-          const now = Date.now()
-
-          const post = createThreadItem({ hoursAgo, likes, hasOPLike })
-          const hotness = getPostHotness(post, now)
-          expect(hotness).toBeCloseTo(expected)
-        },
-      )
     })
   })
 

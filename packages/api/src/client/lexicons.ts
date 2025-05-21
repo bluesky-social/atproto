@@ -10327,8 +10327,7 @@ export const schemaDict = {
               knownValues: [
                 'app.bsky.unspecced.getPostThreadV2#newest',
                 'app.bsky.unspecced.getPostThreadV2#oldest',
-                'app.bsky.unspecced.getPostThreadV2#hotness',
-                'app.bsky.unspecced.getPostThreadV2#mostLikes',
+                'app.bsky.unspecced.getPostThreadV2#top',
               ],
               default: 'app.bsky.unspecced.getPostThreadV2#oldest',
             },
@@ -10370,13 +10369,9 @@ export const schemaDict = {
         type: 'token',
         description: 'Oldest-first thread sort order.',
       },
-      hotness: {
+      top: {
         type: 'token',
-        description: 'Hottest-first thread sort order.',
-      },
-      mostLikes: {
-        type: 'token',
-        description: 'Most-likes-first thread sort order.',
+        description: 'Most-relevant-first thread sort order.',
       },
       threadItem: {
         type: 'object',

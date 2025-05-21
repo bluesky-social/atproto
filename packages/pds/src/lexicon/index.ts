@@ -258,8 +258,7 @@ export const APP_BSKY_GRAPH = {
 export const APP_BSKY_UNSPECCED = {
   GetPostThreadV2Newest: 'app.bsky.unspecced.getPostThreadV2#newest',
   GetPostThreadV2Oldest: 'app.bsky.unspecced.getPostThreadV2#oldest',
-  GetPostThreadV2Hotness: 'app.bsky.unspecced.getPostThreadV2#hotness',
-  GetPostThreadV2MostLikes: 'app.bsky.unspecced.getPostThreadV2#mostLikes',
+  GetPostThreadV2Top: 'app.bsky.unspecced.getPostThreadV2#top',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',

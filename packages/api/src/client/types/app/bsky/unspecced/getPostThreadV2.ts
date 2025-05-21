@@ -31,8 +31,7 @@ export interface QueryParams {
   sorting?:
     | 'app.bsky.unspecced.getPostThreadV2#newest'
     | 'app.bsky.unspecced.getPostThreadV2#oldest'
-    | 'app.bsky.unspecced.getPostThreadV2#hotness'
-    | 'app.bsky.unspecced.getPostThreadV2#mostLikes'
+    | 'app.bsky.unspecced.getPostThreadV2#top'
     | (string & {})
 }
 
@@ -73,10 +72,8 @@ export function toKnownErr(e: any) {
 export const NEWEST = `${id}#newest`
 /** Oldest-first thread sort order. */
 export const OLDEST = `${id}#oldest`
-/** Hottest-first thread sort order. */
-export const HOTNESS = `${id}#hotness`
-/** Most-likes-first thread sort order. */
-export const MOSTLIKES = `${id}#mostLikes`
+/** Most-relevant-first thread sort order. */
+export const TOP = `${id}#top`
 
 export interface ThreadItem {
   $type?: 'app.bsky.unspecced.getPostThreadV2#threadItem'
