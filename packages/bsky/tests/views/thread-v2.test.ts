@@ -1727,81 +1727,12 @@ describe('appview thread views v2', () => {
       await network.processAll()
     })
 
-    it(`muted reply is set as muted in top-level replies`, async () => {
-      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        {
-          uri: seed.root.ref.uriStr,
-          // Don't want to test nested replies in this case.
-          below: 1,
-        },
-        {
-          headers: await network.serviceHeaders(
-            // Fetching as `op` should only mute `opMuted`.
-            seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
-          ),
-        },
-      )
-      const { thread: t } = data
-
-      assertPosts(t)
-      expect(t).toEqual([
-        expect.objectContaining({
-          uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ isMuted: false }),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({ isMuted: false }),
-        }),
-        // Muted is de-prioritized.
-        expect.objectContaining({
-          uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ isMuted: true }),
-        }),
-      ])
-    })
-
-    it(`mutes by OP don't have 3p effects`, async () => {
-      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        {
-          uri: seed.root.ref.uriStr,
-          // Don't want to test nested replies in this case.
-          below: 1,
-        },
-        {
-          headers: await network.serviceHeaders(
-            // Fetching as `muter` should only mute `muted`.
-            seed.users.muter.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
-          ),
-        },
-      )
-      const { thread: t } = data
-
-      assertPosts(t)
-      expect(t).toEqual([
-        expect.objectContaining({
-          uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ isMuted: false }),
-        }),
-        expect.objectContaining({
-          uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ isMuted: false }),
-        }),
-        // Muted is de-prioritized (in this case it would already be at the bottom due to sorting oldest first).
-        expect.objectContaining({
-          uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({ isMuted: true }),
-        }),
-      ])
-    })
-
-    it(`muted reply is omitted in nested replies`, async () => {
+    it(`muted reply is set as muted in top-level replies and omitted in nested replies`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
         { uri: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
+            // Fetching as `op` mutes `opMuted`.
             seed.users.op.did,
             ids.AppBskyUnspeccedGetPostThreadV2,
           ),
@@ -1836,6 +1767,52 @@ describe('appview thread views v2', () => {
         }),
         expect.objectContaining({
           uri: seed.r['0_1'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: false }),
+        }),
+      ])
+    })
+
+    it(`mutes by OP don't have 3p effects`, async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { uri: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            // Fetching as `muter` mutes `muted`.
+            seed.users.muter.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({
+          uri: seed.root.ref.uriStr,
+          value: expect.objectContaining({ isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0_0'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: false }),
+        }),
+        // 0_1 is a nested muted reply, so it is omitted.
+
+        // 1 is muted but is an anchor reply, so it is not omitted but de-prioritized.
+        expect.objectContaining({
+          uri: seed.r['1'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: true }),
+        }),
+        // 1's replies are not omitted nor marked as muted.
+        expect.objectContaining({
+          uri: seed.r['1_0'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_1'].ref.uriStr,
           value: expect.objectContaining({ isMuted: false }),
         }),
       ])
