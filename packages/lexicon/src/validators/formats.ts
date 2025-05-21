@@ -1,6 +1,6 @@
 import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
-import { validateLanguage } from '@atproto/common-web'
+import { validateLanguage, utf8Len } from '@atproto/common-web'
 import {
   ensureValidAtUri,
   ensureValidDid,
@@ -33,6 +33,12 @@ export function uri(path: string, value: string): ValidationResult {
     return {
       success: false,
       error: new ValidationError(`${path} must be a uri`),
+    }
+  }
+  if (utf8Len(value) > 8192) {
+    return {
+      success: false,
+      error: new ValidationError(`${path} URI must be 8 KBytes or less`),
     }
   }
   return { success: true, value }
