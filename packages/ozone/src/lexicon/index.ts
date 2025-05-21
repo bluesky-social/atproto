@@ -265,6 +265,7 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
 }
 export const TOOLS_OZONE_REPORT = {
+  DefsReasonAppeal: 'tools.ozone.report.defs#reasonAppeal',
   DefsReasonViolenceAnimalWelfare:
     'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
   DefsReasonViolenceThreats: 'tools.ozone.report.defs#reasonViolenceThreats',

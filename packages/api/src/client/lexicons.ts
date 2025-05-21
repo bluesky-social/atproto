@@ -1451,6 +1451,7 @@ export const schemaDict = {
           'com.atproto.moderation.defs#reasonRude',
           'com.atproto.moderation.defs#reasonOther',
           'com.atproto.moderation.defs#reasonAppeal',
+          'tools.ozone.report.defs#reasonAppeal',
           'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
           'tools.ozone.report.defs#reasonViolenceThreats',
           'tools.ozone.report.defs#reasonViolenceGraphicContent',
@@ -15278,6 +15279,7 @@ export const schemaDict = {
       reasonType: {
         type: 'string',
         knownValues: [
+          'tools.ozone.report.defs#reasonAppeal',
           'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
           'tools.ozone.report.defs#reasonViolenceThreats',
           'tools.ozone.report.defs#reasonViolenceGraphicContent',
@@ -15323,6 +15325,10 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonCivicMisinformation',
           'tools.ozone.report.defs#reasonCivicImpersonation',
         ],
+      },
+      reasonAppeal: {
+        type: 'token',
+        description: 'Appeal a previously taken moderation action',
       },
       reasonViolenceAnimalWelfare: {
         type: 'token',

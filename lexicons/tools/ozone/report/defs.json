@@ -5,6 +5,8 @@
     "reasonType": {
       "type": "string",
       "knownValues": [
+        "tools.ozone.report.defs#reasonAppeal",
+
         "tools.ozone.report.defs#reasonViolenceAnimalWelfare",
         "tools.ozone.report.defs#reasonViolenceThreats",
         "tools.ozone.report.defs#reasonViolenceGraphicContent",
@@ -56,6 +58,10 @@
         "tools.ozone.report.defs#reasonCivicMisinformation",
         "tools.ozone.report.defs#reasonCivicImpersonation"
       ]
+    },
+    "reasonAppeal": {
+      "type": "token",
+      "description": "Appeal a previously taken moderation action"
     },
     "reasonViolenceAnimalWelfare": {
       "type": "token",

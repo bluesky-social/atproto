@@ -22,6 +22,7 @@ export type ReasonType =
   | 'com.atproto.moderation.defs#reasonRude'
   | 'com.atproto.moderation.defs#reasonOther'
   | 'com.atproto.moderation.defs#reasonAppeal'
+  | 'tools.ozone.report.defs#reasonAppeal'
   | 'tools.ozone.report.defs#reasonViolenceAnimalWelfare'
   | 'tools.ozone.report.defs#reasonViolenceThreats'
   | 'tools.ozone.report.defs#reasonViolenceGraphicContent'
