@@ -15,6 +15,7 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.report.defs'
 
 export type ReasonType =
+  | 'tools.ozone.report.defs#reasonAppeal'
   | 'tools.ozone.report.defs#reasonViolenceAnimalWelfare'
   | 'tools.ozone.report.defs#reasonViolenceThreats'
   | 'tools.ozone.report.defs#reasonViolenceGraphicContent'
@@ -61,6 +62,8 @@ export type ReasonType =
   | 'tools.ozone.report.defs#reasonCivicImpersonation'
   | (string & {})
 
+/** Appeal a previously taken moderation action */
+export const REASONAPPEAL = `${id}#reasonAppeal`
 /** Animal welfare violations */
 export const REASONVIOLENCEANIMALWELFARE = `${id}#reasonViolenceAnimalWelfare`
 /** Threats or incitement */
