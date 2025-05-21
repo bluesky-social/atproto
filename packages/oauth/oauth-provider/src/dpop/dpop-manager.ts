@@ -80,12 +80,12 @@ export class DpopManager {
     })
 
     if (!payload.jti || typeof payload.jti !== 'string') {
-      throw new InvalidDpopProofError('Invalid or missing jti property')
+      throw new InvalidDpopProofError('Invalid or missing "jti" property')
     }
 
     // Note rfc9110#section-9.1 states that the method name is case-sensitive
     if (!httpMethod || httpMethod !== payload.htm) {
-      throw new InvalidDpopProofError('DPoP htm mismatch')
+      throw new InvalidDpopProofError('DPoP "htm" mismatch')
     }
 
     if (payload.nonce !== undefined && typeof payload.nonce !== 'string') {
@@ -113,10 +113,10 @@ export class DpopManager {
     if (accessToken) {
       const athBuffer = createHash('sha256').update(accessToken).digest()
       if (payload.ath !== athBuffer.toString('base64url')) {
-        throw new InvalidDpopProofError('DPoP ath mismatch')
+        throw new InvalidDpopProofError('DPoP "ath" mismatch')
       }
     } else if (payload.ath) {
-      throw new InvalidDpopProofError('DPoP ath not allowed')
+      throw new InvalidDpopProofError('DPoP "ath" claim not allowed')
     }
 
     try {
