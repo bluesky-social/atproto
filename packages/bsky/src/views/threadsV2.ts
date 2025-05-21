@@ -83,108 +83,40 @@ const isPostRecord = asPredicate(validatePostRecord)
 
 function sortTrimThreadTree(
   node: ThreadTree,
-  {
+  opts: SortTrimFlattenOptions,
+): ThreadTree {
+  if (!isThreadPostNode(node)) {
+    return node
+  }
+
+  const {
     nestedBranchingFactor,
     fetchedAt,
     opDid,
     prioritizeFollowedUsers,
     sorting,
     viewer,
-  }: SortTrimFlattenOptions,
-): ThreadTree {
-  if (!isThreadPostNode(node)) {
-    return node
-  }
+  } = opts
 
   if (node.replies) {
-    node.replies.sort((a: ThreadTree, b: ThreadTree) => {
-      if (!isThreadPostNode(a)) {
+    node.replies.sort((aTree: ThreadTree, bTree: ThreadTree) => {
+      if (!isThreadPostNode(aTree)) {
         return 1
       }
-      if (!isThreadPostNode(b)) {
+      if (!isThreadPostNode(bTree)) {
         return -1
       }
-      const aPost = a.item.value.post
-      const bPost = b.item.value.post
+      const a = aTree.item.value
+      const b = bTree.item.value
 
-      // Prioritization is applied first, then the selected sorting is applied.
-
-      // OP replies ⬆️.
-      const aIsByOp = aPost.author.did === opDid
-      const bIsByOp = bPost.author.did === opDid
-      if (aIsByOp && bIsByOp) {
-        return aPost.indexedAt.localeCompare(bPost.indexedAt) // oldest
-      } else if (aIsByOp) {
-        return -1 // op's own reply
-      } else if (bIsByOp) {
-        return 1 // op's own reply
+      // First applies bumping.
+      const bump = applyBump(a, b, opts)
+      if (bump !== null) {
+        return bump
       }
 
-      // Viewer replies ⬆️.
-      const aIsBySelf = aPost.author.did === viewer
-      const bIsBySelf = bPost.author.did === viewer
-      if (aIsBySelf && bIsBySelf) {
-        return aPost.indexedAt.localeCompare(bPost.indexedAt) // oldest
-      } else if (aIsBySelf) {
-        return -1 // current account's reply
-      } else if (bIsBySelf) {
-        return 1 // current account's reply
-      }
-
-      // Muted posts ⬇️.
-      if (isPostRecord(aPost.record) && isPostRecord(bPost.record)) {
-        const aMuted = a.item.value.isMuted
-        const bMuted = b.item.value.isMuted
-        if (aMuted !== bMuted) {
-          if (aMuted) {
-            return 1
-          }
-          if (bMuted) {
-            return -1
-          }
-        }
-      }
-
-      // Pushpin-only posts ⬇️.
-      if (isPostRecord(aPost.record) && isPostRecord(bPost.record)) {
-        const aPin = Boolean(aPost.record.text.trim() === '📌')
-        const bPin = Boolean(bPost.record.text.trim() === '📌')
-        if (aPin !== bPin) {
-          if (aPin) {
-            return 1
-          }
-          if (bPin) {
-            return -1
-          }
-        }
-      }
-
-      // Followers posts ⬆️.
-      if (prioritizeFollowedUsers) {
-        const af = aPost.author.viewer?.following
-        const bf = bPost.author.viewer?.following
-        if (af && !bf) {
-          return -1
-        } else if (!af && bf) {
-          return 1
-        }
-      }
-
-      // Applies the selected sorting.
-      if (sorting === 'app.bsky.unspecced.getPostThreadV2#oldest') {
-        return aPost.indexedAt.localeCompare(bPost.indexedAt)
-      }
-      if (sorting === 'app.bsky.unspecced.getPostThreadV2#newest') {
-        return bPost.indexedAt.localeCompare(aPost.indexedAt)
-      }
-      if (sorting === 'app.bsky.unspecced.getPostThreadV2#top') {
-        // Currently it is just a comparison of likes.
-        if (aPost.likeCount === bPost.likeCount) {
-          return bPost.indexedAt.localeCompare(aPost.indexedAt) // newest
-        }
-        return (bPost.likeCount || 0) - (aPost.likeCount || 0) // most likes
-      }
-      return bPost.indexedAt.localeCompare(aPost.indexedAt)
+      // Then applies sorting.
+      return applySorting(a, b, opts)
     })
 
     // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
@@ -204,6 +136,94 @@ function sortTrimThreadTree(
     )
   }
   return node
+}
+
+function applyBump(
+  a: $Typed<ThreadItemPost>,
+  b: $Typed<ThreadItemPost>,
+  opts: SortTrimFlattenOptions,
+): number | null {
+  const { opDid, prioritizeFollowedUsers, viewer } = opts
+
+  const maybeBump = (
+    aPredicate: boolean,
+    bPredicate: boolean,
+    bump: 'up' | 'down',
+  ): number | null => {
+    if (aPredicate && bPredicate) {
+      return applySorting(a, b, opts)
+    } else if (aPredicate) {
+      return bump === 'up' ? -1 : 1
+    } else if (bPredicate) {
+      return bump === 'up' ? 1 : -1
+    }
+    return null
+  }
+
+  // OP replies ⬆️.
+  const aOp = a.post.author.did === opDid
+  const bOp = b.post.author.did === opDid
+  const bumpOp = maybeBump(aOp, bOp, 'up')
+  if (bumpOp !== null) {
+    return bumpOp
+  }
+
+  // Viewer replies ⬆️.
+  const aViewer = a.post.author.did === viewer
+  const bViewer = b.post.author.did === viewer
+  const bumpViewer = maybeBump(aViewer, bViewer, 'up')
+  if (bumpViewer !== null) {
+    return bumpViewer
+  }
+
+  // Muted posts ⬇️.
+  const aMuted = a.isMuted
+  const bMuted = b.isMuted
+  const bumpMuted = maybeBump(aMuted, bMuted, 'down')
+  if (bumpMuted !== null) {
+    return bumpMuted
+  }
+
+  // Pushpin-only posts ⬇️.
+  if (isPostRecord(a.post.record) && isPostRecord(b.post.record)) {
+    const aPin = Boolean(a.post.record.text.trim() === '📌')
+    const bPin = Boolean(b.post.record.text.trim() === '📌')
+    const bumpPin = maybeBump(aPin, bPin, 'down')
+    if (bumpPin !== null) {
+      return bumpPin
+    }
+  }
+
+  // Followers posts ⬆️.
+  if (prioritizeFollowedUsers) {
+    const aFollowed = a.post.author.viewer?.following
+    const bFollowed = b.post.author.viewer?.following
+    const bumpFollowed = maybeBump(!!aFollowed, !!bFollowed, 'up')
+    if (bumpFollowed !== null) {
+      return bumpFollowed
+    }
+  }
+
+  return null
+}
+
+function applySorting(
+  a: $Typed<ThreadItemPost>,
+  b: $Typed<ThreadItemPost>,
+  { sorting }: SortTrimFlattenOptions,
+): number {
+  if (sorting === 'app.bsky.unspecced.getPostThreadV2#oldest') {
+    return a.post.indexedAt.localeCompare(b.post.indexedAt)
+  }
+  if (sorting === 'app.bsky.unspecced.getPostThreadV2#top') {
+    // Currently it is just a comparison of like count.
+    if (a.post.likeCount !== b.post.likeCount) {
+      return (b.post.likeCount || 0) - (a.post.likeCount || 0)
+    }
+  }
+
+  // Newest.
+  return b.post.indexedAt.localeCompare(a.post.indexedAt)
 }
 
 function flattenThree(tree: ThreadTree) {

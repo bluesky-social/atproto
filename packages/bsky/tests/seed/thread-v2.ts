@@ -648,3 +648,26 @@ export async function mutes(
     r,
   }
 }
+
+export async function muteSort(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'muteSort', ['op', 'opMuted'] as const)
+
+  const { op, opMuted } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(opMuted)
+    await r(opMuted)
+    await r(opMuted)
+  })
+
+  await sc.mute(op.did, opMuted.did)
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}

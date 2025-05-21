@@ -1411,9 +1411,11 @@ describe('appview thread views v2', () => {
 
   describe(`mutes`, () => {
     let seed: Awaited<ReturnType<typeof seeds.mutes>>
+    let seedSort: Awaited<ReturnType<typeof seeds.muteSort>>
 
     beforeAll(async () => {
       seed = await seeds.mutes(sc)
+      seedSort = await seeds.muteSort(sc)
       await network.processAll()
     })
 
@@ -1504,6 +1506,39 @@ describe('appview thread views v2', () => {
         expect.objectContaining({
           uri: seed.r['1_1'].ref.uriStr,
           value: expect.objectContaining({ isMuted: false }),
+        }),
+      ])
+    })
+
+    it('sorts multiple mutes correctly by oldest', async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { uri: seedSort.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            seedSort.users.op.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({
+          uri: seedSort.root.ref.uriStr,
+          value: expect.objectContaining({ isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seedSort.r['0'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: true }),
+        }),
+        expect.objectContaining({
+          uri: seedSort.r['1'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: true }),
+        }),
+        expect.objectContaining({
+          uri: seedSort.r['2'].ref.uriStr,
+          value: expect.objectContaining({ isMuted: true }),
         }),
       ])
     })
