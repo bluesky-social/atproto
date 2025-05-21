@@ -7802,7 +7802,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Find posts matching search criteria, returning views of those posts.',
+          'Find posts matching search criteria, returning views of those posts. Note that this API endpoint may require authentication (eg, not public) for some service providers and implementations.',
         parameters: {
           type: 'params',
           required: ['q'],
