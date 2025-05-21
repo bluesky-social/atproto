@@ -133,6 +133,18 @@ export class DpopManager {
   }
 }
 
+/**
+ * Constructs the HTTP URI (htu) claim as defined in RFC9449.
+ *
+ * The htu claim is the normalized URL of the HTTP request, excluding the query
+ * string and fragment. This function ensures that the URL is normalized by
+ * removing the search and hash components, as well as by using an URL object to
+ * simplify the pathname (e.g. removing dot segments).
+ *
+ * @param inputUrl - The URL of the HTTP request.
+ * @returns The normalized URL as a string.
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-4.3}
+ */
 function buildHtu(inputUrl: Readonly<URL>): string {
   // Optimization: no need to clone the URL if it doesn't have a query or fragment
   if (!inputUrl.search && !inputUrl.hash) return inputUrl.href

@@ -66,6 +66,12 @@ export const htuSchema = z.string().superRefine((value, ctx) => {
   try {
     const url = new URL(value)
 
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invalid HTTP URI: only http and https protocols are allowed',
+      })
+    }
     if (url.search) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
