@@ -123,7 +123,10 @@ export class TokenManager {
       throw new InvalidDpopKeyBindingError()
     }
 
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
+    if (
+      clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER || // LEGACY
+      clientAuth.method === 'private_key_jwt'
+    ) {
       // Clients **must not** use their private key to sign DPoP proofs.
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
         throw new InvalidRequestError(

@@ -2,7 +2,6 @@ import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
   OAuthAuthorizationCodeGrantTokenRequest,
   OAuthAuthorizationRequestJar,
@@ -70,7 +69,6 @@ import { OAuthHooks } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
-import { RequestInfo } from './request/request-info.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
@@ -452,7 +450,7 @@ export class OAuthProvider extends OAuthVerifier {
     client: Client,
     deviceId: DeviceId,
     query: OAuthAuthorizationRequestQuery,
-  ): Promise<RequestInfo> {
+  ) {
     // PAR
     if ('request_uri' in query) {
       const requestUri = await requestUriSchema
@@ -480,9 +478,11 @@ export class OAuthProvider extends OAuthVerifier {
       // for a confidential client.
       //
       // @NOTE this is not part of the ATProto spec.
-      const clientAuth: ClientAuth = signatureMetadata
-        ? { method: CLIENT_ASSERTION_TYPE_JWT_BEARER, ...signatureMetadata }
-        : { method: 'none' }
+      const clientAuth: ClientAuth | null =
+        signatureMetadata &&
+        client.metadata.token_endpoint_auth_method === 'private_key_jwt'
+          ? { ...signatureMetadata, method: 'private_key_jwt' }
+          : null
 
       return this.requestManager.createAuthorizationRequest(
         client,
@@ -497,7 +497,7 @@ export class OAuthProvider extends OAuthVerifier {
     // to the authorization endpoint with all the parameters in the url).
     return this.requestManager.createAuthorizationRequest(
       client,
-      { method: 'none' },
+      null,
       query,
       deviceId,
       null,
