@@ -62,6 +62,7 @@ import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app
 import {
   QueryParams as GetPostThreadV2QueryParams,
   ThreadItem,
+  ThreadItemPost,
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
@@ -1499,6 +1500,23 @@ export class Views {
   ): ThreadItemValuePost {
     const authorDid = creatorFromUri(uri)
 
+    const hasReplies = (postView.replyCount ?? 0) > 0
+    const hiddenByThreadgate =
+      viewer !== authorDid &&
+      this.replyIsHiddenByThreadgate(uri, rootUri, state)
+    const mutedByViewer = this.viewerMuteExists(authorDid, state)
+
+    type Annotation = [boolean, ThreadItemPost['annotations'][number]]
+    const annotations: Annotation[] = [
+      [hasReplies, 'app.bsky.unspecced.getPostThreadV2#hasReplies'],
+      [
+        hiddenByThreadgate,
+        'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
+      ],
+      [mutedByViewer, 'app.bsky.unspecced.getPostThreadV2#mutedByViewer'],
+      [isOPThread, 'app.bsky.unspecced.getPostThreadV2#opThread'],
+    ]
+
     return {
       uri,
       depth,
@@ -1508,12 +1526,7 @@ export class Views {
           $type: 'app.bsky.feed.defs#postView',
           ...postView,
         },
-        hasReplies: (postView.replyCount ?? 0) > 0,
-        isOPThread,
-        isHidden:
-          viewer !== authorDid &&
-          this.replyIsHiddenByThreadgate(uri, rootUri, state),
-        isMuted: this.viewerMuteExists(authorDid, state),
+        annotations: annotations.filter((a) => a[0]).map((a) => a[1]),
       },
     }
   }

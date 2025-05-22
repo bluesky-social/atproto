@@ -68,11 +68,8 @@ export function toKnownErr(e: any) {
   return e
 }
 
-/** Newest-first thread sort order. */
 export const NEWEST = `${id}#newest`
-/** Oldest-first thread sort order. */
 export const OLDEST = `${id}#oldest`
-/** Most-relevant-first thread sort order. */
 export const TOP = `${id}#top`
 
 export interface ThreadItem {
@@ -98,17 +95,21 @@ export function validateThreadItem<V>(v: V) {
   return validate<ThreadItem & V>(v, id, hashThreadItem)
 }
 
+export const HASREPLIES = `${id}#hasReplies`
+export const HIDDENBYTHREADGATE = `${id}#hiddenByThreadgate`
+export const MUTEDBYVIEWER = `${id}#mutedByViewer`
+export const OPTHREAD = `${id}#opThread`
+
 export interface ThreadItemPost {
   $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemPost'
   post: AppBskyFeedDefs.PostView
-  /** Whether this post has replies. Note the replies may not be included in the thread if they are too deep. */
-  hasReplies: boolean
-  /** Whether this post is hidden. */
-  isHidden: boolean
-  /** Whether this post is muted. */
-  isMuted: boolean
-  /** Whether this post is part of a contiguous chain of OP replies. */
-  isOPThread: boolean
+  /** Annotations on this post that might be used by clients to customize experiences. */
+  annotations:
+    | 'app.bsky.unspecced.getPostThreadV2#hasReplies'
+    | 'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate'
+    | 'app.bsky.unspecced.getPostThreadV2#mutedByViewer'
+    | 'app.bsky.unspecced.getPostThreadV2#opThread'
+    | (string & {})[]
 }
 
 const hashThreadItemPost = 'threadItemPost'

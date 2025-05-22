@@ -10314,7 +10314,7 @@ export const schemaDict = {
                 'Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are all returned.',
               default: 10,
               minimum: 0,
-              maximum: 1000,
+              maximum: 100,
             },
             prioritizeFollowedUsers: {
               type: 'boolean',
@@ -10363,15 +10363,12 @@ export const schemaDict = {
       },
       newest: {
         type: 'token',
-        description: 'Newest-first thread sort order.',
       },
       oldest: {
         type: 'token',
-        description: 'Oldest-first thread sort order.',
       },
       top: {
         type: 'token',
-        description: 'Most-relevant-first thread sort order.',
       },
       threadItem: {
         type: 'object',
@@ -10397,31 +10394,39 @@ export const schemaDict = {
           },
         },
       },
+      hasReplies: {
+        type: 'token',
+      },
+      hiddenByThreadgate: {
+        type: 'token',
+      },
+      mutedByViewer: {
+        type: 'token',
+      },
+      opThread: {
+        type: 'token',
+      },
       threadItemPost: {
         type: 'object',
-        required: ['post', 'hasReplies', 'isHidden', 'isMuted', 'isOPThread'],
+        required: ['post', 'annotations'],
         properties: {
           post: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#postView',
           },
-          hasReplies: {
-            type: 'boolean',
+          annotations: {
+            type: 'array',
             description:
-              'Whether this post has replies. Note the replies may not be included in the thread if they are too deep.',
-          },
-          isHidden: {
-            type: 'boolean',
-            description: 'Whether this post is hidden.',
-          },
-          isMuted: {
-            type: 'boolean',
-            description: 'Whether this post is muted.',
-          },
-          isOPThread: {
-            type: 'boolean',
-            description:
-              'Whether this post is part of a contiguous chain of OP replies.',
+              'Annotations on this post that might be used by clients to customize experiences.',
+            items: {
+              type: 'string',
+              knownValues: [
+                'app.bsky.unspecced.getPostThreadV2#hasReplies',
+                'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
+                'app.bsky.unspecced.getPostThreadV2#mutedByViewer',
+                'app.bsky.unspecced.getPostThreadV2#opThread',
+              ],
+            },
           },
         },
       },

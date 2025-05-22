@@ -8,10 +8,10 @@ Object {
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -48,10 +48,7 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -105,10 +102,10 @@ Object {
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -145,10 +142,9 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -195,10 +191,7 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -252,10 +245,10 @@ Object {
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -292,10 +285,9 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -342,10 +334,7 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -399,10 +388,10 @@ Object {
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -439,10 +428,7 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -496,10 +482,10 @@ Object {
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -536,10 +522,10 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -586,10 +572,9 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -643,10 +628,10 @@ Object {
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -683,10 +668,10 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -733,10 +718,9 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -790,10 +774,10 @@ Object {
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -830,10 +814,10 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -880,10 +864,9 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": true,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#opThread",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -930,10 +913,7 @@ Object {
       "uri": "record(3)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -980,10 +960,9 @@ Object {
       "uri": "record(4)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": true,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [
+          "app.bsky.unspecced.getPostThreadV2#hasReplies",
+        ],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -1030,10 +1009,7 @@ Object {
       "uri": "record(5)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -1080,10 +1056,7 @@ Object {
       "uri": "record(6)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hasReplies": false,
-        "isHidden": false,
-        "isMuted": false,
-        "isOPThread": false,
+        "annotations": Array [],
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {

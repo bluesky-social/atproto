@@ -173,15 +173,27 @@ function applyBumping(
     ['up', (i) => i.post.author.did === opDid],
     // Viewer replies.
     ['up', (i) => i.post.author.did === viewer],
-    // Muted posts.
-    ['down', (i) => i.isMuted],
+    // Muted account by the viewer.
+    [
+      'down',
+      (i) =>
+        i.annotations.includes(
+          'app.bsky.unspecced.getPostThreadV2#mutedByViewer',
+        ),
+    ],
     // Pushpin-only.
     [
       'down',
       (i) => isPostRecord(i.post.record) && i.post.record.text.trim() === '📌',
     ],
-    // Hidden.
-    ['down', (i) => i.isHidden],
+    // Hidden by threadgate.
+    [
+      'down',
+      (i) =>
+        i.annotations.includes(
+          'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
+        ),
+    ],
     // Followers posts.
     ['up', (i) => prioritizeFollowedUsers && !!i.post.author.viewer?.following],
   ]
