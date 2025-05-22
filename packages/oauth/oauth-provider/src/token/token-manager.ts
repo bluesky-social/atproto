@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto'
 import { SignedJwt, isSignedJwt } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
   OAuthAuthorizationCodeGrantTokenRequest,
   OAuthAuthorizationRequestParameters,
@@ -123,10 +122,7 @@ export class TokenManager {
       throw new InvalidDpopKeyBindingError()
     }
 
-    if (
-      clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER || // LEGACY
-      clientAuth.method === 'private_key_jwt'
-    ) {
+    if ('jkt' in clientAuth) {
       // Clients **must not** use their private key to sign DPoP proofs.
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
         throw new InvalidRequestError(

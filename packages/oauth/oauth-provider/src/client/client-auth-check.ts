@@ -23,10 +23,7 @@ export function clientAuthCheck<C extends ClientAuth>(
   switch (previous.clientAuth.method) {
     case CLIENT_ASSERTION_TYPE_JWT_BEARER: // LEGACY
     case 'private_key_jwt':
-      if (
-        clientAuth.method !== CLIENT_ASSERTION_TYPE_JWT_BEARER && // LEGACY
-        clientAuth.method !== 'private_key_jwt'
-      ) {
+      if (clientAuth.method !== 'private_key_jwt') {
         throw new InvalidGrantError(
           `Client authentication method mismatch (expected ${previous.clientAuth.method})`,
         )
