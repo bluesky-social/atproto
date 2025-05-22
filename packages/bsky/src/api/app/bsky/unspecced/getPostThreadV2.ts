@@ -67,7 +67,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
-  const anchor = await ctx.hydrator.resolveUri(params.uri)
+  const anchor = await ctx.hydrator.resolveUri(params.anchor)
   try {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,

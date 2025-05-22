@@ -10286,9 +10286,9 @@ export const schemaDict = {
           "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get posts in a thread. It is based in an anchor post at any depth of the tree, and returns posts above it (recursively resolving the parent, without further branching) and below it (recursive replies, with branching). Does not require auth, but additional metadata and filtering will be applied for authed requests.",
         parameters: {
           type: 'params',
-          required: ['uri'],
+          required: ['anchor'],
           properties: {
-            uri: {
+            anchor: {
               type: 'string',
               format: 'at-uri',
               description: 'Reference (AT-URI) to post record.',

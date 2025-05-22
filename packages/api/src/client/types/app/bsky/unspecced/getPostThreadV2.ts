@@ -18,7 +18,7 @@ const id = 'app.bsky.unspecced.getPostThreadV2'
 
 export interface QueryParams {
   /** Reference (AT-URI) to post record. */
-  uri: string
+  anchor: string
   /** How many levels of parent (and grandparent, etc) to include above the anchor. */
   above?: number
   /** How many levels of replies to include below the anchor. */

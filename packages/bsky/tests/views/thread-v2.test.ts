@@ -63,7 +63,7 @@ describe('appview thread views v2', () => {
 
     it('returns thread anchored on root', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.root.ref.uriStr },
+        { anchor: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -88,7 +88,7 @@ describe('appview thread views v2', () => {
 
     it('returns thread anchored on r 0', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.r['0'].ref.uriStr },
+        { anchor: seed.r['0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -109,7 +109,7 @@ describe('appview thread views v2', () => {
 
     it('returns thread anchored on r 0_0', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.r['0_0'].ref.uriStr },
+        { anchor: seed.r['0_0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -130,7 +130,7 @@ describe('appview thread views v2', () => {
 
     it('returns thread anchored on 1', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.r['1'].ref.uriStr },
+        { anchor: seed.r['1'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -150,7 +150,7 @@ describe('appview thread views v2', () => {
 
     it('returns thread anchored on 2', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.r['2'].ref.uriStr },
+        { anchor: seed.r['2'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -171,7 +171,7 @@ describe('appview thread views v2', () => {
 
     it('returns thread anchored on 2_0', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.r['2_0'].ref.uriStr },
+        { anchor: seed.r['2_0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -192,7 +192,7 @@ describe('appview thread views v2', () => {
 
     it('returns thread anchored on 3', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.r['3'].ref.uriStr },
+        { anchor: seed.r['3'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -250,7 +250,7 @@ describe('appview thread views v2', () => {
         async ({ postKey }) => {
           const post = postKey === 'root' ? seed.root : seed.r[postKey]
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-            { uri: post.ref.uriStr },
+            { anchor: post.ref.uriStr },
             {
               headers: await network.serviceHeaders(
                 seed.users.op.did,
@@ -293,7 +293,7 @@ describe('appview thread views v2', () => {
       it('limits to the above count', async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            uri: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+            anchor: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
             above: 10,
           },
           {
@@ -317,7 +317,7 @@ describe('appview thread views v2', () => {
       it(`does not fulfill the above count if there are not enough items in the thread`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            uri: simple.r['0_0'].ref.uriStr,
+            anchor: simple.r['0_0'].ref.uriStr,
             above: 10,
           },
           {
@@ -340,7 +340,7 @@ describe('appview thread views v2', () => {
       it('limits to the below count', async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            uri: seed.root.ref.uriStr,
+            anchor: seed.root.ref.uriStr,
             below: 10,
           },
           {
@@ -361,7 +361,7 @@ describe('appview thread views v2', () => {
       it(`does not fulfill the below count if there are not enough items in the thread`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            uri: simple.root.ref.uriStr,
+            anchor: simple.root.ref.uriStr,
             below: 10,
           },
           {
@@ -533,7 +533,7 @@ describe('appview thread views v2', () => {
       async (args) => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            uri: seed.root.ref.uriStr,
+            anchor: seed.root.ref.uriStr,
             sorting: 'sorting' in args ? args.sorting : undefined,
             branchingFactor: args.branchingFactor,
           },
@@ -627,7 +627,7 @@ describe('appview thread views v2', () => {
       async ({ postKey, length, opThreadPostKeys: opThreadPosts }) => {
         const post = postKey === 'root' ? seed.root : seed.r[postKey]
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: post.ref.uriStr },
+          { anchor: post.ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -732,7 +732,7 @@ describe('appview thread views v2', () => {
         async ({ sorting, postKeys }) => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
-              uri: seed.root.ref.uriStr,
+              anchor: seed.root.ref.uriStr,
               sorting,
             },
             {
@@ -784,7 +784,7 @@ describe('appview thread views v2', () => {
           async ({ sorting, postKeys }) => {
             const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
               {
-                uri: seed.root.ref.uriStr,
+                anchor: seed.root.ref.uriStr,
                 sorting,
               },
               {
@@ -935,7 +935,7 @@ describe('appview thread views v2', () => {
           async ({ sorting, postKeys }) => {
             const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
               {
-                uri: seed.root.ref.uriStr,
+                anchor: seed.root.ref.uriStr,
                 sorting,
               },
               {
@@ -972,7 +972,7 @@ describe('appview thread views v2', () => {
         ) => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
-              uri: post,
+              anchor: post,
               sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
               prioritizeFollowedUsers,
             },
@@ -1065,7 +1065,7 @@ describe('appview thread views v2', () => {
         it('sorts multiple mutes correctly by the sorting param', async () => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
-              uri: seed.root.ref.uriStr,
+              anchor: seed.root.ref.uriStr,
               sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
             },
             {
@@ -1137,7 +1137,7 @@ describe('appview thread views v2', () => {
     describe(`1p blocks`, () => {
       it(`blocked reply is omitted from replies`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.root.ref.uriStr },
+          { anchor: seed.root.ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `blocked`, who was blocked by `blocker`, author of '0'.
@@ -1159,7 +1159,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked anchor returns lone blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['0'].ref.uriStr },
+          { anchor: seed.r['0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `blocked`, who was blocked by `blocker`, author of '0'.
@@ -1183,7 +1183,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked parent is replaced by blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['0_0'].ref.uriStr },
+          { anchor: seed.r['0_0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `blocked`, who was blocked by `blocker`, author of '0'.
@@ -1216,7 +1216,7 @@ describe('appview thread views v2', () => {
     describe(`3p blocks`, () => {
       it(`blocked reply is omitted from replies`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.root.ref.uriStr },
+          { anchor: seed.root.ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
@@ -1240,7 +1240,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked anchor returns post with blocked parent and non-blocked descendants`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['1'].ref.uriStr },
+          { anchor: seed.r['1'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
@@ -1279,7 +1279,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked parent is replaced by blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['1_0'].ref.uriStr },
+          { anchor: seed.r['1_0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
@@ -1310,7 +1310,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked root is replaced by blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['1_1'].ref.uriStr },
+          { anchor: seed.r['1_1'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
@@ -1350,7 +1350,7 @@ describe('appview thread views v2', () => {
     describe(`deleted posts`, () => {
       it(`deleted reply is omitted from replies`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.root.ref.uriStr },
+          { anchor: seed.root.ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -1373,7 +1373,7 @@ describe('appview thread views v2', () => {
 
       it(`deleted anchor returns lone not found view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['2'].ref.uriStr },
+          { anchor: seed.r['2'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -1396,7 +1396,7 @@ describe('appview thread views v2', () => {
 
       it(`deleted parent is replaced by not found view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['2_0'].ref.uriStr },
+          { anchor: seed.r['2_0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -1428,7 +1428,7 @@ describe('appview thread views v2', () => {
     describe('no-unauthenticated', () => {
       it(`no-unauthenticated reply is omitted from replies`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.root.ref.uriStr },
+          { anchor: seed.root.ref.uriStr },
           {
             headers: {
               'atproto-accept-labelers': `${labelerDid}`,
@@ -1464,7 +1464,7 @@ describe('appview thread views v2', () => {
 
       it(`no-unauthenticated anchor returns no-unauthenticated view without breaking the parent chain`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['3'].ref.uriStr },
+          { anchor: seed.r['3'].ref.uriStr },
           {
             headers: {
               'atproto-accept-labelers': `${labelerDid}`,
@@ -1494,7 +1494,7 @@ describe('appview thread views v2', () => {
 
       it(`no-unauthenticated parent is replaced by no-unauthenticated view without breaking the parent chain`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { uri: seed.r['3_0_0'].ref.uriStr },
+          { anchor: seed.r['3_0_0'].ref.uriStr },
           {
             headers: {
               'atproto-accept-labelers': `${labelerDid}`,
@@ -1549,7 +1549,7 @@ describe('appview thread views v2', () => {
 
     it(`muted reply is set as muted in top-level replies and omitted in nested replies`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.root.ref.uriStr },
+        { anchor: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             // Fetching as `op` mutes `opMuted`.
@@ -1596,7 +1596,7 @@ describe('appview thread views v2', () => {
 
     it(`mutes by OP don't have 3p effects`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.root.ref.uriStr },
+        { anchor: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             // Fetching as `muter` mutes `muted`.
@@ -1644,7 +1644,7 @@ describe('appview thread views v2', () => {
 
     it(`mutes by OP don't affect the muted user`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.root.ref.uriStr },
+        { anchor: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.opMuted.did,
@@ -1670,7 +1670,7 @@ describe('appview thread views v2', () => {
 
     it(`hidden reply is set as hidden in top-level replies and omitted in nested replies`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.root.ref.uriStr },
+        { anchor: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -1733,7 +1733,7 @@ describe('appview thread views v2', () => {
 
     it(`author of hidden reply does not see it as hidden`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.root.ref.uriStr },
+        { anchor: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             // `alice` does not get its own reply as hidden.
@@ -1795,7 +1795,7 @@ describe('appview thread views v2', () => {
 
     it(`other viewers are affected by hidden replies by OP`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { uri: seed.root.ref.uriStr },
+        { anchor: seed.root.ref.uriStr },
         {
           headers: await network.serviceHeaders(
             // `viewer` also gets the replies as hidden.
