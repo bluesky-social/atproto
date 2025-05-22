@@ -42,6 +42,9 @@ export class OAuthServerFactory {
     )
 
     if (authMethod === 'legacy') {
+      // @NOTE Because we were previously not storing the authMethod in the
+      // session data, we provide a backwards compatible implementation by
+      // computing it here.
       authMethod = negotiateClientAuthMethod(
         serverMetadata,
         this.clientMetadata,
