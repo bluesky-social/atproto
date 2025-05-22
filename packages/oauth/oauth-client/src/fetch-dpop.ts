@@ -60,8 +60,10 @@ export function dpopFetchWrapper<C = FetchContext>({
       ? await sha256(authorizationHeader.slice(5))
       : undefined
 
-    const { method, url } = request
-    const { origin } = new URL(url)
+    const { origin } = new URL(request.url)
+
+    const htm = request.method
+    const htu = buildHtu(request.url)
 
     let initNonce: string | undefined
     try {
@@ -70,15 +72,7 @@ export function dpopFetchWrapper<C = FetchContext>({
       // Ignore get errors, we will just not send a nonce
     }
 
-    const initProof = await buildProof(
-      key,
-      alg,
-      iss,
-      method,
-      url,
-      initNonce,
-      ath,
-    )
+    const initProof = await buildProof(key, alg, iss, htm, htu, initNonce, ath)
     request.headers.set('DPoP', initProof)
 
     const initResponse = await fetch.call(this, request)
@@ -126,20 +120,31 @@ export function dpopFetchWrapper<C = FetchContext>({
     // The initial response body must be consumed (see cancelBody's doc).
     await cancelBody(initResponse, 'log')
 
-    const nextProof = await buildProof(
-      key,
-      alg,
-      iss,
-      method,
-      url,
-      nextNonce,
-      ath,
-    )
+    const nextProof = await buildProof(key, alg, iss, htm, htu, nextNonce, ath)
     const nextRequest = new Request(input, init)
     nextRequest.headers.set('DPoP', nextProof)
 
     return fetch.call(this, nextRequest)
   }
+}
+
+/**
+ * Strip query and fragment
+ *
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6}
+ */
+function buildHtu(url: string): string {
+  const fragmentIndex = url.indexOf('#')
+  const queryIndex = url.indexOf('?')
+
+  const end =
+    fragmentIndex === -1
+      ? queryIndex
+      : queryIndex === -1
+        ? fragmentIndex
+        : Math.min(fragmentIndex, queryIndex)
+
+  return end === -1 ? url : url.slice(0, end)
 }
 
 async function buildProof(
@@ -151,7 +156,8 @@ async function buildProof(
   nonce?: string,
   ath?: string,
 ) {
-  if (!key.bareJwk) {
+  const jwk = key.bareJwk
+  if (!jwk) {
     throw new Error('Only asymmetric keys can be used as DPoP proofs')
   }
 
@@ -162,7 +168,7 @@ async function buildProof(
     {
       alg,
       typ: 'dpop+jwt',
-      jwk: key.bareJwk,
+      jwk,
     },
     {
       iss,

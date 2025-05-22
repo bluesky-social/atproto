@@ -6221,6 +6221,12 @@ export const schemaDict = {
               'Context provided by feed generator that may be passed back alongside interactions.',
             maxLength: 2000,
           },
+          reqId: {
+            type: 'string',
+            description:
+              'Unique identifier per request that may be passed back alongside interactions.',
+            maxLength: 100,
+          },
         },
       },
       replyRef: {
@@ -6516,6 +6522,12 @@ export const schemaDict = {
             description:
               'Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.',
             maxLength: 2000,
+          },
+          reqId: {
+            type: 'string',
+            description:
+              'Unique identifier per request that may be passed back alongside interactions.',
+            maxLength: 100,
           },
         },
       },
@@ -7065,6 +7077,12 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
                 },
               },
+              reqId: {
+                type: 'string',
+                description:
+                  'Unique identifier per request that may be passed back alongside interactions.',
+                maxLength: 100,
+              },
             },
           },
         },
@@ -7213,6 +7231,48 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7274,48 +7334,6 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
-      },
-    },
-  },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -7784,7 +7802,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Find posts matching search criteria, returning views of those posts.',
+          'Find posts matching search criteria, returning views of those posts. Note that this API endpoint may require authentication (eg, not public) for some service providers and implementations.',
         parameters: {
           type: 'params',
           required: ['q'],
@@ -10183,6 +10201,29 @@ export const schemaDict = {
               checkEmailConfirmed: {
                 type: 'boolean',
               },
+              liveNow: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getConfig#liveNowConfig',
+                },
+              },
+            },
+          },
+        },
+      },
+      liveNowConfig: {
+        type: 'object',
+        required: ['did', 'domains'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          domains: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
         },
@@ -12600,8 +12641,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',

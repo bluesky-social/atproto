@@ -848,6 +848,7 @@ describe('feed generation', () => {
         body: {
           feed: feedResults,
           cursor: cursorResult,
+          reqId: 'req-id-abc-def-ghi',
           $auth: jwtBody(req.headers.authorization), // for testing purposes
         },
       }

@@ -272,7 +272,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                 }
               : undefined,
           branding: {
-            name: env.serviceName ?? 'Personal PDS',
+            name: env.serviceName ?? `${hostname} PDS`,
             logo: env.logoUrl,
             colors: {
               light: env.lightColor,
