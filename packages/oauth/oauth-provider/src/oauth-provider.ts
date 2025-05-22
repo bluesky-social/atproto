@@ -395,14 +395,16 @@ export class OAuthProvider extends OAuthVerifier {
     client: Client,
     input: OAuthAuthorizationRequestJar,
   ) {
-    const { parameters, signatureMetadata, nonce } =
-      await client.parseRequestObject(input.request, this.issuer)
+    const { parameters, nonce } = await client.parseRequestObject(
+      input.request,
+      this.issuer,
+    )
 
     if (!(await this.replayManager.uniqueJar(nonce, client.id))) {
       throw new InvalidRequestError('Request object jti is not unique')
     }
 
-    return { parameters, signatureMetadata }
+    return parameters
   }
 
   /**
@@ -416,10 +418,10 @@ export class OAuthProvider extends OAuthVerifier {
     try {
       const [client, clientAuth] = await this.authenticateClient(credentials)
 
-      const { parameters } =
+      const parameters =
         'request' in authorizationRequest // Handle JAR
           ? await this.decodeJAR(client, authorizationRequest)
-          : { parameters: authorizationRequest }
+          : authorizationRequest
 
       const { uri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
@@ -467,26 +469,11 @@ export class OAuthProvider extends OAuthVerifier {
 
     // JAR
     if ('request' in query) {
-      const { parameters, signatureMetadata } = await this.decodeJAR(
-        client,
-        query,
-      )
-
-      // If the client used a signed JAR, use the signature metadata as client
-      // authentication method. This essentially allows clients to use JAR
-      // instead of PAR and still be able to initiate an authenticated request
-      // for a confidential client.
-      //
-      // @NOTE this is not part of the ATProto spec.
-      const clientAuth: ClientAuth | null =
-        signatureMetadata &&
-        client.metadata.token_endpoint_auth_method === 'private_key_jwt'
-          ? { ...signatureMetadata, method: 'private_key_jwt' }
-          : null
+      const parameters = await this.decodeJAR(client, query)
 
       return this.requestManager.createAuthorizationRequest(
         client,
-        clientAuth,
+        null,
         parameters,
         deviceId,
         null,

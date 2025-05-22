@@ -66,15 +66,10 @@ export class Client {
   public async parseRequestObject(jar: string, audience: string) {
     const result = await this.decodeRequestObject(jar, audience)
 
-    if (!result.payload.jti) {
+    const nonce = result.payload.jti
+    if (!nonce) {
       throw new InvalidRequestError(
         'Request object payload must contain a "jti" claim',
-      )
-    }
-
-    if ('protectedHeader' in result && !result.protectedHeader.kid) {
-      throw new InvalidRequestError(
-        'Request object header must contain a "kid" claim',
       )
     }
 
@@ -88,23 +83,7 @@ export class Client {
         throw InvalidRequestError.from(err, message)
       })
 
-    return {
-      nonce: result.payload.jti,
-      parameters,
-      signatureMetadata:
-        'protectedHeader' in result
-          ? {
-              kid: result.protectedHeader.kid!,
-              alg: result.protectedHeader.alg,
-              jkt: await authJwkThumbprint(result.key).catch((err) => {
-                throw new InvalidRequestError(
-                  'Unable to compute JWK thumbprint',
-                  err,
-                )
-              }),
-            }
-          : null,
-    }
+    return { nonce, parameters }
   }
 
   /**
