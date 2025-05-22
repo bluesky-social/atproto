@@ -101,7 +101,7 @@
         }
       }
     },
-    "hasReplies": { "type": "token" },
+    "hasMoreReplies": { "type": "token" },
     "hiddenByThreadgate": { "type": "token" },
     "mutedByViewer": { "type": "token" },
     "opThread": { "type": "token" },
@@ -116,7 +116,7 @@
           "items": {
             "type": "string",
             "knownValues": [
-              "app.bsky.unspecced.getPostThreadV2#hasReplies",
+              "app.bsky.unspecced.getPostThreadV2#hasMoreReplies",
               "app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate",
               "app.bsky.unspecced.getPostThreadV2#mutedByViewer",
               "app.bsky.unspecced.getPostThreadV2#opThread"

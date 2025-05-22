@@ -95,7 +95,7 @@ export function validateThreadItem<V>(v: V) {
   return validate<ThreadItem & V>(v, id, hashThreadItem)
 }
 
-export const HASREPLIES = `${id}#hasReplies`
+export const HASMOREREPLIES = `${id}#hasMoreReplies`
 export const HIDDENBYTHREADGATE = `${id}#hiddenByThreadgate`
 export const MUTEDBYVIEWER = `${id}#mutedByViewer`
 export const OPTHREAD = `${id}#opThread`
@@ -105,7 +105,7 @@ export interface ThreadItemPost {
   post: AppBskyFeedDefs.PostView
   /** Annotations on this post that might be used by clients to customize experiences. */
   annotations:
-    | 'app.bsky.unspecced.getPostThreadV2#hasReplies'
+    | 'app.bsky.unspecced.getPostThreadV2#hasMoreReplies'
     | 'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate'
     | 'app.bsky.unspecced.getPostThreadV2#mutedByViewer'
     | 'app.bsky.unspecced.getPostThreadV2#opThread'

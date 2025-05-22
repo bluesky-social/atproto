@@ -10396,7 +10396,7 @@ export const schemaDict = {
           },
         },
       },
-      hasReplies: {
+      hasMoreReplies: {
         type: 'token',
       },
       hiddenByThreadgate: {
@@ -10423,7 +10423,7 @@ export const schemaDict = {
             items: {
               type: 'string',
               knownValues: [
-                'app.bsky.unspecced.getPostThreadV2#hasReplies',
+                'app.bsky.unspecced.getPostThreadV2#hasMoreReplies',
                 'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
                 'app.bsky.unspecced.getPostThreadV2#mutedByViewer',
                 'app.bsky.unspecced.getPostThreadV2#opThread',

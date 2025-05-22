@@ -1137,7 +1137,14 @@ export class Views {
   threadV2(
     skeleton: { anchor: string; uris: string[] },
     state: HydrationState,
-    opts: {
+    {
+      above,
+      below,
+      branchingFactor,
+      prioritizeFollowedUsers,
+      sorting,
+      viewer,
+    }: {
       above: number
       below: number
       branchingFactor: number
@@ -1147,7 +1154,6 @@ export class Views {
     },
   ): ThreadItem[] {
     const { anchor, uris } = skeleton
-    const { viewer } = opts
 
     // Not found.
     const postView = this.post(anchor, state)
@@ -1200,7 +1206,7 @@ export class Views {
           opDid,
           rootUri,
           state,
-          above: opts.above,
+          above,
           depth: -1,
         })
       : undefined
@@ -1217,7 +1223,7 @@ export class Views {
       anchorTree = {
         item: this.threadV2ItemNoUnauthenticated({
           uri: anchor,
-          depth: 0,
+          depth: 0, // The depth of the anchor post is always 0.
         }),
         parent,
       }
@@ -1228,6 +1234,7 @@ export class Views {
             depth: 0, // The depth of the anchor post is always 0.
             isOPThread,
             postView,
+            repliesAllowance: Infinity, // While we don't have pagination.
             rootUri,
             uri: anchor,
             viewer,
@@ -1245,8 +1252,9 @@ export class Views {
               rootUri,
               childrenByParentUri,
               state,
-              below: opts.below,
+              below,
               depth: 1,
+              branchingFactor,
             })
           : undefined,
       }
@@ -1254,9 +1262,9 @@ export class Views {
 
     return sortTrimFlattenThreadTree(anchorTree, {
       opDid,
-      branchingFactor: opts.branchingFactor,
-      sorting: opts.sorting,
-      prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
+      branchingFactor,
+      sorting,
+      prioritizeFollowedUsers,
       viewer,
       fetchedAt: Date.now(),
     })
@@ -1386,6 +1394,7 @@ export class Views {
     state,
     below,
     depth,
+    branchingFactor,
   }: {
     parentUri: string
     viewer: HydrateCtx['viewer']
@@ -1396,6 +1405,7 @@ export class Views {
     state: HydrationState
     below: number
     depth: number
+    branchingFactor: number
   }): ThreadTree[] | undefined {
     // Reached the `below` limit.
     if (depth > below) {
@@ -1457,7 +1467,11 @@ export class Views {
         state,
         below,
         depth: depth + 1,
+        branchingFactor,
       })
+
+      const reachedDepth = depth === below
+      const repliesAllowance = reachedDepth ? 0 : branchingFactor
 
       const tree: ThreadTree = {
         item: this.threadV2ItemPost(
@@ -1465,6 +1479,7 @@ export class Views {
             depth,
             isOPThread,
             postView,
+            repliesAllowance,
             rootUri,
             uri,
             viewer,
@@ -1485,6 +1500,7 @@ export class Views {
       depth,
       isOPThread,
       postView,
+      repliesAllowance,
       rootUri,
       uri,
       viewer,
@@ -1492,6 +1508,7 @@ export class Views {
       depth: number
       isOPThread: boolean
       postView: PostView
+      repliesAllowance?: number
       rootUri: string
       uri: string
       viewer: HydrateCtx['viewer']
@@ -1500,7 +1517,11 @@ export class Views {
   ): ThreadItemValuePost {
     const authorDid = creatorFromUri(uri)
 
-    const hasReplies = (postView.replyCount ?? 0) > 0
+    const hasMoreReplies =
+      repliesAllowance === undefined
+        ? false
+        : (postView.replyCount ?? 0) > repliesAllowance
+
     const hiddenByThreadgate =
       viewer !== authorDid &&
       this.replyIsHiddenByThreadgate(uri, rootUri, state)
@@ -1508,7 +1529,7 @@ export class Views {
 
     type Annotation = [boolean, ThreadItemPost['annotations'][number]]
     const annotations: Annotation[] = [
-      [hasReplies, 'app.bsky.unspecced.getPostThreadV2#hasReplies'],
+      [hasMoreReplies, 'app.bsky.unspecced.getPostThreadV2#hasMoreReplies'],
       [
         hiddenByThreadgate,
         'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',

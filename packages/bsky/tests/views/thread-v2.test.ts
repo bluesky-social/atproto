@@ -11,20 +11,11 @@ import { ThreadItemValuePost } from '../../src/views/threadsV2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 
-const hasReplies: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#hasReplies',
+const hasMoreReplies: ThreadItemPost['annotations'] = [
+  'app.bsky.unspecced.getPostThreadV2#hasMoreReplies',
 ]
-const hasRepliesHiddenByThreadgate: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#hasReplies',
+const hiddenByThreadgate: ThreadItemPost['annotations'] = [
   'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
-]
-const hasRepliesMutedByViewer: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#hasReplies',
-  'app.bsky.unspecced.getPostThreadV2#mutedByViewer',
-]
-const hasRepliesOpThread: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#hasReplies',
-  'app.bsky.unspecced.getPostThreadV2#opThread',
 ]
 const opThread: ThreadItemPost['annotations'] = [
   'app.bsky.unspecced.getPostThreadV2#opThread',
@@ -570,6 +561,100 @@ describe('appview thread views v2', () => {
     )
   })
 
+  describe('annotate more replies', () => {
+    let seed: Awaited<ReturnType<typeof seeds.annotateMoreReplies>>
+
+    beforeAll(async () => {
+      seed = await seeds.annotateMoreReplies(sc)
+      await network.processAll()
+    })
+
+    it('annotates correctly both in cases of trimmed replies by depth and by branching factor reached', async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        {
+          anchor: seed.root.ref.uriStr,
+          below: 4,
+          branchingFactor: 2,
+        },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({
+          uri: seed.root.ref.uriStr,
+          value: expect.objectContaining({ annotations: opThread }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0_0_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0_0_0_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: hasMoreReplies }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0_1'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0_1_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['0_1_0_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1'].ref.uriStr,
+          value: expect.objectContaining({ annotations: hasMoreReplies }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: hasMoreReplies }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_0_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_0_1'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_1'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_1_0'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_1_1'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['2'].ref.uriStr,
+          value: expect.objectContaining({ annotations: [] }),
+        }),
+      ])
+    })
+  })
+
   describe(`annotate OP thread`, () => {
     let seed: Awaited<ReturnType<typeof seeds.annotateOP>>
 
@@ -1092,7 +1177,7 @@ describe('appview thread views v2', () => {
             expect.objectContaining({
               uri: seed.root.ref.uriStr,
               value: expect.objectContaining({
-                annotations: hasRepliesOpThread,
+                annotations: opThread,
               }),
             }),
             expect.objectContaining({
@@ -1551,11 +1636,13 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ annotations: hasRepliesOpThread }),
+          value: expect.objectContaining({
+            annotations: opThread,
+          }),
         }),
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasReplies }),
+          value: expect.objectContaining({ annotations: [] }),
         }),
         // 1_0 is a nested muted reply, so it is omitted.
         expect.objectContaining({
@@ -1566,7 +1653,7 @@ describe('appview thread views v2', () => {
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
           value: expect.objectContaining({
-            annotations: hasRepliesMutedByViewer,
+            annotations: mutedByViewer,
           }),
         }),
         // 0's replies are not omitted nor marked as muted.
@@ -1598,11 +1685,13 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ annotations: hasRepliesOpThread }),
+          value: expect.objectContaining({
+            annotations: opThread,
+          }),
         }),
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasReplies }),
+          value: expect.objectContaining({ annotations: [] }),
         }),
         expect.objectContaining({
           uri: seed.r['0_0'].ref.uriStr,
@@ -1614,7 +1703,7 @@ describe('appview thread views v2', () => {
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
           value: expect.objectContaining({
-            annotations: hasRepliesMutedByViewer,
+            annotations: mutedByViewer,
           }),
         }),
         // 1's replies are not omitted nor marked as muted.
@@ -1671,11 +1760,13 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ annotations: hasRepliesOpThread }),
+          value: expect.objectContaining({
+            annotations: opThread,
+          }),
         }),
         expect.objectContaining({
           uri: seed.r['2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasReplies }),
+          value: expect.objectContaining({ annotations: [] }),
         }),
         // OP reply bumped up.
         expect.objectContaining({
@@ -1692,7 +1783,7 @@ describe('appview thread views v2', () => {
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
           value: expect.objectContaining({
-            annotations: hasRepliesHiddenByThreadgate,
+            annotations: hiddenByThreadgate,
           }),
         }),
         // 1's replies are not omitted nor marked as hidden.
@@ -1735,13 +1826,15 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ annotations: hasRepliesOpThread }),
+          value: expect.objectContaining({
+            annotations: opThread,
+          }),
         }),
 
         // alice does not see its own reply as hidden.
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasReplies }),
+          value: expect.objectContaining({ annotations: [] }),
         }),
         // OP reply bumped up.
         expect.objectContaining({
@@ -1765,7 +1858,7 @@ describe('appview thread views v2', () => {
 
         expect.objectContaining({
           uri: seed.r['2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasReplies }),
+          value: expect.objectContaining({ annotations: [] }),
         }),
         // OP reply bumped up.
         expect.objectContaining({
@@ -1797,7 +1890,9 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ annotations: hasRepliesOpThread }),
+          value: expect.objectContaining({
+            annotations: opThread,
+          }),
         }),
         // `opMuted` doesn't see itself as muted, just `op` does.
         expect.objectContaining({
@@ -1807,7 +1902,7 @@ describe('appview thread views v2', () => {
 
         expect.objectContaining({
           uri: seed.r['2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasReplies }),
+          value: expect.objectContaining({ annotations: [] }),
         }),
         // OP reply bumped up.
         expect.objectContaining({
@@ -1824,7 +1919,7 @@ describe('appview thread views v2', () => {
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
           value: expect.objectContaining({
-            annotations: hasRepliesHiddenByThreadgate,
+            annotations: hiddenByThreadgate,
           }),
         }),
         // 1's replies are not omitted nor marked as hidden.

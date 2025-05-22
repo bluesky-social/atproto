@@ -333,6 +333,55 @@ export async function branchingFactor(
   }
 }
 
+export async function annotateMoreReplies(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'mr', ['op', 'alice'] as const)
+  const { op, alice } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(alice, async (r) => {
+      await r(alice, async (r) => {
+        await r(alice, async (r) => {
+          await r(alice, async (r) => {
+            // more replies... (below = 4)
+            await r(alice, async (r) => {
+              await r(alice)
+            })
+          })
+        })
+      })
+      await r(alice, async (r) => {
+        await r(alice, async (r) => {
+          await r(alice)
+        })
+      })
+    })
+    await r(alice, async (r) => {
+      await r(alice, async (r) => {
+        await r(alice)
+        await r(alice)
+        // more replies... (branchingFactor = 2)
+        await r(alice)
+      })
+      await r(alice, async (r) => {
+        await r(alice)
+        await r(alice)
+      })
+      // more replies... (branchingFactor = 2)
+      await r(alice)
+    })
+    await r(alice) // anchor reply not limited by branchingFactor
+  })
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}
+
 export async function annotateOP(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
