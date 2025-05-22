@@ -1,4 +1,3 @@
-import { addHours, subHours } from 'date-fns'
 import { AppBskyFeedPost } from '@atproto/api'
 import {
   RecordRef,
@@ -373,29 +372,24 @@ export async function sort(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   ] as const)
   const { op, alice, bob, carol } = users
 
-  const rootCreatedAt = subHours(new Date(), 10)
-  const ov = (hoursAfterRoot = 0) => ({
-    createdAt: addHours(rootCreatedAt, hoursAfterRoot).toISOString(),
-  })
-
-  const { root, replies: r } = await createThread(sc, op, ov(), async (r) => {
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
     // 0 likes
-    await r(alice, ov(1), async (r) => {
-      await r(carol, ov(2)) // 0 likes
-      await r(alice, ov(3)) // 2 likes
-      await r(bob, ov(4)) // 1 like
+    await r(alice, async (r) => {
+      await r(carol) // 0 likes
+      await r(alice) // 2 likes
+      await r(bob) // 1 like
     })
     // 3 likes
-    await r(carol, ov(3), async (r) => {
-      await r(bob, ov(4)) // 1 like
-      await r(carol, ov(5)) // 2 likes
-      await r(alice, ov(6)) // 0 likes
+    await r(carol, async (r) => {
+      await r(bob) // 1 like
+      await r(carol) // 2 likes
+      await r(alice) // 0 likes
     })
     // 2 likes
-    await r(bob, ov(5), async (r) => {
-      await r(bob, ov(6)) // 2 likes
-      await r(alice, ov(7)) // 1 like
-      await r(carol, ov(8)) // 0 likes
+    await r(bob, async (r) => {
+      await r(bob) // 2 likes
+      await r(alice) // 1 like
+      await r(carol) // 0 likes
     })
   })
 
@@ -437,51 +431,46 @@ export async function bumpOpAndViewer(
   ] as const)
   const { op, viewer, alice, bob, carol } = users
 
-  const rootCreatedAt = subHours(new Date(), 10)
-  const ov = (hoursAfterRoot = 0) => ({
-    createdAt: addHours(rootCreatedAt, hoursAfterRoot).toISOString(),
-  })
-
-  const { root, replies: r } = await createThread(sc, op, ov(), async (r) => {
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
     // 1 like
-    await r(alice, ov(0), async (r) => {
-      await r(carol, ov(1)) // 0 likes
-      await r(alice, ov(2)) // 2 likes
-      await r(bob, ov(3)) // 1 like
-      await r(viewer, ov(4)) // 0 likes
-      await r(op, ov(5)) // 0 likes
+    await r(alice, async (r) => {
+      await r(carol) // 0 likes
+      await r(alice) // 2 likes
+      await r(bob) // 1 like
+      await r(viewer) // 0 likes
+      await r(op) // 0 likes
     })
     // 3 likes
-    await r(carol, ov(1), async (r) => {
-      await r(bob, ov(2)) // 1 like
-      await r(carol, ov(3)) // 2 likes
-      await r(op, ov(4)) // 0 likes
-      await r(viewer, ov(5)) // 1 like
-      await r(alice, ov(6)) // 0 likes
+    await r(carol, async (r) => {
+      await r(bob) // 1 like
+      await r(carol) // 2 likes
+      await r(op) // 0 likes
+      await r(viewer) // 1 like
+      await r(alice) // 0 likes
     })
     // 2 likes
-    await r(bob, ov(2), async (r) => {
-      await r(viewer, ov(3)) // 0 likes
-      await r(bob, ov(4)) // 4 likes
-      await r(op, ov(5)) // 0 likes
-      await r(alice, ov(6)) // 1 like
-      await r(carol, ov(7)) // 1 like
+    await r(bob, async (r) => {
+      await r(viewer) // 0 likes
+      await r(bob) // 4 likes
+      await r(op) // 0 likes
+      await r(alice) // 1 like
+      await r(carol) // 1 like
     })
     // 0 likes
-    await r(op, ov(3), async (r) => {
-      await r(viewer, ov(4)) // 0 likes
-      await r(bob, ov(5)) // 0 likes
-      await r(op, ov(6)) // 0 likes
-      await r(alice, ov(7)) // 0 likes
-      await r(carol, ov(8)) // 0 likes
+    await r(op, async (r) => {
+      await r(viewer) // 0 likes
+      await r(bob) // 0 likes
+      await r(op) // 0 likes
+      await r(alice) // 0 likes
+      await r(carol) // 0 likes
     })
     // 0 likes
-    await r(viewer, ov(4), async (r) => {
-      await r(bob, ov(5)) // 1 like
-      await r(carol, ov(6)) // 1 like
-      await r(op, ov(7)) // 0 likes
-      await r(viewer, ov(8)) // 0 likes
-      await r(alice, ov(9)) // 0 likes
+    await r(viewer, async (r) => {
+      await r(bob) // 1 like
+      await r(carol) // 1 like
+      await r(op) // 0 likes
+      await r(viewer) // 0 likes
+      await r(alice) // 0 likes
     })
   })
 
@@ -561,18 +550,13 @@ export async function bumpFollows(
 
   const { op, viewerF, viewerNoF, alice, bob, carol } = users
 
-  const rootCreatedAt = subHours(new Date(), 10)
-  const ov = (hoursAfterRoot = 0) => ({
-    createdAt: addHours(rootCreatedAt, hoursAfterRoot).toISOString(),
-  })
-
-  const { root, replies: r } = await createThread(sc, op, ov(), async (r) => {
-    await r(alice, ov(0))
-    await r(bob, ov(1))
-    await r(carol, ov(2))
-    await r(op, ov(3))
-    await r(viewerF, ov(4))
-    await r(viewerNoF, ov(5))
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(alice)
+    await r(bob)
+    await r(carol)
+    await r(op)
+    await r(viewerF)
+    await r(viewerNoF)
   })
 
   await sc.follow(viewerF.did, alice.did)
