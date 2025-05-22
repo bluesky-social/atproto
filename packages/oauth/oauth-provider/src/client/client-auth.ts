@@ -34,20 +34,3 @@ export type ClientAuth =
        */
       jkt: string
     }
-
-export function compareClientAuth(a: ClientAuth, b: ClientAuth): boolean {
-  if (a.method === 'none') {
-    if (b.method !== a.method) return false
-
-    return true
-  }
-
-  if (a.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-    if (b.method !== a.method) return false
-
-    return true
-  }
-
-  // Fool-proof
-  throw new TypeError('Invalid ClientAuth method')
-}
