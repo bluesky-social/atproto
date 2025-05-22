@@ -7,9 +7,6 @@ import {
 import { FALLBACK_ALG } from './constants.js'
 import { ClientMetadata, clientMetadataSchema } from './types.js'
 
-const TOKEN_ENDPOINT_AUTH_METHOD = `token_endpoint_auth_method`
-const TOKEN_ENDPOINT_AUTH_SIGNING_ALG = `token_endpoint_auth_signing_alg`
-
 export function validateClientMetadata(
   input: OAuthClientMetadataInput,
   keyset?: Keyset,
@@ -41,20 +38,21 @@ export function validateClientMetadata(
     throw new TypeError(`"grant_types" must include "authorization_code"`)
   }
 
-  const method = metadata[TOKEN_ENDPOINT_AUTH_METHOD]
+  const method = metadata.token_endpoint_auth_method
+  const methodAlg = metadata.token_endpoint_auth_signing_alg
   switch (method) {
     case 'none':
-      if (metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
+      if (methodAlg) {
         throw new TypeError(
-          `${TOKEN_ENDPOINT_AUTH_SIGNING_ALG} must not be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
+          `"token_endpoint_auth_signing_alg" must not be provided when "token_endpoint_auth_method" is "${method}"`,
         )
       }
       break
 
     case 'private_key_jwt': {
-      if (!metadata[TOKEN_ENDPOINT_AUTH_SIGNING_ALG]) {
+      if (!methodAlg) {
         throw new TypeError(
-          `${TOKEN_ENDPOINT_AUTH_SIGNING_ALG} must be provided when ${TOKEN_ENDPOINT_AUTH_METHOD} is "${method}"`,
+          `"token_endpoint_auth_signing_alg" must be provided when "token_endpoint_auth_method" is "${method}"`,
         )
       }
 
@@ -93,7 +91,7 @@ export function validateClientMetadata(
 
     default:
       throw new TypeError(
-        `Invalid "${TOKEN_ENDPOINT_AUTH_METHOD}" value: ${method}`,
+        `Invalid "token_endpoint_auth_method" value: ${method}`,
       )
   }
 

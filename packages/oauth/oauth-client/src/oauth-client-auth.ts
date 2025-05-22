@@ -12,7 +12,7 @@ import { Awaitable } from './util.js'
 
 export type ClientAuthMethod =
   | { method: 'none' }
-  | { method: 'client_secret_jwt'; kid: string }
+  | { method: 'private_key_jwt'; kid: string }
 
 export function negotiateClientAuthMethod(
   serverMetadata: OAuthAuthorizationServerMetadata,
@@ -22,7 +22,7 @@ export function negotiateClientAuthMethod(
   const method = clientMetadata['token_endpoint_auth_method']
 
   // @NOTE ATproto spec requires that AS support both "none" and
-  // "client_secret_jwt", and that clients use one of the other. The following
+  // "private_key_jwt", and that clients use one of the other. The following
   // check ensures that the AS is indeed compliant with this client's
   // configuration.
   const methods = supportedMethods(serverMetadata)
@@ -34,10 +34,10 @@ export function negotiateClientAuthMethod(
     )
   }
 
-  if (method === 'client_secret_jwt') {
+  if (method === 'private_key_jwt') {
     // Invalid client configuration. This should not happen as
     // "validateClientMetadata" already check this.
-    if (!keyset) throw new Error('A keyset is required for client_secret_jwt')
+    if (!keyset) throw new Error('A keyset is required for private_key_jwt')
 
     // @NOTE we can't use `keyset.findPrivateKey` here because we can't enforce
     // that the returned key contains a "kid". The following implementation is
@@ -51,7 +51,7 @@ export function negotiateClientAuthMethod(
 
       // Return the first key from the key set that matches the server's
       // supported algorithms.
-      if (key.kid) return { method: 'client_secret_jwt', kid: key.kid }
+      if (key.kid) return { method: 'private_key_jwt', kid: key.kid }
     }
   }
 
@@ -60,7 +60,7 @@ export function negotiateClientAuthMethod(
   }
 
   throw new Error(
-    `The ATProto OAuth spec requires that client use either "none" or "client_secret_jwt" authentication method.` +
+    `The ATProto OAuth spec requires that client use either "none" or "private_key_jwt" authentication method.` +
       (method === 'client_secret_basic'
         ? ' You might want to explicitly set "token_endpoint_auth_method" to one of those values in the client metadata document.'
         : ` You set "${method}" which is not allowed.`),
@@ -94,10 +94,10 @@ export function createClientCredentialsFactory(
     })
   }
 
-  if (authMethod.method === 'client_secret_jwt') {
+  if (authMethod.method === 'private_key_jwt') {
     try {
       // The client used to be a confidential client but no longer has a keyset.
-      if (!keyset) throw new Error('A keyset is required for client_secret_jwt')
+      if (!keyset) throw new Error('A keyset is required for private_key_jwt')
 
       // @NOTE throws if no matching key can be found
       const [key, alg] = keyset.findPrivateKey({
