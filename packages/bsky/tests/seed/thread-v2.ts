@@ -210,10 +210,10 @@ export async function deep(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   }
 }
 
-export async function nestedBranchingFactor(
+export async function branchingFactor(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'nbf', ['op', 'bob'] as const)
+  const users = await createUsers(sc, 'bf', ['op', 'bob'] as const)
   const { op, bob } = users
 
   const { root, replies: r } = await createThread(sc, op, async (r) => {

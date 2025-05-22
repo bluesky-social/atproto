@@ -10283,7 +10283,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          '[NOTE: this endpoint is under development and it might change without notice]. Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.',
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get posts in a thread. It is based in an anchor post at any depth of the tree, and returns posts above it (recursively resolving the parent, without further branching) and below it (recursive replies, with branching). Does not require auth, but additional metadata and filtering will be applied for authed requests.",
         parameters: {
           type: 'params',
           required: ['uri'],
@@ -10296,29 +10296,31 @@ export const schemaDict = {
             above: {
               type: 'integer',
               description:
-                'How many levels of parent (and grandparent, etc) post to include.',
+                'How many levels of parent (and grandparent, etc) to include above the anchor.',
               default: 80,
               minimum: 0,
               maximum: 100,
             },
             below: {
               type: 'integer',
-              description: 'How many levels of reply depth to include.',
+              description:
+                'How many levels of replies to include below the anchor.',
               default: 6,
               minimum: 0,
               maximum: 100,
             },
-            nestedBranchingFactor: {
+            branchingFactor: {
               type: 'integer',
               description:
-                'Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are all returned.',
+                'Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are (NOTE: currently, during unspecced phase) all returned (NOTE: later they might be paginated).',
               default: 10,
               minimum: 0,
               maximum: 100,
             },
             prioritizeFollowedUsers: {
               type: 'boolean',
-              description: 'Whether to prioritize posts from followed users.',
+              description:
+                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
               default: false,
             },
             sorting: {

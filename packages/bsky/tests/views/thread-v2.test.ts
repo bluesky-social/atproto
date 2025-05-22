@@ -383,28 +383,28 @@ describe('appview thread views v2', () => {
   })
 
   describe('branching factor', () => {
-    let seed: Awaited<ReturnType<typeof seeds.nestedBranchingFactor>>
+    let seed: Awaited<ReturnType<typeof seeds.branchingFactor>>
 
     beforeAll(async () => {
-      seed = await seeds.nestedBranchingFactor(sc)
+      seed = await seeds.branchingFactor(sc)
       await network.processAll()
     })
 
     type Case =
       | {
-          nestedBranchingFactor: number
+          branchingFactor: number
           sorting: QueryParams['sorting']
           postKeys: string[]
         }
       | {
-          nestedBranchingFactor: number
+          branchingFactor: number
           sorting: QueryParams['sorting']
           // For higher branching factors it gets too verbose to write all posts.
           length: number
         }
     const cases: Case[] = [
       {
-        nestedBranchingFactor: 1,
+        branchingFactor: 1,
         sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
         postKeys: [
           'root',
@@ -423,7 +423,7 @@ describe('appview thread views v2', () => {
         ],
       },
       {
-        nestedBranchingFactor: 1,
+        branchingFactor: 1,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
         postKeys: [
           'root',
@@ -442,7 +442,7 @@ describe('appview thread views v2', () => {
         ],
       },
       {
-        nestedBranchingFactor: 2,
+        branchingFactor: 2,
         sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
         postKeys: [
           'root',
@@ -476,7 +476,7 @@ describe('appview thread views v2', () => {
         ],
       },
       {
-        nestedBranchingFactor: 2,
+        branchingFactor: 2,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
         postKeys: [
           'root',
@@ -511,31 +511,31 @@ describe('appview thread views v2', () => {
         ],
       },
       {
-        nestedBranchingFactor: 3,
+        branchingFactor: 3,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
         length: 53,
       },
       {
-        nestedBranchingFactor: 4,
+        branchingFactor: 4,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
         length: 82,
       },
       {
-        nestedBranchingFactor: 5,
+        branchingFactor: 5,
         sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
-        // The seeds have 1 post with 5 replies, so it is +1 compared to nestedBranchingFactor 4.
+        // The seeds have 1 post with 5 replies, so it is +1 compared to branchingFactor 4.
         length: 83,
       },
     ]
 
     it.each(cases)(
-      'returns all top-level replies and limits nested to branching factor of $nestedBranchingFactor when sorting by $sorting',
+      'returns all top-level replies and limits nested to branching factor of $branchingFactor when sorting by $sorting',
       async (args) => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
             uri: seed.root.ref.uriStr,
             sorting: 'sorting' in args ? args.sorting : undefined,
-            nestedBranchingFactor: args.nestedBranchingFactor,
+            branchingFactor: args.branchingFactor,
           },
           {
             headers: await network.serviceHeaders(

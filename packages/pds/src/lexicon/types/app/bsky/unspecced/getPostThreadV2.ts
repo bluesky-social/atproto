@@ -20,13 +20,13 @@ const id = 'app.bsky.unspecced.getPostThreadV2'
 export interface QueryParams {
   /** Reference (AT-URI) to post record. */
   uri: string
-  /** How many levels of parent (and grandparent, etc) post to include. */
+  /** How many levels of parent (and grandparent, etc) to include above the anchor. */
   above: number
-  /** How many levels of reply depth to include. */
+  /** How many levels of replies to include below the anchor. */
   below: number
-  /** Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are all returned. */
-  nestedBranchingFactor: number
-  /** Whether to prioritize posts from followed users. */
+  /** Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are (NOTE: currently, during unspecced phase) all returned (NOTE: later they might be paginated). */
+  branchingFactor: number
+  /** Whether to prioritize posts from followed users. It only has effect when the user is authenticated. */
   prioritizeFollowedUsers: boolean
   /** Sorting for the thread replies. */
   sorting:

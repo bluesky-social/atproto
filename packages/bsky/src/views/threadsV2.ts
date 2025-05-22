@@ -72,7 +72,7 @@ export function sortTrimFlattenThreadTree(
 }
 
 type SortTrimFlattenOptions = {
-  nestedBranchingFactor: GetPostThreadV2QueryParams['nestedBranchingFactor']
+  branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
   fetchedAt: number
   opDid: string
   prioritizeFollowedUsers: boolean
@@ -91,7 +91,7 @@ function sortTrimThreadTree(
   }
 
   const {
-    nestedBranchingFactor,
+    branchingFactor,
     fetchedAt,
     opDid,
     prioritizeFollowedUsers,
@@ -119,13 +119,13 @@ function sortTrimThreadTree(
     })
 
     // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
-    if (node.item.depth !== 0 && nestedBranchingFactor > 0) {
-      node.replies = node.replies.slice(0, nestedBranchingFactor)
+    if (node.item.depth !== 0 && branchingFactor > 0) {
+      node.replies = node.replies.slice(0, branchingFactor)
     }
 
     node.replies.forEach((reply) =>
       sortTrimThreadTree(reply, {
-        nestedBranchingFactor,
+        branchingFactor,
         fetchedAt,
         opDid,
         prioritizeFollowedUsers,
