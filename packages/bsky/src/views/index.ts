@@ -1225,7 +1225,6 @@ export class Views {
         item: this.threadV2ItemPost(
           {
             depth: 0, // The depth of the anchor post is always 0.
-            hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
             isOPThread,
             postView,
             rootUri,
@@ -1234,6 +1233,7 @@ export class Views {
           },
           state,
         ),
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies: !anchorViolatesThreadGate
           ? this.threadV2Replies({
@@ -1359,7 +1359,6 @@ export class Views {
         item: this.threadV2ItemPost(
           {
             depth,
-            hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
             isOPThread,
             postView,
             rootUri,
@@ -1368,6 +1367,7 @@ export class Views {
           },
           state,
         ),
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies: undefined,
       },
@@ -1462,7 +1462,6 @@ export class Views {
         item: this.threadV2ItemPost(
           {
             depth,
-            hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
             isOPThread,
             postView,
             rootUri,
@@ -1471,6 +1470,7 @@ export class Views {
           },
           state,
         ),
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent: undefined,
         replies,
       }
@@ -1482,7 +1482,6 @@ export class Views {
   private threadV2ItemPost(
     {
       depth,
-      hasOPLike,
       isOPThread,
       postView,
       rootUri,
@@ -1490,7 +1489,6 @@ export class Views {
       viewer,
     }: {
       depth: number
-      hasOPLike: boolean
       isOPThread: boolean
       postView: PostView
       rootUri: string
@@ -1510,7 +1508,6 @@ export class Views {
           $type: 'app.bsky.feed.defs#postView',
           ...postView,
         },
-        hasOPLike,
         hasReplies: (postView.replyCount ?? 0) > 0,
         isOPThread,
         isHidden:

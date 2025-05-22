@@ -10399,22 +10399,11 @@ export const schemaDict = {
       },
       threadItemPost: {
         type: 'object',
-        required: [
-          'post',
-          'hasOPLike',
-          'hasReplies',
-          'isHidden',
-          'isMuted',
-          'isOPThread',
-        ],
+        required: ['post', 'hasReplies', 'isHidden', 'isMuted', 'isOPThread'],
         properties: {
           post: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#postView',
-          },
-          hasOPLike: {
-            type: 'boolean',
-            description: 'Whether this post has a like from the OP.',
           },
           hasReplies: {
             type: 'boolean',

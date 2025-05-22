@@ -44,6 +44,7 @@ type ThreadNotFoundNode = {
 
 type ThreadPostNode = {
   item: ThreadItemValuePost
+  hasOPLike: boolean
   parent: ThreadTree | undefined
   replies: ThreadTree[] | undefined
 }
@@ -106,17 +107,15 @@ function sortTrimThreadTree(
       if (!isThreadPostNode(bTree)) {
         return -1
       }
-      const a = aTree.item.value
-      const b = bTree.item.value
 
       // First applies bumping.
-      const bump = applyBumping(a, b, opts)
+      const bump = applyBumping(aTree, bTree, opts)
       if (bump !== null) {
         return bump
       }
 
       // Then applies sorting.
-      return applySorting(a, b, opts)
+      return applySorting(aTree, bTree, opts)
     })
 
     // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
@@ -139,10 +138,12 @@ function sortTrimThreadTree(
 }
 
 function applyBumping(
-  a: $Typed<ThreadItemPost>,
-  b: $Typed<ThreadItemPost>,
+  aTree: ThreadPostNode,
+  bTree: ThreadPostNode,
   opts: SortTrimFlattenOptions,
 ): number | null {
+  const a = aTree.item.value
+  const b = bTree.item.value
   const { opDid, prioritizeFollowedUsers, viewer } = opts
 
   type BumpDirection = 'up' | 'down'
@@ -155,7 +156,7 @@ function applyBumping(
     const aPredicate = predicateFn(a)
     const bPredicate = predicateFn(b)
     if (aPredicate && bPredicate) {
-      return applySorting(a, b, opts)
+      return applySorting(aTree, bTree, opts)
     } else if (aPredicate) {
       return bump === 'up' ? -1 : 1
     } else if (bPredicate) {
@@ -196,18 +197,22 @@ function applyBumping(
 }
 
 function applySorting(
-  a: $Typed<ThreadItemPost>,
-  b: $Typed<ThreadItemPost>,
-  { sorting }: SortTrimFlattenOptions,
+  aTree: ThreadPostNode,
+  bTree: ThreadPostNode,
+  opts: SortTrimFlattenOptions,
 ): number {
+  const a = aTree.item.value
+  const b = bTree.item.value
+  const { sorting } = opts
+
   if (sorting === 'app.bsky.unspecced.getPostThreadV2#oldest') {
     return a.post.indexedAt.localeCompare(b.post.indexedAt)
   }
   if (sorting === 'app.bsky.unspecced.getPostThreadV2#top') {
     const aLikes = a.post.likeCount ?? 0
     const bLikes = b.post.likeCount ?? 0
-    const aTop = topSortValue(aLikes, a.hasOPLike)
-    const bTop = topSortValue(bLikes, b.hasOPLike)
+    const aTop = topSortValue(aLikes, aTree.hasOPLike)
+    const bTop = topSortValue(bLikes, bTree.hasOPLike)
     if (aTop !== bTop) {
       return bTop - aTop
     }
