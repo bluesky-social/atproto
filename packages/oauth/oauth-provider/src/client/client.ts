@@ -8,9 +8,11 @@ import {
   type ResolvedKey,
   UnsecuredJWT,
   type UnsecuredResult,
+  calculateJwkThumbprint,
   createLocalJWKSet,
   createRemoteJWKSet,
   errors,
+  exportJWK,
   jwtVerify,
 } from 'jose'
 import { ZodError } from 'zod'
@@ -32,7 +34,7 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { Awaitable } from '../lib/util/type.js'
-import { ClientAuth, authJwkThumbprint } from './client-auth.js'
+import { ClientAuth } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'
 
@@ -244,7 +246,7 @@ export class Client {
         }
 
         const clientAuth: ClientAuth = {
-          method: CLIENT_ASSERTION_TYPE_JWT_BEARER,
+          method: 'private_key_jwt',
           jkt: await authJwkThumbprint(result.key),
           alg: result.protectedHeader.alg,
           kid: result.protectedHeader.kid,
@@ -375,5 +377,15 @@ export class Client {
   get defaultRedirectUri(): OAuthRedirectUri | undefined {
     const { redirect_uris } = this.metadata
     return redirect_uris.length === 1 ? redirect_uris[0] : undefined
+  }
+}
+
+export async function authJwkThumbprint(
+  key: Uint8Array | KeyLike,
+): Promise<string> {
+  try {
+    return await calculateJwkThumbprint(await exportJWK(key), 'sha512')
+  } catch (err) {
+    throw new InvalidClientError('Unable to compute JWK thumbprint', err)
   }
 }

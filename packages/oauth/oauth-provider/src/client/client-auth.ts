@@ -1,11 +1,11 @@
-import { KeyLike, calculateJwkThumbprint, exportJWK } from 'jose'
 import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from '@atproto/oauth-types'
-import { InvalidClientError } from '../errors/invalid-client-error.js'
 
 export type ClientAuth =
   | { method: 'none' }
   | {
-      method: typeof CLIENT_ASSERTION_TYPE_JWT_BEARER
+      method:
+        | typeof CLIENT_ASSERTION_TYPE_JWT_BEARER // LEGACY
+        | 'private_key_jwt'
 
       /**
        * Algorithm used for client authentication.
@@ -50,14 +50,4 @@ export function compareClientAuth(a: ClientAuth, b: ClientAuth): boolean {
 
   // Fool-proof
   throw new TypeError('Invalid ClientAuth method')
-}
-
-export async function authJwkThumbprint(
-  key: Uint8Array | KeyLike,
-): Promise<string> {
-  try {
-    return await calculateJwkThumbprint(await exportJWK(key), 'sha512')
-  } catch (err) {
-    throw new InvalidClientError('Unable to compute JWK thumbprint', err)
-  }
 }
