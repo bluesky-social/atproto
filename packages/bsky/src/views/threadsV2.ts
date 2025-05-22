@@ -204,14 +204,20 @@ function applySorting(
     return a.post.indexedAt.localeCompare(b.post.indexedAt)
   }
   if (sorting === 'app.bsky.unspecced.getPostThreadV2#top') {
-    // Currently it is just a comparison of like count.
-    if (a.post.likeCount !== b.post.likeCount) {
-      return (b.post.likeCount || 0) - (a.post.likeCount || 0)
+    const aLikes = a.post.likeCount ?? 0
+    const bLikes = b.post.likeCount ?? 0
+    const aTop = topSortValue(aLikes, a.hasOPLike)
+    const bTop = topSortValue(bLikes, b.hasOPLike)
+    if (aTop !== bTop) {
+      return bTop - aTop
     }
   }
-
-  // Newest.
+  // Fallback to newest.
   return b.post.indexedAt.localeCompare(a.post.indexedAt)
+}
+
+function topSortValue(likeCount: number, hasOPLike: boolean): number {
+  return Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
 }
 
 function flattenThree(tree: ThreadTree) {
