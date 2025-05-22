@@ -110,7 +110,7 @@ function sortTrimThreadTree(
       const b = bTree.item.value
 
       // First applies bumping.
-      const bump = applyBump(a, b, opts)
+      const bump = applyBumping(a, b, opts)
       if (bump !== null) {
         return bump
       }
@@ -138,18 +138,22 @@ function sortTrimThreadTree(
   return node
 }
 
-function applyBump(
+function applyBumping(
   a: $Typed<ThreadItemPost>,
   b: $Typed<ThreadItemPost>,
   opts: SortTrimFlattenOptions,
 ): number | null {
   const { opDid, prioritizeFollowedUsers, viewer } = opts
 
+  type BumpDirection = 'up' | 'down'
+  type BumpPredicateFn = (i: $Typed<ThreadItemPost>) => boolean
+
   const maybeBump = (
-    aPredicate: boolean,
-    bPredicate: boolean,
-    bump: 'up' | 'down',
+    bump: BumpDirection,
+    predicateFn: BumpPredicateFn,
   ): number | null => {
+    const aPredicate = predicateFn(a)
+    const bPredicate = predicateFn(b)
     if (aPredicate && bPredicate) {
       return applySorting(a, b, opts)
     } else if (aPredicate) {
@@ -160,47 +164,29 @@ function applyBump(
     return null
   }
 
-  // OP replies ⬆️.
-  const aOp = a.post.author.did === opDid
-  const bOp = b.post.author.did === opDid
-  const bumpOp = maybeBump(aOp, bOp, 'up')
-  if (bumpOp !== null) {
-    return bumpOp
-  }
+  // The order of the bumps determines the priority with which they are applied.
+  // Bumps-up applied first make the item appear higher in the list than later bumps-up.
+  // Bumps-down applied first make the item appear lower in the list than later bumps-down.
+  const bumps: [BumpDirection, BumpPredicateFn][] = [
+    // OP replies.
+    ['up', (i) => i.post.author.did === opDid],
+    // Viewer replies.
+    ['up', (i) => i.post.author.did === viewer],
+    // Muted posts.
+    ['down', (i) => i.isMuted],
+    // Pushpin-only.
+    [
+      'down',
+      (i) => isPostRecord(i.post.record) && i.post.record.text.trim() === '📌',
+    ],
+    // Followers posts.
+    ['up', (i) => prioritizeFollowedUsers && !!i.post.author.viewer?.following],
+  ]
 
-  // Viewer replies ⬆️.
-  const aViewer = a.post.author.did === viewer
-  const bViewer = b.post.author.did === viewer
-  const bumpViewer = maybeBump(aViewer, bViewer, 'up')
-  if (bumpViewer !== null) {
-    return bumpViewer
-  }
-
-  // Muted posts ⬇️.
-  const aMuted = a.isMuted
-  const bMuted = b.isMuted
-  const bumpMuted = maybeBump(aMuted, bMuted, 'down')
-  if (bumpMuted !== null) {
-    return bumpMuted
-  }
-
-  // Pushpin-only posts ⬇️.
-  if (isPostRecord(a.post.record) && isPostRecord(b.post.record)) {
-    const aPin = Boolean(a.post.record.text.trim() === '📌')
-    const bPin = Boolean(b.post.record.text.trim() === '📌')
-    const bumpPin = maybeBump(aPin, bPin, 'down')
-    if (bumpPin !== null) {
-      return bumpPin
-    }
-  }
-
-  // Followers posts ⬆️.
-  if (prioritizeFollowedUsers) {
-    const aFollowed = a.post.author.viewer?.following
-    const bFollowed = b.post.author.viewer?.following
-    const bumpFollowed = maybeBump(!!aFollowed, !!bFollowed, 'up')
-    if (bumpFollowed !== null) {
-      return bumpFollowed
+  for (const [bump, predicateFn] of bumps) {
+    const bumpResult = maybeBump(bump, predicateFn)
+    if (bumpResult !== null) {
+      return bumpResult
     }
   }
 

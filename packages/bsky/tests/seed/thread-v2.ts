@@ -364,10 +364,8 @@ export async function annotateOP(
   }
 }
 
-export async function sortingNoOpOrViewer(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
-  const users = await createUsers(sc, 'sort1', [
+export async function sort(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
+  const users = await createUsers(sc, 'sort', [
     'op',
     'alice',
     'bob',
@@ -404,14 +402,14 @@ export async function sortingNoOpOrViewer(
   // likes depth 1
   await sc.like(alice.did, r['2'].ref)
   await sc.like(carol.did, r['2'].ref)
-  await sc.like(op.did, r['1'].ref) // op like, bumps hotness.
+  await sc.like(op.did, r['1'].ref) // op like
   await sc.like(bob.did, r['1'].ref)
   await sc.like(carol.did, r['1'].ref)
 
   // likes depth 2
   await sc.like(bob.did, r['0_1'].ref)
   await sc.like(carol.did, r['0_1'].ref)
-  await sc.like(op.did, r['0_2'].ref) // op like, bumps hotness.
+  await sc.like(op.did, r['0_2'].ref) // op like
   await sc.like(bob.did, r['1_1'].ref)
   await sc.like(carol.did, r['1_1'].ref)
   await sc.like(bob.did, r['1_0'].ref)
@@ -427,10 +425,10 @@ export async function sortingNoOpOrViewer(
   }
 }
 
-export async function sortingWithOpAndViewer(
+export async function bumpOpAndViewer(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'sort2', [
+  const users = await createUsers(sc, 'bumpOV', [
     'op',
     'viewer',
     'alice',
@@ -491,14 +489,14 @@ export async function sortingWithOpAndViewer(
   await sc.like(alice.did, r['2'].ref)
   await sc.like(carol.did, r['2'].ref)
   await sc.like(viewer.did, r['0'].ref)
-  await sc.like(op.did, r['1'].ref) // op like, bumps hotness.
+  await sc.like(op.did, r['1'].ref) // op like
   await sc.like(bob.did, r['1'].ref)
   await sc.like(carol.did, r['1'].ref)
 
   // likes depth 2
   await sc.like(bob.did, r['0_1'].ref)
   await sc.like(carol.did, r['0_1'].ref)
-  await sc.like(op.did, r['0_2'].ref) // op like, bumps hotness.
+  await sc.like(op.did, r['0_2'].ref) // op like
   await sc.like(bob.did, r['1_1'].ref)
   await sc.like(carol.did, r['1_1'].ref)
   await sc.like(bob.did, r['1_0'].ref)
@@ -520,10 +518,39 @@ export async function sortingWithOpAndViewer(
   }
 }
 
-export async function sortingWithFollows(
+export async function bumpGroupSorting(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'follow', [
+  const users = await createUsers(sc, 'bumpGS', [
+    'op',
+    'viewer',
+    'alice',
+  ] as const)
+  const { op, viewer, alice } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(viewer)
+    await r(op)
+    await r(alice)
+    await r(op)
+    await r(viewer)
+    await r(op)
+    await r(alice)
+    await r(viewer)
+  })
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}
+
+export async function bumpFollows(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'bumpF', [
     'op',
     'viewerF',
     'viewerNoF',
@@ -551,6 +578,36 @@ export async function sortingWithFollows(
   await sc.follow(viewerF.did, alice.did)
   await sc.follow(viewerF.did, bob.did)
   // Does not follow carol.
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}
+
+export async function bumpMutes(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'bumpM', [
+    'op',
+    'opMuted',
+    'alice',
+  ] as const)
+  const { op, opMuted, alice } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(opMuted)
+    await r(alice)
+    await r(op)
+    await r(alice, { text: '📌' })
+    await r(opMuted)
+    await r(op)
+    await r(opMuted)
+  })
+
+  await sc.mute(op.did, opMuted.did)
 
   return {
     seedClient: sc,
@@ -640,29 +697,6 @@ export async function mutes(
 
   await sc.mute(op.did, opMuted.did)
   await sc.mute(muter.did, muted.did)
-
-  return {
-    seedClient: sc,
-    users,
-    root,
-    r,
-  }
-}
-
-export async function muteSort(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
-  const users = await createUsers(sc, 'muteSort', ['op', 'opMuted'] as const)
-
-  const { op, opMuted } = users
-
-  const { root, replies: r } = await createThread(sc, op, async (r) => {
-    await r(opMuted)
-    await r(opMuted)
-    await r(opMuted)
-  })
-
-  await sc.mute(op.did, opMuted.did)
 
   return {
     seedClient: sc,
