@@ -311,7 +311,7 @@ export class ClientManager {
       )
     }
 
-    switch (metadata[`token_endpoint_auth_method`]) {
+    switch (metadata.token_endpoint_auth_method) {
       case 'none':
         if (metadata.token_endpoint_auth_signing_alg) {
           throw new InvalidClientMetadataError(
@@ -340,7 +340,7 @@ export class ClientManager {
 
       default:
         throw new InvalidClientMetadataError(
-          `Unsupported client authentication method "${metadata[`token_endpoint_auth_method`]}". Make sure "token_endpoint_auth_method" is set to one of: "${Client.AUTH_METHODS_SUPPORTED.join('", "')}"`,
+          `Unsupported client authentication method "${metadata.token_endpoint_auth_method}". Make sure "token_endpoint_auth_method" is set to one of: "${Client.AUTH_METHODS_SUPPORTED.join('", "')}"`,
         )
     }
 
@@ -664,7 +664,7 @@ export class ClientManager {
       )
     }
 
-    const method = metadata[`token_endpoint_auth_method`]
+    const method = metadata.token_endpoint_auth_method
     if (method !== 'none') {
       throw new InvalidClientMetadataError(
         `Loopback clients are not allowed to use "token_endpoint_auth_method" ${method}`,
