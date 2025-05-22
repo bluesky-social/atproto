@@ -1,4 +1,4 @@
-import { isNotFoundPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
+import { isThreadItemNotFound } from '@atproto/api/dist/client/types/app/bsky/unspecced/getPostThreadV2'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
@@ -112,12 +112,15 @@ const presentation = (
     sorting: params.sorting,
     viewer: params.hydrateCtx.viewer,
   })
-  if (isNotFoundPost(thread)) {
+
+  const anchor = thread.find((i) => i.depth === 0)
+  if (!anchor || isThreadItemNotFound(anchor.value)) {
     throw new InvalidRequestError(
       `Post not found: ${skeleton.anchor}`,
       'NotFound',
     )
   }
+
   const rootUri =
     hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
     skeleton.anchor

@@ -53,6 +53,16 @@ describe('appview thread views v2', () => {
     await network.close()
   })
 
+  describe('not found anchor', () => {
+    it('returns not found error', async () => {
+      await expect(
+        agent.app.bsky.unspecced.getPostThreadV2({
+          anchor: 'at://did:plc:123/app.bsky.feed.post/456',
+        }),
+      ).rejects.toThrow(AppBskyUnspeccedGetPostThreadV2.NotFoundError)
+    })
+  })
+
   describe('simple thread', () => {
     let seed: Awaited<ReturnType<typeof seeds.simple>>
 
@@ -1368,29 +1378,6 @@ describe('appview thread views v2', () => {
           expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
           expect.objectContaining({ uri: seed.r['3_0'].ref.uriStr }),
           expect.objectContaining({ uri: seed.r['3_0_0'].ref.uriStr }),
-        ])
-      })
-
-      it(`deleted anchor returns lone not found view`, async () => {
-        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { anchor: seed.r['2'].ref.uriStr },
-          {
-            headers: await network.serviceHeaders(
-              seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
-            ),
-          },
-        )
-        const { thread: t } = data
-
-        expect(t).toEqual([
-          expect.objectContaining({
-            uri: seed.r['2'].ref.uriStr,
-            depth: 0,
-            value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
-            }),
-          }),
         ])
       })
 
