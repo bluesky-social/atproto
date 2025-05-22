@@ -10399,7 +10399,14 @@ export const schemaDict = {
       },
       threadItemPost: {
         type: 'object',
-        required: ['post', 'hasOPLike', 'hasReplies', 'isMuted', 'isOPThread'],
+        required: [
+          'post',
+          'hasOPLike',
+          'hasReplies',
+          'isHidden',
+          'isMuted',
+          'isOPThread',
+        ],
         properties: {
           post: {
             type: 'ref',
@@ -10413,6 +10420,10 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'Whether this post has replies. Note the replies may not be included in the thread if they are too deep.',
+          },
+          isHidden: {
+            type: 'boolean',
+            description: 'Whether this post is hidden.',
           },
           isMuted: {
             type: 'boolean',

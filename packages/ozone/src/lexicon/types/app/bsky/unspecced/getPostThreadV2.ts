@@ -108,6 +108,8 @@ export interface ThreadItemPost {
   hasOPLike: boolean
   /** Whether this post has replies. Note the replies may not be included in the thread if they are too deep. */
   hasReplies: boolean
+  /** Whether this post is hidden. */
+  isHidden: boolean
   /** Whether this post is muted. */
   isMuted: boolean
   /** Whether this post is part of a contiguous chain of OP replies. */

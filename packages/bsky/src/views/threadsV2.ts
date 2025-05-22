@@ -179,6 +179,8 @@ function applyBumping(
       'down',
       (i) => isPostRecord(i.post.record) && i.post.record.text.trim() === '📌',
     ],
+    // Hidden.
+    ['down', (i) => i.isHidden],
     // Followers posts.
     ['up', (i) => prioritizeFollowedUsers && !!i.post.author.viewer?.following],
   ]

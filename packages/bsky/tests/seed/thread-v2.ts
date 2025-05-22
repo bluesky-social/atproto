@@ -705,3 +705,58 @@ export async function mutes(
     r,
   }
 }
+
+export async function hidden(
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+) {
+  const users = await createUsers(sc, 'hidden', [
+    'op',
+    'opMuted',
+    'viewer',
+    'alice',
+    'bob',
+  ] as const)
+
+  const { op, opMuted, alice, bob } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    // Muted moves down below hidden.
+    await r(opMuted)
+
+    // Hidden moves down.
+    await r(alice, async (r) => {
+      await r(alice)
+      await r(bob)
+      await r(op) // OP moves up.
+    })
+
+    await r(bob, async (r) => {
+      await r(alice)
+      await r(bob) // Hidden is omitted if fetched from the root.
+      await r(op) // OP moves down.
+    })
+  })
+
+  await sc.agent.app.bsky.feed.threadgate.create(
+    {
+      repo: op.did,
+      rkey: root.ref.uri.rkey,
+    },
+    {
+      post: root.ref.uriStr,
+      createdAt: new Date().toISOString(),
+      hiddenReplies: [r['1'].ref.uriStr, r['2_1'].ref.uriStr],
+    },
+    sc.getHeaders(op.did),
+  )
+
+  // Just throw a mute there to test the prioritization between muted and hidden.
+  await sc.mute(op.did, opMuted.did)
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}

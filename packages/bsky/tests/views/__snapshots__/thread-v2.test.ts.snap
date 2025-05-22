@@ -10,6 +10,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -50,6 +51,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -107,6 +109,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -147,6 +150,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -197,6 +201,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -254,6 +259,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -294,6 +300,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -344,6 +351,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -401,6 +409,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -441,6 +450,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -498,6 +508,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -538,6 +549,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -588,6 +600,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -645,6 +658,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -685,6 +699,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -735,6 +750,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -792,6 +808,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -832,6 +849,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -882,6 +900,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": true,
         "post": Object {
@@ -932,6 +951,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -982,6 +1002,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": true,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -1032,6 +1053,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {
@@ -1082,6 +1104,7 @@ Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
         "hasOPLike": false,
         "hasReplies": false,
+        "isHidden": false,
         "isMuted": false,
         "isOPThread": false,
         "post": Object {

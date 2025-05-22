@@ -1627,6 +1627,200 @@ describe('appview thread views v2', () => {
     })
   })
 
+  describe(`hidden`, () => {
+    let seed: Awaited<ReturnType<typeof seeds.hidden>>
+
+    beforeAll(async () => {
+      seed = await seeds.hidden(sc)
+      await network.processAll()
+    })
+
+    it(`hidden reply is set as hidden in top-level replies and omitted in nested replies`, async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { uri: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({
+          uri: seed.root.ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // OP reply bumped up.
+        expect.objectContaining({
+          uri: seed.r['2_2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['2_0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // 2_1 is a nested hidden reply, so it is omitted.
+
+        // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
+        expect.objectContaining({
+          uri: seed.r['1'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: true, isMuted: false }),
+        }),
+        // 1's replies are not omitted nor marked as hidden.
+        // OP reply bumped up.
+        expect.objectContaining({
+          uri: seed.r['1_2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_1'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+
+        // Mutes come after hidden.
+        expect.objectContaining({
+          uri: seed.r['0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: true }),
+        }),
+      ])
+    })
+
+    it(`author of hidden reply does not see it as hidden`, async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { uri: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            // `alice` does not get its own reply as hidden.
+            seed.users.alice.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({
+          uri: seed.root.ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+
+        // alice does not see its own reply as hidden.
+        expect.objectContaining({
+          uri: seed.r['1'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // OP reply bumped up.
+        expect.objectContaining({
+          uri: seed.r['1_2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_1'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+
+        // `opMuted` is not muted by `alice` and is older.
+        expect.objectContaining({
+          uri: seed.r['0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+
+        expect.objectContaining({
+          uri: seed.r['2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // OP reply bumped up.
+        expect.objectContaining({
+          uri: seed.r['2_2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['2_0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // 2_1 is a nested hidden reply, so it is omitted.
+      ])
+    })
+
+    it(`other viewers are affected by hidden replies by OP`, async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { uri: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            // `viewer` also gets the replies as hidden.
+            seed.users.viewer.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({
+          uri: seed.root.ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // `opMuted` doesn't see itself as muted, just `op` does.
+        expect.objectContaining({
+          uri: seed.r['0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+
+        expect.objectContaining({
+          uri: seed.r['2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // OP reply bumped up.
+        expect.objectContaining({
+          uri: seed.r['2_2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['2_0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        // 2_1 is a nested hidden reply, so it is omitted.
+
+        // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
+        expect.objectContaining({
+          uri: seed.r['1'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: true, isMuted: false }),
+        }),
+        // 1's replies are not omitted nor marked as hidden.
+        // OP reply bumped up.
+        expect.objectContaining({
+          uri: seed.r['1_2'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_0'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1_1'].ref.uriStr,
+          value: expect.objectContaining({ isHidden: false, isMuted: false }),
+        }),
+      ])
+    })
+  })
+
   const createLabel = async (opts: {
     src?: string
     uri: string

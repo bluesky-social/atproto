@@ -1224,11 +1224,13 @@ export class Views {
       anchorTree = {
         item: this.threadV2ItemPost(
           {
-            uri: anchor,
             depth: 0, // The depth of the anchor post is always 0.
-            postView,
-            isOPThread,
             hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+            isOPThread,
+            postView,
+            rootUri,
+            uri: anchor,
+            viewer,
           },
           state,
         ),
@@ -1236,7 +1238,7 @@ export class Views {
         replies: !anchorViolatesThreadGate
           ? this.threadV2Replies({
               parentUri: anchor,
-              viewer: viewer,
+              viewer,
               isOPThread,
               opDid,
               rootUri,
@@ -1254,7 +1256,7 @@ export class Views {
       nestedBranchingFactor: opts.nestedBranchingFactor,
       sorting: opts.sorting,
       prioritizeFollowedUsers: opts.prioritizeFollowedUsers,
-      viewer: viewer,
+      viewer,
       fetchedAt: Date.now(),
     })
   }
@@ -1356,11 +1358,13 @@ export class Views {
       tree: {
         item: this.threadV2ItemPost(
           {
-            uri,
             depth,
-            postView,
-            isOPThread,
             hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+            isOPThread,
+            postView,
+            rootUri,
+            uri,
+            viewer,
           },
           state,
         ),
@@ -1430,6 +1434,11 @@ export class Views {
         return undefined
       }
 
+      // Hidden (omits replies except for anchor replies)
+      if (depth > 1 && this.replyIsHiddenByThreadgate(uri, rootUri, state)) {
+        return undefined
+      }
+
       // No unauthenticated.
       if (this.noUnauthenticatedPost(viewer, postView)) {
         return undefined
@@ -1452,11 +1461,13 @@ export class Views {
       const tree: ThreadTree = {
         item: this.threadV2ItemPost(
           {
-            uri,
             depth,
-            postView,
-            isOPThread,
             hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+            isOPThread,
+            postView,
+            rootUri,
+            uri,
+            viewer,
           },
           state,
         ),
@@ -1470,17 +1481,21 @@ export class Views {
 
   private threadV2ItemPost(
     {
-      uri,
       depth,
-      postView,
-      isOPThread,
       hasOPLike,
+      isOPThread,
+      postView,
+      rootUri,
+      uri,
+      viewer,
     }: {
-      uri: string
       depth: number
-      postView: PostView
-      isOPThread: boolean
       hasOPLike: boolean
+      isOPThread: boolean
+      postView: PostView
+      rootUri: string
+      uri: string
+      viewer: HydrateCtx['viewer']
     },
     state: HydrationState,
   ): ThreadItemValuePost {
@@ -1498,6 +1513,9 @@ export class Views {
         hasOPLike,
         hasReplies: (postView.replyCount ?? 0) > 0,
         isOPThread,
+        isHidden:
+          viewer !== authorDid &&
+          this.replyIsHiddenByThreadgate(uri, rootUri, state),
         isMuted: this.viewerMuteExists(authorDid, state),
       },
     }
