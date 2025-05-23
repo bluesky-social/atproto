@@ -56,7 +56,7 @@ export interface ServerConfigValues {
   bigThreadUris: Set<string>
   bigThreadDepth?: number
   maxThreadDepth?: number
-  maxThreadParents?: number
+  maxThreadParents: number
   // notifications
   notificationsDelayMs?: number
   // client config
