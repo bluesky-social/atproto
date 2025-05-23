@@ -11,18 +11,41 @@ import { ThreadItemValuePost } from '../../src/views/threadsV2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 
-const hasMoreReplies: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#hasMoreReplies',
-]
-const hiddenByThreadgate: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
-]
-const opThread: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#opThread',
-]
-const mutedByViewer: ThreadItemPost['annotations'] = [
-  'app.bsky.unspecced.getPostThreadV2#mutedByViewer',
-]
+type PostProps = Pick<
+  ThreadItemPost,
+  'hasMoreReplies' | 'hiddenByThreadgate' | 'mutedByViewer' | 'opThread'
+>
+
+const propsNone: PostProps = {
+  hasMoreReplies: false,
+  hiddenByThreadgate: false,
+  mutedByViewer: false,
+  opThread: false,
+}
+const propsHmr: PostProps = {
+  hasMoreReplies: true,
+  hiddenByThreadgate: false,
+  mutedByViewer: false,
+  opThread: false,
+}
+const propsHbt: PostProps = {
+  hasMoreReplies: false,
+  hiddenByThreadgate: true,
+  mutedByViewer: false,
+  opThread: false,
+}
+const propsMbv: PostProps = {
+  hasMoreReplies: false,
+  hiddenByThreadgate: false,
+  mutedByViewer: true,
+  opThread: false,
+}
+const propsOt: PostProps = {
+  hasMoreReplies: false,
+  hiddenByThreadgate: false,
+  mutedByViewer: false,
+  opThread: true,
+}
 
 describe('appview thread views v2', () => {
   let network: TestNetwork
@@ -589,67 +612,67 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({ annotations: opThread }),
+          value: expect.objectContaining(propsOt),
         }),
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['0_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['0_0_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['0_0_0_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasMoreReplies }),
+          value: expect.objectContaining(propsHmr),
         }),
         expect.objectContaining({
           uri: seed.r['0_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['0_1_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['0_1_0_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasMoreReplies }),
+          value: expect.objectContaining(propsHmr),
         }),
         expect.objectContaining({
           uri: seed.r['1_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: hasMoreReplies }),
+          value: expect.objectContaining(propsHmr),
         }),
         expect.objectContaining({
           uri: seed.r['1_0_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_0_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_1_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_1_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
       ])
     })
@@ -741,11 +764,7 @@ describe('appview thread views v2', () => {
 
         expect(t).toHaveLength(length)
         t.forEach((i) => {
-          expect(
-            i.value.annotations.includes(
-              'app.bsky.unspecced.getPostThreadV2#opThread',
-            ),
-          ).toBe(opThreadPostsUris.has(i.uri))
+          expect(i.value.opThread).toBe(opThreadPostsUris.has(i.uri))
         })
       },
     )
@@ -1176,38 +1195,36 @@ describe('appview thread views v2', () => {
           expect(t).toEqual([
             expect.objectContaining({
               uri: seed.root.ref.uriStr,
-              value: expect.objectContaining({
-                annotations: opThread,
-              }),
+              value: expect.objectContaining(propsOt),
             }),
             expect.objectContaining({
               uri: seed.r['5'].ref.uriStr,
-              value: expect.objectContaining({ annotations: opThread }),
+              value: expect.objectContaining(propsOt),
             }),
             expect.objectContaining({
               uri: seed.r['2'].ref.uriStr,
-              value: expect.objectContaining({ annotations: opThread }),
+              value: expect.objectContaining(propsOt),
             }),
             expect.objectContaining({
               uri: seed.r['1'].ref.uriStr,
-              value: expect.objectContaining({ annotations: [] }),
+              value: expect.objectContaining(propsNone),
             }),
             // Pushed down because it is `📌`.
             expect.objectContaining({
               uri: seed.r['3'].ref.uriStr,
-              value: expect.objectContaining({ annotations: [] }),
+              value: expect.objectContaining(propsNone),
             }),
             expect.objectContaining({
               uri: seed.r['6'].ref.uriStr,
-              value: expect.objectContaining({ annotations: mutedByViewer }),
+              value: expect.objectContaining(propsMbv),
             }),
             expect.objectContaining({
               uri: seed.r['4'].ref.uriStr,
-              value: expect.objectContaining({ annotations: mutedByViewer }),
+              value: expect.objectContaining(propsMbv),
             }),
             expect.objectContaining({
               uri: seed.r['0'].ref.uriStr,
-              value: expect.objectContaining({ annotations: mutedByViewer }),
+              value: expect.objectContaining(propsMbv),
             }),
           ])
         })
@@ -1636,34 +1653,30 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({
-            annotations: opThread,
-          }),
+          value: expect.objectContaining(propsOt),
         }),
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // 1_0 is a nested muted reply, so it is omitted.
         expect.objectContaining({
           uri: seed.r['1_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // 0 is muted but is an anchor reply, so it is not omitted but bumped down.
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({
-            annotations: mutedByViewer,
-          }),
+          value: expect.objectContaining(propsMbv),
         }),
         // 0's replies are not omitted nor marked as muted.
         expect.objectContaining({
           uri: seed.r['0_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['0_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
       ])
     })
@@ -1685,35 +1698,31 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({
-            annotations: opThread,
-          }),
+          value: expect.objectContaining(propsOt),
         }),
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['0_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // 0_1 is a nested muted reply, so it is omitted.
 
         // 1 is muted but is an anchor reply, so it is not omitted but bumped down.
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({
-            annotations: mutedByViewer,
-          }),
+          value: expect.objectContaining(propsMbv),
         }),
         // 1's replies are not omitted nor marked as muted.
         expect.objectContaining({
           uri: seed.r['1_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
       ])
     })
@@ -1760,51 +1769,47 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({
-            annotations: opThread,
-          }),
+          value: expect.objectContaining(propsOt),
         }),
         expect.objectContaining({
           uri: seed.r['2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['2_2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['2_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // 2_1 is a nested hidden reply, so it is omitted.
 
         // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({
-            annotations: hiddenByThreadgate,
-          }),
+          value: expect.objectContaining(propsHbt),
         }),
         // 1's replies are not omitted nor marked as hidden.
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['1_2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
 
         // Mutes come after hidden.
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: mutedByViewer }),
+          value: expect.objectContaining(propsMbv),
         }),
       ])
     })
@@ -1826,48 +1831,46 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({
-            annotations: opThread,
-          }),
+          value: expect.objectContaining(propsOt),
         }),
 
         // alice does not see its own reply as hidden.
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['1_2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
 
         // `opMuted` is not muted by `alice`.
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
 
         expect.objectContaining({
           uri: seed.r['2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['2_2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['2_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // 2_1 is a nested hidden reply, so it is omitted.
       ])
@@ -1890,51 +1893,47 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
-          value: expect.objectContaining({
-            annotations: opThread,
-          }),
+          value: expect.objectContaining(propsOt),
         }),
         // `opMuted` doesn't see itself as muted, just `op` does.
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
 
         expect.objectContaining({
           uri: seed.r['2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['2_2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['2_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         // 2_1 is a nested hidden reply, so it is omitted.
 
         // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining({
-            annotations: hiddenByThreadgate,
-          }),
+          value: expect.objectContaining(propsHbt),
         }),
         // 1's replies are not omitted nor marked as hidden.
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['1_2'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_0'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
         expect.objectContaining({
           uri: seed.r['1_1'].ref.uriStr,
-          value: expect.objectContaining({ annotations: [] }),
+          value: expect.objectContaining(propsNone),
         }),
       ])
     })

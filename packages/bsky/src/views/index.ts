@@ -62,7 +62,6 @@ import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app
 import {
   QueryParams as GetPostThreadV2QueryParams,
   ThreadItem,
-  ThreadItemPost,
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
@@ -1527,17 +1526,6 @@ export class Views {
       this.replyIsHiddenByThreadgate(uri, rootUri, state)
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
 
-    type Annotation = [boolean, ThreadItemPost['annotations'][number]]
-    const annotations: Annotation[] = [
-      [hasMoreReplies, 'app.bsky.unspecced.getPostThreadV2#hasMoreReplies'],
-      [
-        hiddenByThreadgate,
-        'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
-      ],
-      [mutedByViewer, 'app.bsky.unspecced.getPostThreadV2#mutedByViewer'],
-      [isOPThread, 'app.bsky.unspecced.getPostThreadV2#opThread'],
-    ]
-
     return {
       uri,
       depth,
@@ -1547,7 +1535,10 @@ export class Views {
           $type: 'app.bsky.feed.defs#postView',
           ...postView,
         },
-        annotations: annotations.filter((a) => a[0]).map((a) => a[1]),
+        hasMoreReplies,
+        hiddenByThreadgate,
+        mutedByViewer,
+        opThread: isOPThread,
       },
     }
   }

@@ -101,27 +101,28 @@
         }
       }
     },
-    "hasMoreReplies": { "type": "token" },
-    "hiddenByThreadgate": { "type": "token" },
-    "mutedByViewer": { "type": "token" },
-    "opThread": { "type": "token" },
     "threadItemPost": {
       "type": "object",
-      "required": ["post", "annotations"],
+      "required": [
+        "post",
+        "hasMoreReplies",
+        "hiddenByThreadgate",
+        "mutedByViewer",
+        "opThread"
+      ],
       "properties": {
         "post": { "type": "ref", "ref": "app.bsky.feed.defs#postView" },
-        "annotations": {
-          "type": "array",
-          "description": "Annotations on this post that might be used by clients to customize experiences.",
-          "items": {
-            "type": "string",
-            "knownValues": [
-              "app.bsky.unspecced.getPostThreadV2#hasMoreReplies",
-              "app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate",
-              "app.bsky.unspecced.getPostThreadV2#mutedByViewer",
-              "app.bsky.unspecced.getPostThreadV2#opThread"
-            ]
-          }
+        "hasMoreReplies": {
+          "type": "boolean"
+        },
+        "hiddenByThreadgate": {
+          "type": "boolean"
+        },
+        "mutedByViewer": {
+          "type": "boolean"
+        },
+        "opThread": {
+          "type": "boolean"
         }
       }
     },

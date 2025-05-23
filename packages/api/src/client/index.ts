@@ -570,13 +570,6 @@ export const APP_BSKY_UNSPECCED = {
   GetPostThreadV2Newest: 'app.bsky.unspecced.getPostThreadV2#newest',
   GetPostThreadV2Oldest: 'app.bsky.unspecced.getPostThreadV2#oldest',
   GetPostThreadV2Top: 'app.bsky.unspecced.getPostThreadV2#top',
-  GetPostThreadV2HasMoreReplies:
-    'app.bsky.unspecced.getPostThreadV2#hasMoreReplies',
-  GetPostThreadV2HiddenByThreadgate:
-    'app.bsky.unspecced.getPostThreadV2#hiddenByThreadgate',
-  GetPostThreadV2MutedByViewer:
-    'app.bsky.unspecced.getPostThreadV2#mutedByViewer',
-  GetPostThreadV2OpThread: 'app.bsky.unspecced.getPostThreadV2#opThread',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
