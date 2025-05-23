@@ -153,6 +153,11 @@ function LoginForm() {
                   </Form.Label>
                   <Form.Text
                     name={field.name}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    autoComplete="username"
+                    spellCheck="false"
+                    type="text"
                     value={field.state.value}
                     placeholder={_(msg`@handle or email`)}
                     onBlur={field.handleBlur}
@@ -172,8 +177,12 @@ function LoginForm() {
                     <Trans>Password</Trans>
                   </Form.Label>
                   <Form.Text
-                    type="password"
                     name={field.name}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    autoComplete="current-password"
+                    spellCheck="false"
+                    type="password"
                     value={field.state.value}
                     placeholder={_(msg`Password`)}
                     onBlur={field.handleBlur}
@@ -195,6 +204,10 @@ function LoginForm() {
                       <Trans>Code</Trans>
                     </Form.Label>
                     <Form.Text
+                      autoComplete="one-time-code"
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck="false"
                       name={field.name}
                       value={field.state.value}
                       placeholder={_(msg`XXXXX-XXXXX`)}

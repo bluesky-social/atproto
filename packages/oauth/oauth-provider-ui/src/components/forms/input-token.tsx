@@ -47,9 +47,9 @@ export function InputToken({
     <InputText
       {...props}
       type="text"
-      autoCapitalize="none"
+      autoCapitalize="characters"
       autoCorrect="off"
-      autoComplete="off"
+      autoComplete="one-time-code"
       spellCheck="false"
       minLength={11}
       maxLength={11}

@@ -161,6 +161,12 @@ function ResetPassword() {
                         </Form.Label>
                         <Form.Text
                           name={field.name}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          autoComplete="email"
+                          spellCheck="false"
+                          type="email"
+                          enterKeyHint="next"
                           value={field.state.value}
                           placeholder={_(msg`Enter your email`)}
                           onBlur={field.handleBlur}
@@ -233,7 +239,11 @@ function ResetPassword() {
                               <Trans>Code</Trans>
                             </Form.Label>
                             <Form.Text
-                              autoComplete="off"
+                              autoComplete="one-time-code"
+                              autoCapitalize="characters"
+                              autoCorrect="off"
+                              spellCheck="false"
+                              enterKeyHint="next"
                               name={field.name}
                               value={field.state.value}
                               placeholder={_(msg`XXXXX-XXXXX`)}
@@ -269,7 +279,12 @@ function ResetPassword() {
                             </Form.Label>
                             <Form.Text
                               type="password"
-                              autoComplete="off"
+                              autoComplete="new-password"
+                              autoCapitalize="none"
+                              autoCorrect="off"
+                              spellCheck="false"
+                              enterKeyHint="done"
+                              minLength={MIN_PASSWORD_LENGTH}
                               name={field.name}
                               value={field.state.value}
                               placeholder={_(msg`Enter a new password`)}

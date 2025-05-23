@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:157
+#: src/routes/account/_minimalLayout/sign-in.tsx:162
 msgid "@handle or email"
 msgstr "@identifiant ou adresse email"
 
@@ -49,7 +49,7 @@ msgid "Are you sure you want to revoke access? This application won't be able to
 msgstr "Êtes-vous sûr de vouloir supprimer l'accès? Cette application ne sera plus en mesure d'accéder à vos informations."
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:133
-#: src/routes/account/_minimalLayout/reset-password.tsx:206
+#: src/routes/account/_minimalLayout/reset-password.tsx:212
 msgid "Back to sign in"
 msgstr "Retour vers la page de connexion"
 
@@ -61,12 +61,12 @@ msgstr "Personnalisation"
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:330
+#: src/routes/account/_minimalLayout/reset-password.tsx:345
 msgid "Click here to send a new code to your email."
 msgstr "Cliquez ici pour envoyer un nouveau code dans votre boîte mail."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:195
-#: src/routes/account/_minimalLayout/reset-password.tsx:233
+#: src/routes/account/_minimalLayout/sign-in.tsx:204
+#: src/routes/account/_minimalLayout/reset-password.tsx:239
 msgid "Code"
 msgstr "Code"
 
@@ -82,7 +82,7 @@ msgstr "Applications connectées"
 msgid "Credentials"
 msgstr "Identifiants"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:325
+#: src/routes/account/_minimalLayout/reset-password.tsx:340
 msgid "Don't see the email? <0>Try sending again.</0>"
 msgstr "Vous ne voyez pas l'email ? <0>Essayez d'envoyer à nouveau.</0>"
 
@@ -98,11 +98,11 @@ msgstr "Veuillez entrer le code de vérification envoyé par email"
 msgid "Email is required"
 msgstr "L'adresse email est requise"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:275
+#: src/routes/account/_minimalLayout/reset-password.tsx:290
 msgid "Enter a new password"
 msgstr "Entrez un nouveau mot de passe"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:165
+#: src/routes/account/_minimalLayout/reset-password.tsx:171
 msgid "Enter your email"
 msgstr "Entrez votre adresse email"
 
@@ -130,11 +130,11 @@ msgstr "Échec de l'envoi du code par email"
 msgid "Failed to sign out"
 msgstr "Échec de la déconnexion"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:237
+#: src/routes/account/_minimalLayout/sign-in.tsx:250
 msgid "Forgot password?"
 msgstr "Mot de passe oublié ?"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:197
+#: src/routes/account/_minimalLayout/reset-password.tsx:203
 msgid "Get reset code"
 msgstr "Obtenir le code de réinitialisation"
 
@@ -187,9 +187,9 @@ msgstr "Aucune application connectée"
 msgid "No devices"
 msgstr "Aucun appareil"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:172
-#: src/routes/account/_minimalLayout/sign-in.tsx:178
-#: src/routes/account/_minimalLayout/reset-password.tsx:268
+#: src/routes/account/_minimalLayout/sign-in.tsx:177
+#: src/routes/account/_minimalLayout/sign-in.tsx:187
+#: src/routes/account/_minimalLayout/reset-password.tsx:278
 msgid "Password"
 msgstr "Mot de passe"
 
@@ -207,7 +207,7 @@ msgstr "Déconnecter cet appareil"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:29
 #: src/routes/account/_minimalLayout/reset-password.tsx:140
-#: src/routes/account/_minimalLayout/reset-password.tsx:319
+#: src/routes/account/_minimalLayout/reset-password.tsx:334
 msgid "Reset password"
 msgstr "Réinitialiser le mot de passe"
 
@@ -234,7 +234,7 @@ msgstr "Sélectionnez le compte que vous souhaitez gérer."
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:32
 #: src/routes/account/_minimalLayout/sign-in.tsx:136
-#: src/routes/account/_minimalLayout/sign-in.tsx:228
+#: src/routes/account/_minimalLayout/sign-in.tsx:241
 msgid "Sign in"
 msgstr "Se connecter"
 
@@ -297,8 +297,8 @@ msgstr "Nous n'avons pas pu charger vos comptes. Veuillez réactualiser la page 
 msgid "Whoops! An error occurred."
 msgstr "Oups ! Une erreur s'est produite."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:200
-#: src/routes/account/_minimalLayout/reset-password.tsx:239
+#: src/routes/account/_minimalLayout/sign-in.tsx:213
+#: src/routes/account/_minimalLayout/reset-password.tsx:249
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"
 
