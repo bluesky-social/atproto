@@ -321,17 +321,12 @@ export class TokenManager {
     clientAuth: ClientAuth,
     { data }: TokenInfo,
   ): Promise<void> {
-    // @TODO This value should be computable even if we don't have the "client"
-    // (because fetching client info could be flaky). Instead, all the info
-    // needed should be stored in the token info.
-    const { isFirstParty } = client.info
-
-    const [sessionLifetime, refreshLifetime] = isFirstParty
+    const [sessionLifetime, refreshLifetime] = client.info.isFirstParty
       ? [
           FIRST_PARTY_CLIENT_SESSION_LIFETIME,
           FIRST_PARTY_CLIENT_REFRESH_LIFETIME,
         ]
-      : data.clientAuth.method !== 'none'
+      : clientAuth.method !== 'none'
         ? [
             CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
             CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
