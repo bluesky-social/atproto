@@ -1151,35 +1151,39 @@ export class Views {
       sort: GetPostThreadV2QueryParams['sort']
       viewer: HydrateCtx['viewer']
     },
-  ): ThreadItem[] {
-    const { anchor, uris } = skeleton
+  ): { anchor: ThreadItem; thread: ThreadItem[] } {
+    const { anchor: anchorUri, uris } = skeleton
 
     // Not found.
-    const postView = this.post(anchor, state)
-    const post = state.posts?.get(anchor)
+    const postView = this.post(anchorUri, state)
+    const post = state.posts?.get(anchorUri)
     if (!post || !postView) {
-      return [
-        this.threadV2ItemNotFound({
-          uri: anchor,
-          depth: 0,
-        }),
-      ]
+      const anchor = this.threadV2ItemNotFound({
+        uri: anchorUri,
+        depth: 0,
+      })
+      return {
+        anchor,
+        thread: [anchor],
+      }
     }
 
     // Blocked (only 1p for anchor).
     if (this.viewerBlockExists(postView.author.did, state)) {
-      return [
-        this.threadV2ItemBlocked({
-          uri: anchor,
-          depth: 0,
-          authorDid: postView.author.did,
-          state,
-        }),
-      ]
+      const anchor = this.threadV2ItemBlocked({
+        uri: anchorUri,
+        depth: 0,
+        authorDid: postView.author.did,
+        state,
+      })
+      return {
+        anchor,
+        thread: [anchor],
+      }
     }
 
     // Groups children of each parent.
-    const includedPosts = new Set<string>([anchor])
+    const includedPosts = new Set<string>([anchorUri])
     const childrenByParentUri: Record<string, string[]> = {}
     uris.forEach((uri) => {
       const post = state.posts?.get(uri)
@@ -1191,7 +1195,7 @@ export class Views {
       childrenByParentUri[parentUri].push(uri)
     })
 
-    const rootUri = getRootUri(anchor, post)
+    const rootUri = getRootUri(anchorUri, post)
     const opDid = uriToDid(rootUri)
     const authorDid = postView.author.did
     const isOPPost = authorDid === opDid
@@ -1201,7 +1205,7 @@ export class Views {
     const parentTree =
       !anchorViolatesThreadGate && above
         ? this.threadV2Parent({
-            childUri: anchor,
+            childUri: anchorUri,
             viewer,
             opDid,
             rootUri,
@@ -1221,7 +1225,7 @@ export class Views {
     if (this.noUnauthenticatedPost(viewer, postView)) {
       anchorTree = {
         item: this.threadV2ItemNoUnauthenticated({
-          uri: anchor,
+          uri: anchorUri,
           depth: 0, // The depth of the anchor post is always 0.
         }),
         parent,
@@ -1235,7 +1239,7 @@ export class Views {
             postView,
             repliesAllowance: Infinity, // While we don't have pagination.
             rootUri,
-            uri: anchor,
+            uri: anchorUri,
             viewer,
           },
           state,
@@ -1244,7 +1248,7 @@ export class Views {
         parent,
         replies: !anchorViolatesThreadGate
           ? this.threadV2Replies({
-              parentUri: anchor,
+              parentUri: anchorUri,
               viewer,
               isOPThread,
               opDid,
@@ -1259,7 +1263,7 @@ export class Views {
       }
     }
 
-    return sortTrimFlattenThreadTree(anchorTree, {
+    const flatThread = sortTrimFlattenThreadTree(anchorTree, {
       opDid,
       branchingFactor,
       sort,
@@ -1267,6 +1271,11 @@ export class Views {
       viewer,
       fetchedAt: Date.now(),
     })
+
+    return {
+      anchor: anchorTree.item,
+      thread: flatThread,
+    }
   }
 
   private threadV2Parent({

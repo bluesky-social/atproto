@@ -88,7 +88,7 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const thread = ctx.views.threadV2(skeleton, hydration, {
+  const { anchor, thread } = ctx.views.threadV2(skeleton, hydration, {
     above: params.above,
     below: calculateBelow(ctx, skeleton.anchor, params),
     branchingFactor: params.branchingFactor,
@@ -97,7 +97,6 @@ const presentation = (
     viewer: params.hydrateCtx.viewer,
   })
 
-  const anchor = thread.find((i) => i.depth === 0)
   if (!anchor || isThreadItemNotFound(anchor.value)) {
     throw new InvalidRequestError(
       `Post not found: ${skeleton.anchor}`,
