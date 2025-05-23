@@ -167,25 +167,53 @@ export class Server {
     def: LexXrpcQuery | LexXrpcProcedure,
     config: XRPCHandlerConfig,
   ) {
-    const verb: 'post' | 'get' = def.type === 'procedure' ? 'post' : 'get'
+    // @NOTE This must be called *BEFORE* `createHandler()` as createHandler
+    // will read the routeRateLimiters that is setup through
+    // `setupRouteRateLimits()`.
+    this.setupRouteRateLimits(nsid, config)
+
+    // @TODO Refactor the setupRouteRateLimits logic so that it returns a
+    // middleware since splitting the logic across two methods that need to be
+    // called in a particular order is error prone (and causes un-necessary
+    // setup related properties to be stored on the Server instance).
+
+    const path = `/xrpc/${nsid}`
+    const handler = this.createHandler(nsid, def, config)
+
     const middleware: RequestHandler[] = []
     middleware.push(createLocalsMiddleware(nsid))
     if (config.auth) {
       middleware.push(createAuthMiddleware(config.auth))
     }
-    if (verb === 'post') {
+
+    if (def.type === 'procedure') {
       middleware.push(this.middleware.json)
       middleware.push(this.middleware.text)
+
+      this.routes.post(path, ...middleware, handler)
+    } else if (def.type === 'query') {
+      this.routes.get(path, ...middleware, handler)
+    } else {
+      // Fool-proof
+      throw new TypeError(`Lex def for ${nsid} is not a procedure or a query`)
     }
-    this.setupRouteRateLimits(nsid, config)
-    this.routes[verb](
-      `/xrpc/${nsid}`,
-      ...middleware,
-      this.createHandler(nsid, def, config),
-    )
   }
 
   async catchall(req: Request, res: Response, next: NextFunction) {
+    // validate the HTTP method of known XRPC methods
+    const def = this.lex.getDef(req.params.methodId)
+    if (def) {
+      const expectedMethod =
+        def.type === 'procedure' ? 'POST' : def.type === 'query' ? 'GET' : null
+      if (expectedMethod != null && expectedMethod !== req.method) {
+        return next(
+          new InvalidRequestError(
+            `Incorrect HTTP method (${req.method}) expected ${expectedMethod}`,
+          ),
+        )
+      }
+    }
+
     if (this.globalRateLimiters) {
       try {
         const rlRes = await consumeMany(
@@ -210,28 +238,10 @@ export class Server {
     }
 
     if (this.options.catchall) {
-      return this.options.catchall(req, res, next)
-    }
-
-    const def = this.lex.getDef(req.params.methodId)
-    if (!def) {
+      return this.options.catchall.call(null, req, res, next)
+    } else {
       return next(new MethodNotImplementedError())
     }
-    // validate method
-    if (def.type === 'query' && req.method !== 'GET') {
-      return next(
-        new InvalidRequestError(
-          `Incorrect HTTP method (${req.method}) expected GET`,
-        ),
-      )
-    } else if (def.type === 'procedure' && req.method !== 'POST') {
-      return next(
-        new InvalidRequestError(
-          `Incorrect HTTP method (${req.method}) expected POST`,
-        ),
-      )
-    }
-    return next()
   }
 
   createHandler(
