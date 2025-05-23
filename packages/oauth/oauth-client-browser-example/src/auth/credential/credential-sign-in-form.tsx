@@ -55,6 +55,10 @@ export function CredentialSignInForm({
           <input
             id="identifier"
             name="identifier"
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="username"
+            spellCheck="false"
             type="text"
             className="relative m-0 block w-full flex-auto bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base leading-[1.6] text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="@handle or email"
@@ -68,6 +72,10 @@ export function CredentialSignInForm({
           <input
             id="password"
             name="password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="current-password"
+            spellCheck="false"
             type="password"
             className="relative m-0 block w-full flex-auto bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base leading-[1.6] text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="Password"
