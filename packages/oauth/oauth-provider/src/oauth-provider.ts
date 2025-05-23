@@ -395,7 +395,7 @@ export class OAuthProvider extends OAuthVerifier {
       throw new InvalidDpopProofError('DPoP proof not allowed for this client')
     }
 
-    const clientAuth = await client.authenticate(clientCredentials, {
+    const clientAuth = await client.authenticate(clientCredentials, dpopProof, {
       authorizationServerIdentifier: this.issuer,
     })
 

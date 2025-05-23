@@ -48,6 +48,12 @@ export type ClientAuth =
        * @note This field is optional for legacy reasons.
        */
       exp?: number
+
+      /**
+       * "cnf" (confirmation) claim that contains the key thumbprint (jkt) of
+       * the DPoP key used as proof.
+       */
+      cnf?: { jkt: string }
     }
 
 /**
