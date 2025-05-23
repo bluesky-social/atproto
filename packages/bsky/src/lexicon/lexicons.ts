@@ -3471,70 +3471,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncGetCheckout: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getCheckout',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncGetHead: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getHead',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['root'],
-            properties: {
-              root: {
-                type: 'string',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'HeadNotFound',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoSyncGetHostStatus: {
     lexicon: 1,
     id: 'com.atproto.sync.getHostStatus',
@@ -7231,48 +7167,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7334,6 +7228,48 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -12594,8 +12530,6 @@ export const ids = {
   ComAtprotoSyncDefs: 'com.atproto.sync.defs',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
-  ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
-  ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetHostStatus: 'com.atproto.sync.getHostStatus',
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
@@ -12641,8 +12575,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',

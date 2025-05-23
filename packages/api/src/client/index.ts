@@ -82,8 +82,6 @@ import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateE
 import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
-import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
-import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
 import * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
@@ -128,8 +126,8 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -343,8 +341,6 @@ export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateE
 export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
-export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
-export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
 export * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
@@ -389,8 +385,8 @@ export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -1497,29 +1493,6 @@ export class ComAtprotoSyncNS {
       })
   }
 
-  getCheckout(
-    params?: ComAtprotoSyncGetCheckout.QueryParams,
-    opts?: ComAtprotoSyncGetCheckout.CallOptions,
-  ): Promise<ComAtprotoSyncGetCheckout.Response> {
-    return this._client.call(
-      'com.atproto.sync.getCheckout',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getHead(
-    params?: ComAtprotoSyncGetHead.QueryParams,
-    opts?: ComAtprotoSyncGetHead.CallOptions,
-  ): Promise<ComAtprotoSyncGetHead.Response> {
-    return this._client
-      .call('com.atproto.sync.getHead', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetHead.toKnownErr(e)
-      })
-  }
-
   getHostStatus(
     params?: ComAtprotoSyncGetHostStatus.QueryParams,
     opts?: ComAtprotoSyncGetHostStatus.CallOptions,
@@ -2103,13 +2076,6 @@ export class AppBskyFeedNS {
       })
   }
 
-  getPosts(
-    params?: AppBskyFeedGetPosts.QueryParams,
-    opts?: AppBskyFeedGetPosts.CallOptions,
-  ): Promise<AppBskyFeedGetPosts.Response> {
-    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
-  }
-
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
     opts?: AppBskyFeedGetPostThread.CallOptions,
@@ -2119,6 +2085,13 @@ export class AppBskyFeedNS {
       .catch((e) => {
         throw AppBskyFeedGetPostThread.toKnownErr(e)
       })
+  }
+
+  getPosts(
+    params?: AppBskyFeedGetPosts.QueryParams,
+    opts?: AppBskyFeedGetPosts.CallOptions,
+  ): Promise<AppBskyFeedGetPosts.Response> {
+    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
   }
 
   getQuotes(
