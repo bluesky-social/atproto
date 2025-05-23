@@ -80,7 +80,7 @@ import {
   ThreadItemValuePost,
   ThreadTree,
   sortTrimFlattenThreadTree,
-} from './threadsV2'
+} from './threads-v2'
 import {
   Embed,
   EmbedBlocked,
@@ -158,10 +158,10 @@ export class Views {
   }
 
   noUnauthenticatedPost(viewer: HydrateCtx['viewer'], post: PostView): boolean {
-    const isNoUnauthenticated = !!post.author.labels?.find(
+    const isNoUnauthenticated = post.author.labels?.some(
       (l) => l.val === '!no-unauthenticated',
     )
-    return !viewer && isNoUnauthenticated
+    return !viewer && !!isNoUnauthenticated
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
@@ -1141,14 +1141,14 @@ export class Views {
       below,
       branchingFactor,
       prioritizeFollowedUsers,
-      sorting,
+      sort,
       viewer,
     }: {
-      above: number
+      above: boolean
       below: number
       branchingFactor: number
       prioritizeFollowedUsers: boolean
-      sorting: GetPostThreadV2QueryParams['sorting']
+      sort: GetPostThreadV2QueryParams['sort']
       viewer: HydrateCtx['viewer']
     },
   ): ThreadItem[] {
@@ -1194,28 +1194,28 @@ export class Views {
     const rootUri = getRootUri(anchor, post)
     const opDid = uriToDid(rootUri)
     const authorDid = postView.author.did
-    const isOpPost = authorDid === opDid
+    const isOPPost = authorDid === opDid
     const anchorViolatesThreadGate = post.violatesThreadGate
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
-    const parentTree = !anchorViolatesThreadGate
-      ? this.threadV2Parent({
-          childUri: anchor,
-          viewer,
-          opDid,
-          rootUri,
-          state,
-          above,
-          depth: -1,
-        })
-      : undefined
+    const parentTree =
+      !anchorViolatesThreadGate && above
+        ? this.threadV2Parent({
+            childUri: anchor,
+            viewer,
+            opDid,
+            rootUri,
+            state,
+            depth: -1,
+          })
+        : undefined
 
-    const { tree: parent, isOPThread: isOpThreadFromRootToParent } =
+    const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
       parentTree ?? { tree: undefined, isOPThread: false }
 
     const isOPThread = parent
-      ? isOpThreadFromRootToParent && isOpPost
-      : isOpPost
+      ? isOPThreadFromRootToParent && isOPPost
+      : isOPPost
 
     let anchorTree: ThreadTree
     if (this.noUnauthenticatedPost(viewer, postView)) {
@@ -1262,7 +1262,7 @@ export class Views {
     return sortTrimFlattenThreadTree(anchorTree, {
       opDid,
       branchingFactor,
-      sorting,
+      sort,
       prioritizeFollowedUsers,
       viewer,
       fetchedAt: Date.now(),
@@ -1275,7 +1275,6 @@ export class Views {
     opDid,
     rootUri,
     state,
-    above,
     depth,
   }: {
     childUri: string
@@ -1283,14 +1282,8 @@ export class Views {
     opDid: string
     rootUri: string
     state: HydrationState
-    above: number
     depth: number
   }): { tree: ThreadTree; isOPThread: boolean } | undefined {
-    // Reached the `above` limit.
-    if (Math.abs(depth) > above) {
-      return undefined
-    }
-
     // Not found.
     const uri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!uri) {
@@ -1337,16 +1330,15 @@ export class Views {
       opDid,
       rootUri,
       state,
-      above,
       depth: depth - 1,
     })
-    const { tree: parent, isOPThread: isOpThreadFromRootToParent } =
+    const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
       parentTree ?? { tree: undefined, isOPThread: false }
 
-    const isOpPost = authorDid === opDid
+    const isOPPost = authorDid === opDid
     const isOPThread = parent
-      ? isOpThreadFromRootToParent && isOpPost
-      : isOpPost
+      ? isOPThreadFromRootToParent && isOPPost
+      : isOPPost
 
     if (this.noUnauthenticatedPost(viewer, postView)) {
       return {
@@ -1386,7 +1378,7 @@ export class Views {
   private threadV2Replies({
     parentUri,
     viewer,
-    isOPThread: isOpThreadFromRootToParent,
+    isOPThread: isOPThreadFromRootToParent,
     opDid,
     rootUri,
     childrenByParentUri,
@@ -1455,7 +1447,7 @@ export class Views {
       }
 
       // Recurse down.
-      const isOPThread = isOpThreadFromRootToParent && authorDid === opDid
+      const isOPThread = isOPThreadFromRootToParent && authorDid === opDid
       const replies = this.threadV2Replies({
         parentUri: uri,
         viewer,

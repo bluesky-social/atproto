@@ -63,12 +63,13 @@ export type ThreadTree =
   | ThreadNotFoundNode
   | ThreadPostNode
 
+/** This function mutates the tree parameter. */
 export function sortTrimFlattenThreadTree(
   anchorTree: ThreadTree,
   options: SortTrimFlattenOptions,
 ) {
   const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
-  return flattenThree(sortedAnchorTree)
+  return flattenTree(sortedAnchorTree)
 }
 
 type SortTrimFlattenOptions = {
@@ -76,12 +77,13 @@ type SortTrimFlattenOptions = {
   fetchedAt: number
   opDid: string
   prioritizeFollowedUsers: boolean
-  sorting: GetPostThreadV2QueryParams['sorting']
+  sort: GetPostThreadV2QueryParams['sort']
   viewer: HydrateCtx['viewer']
 }
 
 const isPostRecord = asPredicate(validatePostRecord)
 
+/** This function mutates the tree parameter. */
 function sortTrimThreadTree(
   node: ThreadTree,
   opts: SortTrimFlattenOptions,
@@ -95,7 +97,7 @@ function sortTrimThreadTree(
     fetchedAt,
     opDid,
     prioritizeFollowedUsers,
-    sorting,
+    sort,
     viewer,
   } = opts
 
@@ -129,7 +131,7 @@ function sortTrimThreadTree(
         fetchedAt,
         opDid,
         prioritizeFollowedUsers,
-        sorting,
+        sort,
         viewer,
       }),
     )
@@ -203,12 +205,12 @@ function applySorting(
 ): number {
   const a = aTree.item.value
   const b = bTree.item.value
-  const { sorting } = opts
+  const { sort } = opts
 
-  if (sorting === 'app.bsky.unspecced.getPostThreadV2#oldest') {
+  if (sort === 'oldest') {
     return a.post.indexedAt.localeCompare(b.post.indexedAt)
   }
-  if (sorting === 'app.bsky.unspecced.getPostThreadV2#top') {
+  if (sort === 'top') {
     const aLikes = a.post.likeCount ?? 0
     const bLikes = b.post.likeCount ?? 0
     const aTop = topSortValue(aLikes, aTree.hasOPLike)
@@ -225,8 +227,8 @@ function topSortValue(likeCount: number, hasOPLike: boolean): number {
   return Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
 }
 
-function flattenThree(tree: ThreadTree) {
-  return Array.from([
+function flattenTree(tree: ThreadTree) {
+  return [
     // All parents above.
     ...Array.from(
       flattenInDirection({
@@ -245,7 +247,7 @@ function flattenThree(tree: ThreadTree) {
         direction: 'down',
       }),
     ),
-  ])
+  ]
 }
 
 function* flattenInDirection({
@@ -259,7 +261,7 @@ function* flattenInDirection({
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenThree(tree.parent)
+        yield* flattenTree(tree.parent)
       }
     }
   }
@@ -268,13 +270,13 @@ function* flattenInDirection({
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenThree(tree.parent)
+        yield* flattenTree(tree.parent)
       }
     } else {
       // Unfold all replies below.
       if (tree.replies?.length) {
         for (const reply of tree.replies) {
-          yield* flattenThree(reply)
+          yield* flattenTree(reply)
         }
       }
     }

@@ -7,7 +7,7 @@ import {
   QueryParams,
   ThreadItemPost,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import { ThreadItemValuePost } from '../../src/views/threadsV2'
+import { ThreadItemValuePost } from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 
@@ -282,20 +282,17 @@ describe('appview thread views v2', () => {
 
   describe('deep thread', () => {
     let seed: Awaited<ReturnType<typeof seeds.deep>>
-    let simple: Awaited<ReturnType<typeof seeds.simple>>
 
     beforeAll(async () => {
       seed = await seeds.deep(sc)
-      simple = await seeds.simple(sc, 'simple2')
       await network.processAll()
     })
 
     describe('above', () => {
-      it('limits to the above count', async () => {
+      it('returns the ancestors above if true (default)', async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
             anchor: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
-            above: 10,
           },
           {
             headers: await network.serviceHeaders(
@@ -307,7 +304,7 @@ describe('appview thread views v2', () => {
         const { thread: t } = data
 
         assertPosts(t)
-        expect(t).toHaveLength(11)
+        expect(t).toHaveLength(19)
 
         const last = t.at(-1)
         expect(last!.uri).toBe(
@@ -315,11 +312,11 @@ describe('appview thread views v2', () => {
         )
       })
 
-      it(`does not fulfill the above count if there are not enough items in the thread`, async () => {
+      it(`does not return ancestors if false`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            anchor: simple.r['0_0'].ref.uriStr,
-            above: 10,
+            anchor: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+            above: false,
           },
           {
             headers: await network.serviceHeaders(
@@ -331,9 +328,12 @@ describe('appview thread views v2', () => {
         const { thread: t } = data
 
         assertPosts(t)
-        expect(t).toHaveLength(3)
-        const last = t.at(-1)
-        expect(last!.uri).toBe(simple.r['0_0'].ref.uriStr)
+        expect(t).toHaveLength(1)
+
+        const first = t.at(0)
+        expect(first!.uri).toBe(
+          seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+        )
       })
     })
 
@@ -362,7 +362,8 @@ describe('appview thread views v2', () => {
       it(`does not fulfill the below count if there are not enough items in the thread`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            anchor: simple.root.ref.uriStr,
+            anchor: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+            above: false,
             below: 10,
           },
           {
@@ -375,10 +376,12 @@ describe('appview thread views v2', () => {
         const { thread: t } = data
 
         assertPosts(t)
-        expect(t).toHaveLength(7)
+        expect(t).toHaveLength(4)
 
         const first = t.at(0)
-        expect(first!.uri).toBe(simple.root.ref.uriStr)
+        expect(first!.uri).toBe(
+          seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+        )
       })
     })
   })
@@ -394,19 +397,19 @@ describe('appview thread views v2', () => {
     type Case =
       | {
           branchingFactor: number
-          sorting: QueryParams['sorting']
+          sort: QueryParams['sort']
           postKeys: string[]
         }
       | {
           branchingFactor: number
-          sorting: QueryParams['sorting']
+          sort: QueryParams['sort']
           // For higher branching factors it gets too verbose to write all posts.
           length: number
         }
     const cases: Case[] = [
       {
         branchingFactor: 1,
-        sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
+        sort: 'oldest',
         postKeys: [
           'root',
           '0',
@@ -425,7 +428,7 @@ describe('appview thread views v2', () => {
       },
       {
         branchingFactor: 1,
-        sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+        sort: 'newest',
         postKeys: [
           'root',
           '3',
@@ -444,7 +447,7 @@ describe('appview thread views v2', () => {
       },
       {
         branchingFactor: 2,
-        sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
+        sort: 'oldest',
         postKeys: [
           'root',
           '0',
@@ -478,7 +481,7 @@ describe('appview thread views v2', () => {
       },
       {
         branchingFactor: 2,
-        sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+        sort: 'newest',
         postKeys: [
           'root',
           '3',
@@ -513,29 +516,29 @@ describe('appview thread views v2', () => {
       },
       {
         branchingFactor: 3,
-        sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+        sort: 'newest',
         length: 53,
       },
       {
         branchingFactor: 4,
-        sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+        sort: 'newest',
         length: 82,
       },
       {
         branchingFactor: 5,
-        sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+        sort: 'newest',
         // The seeds have 1 post with 5 replies, so it is +1 compared to branchingFactor 4.
         length: 83,
       },
     ]
 
     it.each(cases)(
-      'returns all top-level replies and limits nested to branching factor of $branchingFactor when sorting by $sorting',
+      'returns all top-level replies and limits nested to branching factor of $branchingFactor when sorting by $sort',
       async (args) => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
             anchor: seed.root.ref.uriStr,
-            sorting: 'sorting' in args ? args.sorting : undefined,
+            sort: 'sort' in args ? args.sort : undefined,
             branchingFactor: args.branchingFactor,
           },
           {
@@ -757,13 +760,13 @@ describe('appview thread views v2', () => {
       })
 
       type Case = {
-        sorting: QueryParams['sorting']
+        sort: QueryParams['sort']
         postKeys: string[]
       }
 
       const cases: Case[] = [
         {
-          sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+          sort: 'newest',
           postKeys: [
             'root',
             '2',
@@ -781,7 +784,7 @@ describe('appview thread views v2', () => {
           ],
         },
         {
-          sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
+          sort: 'oldest',
           postKeys: [
             'root',
             '0',
@@ -799,7 +802,7 @@ describe('appview thread views v2', () => {
           ],
         },
         {
-          sorting: 'app.bsky.unspecced.getPostThreadV2#top',
+          sort: 'top',
           postKeys: [
             'root',
             '1',
@@ -819,12 +822,12 @@ describe('appview thread views v2', () => {
       ]
 
       it.each(cases)(
-        'sorts by $sorting in all levels',
-        async ({ sorting, postKeys }) => {
+        'sorts by $sort in all levels',
+        async ({ sort: sort, postKeys }) => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
               anchor: seed.root.ref.uriStr,
-              sorting,
+              sort,
             },
             {
               headers: await network.serviceHeaders(
@@ -855,28 +858,28 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sorting: QueryParams['sorting']
+          sort: QueryParams['sort']
           postKeys: string[]
         }
 
         const cases: Case[] = [
           {
-            sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+            sort: 'newest',
             postKeys: ['root', '5', '3', '1', '7', '4', '0', '6', '2'],
           },
           {
-            sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
+            sort: 'oldest',
             postKeys: ['root', '1', '3', '5', '0', '4', '7', '2', '6'],
           },
         ]
 
         it.each(cases)(
-          'sorts by $sorting inside each bumped group',
-          async ({ sorting, postKeys }) => {
+          'sorts by $sort inside each bumped group',
+          async ({ sort: sort, postKeys }) => {
             const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
               {
                 anchor: seed.root.ref.uriStr,
-                sorting,
+                sort,
               },
               {
                 headers: await network.serviceHeaders(
@@ -906,13 +909,13 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sorting: QueryParams['sorting']
+          sort: QueryParams['sort']
           postKeys: string[]
         }
 
         const cases: Case[] = [
           {
-            sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+            sort: 'newest',
             postKeys: [
               'root',
               '3', // op
@@ -948,7 +951,7 @@ describe('appview thread views v2', () => {
             ],
           },
           {
-            sorting: 'app.bsky.unspecced.getPostThreadV2#oldest',
+            sort: 'oldest',
             postKeys: [
               'root',
               '3', // op
@@ -984,7 +987,7 @@ describe('appview thread views v2', () => {
             ],
           },
           {
-            sorting: 'app.bsky.unspecced.getPostThreadV2#top',
+            sort: 'top',
             postKeys: [
               'root',
               '3', // op
@@ -1022,12 +1025,12 @@ describe('appview thread views v2', () => {
         ]
 
         it.each(cases)(
-          'bumps up OP and viewer and sorts by $sorting in all levels',
-          async ({ sorting, postKeys }) => {
+          'bumps up OP and viewer and sorts by $sort in all levels',
+          async ({ sort: sort, postKeys }) => {
             const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
               {
                 anchor: seed.root.ref.uriStr,
-                sorting,
+                sort,
               },
               {
                 headers: await network.serviceHeaders(
@@ -1064,7 +1067,7 @@ describe('appview thread views v2', () => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
               anchor: post,
-              sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+              sort: 'newest',
               prioritizeFollowedUsers,
             },
             {
@@ -1153,11 +1156,11 @@ describe('appview thread views v2', () => {
           await network.processAll()
         })
 
-        it('sorts multiple mutes correctly by the sorting param', async () => {
+        it('sorts multiple mutes correctly by the sort param', async () => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
               anchor: seed.root.ref.uriStr,
-              sorting: 'app.bsky.unspecced.getPostThreadV2#newest',
+              sort: 'newest',
             },
             {
               headers: await network.serviceHeaders(

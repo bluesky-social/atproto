@@ -17,10 +17,10 @@ const is$typed = _is$typed,
 const id = 'app.bsky.unspecced.getPostThreadV2'
 
 export interface QueryParams {
-  /** Reference (AT-URI) to post record. */
+  /** Reference (AT-URI) to post record. This is the anchor post, and the thread will be built around it. It can be any post in the tree, not necessarily a root post. */
   anchor: string
-  /** How many levels of parent (and grandparent, etc) to include above the anchor. */
-  above?: number
+  /** Whether to include parents above the anchor. */
+  above?: boolean
   /** How many levels of replies to include below the anchor. */
   below?: number
   /** Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are (NOTE: currently, during unspecced phase) all returned (NOTE: later they might be paginated). */
@@ -28,11 +28,7 @@ export interface QueryParams {
   /** Whether to prioritize posts from followed users. It only has effect when the user is authenticated. */
   prioritizeFollowedUsers?: boolean
   /** Sorting for the thread replies. */
-  sorting?:
-    | 'app.bsky.unspecced.getPostThreadV2#newest'
-    | 'app.bsky.unspecced.getPostThreadV2#oldest'
-    | 'app.bsky.unspecced.getPostThreadV2#top'
-    | (string & {})
+  sort?: 'newest' | 'oldest' | 'top' | (string & {})
 }
 
 export type InputSchema = undefined

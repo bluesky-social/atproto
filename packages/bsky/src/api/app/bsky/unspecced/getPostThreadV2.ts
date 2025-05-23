@@ -5,10 +5,7 @@ import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import {
-  OutputSchema,
-  QueryParams,
-} from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -18,7 +15,7 @@ import {
 } from '../../../../pipeline'
 import { postUriToThreadgateUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
-import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -29,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.unspecced.getPostThreadV2({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, req, res }) => {
+    handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, include3pBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
@@ -40,24 +37,10 @@ export default function (server: Server, ctx: AppContext) {
         include3pBlocks,
       })
 
-      let result: OutputSchema
-      try {
-        result = await getPostThread({ ...params, hydrateCtx }, ctx)
-      } catch (err) {
-        const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-        if (repoRev) {
-          res.setHeader(ATPROTO_REPO_REV, repoRev)
-        }
-        throw err
-      }
-
-      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-
       return {
         encoding: 'application/json',
-        body: result,
+        body: await getPostThread({ ...params, hydrateCtx }, ctx),
         headers: resHeaders({
-          repoRev,
           labelers: hydrateCtx.labelers,
         }),
       }
@@ -71,7 +54,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   try {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
-      above: params.above,
+      // We don't allow customizing the height above the anchor, and set it to a reasonable default.
+      above: params.above ? 50 : 0,
       below: calculateBelow(ctx, anchor, params),
     })
     return {
@@ -109,7 +93,7 @@ const presentation = (
     below: calculateBelow(ctx, skeleton.anchor, params),
     branchingFactor: params.branchingFactor,
     prioritizeFollowedUsers: params.prioritizeFollowedUsers,
-    sorting: params.sorting,
+    sort: params.sort,
     viewer: params.hydrateCtx.viewer,
   })
 

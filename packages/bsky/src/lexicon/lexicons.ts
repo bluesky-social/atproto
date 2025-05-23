@@ -10283,7 +10283,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get posts in a thread. It is based in an anchor post at any depth of the tree, and returns posts above it (recursively resolving the parent, without further branching) and below it (recursive replies, with branching). Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get posts in a thread. It is based in an anchor post at any depth of the tree, and returns posts above it (recursively resolving the parent, without further branching to their replies) and below it (recursive replies, with branching to their replies). Does not require auth, but additional metadata and filtering will be applied for authed requests.",
         parameters: {
           type: 'params',
           required: ['anchor'],
@@ -10291,15 +10291,13 @@ export const schemaDict = {
             anchor: {
               type: 'string',
               format: 'at-uri',
-              description: 'Reference (AT-URI) to post record.',
+              description:
+                'Reference (AT-URI) to post record. This is the anchor post, and the thread will be built around it. It can be any post in the tree, not necessarily a root post.',
             },
             above: {
-              type: 'integer',
-              description:
-                'How many levels of parent (and grandparent, etc) to include above the anchor.',
-              default: 80,
-              minimum: 0,
-              maximum: 100,
+              type: 'boolean',
+              description: 'Whether to include parents above the anchor.',
+              default: true,
             },
             below: {
               type: 'integer',
@@ -10307,7 +10305,7 @@ export const schemaDict = {
                 'How many levels of replies to include below the anchor.',
               default: 6,
               minimum: 0,
-              maximum: 100,
+              maximum: 20,
             },
             branchingFactor: {
               type: 'integer',
@@ -10323,15 +10321,11 @@ export const schemaDict = {
                 'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
               default: false,
             },
-            sorting: {
+            sort: {
               type: 'string',
               description: 'Sorting for the thread replies.',
-              knownValues: [
-                'app.bsky.unspecced.getPostThreadV2#newest',
-                'app.bsky.unspecced.getPostThreadV2#oldest',
-                'app.bsky.unspecced.getPostThreadV2#top',
-              ],
-              default: 'app.bsky.unspecced.getPostThreadV2#oldest',
+              knownValues: ['newest', 'oldest', 'top'],
+              default: 'oldest',
             },
           },
         },
