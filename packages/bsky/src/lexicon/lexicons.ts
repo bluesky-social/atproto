@@ -6259,7 +6259,7 @@ export const schemaDict = {
       },
       reasonRepost: {
         type: 'object',
-        required: ['by', 'indexedAt'],
+        required: ['by', 'uri', 'cid', 'indexedAt'],
         properties: {
           by: {
             type: 'ref',
@@ -9861,7 +9861,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', 'starterpack-joined', 'verified', 'unverified', 'like-via-repost', and 'repost-via-repost'.",
+              'The reason why this notification was delivered - e.g. your post was liked, or you received a new follower.',
             knownValues: [
               'like',
               'repost',
