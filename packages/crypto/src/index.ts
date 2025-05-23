@@ -7,6 +7,9 @@ export * from './types'
 export * from './verify'
 export * from './utils'
 
+export * from './ed25519/keypair'
+export * from './ed25519/plugin'
+
 export * from './p256/keypair'
 export * from './p256/plugin'
 
