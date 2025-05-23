@@ -38,8 +38,8 @@ export const TOKEN_MAX_AGE = 60 * MINUTE
 /** 5 minutes */
 export const AUTHORIZATION_INACTIVITY_TIMEOUT = 5 * MINUTE
 
-/** 1 week */
-export const PUBLIC_CLIENT_SESSION_LIFETIME = 1 * WEEK
+/** 2 week */
+export const PUBLIC_CLIENT_SESSION_LIFETIME = 2 * WEEK
 
 /** no limit (constrained by {@link PUBLIC_CLIENT_SESSION_LIFETIME}) */
 export const PUBLIC_CLIENT_REFRESH_LIFETIME = Infinity
