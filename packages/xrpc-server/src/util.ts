@@ -24,6 +24,9 @@ import {
   handlerSuccess,
 } from './types'
 
+export const asArray = <T>(arr: T | T[]): T[] =>
+  Array.isArray(arr) ? arr : [arr]
+
 export function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
   params: UndecodedParams,
