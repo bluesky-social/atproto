@@ -42,7 +42,7 @@ const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
     }
 
     const breadcrumbs = prevBreadcrumbs
-      ? `${prevBreadcrumbs}_${index++}`
+      ? `${prevBreadcrumbs}.${index++}`
       : `${index++}`
     const text = breadcrumbs
     const reply = await sc.reply(
@@ -460,15 +460,15 @@ export async function sort(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   await sc.like(carol.did, r['1'].ref)
 
   // likes depth 2
-  await sc.like(bob.did, r['0_1'].ref)
-  await sc.like(carol.did, r['0_1'].ref)
-  await sc.like(op.did, r['0_2'].ref) // op like
-  await sc.like(bob.did, r['1_1'].ref)
-  await sc.like(carol.did, r['1_1'].ref)
-  await sc.like(bob.did, r['1_0'].ref)
-  await sc.like(bob.did, r['2_0'].ref)
-  await sc.like(carol.did, r['2_0'].ref)
-  await sc.like(bob.did, r['2_1'].ref)
+  await sc.like(bob.did, r['0.1'].ref)
+  await sc.like(carol.did, r['0.1'].ref)
+  await sc.like(op.did, r['0.2'].ref) // op like
+  await sc.like(bob.did, r['1.1'].ref)
+  await sc.like(carol.did, r['1.1'].ref)
+  await sc.like(bob.did, r['1.0'].ref)
+  await sc.like(bob.did, r['2.0'].ref)
+  await sc.like(carol.did, r['2.0'].ref)
+  await sc.like(bob.did, r['2.1'].ref)
 
   return {
     seedClient: sc,
@@ -542,21 +542,21 @@ export async function bumpOpAndViewer(
   await sc.like(carol.did, r['1'].ref)
 
   // likes depth 2
-  await sc.like(bob.did, r['0_1'].ref)
-  await sc.like(carol.did, r['0_1'].ref)
-  await sc.like(op.did, r['0_2'].ref) // op like
-  await sc.like(bob.did, r['1_1'].ref)
-  await sc.like(carol.did, r['1_1'].ref)
-  await sc.like(bob.did, r['1_0'].ref)
-  await sc.like(alice.did, r['2_1'].ref)
-  await sc.like(bob.did, r['2_1'].ref)
-  await sc.like(carol.did, r['2_1'].ref)
-  await sc.like(viewer.did, r['2_1'].ref)
-  await sc.like(bob.did, r['1_3'].ref)
-  await sc.like(bob.did, r['2_3'].ref)
-  await sc.like(viewer.did, r['2_4'].ref)
-  await sc.like(viewer.did, r['4_0'].ref)
-  await sc.like(alice.did, r['4_1'].ref)
+  await sc.like(bob.did, r['0.1'].ref)
+  await sc.like(carol.did, r['0.1'].ref)
+  await sc.like(op.did, r['0.2'].ref) // op like
+  await sc.like(bob.did, r['1.1'].ref)
+  await sc.like(carol.did, r['1.1'].ref)
+  await sc.like(bob.did, r['1.0'].ref)
+  await sc.like(alice.did, r['2.1'].ref)
+  await sc.like(bob.did, r['2.1'].ref)
+  await sc.like(carol.did, r['2.1'].ref)
+  await sc.like(viewer.did, r['2.1'].ref)
+  await sc.like(bob.did, r['1.3'].ref)
+  await sc.like(bob.did, r['2.3'].ref)
+  await sc.like(viewer.did, r['2.4'].ref)
+  await sc.like(viewer.did, r['4.0'].ref)
+  await sc.like(alice.did, r['4.1'].ref)
 
   return {
     seedClient: sc,
@@ -788,7 +788,7 @@ export async function hidden(
     {
       post: root.ref.uriStr,
       createdAt: new Date().toISOString(),
-      hiddenReplies: [r['1'].ref.uriStr, r['2_1'].ref.uriStr],
+      hiddenReplies: [r['1'].ref.uriStr, r['2.1'].ref.uriStr],
     },
     sc.getHeaders(op.did),
   )

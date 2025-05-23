@@ -228,7 +228,7 @@ Object {
                 "uri": "record(0)",
               },
             },
-            "text": "2_0",
+            "text": "2.0",
           },
           "replyCount": 0,
           "repostCount": 0,
@@ -244,7 +244,7 @@ Object {
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on 2_0 1`] = `
+exports[`appview thread views v2 simple thread returns thread anchored on 2.0 1`] = `
 Object {
   "thread": Array [
     Object {
@@ -375,7 +375,7 @@ Object {
                 "uri": "record(0)",
               },
             },
-            "text": "2_0",
+            "text": "2.0",
           },
           "replyCount": 0,
           "repostCount": 0,
@@ -619,7 +619,7 @@ Object {
                 "uri": "record(0)",
               },
             },
-            "text": "0_0",
+            "text": "0.0",
           },
           "replyCount": 0,
           "repostCount": 0,
@@ -635,7 +635,7 @@ Object {
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on r 0_0 1`] = `
+exports[`appview thread views v2 simple thread returns thread anchored on r 0.0 1`] = `
 Object {
   "thread": Array [
     Object {
@@ -766,7 +766,7 @@ Object {
                 "uri": "record(0)",
               },
             },
-            "text": "0_0",
+            "text": "0.0",
           },
           "replyCount": 0,
           "repostCount": 0,
@@ -913,7 +913,7 @@ Object {
                 "uri": "record(0)",
               },
             },
-            "text": "0_0",
+            "text": "0.0",
           },
           "replyCount": 0,
           "repostCount": 0,
@@ -1063,7 +1063,7 @@ Object {
                 "uri": "record(0)",
               },
             },
-            "text": "2_0",
+            "text": "2.0",
           },
           "replyCount": 0,
           "repostCount": 0,

@@ -78,10 +78,10 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({ depth: 0, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 1, uri: seed.r['0'].ref.uriStr }),
-        expect.objectContaining({ depth: 2, uri: seed.r['0_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 2, uri: seed.r['0.0'].ref.uriStr }),
         expect.objectContaining({ depth: 1, uri: seed.r['1'].ref.uriStr }),
         expect.objectContaining({ depth: 1, uri: seed.r['2'].ref.uriStr }),
-        expect.objectContaining({ depth: 2, uri: seed.r['2_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 2, uri: seed.r['2.0'].ref.uriStr }),
         expect.objectContaining({ depth: 1, uri: seed.r['3'].ref.uriStr }),
       ])
       expect(forSnapshot(data)).toMatchSnapshot()
@@ -103,14 +103,14 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 0, uri: seed.r['0'].ref.uriStr }),
-        expect.objectContaining({ depth: 1, uri: seed.r['0_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['0.0'].ref.uriStr }),
       ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on r 0_0', async () => {
+    it('returns thread anchored on r 0.0', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { anchor: seed.r['0_0'].ref.uriStr },
+        { anchor: seed.r['0.0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -124,7 +124,7 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: -1, uri: seed.r['0'].ref.uriStr }),
-        expect.objectContaining({ depth: 0, uri: seed.r['0_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['0.0'].ref.uriStr }),
       ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -165,14 +165,14 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 0, uri: seed.r['2'].ref.uriStr }),
-        expect.objectContaining({ depth: 1, uri: seed.r['2_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 1, uri: seed.r['2.0'].ref.uriStr }),
       ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
 
-    it('returns thread anchored on 2_0', async () => {
+    it('returns thread anchored on 2.0', async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { anchor: seed.r['2_0'].ref.uriStr },
+        { anchor: seed.r['2.0'].ref.uriStr },
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
@@ -186,7 +186,7 @@ describe('appview thread views v2', () => {
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: -1, uri: seed.r['2'].ref.uriStr }),
-        expect.objectContaining({ depth: 0, uri: seed.r['2_0'].ref.uriStr }),
+        expect.objectContaining({ depth: 0, uri: seed.r['2.0'].ref.uriStr }),
       ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
@@ -228,19 +228,19 @@ describe('appview thread views v2', () => {
       const cases: Case[] = [
         { postKey: 'root' },
         { postKey: '0' },
-        { postKey: '0_0' },
-        { postKey: '0_0_0' },
-        { postKey: '0_0_0_0' },
-        { postKey: '0_0_0_0_0' },
-        { postKey: '0_0_1' },
+        { postKey: '0.0' },
+        { postKey: '0.0.0' },
+        { postKey: '0.0.0.0' },
+        { postKey: '0.0.0.0.0' },
+        { postKey: '0.0.1' },
         { postKey: '1' },
         { postKey: '2' },
         { postKey: '3' },
         { postKey: '4' },
-        { postKey: '4_0' },
-        { postKey: '4_0_0' },
-        { postKey: '4_0_0_0' },
-        { postKey: '4_0_0_0_0' },
+        { postKey: '4.0' },
+        { postKey: '4.0.0' },
+        { postKey: '4.0.0.0' },
+        { postKey: '4.0.0.0.0' },
         { postKey: '5' },
         { postKey: '6' },
         { postKey: '7' },
@@ -292,7 +292,7 @@ describe('appview thread views v2', () => {
       it('returns the ancestors above if true (default)', async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            anchor: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+            anchor: seed.r['0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'].ref.uriStr,
           },
           {
             headers: await network.serviceHeaders(
@@ -308,14 +308,14 @@ describe('appview thread views v2', () => {
 
         const last = t.at(-1)
         expect(last!.uri).toBe(
-          seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+          seed.r['0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'].ref.uriStr,
         )
       })
 
       it(`does not return ancestors if false`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            anchor: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+            anchor: seed.r['0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'].ref.uriStr,
             above: false,
           },
           {
@@ -332,7 +332,7 @@ describe('appview thread views v2', () => {
 
         const first = t.at(0)
         expect(first!.uri).toBe(
-          seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+          seed.r['0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'].ref.uriStr,
         )
       })
     })
@@ -362,7 +362,7 @@ describe('appview thread views v2', () => {
       it(`does not fulfill the below count if there are not enough items in the thread`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
-            anchor: seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+            anchor: seed.r['0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'].ref.uriStr,
             above: false,
             below: 10,
           },
@@ -380,7 +380,7 @@ describe('appview thread views v2', () => {
 
         const first = t.at(0)
         expect(first!.uri).toBe(
-          seed.r['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'].ref.uriStr,
+          seed.r['0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'].ref.uriStr,
         )
       })
     })
@@ -413,17 +413,17 @@ describe('appview thread views v2', () => {
         postKeys: [
           'root',
           '0',
-          '0_0',
-          '0_0_0',
+          '0.0',
+          '0.0.0',
           '1',
-          '1_0',
-          '1_0_0',
+          '1.0',
+          '1.0.0',
           '2',
-          '2_0',
-          '2_0_0',
+          '2.0',
+          '2.0.0',
           '3',
-          '3_0',
-          '3_0_0',
+          '3.0',
+          '3.0.0',
         ],
       },
       {
@@ -432,17 +432,17 @@ describe('appview thread views v2', () => {
         postKeys: [
           'root',
           '3',
-          '3_3',
-          '3_3_3',
+          '3.3',
+          '3.3.3',
           '2',
-          '2_3',
-          '2_3_3',
+          '2.3',
+          '2.3.3',
           '1',
-          '1_3',
-          '1_3_3',
+          '1.3',
+          '1.3.3',
           '0',
-          '0_3',
-          '0_3_3',
+          '0.3',
+          '0.3.3',
         ],
       },
       {
@@ -451,32 +451,32 @@ describe('appview thread views v2', () => {
         postKeys: [
           'root',
           '0',
-          '0_0',
-          '0_0_0',
-          '0_0_1',
-          '0_1',
-          '0_1_0',
-          '0_1_1',
+          '0.0',
+          '0.0.0',
+          '0.0.1',
+          '0.1',
+          '0.1.0',
+          '0.1.1',
           '1',
-          '1_0',
-          '1_0_0',
-          '1_1',
-          '1_1_0',
-          '1_1_1',
+          '1.0',
+          '1.0.0',
+          '1.1',
+          '1.1.0',
+          '1.1.1',
           '2',
-          '2_0',
-          '2_0_0',
-          '2_0_1',
-          '2_1',
-          '2_1_0',
-          '2_1_1',
+          '2.0',
+          '2.0.0',
+          '2.0.1',
+          '2.1',
+          '2.1.0',
+          '2.1.1',
           '3',
-          '3_0',
-          '3_0_0',
-          '3_0_1',
-          '3_1',
-          '3_1_0',
-          '3_1_1',
+          '3.0',
+          '3.0.0',
+          '3.0.1',
+          '3.1',
+          '3.1.0',
+          '3.1.1',
         ],
       },
       {
@@ -485,33 +485,33 @@ describe('appview thread views v2', () => {
         postKeys: [
           'root',
           '3',
-          '3_3',
-          '3_3_3',
-          '3_3_2',
-          '3_2',
-          '3_2_3',
-          '3_2_2',
+          '3.3',
+          '3.3.3',
+          '3.3.2',
+          '3.2',
+          '3.2.3',
+          '3.2.2',
           '2',
-          '2_3',
-          '2_3_3',
-          '2_3_2',
-          '2_2',
-          '2_2_3',
-          '2_2_2',
+          '2.3',
+          '2.3.3',
+          '2.3.2',
+          '2.2',
+          '2.2.3',
+          '2.2.2',
           '1',
-          '1_3',
-          '1_3_3',
-          '1_3_2',
-          '1_2',
-          '1_2_3',
-          '1_2_2',
+          '1.3',
+          '1.3.3',
+          '1.3.2',
+          '1.2',
+          '1.2.3',
+          '1.2.2',
           '0',
-          '0_3',
-          '0_3_3',
-          '0_3_2',
-          '0_2',
-          '0_2_3',
-          '0_2_2',
+          '0.3',
+          '0.3.3',
+          '0.3.2',
+          '0.2',
+          '0.2.3',
+          '0.2.2',
         ],
       },
       {
@@ -599,27 +599,27 @@ describe('appview thread views v2', () => {
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['0_0'].ref.uriStr,
+          uri: seed.r['0.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['0_0_0'].ref.uriStr,
+          uri: seed.r['0.0.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['0_0_0_0'].ref.uriStr,
+          uri: seed.r['0.0.0.0'].ref.uriStr,
           value: expect.objectContaining(props({ moreReplies: 5 })),
         }),
         expect.objectContaining({
-          uri: seed.r['0_1'].ref.uriStr,
+          uri: seed.r['0.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['0_1_0'].ref.uriStr,
+          uri: seed.r['0.1.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['0_1_0_0'].ref.uriStr,
+          uri: seed.r['0.1.0.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
@@ -627,27 +627,27 @@ describe('appview thread views v2', () => {
           value: expect.objectContaining(props({ moreReplies: 1 })),
         }),
         expect.objectContaining({
-          uri: seed.r['1_0'].ref.uriStr,
+          uri: seed.r['1.0'].ref.uriStr,
           value: expect.objectContaining(props({ moreReplies: 3 })),
         }),
         expect.objectContaining({
-          uri: seed.r['1_0_0'].ref.uriStr,
+          uri: seed.r['1.0.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_0_1'].ref.uriStr,
+          uri: seed.r['1.0.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_1'].ref.uriStr,
+          uri: seed.r['1.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_1_0'].ref.uriStr,
+          uri: seed.r['1.1.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_1_1'].ref.uriStr,
+          uri: seed.r['1.1.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
@@ -676,22 +676,22 @@ describe('appview thread views v2', () => {
       {
         postKey: 'root',
         length: 9,
-        opThreadPostKeys: ['root', '0', '0_0', '0_0_0', '2'],
+        opThreadPostKeys: ['root', '0', '0.0', '0.0.0', '2'],
       },
       {
         postKey: '0',
         length: 4,
-        opThreadPostKeys: ['root', '0', '0_0', '0_0_0'],
+        opThreadPostKeys: ['root', '0', '0.0', '0.0.0'],
       },
       {
-        postKey: '0_0',
+        postKey: '0.0',
         length: 4,
-        opThreadPostKeys: ['root', '0', '0_0', '0_0_0'],
+        opThreadPostKeys: ['root', '0', '0.0', '0.0.0'],
       },
       {
-        postKey: '0_0_0',
+        postKey: '0.0.0',
         length: 4,
-        opThreadPostKeys: ['root', '0', '0_0', '0_0_0'],
+        opThreadPostKeys: ['root', '0', '0.0', '0.0.0'],
       },
       {
         postKey: '1',
@@ -699,7 +699,7 @@ describe('appview thread views v2', () => {
         opThreadPostKeys: ['root'],
       },
       {
-        postKey: '1_0',
+        postKey: '1.0',
         length: 3,
         opThreadPostKeys: ['root'],
       },
@@ -709,12 +709,12 @@ describe('appview thread views v2', () => {
         opThreadPostKeys: ['root', '2'],
       },
       {
-        postKey: '2_0',
+        postKey: '2.0',
         length: 4,
         opThreadPostKeys: ['root', '2'],
       },
       {
-        postKey: '2_0_0',
+        postKey: '2.0.0',
         length: 4,
         opThreadPostKeys: ['root', '2'],
       },
@@ -770,17 +770,17 @@ describe('appview thread views v2', () => {
           postKeys: [
             'root',
             '2',
-            '2_2',
-            '2_1',
-            '2_0',
+            '2.2',
+            '2.1',
+            '2.0',
             '1',
-            '1_2',
-            '1_1',
-            '1_0',
+            '1.2',
+            '1.1',
+            '1.0',
             '0',
-            '0_2',
-            '0_1',
-            '0_0',
+            '0.2',
+            '0.1',
+            '0.0',
           ],
         },
         {
@@ -788,17 +788,17 @@ describe('appview thread views v2', () => {
           postKeys: [
             'root',
             '0',
-            '0_0',
-            '0_1',
-            '0_2',
+            '0.0',
+            '0.1',
+            '0.2',
             '1',
-            '1_0',
-            '1_1',
-            '1_2',
+            '1.0',
+            '1.1',
+            '1.2',
             '2',
-            '2_0',
-            '2_1',
-            '2_2',
+            '2.0',
+            '2.1',
+            '2.2',
           ],
         },
         {
@@ -806,17 +806,17 @@ describe('appview thread views v2', () => {
           postKeys: [
             'root',
             '1',
-            '1_1',
-            '1_0',
-            '1_2',
+            '1.1',
+            '1.0',
+            '1.2',
             '2',
-            '2_0',
-            '2_1',
-            '2_2',
+            '2.0',
+            '2.1',
+            '2.2',
             '0',
-            '0_2',
-            '0_1',
-            '0_0',
+            '0.2',
+            '0.1',
+            '0.0',
           ],
         },
       ]
@@ -919,35 +919,35 @@ describe('appview thread views v2', () => {
             postKeys: [
               'root',
               '3', // op
-              '3_2', // op
-              '3_0', // viewer
-              '3_4',
-              '3_3',
-              '3_1',
+              '3.2', // op
+              '3.0', // viewer
+              '3.4',
+              '3.3',
+              '3.1',
               '4', // viewer
-              '4_2', // op
-              '4_3', // viewer
-              '4_4',
-              '4_1',
-              '4_0',
+              '4.2', // op
+              '4.3', // viewer
+              '4.4',
+              '4.1',
+              '4.0',
               '2',
-              '2_2', // op
-              '2_0', // viewer
-              '2_4',
-              '2_3',
-              '2_1',
+              '2.2', // op
+              '2.0', // viewer
+              '2.4',
+              '2.3',
+              '2.1',
               '1',
-              '1_2', // op
-              '1_3', // viewer
-              '1_4',
-              '1_1',
-              '1_0',
+              '1.2', // op
+              '1.3', // viewer
+              '1.4',
+              '1.1',
+              '1.0',
               '0',
-              '0_4', // op
-              '0_3', // viewer
-              '0_2',
-              '0_1',
-              '0_0',
+              '0.4', // op
+              '0.3', // viewer
+              '0.2',
+              '0.1',
+              '0.0',
             ],
           },
           {
@@ -955,35 +955,35 @@ describe('appview thread views v2', () => {
             postKeys: [
               'root',
               '3', // op
-              '3_2', // op
-              '3_0', // viewer
-              '3_1',
-              '3_3',
-              '3_4',
+              '3.2', // op
+              '3.0', // viewer
+              '3.1',
+              '3.3',
+              '3.4',
               '4', // viewer
-              '4_2', // op
-              '4_3', // viewer
-              '4_0',
-              '4_1',
-              '4_4',
+              '4.2', // op
+              '4.3', // viewer
+              '4.0',
+              '4.1',
+              '4.4',
               '0',
-              '0_4', // op
-              '0_3', // viewer
-              '0_0',
-              '0_1',
-              '0_2',
+              '0.4', // op
+              '0.3', // viewer
+              '0.0',
+              '0.1',
+              '0.2',
               '1',
-              '1_2', // op
-              '1_3', // viewer
-              '1_0',
-              '1_1',
-              '1_4',
+              '1.2', // op
+              '1.3', // viewer
+              '1.0',
+              '1.1',
+              '1.4',
               '2',
-              '2_2', // op
-              '2_0', // viewer
-              '2_1',
-              '2_3',
-              '2_4',
+              '2.2', // op
+              '2.0', // viewer
+              '2.1',
+              '2.3',
+              '2.4',
             ],
           },
           {
@@ -991,35 +991,35 @@ describe('appview thread views v2', () => {
             postKeys: [
               'root',
               '3', // op
-              '3_2', // op
-              '3_0', // viewer
-              '3_4',
-              '3_3',
-              '3_1',
+              '3.2', // op
+              '3.0', // viewer
+              '3.4',
+              '3.3',
+              '3.1',
               '4', // viewer
-              '4_2', // op
-              '4_3', // viewer
-              '4_1',
-              '4_0',
-              '4_4',
+              '4.2', // op
+              '4.3', // viewer
+              '4.1',
+              '4.0',
+              '4.4',
               '1',
-              '1_2', // op
-              '1_3', // viewer
-              '1_1',
-              '1_0',
-              '1_4',
+              '1.2', // op
+              '1.3', // viewer
+              '1.1',
+              '1.0',
+              '1.4',
               '2',
-              '2_2', // op
-              '2_0', // viewer
-              '2_1',
-              '2_4',
-              '2_3',
+              '2.2', // op
+              '2.0', // viewer
+              '2.1',
+              '2.4',
+              '2.3',
               '0',
-              '0_4', // op
-              '0_3', // viewer
-              '0_2',
-              '0_1',
-              '0_0',
+              '0.4', // op
+              '0.3', // viewer
+              '0.2',
+              '0.1',
+              '0.0',
             ],
           },
         ]
@@ -1244,8 +1244,8 @@ describe('appview thread views v2', () => {
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
           expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['3_0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['3_0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3.0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3.0.0'].ref.uriStr }),
         ])
       })
 
@@ -1275,7 +1275,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked parent is replaced by blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { anchor: seed.r['0_0'].ref.uriStr },
+          { anchor: seed.r['0.0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `blocked`, who was blocked by `blocker`, author of '0'.
@@ -1295,7 +1295,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['0_0'].ref.uriStr,
+            uri: seed.r['0.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
@@ -1323,10 +1323,10 @@ describe('appview thread views v2', () => {
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
           expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0.0'].ref.uriStr }),
           expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['3_0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['3_0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3.0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3.0.0'].ref.uriStr }),
         ])
       })
 
@@ -1358,9 +1358,9 @@ describe('appview thread views v2', () => {
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
             }),
           }),
-          // 1_0 is blocked, but 1_1 is not
+          // 1.0 is blocked, but 1.1 is not
           expect.objectContaining({
-            uri: seed.r['1_1'].ref.uriStr,
+            uri: seed.r['1.1'].ref.uriStr,
             depth: 1,
             value: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
@@ -1371,7 +1371,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked parent is replaced by blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { anchor: seed.r['1_0'].ref.uriStr },
+          { anchor: seed.r['1.0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
@@ -1391,7 +1391,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['1_0'].ref.uriStr,
+            uri: seed.r['1.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
@@ -1402,7 +1402,7 @@ describe('appview thread views v2', () => {
 
       it(`blocked root is replaced by blocked view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { anchor: seed.r['1_1'].ref.uriStr },
+          { anchor: seed.r['1.1'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
@@ -1429,7 +1429,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['1_1'].ref.uriStr,
+            uri: seed.r['1.1'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
@@ -1456,16 +1456,16 @@ describe('appview thread views v2', () => {
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
           expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0.0'].ref.uriStr }),
           expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['3_0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['3_0_0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3.0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['3.0.0'].ref.uriStr }),
         ])
       })
 
       it(`deleted parent is replaced by not found view`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { anchor: seed.r['2_0'].ref.uriStr },
+          { anchor: seed.r['2.0'].ref.uriStr },
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
@@ -1484,7 +1484,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['2_0'].ref.uriStr,
+            uri: seed.r['2.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
@@ -1522,7 +1522,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['0_0'].ref.uriStr,
+            uri: seed.r['0.0'].ref.uriStr,
             depth: 2,
             value: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
@@ -1563,7 +1563,7 @@ describe('appview thread views v2', () => {
 
       it(`no-unauthenticated parent is replaced by no-unauthenticated view without breaking the parent chain`, async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          { anchor: seed.r['3_0_0'].ref.uriStr },
+          { anchor: seed.r['3.0.0'].ref.uriStr },
           {
             headers: {
               'atproto-accept-labelers': `${labelerDid}`,
@@ -1589,7 +1589,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['3_0'].ref.uriStr,
+            uri: seed.r['3.0'].ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
               $type:
@@ -1597,7 +1597,7 @@ describe('appview thread views v2', () => {
             }),
           }),
           expect.objectContaining({
-            uri: seed.r['3_0_0'].ref.uriStr,
+            uri: seed.r['3.0.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
               $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
@@ -1639,9 +1639,9 @@ describe('appview thread views v2', () => {
           uri: seed.r['1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
-        // 1_0 is a nested muted reply, so it is omitted.
+        // 1.0 is a nested muted reply, so it is omitted.
         expect.objectContaining({
-          uri: seed.r['1_1'].ref.uriStr,
+          uri: seed.r['1.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         // 0 is muted but is an anchor reply, so it is not omitted but bumped down.
@@ -1651,11 +1651,11 @@ describe('appview thread views v2', () => {
         }),
         // 0's replies are not omitted nor marked as muted.
         expect.objectContaining({
-          uri: seed.r['0_0'].ref.uriStr,
+          uri: seed.r['0.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['0_1'].ref.uriStr,
+          uri: seed.r['0.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
       ])
@@ -1685,10 +1685,10 @@ describe('appview thread views v2', () => {
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['0_0'].ref.uriStr,
+          uri: seed.r['0.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
-        // 0_1 is a nested muted reply, so it is omitted.
+        // 0.1 is a nested muted reply, so it is omitted.
 
         // 1 is muted but is an anchor reply, so it is not omitted but bumped down.
         expect.objectContaining({
@@ -1697,11 +1697,11 @@ describe('appview thread views v2', () => {
         }),
         // 1's replies are not omitted nor marked as muted.
         expect.objectContaining({
-          uri: seed.r['1_0'].ref.uriStr,
+          uri: seed.r['1.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_1'].ref.uriStr,
+          uri: seed.r['1.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
       ])
@@ -1757,14 +1757,14 @@ describe('appview thread views v2', () => {
         }),
         // OP reply bumped up.
         expect.objectContaining({
-          uri: seed.r['2_2'].ref.uriStr,
+          uri: seed.r['2.2'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['2_0'].ref.uriStr,
+          uri: seed.r['2.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
-        // 2_1 is a nested hidden reply, so it is omitted.
+        // 2.1 is a nested hidden reply, so it is omitted.
 
         // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
         expect.objectContaining({
@@ -1774,15 +1774,15 @@ describe('appview thread views v2', () => {
         // 1's replies are not omitted nor marked as hidden.
         // OP reply bumped up.
         expect.objectContaining({
-          uri: seed.r['1_2'].ref.uriStr,
+          uri: seed.r['1.2'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_0'].ref.uriStr,
+          uri: seed.r['1.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_1'].ref.uriStr,
+          uri: seed.r['1.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
 
@@ -1821,15 +1821,15 @@ describe('appview thread views v2', () => {
         }),
         // OP reply bumped up.
         expect.objectContaining({
-          uri: seed.r['1_2'].ref.uriStr,
+          uri: seed.r['1.2'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_0'].ref.uriStr,
+          uri: seed.r['1.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_1'].ref.uriStr,
+          uri: seed.r['1.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
 
@@ -1845,14 +1845,14 @@ describe('appview thread views v2', () => {
         }),
         // OP reply bumped up.
         expect.objectContaining({
-          uri: seed.r['2_2'].ref.uriStr,
+          uri: seed.r['2.2'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['2_0'].ref.uriStr,
+          uri: seed.r['2.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
-        // 2_1 is a nested hidden reply, so it is omitted.
+        // 2.1 is a nested hidden reply, so it is omitted.
       ])
     })
 
@@ -1887,14 +1887,14 @@ describe('appview thread views v2', () => {
         }),
         // OP reply bumped up.
         expect.objectContaining({
-          uri: seed.r['2_2'].ref.uriStr,
+          uri: seed.r['2.2'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['2_0'].ref.uriStr,
+          uri: seed.r['2.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
-        // 2_1 is a nested hidden reply, so it is omitted.
+        // 2.1 is a nested hidden reply, so it is omitted.
 
         // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
         expect.objectContaining({
@@ -1904,15 +1904,15 @@ describe('appview thread views v2', () => {
         // 1's replies are not omitted nor marked as hidden.
         // OP reply bumped up.
         expect.objectContaining({
-          uri: seed.r['1_2'].ref.uriStr,
+          uri: seed.r['1.2'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_0'].ref.uriStr,
+          uri: seed.r['1.0'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
         expect.objectContaining({
-          uri: seed.r['1_1'].ref.uriStr,
+          uri: seed.r['1.1'].ref.uriStr,
           value: expect.objectContaining(props()),
         }),
       ])
