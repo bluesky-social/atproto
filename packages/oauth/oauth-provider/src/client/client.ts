@@ -192,7 +192,7 @@ export class Client {
           jkt: await authJwkThumbprint(result.key),
           alg: result.protectedHeader.alg,
           kid: result.protectedHeader.kid,
-          cnf,
+          cnf: cnf as { jkt: string } | undefined,
         }
 
         return { clientAuth, nonce: jti }
