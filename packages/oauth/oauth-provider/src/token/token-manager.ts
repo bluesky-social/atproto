@@ -18,8 +18,6 @@ import { Client } from '../client/client.js'
 import {
   CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
   CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-  FIRST_PARTY_CLIENT_REFRESH_LIFETIME,
-  FIRST_PARTY_CLIENT_SESSION_LIFETIME,
   PUBLIC_CLIENT_REFRESH_LIFETIME,
   PUBLIC_CLIENT_SESSION_LIFETIME,
   TOKEN_MAX_AGE,
@@ -316,17 +314,9 @@ export class TokenManager {
     }
   }
 
-  public async validateRefresh(
-    client: Client,
-    clientAuth: ClientAuth,
-    { data }: TokenInfo,
-  ): Promise<void> {
-    const [sessionLifetime, refreshLifetime] = client.info.isFirstParty
-      ? [
-          FIRST_PARTY_CLIENT_SESSION_LIFETIME,
-          FIRST_PARTY_CLIENT_REFRESH_LIFETIME,
-        ]
-      : clientAuth.method !== 'none'
+  public async validateRefresh({ data }: TokenInfo): Promise<void> {
+    const [sessionLifetime, refreshLifetime] =
+      data.clientAuth.method !== 'none'
         ? [
             CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
             CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
@@ -373,7 +363,7 @@ export class TokenManager {
 
     try {
       await this.validateAccess(client, clientAuth, tokenInfo)
-      await this.validateRefresh(client, clientAuth, tokenInfo)
+      await this.validateRefresh(tokenInfo)
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {
         // In case the client metadata was updated after the token was issued
