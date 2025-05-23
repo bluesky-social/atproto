@@ -20,6 +20,8 @@ export interface QueryParams {
   did: string
   /** The revision ('rev') of the repo to create a diff from. */
   since?: string
+  /** The collection prefix of records to be included in a partial 'slice' of a repository. Prefixes are intended to be structured and full NSID parts and are not intended for arbitrary string matching. Currently cannot be used in conjunction with 'since' and if passed together then 'since' will be ignored. */
+  prefix?: string
 }
 
 export type InputSchema = undefined
