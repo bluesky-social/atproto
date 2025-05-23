@@ -20,7 +20,8 @@
             "app.bsky.embed.video#view",
             "app.bsky.embed.external#view",
             "app.bsky.embed.record#view",
-            "app.bsky.embed.recordWithMedia#view"
+            "app.bsky.embed.recordWithMedia#view",
+            "app.bsky.embed.code#view"
           ]
         },
         "replyCount": { "type": "integer" },
