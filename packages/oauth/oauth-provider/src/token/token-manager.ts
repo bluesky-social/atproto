@@ -338,11 +338,13 @@ export class TokenManager {
           ]
         : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
 
-    if (data.createdAt.getTime() + sessionLifetime < Date.now()) {
+    const sessionAge = Date.now() - data.createdAt.getTime()
+    if (sessionAge > sessionLifetime) {
       throw new InvalidGrantError(`Session expired`)
     }
 
-    if (data.updatedAt.getTime() + refreshLifetime < Date.now()) {
+    const refreshAge = Date.now() - data.updatedAt.getTime()
+    if (refreshAge > refreshLifetime) {
       throw new InvalidGrantError(`Refresh token expired`)
     }
   }

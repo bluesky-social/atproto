@@ -41,8 +41,8 @@ export const AUTHORIZATION_INACTIVITY_TIMEOUT = 5 * MINUTE
 /** 1 week */
 export const PUBLIC_CLIENT_SESSION_LIFETIME = 1 * WEEK
 
-/** 2 days */
-export const PUBLIC_CLIENT_REFRESH_LIFETIME = 2 * DAY
+/** no limit (constrained by {@link PUBLIC_CLIENT_SESSION_LIFETIME}) */
+export const PUBLIC_CLIENT_REFRESH_LIFETIME = Infinity
 
 /** 2 years */
 export const CONFIDENTIAL_CLIENT_SESSION_LIFETIME = 2 * YEAR
