@@ -15,6 +15,10 @@ import { OzoneConfig, OzoneSecrets } from './config'
 import { EventPusher } from './daemon'
 import { BlobDiverter } from './daemon/blob-diverter'
 import { Database } from './db'
+import {
+  ModerationStatusHistory,
+  ModerationStatusHistoryCreator,
+} from './history/status'
 import { ImageInvalidator } from './image-invalidator'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
 import { Sequencer } from './sequencer/sequencer'
@@ -41,6 +45,7 @@ export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
+  modStatusHistoryService: ModerationStatusHistoryCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
@@ -117,6 +122,13 @@ export class AppContext {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
+
+    // As we introduce more automated services, we will need to carefully add their dids here only
+    // when we want end users to see their actions as automated mod actions
+    const modStatusHistoryService = ModerationStatusHistory.creator([
+      cfg.service.did,
+    ])
+
     const modService = ModerationService.creator(
       signingKey,
       signingKeyId,
@@ -127,6 +139,7 @@ export class AppContext {
       appviewAgent,
       createAuthHeaders,
       overrides?.imgInvalidator,
+      modStatusHistoryService,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
@@ -153,6 +166,7 @@ export class AppContext {
         db,
         cfg,
         modService,
+        modStatusHistoryService,
         communicationTemplateService,
         teamService,
         setService,
@@ -202,6 +216,10 @@ export class AppContext {
 
   get communicationTemplateService(): CommunicationTemplateServiceCreator {
     return this.opts.communicationTemplateService
+  }
+
+  get modStatusHistoryService(): ModerationStatusHistoryCreator {
+    return this.opts.modStatusHistoryService
   }
 
   get teamService(): TeamServiceCreator {
