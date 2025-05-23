@@ -6259,7 +6259,7 @@ export const schemaDict = {
       },
       reasonRepost: {
         type: 'object',
-        required: ['by', 'uri', 'cid', 'indexedAt'],
+        required: ['by', 'indexedAt'],
         properties: {
           by: {
             type: 'ref',
