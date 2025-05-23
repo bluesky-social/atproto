@@ -16,11 +16,13 @@ import { AccessTokenMode } from '../access-token/access-token-mode.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import {
-  AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
-  AUTHENTICATED_REFRESH_LIFETIME,
+  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
+  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
+  FIRST_PARTY_CLIENT_REFRESH_LIFETIME,
+  FIRST_PARTY_CLIENT_SESSION_LIFETIME,
+  PUBLIC_CLIENT_REFRESH_LIFETIME,
+  PUBLIC_CLIENT_SESSION_LIFETIME,
   TOKEN_MAX_AGE,
-  UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
-  UNAUTHENTICATED_REFRESH_LIFETIME,
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
@@ -322,23 +324,26 @@ export class TokenManager {
     // @TODO This value should be computable even if we don't have the "client"
     // (because fetching client info could be flaky). Instead, all the info
     // needed should be stored in the token info.
-    const allowLongerLifespan =
-      client.info.isFirstParty || data.clientAuth.method !== 'none'
+    const { isFirstParty } = client.info
 
-    const lifetime = allowLongerLifespan
-      ? AUTHENTICATED_REFRESH_LIFETIME
-      : UNAUTHENTICATED_REFRESH_LIFETIME
+    const [sessionLifetime, refreshLifetime] = isFirstParty
+      ? [
+          FIRST_PARTY_CLIENT_SESSION_LIFETIME,
+          FIRST_PARTY_CLIENT_REFRESH_LIFETIME,
+        ]
+      : data.clientAuth.method !== 'none'
+        ? [
+            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
+            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
+          ]
+        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
 
-    if (data.createdAt.getTime() + lifetime < Date.now()) {
-      throw new InvalidGrantError(`Refresh token expired`)
+    if (data.createdAt.getTime() + sessionLifetime < Date.now()) {
+      throw new InvalidGrantError(`Session expired`)
     }
 
-    const inactivityTimeout = allowLongerLifespan
-      ? AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-      : UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-
-    if (data.updatedAt.getTime() + inactivityTimeout < Date.now()) {
-      throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
+    if (data.updatedAt.getTime() + refreshLifetime < Date.now()) {
+      throw new InvalidGrantError(`Refresh token expired`)
     }
   }
 
