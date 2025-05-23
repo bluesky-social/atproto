@@ -168,8 +168,14 @@ export function createOAuthMiddleware<
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidRequest)
 
+      const dpopJkt = await server.checkDpopProof(
+        req.headers['dpop'],
+        req.method!,
+        this.url,
+      )
+
       try {
-        await server.revoke(credentials, tokenIdentification)
+        await server.revoke(credentials, tokenIdentification, dpopJkt)
       } catch (err) {
         // > Note: invalid tokens do not cause an error response since the
         // > client cannot handle such an error in a reasonable way.  Moreover,

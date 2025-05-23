@@ -360,10 +360,12 @@ export class OAuthProvider extends OAuthVerifier {
 
   protected async authenticateClient(
     credentials: OAuthClientCredentials,
+    dpopJkt: null | string,
   ): Promise<[Client, ClientAuth]> {
     const client = await this.clientManager.getClient(credentials.client_id)
     const { clientAuth, nonce } = await client.verifyCredentials(credentials, {
       audience: this.issuer,
+      cnf: dpopJkt ? { jkt: dpopJkt } : null,
     })
 
     if (
@@ -461,7 +463,10 @@ export class OAuthProvider extends OAuthVerifier {
     dpopJkt: null | string,
   ): Promise<OAuthParResponse> {
     try {
-      const [client, clientAuth] = await this.authenticateClient(credentials)
+      const [client, clientAuth] = await this.authenticateClient(
+        credentials,
+        dpopJkt,
+      )
 
       const { payload: parameters } =
         'request' in authorizationRequest // Handle JAR
@@ -719,8 +724,10 @@ export class OAuthProvider extends OAuthVerifier {
     request: OAuthTokenRequest,
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
-    const [client, clientAuth] =
-      await this.authenticateClient(clientCredentials)
+    const [client, clientAuth] = await this.authenticateClient(
+      clientCredentials,
+      dpopJkt,
+    )
 
     if (!this.metadata.grant_types_supported?.includes(request.grant_type)) {
       throw new InvalidGrantError(
@@ -852,10 +859,14 @@ export class OAuthProvider extends OAuthVerifier {
   public async revoke(
     credentials: OAuthClientCredentials,
     { token }: OAuthTokenIdentification,
+    dpopJkt: null | string,
   ) {
     // > The authorization server first validates the client credentials (in
     // > case of a confidential client)
-    const [client, clientAuth] = await this.authenticateClient(credentials)
+    const [client, clientAuth] = await this.authenticateClient(
+      credentials,
+      dpopJkt,
+    )
 
     const tokenInfo = await this.tokenManager.findToken(token)
 
