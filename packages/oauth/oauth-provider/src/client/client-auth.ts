@@ -11,6 +11,7 @@ export type ClientAuth =
       alg: string
       kid: string
       jkt: string
+      cnf?: { jkt?: string }
     }
 
 export function compareClientAuth(a: ClientAuth, b: ClientAuth): boolean {
