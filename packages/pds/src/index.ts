@@ -13,6 +13,7 @@ import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import {
   Options as XrpcServerOptions,
+  RateLimiter,
   ResponseType,
   XRPCError,
 } from '@atproto/xrpc-server'
@@ -61,6 +62,8 @@ export class PDS {
   ): Promise<PDS> {
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
+    const { rateLimits } = ctx.cfg
+
     const xrpcOpts: XrpcServerOptions = {
       validateResponse: false,
       payload: {
@@ -91,9 +94,25 @@ export class PDS {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: ctx.ratelimitCreator
+      rateLimits: rateLimits.enabled
         ? {
-            creator: ctx.ratelimitCreator,
+            creator:
+              rateLimits.mode === 'redis'
+                ? (opts) => RateLimiter.redis(ctx.redisScratch!, opts)
+                : (opts) => RateLimiter.memory(opts),
+            bypass: ({ req }) => {
+              const { bypassKey, bypassIps } = rateLimits
+              if (
+                bypassKey &&
+                bypassKey === req.headers['x-ratelimit-bypass']
+              ) {
+                return true
+              }
+              if (bypassIps && bypassIps.includes(req.ip)) {
+                return true
+              }
+              return false
+            },
             global: [
               {
                 name: 'global-ip',
