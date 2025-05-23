@@ -96,16 +96,16 @@ export class OAuthVerifier {
 
   public async checkDpopProof(
     proof: unknown,
-    htm: string,
-    htu: string | URL,
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
     accessToken?: string,
   ): Promise<string | null> {
     if (proof === undefined) return null
 
     const { payload, jkt } = await this.dpopManager.checkProof(
       proof,
-      htm,
-      htu,
+      httpMethod,
+      httpUrl,
       accessToken,
     )
 
@@ -142,8 +142,8 @@ export class OAuthVerifier {
   }
 
   public async authenticateRequest(
-    method: string,
-    url: URL,
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
     headers: {
       authorization?: string
       dpop?: unknown
@@ -154,8 +154,8 @@ export class OAuthVerifier {
     try {
       const dpopJkt = await this.checkDpopProof(
         headers.dpop,
-        method,
-        url,
+        httpMethod,
+        httpUrl,
         token,
       )
 

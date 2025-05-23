@@ -48,9 +48,9 @@ export class DpopManager {
    */
   async checkProof(
     proof: unknown,
-    htm: string, // HTTP Method
-    htu: string | URL, // HTTP URL
-    accessToken?: string, // Access Token
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    accessToken?: string,
   ) {
     if (Array.isArray(proof) && proof.length === 1) {
       proof = proof[0]
@@ -63,11 +63,14 @@ export class DpopManager {
     const { protectedHeader, payload } = await jwtVerify<{
       iat: number
       jti: string
+      ath: unknown
+      htm: unknown
+      htu: unknown
     }>(proof, EmbeddedJWK, {
       typ: 'dpop+jwt',
       maxTokenAge: 10,
       clockTolerance: DPOP_NONCE_MAX_AGE / 1e3,
-      requiredClaims: ['iat', 'jti'],
+      requiredClaims: ['iat', 'jti', 'ath', 'htm', 'htu'],
     }).catch((err) => {
       const message =
         err instanceof JOSEError
@@ -77,45 +80,43 @@ export class DpopManager {
     })
 
     if (!payload.jti || typeof payload.jti !== 'string') {
-      throw new InvalidDpopProofError('Invalid or missing jti property')
+      throw new InvalidDpopProofError('Invalid or missing "jti" property')
     }
 
     // Note rfc9110#section-9.1 states that the method name is case-sensitive
-    if (!htm || htm !== payload['htm']) {
-      throw new InvalidDpopProofError('DPoP htm mismatch')
+    if (!httpMethod || httpMethod !== payload.htm) {
+      throw new InvalidDpopProofError('DPoP "htm" mismatch')
     }
 
-    if (
-      payload['nonce'] !== undefined &&
-      typeof payload['nonce'] !== 'string'
-    ) {
-      throw new InvalidDpopProofError('DPoP nonce must be a string')
+    if (payload.nonce !== undefined && typeof payload.nonce !== 'string') {
+      throw new InvalidDpopProofError('DPoP "nonce" must be a string')
     }
 
-    if (!payload['nonce'] && this.dpopNonce) {
+    if (!payload.nonce && this.dpopNonce) {
       throw new UseDpopNonceError()
     }
 
-    if (payload['nonce'] && !this.dpopNonce?.check(payload['nonce'])) {
-      throw new UseDpopNonceError('DPoP nonce mismatch')
+    if (payload.nonce && !this.dpopNonce?.check(payload.nonce)) {
+      throw new UseDpopNonceError('DPoP "nonce" mismatch')
     }
 
-    const htuNorm = normalizeHtu(htu)
-    if (!htuNorm) {
-      throw new TypeError('Invalid "htu" argument')
-    }
-
-    if (htuNorm !== normalizeHtu(payload['htu'])) {
-      throw new InvalidDpopProofError('DPoP htu mismatch')
+    // > To reduce the likelihood of false negatives, servers SHOULD employ
+    // > syntax-based normalization (Section 6.2.2 of [RFC3986]) and
+    // > scheme-based normalization (Section 6.2.3 of [RFC3986]) before
+    // > comparing the htu claim.
+    //
+    // @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-4.3 | RFC9449 section 4.3. Checking DPoP Proofs}
+    if (buildHtu(httpUrl) !== normalizeHtu(payload.htu)) {
+      throw new InvalidDpopProofError('DPoP "htu" mismatch')
     }
 
     if (accessToken) {
       const athBuffer = createHash('sha256').update(accessToken).digest()
-      if (payload['ath'] !== athBuffer.toString('base64url')) {
-        throw new InvalidDpopProofError('DPoP ath mismatch')
+      if (payload.ath !== athBuffer.toString('base64url')) {
+        throw new InvalidDpopProofError('DPoP "ath" mismatch')
       }
-    } else if (payload['ath']) {
-      throw new InvalidDpopProofError('DPoP ath not allowed')
+    } else if (payload.ath) {
+      throw new InvalidDpopProofError('DPoP "ath" claim not allowed')
     }
 
     try {
@@ -133,24 +134,35 @@ export class DpopManager {
 }
 
 /**
- * @note
- * > The htu claim matches the HTTP URI value for the HTTP request in which the
- * > JWT was received, ignoring any query and fragment parts.
+ * Constructs the HTTP URI (htu) claim as defined in RFC9449.
  *
- * > To reduce the likelihood of false negatives, servers SHOULD employ
- * > syntax-based normalization (Section 6.2.2 of [RFC3986]) and scheme-based
- * > normalization (Section 6.2.3 of [RFC3986]) before comparing the htu claim.
- * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-4.3 | RFC9449 section 4.3. Checking DPoP Proofs}
+ * The htu claim is the normalized URL of the HTTP request, excluding the query
+ * string and fragment. This function ensures that the URL is normalized by
+ * removing the search and hash components, as well as by using an URL object to
+ * simplify the pathname (e.g. removing dot segments).
+ *
+ * @param inputUrl - The URL of the HTTP request.
+ * @returns The normalized URL as a string.
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-4.3}
  */
-function normalizeHtu(htu: unknown): string | null {
-  // Optimization
-  if (!htu) return null
+function buildHtu(inputUrl: Readonly<URL>): string {
+  // Optimization: no need to clone the URL if it doesn't have a query or fragment
+  if (!inputUrl.search && !inputUrl.hash) return inputUrl.href
 
+  const url = new URL(inputUrl)
+  url.hash = ''
+  url.search = ''
+  return url.href
+}
+
+function normalizeHtu(htu: unknown): string | undefined {
+  return asNormalizedUrl(htu)?.href
+}
+
+function asNormalizedUrl(value: unknown): URL | null {
+  if (!value) return null
   try {
-    const url = new URL(String(htu))
-    url.hash = ''
-    url.search = ''
-    return url.href
+    return new URL(String(value))
   } catch {
     return null
   }
