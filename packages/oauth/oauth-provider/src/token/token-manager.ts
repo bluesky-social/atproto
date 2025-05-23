@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto'
 import { SignedJwt, isSignedJwt } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
   OAuthAuthorizationCodeGrantTokenRequest,
   OAuthAuthorizationRequestParameters,
@@ -13,6 +12,7 @@ import {
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { AccessTokenMode } from '../access-token/access-token-mode.js'
+import { clientAuthCheck } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import {
@@ -122,7 +122,7 @@ export class TokenManager {
       throw new InvalidDpopKeyBindingError()
     }
 
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
+    if ('jkt' in clientAuth) {
       // Clients **must not** use their private key to sign DPoP proofs.
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
         throw new InvalidRequestError(
@@ -296,24 +296,6 @@ export class TokenManager {
     }
   }
 
-  public async validateAccess(
-    client: Client,
-    clientAuth: ClientAuth,
-    tokenInfo: TokenInfo,
-  ) {
-    if (tokenInfo.data.clientId !== client.id) {
-      throw new InvalidGrantError(`Token was not issued to this client`)
-    }
-
-    if (tokenInfo.data.clientAuth.method !== clientAuth.method) {
-      throw new InvalidGrantError(`Client authentication method mismatch`)
-    }
-
-    if (!(await client.validateClientAuth(tokenInfo.data.clientAuth))) {
-      throw new InvalidGrantError(`Client authentication mismatch`)
-    }
-  }
-
   public async validateRefresh(
     client: Client,
     clientAuth: ClientAuth,
@@ -370,7 +352,7 @@ export class TokenManager {
     const { parameters } = data
 
     try {
-      await this.validateAccess(client, clientAuth, tokenInfo)
+      clientAuthCheck(client, clientAuth, tokenInfo.data)
       await this.validateRefresh(client, clientAuth, tokenInfo)
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {
