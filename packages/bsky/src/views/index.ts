@@ -868,7 +868,7 @@ export class Views {
       const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
       if (repost.record.subject.uri !== item.post.uri) return
-      reason = this.reasonRepost(creatorFromUri(item.repost.uri), repost, state)
+      reason = this.reasonRepost(item.repost.uri, repost, state)
       if (!reason) return
     }
     const post = this.post(item.post.uri, state)
@@ -958,15 +958,18 @@ export class Views {
   }
 
   reasonRepost(
-    creatorDid: string,
+    uri: string,
     repost: Repost,
     state: HydrationState,
   ): $Typed<ReasonRepost> | undefined {
+    const creatorDid = creatorFromUri(uri)
     const creator = this.profileBasic(creatorDid, state)
     if (!creator) return
     return {
       $type: 'app.bsky.feed.defs#reasonRepost',
       by: creator,
+      uri,
+      cid: repost.cid,
       indexedAt: this.indexedAt(repost).toISOString(),
     }
   }

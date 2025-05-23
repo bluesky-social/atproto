@@ -142,6 +142,8 @@ export function validateReplyRef<V>(v: V) {
 export interface ReasonRepost {
   $type?: 'app.bsky.feed.defs#reasonRepost'
   by: AppBskyActorDefs.ProfileViewBasic
+  uri?: string
+  cid?: string
   indexedAt: string
 }
 
