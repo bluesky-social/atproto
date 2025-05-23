@@ -101,7 +101,7 @@ export function validateThreadItem<V>(v: V) {
 export interface ThreadItemPost {
   $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemPost'
   post: AppBskyFeedDefs.PostView
-  hasMoreReplies: boolean
+  moreReplies: number
   hiddenByThreadgate: boolean
   mutedByViewer: boolean
   opThread: boolean

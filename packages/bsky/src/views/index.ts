@@ -1516,10 +1516,10 @@ export class Views {
   ): ThreadItemValuePost {
     const authorDid = creatorFromUri(uri)
 
-    const hasMoreReplies =
+    const moreReplies =
       repliesAllowance === undefined
-        ? false
-        : (postView.replyCount ?? 0) > repliesAllowance
+        ? 0
+        : Math.max((postView.replyCount ?? 0) - repliesAllowance, 0)
 
     const hiddenByThreadgate =
       viewer !== authorDid &&
@@ -1535,8 +1535,8 @@ export class Views {
           $type: 'app.bsky.feed.defs#postView',
           ...postView,
         },
-        hasMoreReplies,
         hiddenByThreadgate,
+        moreReplies,
         mutedByViewer,
         opThread: isOPThread,
       },

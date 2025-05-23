@@ -105,15 +105,15 @@
       "type": "object",
       "required": [
         "post",
-        "hasMoreReplies",
+        "moreReplies",
         "hiddenByThreadgate",
         "mutedByViewer",
         "opThread"
       ],
       "properties": {
         "post": { "type": "ref", "ref": "app.bsky.feed.defs#postView" },
-        "hasMoreReplies": {
-          "type": "boolean"
+        "moreReplies": {
+          "type": "integer"
         },
         "hiddenByThreadgate": {
           "type": "boolean"

@@ -348,6 +348,14 @@ export async function annotateMoreReplies(
             await r(alice, async (r) => {
               await r(alice)
             })
+            await r(alice)
+            await r(alice, async (r) => {
+              await r(alice, async (r) => {
+                await r(alice)
+              })
+            })
+            await r(alice)
+            await r(alice)
           })
         })
       })
@@ -362,6 +370,8 @@ export async function annotateMoreReplies(
         await r(alice)
         await r(alice)
         // more replies... (branchingFactor = 2)
+        await r(alice)
+        await r(alice)
         await r(alice)
       })
       await r(alice, async (r) => {

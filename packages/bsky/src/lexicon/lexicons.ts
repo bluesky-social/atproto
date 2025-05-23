@@ -10400,7 +10400,7 @@ export const schemaDict = {
         type: 'object',
         required: [
           'post',
-          'hasMoreReplies',
+          'moreReplies',
           'hiddenByThreadgate',
           'mutedByViewer',
           'opThread',
@@ -10410,8 +10410,8 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#postView',
           },
-          hasMoreReplies: {
-            type: 'boolean',
+          moreReplies: {
+            type: 'integer',
           },
           hiddenByThreadgate: {
             type: 'boolean',
