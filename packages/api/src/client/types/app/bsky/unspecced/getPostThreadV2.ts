@@ -94,9 +94,15 @@ export function validateThreadItem<V>(v: V) {
 export interface ThreadItemPost {
   $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemPost'
   post: AppBskyFeedDefs.PostView
-  moreReplies: number
+  /** The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread. */
   hiddenByThreadgate: boolean
+  /** This post has more parents that were not present in the response. This is just a boolean, without the number of parents. */
+  moreParents: boolean
+  /** This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate. */
+  moreReplies: number
+  /** This is by an account muted by the viewer requesting it. */
   mutedByViewer: boolean
+  /** This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread. */
   opThread: boolean
 }
 

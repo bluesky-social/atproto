@@ -54,8 +54,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   try {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
-      // We don't allow customizing the height above the anchor, and set it to a reasonable default.
-      above: params.above ? 50 : 0,
+      above: calculateAbove(ctx, params),
       below: calculateBelow(ctx, anchor, params),
     })
     return {
@@ -89,7 +88,7 @@ const presentation = (
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
   const { anchor, thread } = ctx.views.threadV2(skeleton, hydration, {
-    above: params.above,
+    above: calculateAbove(ctx, params),
     below: calculateBelow(ctx, skeleton.anchor, params),
     branchingFactor: params.branchingFactor,
     prioritizeFollowedUsers: params.prioritizeFollowedUsers,
@@ -126,6 +125,10 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
+}
+
+const calculateAbove = (ctx: Context, params: Params) => {
+  return params.above ? ctx.cfg.maxThreadParents : 0
 }
 
 const calculateBelow = (ctx: Context, anchor: string, params: Params) => {

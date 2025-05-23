@@ -10394,8 +10394,9 @@ export const schemaDict = {
         type: 'object',
         required: [
           'post',
-          'moreReplies',
           'hiddenByThreadgate',
+          'moreParents',
+          'moreReplies',
           'mutedByViewer',
           'opThread',
         ],
@@ -10404,17 +10405,30 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#postView',
           },
-          moreReplies: {
-            type: 'integer',
-          },
           hiddenByThreadgate: {
             type: 'boolean',
+            description:
+              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
+          },
+          moreParents: {
+            type: 'boolean',
+            description:
+              'This post has more parents that were not present in the response. This is just a boolean, without the number of parents.',
+          },
+          moreReplies: {
+            type: 'integer',
+            description:
+              'This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate.',
           },
           mutedByViewer: {
             type: 'boolean',
+            description:
+              'This is by an account muted by the viewer requesting it.',
           },
           opThread: {
             type: 'boolean',
+            description:
+              'This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread.',
           },
         },
       },

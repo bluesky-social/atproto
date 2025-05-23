@@ -1144,7 +1144,7 @@ export class Views {
       sort,
       viewer,
     }: {
-      above: boolean
+      above: number
       below: number
       branchingFactor: number
       prioritizeFollowedUsers: boolean
@@ -1202,17 +1202,17 @@ export class Views {
     const anchorViolatesThreadGate = post.violatesThreadGate
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
-    const parentTree =
-      !anchorViolatesThreadGate && above
-        ? this.threadV2Parent({
-            childUri: anchorUri,
-            viewer,
-            opDid,
-            rootUri,
-            state,
-            depth: -1,
-          })
-        : undefined
+    const parentTree = !anchorViolatesThreadGate
+      ? this.threadV2Parent({
+          childUri: anchorUri,
+          viewer,
+          opDid,
+          rootUri,
+          state,
+          above,
+          depth: -1,
+        })
+      : undefined
 
     const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
       parentTree ?? { tree: undefined, isOPThread: false }
@@ -1284,6 +1284,7 @@ export class Views {
     opDid,
     rootUri,
     state,
+    above,
     depth,
   }: {
     childUri: string
@@ -1291,8 +1292,14 @@ export class Views {
     opDid: string
     rootUri: string
     state: HydrationState
+    above: number
     depth: number
   }): { tree: ThreadTree; isOPThread: boolean } | undefined {
+    // Reached the `above` limit.
+    if (Math.abs(depth) > above) {
+      return undefined
+    }
+
     // Not found.
     const uri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!uri) {
@@ -1339,6 +1346,7 @@ export class Views {
       opDid,
       rootUri,
       state,
+      above,
       depth: depth - 1,
     })
     const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
@@ -1363,12 +1371,16 @@ export class Views {
       }
     }
 
+    const parentUri = post.record.reply?.parent.uri
+    const hasMoreParents = !!parentUri && !parent
+
     return {
       tree: {
         item: this.threadV2ItemPost(
           {
             depth,
             isOPThread,
+            moreParents: hasMoreParents,
             postView,
             rootUri,
             uri,
@@ -1499,6 +1511,7 @@ export class Views {
     {
       depth,
       isOPThread,
+      moreParents,
       postView,
       repliesAllowance,
       rootUri,
@@ -1507,6 +1520,7 @@ export class Views {
     }: {
       depth: number
       isOPThread: boolean
+      moreParents?: boolean
       postView: PostView
       repliesAllowance?: number
       rootUri: string
@@ -1537,6 +1551,7 @@ export class Views {
           ...postView,
         },
         hiddenByThreadgate,
+        moreParents: moreParents ?? false,
         moreReplies,
         mutedByViewer,
         opThread: isOPThread,

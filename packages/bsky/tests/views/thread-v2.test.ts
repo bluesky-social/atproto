@@ -32,6 +32,9 @@ describe('appview thread views v2', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
+      bsky: {
+        maxThreadParents: 15,
+      },
       dbPostgresSchema: 'bsky_views_thread_v_two',
     })
     agent = network.bsky.getClient()
@@ -304,12 +307,21 @@ describe('appview thread views v2', () => {
         const { thread: t } = data
 
         assertPosts(t)
-        expect(t).toHaveLength(19)
+        expect(t).toHaveLength(16) // anchor + 15 ancestors, as limited by `maxThreadParents`.
+
+        const first = t.at(0)
+        expect(first!.uri).toBe(seed.r['0.0.0'].ref.uriStr)
+        expect(first!.value.moreParents).toBe(true)
+
+        const second = t.at(1)
+        expect(second!.uri).toBe(seed.r['0.0.0.0'].ref.uriStr)
+        expect(second!.value.moreParents).toBe(false)
 
         const last = t.at(-1)
         expect(last!.uri).toBe(
           seed.r['0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0'].ref.uriStr,
         )
+        expect(last!.value.moreParents).toBe(false)
       })
 
       it(`does not return ancestors if false`, async () => {
