@@ -1451,6 +1451,25 @@ export class ModerationService {
     // Convert map values to an array and return
     return Array.from(statsMap.values())
   }
+
+  async getAccountTimeline(did: string) {
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .where('subjectDid', '=', did)
+      .select([
+        sql<string>`TO_CHAR(CAST(${sql.ref('createdAt')} AS TIMESTAMP), 'YYYY-MM-DD')`.as(
+          'day',
+        ),
+        'subjectDid',
+        'subjectUri',
+        'action',
+        sql<number>`count(*)`.as('count'),
+      ])
+      .groupBy(['day', 'subjectDid', 'subjectUri', 'action'])
+      .orderBy('day', 'desc')
+      .execute()
+    return result
+  }
 }
 
 const parseTags = (tags?: string[]) =>
