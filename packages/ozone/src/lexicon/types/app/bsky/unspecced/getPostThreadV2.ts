@@ -38,6 +38,8 @@ export interface OutputSchema {
   /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
   thread: ThreadItem[]
   threadgate?: AppBskyFeedDefs.ThreadgateView
+  /** Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them. */
+  hasHiddenReplies: boolean
 }
 
 export type HandlerInput = undefined
@@ -92,14 +94,10 @@ export function validateThreadItem<V>(v: V) {
 export interface ThreadItemPost {
   $type?: 'app.bsky.unspecced.getPostThreadV2#threadItemPost'
   post: AppBskyFeedDefs.PostView
-  /** The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread. */
-  hiddenByThreadgate: boolean
   /** This post has more parents that were not present in the response. This is just a boolean, without the number of parents. */
   moreParents: boolean
   /** This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate. */
   moreReplies: number
-  /** This is by an account muted by the viewer requesting it. */
-  mutedByViewer: boolean
   /** This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread. */
   opThread: boolean
 }

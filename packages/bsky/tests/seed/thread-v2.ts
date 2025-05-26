@@ -630,36 +630,6 @@ export async function bumpFollows(
   }
 }
 
-export async function bumpMutes(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
-  const users = await createUsers(sc, 'bumpM', [
-    'op',
-    'opMuted',
-    'alice',
-  ] as const)
-  const { op, opMuted, alice } = users
-
-  const { root, replies: r } = await createThread(sc, op, async (r) => {
-    await r(opMuted)
-    await r(alice)
-    await r(op)
-    await r(alice, { text: '📌' })
-    await r(opMuted)
-    await r(op)
-    await r(opMuted)
-  })
-
-  await sc.mute(op.did, opMuted.did)
-
-  return {
-    seedClient: sc,
-    users,
-    root,
-    r,
-  }
-}
-
 export async function blockDeletionAuth(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
@@ -749,10 +719,10 @@ export async function mutes(
   }
 }
 
-export async function hidden(
+export async function threadgated(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  const users = await createUsers(sc, 'hidden', [
+  const users = await createUsers(sc, 'tg', [
     'op',
     'opMuted',
     'viewer',
@@ -763,10 +733,10 @@ export async function hidden(
   const { op, opMuted, alice, bob } = users
 
   const { root, replies: r } = await createThread(sc, op, async (r) => {
-    // Muted moves down below hidden.
+    // Muted moves down below threadgated.
     await r(opMuted)
 
-    // Hidden moves down.
+    // Threadgated moves down.
     await r(alice, async (r) => {
       await r(alice)
       await r(bob)
@@ -775,7 +745,7 @@ export async function hidden(
 
     await r(bob, async (r) => {
       await r(alice)
-      await r(bob) // Hidden is omitted if fetched from the root.
+      await r(bob) // Threadgated is omitted if fetched from the root.
       await r(op) // OP moves down.
     })
   })
@@ -793,7 +763,7 @@ export async function hidden(
     sc.getHeaders(op.did),
   )
 
-  // Just throw a mute there to test the prioritization between muted and hidden.
+  // Just throw a mute there to test the prioritization between muted and threadgated.
   await sc.mute(op.did, opMuted.did)
 
   return {

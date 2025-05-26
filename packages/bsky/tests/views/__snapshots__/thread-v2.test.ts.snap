@@ -2,16 +2,15 @@
 
 exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] = `
 Object {
+  "hasHiddenReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -49,10 +48,8 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -101,16 +98,15 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] = `
 Object {
+  "hasHiddenReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -148,10 +144,8 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -199,10 +193,8 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -251,16 +243,15 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on 2.0 1`] = `
 Object {
+  "hasHiddenReplies": false,
   "thread": Array [
     Object {
       "depth": -2,
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -298,10 +289,8 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -349,10 +338,8 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -401,16 +388,15 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] = `
 Object {
+  "hasHiddenReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -448,10 +434,8 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -500,16 +484,15 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`] = `
 Object {
+  "hasHiddenReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -547,10 +530,8 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -598,10 +579,8 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -650,16 +629,15 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on r 0.0 1`] = `
 Object {
+  "hasHiddenReplies": false,
   "thread": Array [
     Object {
       "depth": -2,
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -697,10 +675,8 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -748,10 +724,8 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -800,16 +774,15 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on root 1`] = `
 Object {
+  "hasHiddenReplies": false,
   "thread": Array [
     Object {
       "depth": 0,
       "uri": "record(0)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -847,10 +820,8 @@ Object {
       "uri": "record(1)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -898,10 +869,8 @@ Object {
       "uri": "record(2)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -949,10 +918,8 @@ Object {
       "uri": "record(3)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -1000,10 +967,8 @@ Object {
       "uri": "record(4)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -1051,10 +1016,8 @@ Object {
       "uri": "record(5)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",
@@ -1102,10 +1065,8 @@ Object {
       "uri": "record(6)",
       "value": Object {
         "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
-        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
-        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "$type": "app.bsky.feed.defs#postView",

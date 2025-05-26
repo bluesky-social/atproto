@@ -1,6 +1,16 @@
-import { AppBskyUnspeccedGetPostThreadV2, asPredicate } from '@atproto/api'
+import {
+  AppBskyUnspeccedGetPostThreadHiddenV2,
+  AppBskyUnspeccedGetPostThreadV2,
+  asPredicate,
+} from '@atproto/api'
 import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
+import {
+  ThreadHiddenItem,
+  ThreadHiddenItemPost,
+  isThreadHiddenItem,
+  isThreadHiddenItemPost,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
 import {
   QueryParams as GetPostThreadV2QueryParams,
   ThreadItem,
@@ -10,6 +20,8 @@ import {
   ThreadItemPost,
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { $Typed } from '../lexicon/util'
+
+type ThreadMaybeHiddenPostNode = ThreadPostNode | ThreadHiddenPostNode
 
 type ThreadItemValue<T extends ThreadItem['value']> = Omit<
   ThreadItem,
@@ -49,6 +61,19 @@ type ThreadPostNode = {
   replies: ThreadTree[] | undefined
 }
 
+// This is an intermediary type that doesn't map to the views.
+// It is useful to differentiate between the anchor post and the replies for the hidden case,
+// while also differentiating between hidden and visible cases.
+export type ThreadHiddenAnchorPostNode = {
+  item: Omit<ThreadHiddenItem, 'value'> & { value: undefined }
+  replies: ThreadHiddenPostNode[] | undefined
+}
+
+export type ThreadHiddenPostNode = {
+  item: ThreadHiddenItem
+  replies: ThreadHiddenPostNode[] | undefined
+}
+
 const isThreadNoUnauthenticatedNode = (
   node: ThreadTree,
 ): node is ThreadNoUnauthenticatedNode =>
@@ -57,19 +82,28 @@ const isThreadNoUnauthenticatedNode = (
 const isThreadPostNode = (node: ThreadTree): node is ThreadPostNode =>
   AppBskyUnspeccedGetPostThreadV2.isThreadItemPost(node.item.value)
 
-export type ThreadTree =
+const isThreadHiddenPostNode = (
+  node: ThreadTree,
+): node is ThreadHiddenPostNode =>
+  AppBskyUnspeccedGetPostThreadHiddenV2.isThreadHiddenItem(node.item)
+
+export type ThreadTreeVisible =
   | ThreadBlockedNode
   | ThreadNoUnauthenticatedNode
   | ThreadNotFoundNode
   | ThreadPostNode
 
+export type ThreadTreeHidden = ThreadHiddenAnchorPostNode | ThreadHiddenPostNode
+
+export type ThreadTree = ThreadTreeVisible | ThreadTreeHidden
+
 /** This function mutates the tree parameter. */
-export function sortTrimFlattenThreadTree(
-  anchorTree: ThreadTree,
-  options: SortTrimFlattenOptions,
-) {
+export function sortTrimFlattenThreadTree<
+  TItem extends ThreadItem | ThreadHiddenItem,
+>(anchorTree: ThreadTree, options: SortTrimFlattenOptions): TItem[] {
   const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
-  return flattenTree(sortedAnchorTree)
+
+  return flattenTree<TItem>(sortedAnchorTree)
 }
 
 type SortTrimFlattenOptions = {
@@ -77,7 +111,7 @@ type SortTrimFlattenOptions = {
   fetchedAt: number
   opDid: string
   prioritizeFollowedUsers: boolean
-  sort: GetPostThreadV2QueryParams['sort']
+  sort?: GetPostThreadV2QueryParams['sort']
   viewer: HydrateCtx['viewer']
 }
 
@@ -85,12 +119,13 @@ const isPostRecord = asPredicate(validatePostRecord)
 
 /** This function mutates the tree parameter. */
 function sortTrimThreadTree(
-  node: ThreadTree,
+  n: ThreadTree,
   opts: SortTrimFlattenOptions,
 ): ThreadTree {
-  if (!isThreadPostNode(node)) {
-    return node
+  if (!isThreadPostNode(n) && !isThreadHiddenPostNode(n)) {
+    return n
   }
+  const node: ThreadMaybeHiddenPostNode = n
 
   const {
     branchingFactor,
@@ -102,22 +137,24 @@ function sortTrimThreadTree(
   } = opts
 
   if (node.replies) {
-    node.replies.sort((aTree: ThreadTree, bTree: ThreadTree) => {
-      if (!isThreadPostNode(aTree)) {
+    node.replies.sort((an: ThreadTree, bn: ThreadTree) => {
+      if (!isThreadPostNode(an) && !isThreadHiddenPostNode(an)) {
         return 1
       }
-      if (!isThreadPostNode(bTree)) {
+      if (!isThreadPostNode(bn) && !isThreadHiddenPostNode(bn)) {
         return -1
       }
+      const aNode: ThreadMaybeHiddenPostNode = an
+      const bNode: ThreadMaybeHiddenPostNode = bn
 
       // First applies bumping.
-      const bump = applyBumping(aTree, bTree, opts)
+      const bump = applyBumping(aNode, bNode, opts)
       if (bump !== null) {
         return bump
       }
 
       // Then applies sorting.
-      return applySorting(aTree, bTree, opts)
+      return applySorting(aNode, bNode, opts)
     })
 
     // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
@@ -136,20 +173,21 @@ function sortTrimThreadTree(
       }),
     )
   }
+
   return node
 }
 
 function applyBumping(
-  aTree: ThreadPostNode,
-  bTree: ThreadPostNode,
+  aNode: ThreadMaybeHiddenPostNode,
+  bNode: ThreadMaybeHiddenPostNode,
   opts: SortTrimFlattenOptions,
 ): number | null {
-  const a = aTree.item.value
-  const b = bTree.item.value
+  const a = aNode.item.value
+  const b = bNode.item.value
   const { opDid, prioritizeFollowedUsers, viewer } = opts
 
   type BumpDirection = 'up' | 'down'
-  type BumpPredicateFn = (i: $Typed<ThreadItemPost>) => boolean
+  type BumpPredicateFn = (i: ThreadItemPost | ThreadHiddenItemPost) => boolean
 
   const maybeBump = (
     bump: BumpDirection,
@@ -158,7 +196,7 @@ function applyBumping(
     const aPredicate = predicateFn(a)
     const bPredicate = predicateFn(b)
     if (aPredicate && bPredicate) {
-      return applySorting(aTree, bTree, opts)
+      return applySorting(aNode, bNode, opts)
     } else if (aPredicate) {
       return bump === 'up' ? -1 : 1
     } else if (bPredicate) {
@@ -176,14 +214,14 @@ function applyBumping(
     // Viewer replies.
     ['up', (i) => i.post.author.did === viewer],
     // Muted account by the viewer.
-    ['down', (i) => i.mutedByViewer],
+    ['down', (i) => isThreadHiddenItemPost(i) && i.mutedByViewer],
+    // Hidden by threadgate.
+    ['down', (i) => isThreadHiddenItemPost(i) && i.hiddenByThreadgate],
     // Pushpin-only.
     [
       'down',
       (i) => isPostRecord(i.post.record) && i.post.record.text.trim() === '📌',
     ],
-    // Hidden by threadgate.
-    ['down', (i) => i.hiddenByThreadgate],
     // Followers posts.
     ['up', (i) => prioritizeFollowedUsers && !!i.post.author.viewer?.following],
   ]
@@ -199,26 +237,30 @@ function applyBumping(
 }
 
 function applySorting(
-  aTree: ThreadPostNode,
-  bTree: ThreadPostNode,
+  aNode: ThreadMaybeHiddenPostNode,
+  bNode: ThreadMaybeHiddenPostNode,
   opts: SortTrimFlattenOptions,
 ): number {
-  const a = aTree.item.value
-  const b = bTree.item.value
-  const { sort } = opts
+  const a = aNode.item.value
+  const b = bNode.item.value
 
-  if (sort === 'oldest') {
-    return a.post.indexedAt.localeCompare(b.post.indexedAt)
-  }
-  if (sort === 'top') {
-    const aLikes = a.post.likeCount ?? 0
-    const bLikes = b.post.likeCount ?? 0
-    const aTop = topSortValue(aLikes, aTree.hasOPLike)
-    const bTop = topSortValue(bLikes, bTree.hasOPLike)
-    if (aTop !== bTop) {
-      return bTop - aTop
+  if (!isThreadHiddenPostNode(aNode) && !isThreadHiddenPostNode(bNode)) {
+    const { sort } = opts
+
+    if (sort === 'oldest') {
+      return a.post.indexedAt.localeCompare(b.post.indexedAt)
+    }
+    if (sort === 'top') {
+      const aLikes = a.post.likeCount ?? 0
+      const bLikes = b.post.likeCount ?? 0
+      const aTop = topSortValue(aLikes, aNode.hasOPLike)
+      const bTop = topSortValue(bLikes, bNode.hasOPLike)
+      if (aTop !== bTop) {
+        return bTop - aTop
+      }
     }
   }
+
   // Fallback to newest.
   return b.post.indexedAt.localeCompare(a.post.indexedAt)
 }
@@ -227,22 +269,24 @@ function topSortValue(likeCount: number, hasOPLike: boolean): number {
   return Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
 }
 
-function flattenTree(tree: ThreadTree) {
+function flattenTree<TItem extends ThreadItem | ThreadHiddenItem>(
+  tree: ThreadTree,
+): TItem[] {
   return [
     // All parents above.
     ...Array.from(
-      flattenInDirection({
+      flattenInDirection<TItem>({
         tree,
         direction: 'up',
       }),
     ),
 
     // The anchor.
-    tree.item,
+    ...(tree.item.value ? ([tree.item] as TItem[]) : []),
 
     // All replies below.
     ...Array.from(
-      flattenInDirection({
+      flattenInDirection<TItem>({
         tree,
         direction: 'down',
       }),
@@ -250,18 +294,18 @@ function flattenTree(tree: ThreadTree) {
   ]
 }
 
-function* flattenInDirection({
+function* flattenInDirection<TItem extends ThreadItem | ThreadHiddenItem>({
   tree,
   direction,
 }: {
   tree: ThreadTree
   direction: 'up' | 'down'
-}): Generator<ThreadItem, void> {
+}): Generator<TItem, void> {
   if (isThreadNoUnauthenticatedNode(tree)) {
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenTree(tree.parent)
+        yield* flattenTree<TItem>(tree.parent)
       }
     }
   }
@@ -270,13 +314,25 @@ function* flattenInDirection({
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenTree(tree.parent)
+        yield* flattenTree<TItem>(tree.parent)
       }
     } else {
       // Unfold all replies below.
       if (tree.replies?.length) {
         for (const reply of tree.replies) {
-          yield* flattenTree(reply)
+          yield* flattenTree<TItem>(reply)
+        }
+      }
+    }
+  }
+
+  // For the first level of hidden replies, the items are undefined.
+  if (isThreadHiddenPostNode(tree)) {
+    if (direction === 'down') {
+      // Unfold all replies below.
+      if (tree.replies?.length) {
+        for (const reply of tree.replies) {
+          yield* flattenTree<TItem>(reply)
         }
       }
     }

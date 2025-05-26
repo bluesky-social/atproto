@@ -1,26 +1,41 @@
 import assert from 'node:assert'
-import { AppBskyUnspeccedGetPostThreadV2, AtpAgent } from '@atproto/api'
+import {
+  AppBskyUnspeccedGetPostThreadHiddenV2,
+  AppBskyUnspeccedGetPostThreadV2,
+  AtpAgent,
+} from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import {
-  OutputSchema,
-  QueryParams,
+  OutputSchema as OutputSchemaHiddenThread,
+  ThreadHiddenItem,
+  ThreadHiddenItemPost,
+} from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import {
+  OutputSchema as OutputSchemaThread,
+  QueryParams as QueryParamsThread,
   ThreadItemPost,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { ThreadItemValuePost } from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 
-type PostProps = Pick<
-  ThreadItemPost,
-  'moreReplies' | 'hiddenByThreadgate' | 'mutedByViewer' | 'opThread'
->
-
+type PostProps = Pick<ThreadItemPost, 'moreReplies' | 'opThread'>
 const props = (overrides: Partial<PostProps> = {}): PostProps => ({
   moreReplies: 0,
+  opThread: false,
+  ...overrides,
+})
+
+type PostPropsHidden = Pick<
+  ThreadHiddenItemPost,
+  'hiddenByThreadgate' | 'mutedByViewer'
+>
+const propsHidden = (
+  overrides: Partial<PostPropsHidden> = {},
+): PostPropsHidden => ({
   hiddenByThreadgate: false,
   mutedByViewer: false,
-  opThread: false,
   ...overrides,
 })
 
@@ -83,9 +98,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({ depth: 0, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 1, uri: seed.r['0'].ref.uriStr }),
@@ -108,9 +124,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 0, uri: seed.r['0'].ref.uriStr }),
@@ -129,9 +146,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: -1, uri: seed.r['0'].ref.uriStr }),
@@ -150,9 +168,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 0, uri: seed.r['1'].ref.uriStr }),
@@ -170,9 +189,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 0, uri: seed.r['2'].ref.uriStr }),
@@ -191,9 +211,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({ depth: -2, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: -1, uri: seed.r['2'].ref.uriStr }),
@@ -212,9 +233,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({ depth: -1, uri: seed.root.ref.uriStr }),
         expect.objectContaining({ depth: 0, uri: seed.r['3'].ref.uriStr }),
@@ -270,9 +292,10 @@ describe('appview thread views v2', () => {
               ),
             },
           )
-          const { thread: t } = data
+          const { thread: t, hasHiddenReplies } = data
 
           assertPosts(t)
+          expect(hasHiddenReplies).toBe(false)
           const anchorIndex = t.findIndex((i) => i.uri === post.ref.uriStr)
           const anchorPost = t[anchorIndex]
 
@@ -312,9 +335,10 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
         assertPosts(t)
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toHaveLength(16) // anchor + 15 ancestors, as limited by `maxThreadParents`.
 
         const first = t.at(0)
@@ -345,9 +369,10 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
         assertPosts(t)
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toHaveLength(1)
 
         const first = t.at(0)
@@ -371,9 +396,10 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
         assertPosts(t)
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toHaveLength(11)
         const first = t.at(0)
         expect(first!.uri).toBe(seed.root.ref.uriStr)
@@ -393,9 +419,10 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
         assertPosts(t)
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toHaveLength(4)
 
         const first = t.at(0)
@@ -417,12 +444,12 @@ describe('appview thread views v2', () => {
     type Case =
       | {
           branchingFactor: number
-          sort: QueryParams['sort']
+          sort: QueryParamsThread['sort']
           postKeys: string[]
         }
       | {
           branchingFactor: number
-          sort: QueryParams['sort']
+          sort: QueryParamsThread['sort']
           // For higher branching factors it gets too verbose to write all posts.
           length: number
         }
@@ -568,9 +595,10 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
         assertPosts(t)
+        expect(hasHiddenReplies).toBe(false)
         if ('length' in args) {
           expect(data.thread).toHaveLength(args.length)
         } else {
@@ -606,9 +634,10 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
       assertPosts(t)
+      expect(hasHiddenReplies).toBe(false)
       expect(t).toEqual([
         expect.objectContaining({
           uri: seed.root.ref.uriStr,
@@ -753,9 +782,10 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
         assertPosts(t)
+        expect(hasHiddenReplies).toBe(false)
         const opThreadPostsUris = new Set(
           opThreadPosts.map((k) =>
             k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
@@ -780,7 +810,7 @@ describe('appview thread views v2', () => {
       })
 
       type Case = {
-        sort: QueryParams['sort']
+        sort: QueryParamsThread['sort']
         postKeys: string[]
       }
 
@@ -856,9 +886,10 @@ describe('appview thread views v2', () => {
               ),
             },
           )
-          const { thread: t } = data
+          const { thread: t, hasHiddenReplies } = data
 
           assertPosts(t)
+          expect(hasHiddenReplies).toBe(false)
           const tUris = t.map((i) => i.uri)
           const postUris = postKeys.map((k) =>
             k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
@@ -878,7 +909,7 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sort: QueryParams['sort']
+          sort: QueryParamsThread['sort']
           postKeys: string[]
         }
 
@@ -908,9 +939,10 @@ describe('appview thread views v2', () => {
                 ),
               },
             )
-            const { thread: t } = data
+            const { thread: t, hasHiddenReplies } = data
 
             assertPosts(t)
+            expect(hasHiddenReplies).toBe(false)
             const tUris = t.map((i) => i.uri)
             const postUris = postKeys.map((k) =>
               k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
@@ -929,7 +961,7 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sort: QueryParams['sort']
+          sort: QueryParamsThread['sort']
           postKeys: string[]
         }
 
@@ -1059,9 +1091,10 @@ describe('appview thread views v2', () => {
                 ),
               },
             )
-            const { thread: t } = data
+            const { thread: t, hasHiddenReplies } = data
 
             assertPosts(t)
+            expect(hasHiddenReplies).toBe(false)
             const tUris = t.map((i) => i.uri)
             const postUris = postKeys.map((k) =>
               k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
@@ -1097,8 +1130,10 @@ describe('appview thread views v2', () => {
               ),
             },
           )
-          const { thread: t } = data
+          const { thread: t, hasHiddenReplies } = data
+
           assertPosts(t)
+          expect(hasHiddenReplies).toBe(false)
           return t
         }
 
@@ -1167,68 +1202,6 @@ describe('appview thread views v2', () => {
           expect(t2[6].uri).toBe(seed.r['0'].ref.uriStr)
         })
       })
-
-      describe('mutes', () => {
-        let seed: Awaited<ReturnType<typeof seeds.bumpMutes>>
-
-        beforeAll(async () => {
-          seed = await seeds.bumpMutes(sc)
-          await network.processAll()
-        })
-
-        it('sorts multiple mutes correctly by the sort param', async () => {
-          const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-            {
-              anchor: seed.root.ref.uriStr,
-              sort: 'newest',
-            },
-            {
-              headers: await network.serviceHeaders(
-                seed.users.op.did,
-                ids.AppBskyUnspeccedGetPostThreadV2,
-              ),
-            },
-          )
-          const { thread: t } = data
-
-          assertPosts(t)
-          expect(t).toEqual([
-            expect.objectContaining({
-              uri: seed.root.ref.uriStr,
-              value: expect.objectContaining(props({ opThread: true })),
-            }),
-            expect.objectContaining({
-              uri: seed.r['5'].ref.uriStr,
-              value: expect.objectContaining(props({ opThread: true })),
-            }),
-            expect.objectContaining({
-              uri: seed.r['2'].ref.uriStr,
-              value: expect.objectContaining(props({ opThread: true })),
-            }),
-            expect.objectContaining({
-              uri: seed.r['1'].ref.uriStr,
-              value: expect.objectContaining(props()),
-            }),
-            // Pushed down because it is `📌`.
-            expect.objectContaining({
-              uri: seed.r['3'].ref.uriStr,
-              value: expect.objectContaining(props()),
-            }),
-            expect.objectContaining({
-              uri: seed.r['6'].ref.uriStr,
-              value: expect.objectContaining(props({ mutedByViewer: true })),
-            }),
-            expect.objectContaining({
-              uri: seed.r['4'].ref.uriStr,
-              value: expect.objectContaining(props({ mutedByViewer: true })),
-            }),
-            expect.objectContaining({
-              uri: seed.r['0'].ref.uriStr,
-              value: expect.objectContaining(props({ mutedByViewer: true })),
-            }),
-          ])
-        })
-      })
     })
   })
 
@@ -1258,9 +1231,10 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
         assertPosts(t)
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
           expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
@@ -1280,8 +1254,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.r['0'].ref.uriStr,
@@ -1304,8 +1279,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.r['0'].ref.uriStr,
@@ -1337,8 +1313,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
@@ -1361,8 +1338,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.root.ref.uriStr,
@@ -1400,8 +1378,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.r['1'].ref.uriStr,
@@ -1431,8 +1410,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.root.ref.uriStr,
@@ -1470,8 +1450,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         assertPosts(t)
         expect(t).toEqual([
           expect.objectContaining({ uri: seed.root.ref.uriStr }),
@@ -1493,8 +1474,9 @@ describe('appview thread views v2', () => {
             ),
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.r['2'].ref.uriStr,
@@ -1524,8 +1506,9 @@ describe('appview thread views v2', () => {
             },
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.root.ref.uriStr,
@@ -1560,8 +1543,9 @@ describe('appview thread views v2', () => {
             },
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.root.ref.uriStr,
@@ -1590,8 +1574,9 @@ describe('appview thread views v2', () => {
             },
           },
         )
-        const { thread: t } = data
+        const { thread: t, hasHiddenReplies } = data
 
+        expect(hasHiddenReplies).toBe(false)
         expect(t).toEqual([
           expect.objectContaining({
             uri: seed.root.ref.uriStr,
@@ -1636,124 +1621,166 @@ describe('appview thread views v2', () => {
       await network.processAll()
     })
 
-    it(`muted reply is set as muted in top-level replies and omitted in nested replies`, async () => {
-      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { anchor: seed.root.ref.uriStr },
-        {
-          headers: await network.serviceHeaders(
-            // Fetching as `op` mutes `opMuted`.
-            seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
-          ),
-        },
-      )
-      const { thread: t } = data
+    describe('omitting muted replies', () => {
+      it(`muted reply is omitted in top-level replies and in nested replies`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { anchor: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Fetching as `op` mutes `opMuted`.
+              seed.users.op.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t, hasHiddenReplies } = data
 
-      assertPosts(t)
-      expect(t).toEqual([
-        expect.objectContaining({
-          uri: seed.root.ref.uriStr,
-          value: expect.objectContaining(props({ opThread: true })),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        // 1.0 is a nested muted reply, so it is omitted.
-        expect.objectContaining({
-          uri: seed.r['1.1'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        // 0 is muted but is an anchor reply, so it is not omitted but bumped down.
-        expect.objectContaining({
-          uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining(props({ mutedByViewer: true })),
-        }),
-        // 0's replies are not omitted nor marked as muted.
-        expect.objectContaining({
-          uri: seed.r['0.0'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['0.1'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-      ])
+        expect(hasHiddenReplies).toBe(true)
+        assertPosts(t)
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.root.ref.uriStr,
+            value: expect.objectContaining(props({ opThread: true })),
+          }),
+          expect.objectContaining({
+            uri: seed.r['1'].ref.uriStr,
+            value: expect.objectContaining(props()),
+          }),
+          // 1.0 is a nested muted reply, so it is omitted.
+          expect.objectContaining({
+            uri: seed.r['1.1'].ref.uriStr,
+            value: expect.objectContaining(props()),
+          }),
+        ])
+      })
+
+      it(`top-level muted replies are returned when fetching hidden, sorted by newest`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
+          { anchor: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Fetching as `op` mutes `opMuted`.
+              seed.users.op.did,
+              ids.AppBskyUnspeccedGetPostThreadHiddenV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        assertHiddenPosts(t)
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.r['0'].ref.uriStr,
+            value: expect.objectContaining(
+              propsHidden({ mutedByViewer: true }),
+            ),
+          }),
+          expect.objectContaining({
+            uri: seed.r['0.1'].ref.uriStr,
+            value: expect.objectContaining(propsHidden()),
+          }),
+          expect.objectContaining({
+            uri: seed.r['0.0'].ref.uriStr,
+            value: expect.objectContaining(propsHidden()),
+          }),
+        ])
+      })
     })
 
-    it(`mutes by OP don't have 3p effects`, async () => {
-      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { anchor: seed.root.ref.uriStr },
-        {
-          headers: await network.serviceHeaders(
-            // Fetching as `muter` mutes `muted`.
-            seed.users.muter.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
-          ),
-        },
-      )
-      const { thread: t } = data
+    describe('OP mutes', () => {
+      it(`mutes by OP don't mute for 3p`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { anchor: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Fetching as `muter` mutes `muted`.
+              seed.users.muter.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t, hasHiddenReplies } = data
 
-      assertPosts(t)
-      expect(t).toEqual([
-        expect.objectContaining({
-          uri: seed.root.ref.uriStr,
-          value: expect.objectContaining(props({ opThread: true })),
-        }),
-        expect.objectContaining({
-          uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['0.0'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        // 0.1 is a nested muted reply, so it is omitted.
+        expect(hasHiddenReplies).toBe(true)
+        assertPosts(t)
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.root.ref.uriStr,
+            value: expect.objectContaining(props({ opThread: true })),
+          }),
+          expect.objectContaining({
+            uri: seed.r['0'].ref.uriStr,
+            value: expect.objectContaining(props()),
+          }),
+          expect.objectContaining({
+            uri: seed.r['0.0'].ref.uriStr,
+            value: expect.objectContaining(props()),
+          }),
+          // 0.1 is a nested muted reply, so it is omitted.
+        ])
+      })
 
-        // 1 is muted but is an anchor reply, so it is not omitted but bumped down.
-        expect.objectContaining({
-          uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining(props({ mutedByViewer: true })),
-        }),
-        // 1's replies are not omitted nor marked as muted.
-        expect.objectContaining({
-          uri: seed.r['1.0'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1.1'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-      ])
-    })
+      it(`fetches hidden replies includes own mutes, not OP mutes, sorted by newest`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
+          { anchor: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              // Fetching as `muter` mutes `muted`.
+              seed.users.muter.did,
+              ids.AppBskyUnspeccedGetPostThreadHiddenV2,
+            ),
+          },
+        )
+        const { thread: t } = data
 
-    it(`mutes by OP don't affect the muted user`, async () => {
-      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { anchor: seed.root.ref.uriStr },
-        {
-          headers: await network.serviceHeaders(
-            seed.users.opMuted.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
-          ),
-        },
-      )
-      const { thread: t } = data
+        assertHiddenPosts(t)
+        expect(t).toEqual([
+          expect.objectContaining({
+            uri: seed.r['1'].ref.uriStr,
+            value: expect.objectContaining(
+              propsHidden({ mutedByViewer: true }),
+            ),
+          }),
+          expect.objectContaining({
+            uri: seed.r['1.1'].ref.uriStr,
+            value: expect.objectContaining(propsHidden()),
+          }),
+          expect.objectContaining({
+            uri: seed.r['1.0'].ref.uriStr,
+            value: expect.objectContaining(propsHidden()),
+          }),
+        ])
+      })
 
-      assertPosts(t)
-      // No muted posts by `opMuted`, gets the full thread.
-      expect(t.length).toBe(1 + Object.keys(seed.r).length) // root + replies
+      it(`mutes by OP don't affect the muted user`, async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { anchor: seed.root.ref.uriStr },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.opMuted.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t, hasHiddenReplies } = data
+
+        expect(hasHiddenReplies).toBe(false)
+        assertPosts(t)
+        // No muted posts by `opMuted`, gets the full thread.
+        expect(t.length).toBe(1 + Object.keys(seed.r).length) // root + replies
+      })
     })
   })
 
-  describe(`hidden`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.hidden>>
+  describe(`threadgated`, () => {
+    let seed: Awaited<ReturnType<typeof seeds.threadgated>>
 
     beforeAll(async () => {
-      seed = await seeds.hidden(sc)
+      seed = await seeds.threadgated(sc)
       await network.processAll()
     })
 
-    it(`hidden reply is set as hidden in top-level replies and omitted in nested replies`, async () => {
+    it(`threadgated reply is omitted in top-level replies and in nested replies`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
         { anchor: seed.root.ref.uriStr },
         {
@@ -1763,8 +1790,9 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
+      expect(hasHiddenReplies).toBe(true)
       assertPosts(t)
       expect(t).toEqual([
         expect.objectContaining({
@@ -1785,31 +1813,47 @@ describe('appview thread views v2', () => {
           value: expect.objectContaining(props()),
         }),
         // 2.1 is a nested hidden reply, so it is omitted.
+      ])
+    })
 
-        // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
+    it(`top-level threadgated replies are returned to OP when fetching hidden, sorted by newest`, async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
+        { anchor: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyUnspeccedGetPostThreadHiddenV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertHiddenPosts(t)
+      expect(t).toEqual([
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining(props({ hiddenByThreadgate: true })),
+          value: expect.objectContaining(
+            propsHidden({ hiddenByThreadgate: true }),
+          ),
         }),
-        // 1's replies are not omitted nor marked as hidden.
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['1.2'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1.0'].ref.uriStr,
-          value: expect.objectContaining(props()),
+          value: expect.objectContaining(propsHidden()),
         }),
         expect.objectContaining({
           uri: seed.r['1.1'].ref.uriStr,
-          value: expect.objectContaining(props()),
+          value: expect.objectContaining(propsHidden()),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1.0'].ref.uriStr,
+          value: expect.objectContaining(propsHidden()),
         }),
 
         // Mutes come after hidden.
         expect.objectContaining({
           uri: seed.r['0'].ref.uriStr,
-          value: expect.objectContaining(props({ mutedByViewer: true })),
+          value: expect.objectContaining(propsHidden({ mutedByViewer: true })),
         }),
       ])
     })
@@ -1825,8 +1869,9 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
+      expect(hasHiddenReplies).toBe(false)
       assertPosts(t)
       expect(t).toEqual([
         expect.objectContaining({
@@ -1887,8 +1932,9 @@ describe('appview thread views v2', () => {
           ),
         },
       )
-      const { thread: t } = data
+      const { thread: t, hasHiddenReplies } = data
 
+      expect(hasHiddenReplies).toBe(true)
       assertPosts(t)
       expect(t).toEqual([
         expect.objectContaining({
@@ -1915,25 +1961,42 @@ describe('appview thread views v2', () => {
           value: expect.objectContaining(props()),
         }),
         // 2.1 is a nested hidden reply, so it is omitted.
+      ])
+    })
 
-        // 1 is hidden but is an anchor reply, so it is not omitted but bumped down.
+    it(`top-level threadgated replies are returned to other viewers when fetching hidden, sorted by newest`, async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
+        { anchor: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            // `viewer` also gets the replies as hidden.
+            seed.users.viewer.did,
+            ids.AppBskyUnspeccedGetPostThreadHiddenV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertHiddenPosts(t)
+      expect(t).toEqual([
         expect.objectContaining({
           uri: seed.r['1'].ref.uriStr,
-          value: expect.objectContaining(props({ hiddenByThreadgate: true })),
+          value: expect.objectContaining(
+            propsHidden({ hiddenByThreadgate: true }),
+          ),
         }),
-        // 1's replies are not omitted nor marked as hidden.
         // OP reply bumped up.
         expect.objectContaining({
           uri: seed.r['1.2'].ref.uriStr,
-          value: expect.objectContaining(props()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1.0'].ref.uriStr,
-          value: expect.objectContaining(props()),
+          value: expect.objectContaining(propsHidden()),
         }),
         expect.objectContaining({
           uri: seed.r['1.1'].ref.uriStr,
-          value: expect.objectContaining(props()),
+          value: expect.objectContaining(propsHidden()),
+        }),
+        expect.objectContaining({
+          uri: seed.r['1.0'].ref.uriStr,
+          value: expect.objectContaining(propsHidden()),
         }),
       ])
     })
@@ -1962,12 +2025,23 @@ describe('appview thread views v2', () => {
 })
 
 function assertPosts(
-  t: OutputSchema['thread'],
+  t: OutputSchemaThread['thread'],
 ): asserts t is ThreadItemValuePost[] {
   t.forEach((i) => {
     assert(
       AppBskyUnspeccedGetPostThreadV2.isThreadItemPost(i.value),
       `Expected thread item to have a post as value`,
+    )
+  })
+}
+
+function assertHiddenPosts(
+  t: OutputSchemaHiddenThread['thread'],
+): asserts t is ThreadHiddenItem[] {
+  t.forEach((i) => {
+    assert(
+      AppBskyUnspeccedGetPostThreadHiddenV2.isThreadHiddenItemPost(i.value),
+      `Expected thread item to have a hidden post as value`,
     )
   })
 }

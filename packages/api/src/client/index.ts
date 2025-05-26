@@ -183,6 +183,7 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetPostThreadHiddenV2 from './types/app/bsky/unspecced/getPostThreadHiddenV2.js'
 import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
@@ -445,6 +446,7 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetPostThreadHiddenV2 from './types/app/bsky/unspecced/getPostThreadHiddenV2.js'
 export * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
@@ -565,6 +567,13 @@ export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
+}
+export const APP_BSKY_UNSPECCED = {
+  GetPostThreadHiddenV2Newest:
+    'app.bsky.unspecced.getPostThreadHiddenV2#newest',
+  GetPostThreadHiddenV2Oldest:
+    'app.bsky.unspecced.getPostThreadHiddenV2#oldest',
+  GetPostThreadHiddenV2Top: 'app.bsky.unspecced.getPostThreadHiddenV2#top',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
@@ -3435,6 +3444,18 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetPopularFeedGenerators.Response> {
     return this._client.call(
       'app.bsky.unspecced.getPopularFeedGenerators',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPostThreadHiddenV2(
+    params?: AppBskyUnspeccedGetPostThreadHiddenV2.QueryParams,
+    opts?: AppBskyUnspeccedGetPostThreadHiddenV2.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPostThreadHiddenV2.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadHiddenV2',
       params,
       undefined,
       opts,
