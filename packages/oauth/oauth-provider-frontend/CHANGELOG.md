@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-frontend
 
+## 0.1.5
+
+### Patch Changes
+
+- [`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve auto completion of sing-in & reset password flows
+
 ## 0.1.4
 
 ## 0.1.3
