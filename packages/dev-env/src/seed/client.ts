@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import {
   AppBskyFeedLike,
   AppBskyFeedPost,
+  AppBskyFeedRepost,
   AppBskyGraphBlock,
   AppBskyGraphFollow,
   AppBskyGraphList,
@@ -425,10 +426,18 @@ export class SeedClient<
     return reply
   }
 
-  async repost(by: string, subject: RecordRef) {
+  async repost(
+    by: string,
+    subject: RecordRef,
+    overrides?: Partial<AppBskyFeedRepost.Record>,
+  ) {
     const res = await this.agent.app.bsky.feed.repost.create(
       { repo: by },
-      { subject: subject.raw, createdAt: new Date().toISOString() },
+      {
+        subject: subject.raw,
+        createdAt: new Date().toISOString(),
+        ...overrides,
+      },
       this.getHeaders(by),
     )
     this.reposts[by] ??= []
