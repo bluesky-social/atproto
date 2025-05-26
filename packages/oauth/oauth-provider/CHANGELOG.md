@@ -1,5 +1,15 @@
 # @atproto/oauth-provider
 
+## 0.7.8
+
+### Patch Changes
+
+- [`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `/.well-known/change-password` endpoint
+
+- Updated dependencies [[`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5)]:
+  - @atproto/oauth-provider-frontend@0.1.5
+  - @atproto/oauth-provider-ui@0.1.6
+
 ## 0.7.7
 
 ### Patch Changes
