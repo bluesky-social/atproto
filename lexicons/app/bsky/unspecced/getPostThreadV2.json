@@ -66,8 +66,7 @@
             }
           }
         }
-      },
-      "errors": [{ "name": "NotFound" }]
+      }
     },
     "newest": { "type": "token" },
     "oldest": { "type": "token" },

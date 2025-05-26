@@ -10351,11 +10351,6 @@ export const schemaDict = {
             },
           },
         },
-        errors: [
-          {
-            name: 'NotFound',
-          },
-        ],
       },
       newest: {
         type: 'token',

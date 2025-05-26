@@ -3450,11 +3450,12 @@ export class AppBskyUnspeccedNS {
     params?: AppBskyUnspeccedGetPostThreadV2.QueryParams,
     opts?: AppBskyUnspeccedGetPostThreadV2.CallOptions,
   ): Promise<AppBskyUnspeccedGetPostThreadV2.Response> {
-    return this._client
-      .call('app.bsky.unspecced.getPostThreadV2', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedGetPostThreadV2.toKnownErr(e)
-      })
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadV2',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   getSuggestedFeeds(

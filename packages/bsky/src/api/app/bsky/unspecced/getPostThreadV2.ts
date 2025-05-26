@@ -1,5 +1,3 @@
-import { isThreadItemNotFound } from '@atproto/api/dist/client/types/app/bsky/unspecced/getPostThreadV2'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
@@ -87,7 +85,7 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const { anchor, thread } = ctx.views.threadV2(skeleton, hydration, {
+  const thread = ctx.views.threadV2(skeleton, hydration, {
     above: calculateAbove(ctx, params),
     below: calculateBelow(ctx, skeleton.anchor, params),
     branchingFactor: params.branchingFactor,
@@ -95,13 +93,6 @@ const presentation = (
     sort: params.sort,
     viewer: params.hydrateCtx.viewer,
   })
-
-  if (!anchor || isThreadItemNotFound(anchor.value)) {
-    throw new InvalidRequestError(
-      `Post not found: ${skeleton.anchor}`,
-      'NotFound',
-    )
-  }
 
   const rootUri =
     hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??

@@ -49,11 +49,19 @@ describe('appview thread views v2', () => {
 
   describe('not found anchor', () => {
     it('returns not found error', async () => {
-      await expect(
-        agent.app.bsky.unspecced.getPostThreadV2({
-          anchor: 'at://did:plc:123/app.bsky.feed.post/456',
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2({
+        anchor: 'at://did:plc:123/app.bsky.feed.post/456',
+      })
+      const { thread: t } = data
+
+      expect(t).toEqual([
+        expect.objectContaining({
+          depth: 0,
+          value: {
+            $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
+          },
         }),
-      ).rejects.toThrow(AppBskyUnspeccedGetPostThreadV2.NotFoundError)
+      ])
     })
   })
 

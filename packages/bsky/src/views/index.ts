@@ -1151,35 +1151,31 @@ export class Views {
       sort: GetPostThreadV2QueryParams['sort']
       viewer: HydrateCtx['viewer']
     },
-  ): { anchor: ThreadItem; thread: ThreadItem[] } {
+  ): ThreadItem[] {
     const { anchor: anchorUri, uris } = skeleton
 
     // Not found.
     const postView = this.post(anchorUri, state)
     const post = state.posts?.get(anchorUri)
     if (!post || !postView) {
-      const anchor = this.threadV2ItemNotFound({
-        uri: anchorUri,
-        depth: 0,
-      })
-      return {
-        anchor,
-        thread: [anchor],
-      }
+      return [
+        this.threadV2ItemNotFound({
+          uri: anchorUri,
+          depth: 0,
+        }),
+      ]
     }
 
     // Blocked (only 1p for anchor).
     if (this.viewerBlockExists(postView.author.did, state)) {
-      const anchor = this.threadV2ItemBlocked({
-        uri: anchorUri,
-        depth: 0,
-        authorDid: postView.author.did,
-        state,
-      })
-      return {
-        anchor,
-        thread: [anchor],
-      }
+      return [
+        this.threadV2ItemBlocked({
+          uri: anchorUri,
+          depth: 0,
+          authorDid: postView.author.did,
+          state,
+        }),
+      ]
     }
 
     // Groups children of each parent.
@@ -1263,7 +1259,7 @@ export class Views {
       }
     }
 
-    const flatThread = sortTrimFlattenThreadTree(anchorTree, {
+    return sortTrimFlattenThreadTree(anchorTree, {
       opDid,
       branchingFactor,
       sort,
@@ -1271,11 +1267,6 @@ export class Views {
       viewer,
       fetchedAt: Date.now(),
     })
-
-    return {
-      anchor: anchorTree.item,
-      thread: flatThread,
-    }
   }
 
   private threadV2Parent({
