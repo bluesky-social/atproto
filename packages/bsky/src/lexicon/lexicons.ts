@@ -6265,6 +6265,14 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -7576,6 +7584,10 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
             },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
           },
         },
       },
@@ -7789,6 +7801,10 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
           },
         },
@@ -9845,7 +9861,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', 'starterpack-joined', 'verified', and 'unverified'.",
+              'The reason why this notification was delivered - e.g. your post was liked, or you received a new follower.',
             knownValues: [
               'like',
               'repost',
@@ -9856,6 +9872,8 @@ export const schemaDict = {
               'starterpack-joined',
               'verified',
               'unverified',
+              'like-via-repost',
+              'repost-via-repost',
             ],
           },
           reasonSubject: {

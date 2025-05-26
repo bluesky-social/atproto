@@ -12,6 +12,8 @@ describe('notification views', () => {
 
   // account dids, for convenience
   let alice: string
+  let carol: string
+  let dan: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -27,6 +29,8 @@ describe('notification views', () => {
       .execute()
     await network.processAll()
     alice = sc.dids.alice
+    carol = sc.dids.carol
+    dan = sc.dids.dan
   })
 
   afterAll(async () => {
@@ -154,6 +158,179 @@ describe('notification views', () => {
       },
     )
     expect(forSnapshot(sort(notifsDan.data.notifications))).toMatchSnapshot()
+  })
+
+  it('generates notifications for likes', async () => {
+    const notifsAlice = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const na = sort(
+      notifsAlice.data.notifications.filter((n) => n.reason === 'like'),
+    )
+    expect(na).toHaveLength(5)
+    expect(forSnapshot(na)).toMatchSnapshot()
+  })
+
+  it('generates notifications for reposts', async () => {
+    const notifsAlice = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const na = sort(
+      notifsAlice.data.notifications.filter((n) => n.reason === 'repost'),
+    )
+    expect(na).toHaveLength(2)
+    expect(forSnapshot(na)).toMatchSnapshot()
+  })
+
+  it('generates notifications for likes via repost', async () => {
+    const op = dan
+    const reposter = carol
+    const liker = alice
+    await sc.like(liker, sc.posts[op][1].ref, {
+      via: sc.reposts[reposter][0].raw,
+    })
+    await network.processAll()
+
+    const notifsOp = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          op,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const no = sort(
+      notifsOp.data.notifications.filter((n) => n.reason === 'like'),
+    )
+    // Like from `alice` in this test.
+    expect(no).toHaveLength(1)
+    expect(forSnapshot(no)).toMatchSnapshot()
+
+    const notifsReposter = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          reposter,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const nr = sort(
+      notifsReposter.data.notifications.filter(
+        (n) => n.reason === 'like-via-repost',
+      ),
+    )
+    // Like from `alice` in this test.
+    expect(nr).toHaveLength(1)
+    expect(forSnapshot(nr)).toMatchSnapshot()
+  })
+
+  it('does not generate self notifications for likes via own repost', async () => {
+    const op = dan
+    const reposter = carol
+    await sc.like(reposter, sc.posts[op][1].ref, {
+      via: sc.reposts[reposter][0].raw,
+    })
+    await network.processAll()
+
+    const notifsOp = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          op,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const no = sort(
+      notifsOp.data.notifications.filter((n) => n.reason === 'like'),
+    )
+    // Like from `alice` in previous test + `carol` on this test.
+    expect(no).toHaveLength(2)
+    expect(forSnapshot(no)).toMatchSnapshot()
+
+    const notifsReposter = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          reposter,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const nr = sort(
+      notifsReposter.data.notifications.filter(
+        (n) => n.reason === 'like-via-repost',
+      ),
+    )
+    // Like from `alice` in previous test.
+    expect(nr).toHaveLength(1)
+    expect(forSnapshot(nr)).toMatchSnapshot()
+  })
+
+  it('generates notifications for reposts via repost', async () => {
+    const op = dan
+    const reposter = carol
+    const reReposter = alice
+    await sc.repost(reReposter, sc.posts[op][1].ref, {
+      via: sc.reposts[reposter][0].raw,
+    })
+    await network.processAll()
+
+    const notifsOp = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          op,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const no = sort(
+      notifsOp.data.notifications.filter((n) => n.reason === 'repost'),
+    )
+    // Repost from `carol` in seeds + `alice` on this test.
+    expect(no).toHaveLength(2)
+    expect(forSnapshot(no)).toMatchSnapshot()
+
+    const notifsReposter = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          reposter,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const nr = sort(
+      notifsReposter.data.notifications.filter(
+        (n) => n.reason === 'repost-via-repost',
+      ),
+    )
+    // Repost from `alice` in this test.
+    expect(nr).toHaveLength(1)
+    expect(forSnapshot(nr)).toMatchSnapshot()
   })
 
   it('generates notifications for verification created and removed', async () => {
