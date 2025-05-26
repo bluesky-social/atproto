@@ -1,5 +1,9 @@
 import { sql } from 'kysely'
-import { AppBskyActorDefs, AtpAgent } from '@atproto/api'
+import {
+  AppBskyActorDefs,
+  AtpAgent,
+  ComAtprotoRepoGetRecord,
+} from '@atproto/api'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
@@ -72,6 +76,8 @@ export class ModerationViews {
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
     private appviewAuth: (method: string) => Promise<AuthHeaders>,
+    private pdsAgent?: AtpAgent,
+    private pdsAuth?: (method: string) => Promise<AuthHeaders | undefined>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
@@ -294,28 +300,57 @@ export class ModerationViews {
     return results
   }
 
-  async fetchRecords(
-    subjects: RecordSubject[],
-  ): Promise<Map<string, RecordInfo>> {
-    const auth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
-    if (!auth) return new Map()
-    const fetched = await Promise.all(
-      subjects.map(async (subject) => {
-        const uri = new AtUri(subject.uri)
+  async fetchRecord(
+    params: ComAtprotoRepoGetRecord.QueryParams,
+    appviewAuth: AuthHeaders,
+    pdsAuth?: AuthHeaders,
+  ) {
+    try {
+      const record = await this.appviewAgent.com.atproto.repo.getRecord(
+        params,
+        appviewAuth,
+      )
+      return record
+    } catch (err) {
+      if (
+        (err as Error).message?.startsWith('Record not found') &&
+        this.pdsAgent
+      ) {
+        // If pds fetch fails, just return null regardless of the error
         try {
-          const record = await this.appviewAgent.api.com.atproto.repo.getRecord(
-            {
-              repo: uri.hostname,
-              collection: uri.collection,
-              rkey: uri.rkey,
-              cid: subject.cid,
-            },
-            auth,
-          )
-          return record
+          return this.pdsAgent.com.atproto.repo.getRecord(params, pdsAuth)
         } catch {
           return null
         }
+      }
+
+      return null
+    }
+  }
+
+  async getRecordFromPds(params: ComAtprotoRepoGetRecord.QueryParams) {
+    const record = await this.pdsAgent?.com.atproto.repo.getRecord(params)
+    return record
+  }
+
+  async fetchRecords(
+    subjects: RecordSubject[],
+  ): Promise<Map<string, RecordInfo>> {
+    const appviewAuth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
+    if (!appviewAuth) return new Map()
+    const pdsAuth = this.pdsAuth
+      ? await this.pdsAuth(ids.ComAtprotoRepoGetRecord)
+      : undefined
+    const fetched = await Promise.all(
+      subjects.map(async (subject) => {
+        const uri = new AtUri(subject.uri)
+        const params = {
+          repo: uri.hostname,
+          collection: uri.collection,
+          rkey: uri.rkey,
+          cid: subject.cid,
+        }
+        return this.fetchRecord(params, appviewAuth, pdsAuth)
       }),
     )
     return fetched.reduce((acc, cur) => {

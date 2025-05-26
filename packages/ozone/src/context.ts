@@ -126,6 +126,7 @@ export class AppContext {
       eventPusher,
       appviewAgent,
       createAuthHeaders,
+      pdsAgent,
       overrides?.imgInvalidator,
     )
 

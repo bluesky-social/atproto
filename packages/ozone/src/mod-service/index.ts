@@ -81,6 +81,7 @@ export class ModerationService {
       aud: string,
       method: string,
     ) => Promise<AuthHeaders>,
+    private pdsAgent?: AtpAgent,
     public imgInvalidator?: ImageInvalidator,
   ) {}
 
@@ -93,6 +94,7 @@ export class ModerationService {
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
+    pdsAgent?: AtpAgent,
     imgInvalidator?: ImageInvalidator,
   ) {
     return (db: Database) =>
@@ -106,6 +108,7 @@ export class ModerationService {
         eventPusher,
         appviewAgent,
         createAuthHeaders,
+        pdsAgent,
         imgInvalidator,
       )
   }
@@ -123,6 +126,14 @@ export class ModerationService {
       if (labelers?.dids?.length) {
         authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
       }
+      return authHeaders
+    },
+    this.pdsAgent,
+    async (method: string) => {
+      if (!this.cfg.pds) {
+        return undefined
+      }
+      const authHeaders = await this.createAuthHeaders(this.cfg.pds.did, method)
       return authHeaders
     },
   )
