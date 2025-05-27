@@ -1675,14 +1675,7 @@ describe('appview thread views v2', () => {
               propsHidden({ mutedByViewer: true }),
             ),
           }),
-          expect.objectContaining({
-            uri: seed.r['0.1'].ref.uriStr,
-            value: expect.objectContaining(propsHidden()),
-          }),
-          expect.objectContaining({
-            uri: seed.r['0.0'].ref.uriStr,
-            value: expect.objectContaining(propsHidden()),
-          }),
+          // No nested replies for hidden.
         ])
       })
     })
@@ -1741,14 +1734,7 @@ describe('appview thread views v2', () => {
               propsHidden({ mutedByViewer: true }),
             ),
           }),
-          expect.objectContaining({
-            uri: seed.r['1.1'].ref.uriStr,
-            value: expect.objectContaining(propsHidden()),
-          }),
-          expect.objectContaining({
-            uri: seed.r['1.0'].ref.uriStr,
-            value: expect.objectContaining(propsHidden()),
-          }),
+          // No nested replies for hidden.
         ])
       })
 
@@ -1836,19 +1822,7 @@ describe('appview thread views v2', () => {
             propsHidden({ hiddenByThreadgate: true }),
           ),
         }),
-        // OP reply bumped up.
-        expect.objectContaining({
-          uri: seed.r['1.2'].ref.uriStr,
-          value: expect.objectContaining(propsHidden()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1.1'].ref.uriStr,
-          value: expect.objectContaining(propsHidden()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1.0'].ref.uriStr,
-          value: expect.objectContaining(propsHidden()),
-        }),
+        // No nested replies for hidden.
 
         // Mutes come after hidden.
         expect.objectContaining({
@@ -1921,7 +1895,7 @@ describe('appview thread views v2', () => {
       ])
     })
 
-    it(`other viewers are affected by hidden replies by OP`, async () => {
+    it(`other viewers are affected by threadgate-hidden replies by OP`, async () => {
       const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
         { anchor: seed.root.ref.uriStr },
         {
@@ -1985,19 +1959,7 @@ describe('appview thread views v2', () => {
             propsHidden({ hiddenByThreadgate: true }),
           ),
         }),
-        // OP reply bumped up.
-        expect.objectContaining({
-          uri: seed.r['1.2'].ref.uriStr,
-          value: expect.objectContaining(propsHidden()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1.1'].ref.uriStr,
-          value: expect.objectContaining(propsHidden()),
-        }),
-        expect.objectContaining({
-          uri: seed.r['1.0'].ref.uriStr,
-          value: expect.objectContaining(propsHidden()),
-        }),
+        // No nested replies for hidden.
       ])
     })
   })

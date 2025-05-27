@@ -8,7 +8,6 @@ import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/
 import {
   ThreadHiddenItem,
   ThreadHiddenItemPost,
-  isThreadHiddenItem,
   isThreadHiddenItemPost,
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
 import {
@@ -158,7 +157,7 @@ function sortTrimThreadTree(
     })
 
     // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
-    if (node.item.depth !== 0 && branchingFactor > 0) {
+    if (node.item.depth !== 0) {
       node.replies = node.replies.slice(0, branchingFactor)
     }
 

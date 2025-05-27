@@ -14,8 +14,15 @@ import {
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
-const BELOW = 2
-const BRANCHING_FACTOR = 3
+// No parents for hidden replies (it would be the anchor post).
+const ABOVE = 0
+
+// For hidden replies we don't get more than the top-level replies.
+// To get nested replies, load the thread as one of the hidden replies as anchor.
+const BELOW = 1
+
+// It doesn't really matter since BELOW is 1, so it will not be used.
+const BRANCHING_FACTOR = 0
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThreadHidden = createPipeline(
@@ -54,8 +61,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   try {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
-      above: 0,
-      below: calculateBelow(ctx, anchor, BELOW),
+      above: ABOVE,
+      below: BELOW,
     })
     return {
       anchor,
@@ -88,7 +95,7 @@ const presentation = (
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
   const thread = ctx.views.threadHiddenV2(skeleton, hydration, {
-    below: calculateBelow(ctx, skeleton.anchor, BELOW),
+    below: BELOW,
     branchingFactor: BRANCHING_FACTOR,
     viewer: params.hydrateCtx.viewer,
   })
@@ -107,12 +114,4 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
-}
-
-const calculateBelow = (ctx: Context, anchor: string, below: number) => {
-  let maxDepth = ctx.cfg.maxThreadDepth
-  if (ctx.cfg.bigThreadUris.has(anchor) && ctx.cfg.bigThreadDepth) {
-    maxDepth = ctx.cfg.bigThreadDepth
-  }
-  return maxDepth ? Math.min(maxDepth, below) : below
 }
