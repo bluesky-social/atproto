@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
@@ -145,15 +146,23 @@ describe('operations', () => {
     })
 
     it('puts operations.', async () => {
-      const res = await client.putOperation({
+      const res1 = await client.putOperation({
         collection: 'app.bsky.some.col',
         actorDid: 'did:example:a',
         rkey: 'rkey1',
         method: Method.CREATE,
         payload: Buffer.from([1, 2, 3]),
       })
+      const res2 = await client.putOperation({
+        collection: 'app.bsky.some.col',
+        actorDid: 'did:example:a',
+        rkey: 'rkey1',
+        method: Method.UPDATE,
+        payload: Buffer.from([4, 5, 6]),
+      })
 
-      expect(res.operation?.id).toBe('1')
+      expect(res1.operation?.id).toBe('1')
+      expect(res2.operation?.id).toBe('2')
       expect(await dumpOps(bsync.ctx.db)).toStrictEqual([
         {
           id: 1,
@@ -164,7 +173,36 @@ describe('operations', () => {
           payload: Buffer.from([1, 2, 3]),
           createdAt: expect.any(Date),
         },
+        {
+          id: 2,
+          collection: 'app.bsky.some.col',
+          actorDid: 'did:example:a',
+          rkey: 'rkey1',
+          method: Method.UPDATE,
+          payload: Buffer.from([4, 5, 6]),
+          createdAt: expect.any(Date),
+        },
       ])
+    })
+
+    it('returns the operations on creation.', async () => {
+      const res = await client.putOperation({
+        collection: 'app.bsky.some.col',
+        actorDid: 'did:example:a',
+        rkey: 'rkey1',
+        method: Method.CREATE,
+        payload: Buffer.from([1, 2, 3]),
+      })
+
+      const op = res.operation
+      assert(op)
+      // Compare each field individually to avoid custom serialization by proto response objects.
+      expect(op.id).toBe('3')
+      expect(op.collection).toBe('app.bsky.some.col')
+      expect(op.actorDid).toBe('did:example:a')
+      expect(op.rkey).toBe('rkey1')
+      expect(op.method).toBe(Method.CREATE)
+      expect(op.payload).toEqual(Uint8Array.from([1, 2, 3]))
     })
   })
 
