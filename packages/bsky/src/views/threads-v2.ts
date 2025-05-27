@@ -1,8 +1,4 @@
-import {
-  AppBskyUnspeccedGetPostThreadHiddenV2,
-  AppBskyUnspeccedGetPostThreadV2,
-  asPredicate,
-} from '@atproto/api'
+import { asPredicate } from '@atproto/api'
 import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
@@ -21,6 +17,10 @@ import {
 import { $Typed } from '../lexicon/util'
 
 type ThreadMaybeHiddenPostNode = ThreadPostNode | ThreadHiddenPostNode
+type ThreadNodeWithReplies =
+  | ThreadPostNode
+  | ThreadHiddenPostNode
+  | ThreadHiddenAnchorPostNode
 
 type ThreadItemValue<T extends ThreadItem['value']> = Omit<
   ThreadItem,
@@ -42,18 +42,22 @@ export type ThreadItemValueNotFound = ThreadItemValue<
 export type ThreadItemValuePost = ThreadItemValue<$Typed<ThreadItemPost>>
 
 type ThreadBlockedNode = {
+  type: 'blocked'
   item: ThreadItemValueBlocked
 }
 type ThreadNoUnauthenticatedNode = {
+  type: 'noUnauthenticated'
   parent: ThreadTree | undefined
   item: ThreadItemValueNoUnauthenticated
 }
 
 type ThreadNotFoundNode = {
+  type: 'notFound'
   item: ThreadItemValueNotFound
 }
 
 type ThreadPostNode = {
+  type: 'post'
   item: ThreadItemValuePost
   hasOPLike: boolean
   parent: ThreadTree | undefined
@@ -75,27 +79,22 @@ export type ThreadHiddenItemValuePost = ThreadHiddenItemValue<
 // It is useful to differentiate between the anchor post and the replies for the hidden case,
 // while also differentiating between hidden and visible cases.
 export type ThreadHiddenAnchorPostNode = {
+  type: 'hiddenAnchor'
   item: Omit<ThreadHiddenItem, 'value'> & { value: undefined }
   replies: ThreadHiddenPostNode[] | undefined
 }
 
 export type ThreadHiddenPostNode = {
+  type: 'hiddenPost'
   item: ThreadHiddenItemValuePost
   replies: ThreadHiddenPostNode[] | undefined
 }
 
-const isThreadNoUnauthenticatedNode = (
-  node: ThreadTree,
-): node is ThreadNoUnauthenticatedNode =>
-  AppBskyUnspeccedGetPostThreadV2.isThreadItemNoUnauthenticated(node.item.value)
+const isNodeWithReplies = (node: ThreadTree): node is ThreadNodeWithReplies =>
+  'replies' in node && node.replies !== undefined
 
-const isThreadPostNode = (node: ThreadTree): node is ThreadPostNode =>
-  AppBskyUnspeccedGetPostThreadV2.isThreadItemPost(node.item.value)
-
-const isThreadHiddenPostNode = (
-  node: ThreadTree,
-): node is ThreadHiddenPostNode =>
-  AppBskyUnspeccedGetPostThreadHiddenV2.isThreadHiddenItem(node.item)
+const isPostNode = (node: ThreadTree): node is ThreadMaybeHiddenPostNode =>
+  node.type === 'post' || node.type === 'hiddenPost'
 
 export type ThreadTreeVisible =
   | ThreadBlockedNode
@@ -132,10 +131,10 @@ function sortTrimThreadTree(
   n: ThreadTree,
   opts: SortTrimFlattenOptions,
 ): ThreadTree {
-  if (!isThreadPostNode(n) && !isThreadHiddenPostNode(n)) {
+  if (!isNodeWithReplies(n)) {
     return n
   }
-  const node: ThreadMaybeHiddenPostNode = n
+  const node: ThreadNodeWithReplies = n
 
   const {
     branchingFactor,
@@ -148,10 +147,10 @@ function sortTrimThreadTree(
 
   if (node.replies) {
     node.replies.sort((an: ThreadTree, bn: ThreadTree) => {
-      if (!isThreadPostNode(an) && !isThreadHiddenPostNode(an)) {
+      if (!isPostNode(an)) {
         return 1
       }
-      if (!isThreadPostNode(bn) && !isThreadHiddenPostNode(bn)) {
+      if (!isPostNode(bn)) {
         return -1
       }
       const aNode: ThreadMaybeHiddenPostNode = an
@@ -254,7 +253,8 @@ function applySorting(
   const a = aNode.item.value
   const b = bNode.item.value
 
-  if (!isThreadHiddenPostNode(aNode) && !isThreadHiddenPostNode(bNode)) {
+  // Only customize sort for visible posts.
+  if (aNode.type === 'post' && bNode.type === 'post') {
     const { sort } = opts
 
     if (sort === 'oldest') {
@@ -292,6 +292,7 @@ function flattenTree<TItem extends ThreadItem | ThreadHiddenItem>(
     ),
 
     // The anchor.
+    // In the case of hidden replies, the anchor item itself is undefined.
     ...(tree.item.value ? ([tree.item] as TItem[]) : []),
 
     // All replies below.
@@ -311,7 +312,7 @@ function* flattenInDirection<TItem extends ThreadItem | ThreadHiddenItem>({
   tree: ThreadTree
   direction: 'up' | 'down'
 }): Generator<TItem, void> {
-  if (isThreadNoUnauthenticatedNode(tree)) {
+  if (tree.type === 'noUnauthenticated') {
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
@@ -320,7 +321,7 @@ function* flattenInDirection<TItem extends ThreadItem | ThreadHiddenItem>({
     }
   }
 
-  if (isThreadPostNode(tree)) {
+  if (tree.type === 'post') {
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
@@ -337,7 +338,7 @@ function* flattenInDirection<TItem extends ThreadItem | ThreadHiddenItem>({
   }
 
   // For the first level of hidden replies, the items are undefined.
-  if (isThreadHiddenPostNode(tree)) {
+  if (tree.type === 'hiddenAnchor' || tree.type === 'hiddenPost') {
     if (direction === 'down') {
       // Unfold all replies below.
       if (tree.replies?.length) {

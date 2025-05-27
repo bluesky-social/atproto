@@ -3,7 +3,7 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
-import { HydrateCtx, HydrationState } from '../hydration/hydrator'
+import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
 import { RecordInfo } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
@@ -1225,6 +1225,7 @@ export class Views {
 
     if (this.noUnauthenticatedPost(state, postView)) {
       anchorTree = {
+        type: 'noUnauthenticated',
         item: this.threadV2ItemNoUnauthenticated({
           uri: anchorUri,
           depth: anchorDepth,
@@ -1251,6 +1252,7 @@ export class Views {
       hasHiddenReplies = hasHiddenRepliesShadow
 
       anchorTree = {
+        type: 'post',
         item: this.threadV2ItemPost({
           depth: anchorDepth,
           isOPThread,
@@ -1310,6 +1312,7 @@ export class Views {
     if (!post || !postView) {
       return {
         tree: {
+          type: 'notFound',
           item: this.threadV2ItemNotFound({ uri, depth }),
         },
         isOPThread: false,
@@ -1328,6 +1331,7 @@ export class Views {
     if (has1pBlock || has3pBlock) {
       return {
         tree: {
+          type: 'blocked',
           item: this.threadV2ItemBlocked({
             uri,
             depth,
@@ -1361,12 +1365,12 @@ export class Views {
     if (this.noUnauthenticatedPost(state, postView)) {
       return {
         tree: {
+          type: 'noUnauthenticated',
           item: this.threadV2ItemNoUnauthenticated({
             uri,
             depth,
           }),
           parent,
-          replies: undefined,
         },
         isOPThread,
       }
@@ -1377,6 +1381,7 @@ export class Views {
 
     return {
       tree: {
+        type: 'post',
         item: this.threadV2ItemPost({
           depth,
           isOPThread,
@@ -1486,6 +1491,7 @@ export class Views {
       const repliesAllowance = reachedDepth ? 0 : branchingFactor
 
       const tree: ThreadTree = {
+        type: 'post',
         item: this.threadV2ItemPost({
           depth,
           isOPThread,
@@ -1630,6 +1636,7 @@ export class Views {
     const opDid = uriToDid(rootUri)
 
     const anchorTree: ThreadHiddenAnchorPostNode = {
+      type: 'hiddenAnchor',
       item: this.threadHiddenV2ItemPostAnchor({ depth: 0, uri: anchorUri }),
       replies: this.threadHiddenV2Replies(
         {
@@ -1745,6 +1752,7 @@ export class Views {
       )
 
       const tree: ThreadHiddenPostNode = {
+        type: 'hiddenPost',
         item: item,
         replies,
       }
@@ -1761,7 +1769,6 @@ export class Views {
     uri: string
   }): ThreadHiddenAnchorPostNode['item'] {
     return {
-      $type: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem',
       uri,
       depth,
       // In hidden replies, the anchor value is undefined, so it doesn't include the anchor in the result.
