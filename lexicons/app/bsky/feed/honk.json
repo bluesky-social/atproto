@@ -1,0 +1,25 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.honk",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record declaring a public threat AKA a 'honk' at another actor.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "createdAt"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 10,
+            "maxGraphemes": 1,
+            "description": "DEPRECATED: Optional single character summary of the threat intesity, expressed as an emoji."
+          },
+          "subject": { "type": "string", "format": "did" },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}
