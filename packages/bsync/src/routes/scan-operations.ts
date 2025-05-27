@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import { ServiceImpl } from '@connectrpc/connect'
 import { AppContext } from '../context'
-import { createOpChannel } from '../db/schema/op'
+import { createOperationChannel } from '../db/schema/operation'
 import { Service } from '../proto/bsync_connect'
 import { ScanOperationsResponse } from '../proto/bsync_pb'
 import { authWithApiKey } from './auth'
@@ -13,7 +13,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const { db, events } = ctx
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
-    const nextOpPromise = once(events, createOpChannel, {
+    const nextOpPromise = once(events, createOperationChannel, {
       signal: combineSignals(
         ctx.shutdown,
         AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
@@ -22,7 +22,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     nextOpPromise.catch(() => null) // ensure timeout is always handled
 
     const nextOpPageQb = db.db
-      .selectFrom('op')
+      .selectFrom('operation')
       .selectAll()
       .where('id', '>', cursor ?? -1)
       .orderBy('id', 'asc')

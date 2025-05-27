@@ -6,7 +6,7 @@ import { ServerConfig } from './config'
 import { AppContext, AppContextOptions } from './context'
 import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
-import { createOpChannel } from './db/schema/op'
+import { createOperationChannel } from './db/schema/operation'
 import { dbLogger, loggerMiddleware } from './logger'
 import routes from './routes'
 
@@ -93,7 +93,7 @@ export class BsyncService {
     // if these error, unhandled rejection should cause process to exit
     conn.query(`listen ${createMuteOpChannel}`)
     conn.query(`listen ${createNotifOpChannel}`)
-    conn.query(`listen ${createOpChannel}`)
+    conn.query(`listen ${createOperationChannel}`)
     conn.on('notification', (notif) => {
       if (notif.channel === createMuteOpChannel) {
         this.ctx.events.emit(createMuteOpChannel)
@@ -101,8 +101,8 @@ export class BsyncService {
       if (notif.channel === createNotifOpChannel) {
         this.ctx.events.emit(createNotifOpChannel)
       }
-      if (notif.channel === createOpChannel) {
-        this.ctx.events.emit(createOpChannel)
+      if (notif.channel === createOperationChannel) {
+        this.ctx.events.emit(createOperationChannel)
       }
     })
   }

@@ -3,7 +3,7 @@ import { sql } from 'kysely'
 import { ensureValidNsid } from '@atproto/syntax'
 import { AppContext } from '../context'
 import { Database } from '../db'
-import { OpMethod, createOpChannel } from '../db/schema/op'
+import { OperationMethod, createOperationChannel } from '../db/schema/operation'
 import { Service } from '../proto/bsync_connect'
 import {
   Method,
@@ -37,7 +37,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
 const putOp = async (db: Database, op: Operation) => {
   const { ref } = db.db.dynamic
   const { id } = await db.db
-    .insertInto('op')
+    .insertInto('operation')
     .values({
       collection: op.collection,
       actorDid: op.actorDid,
@@ -47,7 +47,7 @@ const putOp = async (db: Database, op: Operation) => {
     })
     .returning('id')
     .executeTakeFirstOrThrow()
-  await sql`notify ${ref(createOpChannel)}`.execute(db.db) // emitted transactionally
+  await sql`notify ${ref(createOperationChannel)}`.execute(db.db) // emitted transactionally
   return id
 }
 
@@ -95,5 +95,5 @@ type Operation = {
   actorDid: string
   rkey: string
   payload: Uint8Array
-  method: OpMethod
+  method: OperationMethod
 }
