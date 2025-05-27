@@ -55,10 +55,6 @@ export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
 
-export const NEWEST = `${id}#newest`
-export const OLDEST = `${id}#oldest`
-export const TOP = `${id}#top`
-
 export interface ThreadHiddenItem {
   $type?: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem'
   uri: string

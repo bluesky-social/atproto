@@ -43,10 +43,6 @@ export function toKnownErr(e: any) {
   return e
 }
 
-export const NEWEST = `${id}#newest`
-export const OLDEST = `${id}#oldest`
-export const TOP = `${id}#top`
-
 export interface ThreadHiddenItem {
   $type?: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem'
   uri: string
