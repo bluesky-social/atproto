@@ -726,27 +726,32 @@ export class ScanNotifOperationsResponse extends Message<ScanNotifOperationsResp
  */
 export class Operation extends Message<Operation> {
   /**
-   * @generated from field: string collection = 1;
-   */
-  collection = ''
-
-  /**
-   * @generated from field: string actor_did = 2;
-   */
-  actorDid = ''
-
-  /**
-   * @generated from field: string id = 3;
+   * @generated from field: string id = 1;
    */
   id = ''
 
   /**
-   * @generated from field: bsync.Method method = 4;
+   * @generated from field: string collection = 2;
+   */
+  collection = ''
+
+  /**
+   * @generated from field: string actor_did = 3;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string rkey = 4;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: bsync.Method method = 5;
    */
   method = Method.UNSPECIFIED
 
   /**
-   * @generated from field: bytes payload = 5;
+   * @generated from field: bytes payload = 6;
    */
   payload = new Uint8Array(0)
 
@@ -758,11 +763,12 @@ export class Operation extends Message<Operation> {
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsync.Operation'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
-    { no: 5, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
+    { no: 6, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
   ])
 
   static fromBinary(
@@ -799,9 +805,29 @@ export class Operation extends Message<Operation> {
  */
 export class PutOperationRequest extends Message<PutOperationRequest> {
   /**
-   * @generated from field: bsync.Operation operation = 1;
+   * @generated from field: string collection = 1;
    */
-  operation?: Operation
+  collection = ''
+
+  /**
+   * @generated from field: string actor_did = 2;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string rkey = 3;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: bsync.Method method = 4;
+   */
+  method = Method.UNSPECIFIED
+
+  /**
+   * @generated from field: bytes payload = 5;
+   */
+  payload = new Uint8Array(0)
 
   constructor(data?: PartialMessage<PutOperationRequest>) {
     super()
@@ -811,7 +837,11 @@ export class PutOperationRequest extends Message<PutOperationRequest> {
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsync.PutOperationRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'operation', kind: 'message', T: Operation },
+    { no: 1, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
+    { no: 5, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
   ])
 
   static fromBinary(
@@ -847,6 +877,11 @@ export class PutOperationRequest extends Message<PutOperationRequest> {
  * @generated from message bsync.PutOperationResponse
  */
 export class PutOperationResponse extends Message<PutOperationResponse> {
+  /**
+   * @generated from field: bsync.Operation operation = 1;
+   */
+  operation?: Operation
+
   constructor(data?: PartialMessage<PutOperationResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -854,7 +889,9 @@ export class PutOperationResponse extends Message<PutOperationResponse> {
 
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsync.PutOperationResponse'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'operation', kind: 'message', T: Operation },
+  ])
 
   static fromBinary(
     bytes: Uint8Array,

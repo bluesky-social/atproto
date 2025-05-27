@@ -75,18 +75,24 @@ enum Method {
 }
 
 message Operation {
+  string id = 1;
+  string collection = 2;
+  string actor_did = 3;
+  string rkey = 4;
+  Method method = 5;
+  bytes payload = 6;
+}
+
+message PutOperationRequest {
   string collection = 1;
   string actor_did = 2;
-  string id = 3;
+  string rkey = 3;
   Method method = 4;
   bytes payload = 5;
 }
 
-message PutOperationRequest {
-  Operation operation = 1;
-}
-
 message PutOperationResponse {
+  Operation operation = 1;
 }
 
 message ScanOperationsRequest {
