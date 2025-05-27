@@ -219,11 +219,6 @@ export const APP_BSKY_GRAPH = {
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
-export const APP_BSKY_UNSPECCED = {
-  GetPostThreadV2Newest: 'app.bsky.unspecced.getPostThreadV2#newest',
-  GetPostThreadV2Oldest: 'app.bsky.unspecced.getPostThreadV2#oldest',
-  GetPostThreadV2Top: 'app.bsky.unspecced.getPostThreadV2#top',
-}
 
 export function createServer(options?: XrpcOptions): Server {
   return new Server(options)

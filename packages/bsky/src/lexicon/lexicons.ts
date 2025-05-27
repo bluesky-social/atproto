@@ -10352,15 +10352,6 @@ export const schemaDict = {
           },
         },
       },
-      newest: {
-        type: 'token',
-      },
-      oldest: {
-        type: 'token',
-      },
-      top: {
-        type: 'token',
-      },
       threadItem: {
         type: 'object',
         required: ['uri', 'depth', 'value'],

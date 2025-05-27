@@ -255,11 +255,6 @@ export const APP_BSKY_GRAPH = {
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
-export const APP_BSKY_UNSPECCED = {
-  GetPostThreadV2Newest: 'app.bsky.unspecced.getPostThreadV2#newest',
-  GetPostThreadV2Oldest: 'app.bsky.unspecced.getPostThreadV2#oldest',
-  GetPostThreadV2Top: 'app.bsky.unspecced.getPostThreadV2#top',
-}
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
