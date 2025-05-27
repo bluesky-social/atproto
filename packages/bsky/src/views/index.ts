@@ -1531,10 +1531,7 @@ export class Views {
       depth,
       value: {
         $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
-        post: {
-          $type: 'app.bsky.feed.defs#postView',
-          ...postView,
-        },
+        post: postView,
         moreParents: moreParents ?? false,
         moreReplies,
         opThread: isOPThread,
@@ -1800,10 +1797,7 @@ export class Views {
       ...base,
       value: {
         $type: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost',
-        post: {
-          $type: 'app.bsky.feed.defs#postView',
-          ...postView,
-        },
+        post: postView,
         hiddenByThreadgate,
         mutedByViewer,
       },

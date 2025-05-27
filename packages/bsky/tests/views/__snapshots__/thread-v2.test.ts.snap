@@ -13,7 +13,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -52,7 +51,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(1)",
             "handle": "simple-alice.test",
@@ -109,7 +107,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -148,7 +145,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(1)",
             "handle": "simple-bob.test",
@@ -197,7 +193,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(2)",
             "handle": "simple-alice.test",
@@ -254,7 +249,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -293,7 +287,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(1)",
             "handle": "simple-bob.test",
@@ -342,7 +335,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(2)",
             "handle": "simple-alice.test",
@@ -399,7 +391,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -438,7 +429,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(1)",
             "handle": "simple-carol.test",
@@ -495,7 +485,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -534,7 +523,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -583,7 +571,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -640,7 +627,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -679,7 +665,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -728,7 +713,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -785,7 +769,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -824,7 +807,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -873,7 +855,6 @@ Object {
         "moreReplies": 0,
         "opThread": true,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(0)",
             "handle": "simple-op.test",
@@ -922,7 +903,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(1)",
             "handle": "simple-alice.test",
@@ -971,7 +951,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(2)",
             "handle": "simple-bob.test",
@@ -1020,7 +999,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(1)",
             "handle": "simple-alice.test",
@@ -1069,7 +1047,6 @@ Object {
         "moreReplies": 0,
         "opThread": false,
         "post": Object {
-          "$type": "app.bsky.feed.defs#postView",
           "author": Object {
             "did": "user(3)",
             "handle": "simple-carol.test",
