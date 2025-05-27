@@ -14,7 +14,7 @@
             "type": "string",
             "maxLength": 10,
             "maxGraphemes": 1,
-            "description": "DEPRECATED: Optional single character summary of the threat intesity, expressed as an emoji."
+            "description": "DEPRECATED: Optional single character summary of the threat intensity, expressed as an emoji."
           },
           "subject": { "type": "string", "format": "did" },
           "createdAt": { "type": "string", "format": "datetime" }
