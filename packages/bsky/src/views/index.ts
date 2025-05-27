@@ -161,11 +161,11 @@ export class Views {
     return false
   }
 
-  noUnauthenticatedPost(viewer: HydrateCtx['viewer'], post: PostView): boolean {
+  noUnauthenticatedPost(state: HydrationState, post: PostView): boolean {
     const isNoUnauthenticated = post.author.labels?.some(
       (l) => l.val === '!no-unauthenticated',
     )
-    return !viewer && !!isNoUnauthenticated
+    return !state.ctx?.viewer && !!isNoUnauthenticated
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
@@ -1146,14 +1146,12 @@ export class Views {
       branchingFactor,
       prioritizeFollowedUsers,
       sort,
-      viewer,
     }: {
       above: number
       below: number
       branchingFactor: number
       prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
-      viewer: HydrateCtx['viewer']
     },
   ): { hasHiddenReplies: boolean; thread: ThreadItem[] } {
     const { anchor: anchorUri, uris } = skeleton
@@ -1201,15 +1199,17 @@ export class Views {
 
     // Builds the parent tree, and whether it is a contiguous OP thread.
     const parentTree = !anchorViolatesThreadGate
-      ? this.threadV2Parent({
-          childUri: anchorUri,
-          viewer,
-          opDid,
-          rootUri,
+      ? this.threadV2Parent(
+          {
+            childUri: anchorUri,
+            opDid,
+            rootUri,
+
+            above,
+            depth: -1,
+          },
           state,
-          above,
-          depth: -1,
-        })
+        )
       : undefined
 
     const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
@@ -1223,7 +1223,7 @@ export class Views {
     let anchorTree: ThreadTree
     let hasHiddenReplies = false
 
-    if (this.noUnauthenticatedPost(viewer, postView)) {
+    if (this.noUnauthenticatedPost(state, postView)) {
       anchorTree = {
         item: this.threadV2ItemNoUnauthenticated({
           uri: anchorUri,
@@ -1234,18 +1234,19 @@ export class Views {
     } else {
       const { replies, hasHiddenReplies: hasHiddenRepliesShadow } =
         !anchorViolatesThreadGate
-          ? this.threadV2Replies({
-              parentUri: anchorUri,
-              viewer,
-              isOPThread,
-              opDid,
-              rootUri,
-              childrenByParentUri,
+          ? this.threadV2Replies(
+              {
+                parentUri: anchorUri,
+                isOPThread,
+                opDid,
+                rootUri,
+                childrenByParentUri,
+                below,
+                depth: 1,
+                branchingFactor,
+              },
               state,
-              below,
-              depth: 1,
-              branchingFactor,
-            })
+            )
           : { replies: undefined, hasHiddenReplies: false }
       hasHiddenReplies = hasHiddenRepliesShadow
 
@@ -1268,7 +1269,7 @@ export class Views {
       branchingFactor,
       sort,
       prioritizeFollowedUsers,
-      viewer,
+      viewer: state.ctx?.viewer ?? null,
       fetchedAt: Date.now(),
     })
 
@@ -1278,23 +1279,22 @@ export class Views {
     }
   }
 
-  private threadV2Parent({
-    childUri,
-    viewer,
-    opDid,
-    rootUri,
-    state,
-    above,
-    depth,
-  }: {
-    childUri: string
-    viewer: HydrateCtx['viewer']
-    opDid: string
-    rootUri: string
-    state: HydrationState
-    above: number
-    depth: number
-  }): { tree: ThreadTreeVisible; isOPThread: boolean } | undefined {
+  private threadV2Parent(
+    {
+      childUri,
+      opDid,
+      rootUri,
+      above,
+      depth,
+    }: {
+      childUri: string
+      opDid: string
+      rootUri: string
+      above: number
+      depth: number
+    },
+    state: HydrationState,
+  ): { tree: ThreadTreeVisible; isOPThread: boolean } | undefined {
     // Reached the `above` limit.
     if (Math.abs(depth) > above) {
       return undefined
@@ -1340,15 +1340,16 @@ export class Views {
     }
 
     // Recurse up.
-    const parentTree = this.threadV2Parent({
-      childUri: uri,
-      viewer,
-      opDid,
-      rootUri,
+    const parentTree = this.threadV2Parent(
+      {
+        childUri: uri,
+        opDid,
+        rootUri,
+        above,
+        depth: depth - 1,
+      },
       state,
-      above,
-      depth: depth - 1,
-    })
+    )
     const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
       parentTree ?? { tree: undefined, isOPThread: false }
 
@@ -1357,7 +1358,7 @@ export class Views {
       ? isOPThreadFromRootToParent && isOPPost
       : isOPPost
 
-    if (this.noUnauthenticatedPost(viewer, postView)) {
+    if (this.noUnauthenticatedPost(state, postView)) {
       return {
         tree: {
           item: this.threadV2ItemNoUnauthenticated({
@@ -1391,29 +1392,28 @@ export class Views {
     }
   }
 
-  private threadV2Replies({
-    parentUri,
-    viewer,
-    isOPThread: isOPThreadFromRootToParent,
-    opDid,
-    rootUri,
-    childrenByParentUri,
-    state,
-    below,
-    depth,
-    branchingFactor,
-  }: {
-    parentUri: string
-    viewer: HydrateCtx['viewer']
-    isOPThread: boolean
-    opDid: string
-    rootUri: string
-    childrenByParentUri: Record<string, string[]>
-    state: HydrationState
-    below: number
-    depth: number
-    branchingFactor: number
-  }): { replies: ThreadTreeVisible[] | undefined; hasHiddenReplies: boolean } {
+  private threadV2Replies(
+    {
+      parentUri,
+      isOPThread: isOPThreadFromRootToParent,
+      opDid,
+      rootUri,
+      childrenByParentUri,
+      below,
+      depth,
+      branchingFactor,
+    }: {
+      parentUri: string
+      isOPThread: boolean
+      opDid: string
+      rootUri: string
+      childrenByParentUri: Record<string, string[]>
+      below: number
+      depth: number
+      branchingFactor: number
+    },
+    state: HydrationState,
+  ): { replies: ThreadTreeVisible[] | undefined; hasHiddenReplies: boolean } {
     // Reached the `below` limit.
     if (depth > below) {
       return { replies: undefined, hasHiddenReplies: false }
@@ -1449,13 +1449,13 @@ export class Views {
       }
 
       // No unauthenticated.
-      if (this.noUnauthenticatedPost(viewer, postView)) {
+      if (this.noUnauthenticatedPost(state, postView)) {
         return undefined
       }
 
       // Hidden.
       const { hiddenByThreadgate, mutedByViewer } = this.isHiddenThreadPost(
-        { rootUri, uri, viewer },
+        { rootUri, uri },
         state,
       )
       if (hiddenByThreadgate || mutedByViewer) {
@@ -1468,18 +1468,19 @@ export class Views {
 
       // Recurse down.
       const isOPThread = isOPThreadFromRootToParent && authorDid === opDid
-      const { replies: nestedReplies } = this.threadV2Replies({
-        parentUri: uri,
-        viewer,
-        isOPThread,
-        opDid,
-        rootUri,
-        childrenByParentUri,
+      const { replies: nestedReplies } = this.threadV2Replies(
+        {
+          parentUri: uri,
+          isOPThread,
+          opDid,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: depth + 1,
+          branchingFactor,
+        },
         state,
-        below,
-        depth: depth + 1,
-        branchingFactor,
-      })
+      )
 
       const reachedDepth = depth === below
       const repliesAllowance = reachedDepth ? 0 : branchingFactor
@@ -1601,11 +1602,9 @@ export class Views {
     {
       below,
       branchingFactor,
-      viewer,
     }: {
       below: number
       branchingFactor: number
-      viewer: HydrateCtx['viewer']
     },
   ): ThreadHiddenItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1632,43 +1631,43 @@ export class Views {
 
     const anchorTree: ThreadHiddenAnchorPostNode = {
       item: this.threadHiddenV2ItemPostAnchor({ depth: 0, uri: anchorUri }),
-      replies: this.threadHiddenV2Replies({
-        parentUri: anchorUri,
-        viewer,
-        rootUri,
-        childrenByParentUri,
+      replies: this.threadHiddenV2Replies(
+        {
+          parentUri: anchorUri,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: 1,
+        },
         state,
-        below,
-        depth: 1,
-      }),
+      ),
     }
 
     return sortTrimFlattenThreadTree(anchorTree, {
       opDid,
       branchingFactor,
       prioritizeFollowedUsers: false,
-      viewer,
+      viewer: state.ctx?.viewer ?? null,
       fetchedAt: Date.now(),
     })
   }
 
-  private threadHiddenV2Replies({
-    parentUri,
-    viewer,
-    rootUri,
-    childrenByParentUri,
-    state,
-    below,
-    depth,
-  }: {
-    parentUri: string
-    viewer: HydrateCtx['viewer']
-    rootUri: string
-    childrenByParentUri: Record<string, string[]>
-    state: HydrationState
-    below: number
-    depth: number
-  }): ThreadHiddenPostNode[] | undefined {
+  private threadHiddenV2Replies(
+    {
+      parentUri,
+      rootUri,
+      childrenByParentUri,
+      below,
+      depth,
+    }: {
+      parentUri: string
+      rootUri: string
+      childrenByParentUri: Record<string, string[]>
+      below: number
+      depth: number
+    },
+    state: HydrationState,
+  ): ThreadHiddenPostNode[] | undefined {
     // Reached the `below` limit.
     if (depth > below) {
       return undefined
@@ -1703,13 +1702,13 @@ export class Views {
       }
 
       // No unauthenticated.
-      if (this.noUnauthenticatedPost(viewer, postView)) {
+      if (this.noUnauthenticatedPost(state, postView)) {
         return undefined
       }
 
       // Hidden.
       const { hiddenByThreadgate, mutedByViewer } = this.isHiddenThreadPost(
-        { rootUri, uri, viewer },
+        { rootUri, uri },
         state,
       )
       // Is hidden reply.
@@ -1724,15 +1723,16 @@ export class Views {
       }
 
       // Recurse down.
-      const replies = this.threadHiddenV2Replies({
-        parentUri: uri,
-        viewer,
-        rootUri,
-        childrenByParentUri,
+      const replies = this.threadHiddenV2Replies(
+        {
+          parentUri: uri,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: depth + 1,
+        },
         state,
-        below,
-        depth: depth + 1,
-      })
+      )
 
       const item = this.threadHiddenV2ItemPost(
         {
@@ -1740,7 +1740,6 @@ export class Views {
           postView,
           rootUri,
           uri,
-          viewer,
         },
         state,
       )
@@ -1777,18 +1776,16 @@ export class Views {
       postView,
       rootUri,
       uri,
-      viewer,
     }: {
       depth: number
       postView: PostView
       rootUri: string
       uri: string
-      viewer: HydrateCtx['viewer']
     },
     state: HydrationState,
   ): ThreadHiddenPostNode['item'] {
     const { hiddenByThreadgate, mutedByViewer } = this.isHiddenThreadPost(
-      { rootUri, uri, viewer },
+      { rootUri, uri },
       state,
     )
 
@@ -1808,11 +1805,9 @@ export class Views {
     {
       rootUri,
       uri,
-      viewer,
     }: {
       rootUri: string
       uri: string
-      viewer: HydrateCtx['viewer']
     },
     state: HydrationState,
   ): {
@@ -1822,7 +1817,7 @@ export class Views {
     const authorDid = creatorFromUri(uri)
 
     const hiddenByThreadgate =
-      viewer !== authorDid &&
+      state.ctx?.viewer !== authorDid &&
       this.replyIsHiddenByThreadgate(uri, rootUri, state)
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)

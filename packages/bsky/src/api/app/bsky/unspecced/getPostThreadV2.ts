@@ -91,7 +91,6 @@ const presentation = (
     branchingFactor: params.branchingFactor,
     prioritizeFollowedUsers: params.prioritizeFollowedUsers,
     sort: params.sort,
-    viewer: params.hydrateCtx.viewer,
   })
 
   const rootUri =

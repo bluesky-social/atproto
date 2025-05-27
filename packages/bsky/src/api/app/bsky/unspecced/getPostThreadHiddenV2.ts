@@ -93,11 +93,10 @@ const hydration = async (
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton, hydration } = inputs
+  const { ctx, skeleton, hydration } = inputs
   const thread = ctx.views.threadHiddenV2(skeleton, hydration, {
     below: BELOW,
     branchingFactor: BRANCHING_FACTOR,
-    viewer: params.hydrateCtx.viewer,
   })
   return { thread }
 }
