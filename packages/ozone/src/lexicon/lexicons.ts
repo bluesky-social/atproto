@@ -10329,8 +10329,10 @@ export const schemaDict = {
               'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
           },
           value: {
-            type: 'ref',
-            ref: 'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost',
+            type: 'union',
+            refs: [
+              'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost',
+            ],
           },
         },
       },

@@ -60,6 +60,17 @@ type ThreadPostNode = {
   replies: ThreadTree[] | undefined
 }
 
+type ThreadHiddenItemValue<T extends ThreadHiddenItem['value']> = Omit<
+  ThreadHiddenItem,
+  'value'
+> & {
+  value: T
+}
+
+export type ThreadHiddenItemValuePost = ThreadHiddenItemValue<
+  $Typed<ThreadHiddenItemPost>
+>
+
 // This is an intermediary type that doesn't map to the views.
 // It is useful to differentiate between the anchor post and the replies for the hidden case,
 // while also differentiating between hidden and visible cases.
@@ -69,7 +80,7 @@ export type ThreadHiddenAnchorPostNode = {
 }
 
 export type ThreadHiddenPostNode = {
-  item: ThreadHiddenItem
+  item: ThreadHiddenItemValuePost
   replies: ThreadHiddenPostNode[] | undefined
 }
 

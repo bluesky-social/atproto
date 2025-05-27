@@ -48,7 +48,7 @@ export interface ThreadHiddenItem {
   uri: string
   /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
   depth: number
-  value: ThreadHiddenItemPost
+  value: $Typed<ThreadHiddenItemPost> | { $type: string }
 }
 
 const hashThreadHiddenItem = 'threadHiddenItem'
