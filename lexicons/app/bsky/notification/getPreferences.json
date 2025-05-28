@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Set notification-related preferences for an account. Requires auth.",
+      "description": "Get notification-related preferences for an account. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {}
