@@ -10276,6 +10276,88 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetPostThreadHiddenV2: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPostThreadHiddenV2',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get the hidden posts in a thread. It is based in an anchor post at any depth of the tree, and returns hidden replies (recursive replies, with branching to their replies) below the anchor. It does not include ancestors nor the anchor. This should be called after exhausting `app.bsky.unspecced.getPostThreadV2`. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+        parameters: {
+          type: 'params',
+          required: ['anchor'],
+          properties: {
+            anchor: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'Reference (AT-URI) to post record. This is the anchor post.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['thread'],
+            properties: {
+              thread: {
+                type: 'array',
+                description:
+                  'A flat list of thread hidden items. The depth of each item is indicated by the depth property inside the item.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem',
+                },
+              },
+            },
+          },
+        },
+      },
+      threadHiddenItem: {
+        type: 'object',
+        required: ['uri', 'depth', 'value'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          value: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost',
+            ],
+          },
+        },
+      },
+      threadHiddenItemPost: {
+        type: 'object',
+        required: ['post', 'hiddenByThreadgate', 'mutedByViewer'],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          hiddenByThreadgate: {
+            type: 'boolean',
+            description:
+              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
+          },
+          mutedByViewer: {
+            type: 'boolean',
+            description:
+              'This is by an account muted by the viewer requesting it.',
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPostThreadV2: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPostThreadV2',
@@ -10333,7 +10415,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['thread'],
+            required: ['thread', 'hasHiddenReplies'],
             properties: {
               thread: {
                 type: 'array',
@@ -10347,6 +10429,11 @@ export const schemaDict = {
               threadgate: {
                 type: 'ref',
                 ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
+              hasHiddenReplies: {
+                type: 'boolean',
+                description:
+                  'Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them.',
               },
             },
           },
@@ -10378,23 +10465,11 @@ export const schemaDict = {
       },
       threadItemPost: {
         type: 'object',
-        required: [
-          'post',
-          'hiddenByThreadgate',
-          'moreParents',
-          'moreReplies',
-          'mutedByViewer',
-          'opThread',
-        ],
+        required: ['post', 'moreParents', 'moreReplies', 'opThread'],
         properties: {
           post: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#postView',
-          },
-          hiddenByThreadgate: {
-            type: 'boolean',
-            description:
-              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
           },
           moreParents: {
             type: 'boolean',
@@ -10405,11 +10480,6 @@ export const schemaDict = {
             type: 'integer',
             description:
               'This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate.',
-          },
-          mutedByViewer: {
-            type: 'boolean',
-            description:
-              'This is by an account muted by the viewer requesting it.',
           },
           opThread: {
             type: 'boolean',
@@ -12861,6 +12931,8 @@ export const ids = {
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetPostThreadHiddenV2:
+    'app.bsky.unspecced.getPostThreadHiddenV2',
   AppBskyUnspeccedGetPostThreadV2: 'app.bsky.unspecced.getPostThreadV2',
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
   AppBskyUnspeccedGetSuggestedFeedsSkeleton:

@@ -3,7 +3,7 @@ import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -11,18 +11,27 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
-import { postUriToThreadgateUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
+// No parents for hidden replies (it would be the anchor post).
+const ABOVE = 0
+
+// For hidden replies we don't get more than the top-level replies.
+// To get nested replies, load the thread as one of the hidden replies as anchor.
+const BELOW = 1
+
+// It doesn't really matter since BELOW is 1, so it will not be used.
+const BRANCHING_FACTOR = 0
+
 export default function (server: Server, ctx: AppContext) {
-  const getPostThread = createPipeline(
+  const getPostThreadHidden = createPipeline(
     skeleton,
     hydration,
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
-  server.app.bsky.unspecced.getPostThreadV2({
+  server.app.bsky.unspecced.getPostThreadHiddenV2({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, include3pBlocks } =
@@ -37,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await getPostThread({ ...params, hydrateCtx }, ctx),
+        body: await getPostThreadHidden({ ...params, hydrateCtx }, ctx),
         headers: resHeaders({
           labelers: hydrateCtx.labelers,
         }),
@@ -52,8 +61,8 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   try {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
-      above: calculateAbove(ctx, params),
-      below: calculateBelow(ctx, anchor, params),
+      above: ABOVE,
+      below: BELOW,
     })
     return {
       anchor,
@@ -84,23 +93,12 @@ const hydration = async (
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton, hydration } = inputs
-  const { hasHiddenReplies, thread } = ctx.views.threadV2(skeleton, hydration, {
-    above: calculateAbove(ctx, params),
-    below: calculateBelow(ctx, skeleton.anchor, params),
-    branchingFactor: params.branchingFactor,
-    prioritizeFollowedUsers: params.prioritizeFollowedUsers,
-    sort: params.sort,
+  const { ctx, skeleton, hydration } = inputs
+  const thread = ctx.views.threadHiddenV2(skeleton, hydration, {
+    below: BELOW,
+    branchingFactor: BRANCHING_FACTOR,
   })
-
-  const rootUri =
-    hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
-    skeleton.anchor
-  const threadgate = ctx.views.threadgate(
-    postUriToThreadgateUri(rootUri),
-    hydration,
-  )
-  return { hasHiddenReplies, thread, threadgate }
+  return { thread }
 }
 
 type Context = {
@@ -115,16 +113,4 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
-}
-
-const calculateAbove = (ctx: Context, params: Params) => {
-  return params.above ? ctx.cfg.maxThreadParents : 0
-}
-
-const calculateBelow = (ctx: Context, anchor: string, params: Params) => {
-  let maxDepth = ctx.cfg.maxThreadDepth
-  if (ctx.cfg.bigThreadUris.has(anchor) && ctx.cfg.bigThreadDepth) {
-    maxDepth = ctx.cfg.bigThreadDepth
-  }
-  return maxDepth ? Math.min(maxDepth, params.below) : params.below
 }

@@ -50,7 +50,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["thread"],
+          "required": ["thread", "hasHiddenReplies"],
           "properties": {
             "thread": {
               "type": "array",
@@ -63,6 +63,10 @@
             "threadgate": {
               "type": "ref",
               "ref": "app.bsky.feed.defs#threadgateView"
+            },
+            "hasHiddenReplies": {
+              "type": "boolean",
+              "description": "Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them."
             }
           }
         }
@@ -93,20 +97,9 @@
     },
     "threadItemPost": {
       "type": "object",
-      "required": [
-        "post",
-        "hiddenByThreadgate",
-        "moreParents",
-        "moreReplies",
-        "mutedByViewer",
-        "opThread"
-      ],
+      "required": ["post", "moreParents", "moreReplies", "opThread"],
       "properties": {
         "post": { "type": "ref", "ref": "app.bsky.feed.defs#postView" },
-        "hiddenByThreadgate": {
-          "type": "boolean",
-          "description": "The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread."
-        },
         "moreParents": {
           "type": "boolean",
           "description": "This post has more parents that were not present in the response. This is just a boolean, without the number of parents."
@@ -114,10 +107,6 @@
         "moreReplies": {
           "type": "integer",
           "description": "This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate."
-        },
-        "mutedByViewer": {
-          "type": "boolean",
-          "description": "This is by an account muted by the viewer requesting it."
         },
         "opThread": {
           "type": "boolean",
