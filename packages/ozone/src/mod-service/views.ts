@@ -53,7 +53,7 @@ import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { formatLabel, isSafeUrl, signLabel } from './util'
+import { formatLabel, getPdsAgentForRepo, isSafeUrl, signLabel } from './util'
 
 const isValidSelfLabels = asPredicate(validateSelfLabels)
 
@@ -314,14 +314,15 @@ export class ModerationViews {
       return record
     } catch (err) {
       if (err instanceof RecordNotFoundError) {
-        const { pds } = await this.idResolver.did.resolveAtprotoData(
+        const { agent: pdsAgent } = await getPdsAgentForRepo(
+          this.idResolver,
           params.repo,
+          this.devMode,
         )
-        const url = new URL(pds)
-        if (!this.devMode && !isSafeUrl(url)) {
+        if (!pdsAgent) {
           return null
         }
-        const pdsAgent = new AtpAgent({ service: url })
+
         // If pds fetch fails, just return null regardless of the error
         try {
           return pdsAgent.com.atproto.repo.getRecord(params)

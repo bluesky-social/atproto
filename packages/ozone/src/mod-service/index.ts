@@ -61,7 +61,13 @@ import {
   ReporterStatsResult,
   ReversibleModerationEvent,
 } from './types'
-import { formatLabel, formatLabelRow, isSafeUrl, signLabel } from './util'
+import {
+  formatLabel,
+  formatLabelRow,
+  getPdsAgentForRepo,
+  isSafeUrl,
+  signLabel,
+} from './util'
 import { AuthHeaders, ModerationViews } from './views'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
@@ -80,7 +86,6 @@ export class ModerationService {
       aud: string,
       method: string,
     ) => Promise<AuthHeaders>,
-    private pdsAgent?: AtpAgent,
     public imgInvalidator?: ImageInvalidator,
   ) {}
 
@@ -93,7 +98,6 @@ export class ModerationService {
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
-    pdsAgent?: AtpAgent,
     imgInvalidator?: ImageInvalidator,
   ) {
     return (db: Database) =>
@@ -107,7 +111,6 @@ export class ModerationService {
         eventPusher,
         appviewAgent,
         createAuthHeaders,
-        pdsAgent,
         imgInvalidator,
       )
   }
@@ -1247,19 +1250,22 @@ export class ModerationService {
     subject: string
   }) {
     const { subject, content, recipientDid } = opts
-    const { pds } = await this.idResolver.did.resolveAtprotoData(recipientDid)
-    const url = new URL(pds)
-    if (!this.cfg.service.devMode && !isSafeUrl(url)) {
+    const { agent: pdsAgent, url } = await getPdsAgentForRepo(
+      this.idResolver,
+      recipientDid,
+      this.cfg.service.devMode,
+    )
+    if (!pdsAgent) {
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const agent = new AtpAgent({ service: url })
-    const { data: serverInfo } = await agent.com.atproto.server.describeServer()
+    const { data: serverInfo } =
+      await pdsAgent.com.atproto.server.describeServer()
     if (serverInfo.did !== `did:web:${url.hostname}`) {
       // @TODO do bidirectional check once implemented. in the meantime,
       // matching did to hostname we're talking to is pretty good.
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: delivery } = await agent.com.atproto.admin.sendEmail(
+    const { data: delivery } = await pdsAgent.com.atproto.admin.sendEmail(
       {
         subject,
         content,
