@@ -5,6 +5,7 @@ import {
   TestNetwork,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
+import { DatabaseSchema } from '../../src/data-plane/server/db/database-schema'
 import { User, createUsers } from './util'
 
 type ReplyFn = (
@@ -632,6 +633,8 @@ export async function bumpFollows(
 
 export async function blockDeletionAuth(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+  db: DatabaseSchema,
+  labelerDid: string,
 ) {
   const users = await createUsers(sc, 'bda', [
     'op',
@@ -674,6 +677,13 @@ export async function blockDeletionAuth(
   await sc.deletePost(alice.did, r['2'].ref.uri)
   await sc.block(blocker.did, blocked.did)
   await sc.block(op.did, opBlocked.did)
+
+  await createLabel(db, {
+    src: labelerDid,
+    uri: auth.did,
+    cid: '',
+    val: '!no-unauthenticated',
+  })
 
   return {
     seedClient: sc,
@@ -772,4 +782,28 @@ export async function threadgated(
     root,
     r,
   }
+}
+
+const createLabel = async (
+  db: DatabaseSchema,
+  opts: {
+    src: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  },
+) => {
+  await db
+    .insertInto('label')
+    .values({
+      uri: opts.uri,
+      cid: opts.cid,
+      val: opts.val,
+      cts: new Date().toISOString(),
+      exp: opts.exp ?? null,
+      neg: false,
+      src: opts.src,
+    })
+    .execute()
 }
