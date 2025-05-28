@@ -20,6 +20,10 @@ import {
   View as VideoEmbedView,
 } from '../lexicon/types/app/bsky/embed/video'
 import {
+  Main as CodeEmbed,
+  View as CodeEmbedView,
+} from '../lexicon/types/app/bsky/embed/code'
+import {
   BlockedPost,
   GeneratorView,
   NotFoundPost,
@@ -62,6 +66,11 @@ export type {
 export { isMain as isRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 export type { View as RecordWithMediaEmbedView } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 export type {
+  Main as CodeEmbed,
+  View as CodeEmbedView,
+} from '../lexicon/types/app/bsky/embed/code'
+export { isMain as isCodeEmbed } from '../lexicon/types/app/bsky/embed/code'
+export type {
   BlockedPost,
   GeneratorView,
   NotFoundPost,
@@ -77,6 +86,7 @@ export type Embed =
   | ExternalEmbed
   | RecordEmbed
   | RecordWithMedia
+  | CodeEmbed
 
 export type EmbedView =
   | ImagesEmbedView
@@ -84,6 +94,7 @@ export type EmbedView =
   | ExternalEmbedView
   | RecordEmbedView
   | RecordWithMediaView
+  | CodeEmbedView
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
 
