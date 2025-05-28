@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.3.19
+
+### Patch Changes
+
+- [#3877](https://github.com/bluesky-social/atproto/pull/3877) [`a03f0b906`](https://github.com/bluesky-social/atproto/commit/a03f0b906b108f8c766a5700f0d68b55748f23bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove un-necessary validation of `alg` on every dpop token creation
+
 ## 0.3.18
 
 ### Patch Changes
