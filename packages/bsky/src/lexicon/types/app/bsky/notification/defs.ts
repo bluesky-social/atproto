@@ -27,3 +27,19 @@ export function isRecordDeleted<V>(v: V) {
 export function validateRecordDeleted<V>(v: V) {
   return validate<RecordDeleted & V>(v, id, hashRecordDeleted)
 }
+
+export interface Preference {
+  $type?: 'app.bsky.notification.defs#preference'
+  filter: 'all' | 'follows' | (string & {})
+  channels: 'in-app' | 'push' | (string & {})[]
+}
+
+const hashPreference = 'preference'
+
+export function isPreference<V>(v: V) {
+  return is$typed(v, id, hashPreference)
+}
+
+export function validatePreference<V>(v: V) {
+  return validate<Preference & V>(v, id, hashPreference)
+}
