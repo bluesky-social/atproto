@@ -314,18 +314,19 @@ export class ModerationViews {
       return record
     } catch (err) {
       if (err instanceof RecordNotFoundError) {
-        const { agent: pdsAgent } = await getPdsAgentForRepo(
-          this.idResolver,
-          params.repo,
-          this.devMode,
-        )
-        if (!pdsAgent) {
-          return null
-        }
-
         // If pds fetch fails, just return null regardless of the error
         try {
-          return pdsAgent.com.atproto.repo.getRecord(params)
+          const { agent: pdsAgent } = await getPdsAgentForRepo(
+            this.idResolver,
+            params.repo,
+            this.devMode,
+          )
+          if (!pdsAgent) {
+            return null
+          }
+
+          const record = await pdsAgent.com.atproto.repo.getRecord(params)
+          return record
         } catch (error) {
           return null
         }
