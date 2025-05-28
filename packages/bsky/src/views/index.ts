@@ -1441,13 +1441,16 @@ export class Views {
     let hasHiddenReplies = false
     const replies = mapDefined(childrenUris, (uri) => {
       const replyInclusion = this.checkThreadV2ReplyInclusion({
+        opDid,
         uri,
         rootUri,
         state,
-        includeHiddenByTag: false,
         threadTagsHide,
       })
-      if (!replyInclusion) {
+      if ('exclusionReason' in replyInclusion) {
+        if (replyInclusion.exclusionReason === 'hiddenByTag') {
+          hasHiddenReplies = true
+        }
         return undefined
       }
       const { authorDid, post, postView } = replyInclusion
@@ -1641,6 +1644,7 @@ export class Views {
       item: this.threadHiddenV2ItemPostAnchor({ depth: 0, uri: anchorUri }),
       replies: this.threadHiddenV2Replies(
         {
+          opDid,
           parentUri: anchorUri,
           rootUri,
           childrenByParentUri,
@@ -1664,6 +1668,7 @@ export class Views {
 
   private threadHiddenV2Replies(
     {
+      opDid,
       parentUri,
       rootUri,
       childrenByParentUri,
@@ -1671,6 +1676,7 @@ export class Views {
       depth,
       threadTagsHide,
     }: {
+      opDid: string
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
@@ -1688,13 +1694,16 @@ export class Views {
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
       const replyInclusion = this.checkThreadV2ReplyInclusion({
+        opDid,
         uri,
         rootUri,
         state,
-        includeHiddenByTag: true,
         threadTagsHide,
       })
-      if (!replyInclusion) {
+      if (
+        'exclusionReason' in replyInclusion &&
+        replyInclusion.exclusionReason !== 'hiddenByTag'
+      ) {
         return undefined
       }
       const { post, postView } = replyInclusion
@@ -1705,7 +1714,12 @@ export class Views {
         state,
       )
       // Is hidden reply.
-      if (hiddenByThreadgate || mutedByViewer) {
+      if (
+        hiddenByThreadgate ||
+        mutedByViewer ||
+        ('exclusionReason' in replyInclusion &&
+          replyInclusion.exclusionReason === 'hiddenByTag')
+      ) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
           return undefined
@@ -1718,6 +1732,7 @@ export class Views {
       // Recurse down.
       const replies = this.threadHiddenV2Replies(
         {
+          opDid,
           parentUri: uri,
           rootUri,
           childrenByParentUri,
@@ -1797,31 +1812,43 @@ export class Views {
   }
 
   private checkThreadV2ReplyInclusion({
+    opDid,
     uri,
     rootUri,
     state,
-    includeHiddenByTag,
     threadTagsHide,
   }: {
+    opDid: string
     uri: string
     rootUri: string
     state: HydrationState
-    includeHiddenByTag: boolean
     threadTagsHide: readonly string[]
-  }): { authorDid: string; post: Post; postView: PostView } | null {
+  }):
+    | {
+        authorDid: string
+        post: Post
+        postView: PostView
+      }
+    | {
+        authorDid: string
+        post: Post
+        postView: PostView
+        exclusionReason: 'hiddenByTag'
+      }
+    | { exclusionReason: 'other' } {
     // Not found.
     const post = state.posts?.get(uri)
     if (post?.violatesThreadGate) {
-      return null
+      return { exclusionReason: 'other' }
     }
     const postView = this.post(uri, state)
     if (!post || !postView) {
-      return null
+      return { exclusionReason: 'other' }
     }
     const authorDid = postView.author.did
     if (rootUri !== getRootUri(uri, post)) {
       // outside thread boundary
-      return null
+      return { exclusionReason: 'other' }
     }
 
     // Blocked (1p and 3p for replies).
@@ -1829,24 +1856,24 @@ export class Views {
     const has3pBlock =
       !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
     if (has1pBlock || has3pBlock) {
-      return null
+      return { exclusionReason: 'other' }
     }
     if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
-      return null
+      return { exclusionReason: 'other' }
     }
 
     // No unauthenticated.
     if (this.noUnauthenticatedPost(state, postView)) {
-      return null
+      return { exclusionReason: 'other' }
     }
 
     // Hidden by tag.
     if (
-      !includeHiddenByTag &&
+      authorDid !== opDid &&
       authorDid !== state.ctx?.viewer &&
       threadTagsHide.some((t) => post.tags.has(t))
     ) {
-      return null
+      return { authorDid, post, postView, exclusionReason: 'hiddenByTag' }
     }
 
     return { authorDid, post, postView }
