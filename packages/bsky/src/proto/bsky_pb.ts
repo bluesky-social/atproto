@@ -90,6 +90,11 @@ export class Record extends Message<Record> {
    */
   takedownRef = ''
 
+  /**
+   * @generated from field: repeated string tags = 9;
+   */
+  tags: string[] = []
+
   constructor(data?: PartialMessage<Record>) {
     super()
     proto3.util.initPartial(data, this)
@@ -109,6 +114,13 @@ export class Record extends Message<Record> {
       name: 'takedown_ref',
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 9,
+      name: 'tags',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
     },
   ])
 

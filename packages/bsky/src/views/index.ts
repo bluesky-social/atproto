@@ -1149,12 +1149,16 @@ export class Views {
       branchingFactor,
       prioritizeFollowedUsers,
       sort,
+      threadTagsBumpDown,
+      threadTagsHide,
     }: {
       above: number
       below: number
       branchingFactor: number
       prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
+      threadTagsBumpDown: readonly string[]
+      threadTagsHide: readonly string[]
     },
   ): { hasHiddenReplies: boolean; thread: ThreadItem[] } {
     const { anchor: anchorUri, uris } = skeleton
@@ -1248,6 +1252,7 @@ export class Views {
                 below,
                 depth: 1,
                 branchingFactor,
+                threadTagsHide,
               },
               state,
             )
@@ -1263,6 +1268,7 @@ export class Views {
           repliesAllowance: Infinity, // While we don't have pagination.
           uri: anchorUri,
         }),
+        tags: post.tags,
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies,
@@ -1275,7 +1281,8 @@ export class Views {
       sort,
       prioritizeFollowedUsers,
       viewer: state.ctx?.viewer ?? null,
-      fetchedAt: Date.now(),
+      threadTagsBumpDown,
+      threadTagsHide,
     })
 
     return {
@@ -1392,6 +1399,7 @@ export class Views {
           postView,
           uri,
         }),
+        tags: post.tags,
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent,
         replies: undefined,
@@ -1410,6 +1418,7 @@ export class Views {
       below,
       depth,
       branchingFactor,
+      threadTagsHide,
     }: {
       parentUri: string
       isOPThread: boolean
@@ -1419,6 +1428,7 @@ export class Views {
       below: number
       depth: number
       branchingFactor: number
+      threadTagsHide: readonly string[]
     },
     state: HydrationState,
   ): { replies: ThreadTreeVisible[] | undefined; hasHiddenReplies: boolean } {
@@ -1430,15 +1440,17 @@ export class Views {
     const childrenUris = childrenByParentUri[parentUri] ?? []
     let hasHiddenReplies = false
     const replies = mapDefined(childrenUris, (uri) => {
-      const replyInclusion = this.checkThreadV2ReplyInclusion(
+      const replyInclusion = this.checkThreadV2ReplyInclusion({
         uri,
         rootUri,
         state,
-      )
+        includeHiddenByTag: false,
+        threadTagsHide,
+      })
       if (!replyInclusion) {
         return undefined
       }
-      const { authorDid, postView } = replyInclusion
+      const { authorDid, post, postView } = replyInclusion
 
       // Hidden.
       const { hiddenByThreadgate, mutedByViewer } = this.isHiddenThreadPost(
@@ -1466,6 +1478,7 @@ export class Views {
           below,
           depth: depth + 1,
           branchingFactor,
+          threadTagsHide,
         },
         state,
       )
@@ -1482,6 +1495,7 @@ export class Views {
           repliesAllowance,
           uri,
         }),
+        tags: post.tags,
         hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
         parent: undefined,
         replies: nestedReplies,
@@ -1591,9 +1605,13 @@ export class Views {
     {
       below,
       branchingFactor,
+      threadTagsBumpDown,
+      threadTagsHide,
     }: {
       below: number
       branchingFactor: number
+      threadTagsBumpDown: readonly string[]
+      threadTagsHide: readonly string[]
     },
   ): ThreadHiddenItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1628,6 +1646,7 @@ export class Views {
           childrenByParentUri,
           below,
           depth: 1,
+          threadTagsHide,
         },
         state,
       ),
@@ -1638,7 +1657,8 @@ export class Views {
       branchingFactor,
       prioritizeFollowedUsers: false,
       viewer: state.ctx?.viewer ?? null,
-      fetchedAt: Date.now(),
+      threadTagsBumpDown,
+      threadTagsHide,
     })
   }
 
@@ -1649,12 +1669,14 @@ export class Views {
       childrenByParentUri,
       below,
       depth,
+      threadTagsHide,
     }: {
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
       below: number
       depth: number
+      threadTagsHide: readonly string[]
     },
     state: HydrationState,
   ): ThreadHiddenPostNode[] | undefined {
@@ -1665,15 +1687,17 @@ export class Views {
 
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
-      const replyInclusion = this.checkThreadV2ReplyInclusion(
+      const replyInclusion = this.checkThreadV2ReplyInclusion({
         uri,
         rootUri,
         state,
-      )
+        includeHiddenByTag: true,
+        threadTagsHide,
+      })
       if (!replyInclusion) {
         return undefined
       }
-      const { postView } = replyInclusion
+      const { post, postView } = replyInclusion
 
       // Hidden.
       const { hiddenByThreadgate, mutedByViewer } = this.isHiddenThreadPost(
@@ -1699,6 +1723,7 @@ export class Views {
           childrenByParentUri,
           below,
           depth: depth + 1,
+          threadTagsHide,
         },
         state,
       )
@@ -1716,6 +1741,7 @@ export class Views {
       const tree: ThreadHiddenPostNode = {
         type: 'hiddenPost',
         item: item,
+        tags: post.tags,
         replies,
       }
 
@@ -1770,11 +1796,19 @@ export class Views {
     }
   }
 
-  private checkThreadV2ReplyInclusion(
-    uri: string,
-    rootUri: string,
-    state: HydrationState,
-  ): { authorDid: string; postView: PostView } | null {
+  private checkThreadV2ReplyInclusion({
+    uri,
+    rootUri,
+    state,
+    includeHiddenByTag,
+    threadTagsHide,
+  }: {
+    uri: string
+    rootUri: string
+    state: HydrationState
+    includeHiddenByTag: boolean
+    threadTagsHide: readonly string[]
+  }): { authorDid: string; post: Post; postView: PostView } | null {
     // Not found.
     const post = state.posts?.get(uri)
     if (post?.violatesThreadGate) {
@@ -1806,7 +1840,16 @@ export class Views {
       return null
     }
 
-    return { authorDid, postView }
+    // Hidden by tag.
+    if (
+      !includeHiddenByTag &&
+      authorDid !== state.ctx?.viewer &&
+      threadTagsHide.some((t) => post.tags.has(t))
+    ) {
+      return null
+    }
+
+    return { authorDid, post, postView }
   }
 
   private isHiddenThreadPost(
