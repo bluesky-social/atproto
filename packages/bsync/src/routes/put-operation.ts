@@ -1,6 +1,6 @@
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
-import { ensureValidNsid } from '@atproto/syntax'
+import { ensureValidNsid, ensureValidRecordKey } from '@atproto/syntax'
 import { AppContext } from '../context'
 import { Database } from '../db'
 import { OperationMethod, createOperationChannel } from '../db/schema/operation'
@@ -68,7 +68,9 @@ const validateOp = (req: PutOperationRequest): Operation => {
     )
   }
 
-  if (!req.rkey) {
+  try {
+    ensureValidRecordKey(req.rkey)
+  } catch (error) {
     throw new ConnectError('operation rkey is required', Code.InvalidArgument)
   }
 

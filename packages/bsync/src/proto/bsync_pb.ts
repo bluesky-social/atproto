@@ -731,14 +731,14 @@ export class Operation extends Message<Operation> {
   id = ''
 
   /**
-   * @generated from field: string collection = 2;
-   */
-  collection = ''
-
-  /**
-   * @generated from field: string actor_did = 3;
+   * @generated from field: string actor_did = 2;
    */
   actorDid = ''
+
+  /**
+   * @generated from field: string collection = 3;
+   */
+  collection = ''
 
   /**
    * @generated from field: string rkey = 4;
@@ -764,8 +764,8 @@ export class Operation extends Message<Operation> {
   static readonly typeName = 'bsync.Operation'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 4, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 5, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
     { no: 6, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },

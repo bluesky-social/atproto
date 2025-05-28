@@ -76,8 +76,8 @@ enum Method {
 
 message Operation {
   string id = 1;
-  string collection = 2;
-  string actor_did = 3;
+  string actor_did = 2;
+  string collection = 3;
   string rkey = 4;
   Method method = 5;
   bytes payload = 6;
