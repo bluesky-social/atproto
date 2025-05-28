@@ -1427,42 +1427,22 @@ export class Views {
     const childrenUris = childrenByParentUri[parentUri] ?? []
     let hasHiddenReplies = false
     const replies = mapDefined(childrenUris, (uri) => {
-      // Not found.
-      const post = state.posts?.get(uri)
-      if (post?.violatesThreadGate) {
+      const replyInclusion = this.checkThreadV2ReplyInclusion(
+        uri,
+        rootUri,
+        state,
+      )
+      if (!replyInclusion) {
         return undefined
       }
-      const postView = this.post(uri, state)
-      if (!post || !postView) {
-        return undefined
-      }
-      const authorDid = postView.author.did
-      if (rootUri !== getRootUri(uri, post)) {
-        // outside thread boundary
-        return undefined
-      }
-
-      // Blocked (1p and 3p for replies).
-      const has1pBlock = this.viewerBlockExists(authorDid, state)
-      const has3pBlock =
-        !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
-      if (has1pBlock || has3pBlock) {
-        return undefined
-      }
-      if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
-        return undefined
-      }
-
-      // No unauthenticated.
-      if (this.noUnauthenticatedPost(state, postView)) {
-        return undefined
-      }
+      const { authorDid, postView } = replyInclusion
 
       // Hidden.
       const { hiddenByThreadgate, mutedByViewer } = this.isHiddenThreadPost(
         { rootUri, uri },
         state,
       )
+      // Is hidden reply.
       if (hiddenByThreadgate || mutedByViewer) {
         // Only care about anchor replies
         if (depth === 1) {
@@ -1682,36 +1662,15 @@ export class Views {
 
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
-      // Not found.
-      const post = state.posts?.get(uri)
-      if (post?.violatesThreadGate) {
+      const replyInclusion = this.checkThreadV2ReplyInclusion(
+        uri,
+        rootUri,
+        state,
+      )
+      if (!replyInclusion) {
         return undefined
       }
-      const postView = this.post(uri, state)
-      if (!post || !postView) {
-        return undefined
-      }
-      const authorDid = postView.author.did
-      if (rootUri !== getRootUri(uri, post)) {
-        // outside thread boundary
-        return undefined
-      }
-
-      // Blocked (1p and 3p for replies).
-      const has1pBlock = this.viewerBlockExists(authorDid, state)
-      const has3pBlock =
-        !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
-      if (has1pBlock || has3pBlock) {
-        return undefined
-      }
-      if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
-        return undefined
-      }
-
-      // No unauthenticated.
-      if (this.noUnauthenticatedPost(state, postView)) {
-        return undefined
-      }
+      const { postView } = replyInclusion
 
       // Hidden.
       const { hiddenByThreadgate, mutedByViewer } = this.isHiddenThreadPost(
@@ -1806,6 +1765,45 @@ export class Views {
         mutedByViewer,
       },
     }
+  }
+
+  private checkThreadV2ReplyInclusion(
+    uri: string,
+    rootUri: string,
+    state: HydrationState,
+  ): { authorDid: string; postView: PostView } | null {
+    // Not found.
+    const post = state.posts?.get(uri)
+    if (post?.violatesThreadGate) {
+      return null
+    }
+    const postView = this.post(uri, state)
+    if (!post || !postView) {
+      return null
+    }
+    const authorDid = postView.author.did
+    if (rootUri !== getRootUri(uri, post)) {
+      // outside thread boundary
+      return null
+    }
+
+    // Blocked (1p and 3p for replies).
+    const has1pBlock = this.viewerBlockExists(authorDid, state)
+    const has3pBlock =
+      !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
+    if (has1pBlock || has3pBlock) {
+      return null
+    }
+    if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
+      return null
+    }
+
+    // No unauthenticated.
+    if (this.noUnauthenticatedPost(state, postView)) {
+      return null
+    }
+
+    return { authorDid, postView }
   }
 
   private isHiddenThreadPost(
