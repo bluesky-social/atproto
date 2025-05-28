@@ -53,7 +53,7 @@ import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { formatLabel, getPdsAgentForRepo, isSafeUrl, signLabel } from './util'
+import { formatLabel, getPdsAgentForRepo, signLabel } from './util'
 
 const isValidSelfLabels = asPredicate(validateSelfLabels)
 

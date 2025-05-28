@@ -65,7 +65,6 @@ import {
   formatLabel,
   formatLabelRow,
   getPdsAgentForRepo,
-  isSafeUrl,
   signLabel,
 } from './util'
 import { AuthHeaders, ModerationViews } from './views'
