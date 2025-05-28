@@ -5,6 +5,23 @@
     "recordDeleted": {
       "type": "object",
       "properties": {}
+    },
+    "preference": {
+      "type": "object",
+      "required": ["filter", "channels"],
+      "properties": {
+        "filter": {
+          "type": "string",
+          "knownValues": ["all", "follows"]
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "knownValues": ["in-app", "push"]
+          }
+        }
+      }
     }
   }
 }
