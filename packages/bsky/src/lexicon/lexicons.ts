@@ -9736,16 +9736,16 @@ export const schemaDict = {
         type: 'object',
         required: ['filter', 'channels'],
         properties: {
-          filter: {
-            type: 'string',
-            knownValues: ['all', 'follows'],
-          },
           channels: {
             type: 'array',
             items: {
               type: 'string',
               knownValues: ['in-app', 'push'],
             },
+          },
+          filter: {
+            type: 'string',
+            knownValues: ['all', 'follows'],
           },
         },
       },
