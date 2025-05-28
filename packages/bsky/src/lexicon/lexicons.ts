@@ -7239,48 +7239,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7342,6 +7300,48 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -10294,6 +10294,238 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetPostThreadHiddenV2: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPostThreadHiddenV2',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get the hidden posts in a thread. It is based in an anchor post at any depth of the tree, and returns hidden replies (recursive replies, with branching to their replies) below the anchor. It does not include ancestors nor the anchor. This should be called after exhausting `app.bsky.unspecced.getPostThreadV2`. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+        parameters: {
+          type: 'params',
+          required: ['anchor'],
+          properties: {
+            anchor: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'Reference (AT-URI) to post record. This is the anchor post.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['thread'],
+            properties: {
+              thread: {
+                type: 'array',
+                description:
+                  'A flat list of thread hidden items. The depth of each item is indicated by the depth property inside the item.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem',
+                },
+              },
+            },
+          },
+        },
+      },
+      threadHiddenItem: {
+        type: 'object',
+        required: ['uri', 'depth', 'value'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          value: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost',
+            ],
+          },
+        },
+      },
+      threadHiddenItemPost: {
+        type: 'object',
+        required: ['post', 'hiddenByThreadgate', 'mutedByViewer'],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          hiddenByThreadgate: {
+            type: 'boolean',
+            description:
+              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
+          },
+          mutedByViewer: {
+            type: 'boolean',
+            description:
+              'This is by an account muted by the viewer requesting it.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetPostThreadV2: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPostThreadV2',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get posts in a thread. It is based in an anchor post at any depth of the tree, and returns posts above it (recursively resolving the parent, without further branching to their replies) and below it (recursive replies, with branching to their replies). Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+        parameters: {
+          type: 'params',
+          required: ['anchor'],
+          properties: {
+            anchor: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'Reference (AT-URI) to post record. This is the anchor post, and the thread will be built around it. It can be any post in the tree, not necessarily a root post.',
+            },
+            above: {
+              type: 'boolean',
+              description: 'Whether to include parents above the anchor.',
+              default: true,
+            },
+            below: {
+              type: 'integer',
+              description:
+                'How many levels of replies to include below the anchor.',
+              default: 6,
+              minimum: 0,
+              maximum: 20,
+            },
+            branchingFactor: {
+              type: 'integer',
+              description:
+                'Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are (NOTE: currently, during unspecced phase) all returned (NOTE: later they might be paginated).',
+              default: 10,
+              minimum: 0,
+              maximum: 100,
+            },
+            prioritizeFollowedUsers: {
+              type: 'boolean',
+              description:
+                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
+              default: false,
+            },
+            sort: {
+              type: 'string',
+              description: 'Sorting for the thread replies.',
+              knownValues: ['newest', 'oldest', 'top'],
+              default: 'oldest',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['thread', 'hasHiddenReplies'],
+            properties: {
+              thread: {
+                type: 'array',
+                description:
+                  'A flat list of thread items. The depth of each item is indicated by the depth property inside the item.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getPostThreadV2#threadItem',
+                },
+              },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
+              hasHiddenReplies: {
+                type: 'boolean',
+                description:
+                  'Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them.',
+              },
+            },
+          },
+        },
+      },
+      threadItem: {
+        type: 'object',
+        required: ['uri', 'depth', 'value'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          value: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
+              'lex:app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+            ],
+          },
+        },
+      },
+      threadItemPost: {
+        type: 'object',
+        required: ['post', 'moreParents', 'moreReplies', 'opThread'],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          moreParents: {
+            type: 'boolean',
+            description:
+              'This post has more parents that were not present in the response. This is just a boolean, without the number of parents.',
+          },
+          moreReplies: {
+            type: 'integer',
+            description:
+              'This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate.',
+          },
+          opThread: {
+            type: 'boolean',
+            description:
+              'This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread.',
+          },
+        },
+      },
+      threadItemNoUnauthenticated: {
+        type: 'object',
+        properties: {},
+      },
+      threadItemNotFound: {
+        type: 'object',
+        properties: {},
+      },
+      threadItemBlocked: {
+        type: 'object',
+        required: ['author'],
+        properties: {
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetSuggestedFeeds: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getSuggestedFeeds',
@@ -12659,8 +12891,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
@@ -12717,6 +12949,9 @@ export const ids = {
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetPostThreadHiddenV2:
+    'app.bsky.unspecced.getPostThreadHiddenV2',
+  AppBskyUnspeccedGetPostThreadV2: 'app.bsky.unspecced.getPostThreadV2',
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
   AppBskyUnspeccedGetSuggestedFeedsSkeleton:
     'app.bsky.unspecced.getSuggestedFeedsSkeleton',

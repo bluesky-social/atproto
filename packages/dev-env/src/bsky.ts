@@ -79,6 +79,7 @@ export class TestBsky {
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
       bigThreadUris: new Set(),
+      maxThreadParents: cfg.maxThreadParents ?? 50,
       disableSsrfProtection: true,
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],

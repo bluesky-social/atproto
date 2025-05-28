@@ -56,6 +56,7 @@ export interface ServerConfigValues {
   bigThreadUris: Set<string>
   bigThreadDepth?: number
   maxThreadDepth?: number
+  maxThreadParents: number
   // notifications
   notificationsDelayMs?: number
   // client config
@@ -191,6 +192,9 @@ export class ServerConfig {
     const maxThreadDepth = process.env.BSKY_MAX_THREAD_DEPTH
       ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
       : undefined
+    const maxThreadParents = process.env.BSKY_MAX_THREAD_PARENTS
+      ? parseInt(process.env.BSKY_MAX_THREAD_PARENTS || '', 10)
+      : 50
 
     const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
@@ -258,6 +262,7 @@ export class ServerConfig {
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
+      maxThreadParents,
       notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
@@ -456,6 +461,10 @@ export class ServerConfig {
 
   get maxThreadDepth() {
     return this.cfg.maxThreadDepth
+  }
+
+  get maxThreadParents() {
+    return this.cfg.maxThreadParents
   }
 
   get notificationsDelayMs() {
