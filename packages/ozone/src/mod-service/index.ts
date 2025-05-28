@@ -1,4 +1,3 @@
-import net from 'node:net'
 import { Insertable, RawBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtpAgent } from '@atproto/api'
@@ -62,7 +61,7 @@ import {
   ReporterStatsResult,
   ReversibleModerationEvent,
 } from './types'
-import { formatLabel, formatLabelRow, signLabel } from './util'
+import { formatLabel, formatLabelRow, isSafeUrl, signLabel } from './util'
 import { AuthHeaders, ModerationViews } from './views'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
@@ -128,14 +127,8 @@ export class ModerationService {
       }
       return authHeaders
     },
-    this.pdsAgent,
-    async (method: string) => {
-      if (!this.cfg.pds) {
-        return undefined
-      }
-      const authHeaders = await this.createAuthHeaders(this.cfg.pds.did, method)
-      return authHeaders
-    },
+    this.idResolver,
+    this.cfg.service.devMode,
   )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
@@ -1475,13 +1468,6 @@ const parseTags = (tags?: string[]) =>
     )
     // Ignore invalid items
     .filter((subTags): subTags is [string, ...string[]] => subTags.length > 0)
-
-const isSafeUrl = (url: URL) => {
-  if (url.protocol !== 'https:') return false
-  if (!url.hostname || url.hostname === 'localhost') return false
-  if (net.isIP(url.hostname) !== 0) return false
-  return true
-}
 
 const TAKEDOWNS = ['pds_takedown' as const, 'appview_takedown' as const]
 

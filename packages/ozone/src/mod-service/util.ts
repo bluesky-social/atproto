@@ -1,3 +1,4 @@
+import net from 'node:net'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { LabelRow } from '../db/schema/label'
@@ -58,4 +59,11 @@ export const signLabel = async (
     ...reformatted,
     sig,
   }
+}
+
+export const isSafeUrl = (url: URL) => {
+  if (url.protocol !== 'https:') return false
+  if (!url.hostname || url.hostname === 'localhost') return false
+  if (net.isIP(url.hostname) !== 0) return false
+  return true
 }

@@ -4,8 +4,10 @@ import {
   AtpAgent,
   ComAtprotoRepoGetRecord,
 } from '@atproto/api'
+import { RecordNotFoundError } from '@atproto/api/dist/client/types/com/atproto/repo/getRecord'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Database } from '../db'
@@ -51,7 +53,7 @@ import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { formatLabel, signLabel } from './util'
+import { formatLabel, isSafeUrl, signLabel } from './util'
 
 const isValidSelfLabels = asPredicate(validateSelfLabels)
 
@@ -76,8 +78,8 @@ export class ModerationViews {
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
     private appviewAuth: (method: string) => Promise<AuthHeaders>,
-    private pdsAgent?: AtpAgent,
-    private pdsAuth?: (method: string) => Promise<AuthHeaders | undefined>,
+    public idResolver: IdResolver,
+    public devMode?: boolean,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
@@ -303,7 +305,6 @@ export class ModerationViews {
   async fetchRecord(
     params: ComAtprotoRepoGetRecord.QueryParams,
     appviewAuth: AuthHeaders,
-    pdsAuth?: AuthHeaders,
   ) {
     try {
       const record = await this.appviewAgent.com.atproto.repo.getRecord(
@@ -312,14 +313,19 @@ export class ModerationViews {
       )
       return record
     } catch (err) {
-      if (
-        (err as Error).message?.startsWith('Record not found') &&
-        this.pdsAgent
-      ) {
+      if (err instanceof RecordNotFoundError) {
+        const { pds } = await this.idResolver.did.resolveAtprotoData(
+          params.repo,
+        )
+        const url = new URL(pds)
+        if (!this.devMode && !isSafeUrl(url)) {
+          return null
+        }
+        const pdsAgent = new AtpAgent({ service: url })
         // If pds fetch fails, just return null regardless of the error
         try {
-          return this.pdsAgent.com.atproto.repo.getRecord(params, pdsAuth)
-        } catch {
+          return pdsAgent.com.atproto.repo.getRecord(params)
+        } catch (error) {
           return null
         }
       }
@@ -328,19 +334,12 @@ export class ModerationViews {
     }
   }
 
-  async getRecordFromPds(params: ComAtprotoRepoGetRecord.QueryParams) {
-    const record = await this.pdsAgent?.com.atproto.repo.getRecord(params)
-    return record
-  }
-
   async fetchRecords(
     subjects: RecordSubject[],
   ): Promise<Map<string, RecordInfo>> {
     const appviewAuth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
     if (!appviewAuth) return new Map()
-    const pdsAuth = this.pdsAuth
-      ? await this.pdsAuth(ids.ComAtprotoRepoGetRecord)
-      : undefined
+
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
@@ -350,7 +349,7 @@ export class ModerationViews {
           rkey: uri.rkey,
           cid: subject.cid,
         }
-        return this.fetchRecord(params, appviewAuth, pdsAuth)
+        return this.fetchRecord(params, appviewAuth)
       }),
     )
     return fetched.reduce((acc, cur) => {

@@ -104,7 +104,7 @@ describe('admin get record view', () => {
       },
       { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
-    await expect(promise).rejects.toThrow('Record not found')
+    await expect(promise).rejects.toThrow('Could not locate record')
   })
 
   it('fails when record cid does not exist.', async () => {
@@ -115,16 +115,16 @@ describe('admin get record view', () => {
       },
       { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
-    await expect(promise).rejects.toThrow('Record not found')
+    await expect(promise).rejects.toThrow('Could not locate record')
   })
 
   it('gets record from pds if appview does not have it.', async () => {
     const post = await sc.post(sc.dids.carol, 'this is test')
-    await expect(
-      agent.tools.ozone.moderation.getRecord(
+    const { data: postFromOzone } =
+      await agent.tools.ozone.moderation.getRecord(
         { uri: post.ref.uriStr },
         { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
-      ),
-    ).rejects.toThrow('Record not found')
+      )
+    expect(forSnapshot(postFromOzone)).toMatchSnapshot()
   })
 })
