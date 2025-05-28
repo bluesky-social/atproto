@@ -331,6 +331,15 @@ export function genArray(
       type: `(${types.join('|')})[]`,
       isExported: true,
     })
+  } else if (def.items.type === 'string') {
+    genComment(
+      file.addTypeAlias({
+        name: toTitleCase(getHash(lexUri)),
+        type: `(${primitiveOrBlobToType(def.items)})[]`,
+        isExported: true,
+      }),
+      def,
+    )
   } else {
     genComment(
       file.addTypeAlias({
