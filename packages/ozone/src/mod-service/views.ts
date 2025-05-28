@@ -4,7 +4,6 @@ import {
   AtpAgent,
   ComAtprotoRepoGetRecord,
 } from '@atproto/api'
-import { RecordNotFoundError } from '@atproto/api/dist/client/types/com/atproto/repo/getRecord'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -313,7 +312,7 @@ export class ModerationViews {
       )
       return record
     } catch (err) {
-      if (err instanceof RecordNotFoundError) {
+      if (err instanceof ComAtprotoRepoGetRecord.RecordNotFoundError) {
         // If pds fetch fails, just return null regardless of the error
         try {
           const { agent: pdsAgent } = await getPdsAgentForRepo(
