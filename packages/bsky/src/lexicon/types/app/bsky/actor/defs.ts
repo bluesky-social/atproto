@@ -147,6 +147,7 @@ export interface ViewerState {
   following?: string
   followedBy?: string
   knownFollowers?: KnownFollowers
+  subscription?: Subscription
 }
 
 const hashViewerState = 'viewerState'
@@ -218,6 +219,21 @@ export function isVerificationView<V>(v: V) {
 
 export function validateVerificationView<V>(v: V) {
   return validate<VerificationView & V>(v, id, hashVerificationView)
+}
+
+export interface Subscription {
+  $type?: 'app.bsky.actor.defs#subscription'
+  activity?: 'posts_no_replies' | 'posts_with_replies' | (string & {})
+}
+
+const hashSubscription = 'subscription'
+
+export function isSubscription<V>(v: V) {
+  return is$typed(v, id, hashSubscription)
+}
+
+export function validateSubscription<V>(v: V) {
+  return validate<Subscription & V>(v, id, hashSubscription)
 }
 
 export type Preferences = (

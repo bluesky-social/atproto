@@ -177,9 +177,12 @@ import * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
 import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+import * as AppBskyNotificationListSubscriptions from './types/app/bsky/notification/listSubscriptions.js'
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationSubscribe from './types/app/bsky/notification/subscribe.js'
+import * as AppBskyNotificationUnsubscribe from './types/app/bsky/notification/unsubscribe.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
@@ -442,9 +445,12 @@ export * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
 export * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+export * as AppBskyNotificationListSubscriptions from './types/app/bsky/notification/listSubscriptions.js'
 export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+export * as AppBskyNotificationSubscribe from './types/app/bsky/notification/subscribe.js'
+export * as AppBskyNotificationUnsubscribe from './types/app/bsky/notification/unsubscribe.js'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
@@ -3383,6 +3389,18 @@ export class AppBskyNotificationNS {
     )
   }
 
+  listSubscriptions(
+    data?: AppBskyNotificationListSubscriptions.InputSchema,
+    opts?: AppBskyNotificationListSubscriptions.CallOptions,
+  ): Promise<AppBskyNotificationListSubscriptions.Response> {
+    return this._client.call(
+      'app.bsky.notification.listSubscriptions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   putPreferences(
     data?: AppBskyNotificationPutPreferences.InputSchema,
     opts?: AppBskyNotificationPutPreferences.CallOptions,
@@ -3413,6 +3431,30 @@ export class AppBskyNotificationNS {
   ): Promise<AppBskyNotificationRegisterPush.Response> {
     return this._client.call(
       'app.bsky.notification.registerPush',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  subscribe(
+    data?: AppBskyNotificationSubscribe.InputSchema,
+    opts?: AppBskyNotificationSubscribe.CallOptions,
+  ): Promise<AppBskyNotificationSubscribe.Response> {
+    return this._client.call(
+      'app.bsky.notification.subscribe',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  unsubscribe(
+    data?: AppBskyNotificationUnsubscribe.InputSchema,
+    opts?: AppBskyNotificationUnsubscribe.CallOptions,
+  ): Promise<AppBskyNotificationUnsubscribe.Response> {
+    return this._client.call(
+      'app.bsky.notification.unsubscribe',
       opts?.qp,
       data,
       opts,
