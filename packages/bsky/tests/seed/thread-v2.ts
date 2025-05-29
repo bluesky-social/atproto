@@ -772,13 +772,14 @@ export async function threadgated(sc: SeedClient<TestNetwork>) {
 export async function tags(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'tags', [
     'op',
-    'viewer',
     'alice',
     'down',
+    'following',
     'hide',
+    'viewer',
   ] as const)
 
-  const { op, alice, down, hide, viewer } = users
+  const { op, alice, down, following, hide, viewer } = users
 
   const { root, replies: r } = await createThread(sc, op, async (r) => {
     await r(alice, async (r) => {
@@ -798,9 +799,12 @@ export async function tags(sc: SeedClient<TestNetwork>) {
     })
     await r(op)
     await r(viewer)
+    await r(following)
   })
 
   await sc.network.processAll()
+
+  await sc.follow(viewer.did, following.did)
 
   const db = sc.network.bsky.db.db
   await createTag(db, { uri: r['1'].ref.uriStr, val: TAG_BUMP_DOWN })
@@ -813,9 +817,12 @@ export async function tags(sc: SeedClient<TestNetwork>) {
   await createTag(db, { uri: r['1.2'].ref.uriStr, val: TAG_HIDE })
   await createTag(db, { uri: r['2.2'].ref.uriStr, val: TAG_HIDE })
 
-  // Neither tag affect op and viewer.
+  // Neither tag affect op, viewer.
   await createTag(db, { uri: r['3'].ref.uriStr, val: TAG_BUMP_DOWN })
   await createTag(db, { uri: r['4'].ref.uriStr, val: TAG_HIDE })
+
+  // Tags affect following depending on the config to prioritize following.
+  await createTag(db, { uri: r['5'].ref.uriStr, val: TAG_HIDE })
 
   return {
     seedClient: sc,

@@ -1252,6 +1252,7 @@ export class Views {
                 below,
                 depth: 1,
                 branchingFactor,
+                prioritizeFollowedUsers,
               },
               state,
             )
@@ -1417,6 +1418,7 @@ export class Views {
       below,
       depth,
       branchingFactor,
+      prioritizeFollowedUsers,
     }: {
       parentUri: string
       isOPThread: boolean
@@ -1426,6 +1428,7 @@ export class Views {
       below: number
       depth: number
       branchingFactor: number
+      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): { replies: ThreadTreeVisible[] | undefined; hasHiddenReplies: boolean } {
@@ -1449,7 +1452,7 @@ export class Views {
 
       // Hidden.
       const { isHidden } = this.isHiddenThreadPost(
-        { post, rootUri, uri },
+        { post, postView, prioritizeFollowedUsers, rootUri, uri },
         state,
       )
       if (isHidden) {
@@ -1472,6 +1475,7 @@ export class Views {
           below,
           depth: depth + 1,
           branchingFactor,
+          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1598,9 +1602,11 @@ export class Views {
     {
       below,
       branchingFactor,
+      prioritizeFollowedUsers,
     }: {
       below: number
       branchingFactor: number
+      prioritizeFollowedUsers: boolean
     },
   ): ThreadHiddenItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1635,6 +1641,7 @@ export class Views {
           childrenByParentUri,
           below,
           depth: 1,
+          prioritizeFollowedUsers,
         },
         state,
       ),
@@ -1657,12 +1664,14 @@ export class Views {
       childrenByParentUri,
       below,
       depth,
+      prioritizeFollowedUsers,
     }: {
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
       below: number
       depth: number
+      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): ThreadHiddenPostNode[] | undefined {
@@ -1685,7 +1694,10 @@ export class Views {
 
       // Hidden.
       const { isHidden, hiddenByThreadgate, mutedByViewer } =
-        this.isHiddenThreadPost({ post, rootUri, uri }, state)
+        this.isHiddenThreadPost(
+          { post, postView, rootUri, prioritizeFollowedUsers, uri },
+          state,
+        )
       if (isHidden) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
@@ -1704,6 +1716,7 @@ export class Views {
           childrenByParentUri,
           below,
           depth: depth + 1,
+          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1818,10 +1831,14 @@ export class Views {
   private isHiddenThreadPost(
     {
       post,
+      postView,
+      prioritizeFollowedUsers,
       rootUri,
       uri,
     }: {
       post: Post
+      postView: PostView
+      prioritizeFollowedUsers: boolean
       rootUri: string
       uri: string
     },
@@ -1835,9 +1852,12 @@ export class Views {
     const opDid = creatorFromUri(rootUri)
     const authorDid = creatorFromUri(uri)
 
+    const showBecauseFollowing =
+      prioritizeFollowedUsers && !!postView.author.viewer?.following
     const hiddenByTag =
       authorDid !== opDid &&
       authorDid !== state.ctx?.viewer &&
+      !showBecauseFollowing &&
       this.threadTagsHide.some((t) => post.tags.has(t))
 
     const hiddenByThreadgate =

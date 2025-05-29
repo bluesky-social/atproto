@@ -10312,6 +10312,12 @@ export const schemaDict = {
               description:
                 'Reference (AT-URI) to post record. This is the anchor post.',
             },
+            prioritizeFollowedUsers: {
+              type: 'boolean',
+              description:
+                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
+              default: false,
+            },
           },
         },
         output: {
