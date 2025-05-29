@@ -225,6 +225,14 @@ function applyBumping(
       Bumps within visible replies.
     */
     // Pushpin-only.
+    // Followers posts.
+    [
+      'up',
+      (i) =>
+        i.type === 'post' &&
+        prioritizeFollowedUsers &&
+        !!i.item.value.post.author.viewer?.following,
+    ],
     [
       'down',
       (i) => i.type === 'post' && threadTagsBumpDown.some((t) => i.tags.has(t)),
@@ -235,14 +243,6 @@ function applyBumping(
         i.type === 'post' &&
         isPostRecord(i.item.value.post.record) &&
         i.item.value.post.record.text.trim() === '📌',
-    ],
-    // Followers posts.
-    [
-      'up',
-      (i) =>
-        i.type === 'post' &&
-        prioritizeFollowedUsers &&
-        !!i.item.value.post.author.viewer?.following,
     ],
 
     /*
