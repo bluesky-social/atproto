@@ -52,6 +52,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": true,
         "lists": 0,
@@ -81,6 +84,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,
@@ -127,6 +133,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,
@@ -158,6 +167,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,
@@ -221,6 +233,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": true,
         "lists": 0,
@@ -250,6 +265,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,
@@ -296,6 +314,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,
@@ -327,6 +348,9 @@ Array [
     "lastUpdatedBy": "user(1)",
     "profile": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,

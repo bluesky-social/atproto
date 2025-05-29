@@ -12,9 +12,10 @@ import { Notification } from '../proto/bsky_pb'
 import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
+  ActivitySubscriptionStates,
   ActorHydrator,
   Actors,
-  KnownFollowers,
+  KnownFollowersStates,
   ProfileAggs,
   ProfileViewerState,
   ProfileViewerStates,
@@ -121,7 +122,8 @@ export type HydrationState = {
   labelers?: Labelers
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
-  knownFollowers?: KnownFollowers
+  knownFollowers?: KnownFollowersStates
+  activitySubscriptions?: ActivitySubscriptionStates
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
 }
@@ -175,12 +177,12 @@ export class Hydrator {
       viewer,
     )
     const listUris: string[] = []
-    profileViewers?.forEach((item) => {
+    profileViewers.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
     })
     const listState = await this.hydrateListsBasic(listUris, ctx)
     // if a list no longer exists or is not a mod list, then remove from viewer state
-    profileViewers?.forEach((item) => {
+    profileViewers.forEach((item) => {
       removeNonModListsFromProfileViewer(item, listState)
     })
 
@@ -239,14 +241,26 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    let knownFollowers: KnownFollowers = new HydrationMap()
-
+    let knownFollowers: KnownFollowersStates = new HydrationMap()
     try {
       knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
     } catch (err) {
       hydrationLogger.error(
         { err },
         'Failed to get known followers for profiles',
+      )
+    }
+
+    let activitySubscriptions: ActivitySubscriptionStates = new HydrationMap()
+    try {
+      activitySubscriptions = await this.actor.getActivitySubscriptions(
+        dids,
+        ctx.viewer,
+      )
+    } catch (err) {
+      hydrationLogger.error(
+        { err },
+        'Failed to get activity subscriptions state for profiles',
       )
     }
 
@@ -281,6 +295,7 @@ export class Hydrator {
     return mergeManyStates(state, starterPackState, {
       profileAggs,
       knownFollowers,
+      activitySubscriptions,
       ctx,
       bidirectionalBlocks,
     })
@@ -1130,6 +1145,13 @@ export class Hydrator {
           uri,
         ) ?? undefined
       )
+    } else if (collection === ids.AppBskyNotificationDeclaration) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (
+          await this.actor.getNotificationDeclarations([uri], includeTakedowns)
+        ).get(uri) ?? undefined
+      )
     } else if (collection === ids.AppBskyActorStatus) {
       if (parsed.rkey !== 'self') return
       return (
@@ -1348,6 +1370,10 @@ export const mergeStates = (
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
     knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
+    activitySubscriptions: mergeMaps(
+      stateA.activitySubscriptions,
+      stateB.activitySubscriptions,
+    ),
     bidirectionalBlocks: mergeNestedMaps(
       stateA.bidirectionalBlocks,
       stateB.bidirectionalBlocks,

@@ -174,10 +174,12 @@
         "following": { "type": "string", "format": "at-uri" },
         "followedBy": { "type": "string", "format": "at-uri" },
         "knownFollowers": {
+          "description": "This property is present only in selected cases, as an optimization.",
           "type": "ref",
           "ref": "#knownFollowers"
         },
         "activitySubscription": {
+          "description": "This property is present only in selected cases, as an optimization.",
           "type": "ref",
           "ref": "app.bsky.notification.defs#activitySubscription"
         }
