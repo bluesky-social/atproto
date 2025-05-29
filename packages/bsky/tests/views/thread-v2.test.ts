@@ -30,7 +30,7 @@ import {
   seedThreadV2Sort,
   seedThreadV2Tags,
   seedThreadV2Threadgated,
-} from '../seed/thread-v2'
+} from '@atproto/dev-env/src/seed/thread-v2'
 
 type PostProps = Pick<ThreadItemPost, 'moreReplies' | 'opThread'>
 const props = (overrides: Partial<PostProps> = {}): PostProps => ({

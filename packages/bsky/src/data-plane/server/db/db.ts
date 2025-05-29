@@ -19,6 +19,8 @@ import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { PgOptions } from './types'
 
+export type { DatabaseSchema }
+
 export class Database {
   pool: PgPool
   db: DatabaseSchema
