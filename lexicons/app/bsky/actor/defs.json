@@ -236,10 +236,11 @@
     },
     "subscription": {
       "type": "object",
+      "required": ["activity"],
       "properties": {
         "activity": {
           "type": "string",
-          "knownValues": ["posts_no_replies", "posts_with_replies"]
+          "knownValues": ["posts_no_replies", "posts_with_replies", "none"]
         }
       }
     },
