@@ -314,7 +314,11 @@ export class TokenManager {
     }
   }
 
-  public async validateRefresh({ data }: TokenInfo): Promise<void> {
+  public async validateRefresh(
+    client: Client,
+    clientAuth: ClientAuth,
+    { data }: TokenInfo,
+  ): Promise<void> {
     const [sessionLifetime, refreshLifetime] =
       data.clientAuth.method !== 'none'
         ? [
@@ -331,6 +335,11 @@ export class TokenManager {
     const refreshAge = Date.now() - data.updatedAt.getTime()
     if (refreshAge > refreshLifetime) {
       throw new InvalidGrantError(`Refresh token expired`)
+    }
+
+    // Foolproof against data manipulation
+    if (refreshAge > sessionAge) {
+      throw new InvalidGrantError(`Refresh token is older than session`)
     }
   }
 
@@ -363,7 +372,7 @@ export class TokenManager {
 
     try {
       await this.validateAccess(client, clientAuth, tokenInfo)
-      await this.validateRefresh(tokenInfo)
+      await this.validateRefresh(client, clientAuth, tokenInfo)
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {
         // In case the client metadata was updated after the token was issued
