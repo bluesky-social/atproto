@@ -57,7 +57,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 export interface Subscription {
   $type?: 'app.bsky.notification.listSubscriptions#subscription'
   subject: string
-  activity?: 'posts_no_replies' | 'posts_with_replies' | (string & {})
+  activity: 'posts_no_replies' | 'posts_with_replies' | 'none' | (string & {})
 }
 
 const hashSubscription = 'subscription'

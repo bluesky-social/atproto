@@ -4860,10 +4860,11 @@ export const schemaDict = {
       },
       subscription: {
         type: 'object',
+        required: ['activity'],
         properties: {
           activity: {
             type: 'string',
-            knownValues: ['posts_no_replies', 'posts_with_replies'],
+            knownValues: ['posts_no_replies', 'posts_with_replies', 'none'],
           },
         },
       },
@@ -10098,7 +10099,7 @@ export const schemaDict = {
       },
       subscription: {
         type: 'object',
-        required: ['subject'],
+        required: ['subject', 'activity'],
         properties: {
           subject: {
             type: 'string',
@@ -10106,7 +10107,7 @@ export const schemaDict = {
           },
           activity: {
             type: 'string',
-            knownValues: ['posts_no_replies', 'posts_with_replies'],
+            knownValues: ['posts_no_replies', 'posts_with_replies', 'none'],
           },
         },
       },
@@ -10259,7 +10260,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Subscribe to activity for an account. Requires auth.',
+        description:
+          "Subscribe to activity for an account. Setting activity to 'none' removes the subscription. Requires auth.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -10272,30 +10274,7 @@ export const schemaDict = {
               },
               activity: {
                 type: 'string',
-                knownValues: ['posts_no_replies', 'posts_with_replies'],
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyNotificationUnsubscribe: {
-    lexicon: 1,
-    id: 'app.bsky.notification.unsubscribe',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Unsubscribe from activity for an account. Requires auth.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject'],
-            properties: {
-              subject: {
-                type: 'string',
-                format: 'did',
+                knownValues: ['posts_no_replies', 'posts_with_replies', 'none'],
               },
             },
           },
@@ -16912,7 +16891,6 @@ export const ids = {
   AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationSubscribe: 'app.bsky.notification.subscribe',
-  AppBskyNotificationUnsubscribe: 'app.bsky.notification.unsubscribe',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',

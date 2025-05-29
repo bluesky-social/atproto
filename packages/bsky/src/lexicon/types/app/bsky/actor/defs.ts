@@ -223,7 +223,7 @@ export function validateVerificationView<V>(v: V) {
 
 export interface Subscription {
   $type?: 'app.bsky.actor.defs#subscription'
-  activity?: 'posts_no_replies' | 'posts_with_replies' | (string & {})
+  activity: 'posts_no_replies' | 'posts_with_replies' | 'none' | (string & {})
 }
 
 const hashSubscription = 'subscription'

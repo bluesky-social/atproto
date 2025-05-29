@@ -19,7 +19,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   subject: string
-  activity: 'posts_no_replies' | 'posts_with_replies' | (string & {})
+  activity: 'posts_no_replies' | 'posts_with_replies' | 'none' | (string & {})
 }
 
 export interface CallOptions {
