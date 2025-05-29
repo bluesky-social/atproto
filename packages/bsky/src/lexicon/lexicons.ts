@@ -9758,7 +9758,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Set notification-related preferences for an account. Requires auth.',
+          'Get notification-related preferences for an account. Requires auth.',
         parameters: {
           type: 'params',
           properties: {},
@@ -10014,7 +10014,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'DEPRECIATED: Use putPreferencesV2. Requires auth.',
+        description: 'DEPRECATED: Use putPreferencesV2. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
