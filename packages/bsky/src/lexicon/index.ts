@@ -144,7 +144,6 @@ import * as AppBskyNotificationListSubscriptions from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationSubscribe from './types/app/bsky/notification/subscribe.js'
-import * as AppBskyNotificationUnsubscribe from './types/app/bsky/notification/unsubscribe.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -1919,17 +1918,6 @@ export class AppBskyNotificationNS {
     >,
   ) {
     const nsid = 'app.bsky.notification.subscribe' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unsubscribe<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyNotificationUnsubscribe.Handler<ExtractAuth<AV>>,
-      AppBskyNotificationUnsubscribe.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.unsubscribe' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
