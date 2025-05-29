@@ -91,8 +91,6 @@ const presentation = (
     branchingFactor: params.branchingFactor,
     prioritizeFollowedUsers: params.prioritizeFollowedUsers,
     sort: params.sort,
-    threadTagsBumpDown: [...ctx.cfg.threadTagsBumpDown],
-    threadTagsHide: [...ctx.cfg.threadTagsHide],
   })
 
   const rootUri =

@@ -97,8 +97,6 @@ const presentation = (
   const thread = ctx.views.threadHiddenV2(skeleton, hydration, {
     below: BELOW,
     branchingFactor: BRANCHING_FACTOR,
-    threadTagsBumpDown: [...ctx.cfg.threadTagsBumpDown],
-    threadTagsHide: [...ctx.cfg.threadTagsHide],
   })
   return { thread }
 }

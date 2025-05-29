@@ -130,11 +130,15 @@ export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
   public videoUriBuilder: VideoUriBuilder = this.opts.videoUriBuilder
   public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
+  private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
+  private threadTagsHide: readonly string[] = this.opts.threadTagsHide
   constructor(
     private opts: {
       imgUriBuilder: ImageUriBuilder
       videoUriBuilder: VideoUriBuilder
       indexedAtEpoch: Date | undefined
+      threadTagsBumpDown: readonly string[]
+      threadTagsHide: readonly string[]
     },
   ) {}
 
@@ -1149,16 +1153,12 @@ export class Views {
       branchingFactor,
       prioritizeFollowedUsers,
       sort,
-      threadTagsBumpDown,
-      threadTagsHide,
     }: {
       above: number
       below: number
       branchingFactor: number
       prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
-      threadTagsBumpDown: readonly string[]
-      threadTagsHide: readonly string[]
     },
   ): { hasHiddenReplies: boolean; thread: ThreadItem[] } {
     const { anchor: anchorUri, uris } = skeleton
@@ -1252,7 +1252,6 @@ export class Views {
                 below,
                 depth: 1,
                 branchingFactor,
-                threadTagsHide,
               },
               state,
             )
@@ -1281,8 +1280,8 @@ export class Views {
       sort,
       prioritizeFollowedUsers,
       viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown,
-      threadTagsHide,
+      threadTagsBumpDown: this.threadTagsBumpDown,
+      threadTagsHide: this.threadTagsHide,
     })
 
     return {
@@ -1418,7 +1417,6 @@ export class Views {
       below,
       depth,
       branchingFactor,
-      threadTagsHide,
     }: {
       parentUri: string
       isOPThread: boolean
@@ -1428,7 +1426,6 @@ export class Views {
       below: number
       depth: number
       branchingFactor: number
-      threadTagsHide: readonly string[]
     },
     state: HydrationState,
   ): { replies: ThreadTreeVisible[] | undefined; hasHiddenReplies: boolean } {
@@ -1452,7 +1449,7 @@ export class Views {
 
       // Hidden.
       const { isHidden } = this.isHiddenThreadPost(
-        { post, rootUri, uri, threadTagsHide },
+        { post, rootUri, uri },
         state,
       )
       if (isHidden) {
@@ -1475,7 +1472,6 @@ export class Views {
           below,
           depth: depth + 1,
           branchingFactor,
-          threadTagsHide,
         },
         state,
       )
@@ -1602,13 +1598,9 @@ export class Views {
     {
       below,
       branchingFactor,
-      threadTagsBumpDown,
-      threadTagsHide,
     }: {
       below: number
       branchingFactor: number
-      threadTagsBumpDown: readonly string[]
-      threadTagsHide: readonly string[]
     },
   ): ThreadHiddenItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1643,7 +1635,6 @@ export class Views {
           childrenByParentUri,
           below,
           depth: 1,
-          threadTagsHide,
         },
         state,
       ),
@@ -1654,8 +1645,8 @@ export class Views {
       branchingFactor,
       prioritizeFollowedUsers: false,
       viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown,
-      threadTagsHide,
+      threadTagsBumpDown: this.threadTagsBumpDown,
+      threadTagsHide: this.threadTagsHide,
     })
   }
 
@@ -1666,14 +1657,12 @@ export class Views {
       childrenByParentUri,
       below,
       depth,
-      threadTagsHide,
     }: {
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
       below: number
       depth: number
-      threadTagsHide: readonly string[]
     },
     state: HydrationState,
   ): ThreadHiddenPostNode[] | undefined {
@@ -1696,7 +1685,7 @@ export class Views {
 
       // Hidden.
       const { isHidden, hiddenByThreadgate, mutedByViewer } =
-        this.isHiddenThreadPost({ post, rootUri, uri, threadTagsHide }, state)
+        this.isHiddenThreadPost({ post, rootUri, uri }, state)
       if (isHidden) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
@@ -1715,7 +1704,6 @@ export class Views {
           childrenByParentUri,
           below,
           depth: depth + 1,
-          threadTagsHide,
         },
         state,
       )
@@ -1831,12 +1819,10 @@ export class Views {
     {
       post,
       rootUri,
-      threadTagsHide,
       uri,
     }: {
       post: Post
       rootUri: string
-      threadTagsHide: readonly string[]
       uri: string
     },
     state: HydrationState,
@@ -1852,7 +1838,7 @@ export class Views {
     const hiddenByTag =
       authorDid !== opDid &&
       authorDid !== state.ctx?.viewer &&
-      threadTagsHide.some((t) => post.tags.has(t))
+      this.threadTagsHide.some((t) => post.tags.has(t))
 
     const hiddenByThreadgate =
       state.ctx?.viewer !== authorDid &&
