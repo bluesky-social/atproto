@@ -27,15 +27,6 @@ export const verifyAppPassword = async (
   did: string,
   password: string,
 ): Promise<AppPassDescript | null> => {
-  // Fast check for the password format
-  if (
-    password.length !== 19 ||
-    password[4] !== '-' ||
-    password[9] !== '-' ||
-    password[14] !== '-'
-  ) {
-    return null
-  }
   const passwordScrypt = await scrypt.hashAppPassword(did, password)
   const found = await db.db
     .selectFrom('app_password')
