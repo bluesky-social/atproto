@@ -1,18 +1,6 @@
 import assert from 'node:assert'
 import { AppBskyUnspeccedDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
-import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
-import {
-  OutputSchema as OutputSchemaThread,
-  QueryParams as QueryParamsThread,
-} from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import {
-  ThreadHiddenItemValuePost,
-  ThreadItemValuePost,
-} from '../../src/views/threads-v2'
-import { forSnapshot } from '../_util'
 import {
   TAG_BUMP_DOWN,
   TAG_HIDE,
@@ -31,6 +19,18 @@ import {
   seedThreadV2Tags,
   seedThreadV2Threadgated,
 } from '@atproto/dev-env/src/seed/thread-v2'
+import { ids } from '../../src/lexicon/lexicons'
+import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
+import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import {
+  OutputSchema as OutputSchemaThread,
+  QueryParams as QueryParamsThread,
+} from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import {
+  ThreadHiddenItemValuePost,
+  ThreadItemValuePost,
+} from '../../src/views/threads-v2'
+import { forSnapshot } from '../_util'
 
 type PostProps = Pick<ThreadItemPost, 'moreReplies' | 'opThread'>
 const props = (overrides: Partial<PostProps> = {}): PostProps => ({
