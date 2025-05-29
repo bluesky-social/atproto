@@ -30,7 +30,7 @@ export function validateRecordDeleted<V>(v: V) {
 
 export interface Preference {
   $type?: 'app.bsky.notification.defs#preference'
-  channels: 'in-app' | 'push' | (string & {})[]
+  channels: ('in-app' | 'push' | (string & {}))[]
   filter: 'all' | 'follows' | (string & {})
 }
 
