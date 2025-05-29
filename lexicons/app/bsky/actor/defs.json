@@ -162,6 +162,10 @@
         "knownFollowers": {
           "type": "ref",
           "ref": "#knownFollowers"
+        },
+        "subscription": {
+          "type": "ref",
+          "ref": "#subscription"
         }
       }
     },
@@ -227,6 +231,15 @@
           "type": "string",
           "description": "Timestamp when the verification was created.",
           "format": "datetime"
+        }
+      }
+    },
+    "subscription": {
+      "type": "object",
+      "properties": {
+        "activity": {
+          "type": "string",
+          "knownValues": ["posts_no_replies", "posts_with_replies"]
         }
       }
     },

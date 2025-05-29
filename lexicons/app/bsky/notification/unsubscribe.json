@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.unsubscribe",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Unsubscribe from activity for an account. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject"],
+          "properties": {
+            "subject": { "type": "string", "format": "did" }
+          }
+        }
+      }
+    }
+  }
+}

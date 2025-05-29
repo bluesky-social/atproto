@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.subscribe",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Subscribe to activity for an account. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject", "activity"],
+          "properties": {
+            "subject": { "type": "string", "format": "did" },
+            "activity": {
+              "type": "string",
+              "knownValues": ["posts_no_replies", "posts_with_replies"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
