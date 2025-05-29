@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.15.11
+
+### Patch Changes
+
+- [#3910](https://github.com/bluesky-social/atproto/pull/3910) [`a978681fd`](https://github.com/bluesky-social/atproto/commit/a978681fde1c138a5298bae77e5dc36ce155f955) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Updates to app.bsky.unspecced.getPostThreadHiddenV2 done in f6d5a467e71fb54996754cce7747b1e98a34442b (https://github.com/bluesky-social/atproto/pull/3909)
+
 ## 0.15.10
 
 ### Patch Changes

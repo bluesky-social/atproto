@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.7.9
+
+### Patch Changes
+
+- [#3900](https://github.com/bluesky-social/atproto/pull/3900) [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add max length limit to passwords
+
 ## 0.7.8
 
 ### Patch Changes
