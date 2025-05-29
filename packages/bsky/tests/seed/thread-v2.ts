@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { AppBskyFeedPost } from '@atproto/api'
 import {
   RecordRef,
@@ -866,7 +865,7 @@ const createTag = async (
   await db
     .updateTable('record')
     .set({
-      tags: sql<string[]>`${JSON.stringify([opts.val])}`,
+      tags: JSON.stringify([opts.val]),
     })
     .where('uri', '=', opts.uri)
     .returningAll()
