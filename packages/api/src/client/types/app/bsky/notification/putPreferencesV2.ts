@@ -34,6 +34,22 @@ export interface InputSchema {
   chatNotification?: AppBskyNotificationDefs.Preference
 }
 
+export interface OutputSchema {
+  likeNotification: AppBskyNotificationDefs.Preference
+  repostNotification: AppBskyNotificationDefs.Preference
+  followNotification: AppBskyNotificationDefs.Preference
+  replyNotification: AppBskyNotificationDefs.Preference
+  mentionNotification: AppBskyNotificationDefs.Preference
+  quoteNotification: AppBskyNotificationDefs.Preference
+  starterpackJoinedNotification: AppBskyNotificationDefs.Preference
+  verifiedNotification: AppBskyNotificationDefs.Preference
+  unverifiedNotification: AppBskyNotificationDefs.Preference
+  likeViaRepostNotification: AppBskyNotificationDefs.Preference
+  repostViaRepostNotification: AppBskyNotificationDefs.Preference
+  subscribedPostNotification: AppBskyNotificationDefs.Preference
+  chatNotification: AppBskyNotificationDefs.Preference
+}
+
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
@@ -44,6 +60,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {
