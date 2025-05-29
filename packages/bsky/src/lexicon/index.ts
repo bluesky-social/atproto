@@ -141,9 +141,12 @@ import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices
 import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+import * as AppBskyNotificationListSubscriptions from './types/app/bsky/notification/listSubscriptions.js'
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationSubscribe from './types/app/bsky/notification/subscribe.js'
+import * as AppBskyNotificationUnsubscribe from './types/app/bsky/notification/unsubscribe.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -1888,6 +1891,17 @@ export class AppBskyNotificationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  listSubscriptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationListSubscriptions.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationListSubscriptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.listSubscriptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   putPreferences<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1918,6 +1932,28 @@ export class AppBskyNotificationNS {
     >,
   ) {
     const nsid = 'app.bsky.notification.registerPush' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  subscribe<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationSubscribe.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationSubscribe.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.subscribe' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unsubscribe<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationUnsubscribe.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationUnsubscribe.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.unsubscribe' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
