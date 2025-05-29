@@ -224,7 +224,6 @@ function applyBumping(
     /*
       Bumps within visible replies.
     */
-    // Pushpin-only.
     // Followers posts.
     [
       'up',
@@ -233,10 +232,12 @@ function applyBumping(
         prioritizeFollowedUsers &&
         !!i.item.value.post.author.viewer?.following,
     ],
+    // Bump-down tags.
     [
       'down',
       (i) => i.type === 'post' && threadTagsBumpDown.some((t) => i.tags.has(t)),
     ],
+    // Pushpin-only.
     [
       'down',
       (i) =>
