@@ -1,13 +1,13 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { BlobRef, type ValidationResult } from '@atproto/lexicon'
 import { validate as _validate } from '../../../../lexicons'
 import {
   type $Typed,
-  is$typed as _is$typed,
   type OmitKey,
+  is$typed as _is$typed,
 } from '../../../../util'
 
 const is$typed = _is$typed,
