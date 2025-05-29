@@ -34,12 +34,12 @@
     },
     "subscription": {
       "type": "object",
-      "required": ["subject"],
+      "required": ["subject", "activity"],
       "properties": {
         "subject": { "type": "string", "format": "did" },
         "activity": {
           "type": "string",
-          "knownValues": ["posts_no_replies", "posts_with_replies"]
+          "knownValues": ["posts_no_replies", "posts_with_replies", "none"]
         }
       }
     }
