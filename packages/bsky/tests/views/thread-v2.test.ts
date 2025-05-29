@@ -1969,49 +1969,131 @@ describe('appview thread views v2', () => {
       await network.processAll()
     })
 
-    it('considers tags for bumping down and hiding', async () => {
-      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-        { anchor: seed.root.ref.uriStr, sort: 'newest' },
-        {
-          headers: await network.serviceHeaders(
-            seed.users.viewer.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
-          ),
-        },
-      )
-      const { thread: t, hasHiddenReplies } = data
+    describe('when prioritizing followed users', () => {
+      const prioritizeFollowedUsers = true
 
-      expect(hasHiddenReplies).toBe(true)
-      assertPosts(t)
-      expect(t).toEqual([
-        expect.objectContaining({ uri: seed.root.ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['4'].ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['0.0'].ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['0.1'].ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['1'].ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['1.0'].ref.uriStr }),
-        expect.objectContaining({ uri: seed.r['1.1'].ref.uriStr }),
-      ])
+      it('considers tags for bumping down and hiding', async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          {
+            anchor: seed.root.ref.uriStr,
+            sort: 'newest',
+            prioritizeFollowedUsers,
+          },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.viewer.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t, hasHiddenReplies } = data
+
+        expect(hasHiddenReplies).toBe(true)
+        assertPosts(t)
+        expect(t).toEqual([
+          expect.objectContaining({ uri: seed.root.ref.uriStr }),
+          // OP (down overridden).
+          expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
+          // Viewer (hide overridden).
+          expect.objectContaining({ uri: seed.r['4'].ref.uriStr }),
+          // Following (hide overridden).
+          expect.objectContaining({ uri: seed.r['5'].ref.uriStr }),
+          // Fot following.
+          expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0.0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0.1'].ref.uriStr }),
+          // Down.
+          expect.objectContaining({ uri: seed.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['1.0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['1.1'].ref.uriStr }),
+        ])
+      })
+
+      it('finds the hidden by tag', async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
+          {
+            anchor: seed.root.ref.uriStr,
+            prioritizeFollowedUsers,
+          },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.viewer.did,
+              ids.AppBskyUnspeccedGetPostThreadHiddenV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        assertHiddenPosts(t)
+        expect(t).toEqual([
+          // Hide.
+          expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
+        ])
+      })
     })
 
-    it('finds the hidden by tag', async () => {
-      const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
-        { anchor: seed.root.ref.uriStr },
-        {
-          headers: await network.serviceHeaders(
-            seed.users.viewer.did,
-            ids.AppBskyUnspeccedGetPostThreadHiddenV2,
-          ),
-        },
-      )
-      const { thread: t } = data
+    describe('when not prioritizing followed users', () => {
+      const prioritizeFollowedUsers = false
 
-      assertHiddenPosts(t)
-      expect(t).toEqual([
-        expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
-      ])
+      it('considers tags for bumping down and hiding', async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          {
+            anchor: seed.root.ref.uriStr,
+            sort: 'newest',
+            prioritizeFollowedUsers,
+          },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.viewer.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+        const { thread: t, hasHiddenReplies } = data
+
+        expect(hasHiddenReplies).toBe(true)
+        assertPosts(t)
+        expect(t).toEqual([
+          expect.objectContaining({ uri: seed.root.ref.uriStr }),
+          // OP (down overridden).
+          expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
+          // Viewer (hide overriden).
+          expect.objectContaining({ uri: seed.r['4'].ref.uriStr }),
+          // Following was hidden because not prioritizing.
+          // Not following.
+          expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0.0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['0.1'].ref.uriStr }),
+          // Down.
+          expect.objectContaining({ uri: seed.r['1'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['1.0'].ref.uriStr }),
+          expect.objectContaining({ uri: seed.r['1.1'].ref.uriStr }),
+        ])
+      })
+
+      it('finds the hidden by tag', async () => {
+        const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
+          {
+            anchor: seed.root.ref.uriStr,
+            prioritizeFollowedUsers,
+          },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.viewer.did,
+              ids.AppBskyUnspeccedGetPostThreadHiddenV2,
+            ),
+          },
+        )
+        const { thread: t } = data
+
+        assertHiddenPosts(t)
+        expect(t).toEqual([
+          // Following (hide).
+          expect.objectContaining({ uri: seed.r['5'].ref.uriStr }),
+          // Hide.
+          expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
+        ])
+      })
     })
   })
 })

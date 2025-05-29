@@ -93,10 +93,11 @@ const hydration = async (
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, skeleton, hydration } = inputs
+  const { ctx, params, skeleton, hydration } = inputs
   const thread = ctx.views.threadHiddenV2(skeleton, hydration, {
     below: BELOW,
     branchingFactor: BRANCHING_FACTOR,
+    prioritizeFollowedUsers: params.prioritizeFollowedUsers,
   })
   return { thread }
 }
