@@ -4,7 +4,6 @@ import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/
 import {
   ThreadHiddenItem,
   ThreadHiddenItemPost,
-  isThreadHiddenItemPost,
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
 import {
   QueryParams as GetPostThreadV2QueryParams,
@@ -59,6 +58,7 @@ type ThreadNotFoundNode = {
 type ThreadPostNode = {
   type: 'post'
   item: ThreadItemValuePost
+  tags: Set<string>
   hasOPLike: boolean
   parent: ThreadTree | undefined
   replies: ThreadTree[] | undefined
@@ -87,6 +87,7 @@ export type ThreadHiddenAnchorPostNode = {
 export type ThreadHiddenPostNode = {
   type: 'hiddenPost'
   item: ThreadHiddenItemValuePost
+  tags: Set<string>
   replies: ThreadHiddenPostNode[] | undefined
 }
 
@@ -117,11 +118,12 @@ export function sortTrimFlattenThreadTree<
 
 type SortTrimFlattenOptions = {
   branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
-  fetchedAt: number
   opDid: string
   prioritizeFollowedUsers: boolean
   sort?: GetPostThreadV2QueryParams['sort']
   viewer: HydrateCtx['viewer']
+  threadTagsBumpDown: readonly string[]
+  threadTagsHide: readonly string[]
 }
 
 const isPostRecord = asPredicate(validatePostRecord)
@@ -135,15 +137,6 @@ function sortTrimThreadTree(
     return n
   }
   const node: ThreadNodeWithReplies = n
-
-  const {
-    branchingFactor,
-    fetchedAt,
-    opDid,
-    prioritizeFollowedUsers,
-    sort,
-    viewer,
-  } = opts
 
   if (node.replies) {
     node.replies.sort((an: ThreadTree, bn: ThreadTree) => {
@@ -168,19 +161,10 @@ function sortTrimThreadTree(
 
     // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
     if (node.item.depth !== 0) {
-      node.replies = node.replies.slice(0, branchingFactor)
+      node.replies = node.replies.slice(0, opts.branchingFactor)
     }
 
-    node.replies.forEach((reply) =>
-      sortTrimThreadTree(reply, {
-        branchingFactor,
-        fetchedAt,
-        opDid,
-        prioritizeFollowedUsers,
-        sort,
-        viewer,
-      }),
-    )
+    node.replies.forEach((reply) => sortTrimThreadTree(reply, opts))
   }
 
   return node
@@ -191,19 +175,30 @@ function applyBumping(
   bNode: ThreadMaybeHiddenPostNode,
   opts: SortTrimFlattenOptions,
 ): number | null {
-  const a = aNode.item.value
-  const b = bNode.item.value
-  const { opDid, prioritizeFollowedUsers, viewer } = opts
+  if (!isPostNode(aNode)) {
+    return null
+  }
+  if (!isPostNode(bNode)) {
+    return null
+  }
+
+  const {
+    opDid,
+    prioritizeFollowedUsers,
+    viewer,
+    threadTagsBumpDown,
+    threadTagsHide,
+  } = opts
 
   type BumpDirection = 'up' | 'down'
-  type BumpPredicateFn = (i: ThreadItemPost | ThreadHiddenItemPost) => boolean
+  type BumpPredicateFn = (i: ThreadMaybeHiddenPostNode) => boolean
 
   const maybeBump = (
     bump: BumpDirection,
     predicateFn: BumpPredicateFn,
   ): number | null => {
-    const aPredicate = predicateFn(a)
-    const bPredicate = predicateFn(b)
+    const aPredicate = predicateFn(aNode)
+    const bPredicate = predicateFn(bNode)
     if (aPredicate && bPredicate) {
       return applySorting(aNode, bNode, opts)
     } else if (aPredicate) {
@@ -218,21 +213,56 @@ function applyBumping(
   // Bumps-up applied first make the item appear higher in the list than later bumps-up.
   // Bumps-down applied first make the item appear lower in the list than later bumps-down.
   const bumps: [BumpDirection, BumpPredicateFn][] = [
+    /*
+      General bumps.
+    */
     // OP replies.
-    ['up', (i) => i.post.author.did === opDid],
+    ['up', (i) => i.item.value.post.author.did === opDid],
     // Viewer replies.
-    ['up', (i) => i.post.author.did === viewer],
-    // Muted account by the viewer.
-    ['down', (i) => isThreadHiddenItemPost(i) && i.mutedByViewer],
-    // Hidden by threadgate.
-    ['down', (i) => isThreadHiddenItemPost(i) && i.hiddenByThreadgate],
+    ['up', (i) => i.item.value.post.author.did === viewer],
+
+    /*
+      Bumps within visible replies.
+    */
+    // Followers posts.
+    [
+      'up',
+      (i) =>
+        i.type === 'post' &&
+        prioritizeFollowedUsers &&
+        !!i.item.value.post.author.viewer?.following,
+    ],
+    // Bump-down tags.
+    [
+      'down',
+      (i) => i.type === 'post' && threadTagsBumpDown.some((t) => i.tags.has(t)),
+    ],
     // Pushpin-only.
     [
       'down',
-      (i) => isPostRecord(i.post.record) && i.post.record.text.trim() === '📌',
+      (i) =>
+        i.type === 'post' &&
+        isPostRecord(i.item.value.post.record) &&
+        i.item.value.post.record.text.trim() === '📌',
     ],
-    // Followers posts.
-    ['up', (i) => prioritizeFollowedUsers && !!i.post.author.viewer?.following],
+
+    /*
+      Bumps within hidden replies.
+      This determines the order of hidden replies:
+        1. hidden by threadgate.
+        2. hidden by tags.
+        3. muted by viewer.
+    */
+    // Muted account by the viewer.
+    ['down', (i) => i.type === 'hiddenPost' && i.item.value.mutedByViewer],
+    // Hidden by tags.
+    [
+      'down',
+      (i) =>
+        i.type === 'hiddenPost' && threadTagsHide.some((t) => i.tags.has(t)),
+    ],
+    // Hidden by threadgate.
+    ['down', (i) => i.type === 'hiddenPost' && i.item.value.hiddenByThreadgate],
   ]
 
   for (const [bump, predicateFn] of bumps) {

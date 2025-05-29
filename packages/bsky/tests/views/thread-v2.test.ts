@@ -19,6 +19,7 @@ import {
 import { ThreadItemValuePost } from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
+import { TAG_BUMP_DOWN, TAG_HIDE } from '../seed/thread-v2'
 
 type PostProps = Pick<ThreadItemPost, 'moreReplies' | 'opThread'>
 const props = (overrides: Partial<PostProps> = {}): PostProps => ({
@@ -43,12 +44,14 @@ describe('appview thread views v2', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let labelerDid: string
-  let sc: SeedClient
+  let sc: SeedClient<TestNetwork>
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       bsky: {
         maxThreadParents: 15,
+        threadTagsBumpDown: new Set([TAG_BUMP_DOWN]),
+        threadTagsHide: new Set([TAG_HIDE]),
       },
       dbPostgresSchema: 'bsky_views_thread_v_two',
     })
@@ -1209,13 +1212,7 @@ describe('appview thread views v2', () => {
     let seed: Awaited<ReturnType<typeof seeds.blockDeletionAuth>>
 
     beforeAll(async () => {
-      seed = await seeds.blockDeletionAuth(sc)
-      await createLabel({
-        src: labelerDid,
-        uri: seed.users.auth.did,
-        cid: '',
-        val: '!no-unauthenticated',
-      })
+      seed = await seeds.blockDeletionAuth(sc, labelerDid)
       await network.processAll()
     })
 
@@ -1964,26 +1961,59 @@ describe('appview thread views v2', () => {
     })
   })
 
-  const createLabel = async (opts: {
-    src?: string
-    uri: string
-    cid: string
-    val: string
-    exp?: string
-  }) => {
-    await network.bsky.db.db
-      .insertInto('label')
-      .values({
-        uri: opts.uri,
-        cid: opts.cid,
-        val: opts.val,
-        cts: new Date().toISOString(),
-        exp: opts.exp ?? null,
-        neg: false,
-        src: opts.src ?? labelerDid,
-      })
-      .execute()
-  }
+  describe('tags', () => {
+    let seed: Awaited<ReturnType<typeof seeds.tags>>
+
+    beforeAll(async () => {
+      seed = await seeds.tags(sc)
+      await network.processAll()
+    })
+
+    it('considers tags for bumping down and hiding', async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { anchor: seed.root.ref.uriStr, sort: 'newest' },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.viewer.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      const { thread: t, hasHiddenReplies } = data
+
+      expect(hasHiddenReplies).toBe(true)
+      assertPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({ uri: seed.root.ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['4'].ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['0.0'].ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['0.1'].ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['1'].ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['1.0'].ref.uriStr }),
+        expect.objectContaining({ uri: seed.r['1.1'].ref.uriStr }),
+      ])
+    })
+
+    it('finds the hidden by tag', async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadHiddenV2(
+        { anchor: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.viewer.did,
+            ids.AppBskyUnspeccedGetPostThreadHiddenV2,
+          ),
+        },
+      )
+      const { thread: t } = data
+
+      assertHiddenPosts(t)
+      expect(t).toEqual([
+        expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
+      ])
+    })
+  })
 })
 
 function assertPosts(

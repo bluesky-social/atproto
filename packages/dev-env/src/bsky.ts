@@ -81,6 +81,8 @@ export class TestBsky {
       bigThreadUris: new Set(),
       maxThreadParents: cfg.maxThreadParents ?? 50,
       disableSsrfProtection: true,
+      threadTagsBumpDown: new Set(),
+      threadTagsHide: new Set(),
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
       etcdHosts: [],

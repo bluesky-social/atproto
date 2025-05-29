@@ -25,6 +25,7 @@ export type Post = RecordInfo<PostRecord> & {
   violatesEmbeddingRules: boolean
   hasThreadGate: boolean
   hasPostGate: boolean
+  tags: Set<string>
 }
 export type Posts = HydrationMap<Post>
 
@@ -113,6 +114,7 @@ export class FeedHydrator {
       const violatesEmbeddingRules = res.meta[i].violatesEmbeddingRules
       const hasThreadGate = res.meta[i].hasThreadGate
       const hasPostGate = res.meta[i].hasPostGate
+      const tags = new Set<string>(res.records[i].tags ?? [])
       return acc.set(
         uri,
         record
@@ -122,6 +124,7 @@ export class FeedHydrator {
               violatesEmbeddingRules,
               hasThreadGate,
               hasPostGate,
+              tags,
             }
           : null,
       )

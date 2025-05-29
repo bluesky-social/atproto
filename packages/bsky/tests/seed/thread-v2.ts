@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { AppBskyFeedPost } from '@atproto/api'
 import {
   RecordRef,
@@ -5,6 +6,7 @@ import {
   TestNetwork,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
+import { DatabaseSchema } from '../../src/data-plane/server/db/database-schema'
 import { User, createUsers } from './util'
 
 type ReplyFn = (
@@ -14,6 +16,9 @@ type ReplyFn = (
 ) => Promise<void>
 
 type ReplyCb = (r: ReplyFn) => Promise<void>
+
+export const TAG_BUMP_DOWN = 'down'
+export const TAG_HIDE = 'hide'
 
 const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
   sc: SeedClient<T>,
@@ -95,10 +100,7 @@ const createThread = async <T extends TestNetworkNoAppView>(
   return { root, replies }
 }
 
-export async function simple(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-  prefix = 'simple',
-) {
+export async function simple(sc: SeedClient<TestNetwork>, prefix = 'simple') {
   const users = await createUsers(sc, prefix, [
     'op',
     'alice',
@@ -126,7 +128,7 @@ export async function simple(
   }
 }
 
-export async function long(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
+export async function long(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'long', [
     'op',
     'alice',
@@ -187,7 +189,7 @@ export async function long(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   }
 }
 
-export async function deep(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
+export async function deep(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'deep', ['op'] as const)
   const { op } = users
 
@@ -210,9 +212,7 @@ export async function deep(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   }
 }
 
-export async function branchingFactor(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function branchingFactor(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bf', ['op', 'bob'] as const)
   const { op, bob } = users
 
@@ -333,9 +333,7 @@ export async function branchingFactor(
   }
 }
 
-export async function annotateMoreReplies(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function annotateMoreReplies(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'mr', ['op', 'alice'] as const)
   const { op, alice } = users
 
@@ -392,9 +390,7 @@ export async function annotateMoreReplies(
   }
 }
 
-export async function annotateOP(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function annotateOP(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'op', ['op', 'alice', 'bob'] as const)
   const { op, alice, bob } = users
 
@@ -422,7 +418,7 @@ export async function annotateOP(
   }
 }
 
-export async function sort(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
+export async function sort(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'sort', [
     'op',
     'alice',
@@ -478,9 +474,7 @@ export async function sort(sc: SeedClient<TestNetwork | TestNetworkNoAppView>) {
   }
 }
 
-export async function bumpOpAndViewer(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function bumpOpAndViewer(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bumpOV', [
     'op',
     'viewer',
@@ -566,9 +560,7 @@ export async function bumpOpAndViewer(
   }
 }
 
-export async function bumpGroupSorting(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function bumpGroupSorting(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bumpGS', [
     'op',
     'viewer',
@@ -595,9 +587,7 @@ export async function bumpGroupSorting(
   }
 }
 
-export async function bumpFollows(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function bumpFollows(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bumpF', [
     'op',
     'viewerF',
@@ -631,7 +621,8 @@ export async function bumpFollows(
 }
 
 export async function blockDeletionAuth(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+  sc: SeedClient<TestNetwork>,
+  labelerDid: string,
 ) {
   const users = await createUsers(sc, 'bda', [
     'op',
@@ -675,6 +666,14 @@ export async function blockDeletionAuth(
   await sc.block(blocker.did, blocked.did)
   await sc.block(op.did, opBlocked.did)
 
+  const db = sc.network.bsky.db.db
+  await createLabel(db, {
+    src: labelerDid,
+    uri: auth.did,
+    cid: '',
+    val: '!no-unauthenticated',
+  })
+
   return {
     seedClient: sc,
     users,
@@ -683,9 +682,7 @@ export async function blockDeletionAuth(
   }
 }
 
-export async function mutes(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function mutes(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'mutes', [
     'op',
     'opMuted',
@@ -719,9 +716,7 @@ export async function mutes(
   }
 }
 
-export async function threadgated(
-  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
-) {
+export async function threadgated(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'tg', [
     'op',
     'opMuted',
@@ -772,4 +767,101 @@ export async function threadgated(
     root,
     r,
   }
+}
+
+export async function tags(sc: SeedClient<TestNetwork>) {
+  const users = await createUsers(sc, 'tags', [
+    'op',
+    'viewer',
+    'alice',
+    'down',
+    'hide',
+  ] as const)
+
+  const { op, alice, down, hide, viewer } = users
+
+  const { root, replies: r } = await createThread(sc, op, async (r) => {
+    await r(alice, async (r) => {
+      await r(alice)
+      await r(down)
+      await r(hide)
+    })
+    await r(down, async (r) => {
+      await r(alice)
+      await r(down)
+      await r(hide)
+    })
+    await r(hide, async (r) => {
+      await r(alice)
+      await r(down)
+      await r(hide)
+    })
+    await r(op)
+    await r(viewer)
+  })
+
+  await sc.network.processAll()
+
+  const db = sc.network.bsky.db.db
+  await createTag(db, { uri: r['1'].ref.uriStr, val: TAG_BUMP_DOWN })
+  await createTag(db, { uri: r['0.1'].ref.uriStr, val: TAG_BUMP_DOWN })
+  await createTag(db, { uri: r['1.1'].ref.uriStr, val: TAG_BUMP_DOWN })
+  await createTag(db, { uri: r['2.1'].ref.uriStr, val: TAG_BUMP_DOWN })
+
+  await createTag(db, { uri: r['2'].ref.uriStr, val: TAG_HIDE })
+  await createTag(db, { uri: r['0.2'].ref.uriStr, val: TAG_HIDE })
+  await createTag(db, { uri: r['1.2'].ref.uriStr, val: TAG_HIDE })
+  await createTag(db, { uri: r['2.2'].ref.uriStr, val: TAG_HIDE })
+
+  // Neither tag affect op and viewer.
+  await createTag(db, { uri: r['3'].ref.uriStr, val: TAG_BUMP_DOWN })
+  await createTag(db, { uri: r['4'].ref.uriStr, val: TAG_HIDE })
+
+  return {
+    seedClient: sc,
+    users,
+    root,
+    r,
+  }
+}
+
+const createLabel = async (
+  db: DatabaseSchema,
+  opts: {
+    src: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  },
+) => {
+  await db
+    .insertInto('label')
+    .values({
+      uri: opts.uri,
+      cid: opts.cid,
+      val: opts.val,
+      cts: new Date().toISOString(),
+      exp: opts.exp ?? null,
+      neg: false,
+      src: opts.src,
+    })
+    .execute()
+}
+
+const createTag = async (
+  db: DatabaseSchema,
+  opts: {
+    uri: string
+    val: string
+  },
+) => {
+  await db
+    .updateTable('record')
+    .set({
+      tags: sql<string[]>`${JSON.stringify([opts.val])}`,
+    })
+    .where('uri', '=', opts.uri)
+    .returningAll()
+    .execute()
 }
