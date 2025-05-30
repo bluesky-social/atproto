@@ -9921,7 +9921,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'List subscriptions to all accounts. Requires auth.',
+        description:
+          'Enumerate all accounts to which the requesting account is subscribed, along with their subscription details. Requires auth.',
         parameters: {
           type: 'params',
           properties: {
@@ -9961,8 +9962,8 @@ export const schemaDict = {
         required: ['subject', 'activity'],
         properties: {
           subject: {
-            type: 'string',
-            format: 'did',
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
           },
           activity: {
             type: 'string',

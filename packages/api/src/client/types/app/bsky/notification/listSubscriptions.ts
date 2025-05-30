@@ -10,6 +10,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -45,7 +46,7 @@ export function toKnownErr(e: any) {
 
 export interface Subscription {
   $type?: 'app.bsky.notification.listSubscriptions#subscription'
-  subject: string
+  subject: AppBskyActorDefs.ProfileView
   activity: 'posts_no_replies' | 'posts_with_replies' | 'none' | (string & {})
 }
 
