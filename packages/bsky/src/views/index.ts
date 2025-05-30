@@ -76,6 +76,7 @@ import {
 } from '../util/uris'
 import {
   ThreadHiddenAnchorPostNode,
+  ThreadHiddenItemValuePost,
   ThreadHiddenPostNode,
   ThreadItemValueBlocked,
   ThreadItemValueNoUnauthenticated,
@@ -1275,7 +1276,7 @@ export class Views {
       }
     }
 
-    const thread = sortTrimFlattenThreadTree<ThreadItem>(anchorTree, {
+    const thread = sortTrimFlattenThreadTree(anchorTree, {
       opDid,
       branchingFactor,
       sort,
@@ -1770,7 +1771,7 @@ export class Views {
     mutedByViewer: boolean
     postView: PostView
     uri: string
-  }): ThreadHiddenPostNode['item'] {
+  }): ThreadHiddenItemValuePost {
     const base = this.threadHiddenV2ItemPostAnchor({ depth, uri })
     return {
       ...base,
