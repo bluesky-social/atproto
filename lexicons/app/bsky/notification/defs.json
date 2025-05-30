@@ -63,6 +63,15 @@
         "unverified": { "type": "ref", "ref": "#preference" },
         "verified": { "type": "ref", "ref": "#preference" }
       }
+    },
+    "activitySubscription": {
+      "type": "object",
+      "properties": {
+        "posts": {
+          "type": "string",
+          "knownValues": ["posts_no_replies", "posts_with_replies"]
+        }
+      }
     }
   }
 }
