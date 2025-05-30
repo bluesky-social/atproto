@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "List subscriptions to all accounts. Requires auth.",
+      "description": "Enumerate all accounts to which the requesting account is subscribed, along with their subscription details. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -36,7 +36,7 @@
       "type": "object",
       "required": ["subject", "activity"],
       "properties": {
-        "subject": { "type": "string", "format": "did" },
+        "subject": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
         "activity": {
           "type": "string",
           "knownValues": ["posts_no_replies", "posts_with_replies", "none"]
