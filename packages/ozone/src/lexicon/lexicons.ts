@@ -10014,7 +10014,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'DEPRECATED: Use putPreferencesV2. Requires auth.',
+        description:
+          'Set notification-related preferences for an account. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
