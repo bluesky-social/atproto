@@ -2,22 +2,7 @@ import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
 import { AtUri } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
-import {
-  seedThreadV2AnnotateMoreReplies,
-  seedThreadV2AnnotateOP,
-  seedThreadV2BlockDeletionAuth,
-  seedThreadV2BranchingFactor,
-  seedThreadV2BumpFollows,
-  seedThreadV2BumpGroupSorting,
-  seedThreadV2BumpOpAndViewer,
-  seedThreadV2Deep,
-  seedThreadV2Long,
-  seedThreadV2Mutes,
-  seedThreadV2Simple,
-  seedThreadV2Sort,
-  seedThreadV2Tags,
-  seedThreadV2Threadgated,
-} from '../seed/thread-v2'
+import * as seedThreadV2 from '../seed/thread-v2'
 import { postTexts, replyTexts } from './data'
 import blurHashB64 from './img/blur-hash-avatar-b64'
 import labeledImgB64 from './img/labeled-img-b64'
@@ -518,20 +503,20 @@ export async function generateMockSetup(env: TestNetwork) {
   await setVerifier(env.bsky.db, alice.accountDid)
 
   const sc = env.getSeedClient()
-  await seedThreadV2Simple(sc)
-  await seedThreadV2Long(sc)
-  await seedThreadV2Deep(sc)
-  await seedThreadV2BranchingFactor(sc)
-  await seedThreadV2AnnotateMoreReplies(sc)
-  await seedThreadV2AnnotateOP(sc)
-  await seedThreadV2Sort(sc)
-  await seedThreadV2BumpOpAndViewer(sc)
-  await seedThreadV2BumpGroupSorting(sc)
-  await seedThreadV2BumpFollows(sc)
-  await seedThreadV2BlockDeletionAuth(sc, env.bsky.ctx.cfg.modServiceDid)
-  await seedThreadV2Mutes(sc)
-  await seedThreadV2Threadgated(sc)
-  await seedThreadV2Tags(sc)
+  await seedThreadV2.simple(sc)
+  await seedThreadV2.long(sc)
+  await seedThreadV2.deep(sc)
+  await seedThreadV2.branchingFactor(sc)
+  await seedThreadV2.annotateMoreReplies(sc)
+  await seedThreadV2.annotateOP(sc)
+  await seedThreadV2.sort(sc)
+  await seedThreadV2.bumpOpAndViewer(sc)
+  await seedThreadV2.bumpGroupSorting(sc)
+  await seedThreadV2.bumpFollows(sc)
+  await seedThreadV2.blockDeletionAuth(sc, env.bsky.ctx.cfg.modServiceDid)
+  await seedThreadV2.mutes(sc)
+  await seedThreadV2.threadgated(sc)
+  await seedThreadV2.tags(sc)
 }
 
 function ucfirst(str: string): string {

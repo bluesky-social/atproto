@@ -146,10 +146,7 @@ const createThread = async <T extends TestNetworkNoAppView>(
   return { root, replies }
 }
 
-export async function seedThreadV2Simple(
-  sc: SeedClient<TestNetwork>,
-  prefix = 'simple',
-) {
+export async function simple(sc: SeedClient<TestNetwork>, prefix = 'simple') {
   const users = await createUsers(sc, prefix, [
     'op',
     'alice',
@@ -177,7 +174,7 @@ export async function seedThreadV2Simple(
   }
 }
 
-export async function seedThreadV2Long(sc: SeedClient<TestNetwork>) {
+export async function long(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'long', [
     'op',
     'alice',
@@ -238,7 +235,7 @@ export async function seedThreadV2Long(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2Deep(sc: SeedClient<TestNetwork>) {
+export async function deep(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'deep', ['op'] as const)
   const { op } = users
 
@@ -261,7 +258,7 @@ export async function seedThreadV2Deep(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2BranchingFactor(sc: SeedClient<TestNetwork>) {
+export async function branchingFactor(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bf', ['op', 'bob'] as const)
   const { op, bob } = users
 
@@ -382,9 +379,7 @@ export async function seedThreadV2BranchingFactor(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2AnnotateMoreReplies(
-  sc: SeedClient<TestNetwork>,
-) {
+export async function annotateMoreReplies(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'mr', ['op', 'alice'] as const)
   const { op, alice } = users
 
@@ -441,7 +436,7 @@ export async function seedThreadV2AnnotateMoreReplies(
   }
 }
 
-export async function seedThreadV2AnnotateOP(sc: SeedClient<TestNetwork>) {
+export async function annotateOP(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'op', ['op', 'alice', 'bob'] as const)
   const { op, alice, bob } = users
 
@@ -469,7 +464,7 @@ export async function seedThreadV2AnnotateOP(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2Sort(sc: SeedClient<TestNetwork>) {
+export async function sort(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'sort', [
     'op',
     'alice',
@@ -525,7 +520,7 @@ export async function seedThreadV2Sort(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2BumpOpAndViewer(sc: SeedClient<TestNetwork>) {
+export async function bumpOpAndViewer(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bumpOV', [
     'op',
     'viewer',
@@ -611,9 +606,7 @@ export async function seedThreadV2BumpOpAndViewer(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2BumpGroupSorting(
-  sc: SeedClient<TestNetwork>,
-) {
+export async function bumpGroupSorting(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bumpGS', [
     'op',
     'viewer',
@@ -640,7 +633,7 @@ export async function seedThreadV2BumpGroupSorting(
   }
 }
 
-export async function seedThreadV2BumpFollows(sc: SeedClient<TestNetwork>) {
+export async function bumpFollows(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'bumpF', [
     'op',
     'viewerF',
@@ -673,7 +666,7 @@ export async function seedThreadV2BumpFollows(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2BlockDeletionAuth(
+export async function blockDeletionAuth(
   sc: SeedClient<TestNetwork>,
   labelerDid: string,
 ) {
@@ -735,7 +728,7 @@ export async function seedThreadV2BlockDeletionAuth(
   }
 }
 
-export async function seedThreadV2Mutes(sc: SeedClient<TestNetwork>) {
+export async function mutes(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'mutes', [
     'op',
     'opMuted',
@@ -769,7 +762,7 @@ export async function seedThreadV2Mutes(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2Threadgated(sc: SeedClient<TestNetwork>) {
+export async function threadgated(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'tg', [
     'op',
     'opMuted',
@@ -822,7 +815,7 @@ export async function seedThreadV2Threadgated(sc: SeedClient<TestNetwork>) {
   }
 }
 
-export async function seedThreadV2Tags(sc: SeedClient<TestNetwork>) {
+export async function tags(sc: SeedClient<TestNetwork>) {
   const users = await createUsers(sc, 'tags', [
     'op',
     'alice',

@@ -1,24 +1,6 @@
 import assert from 'node:assert'
 import { AppBskyUnspeccedDefs, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import {
-  TAG_BUMP_DOWN,
-  TAG_HIDE,
-  seedThreadV2AnnotateMoreReplies,
-  seedThreadV2AnnotateOP,
-  seedThreadV2BlockDeletionAuth,
-  seedThreadV2BranchingFactor,
-  seedThreadV2BumpFollows,
-  seedThreadV2BumpGroupSorting,
-  seedThreadV2BumpOpAndViewer,
-  seedThreadV2Deep,
-  seedThreadV2Long,
-  seedThreadV2Mutes,
-  seedThreadV2Simple,
-  seedThreadV2Sort,
-  seedThreadV2Tags,
-  seedThreadV2Threadgated,
-} from '@atproto/dev-env/src/seed/thread-v2'
+import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
 import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
@@ -61,8 +43,8 @@ describe('appview thread views v2', () => {
     network = await TestNetwork.create({
       bsky: {
         maxThreadParents: 15,
-        threadTagsBumpDown: new Set([TAG_BUMP_DOWN]),
-        threadTagsHide: new Set([TAG_HIDE]),
+        threadTagsBumpDown: new Set([seedThreadV2.TAG_BUMP_DOWN]),
+        threadTagsHide: new Set([seedThreadV2.TAG_HIDE]),
       },
       dbPostgresSchema: 'bsky_views_thread_v_two',
     })
@@ -95,10 +77,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('simple thread', () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2Simple>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.simple>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2Simple(sc)
+      seed = await seedThreadV2.simple(sc)
       await network.processAll()
     })
 
@@ -260,10 +242,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('long thread', () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2Long>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.long>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2Long(sc)
+      seed = await seedThreadV2.long(sc)
       await network.processAll()
     })
 
@@ -329,10 +311,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('deep thread', () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2Deep>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.deep>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2Deep(sc)
+      seed = await seedThreadV2.deep(sc)
       await network.processAll()
     })
 
@@ -448,10 +430,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('branching factor', () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2BranchingFactor>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.branchingFactor>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2BranchingFactor(sc)
+      seed = await seedThreadV2.branchingFactor(sc)
       await network.processAll()
     })
 
@@ -627,10 +609,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('annotate more replies', () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2AnnotateMoreReplies>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.annotateMoreReplies>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2AnnotateMoreReplies(sc)
+      seed = await seedThreadV2.annotateMoreReplies(sc)
       await network.processAll()
     })
 
@@ -722,10 +704,10 @@ describe('appview thread views v2', () => {
   })
 
   describe(`annotate OP thread`, () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2AnnotateOP>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.annotateOP>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2AnnotateOP(sc)
+      seed = await seedThreadV2.annotateOP(sc)
       await network.processAll()
     })
 
@@ -816,10 +798,10 @@ describe('appview thread views v2', () => {
 
   describe('bumping and sorting', () => {
     describe('sorting', () => {
-      let seed: Awaited<ReturnType<typeof seedThreadV2Sort>>
+      let seed: Awaited<ReturnType<typeof seedThreadV2.sort>>
 
       beforeAll(async () => {
-        seed = await seedThreadV2Sort(sc)
+        seed = await seedThreadV2.sort(sc)
         await network.processAll()
       })
 
@@ -915,10 +897,10 @@ describe('appview thread views v2', () => {
 
     describe('bumping', () => {
       describe('sorting within bumped post groups', () => {
-        let seed: Awaited<ReturnType<typeof seedThreadV2BumpGroupSorting>>
+        let seed: Awaited<ReturnType<typeof seedThreadV2.bumpGroupSorting>>
 
         beforeAll(async () => {
-          seed = await seedThreadV2BumpGroupSorting(sc)
+          seed = await seedThreadV2.bumpGroupSorting(sc)
           await network.processAll()
         })
 
@@ -967,10 +949,10 @@ describe('appview thread views v2', () => {
       })
 
       describe('OP and viewer', () => {
-        let seed: Awaited<ReturnType<typeof seedThreadV2BumpOpAndViewer>>
+        let seed: Awaited<ReturnType<typeof seedThreadV2.bumpOpAndViewer>>
 
         beforeAll(async () => {
-          seed = await seedThreadV2BumpOpAndViewer(sc)
+          seed = await seedThreadV2.bumpOpAndViewer(sc)
           await network.processAll()
         })
 
@@ -1119,10 +1101,10 @@ describe('appview thread views v2', () => {
       })
 
       describe('followers', () => {
-        let seed: Awaited<ReturnType<typeof seedThreadV2BumpFollows>>
+        let seed: Awaited<ReturnType<typeof seedThreadV2.bumpFollows>>
 
         beforeAll(async () => {
-          seed = await seedThreadV2BumpFollows(sc)
+          seed = await seedThreadV2.bumpFollows(sc)
           await network.processAll()
         })
 
@@ -1220,10 +1202,10 @@ describe('appview thread views v2', () => {
   })
 
   describe(`blocks, deletions, no-unauthenticated`, () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2BlockDeletionAuth>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.blockDeletionAuth>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2BlockDeletionAuth(sc, labelerDid)
+      seed = await seedThreadV2.blockDeletionAuth(sc, labelerDid)
       await network.processAll()
     })
 
@@ -1619,10 +1601,10 @@ describe('appview thread views v2', () => {
   })
 
   describe(`mutes`, () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2Mutes>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.mutes>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2Mutes(sc)
+      seed = await seedThreadV2.mutes(sc)
       await network.processAll()
     })
 
@@ -1764,10 +1746,10 @@ describe('appview thread views v2', () => {
   })
 
   describe(`threadgated`, () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2Threadgated>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.threadgated>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2Threadgated(sc)
+      seed = await seedThreadV2.threadgated(sc)
       await network.processAll()
     })
 
@@ -1970,10 +1952,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('tags', () => {
-    let seed: Awaited<ReturnType<typeof seedThreadV2Tags>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.tags>>
 
     beforeAll(async () => {
-      seed = await seedThreadV2Tags(sc)
+      seed = await seedThreadV2.tags(sc)
       await network.processAll()
     })
 
