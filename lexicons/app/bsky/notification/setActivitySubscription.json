@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.notification.subscribe",
+  "id": "app.bsky.notification.setActivitySubscription",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Subscribe to activity for an account. Setting activity to 'none' removes the subscription. Requires auth.",
+      "description": "Subscribe to receive notifications for activity on an account. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,8 +13,8 @@
           "properties": {
             "subject": { "type": "string", "format": "did" },
             "activity": {
-              "type": "string",
-              "knownValues": ["posts_no_replies", "posts_with_replies", "none"]
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#activitySubscription"
             }
           }
         }

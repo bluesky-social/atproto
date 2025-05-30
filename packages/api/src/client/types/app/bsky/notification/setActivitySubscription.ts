@@ -10,16 +10,17 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyNotificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.notification.subscribe'
+const id = 'app.bsky.notification.setActivitySubscription'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   subject: string
-  activity: 'posts_no_replies' | 'posts_with_replies' | 'none' | (string & {})
+  activity: AppBskyNotificationDefs.ActivitySubscription
 }
 
 export interface CallOptions {

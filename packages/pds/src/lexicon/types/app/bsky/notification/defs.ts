@@ -103,3 +103,18 @@ export function isPreferences<V>(v: V) {
 export function validatePreferences<V>(v: V) {
   return validate<Preferences & V>(v, id, hashPreferences)
 }
+
+export interface ActivitySubscription {
+  $type?: 'app.bsky.notification.defs#activitySubscription'
+  posts?: 'posts_no_replies' | 'posts_with_replies' | (string & {})
+}
+
+const hashActivitySubscription = 'activitySubscription'
+
+export function isActivitySubscription<V>(v: V) {
+  return is$typed(v, id, hashActivitySubscription)
+}
+
+export function validateActivitySubscription<V>(v: V) {
+  return validate<ActivitySubscription & V>(v, id, hashActivitySubscription)
+}

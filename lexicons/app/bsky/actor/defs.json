@@ -163,9 +163,9 @@
           "type": "ref",
           "ref": "#knownFollowers"
         },
-        "subscription": {
+        "activitySubscription": {
           "type": "ref",
-          "ref": "#subscription"
+          "ref": "app.bsky.notification.defs#activitySubscription"
         }
       }
     },
@@ -231,16 +231,6 @@
           "type": "string",
           "description": "Timestamp when the verification was created.",
           "format": "datetime"
-        }
-      }
-    },
-    "subscription": {
-      "type": "object",
-      "required": ["activity"],
-      "properties": {
-        "activity": {
-          "type": "string",
-          "knownValues": ["posts_no_replies", "posts_with_replies", "none"]
         }
       }
     },
