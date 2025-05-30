@@ -61,6 +61,36 @@ export const jwtHeaderSchema = z
 
 export type JwtHeader = z.infer<typeof jwtHeaderSchema>
 
+export const htuSchema = z
+  .string()
+  .url()
+  .superRefine((value, ctx) => {
+    // https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6
+
+    if (!value.startsWith('http:') && !value.startsWith('https:')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invalid HTTP URI: only http and https protocols are allowed',
+      })
+    }
+
+    if (value.includes('?')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invalid HTTP URI: query string not allowed',
+      })
+    }
+
+    if (value.includes('#')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invalid HTTP URI: fragment not allowed',
+      })
+    }
+
+    return value
+  })
+
 // https://www.iana.org/assignments/jwt/jwt.xhtml
 export const jwtPayloadSchema = z
   .object({
@@ -72,7 +102,7 @@ export const jwtPayloadSchema = z
     iat: z.number().int().optional(),
     jti: z.string().optional(),
     htm: z.string().optional(),
-    htu: z.string().optional(),
+    htu: htuSchema.optional(),
     ath: z.string().optional(),
     acr: z.string().optional(),
     azp: z.string().optional(),
