@@ -1,9 +1,7 @@
 import { asPredicate } from '@atproto/api'
 import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
-import {
-  QueryParams as GetPostThreadV2QueryParams,
-} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import {
   ThreadItem,
   ThreadItemBlocked,

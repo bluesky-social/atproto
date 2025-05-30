@@ -1550,8 +1550,7 @@ describe('appview thread views v2', () => {
             uri: seed.r['3'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type:
-                'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
+              $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
             }),
           }),
         ])
@@ -1581,16 +1580,14 @@ describe('appview thread views v2', () => {
             uri: seed.r['3'].ref.uriStr,
             depth: -2,
             value: expect.objectContaining({
-              $type:
-                'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
+              $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['3.0'].ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type:
-                'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
+              $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
             }),
           }),
           expect.objectContaining({

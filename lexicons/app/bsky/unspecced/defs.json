@@ -112,7 +112,14 @@
     },
     "threadItemPost": {
       "type": "object",
-      "required": ["post", "moreParents", "moreReplies", "opThread", "hiddenByThreadgate", "mutedByViewer"],
+      "required": [
+        "post",
+        "moreParents",
+        "moreReplies",
+        "opThread",
+        "hiddenByThreadgate",
+        "mutedByViewer"
+      ],
       "properties": {
         "post": { "type": "ref", "ref": "app.bsky.feed.defs#postView" },
         "moreParents": {
