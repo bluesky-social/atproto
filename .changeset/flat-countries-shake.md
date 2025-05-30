@@ -5,4 +5,4 @@
 "@atproto/pds": patch
 ---
 
-Add subscription lexicons
+Add activity subscription lexicons
