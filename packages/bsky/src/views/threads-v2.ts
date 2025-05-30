@@ -1,14 +1,17 @@
 import { asPredicate } from '@atproto/api'
 import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import {
-  ThreadItem,
   ThreadItemBlocked,
   ThreadItemNoUnauthenticated,
   ThreadItemNotFound,
   ThreadItemPost,
 } from '../lexicon/types/app/bsky/unspecced/defs'
+import { ThreadHiddenItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import {
+  QueryParams as GetPostThreadV2QueryParams,
+  ThreadItem,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { $Typed } from '../lexicon/util'
 
 type ThreadMaybeHiddenPostNode = ThreadPostNode | ThreadHiddenPostNode
@@ -105,7 +108,7 @@ export type ThreadTree = ThreadTreeVisible | ThreadTreeHidden
 
 /** This function mutates the tree parameter. */
 export function sortTrimFlattenThreadTree<
-  TItem extends ThreadItem | ThreadItem,
+  TItem extends ThreadItem | ThreadHiddenItem,
 >(anchorTree: ThreadTree, options: SortTrimFlattenOptions): TItem[] {
   const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
 
@@ -305,7 +308,7 @@ function topSortValue(likeCount: number, hasOPLike: boolean): number {
   return Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
 }
 
-function flattenTree<TItem extends ThreadItem | ThreadItem>(
+function flattenTree<TItem extends ThreadItem | ThreadHiddenItem>(
   tree: ThreadTree,
 ): TItem[] {
   return [
@@ -331,7 +334,7 @@ function flattenTree<TItem extends ThreadItem | ThreadItem>(
   ]
 }
 
-function* flattenInDirection<TItem extends ThreadItem | ThreadItem>({
+function* flattenInDirection<TItem extends ThreadItem | ThreadHiddenItem>({
   tree,
   direction,
 }: {

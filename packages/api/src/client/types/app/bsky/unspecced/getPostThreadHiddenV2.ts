@@ -27,7 +27,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   /** A flat list of hidden thread items. The depth of each item is indicated by the depth property inside the item. */
-  thread: AppBskyUnspeccedDefs.ThreadItem[]
+  thread: ThreadHiddenItem[]
 }
 
 export interface CallOptions {
@@ -43,4 +43,22 @@ export interface Response {
 
 export function toKnownErr(e: any) {
   return e
+}
+
+export interface ThreadHiddenItem {
+  $type?: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem'
+  uri: string
+  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
+  depth: number
+  value: $Typed<AppBskyUnspeccedDefs.ThreadItemPost> | { $type: string }
+}
+
+const hashThreadHiddenItem = 'threadHiddenItem'
+
+export function isThreadHiddenItem<V>(v: V) {
+  return is$typed(v, id, hashThreadHiddenItem)
+}
+
+export function validateThreadHiddenItem<V>(v: V) {
+  return validate<ThreadHiddenItem & V>(v, id, hashThreadHiddenItem)
 }

@@ -57,7 +57,7 @@
               "description": "A flat list of thread items. The depth of each item is indicated by the depth property inside the item.",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.unspecced.defs#threadItem"
+                "ref": "#threadItem"
               }
             },
             "threadgate": {
@@ -69,6 +69,29 @@
               "description": "Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them."
             }
           }
+        }
+      }
+    },
+    "threadItem": {
+      "type": "object",
+      "required": ["uri", "depth", "value"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        },
+        "depth": {
+          "type": "integer",
+          "description": "The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths."
+        },
+        "value": {
+          "type": "union",
+          "refs": [
+            "app.bsky.unspecced.defs#threadItemPost",
+            "app.bsky.unspecced.defs#threadItemNoUnauthenticated",
+            "app.bsky.unspecced.defs#threadItemNotFound",
+            "app.bsky.unspecced.defs#threadItemBlocked"
+          ]
         }
       }
     }

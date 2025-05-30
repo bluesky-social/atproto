@@ -11,8 +11,8 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as AppBskyUnspeccedDefs from './defs.js'
 import type * as AppBskyFeedDefs from '../feed/defs.js'
+import type * as AppBskyUnspeccedDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -37,7 +37,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
-  thread: AppBskyUnspeccedDefs.ThreadItem[]
+  thread: ThreadItem[]
   threadgate?: AppBskyFeedDefs.ThreadgateView
   /** Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them. */
   hasHiddenReplies: boolean
@@ -68,3 +68,26 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface ThreadItem {
+  $type?: 'app.bsky.unspecced.getPostThreadV2#threadItem'
+  uri: string
+  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
+  depth: number
+  value:
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemPost>
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemNoUnauthenticated>
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemNotFound>
+    | $Typed<AppBskyUnspeccedDefs.ThreadItemBlocked>
+    | { $type: string }
+}
+
+const hashThreadItem = 'threadItem'
+
+export function isThreadItem<V>(v: V) {
+  return is$typed(v, id, hashThreadItem)
+}
+
+export function validateThreadItem<V>(v: V) {
+  return validate<ThreadItem & V>(v, id, hashThreadItem)
+}
