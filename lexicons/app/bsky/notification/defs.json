@@ -5,6 +5,15 @@
     "recordDeleted": {
       "type": "object",
       "properties": {}
+    },
+    "activitySubscription": {
+      "type": "object",
+      "properties": {
+        "posts": {
+          "type": "string",
+          "knownValues": ["posts_no_replies", "posts_with_replies"]
+        }
+      }
     }
   }
 }

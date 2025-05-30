@@ -15,7 +15,7 @@ import type * as AppBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.notification.listSubscriptions'
+const id = 'app.bsky.notification.listActivitySubscriptions'
 
 export interface QueryParams {
   limit: number
@@ -26,7 +26,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  subscriptions: Subscription[]
+  subscriptions: AppBskyActorDefs.ProfileView[]
 }
 
 export type HandlerInput = undefined
@@ -54,19 +54,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Subscription {
-  $type?: 'app.bsky.notification.listSubscriptions#subscription'
-  subject: AppBskyActorDefs.ProfileView
-  activity: 'posts_no_replies' | 'posts_with_replies' | 'none' | (string & {})
-}
-
-const hashSubscription = 'subscription'
-
-export function isSubscription<V>(v: V) {
-  return is$typed(v, id, hashSubscription)
-}
-
-export function validateSubscription<V>(v: V) {
-  return validate<Subscription & V>(v, id, hashSubscription)
-}

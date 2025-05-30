@@ -4779,9 +4779,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
           },
-          subscription: {
+          activitySubscription: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#subscription',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
         },
       },
@@ -4855,16 +4855,6 @@ export const schemaDict = {
             type: 'string',
             description: 'Timestamp when the verification was created.',
             format: 'datetime',
-          },
-        },
-      },
-      subscription: {
-        type: 'object',
-        required: ['activity'],
-        properties: {
-          activity: {
-            type: 'string',
-            knownValues: ['posts_no_replies', 'posts_with_replies', 'none'],
           },
         },
       },
@@ -9746,6 +9736,15 @@ export const schemaDict = {
         type: 'object',
         properties: {},
       },
+      activitySubscription: {
+        type: 'object',
+        properties: {
+          posts: {
+            type: 'string',
+            knownValues: ['posts_no_replies', 'posts_with_replies'],
+          },
+        },
+      },
     },
   },
   AppBskyNotificationGetUnreadCount: {
@@ -9776,6 +9775,50 @@ export const schemaDict = {
             properties: {
               count: {
                 type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationListActivitySubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.notification.listActivitySubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate all accounts to which the requesting account is subscribed to receive notifications for. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
               },
             },
           },
@@ -9915,64 +9958,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyNotificationListSubscriptions: {
-    lexicon: 1,
-    id: 'app.bsky.notification.listSubscriptions',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Enumerate all accounts to which the requesting account is subscribed, along with their subscription details. Requires auth.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subscriptions'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              subscriptions: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.notification.listSubscriptions#subscription',
-                },
-              },
-            },
-          },
-        },
-      },
-      subscription: {
-        type: 'object',
-        required: ['subject', 'activity'],
-        properties: {
-          subject: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileView',
-          },
-          activity: {
-            type: 'string',
-            knownValues: ['posts_no_replies', 'posts_with_replies', 'none'],
-          },
-        },
-      },
-    },
-  },
   AppBskyNotificationPutPreferences: {
     lexicon: 1,
     id: 'app.bsky.notification.putPreferences',
@@ -10030,14 +10015,14 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyNotificationSubscribe: {
+  AppBskyNotificationSetActivitySubscription: {
     lexicon: 1,
-    id: 'app.bsky.notification.subscribe',
+    id: 'app.bsky.notification.setActivitySubscription',
     defs: {
       main: {
         type: 'procedure',
         description:
-          "Subscribe to activity for an account. Setting activity to 'none' removes the subscription. Requires auth.",
+          'Subscribe to receive notifications for activity on an account. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -10049,8 +10034,8 @@ export const schemaDict = {
                 format: 'did',
               },
               activity: {
-                type: 'string',
-                knownValues: ['posts_no_replies', 'posts_with_replies', 'none'],
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
               },
             },
           },
@@ -13039,13 +13024,14 @@ export const ids = {
   AppBskyLabelerService: 'app.bsky.labeler.service',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
+  AppBskyNotificationListActivitySubscriptions:
+    'app.bsky.notification.listActivitySubscriptions',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
-  AppBskyNotificationListSubscriptions:
-    'app.bsky.notification.listSubscriptions',
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
-  AppBskyNotificationSubscribe: 'app.bsky.notification.subscribe',
+  AppBskyNotificationSetActivitySubscription:
+    'app.bsky.notification.setActivitySubscription',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',

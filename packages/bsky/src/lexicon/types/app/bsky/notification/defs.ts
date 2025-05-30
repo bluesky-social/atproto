@@ -27,3 +27,18 @@ export function isRecordDeleted<V>(v: V) {
 export function validateRecordDeleted<V>(v: V) {
   return validate<RecordDeleted & V>(v, id, hashRecordDeleted)
 }
+
+export interface ActivitySubscription {
+  $type?: 'app.bsky.notification.defs#activitySubscription'
+  posts?: 'posts_no_replies' | 'posts_with_replies' | (string & {})
+}
+
+const hashActivitySubscription = 'activitySubscription'
+
+export function isActivitySubscription<V>(v: V) {
+  return is$typed(v, id, hashActivitySubscription)
+}
+
+export function validateActivitySubscription<V>(v: V) {
+  return validate<ActivitySubscription & V>(v, id, hashActivitySubscription)
+}

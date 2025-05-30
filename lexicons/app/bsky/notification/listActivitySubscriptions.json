@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.notification.listSubscriptions",
+  "id": "app.bsky.notification.listActivitySubscriptions",
   "defs": {
     "main": {
-      "type": "procedure",
-      "description": "Enumerate all accounts to which the requesting account is subscribed, along with their subscription details. Requires auth.",
+      "type": "query",
+      "description": "Enumerate all accounts to which the requesting account is subscribed to receive notifications for. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -26,20 +26,12 @@
             "cursor": { "type": "string" },
             "subscriptions": {
               "type": "array",
-              "items": { "type": "ref", "ref": "#subscription" }
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileView"
+              }
             }
           }
-        }
-      }
-    },
-    "subscription": {
-      "type": "object",
-      "required": ["subject", "activity"],
-      "properties": {
-        "subject": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
-        "activity": {
-          "type": "string",
-          "knownValues": ["posts_no_replies", "posts_with_replies", "none"]
         }
       }
     }
