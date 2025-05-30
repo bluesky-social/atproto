@@ -2,17 +2,15 @@ import { asPredicate } from '@atproto/api'
 import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
-  ThreadHiddenItem,
-  ThreadHiddenItemPost,
-} from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
-import {
   QueryParams as GetPostThreadV2QueryParams,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import {
   ThreadItem,
   ThreadItemBlocked,
   ThreadItemNoUnauthenticated,
   ThreadItemNotFound,
   ThreadItemPost,
-} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+} from '../lexicon/types/app/bsky/unspecced/defs'
 import { $Typed } from '../lexicon/util'
 
 type ThreadMaybeHiddenPostNode = ThreadPostNode | ThreadHiddenPostNode
@@ -64,15 +62,15 @@ type ThreadPostNode = {
   replies: ThreadTree[] | undefined
 }
 
-type ThreadHiddenItemValue<T extends ThreadHiddenItem['value']> = Omit<
-  ThreadHiddenItem,
+type ThreadHiddenItemValue<T extends ThreadItem['value']> = Omit<
+  ThreadItem,
   'value'
 > & {
   value: T
 }
 
 export type ThreadHiddenItemValuePost = ThreadHiddenItemValue<
-  $Typed<ThreadHiddenItemPost>
+  $Typed<ThreadItemPost>
 >
 
 // This is an intermediary type that doesn't map to the views.
@@ -80,7 +78,7 @@ export type ThreadHiddenItemValuePost = ThreadHiddenItemValue<
 // while also differentiating between hidden and visible cases.
 export type ThreadHiddenAnchorPostNode = {
   type: 'hiddenAnchor'
-  item: Omit<ThreadHiddenItem, 'value'> & { value: undefined }
+  item: Omit<ThreadItem, 'value'> & { value: undefined }
   replies: ThreadHiddenPostNode[] | undefined
 }
 
@@ -109,7 +107,7 @@ export type ThreadTree = ThreadTreeVisible | ThreadTreeHidden
 
 /** This function mutates the tree parameter. */
 export function sortTrimFlattenThreadTree<
-  TItem extends ThreadItem | ThreadHiddenItem,
+  TItem extends ThreadItem | ThreadItem,
 >(anchorTree: ThreadTree, options: SortTrimFlattenOptions): TItem[] {
   const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
 
@@ -309,7 +307,7 @@ function topSortValue(likeCount: number, hasOPLike: boolean): number {
   return Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
 }
 
-function flattenTree<TItem extends ThreadItem | ThreadHiddenItem>(
+function flattenTree<TItem extends ThreadItem | ThreadItem>(
   tree: ThreadTree,
 ): TItem[] {
   return [
@@ -335,7 +333,7 @@ function flattenTree<TItem extends ThreadItem | ThreadHiddenItem>(
   ]
 }
 
-function* flattenInDirection<TItem extends ThreadItem | ThreadHiddenItem>({
+function* flattenInDirection<TItem extends ThreadItem | ThreadItem>({
   tree,
   direction,
 }: {

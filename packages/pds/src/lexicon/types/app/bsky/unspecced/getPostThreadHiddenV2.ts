@@ -11,7 +11,7 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as AppBskyFeedDefs from '../feed/defs.js'
+import type * as AppBskyUnspeccedDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -27,8 +27,8 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  /** A flat list of thread hidden items. The depth of each item is indicated by the depth property inside the item. */
-  thread: ThreadHiddenItem[]
+  /** A flat list of hidden thread items. The depth of each item is indicated by the depth property inside the item. */
+  thread: AppBskyUnspeccedDefs.ThreadItem[]
 }
 
 export type HandlerInput = undefined
@@ -56,40 +56,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface ThreadHiddenItem {
-  $type?: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem'
-  uri: string
-  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
-  depth: number
-  value: $Typed<ThreadHiddenItemPost> | { $type: string }
-}
-
-const hashThreadHiddenItem = 'threadHiddenItem'
-
-export function isThreadHiddenItem<V>(v: V) {
-  return is$typed(v, id, hashThreadHiddenItem)
-}
-
-export function validateThreadHiddenItem<V>(v: V) {
-  return validate<ThreadHiddenItem & V>(v, id, hashThreadHiddenItem)
-}
-
-export interface ThreadHiddenItemPost {
-  $type?: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost'
-  post: AppBskyFeedDefs.PostView
-  /** The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread. */
-  hiddenByThreadgate: boolean
-  /** This is by an account muted by the viewer requesting it. */
-  mutedByViewer: boolean
-}
-
-const hashThreadHiddenItemPost = 'threadHiddenItemPost'
-
-export function isThreadHiddenItemPost<V>(v: V) {
-  return is$typed(v, id, hashThreadHiddenItemPost)
-}
-
-export function validateThreadHiddenItemPost<V>(v: V) {
-  return validate<ThreadHiddenItemPost & V>(v, id, hashThreadHiddenItemPost)
-}

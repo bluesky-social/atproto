@@ -59,11 +59,8 @@ import {
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
 import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
-import { ThreadHiddenItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
-import {
-  QueryParams as GetPostThreadV2QueryParams,
-  ThreadItem,
-} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
+import { ThreadItem } from '../lexicon/types/app/bsky/unspecced/defs'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
@@ -1531,11 +1528,13 @@ export class Views {
       uri,
       depth,
       value: {
-        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+        $type: 'app.bsky.unspecced.defs#threadItemPost',
         post: postView,
         moreParents: moreParents ?? false,
         moreReplies,
         opThread: isOPThread,
+        hiddenByThreadgate: false, // Hidden posts are handled by threadHiddenV2
+        mutedByViewer: false, // Hidden posts are handled by threadHiddenV2
       },
     }
   }
@@ -1551,7 +1550,7 @@ export class Views {
       uri,
       depth,
       value: {
-        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
+        $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
       },
     }
   }
@@ -1567,7 +1566,7 @@ export class Views {
       uri,
       depth,
       value: {
-        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
+        $type: 'app.bsky.unspecced.defs#threadItemNotFound',
       },
     }
   }
@@ -1587,7 +1586,7 @@ export class Views {
       uri,
       depth,
       value: {
-        $type: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+        $type: 'app.bsky.unspecced.defs#threadItemBlocked',
         author: {
           did: authorDid,
           viewer: this.blockedProfileViewer(authorDid, state),
@@ -1608,7 +1607,7 @@ export class Views {
       branchingFactor: number
       prioritizeFollowedUsers: boolean
     },
-  ): ThreadHiddenItem[] {
+  ): ThreadItem[] {
     const { anchor: anchorUri, uris } = skeleton
 
     // Not found.
@@ -1773,10 +1772,13 @@ export class Views {
     return {
       ...base,
       value: {
-        $type: 'app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost',
+        $type: 'app.bsky.unspecced.defs#threadItemPost',
         post: postView,
         hiddenByThreadgate,
         mutedByViewer,
+        moreParents: false, // Hidden replies don't have parents.
+        moreReplies: 0, // Hidden replies don't have replies hydrated.
+        opThread: false, // Hidden replies don't contain OP threads.
       },
     }
   }
