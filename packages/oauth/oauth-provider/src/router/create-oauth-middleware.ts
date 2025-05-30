@@ -101,16 +101,16 @@ export function createOAuthMiddleware<
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidRequest)
 
-      const dpopJkt = await server.checkDpopProof(
-        req.headers['dpop'],
+      const dpopResult = await server.checkDpopProof(
         req.method!,
         this.url,
+        req.headers,
       )
 
       return server.pushedAuthorizationRequest(
         credentials,
         authorizationRequest,
-        dpopJkt,
+        dpopResult,
       )
     }, 201),
   )
@@ -138,17 +138,17 @@ export function createOAuthMiddleware<
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidGrant)
 
-      const dpopJkt = await server.checkDpopProof(
-        req.headers['dpop'],
+      const dpopResult = await server.checkDpopProof(
         req.method!,
         this.url,
+        req.headers,
       )
 
       return server.token(
         clientCredentials,
         clientMetadata,
         tokenRequest,
-        dpopJkt,
+        dpopResult,
       )
     }),
   )
