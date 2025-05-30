@@ -87,29 +87,6 @@
         }
       }
     },
-    "threadItem": {
-      "type": "object",
-      "required": ["uri", "depth", "value"],
-      "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
-        "depth": {
-          "type": "integer",
-          "description": "The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths."
-        },
-        "value": {
-          "type": "union",
-          "refs": [
-            "#threadItemPost",
-            "#threadItemNoUnauthenticated",
-            "#threadItemNotFound",
-            "#threadItemBlocked"
-          ]
-        }
-      }
-    },
     "threadItemPost": {
       "type": "object",
       "required": [

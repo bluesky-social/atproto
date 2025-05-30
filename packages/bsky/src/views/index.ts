@@ -59,8 +59,11 @@ import {
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
 import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
-import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import { ThreadItem } from '../lexicon/types/app/bsky/unspecced/defs'
+import { ThreadHiddenItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import {
+  QueryParams as GetPostThreadV2QueryParams,
+  ThreadItem,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import { $Typed, Un$Typed } from '../lexicon/util'
 import { Notification } from '../proto/bsky_pb'
@@ -73,6 +76,7 @@ import {
 } from '../util/uris'
 import {
   ThreadHiddenAnchorPostNode,
+  ThreadHiddenItemValuePost,
   ThreadHiddenPostNode,
   ThreadItemValueBlocked,
   ThreadItemValueNoUnauthenticated,
@@ -1272,7 +1276,7 @@ export class Views {
       }
     }
 
-    const thread = sortTrimFlattenThreadTree<ThreadItem>(anchorTree, {
+    const thread = sortTrimFlattenThreadTree(anchorTree, {
       opDid,
       branchingFactor,
       sort,
@@ -1607,7 +1611,7 @@ export class Views {
       branchingFactor: number
       prioritizeFollowedUsers: boolean
     },
-  ): ThreadItem[] {
+  ): ThreadHiddenItem[] {
     const { anchor: anchorUri, uris } = skeleton
 
     // Not found.
@@ -1767,7 +1771,7 @@ export class Views {
     mutedByViewer: boolean
     postView: PostView
     uri: string
-  }): ThreadHiddenPostNode['item'] {
+  }): ThreadHiddenItemValuePost {
     const base = this.threadHiddenV2ItemPostAnchor({ depth, uri })
     return {
       ...base,

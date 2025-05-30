@@ -127,29 +127,6 @@ export function validateTrendView<V>(v: V) {
   return validate<TrendView & V>(v, id, hashTrendView)
 }
 
-export interface ThreadItem {
-  $type?: 'app.bsky.unspecced.defs#threadItem'
-  uri: string
-  /** The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths. */
-  depth: number
-  value:
-    | $Typed<ThreadItemPost>
-    | $Typed<ThreadItemNoUnauthenticated>
-    | $Typed<ThreadItemNotFound>
-    | $Typed<ThreadItemBlocked>
-    | { $type: string }
-}
-
-const hashThreadItem = 'threadItem'
-
-export function isThreadItem<V>(v: V) {
-  return is$typed(v, id, hashThreadItem)
-}
-
-export function validateThreadItem<V>(v: V) {
-  return validate<ThreadItem & V>(v, id, hashThreadItem)
-}
-
 export interface ThreadItemPost {
   $type?: 'app.bsky.unspecced.defs#threadItemPost'
   post: AppBskyFeedDefs.PostView

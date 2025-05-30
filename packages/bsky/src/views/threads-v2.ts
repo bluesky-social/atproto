@@ -1,14 +1,17 @@
 import { asPredicate } from '@atproto/api'
 import { HydrateCtx } from '../hydration/hydrator'
 import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { QueryParams as GetPostThreadV2QueryParams } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import {
-  ThreadItem,
   ThreadItemBlocked,
   ThreadItemNoUnauthenticated,
   ThreadItemNotFound,
   ThreadItemPost,
 } from '../lexicon/types/app/bsky/unspecced/defs'
+import { ThreadHiddenItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import {
+  QueryParams as GetPostThreadV2QueryParams,
+  ThreadItem,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { $Typed } from '../lexicon/util'
 
 type ThreadMaybeHiddenPostNode = ThreadPostNode | ThreadHiddenPostNode
@@ -60,8 +63,8 @@ type ThreadPostNode = {
   replies: ThreadTree[] | undefined
 }
 
-type ThreadHiddenItemValue<T extends ThreadItem['value']> = Omit<
-  ThreadItem,
+type ThreadHiddenItemValue<T extends ThreadHiddenItem['value']> = Omit<
+  ThreadHiddenItem,
   'value'
 > & {
   value: T
@@ -76,7 +79,7 @@ export type ThreadHiddenItemValuePost = ThreadHiddenItemValue<
 // while also differentiating between hidden and visible cases.
 export type ThreadHiddenAnchorPostNode = {
   type: 'hiddenAnchor'
-  item: Omit<ThreadItem, 'value'> & { value: undefined }
+  item: Omit<ThreadHiddenItem, 'value'> & { value: undefined }
   replies: ThreadHiddenPostNode[] | undefined
 }
 
@@ -104,12 +107,13 @@ export type ThreadTreeHidden = ThreadHiddenAnchorPostNode | ThreadHiddenPostNode
 export type ThreadTree = ThreadTreeVisible | ThreadTreeHidden
 
 /** This function mutates the tree parameter. */
-export function sortTrimFlattenThreadTree<
-  TItem extends ThreadItem | ThreadItem,
->(anchorTree: ThreadTree, options: SortTrimFlattenOptions): TItem[] {
+export function sortTrimFlattenThreadTree(
+  anchorTree: ThreadTree,
+  options: SortTrimFlattenOptions,
+) {
   const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
 
-  return flattenTree<TItem>(sortedAnchorTree)
+  return flattenTree(sortedAnchorTree)
 }
 
 type SortTrimFlattenOptions = {
@@ -305,13 +309,11 @@ function topSortValue(likeCount: number, hasOPLike: boolean): number {
   return Math.log(3 + likeCount) * (hasOPLike ? 1.45 : 1.0)
 }
 
-function flattenTree<TItem extends ThreadItem | ThreadItem>(
-  tree: ThreadTree,
-): TItem[] {
+function flattenTree(tree: ThreadTree) {
   return [
     // All parents above.
     ...Array.from(
-      flattenInDirection<TItem>({
+      flattenInDirection({
         tree,
         direction: 'up',
       }),
@@ -319,11 +321,11 @@ function flattenTree<TItem extends ThreadItem | ThreadItem>(
 
     // The anchor.
     // In the case of hidden replies, the anchor item itself is undefined.
-    ...(tree.item.value ? ([tree.item] as TItem[]) : []),
+    ...(tree.item.value ? [tree.item] : []),
 
     // All replies below.
     ...Array.from(
-      flattenInDirection<TItem>({
+      flattenInDirection({
         tree,
         direction: 'down',
       }),
@@ -331,18 +333,18 @@ function flattenTree<TItem extends ThreadItem | ThreadItem>(
   ]
 }
 
-function* flattenInDirection<TItem extends ThreadItem | ThreadItem>({
+function* flattenInDirection({
   tree,
   direction,
 }: {
   tree: ThreadTree
   direction: 'up' | 'down'
-}): Generator<TItem, void> {
+}) {
   if (tree.type === 'noUnauthenticated') {
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenTree<TItem>(tree.parent)
+        yield* flattenTree(tree.parent)
       }
     }
   }
@@ -351,13 +353,13 @@ function* flattenInDirection<TItem extends ThreadItem | ThreadItem>({
     if (direction === 'up') {
       if (tree.parent) {
         // Unfold all parents above.
-        yield* flattenTree<TItem>(tree.parent)
+        yield* flattenTree(tree.parent)
       }
     } else {
       // Unfold all replies below.
       if (tree.replies?.length) {
         for (const reply of tree.replies) {
-          yield* flattenTree<TItem>(reply)
+          yield* flattenTree(reply)
         }
       }
     }
@@ -369,7 +371,7 @@ function* flattenInDirection<TItem extends ThreadItem | ThreadItem>({
       // Unfold all replies below.
       if (tree.replies?.length) {
         for (const reply of tree.replies) {
-          yield* flattenTree<TItem>(reply)
+          yield* flattenTree(reply)
         }
       }
     }
