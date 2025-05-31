@@ -1,16 +1,24 @@
-import { Link as RouterLink, LinkComponentProps } from '@tanstack/react-router'
+import {
+  Link as RouterLink,
+  type LinkComponentProps,
+} from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { ButtonStyleProps, useButtonStyles } from '#/components/Button'
+import { type ReactNode } from 'react'
+import { type ButtonStyleProps, useButtonStyles } from '#/components/Button'
 
 export type LinkProps = LinkComponentProps & {
   label?: string
+  children?: ReactNode | string
 }
 
 export function Link({ children, label, ...rest }: LinkProps) {
+  const isExternal = !rest.to && rest.href
+  const Component = isExternal ? 'a' : RouterLink
+
   return (
-    <RouterLink {...rest} aria-label={label || rest.href || rest.to}>
+    <Component {...rest} aria-label={label || rest.href || rest.to}>
       {children}
-    </RouterLink>
+    </Component>
   )
 }
 

@@ -13,8 +13,8 @@ export function Footer() {
       <div className="flex flex-wrap">
         {links?.map((link) => (
           <InlineLink
-            href={link.href}
             className="text-text-light mr-4 text-sm"
+            href={link.href}
             key={link.href}
           >
             {localizeString(link.title)}
