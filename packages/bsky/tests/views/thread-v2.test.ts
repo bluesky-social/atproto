@@ -2,15 +2,15 @@ import assert from 'node:assert'
 import { AppBskyUnspeccedDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
 import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
 import {
   OutputSchema as OutputSchemaThread,
   QueryParams as QueryParamsThread,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
 import {
-  ThreadItemValuePost,
   ThreadHiddenItemValuePost,
+  ThreadItemValuePost,
 } from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
