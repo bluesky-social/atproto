@@ -162,6 +162,10 @@
         "knownFollowers": {
           "type": "ref",
           "ref": "#knownFollowers"
+        },
+        "activitySubscription": {
+          "type": "ref",
+          "ref": "app.bsky.notification.defs#activitySubscription"
         }
       }
     },

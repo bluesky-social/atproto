@@ -12,6 +12,7 @@ import {
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyGraphDefs from '../graph/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+import type * as AppBskyNotificationDefs from '../notification/defs.js'
 import type * as AppBskyFeedThreadgate from '../feed/threadgate.js'
 import type * as AppBskyFeedPostgate from '../feed/postgate.js'
 import type * as AppBskyEmbedExternal from '../embed/external.js'
@@ -147,6 +148,7 @@ export interface ViewerState {
   following?: string
   followedBy?: string
   knownFollowers?: KnownFollowers
+  activitySubscription?: AppBskyNotificationDefs.ActivitySubscription
 }
 
 const hashViewerState = 'viewerState'
