@@ -3,8 +3,10 @@ import http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { IdResolver, MemoryCache } from '@atproto/identity'
-import { Database } from './db'
+import { Database, DatabaseSchema } from './db'
 import createRoutes from './routes'
+
+export type { DatabaseSchema }
 
 export { RepoSubscription } from './subscription'
 
