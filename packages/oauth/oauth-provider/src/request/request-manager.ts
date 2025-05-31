@@ -23,6 +23,7 @@ import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
+import { DpopResult } from '../oauth-verifier.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
 import {
@@ -56,9 +57,14 @@ export class RequestManager {
     clientAuth: ClientAuth,
     input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
-    dpopJkt: null | string,
+    dpopResult: null | DpopResult,
   ): Promise<RequestInfo> {
-    const parameters = await this.validate(client, clientAuth, input, dpopJkt)
+    const parameters = await this.validate(
+      client,
+      clientAuth,
+      input,
+      dpopResult,
+    )
     return this.create(client, clientAuth, parameters, deviceId)
   }
 
@@ -89,7 +95,7 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    dpop_jkt: null | string,
+    dpopResult: null | DpopResult,
   ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
     // -------------------------------
     // Validate unsupported parameters
@@ -196,8 +202,8 @@ export class RequestManager {
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-10
     if (!parameters.dpop_jkt) {
-      if (dpop_jkt) parameters = { ...parameters, dpop_jkt }
-    } else if (parameters.dpop_jkt !== dpop_jkt) {
+      if (dpopResult) parameters = { ...parameters, dpop_jkt: dpopResult.jkt }
+    } else if (parameters.dpop_jkt !== dpopResult?.jkt) {
       throw new InvalidParametersError(
         parameters,
         '"dpop_jkt" parameters does not match the DPoP proof',
