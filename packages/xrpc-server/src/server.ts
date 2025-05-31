@@ -209,29 +209,28 @@ export class Server {
       }
     }
 
-    if (this.options.catchall) {
-      return this.options.catchall(req, res, next)
+    // Ensure that known XRPC methods are only called with the correct HTTP
+    // method.
+    const def = this.lex.getDef(req.params.methodId)
+    if (def) {
+      const expectedMethod =
+        def.type === 'procedure' ? 'POST' : def.type === 'query' ? 'GET' : null
+      if (expectedMethod != null && expectedMethod !== req.method) {
+        return next(
+          new InvalidRequestError(
+            `Incorrect HTTP method (${req.method}) expected ${expectedMethod}`,
+          ),
+        )
+      }
     }
 
-    const def = this.lex.getDef(req.params.methodId)
-    if (!def) {
-      return next(new MethodNotImplementedError())
+    if (this.options.catchall) {
+      this.options.catchall.call(null, req, res, next)
+    } else if (!def) {
+      next(new MethodNotImplementedError())
+    } else {
+      next()
     }
-    // validate method
-    if (def.type === 'query' && req.method !== 'GET') {
-      return next(
-        new InvalidRequestError(
-          `Incorrect HTTP method (${req.method}) expected GET`,
-        ),
-      )
-    } else if (def.type === 'procedure' && req.method !== 'POST') {
-      return next(
-        new InvalidRequestError(
-          `Incorrect HTTP method (${req.method}) expected POST`,
-        ),
-      )
-    }
-    return next()
   }
 
   createHandler(
