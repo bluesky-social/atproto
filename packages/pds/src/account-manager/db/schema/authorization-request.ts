@@ -15,7 +15,7 @@ export interface AuthorizationRequest {
   deviceId: DeviceId | null
 
   clientId: OAuthClientId
-  clientAuth: JsonEncoded<ClientAuth>
+  clientAuth: JsonEncoded<ClientAuth | null>
   parameters: JsonEncoded<OAuthAuthorizationRequestParameters>
   expiresAt: DateISO
   code: Code | null

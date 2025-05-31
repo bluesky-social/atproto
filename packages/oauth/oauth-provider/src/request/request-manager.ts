@@ -1,9 +1,9 @@
 import type { Account } from '@atproto/oauth-provider-api'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
+import { clientAuthCheck } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -25,10 +25,7 @@ import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
-import {
-  RequestDataAuthorized,
-  isRequestDataAuthorized,
-} from './request-data.js'
+import { isRequestDataAuthorized } from './request-data.js'
 import { generateRequestId } from './request-id.js'
 import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
@@ -53,21 +50,13 @@ export class RequestManager {
 
   async createAuthorizationRequest(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
     dpopJkt: null | string,
-  ): Promise<RequestInfo> {
+  ) {
     const parameters = await this.validate(client, clientAuth, input, dpopJkt)
-    return this.create(client, clientAuth, parameters, deviceId)
-  }
 
-  protected async create(
-    client: Client,
-    clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    deviceId: null | DeviceId = null,
-  ): Promise<RequestInfo> {
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
     const id = await generateRequestId()
 
@@ -82,12 +71,12 @@ export class RequestManager {
     })
 
     const uri = encodeRequestUri(id)
-    return { id, uri, expiresAt, parameters, clientId: client.id, clientAuth }
+    return { uri, expiresAt, parameters }
   }
 
   protected async validate(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
     dpop_jkt: null | string,
   ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
@@ -204,7 +193,21 @@ export class RequestManager {
       )
     }
 
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
+    if (
+      // @NOTE we allow the client to be unauthenticated when creating the request
+      // as it might not always be possible to authenticate the client at this
+      // stage (e.g. when the client directed the user to the authorization
+      // endpoint).
+      clientAuth !== null &&
+      clientAuth.method !== client.metadata.token_endpoint_auth_method
+    ) {
+      throw new InvalidParametersError(
+        parameters,
+        `Client authentication method "${clientAuth.method}" is not supported by this client`,
+      )
+    }
+
+    if (clientAuth?.method === 'private_key_jwt') {
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
         throw new InvalidParametersError(
           parameters,
@@ -290,7 +293,7 @@ export class RequestManager {
     if (
       !client.info.isTrusted &&
       !client.info.isFirstParty &&
-      clientAuth.method === 'none'
+      (!clientAuth || clientAuth.method === 'none')
     ) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
@@ -440,7 +443,11 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     code: Code,
-  ): Promise<RequestDataAuthorized & { requestUri: RequestUri }> {
+  ): Promise<{
+    parameters: OAuthAuthorizationRequestParameters
+    sub: string
+    deviceId: DeviceId
+  }> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
@@ -462,23 +469,32 @@ export class RequestManager {
         throw new InvalidGrantError('This code has expired')
       }
 
-      if (data.clientAuth.method === 'none') {
+      if (data.clientAuth === null) {
         // If the client did not use PAR, it was not authenticated when the
-        // request was created (see authorize() method above). Since PAR is not
-        // mandatory, and since the token exchange currently taking place *is*
-        // authenticated (`clientAuth`), we allow "upgrading" the authentication
-        // method (the token created will be bound to the current clientAuth).
+        // request was created (see authorize() method in OAuthProvider). Since
+        // PAR is not mandatory, and since the token exchange currently taking
+        // place *is* authenticated (`clientAuth`), we allow "upgrading" the
+        // authentication method (the token created will be bound to the current
+        // clientAuth).
+      } else if (data.clientAuth.method === 'none') {
+        // LEGACY before being represented as "null", unauthenticated
+        // authorization request creation were represented as "none". This is a
+        // legacy case that should be removed in the (very near) future.
+        //
+        // @TODO remove this whole "else if" check & block after the current
+        // code was deployed for at least 1 day (to allow for the changes to
+        // propagate).
       } else {
-        if (clientAuth.method !== data.clientAuth.method) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
-
-        if (!(await client.validateClientAuth(data.clientAuth))) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
+        // Otherwise, the authentication method currently used must match the
+        // one that was used to initiate the session.
+        clientAuthCheck(client, clientAuth, {
+          clientId: data.clientId,
+          clientAuth: data.clientAuth,
+        })
       }
 
-      return { ...data, requestUri: encodeRequestUri(id) }
+      const { sub, deviceId, parameters } = data
+      return { sub, deviceId, parameters }
     } finally {
       // A "code" can only be used once
       await this.store.deleteRequest(id)

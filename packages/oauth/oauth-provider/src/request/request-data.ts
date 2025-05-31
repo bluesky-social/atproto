@@ -8,7 +8,7 @@ import { Code } from './code.js'
 
 export type RequestData = {
   clientId: ClientId
-  clientAuth: ClientAuth
+  clientAuth: ClientAuth | null
   parameters: Readonly<OAuthAuthorizationRequestParameters>
   expiresAt: Date
   deviceId: DeviceId | null
