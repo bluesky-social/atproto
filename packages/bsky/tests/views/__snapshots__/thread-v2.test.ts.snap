@@ -8,9 +8,11 @@ Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -46,9 +48,11 @@ Object {
       "depth": 0,
       "uri": "record(1)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -102,9 +106,11 @@ Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -140,9 +146,11 @@ Object {
       "depth": 0,
       "uri": "record(1)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -188,9 +196,11 @@ Object {
       "depth": 1,
       "uri": "record(2)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -244,9 +254,11 @@ Object {
       "depth": -2,
       "uri": "record(0)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -282,9 +294,11 @@ Object {
       "depth": -1,
       "uri": "record(1)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -330,9 +344,11 @@ Object {
       "depth": 0,
       "uri": "record(2)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -386,9 +402,11 @@ Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -424,9 +442,11 @@ Object {
       "depth": 0,
       "uri": "record(1)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -480,9 +500,11 @@ Object {
       "depth": -1,
       "uri": "record(0)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -518,9 +540,11 @@ Object {
       "depth": 0,
       "uri": "record(1)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -566,9 +590,11 @@ Object {
       "depth": 1,
       "uri": "record(2)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -622,9 +648,11 @@ Object {
       "depth": -2,
       "uri": "record(0)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -660,9 +688,11 @@ Object {
       "depth": -1,
       "uri": "record(1)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -708,9 +738,11 @@ Object {
       "depth": 0,
       "uri": "record(2)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -764,9 +796,11 @@ Object {
       "depth": 0,
       "uri": "record(0)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -802,9 +836,11 @@ Object {
       "depth": 1,
       "uri": "record(1)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -850,9 +886,11 @@ Object {
       "depth": 2,
       "uri": "record(2)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": true,
         "post": Object {
           "author": Object {
@@ -898,9 +936,11 @@ Object {
       "depth": 1,
       "uri": "record(3)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -946,9 +986,11 @@ Object {
       "depth": 1,
       "uri": "record(4)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -994,9 +1036,11 @@ Object {
       "depth": 2,
       "uri": "record(5)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {
@@ -1042,9 +1086,11 @@ Object {
       "depth": 1,
       "uri": "record(6)",
       "value": Object {
-        "$type": "app.bsky.unspecced.getPostThreadV2#threadItemPost",
+        "$type": "app.bsky.unspecced.defs#threadItemPost",
+        "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
+        "mutedByViewer": false,
         "opThread": false,
         "post": Object {
           "author": Object {

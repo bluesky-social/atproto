@@ -10201,6 +10201,66 @@ export const schemaDict = {
           },
         },
       },
+      threadItemPost: {
+        type: 'object',
+        required: [
+          'post',
+          'moreParents',
+          'moreReplies',
+          'opThread',
+          'hiddenByThreadgate',
+          'mutedByViewer',
+        ],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          moreParents: {
+            type: 'boolean',
+            description:
+              'This post has more parents that were not present in the response. This is just a boolean, without the number of parents.',
+          },
+          moreReplies: {
+            type: 'integer',
+            description:
+              'This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate.',
+          },
+          opThread: {
+            type: 'boolean',
+            description:
+              'This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread.',
+          },
+          hiddenByThreadgate: {
+            type: 'boolean',
+            description:
+              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
+          },
+          mutedByViewer: {
+            type: 'boolean',
+            description:
+              'This is by an account muted by the viewer requesting it.',
+          },
+        },
+      },
+      threadItemNoUnauthenticated: {
+        type: 'object',
+        properties: {},
+      },
+      threadItemNotFound: {
+        type: 'object',
+        properties: {},
+      },
+      threadItemBlocked: {
+        type: 'object',
+        required: ['author'],
+        properties: {
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -10329,7 +10389,7 @@ export const schemaDict = {
               thread: {
                 type: 'array',
                 description:
-                  'A flat list of thread hidden items. The depth of each item is indicated by the depth property inside the item.',
+                  'A flat list of hidden thread items. The depth of each item is indicated by the depth property inside the item.',
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem',
@@ -10354,29 +10414,7 @@ export const schemaDict = {
           },
           value: {
             type: 'union',
-            refs: [
-              'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItemPost',
-            ],
-          },
-        },
-      },
-      threadHiddenItemPost: {
-        type: 'object',
-        required: ['post', 'hiddenByThreadgate', 'mutedByViewer'],
-        properties: {
-          post: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
-          },
-          hiddenByThreadgate: {
-            type: 'boolean',
-            description:
-              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
-          },
-          mutedByViewer: {
-            type: 'boolean',
-            description:
-              'This is by an account muted by the viewer requesting it.',
+            refs: ['lex:app.bsky.unspecced.defs#threadItemPost'],
           },
         },
       },
@@ -10479,54 +10517,11 @@ export const schemaDict = {
           value: {
             type: 'union',
             refs: [
-              'lex:app.bsky.unspecced.getPostThreadV2#threadItemPost',
-              'lex:app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
-              'lex:app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
-              'lex:app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+              'lex:app.bsky.unspecced.defs#threadItemPost',
+              'lex:app.bsky.unspecced.defs#threadItemNoUnauthenticated',
+              'lex:app.bsky.unspecced.defs#threadItemNotFound',
+              'lex:app.bsky.unspecced.defs#threadItemBlocked',
             ],
-          },
-        },
-      },
-      threadItemPost: {
-        type: 'object',
-        required: ['post', 'moreParents', 'moreReplies', 'opThread'],
-        properties: {
-          post: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
-          },
-          moreParents: {
-            type: 'boolean',
-            description:
-              'This post has more parents that were not present in the response. This is just a boolean, without the number of parents.',
-          },
-          moreReplies: {
-            type: 'integer',
-            description:
-              'This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate.',
-          },
-          opThread: {
-            type: 'boolean',
-            description:
-              'This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread.',
-          },
-        },
-      },
-      threadItemNoUnauthenticated: {
-        type: 'object',
-        properties: {},
-      },
-      threadItemNotFound: {
-        type: 'object',
-        properties: {},
-      },
-      threadItemBlocked: {
-        type: 'object',
-        required: ['author'],
-        properties: {
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
           },
         },
       },
