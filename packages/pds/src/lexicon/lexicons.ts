@@ -10323,7 +10323,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          '[NOTE: This is an experimental endpoint for BlueSky to experiment with private data off-protocol. This is intended to be replaced with on-protocol private data]. Apply a batch transaction of repository creates. Requires auth, implemented by appview.',
+          '[NOTE: This is an experimental endpoint for BlueSky to experiment with private data off-protocol. This is intended to be replaced with on-protocol private data]. Apply a single create, update or delete. Requires auth, implemented by appview.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -10334,6 +10334,7 @@ export const schemaDict = {
                 type: 'union',
                 refs: [
                   'lex:app.bsky.unspecced.applyPrivateWrite#create',
+                  'lex:app.bsky.unspecced.applyPrivateWrite#update',
                   'lex:app.bsky.unspecced.applyPrivateWrite#delete',
                 ],
                 closed: true,
@@ -10351,6 +10352,7 @@ export const schemaDict = {
                 type: 'union',
                 refs: [
                   'lex:app.bsky.unspecced.applyPrivateWrite#createResult',
+                  'lex:app.bsky.unspecced.applyPrivateWrite#updateResult',
                   'lex:app.bsky.unspecced.applyPrivateWrite#deleteResult',
                 ],
                 closed: true,
@@ -10377,9 +10379,27 @@ export const schemaDict = {
           },
         },
       },
+      update: {
+        type: 'object',
+        description: 'Operation which updates an existing record.',
+        required: ['collection', 'rkey', 'value'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          value: {
+            type: 'unknown',
+          },
+        },
+      },
       delete: {
         type: 'object',
-        description: 'Operation which creates a new record.',
+        description: 'Operation which deletes an existing record.',
         required: ['collection', 'rkey'],
         properties: {
           collection: {
@@ -10393,6 +10413,20 @@ export const schemaDict = {
         },
       },
       createResult: {
+        type: 'object',
+        required: ['rkey'],
+        properties: {
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      updateResult: {
         type: 'object',
         required: ['rkey'],
         properties: {

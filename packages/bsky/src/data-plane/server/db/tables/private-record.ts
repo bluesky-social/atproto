@@ -6,6 +6,7 @@ export interface PrivateRecord {
   // JSON-encoded record
   payload: string
   indexedAt: string
+  updatedAt: string
 }
 
 export const tableName = 'private_record'

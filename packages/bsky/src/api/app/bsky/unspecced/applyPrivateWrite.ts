@@ -4,11 +4,13 @@ import { Server } from '../../../../lexicon'
 import {
   Create,
   Delete,
+  Update,
   isCreate,
   isDelete,
+  isUpdate,
 } from '../../../../lexicon/types/app/bsky/unspecced/applyPrivateWrite'
 import { $Typed } from '../../../../lexicon/util'
-import { Method, PutOperationRequest } from '../../../../proto/bsync_pb'
+import { Method } from '../../../../proto/bsync_pb'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.applyPrivateWrite({
@@ -40,32 +42,46 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-type PreparedWrite = PreparedCreate | PreparedDelete
+type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
 
-type PreparedCreate = Pick<
-  PutOperationRequest,
-  'actorDid' | 'collection' | 'rkey'
-> & {
+type PreparedCreate = {
   $type: 'app.bsky.unspecced.applyPrivateWrite#createResult'
+  actorDid: string
+  collection: string
+  rkey: string
   method: Method.CREATE
   payload: Uint8Array
 }
 
-type PreparedDelete = Pick<
-  PutOperationRequest,
-  'actorDid' | 'collection' | 'rkey'
-> & {
+type PreparedUpdate = {
+  $type: 'app.bsky.unspecced.applyPrivateWrite#updateResult'
+  actorDid: string
+  collection: string
+  rkey: string
+  method: Method.UPDATE
+  payload: Uint8Array
+}
+
+type PreparedDelete = {
   $type: 'app.bsky.unspecced.applyPrivateWrite#deleteResult'
+  actorDid: string
+  collection: string
+  rkey: string
   method: Method.DELETE
   payload: undefined
 }
 
 const prepareWrite = (
   actorDid: string,
-  write: $Typed<Create> | $Typed<Delete>,
+  write: $Typed<Create> | $Typed<Update> | $Typed<Delete>,
 ): PreparedWrite | PromiseLike<PreparedWrite> => {
   if (isCreate(write)) {
     return prepareCreate({
+      actorDid,
+      write,
+    })
+  } else if (isUpdate(write)) {
+    return prepareUpdate({
       actorDid,
       write,
     })
@@ -93,6 +109,22 @@ const prepareCreate = async (opts: {
     rkey: write.rkey || 'self',
     payload: Buffer.from(JSON.stringify(write.value)),
     method: Method.CREATE,
+  }
+}
+
+const prepareUpdate = async (opts: {
+  actorDid: string
+  write: $Typed<Update>
+}): Promise<PreparedUpdate> => {
+  const { actorDid, write } = opts
+
+  return {
+    $type: 'app.bsky.unspecced.applyPrivateWrite#updateResult',
+    actorDid,
+    collection: write.collection,
+    rkey: write.rkey,
+    payload: Buffer.from(JSON.stringify(write.value)),
+    method: Method.UPDATE,
   }
 }
 

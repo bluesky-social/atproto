@@ -39,6 +39,7 @@ describe('private records', () => {
     it('creates record', async () => {
       const actorDid = alice
 
+      // Create.
       const { data } = await agent.app.bsky.unspecced.applyPrivateWrite(
         {
           write: {
@@ -81,14 +82,16 @@ describe('private records', () => {
           text: 'hello',
         }),
         indexedAt: expect.any(String),
+        updatedAt: expect.any(String),
       })
     })
   })
 
-  describe('delete', () => {
-    it('deletes record', async () => {
+  describe('update', () => {
+    it('updates record', async () => {
       const actorDid = alice
 
+      // Create.
       await agent.app.bsky.unspecced.applyPrivateWrite(
         {
           write: {
@@ -110,6 +113,81 @@ describe('private records', () => {
       )
       await network.processAll()
 
+      // Update.
+      const { data } = await agent.app.bsky.unspecced.applyPrivateWrite(
+        {
+          write: {
+            $type: 'app.bsky.unspecced.applyPrivateWrite#update',
+            collection,
+            rkey,
+            value: {
+              $type: 'app.bsky.unspecced.test#dummy',
+              text: 'goodbye',
+            },
+          },
+        },
+        {
+          headers: await network.serviceHeaders(
+            actorDid,
+            lex.ids.AppBskyUnspeccedApplyPrivateWrite,
+          ),
+        },
+      )
+      await network.processAll()
+
+      expect(data.result).toStrictEqual({
+        $type: 'app.bsky.unspecced.applyPrivateWrite#updateResult',
+        rkey,
+      })
+
+      const uri = `at://${actorDid}/${collection}/${rkey}`
+      const dbResult = await db.db
+        .selectFrom('private_record')
+        .selectAll()
+        .where('uri', '=', uri)
+        .executeTakeFirstOrThrow()
+      expect(dbResult).toStrictEqual({
+        uri,
+        actorDid,
+        collection,
+        rkey,
+        payload: JSON.stringify({
+          $type: 'app.bsky.unspecced.test#dummy',
+          text: 'goodbye',
+        }),
+        indexedAt: expect.any(String),
+        updatedAt: expect.any(String),
+      })
+    })
+  })
+
+  describe('delete', () => {
+    it('deletes record', async () => {
+      const actorDid = alice
+
+      // Create.
+      await agent.app.bsky.unspecced.applyPrivateWrite(
+        {
+          write: {
+            $type: 'app.bsky.unspecced.applyPrivateWrite#create',
+            collection,
+            rkey,
+            value: {
+              $type: 'app.bsky.unspecced.test#dummy',
+              text: 'hello',
+            },
+          },
+        },
+        {
+          headers: await network.serviceHeaders(
+            actorDid,
+            lex.ids.AppBskyUnspeccedApplyPrivateWrite,
+          ),
+        },
+      )
+      await network.processAll()
+
+      // Delete.
       const { data } = await agent.app.bsky.unspecced.applyPrivateWrite(
         {
           write: {

@@ -9,6 +9,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('payload', 'text', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('updatedAt', 'varchar', (col) => col.notNull())
     .execute()
 }
 

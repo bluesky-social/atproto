@@ -19,11 +19,11 @@ const id = 'app.bsky.unspecced.applyPrivateWrite'
 export interface QueryParams {}
 
 export interface InputSchema {
-  write: $Typed<Create> | $Typed<Delete>
+  write: $Typed<Create> | $Typed<Update> | $Typed<Delete>
 }
 
 export interface OutputSchema {
-  result?: $Typed<CreateResult> | $Typed<DeleteResult>
+  result?: $Typed<CreateResult> | $Typed<UpdateResult> | $Typed<DeleteResult>
 }
 
 export interface HandlerInput {
@@ -73,7 +73,25 @@ export function validateCreate<V>(v: V) {
   return validate<Create & V>(v, id, hashCreate)
 }
 
-/** Operation which creates a new record. */
+/** Operation which updates an existing record. */
+export interface Update {
+  $type?: 'app.bsky.unspecced.applyPrivateWrite#update'
+  collection: string
+  rkey: string
+  value: { [_ in string]: unknown }
+}
+
+const hashUpdate = 'update'
+
+export function isUpdate<V>(v: V) {
+  return is$typed(v, id, hashUpdate)
+}
+
+export function validateUpdate<V>(v: V) {
+  return validate<Update & V>(v, id, hashUpdate)
+}
+
+/** Operation which deletes an existing record. */
 export interface Delete {
   $type?: 'app.bsky.unspecced.applyPrivateWrite#delete'
   collection: string
@@ -104,6 +122,22 @@ export function isCreateResult<V>(v: V) {
 
 export function validateCreateResult<V>(v: V) {
   return validate<CreateResult & V>(v, id, hashCreateResult)
+}
+
+export interface UpdateResult {
+  $type?: 'app.bsky.unspecced.applyPrivateWrite#updateResult'
+  rkey: string
+  validationStatus?: 'valid' | 'unknown' | (string & {})
+}
+
+const hashUpdateResult = 'updateResult'
+
+export function isUpdateResult<V>(v: V) {
+  return is$typed(v, id, hashUpdateResult)
+}
+
+export function validateUpdateResult<V>(v: V) {
+  return validate<UpdateResult & V>(v, id, hashUpdateResult)
 }
 
 export interface DeleteResult {
