@@ -3,7 +3,9 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
   Create,
+  Delete,
   isCreate,
+  isDelete,
 } from '../../../../lexicon/types/app/bsky/unspecced/applyPrivateWrite'
 import { $Typed } from '../../../../lexicon/util'
 import { Method, PutOperationRequest } from '../../../../proto/bsync_pb'
@@ -38,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-type PreparedWrite = PreparedCreate
+type PreparedWrite = PreparedCreate | PreparedDelete
 
 type PreparedCreate = Pick<
   PutOperationRequest,
@@ -49,12 +51,26 @@ type PreparedCreate = Pick<
   payload: Uint8Array
 }
 
+type PreparedDelete = Pick<
+  PutOperationRequest,
+  'actorDid' | 'collection' | 'rkey'
+> & {
+  $type: 'app.bsky.unspecced.applyPrivateWrite#deleteResult'
+  method: Method.DELETE
+  payload: undefined
+}
+
 const prepareWrite = (
   actorDid: string,
-  write: $Typed<Create>,
+  write: $Typed<Create> | $Typed<Delete>,
 ): PreparedWrite | PromiseLike<PreparedWrite> => {
   if (isCreate(write)) {
     return prepareCreate({
+      actorDid,
+      write,
+    })
+  } else if (isDelete(write)) {
+    return prepareDelete({
       actorDid,
       write,
     })
@@ -77,5 +93,21 @@ const prepareCreate = async (opts: {
     rkey: write.rkey || 'self',
     payload: Buffer.from(JSON.stringify(write.value)),
     method: Method.CREATE,
+  }
+}
+
+const prepareDelete = async (opts: {
+  actorDid: string
+  write: $Typed<Delete>
+}): Promise<PreparedDelete> => {
+  const { actorDid, write } = opts
+
+  return {
+    $type: 'app.bsky.unspecced.applyPrivateWrite#deleteResult',
+    actorDid,
+    collection: write.collection,
+    rkey: write.rkey,
+    payload: undefined,
+    method: Method.DELETE,
   }
 }

@@ -156,6 +156,12 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
             indexedAt: new Date().toISOString(),
           })
           .execute()
+      } else if (method === Method.DELETE) {
+        await db.db
+          .deleteFrom('private_record')
+          .where('uri', '=', uri)
+          .returningAll()
+          .executeTakeFirstOrThrow()
       } else {
         throw new Error(`Unsupported method: ${method}`)
       }

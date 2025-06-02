@@ -19,11 +19,11 @@ const id = 'app.bsky.unspecced.applyPrivateWrite'
 export interface QueryParams {}
 
 export interface InputSchema {
-  write: $Typed<Create>
+  write: $Typed<Create> | $Typed<Delete>
 }
 
 export interface OutputSchema {
-  result?: $Typed<CreateResult>
+  result?: $Typed<CreateResult> | $Typed<DeleteResult>
 }
 
 export interface HandlerInput {
@@ -73,6 +73,23 @@ export function validateCreate<V>(v: V) {
   return validate<Create & V>(v, id, hashCreate)
 }
 
+/** Operation which creates a new record. */
+export interface Delete {
+  $type?: 'app.bsky.unspecced.applyPrivateWrite#delete'
+  collection: string
+  rkey: string
+}
+
+const hashDelete = 'delete'
+
+export function isDelete<V>(v: V) {
+  return is$typed(v, id, hashDelete)
+}
+
+export function validateDelete<V>(v: V) {
+  return validate<Delete & V>(v, id, hashDelete)
+}
+
 export interface CreateResult {
   $type?: 'app.bsky.unspecced.applyPrivateWrite#createResult'
   rkey: string
@@ -87,4 +104,19 @@ export function isCreateResult<V>(v: V) {
 
 export function validateCreateResult<V>(v: V) {
   return validate<CreateResult & V>(v, id, hashCreateResult)
+}
+
+export interface DeleteResult {
+  $type?: 'app.bsky.unspecced.applyPrivateWrite#deleteResult'
+  rkey: string
+}
+
+const hashDeleteResult = 'deleteResult'
+
+export function isDeleteResult<V>(v: V) {
+  return is$typed(v, id, hashDeleteResult)
+}
+
+export function validateDeleteResult<V>(v: V) {
+  return validate<DeleteResult & V>(v, id, hashDeleteResult)
 }

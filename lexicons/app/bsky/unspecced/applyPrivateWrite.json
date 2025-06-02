@@ -13,7 +13,7 @@
           "properties": {
             "write": {
               "type": "union",
-              "refs": ["#create"],
+              "refs": ["#create", "#delete"],
               "closed": true
             }
           }
@@ -27,7 +27,7 @@
           "properties": {
             "result": {
               "type": "union",
-              "refs": ["#createResult"],
+              "refs": ["#createResult", "#deleteResult"],
               "closed": true
             }
           }
@@ -47,6 +47,18 @@
         "value": { "type": "unknown" }
       }
     },
+    "delete": {
+      "type": "object",
+      "description": "Operation which creates a new record.",
+      "required": ["collection", "rkey"],
+      "properties": {
+        "collection": { "type": "string", "format": "nsid" },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        }
+      }
+    },
     "createResult": {
       "type": "object",
       "required": ["rkey"],
@@ -58,6 +70,16 @@
         "validationStatus": {
           "type": "string",
           "knownValues": ["valid", "unknown"]
+        }
+      }
+    },
+    "deleteResult": {
+      "type": "object",
+      "required": ["rkey"],
+      "properties": {
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
         }
       }
     }

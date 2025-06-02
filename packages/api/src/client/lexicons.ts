@@ -10332,7 +10332,10 @@ export const schemaDict = {
             properties: {
               write: {
                 type: 'union',
-                refs: ['lex:app.bsky.unspecced.applyPrivateWrite#create'],
+                refs: [
+                  'lex:app.bsky.unspecced.applyPrivateWrite#create',
+                  'lex:app.bsky.unspecced.applyPrivateWrite#delete',
+                ],
                 closed: true,
               },
             },
@@ -10346,7 +10349,10 @@ export const schemaDict = {
             properties: {
               result: {
                 type: 'union',
-                refs: ['lex:app.bsky.unspecced.applyPrivateWrite#createResult'],
+                refs: [
+                  'lex:app.bsky.unspecced.applyPrivateWrite#createResult',
+                  'lex:app.bsky.unspecced.applyPrivateWrite#deleteResult',
+                ],
                 closed: true,
               },
             },
@@ -10371,6 +10377,21 @@ export const schemaDict = {
           },
         },
       },
+      delete: {
+        type: 'object',
+        description: 'Operation which creates a new record.',
+        required: ['collection', 'rkey'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+        },
+      },
       createResult: {
         type: 'object',
         required: ['rkey'],
@@ -10382,6 +10403,16 @@ export const schemaDict = {
           validationStatus: {
             type: 'string',
             knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      deleteResult: {
+        type: 'object',
+        required: ['rkey'],
+        properties: {
+          rkey: {
+            type: 'string',
+            format: 'record-key',
           },
         },
       },
