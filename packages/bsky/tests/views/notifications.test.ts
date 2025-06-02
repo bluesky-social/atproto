@@ -5,8 +5,12 @@ import { ids } from '../../src/lexicon/lexicons'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 import { forSnapshot, paginateAll } from '../_util'
 
+type Database = TestNetwork['bsky']['db']
+
 describe('notification views', () => {
   let network: TestNetwork
+  let db: Database
+
   let agent: AtpAgent
   let sc: SeedClient
 
@@ -19,6 +23,7 @@ describe('notification views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
     })
+    db = network.bsky.db
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -31,6 +36,10 @@ describe('notification views', () => {
     alice = sc.dids.alice
     carol = sc.dids.carol
     dan = sc.dids.dan
+  })
+
+  afterEach(async () => {
+    await clearPrivateRecords(db)
   })
 
   afterAll(async () => {
@@ -905,4 +914,50 @@ describe('notification views', () => {
       })
     })
   })
+
+  describe('preferences v2', () => {
+    it('stores the preferences', async () => {
+      const { data } = await agent.app.bsky.notification.putPreferencesV2(
+        { chatNotification: { filter: 'follows', channels: ['push'] } },
+        {
+          encoding: 'application/json',
+          headers: await network.serviceHeaders(
+            sc.dids.carol,
+            ids.AppBskyNotificationPutPreferencesV2,
+          ),
+        },
+      )
+      await network.processAll()
+
+      expect(data.chatNotification).toEqual({
+        channels: ['push'],
+        filter: 'follows',
+      })
+      expect(data.followNotification).toEqual({
+        channels: [],
+        filter: 'all',
+      })
+
+      const uri = `at://${sc.dids.carol}/com.test.notification.preferences/self`
+      const dbResult = await db.db
+        .selectFrom('private_record')
+        .selectAll()
+        .where('uri', '=', uri)
+        .executeTakeFirst()
+      expect(dbResult).toStrictEqual({
+        actorDid: sc.dids.carol,
+        collection: 'com.test.notification.preferences',
+        indexedAt: expect.any(String),
+        payload:
+          '{"chatNotification":{"filter":"follows","channels":["push"]}}',
+        rkey: 'self',
+        updatedAt: expect.any(String),
+        uri,
+      })
+    })
+  })
 })
+
+const clearPrivateRecords = async (db: Database) => {
+  await db.db.deleteFrom('private_record').execute()
+}

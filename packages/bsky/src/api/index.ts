@@ -45,6 +45,7 @@ import getLabelerServices from './app/bsky/labeler/getServices'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
 import putPreferences from './app/bsky/notification/putPreferences'
+import putPreferencesV2 from './app/bsky/notification/putPreferencesV2'
 import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import applyPrivateWrite from './app/bsky/unspecced/applyPrivateWrite'
@@ -127,6 +128,7 @@ export default function (server: Server, ctx: AppContext) {
   listNotifications(server, ctx)
   updateSeen(server, ctx)
   putPreferences(server, ctx)
+  putPreferencesV2(server, ctx)
   registerPush(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
