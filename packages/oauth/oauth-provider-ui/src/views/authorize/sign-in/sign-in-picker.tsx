@@ -1,4 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { ReactNode } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { Button } from '../../../components/forms/button.tsx'
 import {
@@ -21,6 +22,9 @@ export type SignInPickerProps = Override<
     onAccount: (account: Account) => void
     onOther?: () => void
     onBack?: () => void
+    onSignUp?: () => void
+
+    backLabel?: ReactNode
   }
 >
 
@@ -30,6 +34,9 @@ export function SignInPicker({
   onAccount,
   onOther = undefined,
   onBack,
+  onSignUp,
+
+  backLabel,
 
   // FormCard
   children,
@@ -40,12 +47,16 @@ export function SignInPicker({
     <FormCard
       {...props}
       append={children}
-      actions={null}
+      actions={
+        onSignUp && (
+          <Button onClick={onSignUp} color="primary" transparent>
+            <Trans>Sign up</Trans>
+          </Button>
+        )
+      }
       cancel={
         onBack && (
-          <Button onClick={onBack}>
-            <Trans>Back</Trans>
-          </Button>
+          <Button onClick={onBack}>{backLabel || <Trans>Back</Trans>}</Button>
         )
       }
     >

@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { useCallback, useRef, useState } from 'react'
+import { ReactNode, useCallback, useRef, useState } from 'react'
 import { Button } from '../../../components/forms/button.tsx'
 import { Fieldset } from '../../../components/forms/fieldset.tsx'
 import {
@@ -34,6 +34,7 @@ export type SignInFormProps = Override<
     rememberDefault?: boolean
 
     onBack?: () => void
+    backLabel?: ReactNode
     onForgotPassword?: (emailHint?: string) => void
     onSubmit: (
       credentials: SignInFormOutput,
@@ -49,6 +50,7 @@ export function SignInForm({
 
   onSubmit,
   onBack,
+  backLabel,
   onForgotPassword,
 
   // FormCardAsync
@@ -127,7 +129,7 @@ export function SignInForm({
       ref={mergeRefs([ref, formRef])}
       onLoading={setLoading}
       onCancel={onBack}
-      cancelLabel={t`Back`}
+      cancelLabel={backLabel ?? t`Back`}
       append={children}
       invalid={
         invalid || !username || !password || (secondFactor != null && !otp)
