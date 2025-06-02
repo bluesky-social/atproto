@@ -4,10 +4,11 @@ import http from 'node:http'
 import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
+import * as crypto from '@atproto/crypto'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
 import { Service } from '../../proto/bsync_connect'
-import { MuteOperation_Type } from '../../proto/bsync_pb'
+import { Method, MuteOperation_Type } from '../../proto/bsync_pb'
 import { Database } from '../server/db'
 
 export class MockBsync {
@@ -135,6 +136,48 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
     },
 
     async scanNotifOperations() {
+      throw new Error('not implemented')
+    },
+
+    async putOperation(req) {
+      const { actorDid, collection, rkey, method, payload: payloadBuffer } = req
+      const payload = Buffer.from(payloadBuffer).toString('utf8')
+      const uri = `at://${actorDid}/${collection}/${rkey}`
+
+      if (method === Method.CREATE) {
+        await db.db
+          .insertInto('private_record')
+          .values({
+            uri,
+            actorDid,
+            collection,
+            rkey,
+            payload,
+            indexedAt: new Date().toISOString(),
+          })
+          .execute()
+      } else {
+        throw new Error(`Unsupported method: ${method}`)
+      }
+
+      // @NOTE: This operation ID is opaque to the client, and is used as a cursor to scan.
+      // Since we don't implement scanning for dev-env, it can be any value.
+      const operationId = crypto.randomStr(16, 'hex')
+
+      return {
+        operation: {
+          id: operationId,
+          actorDid,
+          collection,
+          rkey,
+          method,
+          uri,
+          payload: payloadBuffer,
+        },
+      }
+    },
+
+    async scanOperations() {
       throw new Error('not implemented')
     },
 

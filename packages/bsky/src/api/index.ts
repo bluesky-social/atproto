@@ -47,6 +47,7 @@ import listNotifications from './app/bsky/notification/listNotifications'
 import putPreferences from './app/bsky/notification/putPreferences'
 import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
+import applyPrivateWrite from './app/bsky/unspecced/applyPrivateWrite'
 import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getPostThreadHiddenV2 from './app/bsky/unspecced/getPostThreadHiddenV2'
@@ -130,6 +131,7 @@ export default function (server: Server, ctx: AppContext) {
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
+  applyPrivateWrite(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

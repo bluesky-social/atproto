@@ -10316,6 +10316,77 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedApplyPrivateWrite: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.applyPrivateWrite',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is an experimental endpoint for BlueSky to experiment with private data off-protocol. This is intended to be replaced with on-protocol private data]. Apply a batch transaction of repository creates. Requires auth, implemented by appview.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['write'],
+            properties: {
+              write: {
+                type: 'union',
+                refs: ['lex:app.bsky.unspecced.applyPrivateWrite#create'],
+                closed: true,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              result: {
+                type: 'union',
+                refs: ['lex:app.bsky.unspecced.applyPrivateWrite#createResult'],
+                closed: true,
+              },
+            },
+          },
+        },
+      },
+      create: {
+        type: 'object',
+        description: 'Operation which creates a new record.',
+        required: ['collection', 'value'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          value: {
+            type: 'unknown',
+          },
+        },
+      },
+      createResult: {
+        type: 'object',
+        required: ['rkey'],
+        properties: {
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedDefs: {
     lexicon: 1,
     id: 'app.bsky.unspecced.defs',
@@ -13201,6 +13272,7 @@ export const ids = {
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedApplyPrivateWrite: 'app.bsky.unspecced.applyPrivateWrite',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
