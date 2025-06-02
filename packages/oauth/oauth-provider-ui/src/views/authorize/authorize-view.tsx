@@ -176,7 +176,7 @@ export function AuthorizeView({
             ? undefined
             : () => {
                 selectSub(null)
-                setView(sessions.length ? View.SignIn : View.Welcome)
+                showHome()
               }
         }
       />
