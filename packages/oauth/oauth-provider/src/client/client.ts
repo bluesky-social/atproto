@@ -15,15 +15,13 @@ import {
   exportJWK,
   jwtVerify,
 } from 'jose'
-import { ZodError } from 'zod'
-import { Jwks } from '@atproto/jwk'
+import { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthClientCredentials,
   OAuthClientMetadata,
   OAuthRedirectUri,
-  oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
@@ -63,33 +61,13 @@ export class Client {
         : createRemoteJWKSet(new URL(metadata.jwks_uri), {})
   }
 
-  public async parseRequestObject(jar: string, audience: string) {
-    const result = await this.decodeRequestObject(jar, audience)
-
-    const nonce = result.payload.jti
-    if (!nonce) {
-      throw new InvalidRequestError(
-        'Request object payload must contain a "jti" claim',
-      )
-    }
-
-    const parameters = await oauthAuthorizationRequestParametersSchema
-      .parseAsync(result.payload)
-      .catch((err) => {
-        const message =
-          err instanceof ZodError
-            ? `Invalid request parameters: ${err.message}`
-            : `Invalid "request" object`
-        throw InvalidRequestError.from(err, message)
-      })
-
-    return { nonce, parameters }
-  }
-
   /**
    * @see {@link https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2}
    */
-  protected async decodeRequestObject(jar: string, audience: string) {
+  public async decodeRequestObject(
+    jar: SignedJwt | UnsignedJwt,
+    audience: string,
+  ) {
     // > If signed, the Authorization Request Object SHOULD contain the Claims
     // > iss (issuer) and aud (audience) as members with their semantics being
     // > the same as defined in the JWT [RFC7519] specification. The value of

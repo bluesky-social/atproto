@@ -1,4 +1,5 @@
 import type { Redis, RedisOptions } from 'ioredis'
+import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -19,6 +20,7 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
+  oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
@@ -394,15 +396,31 @@ export class OAuthProvider extends OAuthVerifier {
   protected async decodeJAR(
     client: Client,
     input: OAuthAuthorizationRequestJar,
-  ) {
-    const { parameters, nonce } = await client.parseRequestObject(
+  ): Promise<OAuthAuthorizationRequestParameters> {
+    const { payload } = await client.decodeRequestObject(
       input.request,
       this.issuer,
     )
 
-    if (!(await this.replayManager.uniqueJar(nonce, client.id))) {
-      throw new InvalidRequestError('Request object jti is not unique')
+    const { jti } = payload
+    if (!jti) {
+      throw new InvalidRequestError(
+        'Request object payload must contain a "jti" claim',
+      )
     }
+    if (!(await this.replayManager.uniqueJar(jti, client.id))) {
+      throw new InvalidRequestError('Request object was replayed')
+    }
+
+    const parameters = await oauthAuthorizationRequestParametersSchema
+      .parseAsync(payload)
+      .catch((err) => {
+        const message =
+          err instanceof ZodError
+            ? `Invalid request parameters: ${err.message}`
+            : `Invalid "request" object`
+        throw InvalidRequestError.from(err, message)
+      })
 
     return parameters
   }
