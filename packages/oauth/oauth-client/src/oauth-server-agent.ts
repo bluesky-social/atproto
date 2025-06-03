@@ -222,10 +222,14 @@ export class OAuthServerAgent {
 
     const credentials = await this.clientCredentialsFactory()
 
+    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13#section-3.2.2
+    // https://datatracker.ietf.org/doc/html/rfc7009#section-2.1
+    // https://datatracker.ietf.org/doc/html/rfc7662#section-2.1
+    // https://datatracker.ietf.org/doc/html/rfc9126#section-2
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, ...credentials }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: wwwFormUrlEncode({ ...payload, ...credentials }),
     }).then(fetchJsonProcessor())
 
     if (response.ok) {
@@ -241,4 +245,26 @@ export class OAuthServerAgent {
       throw new OAuthResponseError(response, json)
     }
   }
+}
+
+function wwwFormUrlEncode(payload: Record<string, undefined | unknown>) {
+  return new URLSearchParams(
+    Object.entries(payload)
+      .filter(entryHasDefinedValue)
+      .map(stringifyEntryValue),
+  ).toString()
+}
+
+function entryHasDefinedValue(
+  entry: [string, unknown],
+): entry is [string, null | NonNullable<unknown>] {
+  return entry[1] !== undefined
+}
+
+function stringifyEntryValue(entry: [string, unknown]): [string, string] {
+  const value: unknown = entry[1]
+  if (typeof value === 'string') return entry as [string, string]
+
+  const name: string = entry[0]
+  return [name, JSON.stringify(value)]
 }

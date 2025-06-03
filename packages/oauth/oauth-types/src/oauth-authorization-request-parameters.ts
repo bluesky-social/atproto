@@ -10,6 +10,7 @@ import { oauthScopeSchema } from './oauth-scope.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
 import { oidcClaimsPropertiesSchema } from './oidc-claims-properties.js'
 import { oidcEntityTypeSchema } from './oidc-entity-type.js'
+import { jsonObjectPreprocess } from './util.js'
 
 /**
  * @see {@link https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest | OIDC}
@@ -48,11 +49,14 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   max_age: z.number().int().min(0).optional(),
 
   claims: z
-    .record(
-      oidcEntityTypeSchema,
+    .preprocess(
+      jsonObjectPreprocess,
       z.record(
-        oidcClaimsParameterSchema,
-        z.union([z.literal(null), oidcClaimsPropertiesSchema]),
+        oidcEntityTypeSchema,
+        z.record(
+          oidcClaimsParameterSchema,
+          z.union([z.literal(null), oidcClaimsPropertiesSchema]),
+        ),
       ),
     )
     .optional(),
@@ -83,7 +87,9 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   prompt: z.enum(['none', 'login', 'consent', 'select_account']).optional(),
 
   // https://datatracker.ietf.org/doc/html/rfc9396
-  authorization_details: oauthAuthorizationDetailsSchema.optional(),
+  authorization_details: z
+    .preprocess(jsonObjectPreprocess, oauthAuthorizationDetailsSchema)
+    .optional(),
 })
 
 /**

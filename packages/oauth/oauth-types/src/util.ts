@@ -66,3 +66,15 @@ export function extractUrlPath(url) {
 
   return url.substring(pathStart, pathEnd)
 }
+
+export const jsonObjectPreprocess = (val: unknown) => {
+  if (typeof val === 'string' && val.startsWith('{') && val.endsWith('}')) {
+    try {
+      return JSON.parse(val)
+    } catch {
+      return val
+    }
+  }
+
+  return val
+}
