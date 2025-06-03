@@ -182,7 +182,6 @@ import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notificat
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
-import * as AppBskyUnspeccedApplyPrivateWrite from './types/app/bsky/unspecced/applyPrivateWrite.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -448,7 +447,6 @@ export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notificat
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
-export * as AppBskyUnspeccedApplyPrivateWrite from './types/app/bsky/unspecced/applyPrivateWrite.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -3447,18 +3445,6 @@ export class AppBskyUnspeccedNS {
 
   constructor(client: XrpcClient) {
     this._client = client
-  }
-
-  applyPrivateWrite(
-    data?: AppBskyUnspeccedApplyPrivateWrite.InputSchema,
-    opts?: AppBskyUnspeccedApplyPrivateWrite.CallOptions,
-  ): Promise<AppBskyUnspeccedApplyPrivateWrite.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.applyPrivateWrite',
-      opts?.qp,
-      data,
-      opts,
-    )
   }
 
   getConfig(

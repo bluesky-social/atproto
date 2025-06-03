@@ -8,15 +8,17 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
-      const collection = 'com.test.notification.preferences'
-      const rkey = 'self'
-      const record = { ...input.body }
+      const namespace = 'app.bsky.notification.defs#preferences'
+      const key = 'self'
+      const entry = { ...input.body }
+
+      // await ctx.vaultClient.create({})
 
       await ctx.bsyncClient.putOperation({
         actorDid,
-        collection,
-        rkey,
-        payload: Buffer.from(JSON.stringify(record)),
+        namespace,
+        key,
+        payload: Buffer.from(JSON.stringify(entry)),
         method: Method.CREATE,
       })
 
@@ -37,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
             repostViaRepostNotification: emptyPreference(),
             subscribedPostNotification: emptyPreference(),
             chatNotification: emptyPreference(),
-            ...record,
+            ...entry,
           },
         },
       }

@@ -38,10 +38,6 @@ describe('notification views', () => {
     dan = sc.dids.dan
   })
 
-  afterEach(async () => {
-    await clearPrivateRecords(db)
-  })
-
   afterAll(async () => {
     await network.close()
   })
@@ -916,9 +912,18 @@ describe('notification views', () => {
   })
 
   describe('preferences v2', () => {
+    beforeEach(async () => {
+      await clearPrivateData(db)
+    })
+
     it('stores the preferences', async () => {
       const { data } = await agent.app.bsky.notification.putPreferencesV2(
-        { chatNotification: { filter: 'follows', channels: ['push'] } },
+        {
+          chatNotification: {
+            channels: { inApp: false, push: true },
+            filter: 'follows',
+          },
+        },
         {
           encoding: 'application/json',
           headers: await network.serviceHeaders(
@@ -929,35 +934,39 @@ describe('notification views', () => {
       )
       await network.processAll()
 
-      expect(data.chatNotification).toEqual({
-        channels: ['push'],
+      expect(data.preferences.chatNotification).toEqual({
+        channels: { inApp: false, push: true },
         filter: 'follows',
       })
-      expect(data.followNotification).toEqual({
-        channels: [],
+      expect(data.preferences.followNotification).toEqual({
+        channels: { inApp: false, push: false },
         filter: 'all',
       })
 
-      const uri = `at://${sc.dids.carol}/com.test.notification.preferences/self`
       const dbResult = await db.db
-        .selectFrom('private_record')
+        .selectFrom('private_data')
         .selectAll()
-        .where('uri', '=', uri)
+        .where('actorDid', '=', sc.dids.carol)
+        .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+        .where('key', '=', 'self')
         .executeTakeFirst()
       expect(dbResult).toStrictEqual({
         actorDid: sc.dids.carol,
-        collection: 'com.test.notification.preferences',
+        namespace: 'app.bsky.notification.defs#preferences',
+        key: 'self',
         indexedAt: expect.any(String),
-        payload:
-          '{"chatNotification":{"filter":"follows","channels":["push"]}}',
-        rkey: 'self',
+        payload: JSON.stringify({
+          chatNotification: {
+            channels: { inApp: false, push: true },
+            filter: 'follows',
+          },
+        }),
         updatedAt: expect.any(String),
-        uri,
       })
     })
   })
 })
 
-const clearPrivateRecords = async (db: Database) => {
-  await db.db.deleteFrom('private_record').execute()
+const clearPrivateData = async (db: Database) => {
+  await db.db.deleteFrom('private_data').execute()
 }

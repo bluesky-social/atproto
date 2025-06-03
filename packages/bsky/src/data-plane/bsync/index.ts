@@ -140,54 +140,54 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
     },
 
     async putOperation(req) {
-      const { actorDid, collection, rkey, method, payload: payloadBuffer } = req
-      const payload = Buffer.from(payloadBuffer).toString('utf8')
-      const uri = `at://${actorDid}/${collection}/${rkey}`
+      const { actorDid, namespace, key, method, payload } = req
 
       if (method === Method.CREATE) {
         await db.db
-          .insertInto('private_record')
+          .insertInto('private_data')
           .values({
-            uri,
             actorDid,
-            collection,
-            rkey,
-            payload,
+            namespace,
+            key,
+            payload: Buffer.from(payload).toString('utf8'),
             indexedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })
           .execute()
       } else if (method === Method.UPDATE) {
         await db.db
-          .updateTable('private_record')
-          .where('uri', '=', uri)
+          .updateTable('private_data')
+          .where('actorDid', '=', actorDid)
+          .where('namespace', '=', namespace)
+          .where('key', '=', key)
           .set({
-            payload,
+            payload: Buffer.from(payload).toString('utf8'),
             updatedAt: new Date().toISOString(),
           })
           .execute()
       } else if (method === Method.DELETE) {
         await db.db
-          .deleteFrom('private_record')
-          .where('uri', '=', uri)
+          .deleteFrom('private_data')
+          .where('actorDid', '=', actorDid)
+          .where('namespace', '=', namespace)
+          .where('key', '=', key)
           .execute()
       } else {
         throw new Error(`Unsupported method: ${method}`)
       }
 
       // @NOTE: This operation ID is opaque to the client, and is used as a cursor to scan.
-      // Since we don't implement scanning for dev-env, it can be any value.
+      // Since we don't implement scanning for dev-env, it can random, doesn't have to be sequential.
       const operationId = crypto.randomStr(16, 'hex')
 
       return {
         operation: {
           id: operationId,
           actorDid,
-          collection,
-          rkey,
+          namespace,
+          key,
           method,
-          uri,
-          payload: payloadBuffer,
+          payload,
         },
       }
     },

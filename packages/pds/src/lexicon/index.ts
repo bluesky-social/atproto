@@ -145,7 +145,6 @@ import * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
-import * as AppBskyUnspeccedApplyPrivateWrite from './types/app/bsky/unspecced/applyPrivateWrite.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadHiddenV2 from './types/app/bsky/unspecced/getPostThreadHiddenV2.js'
@@ -1997,17 +1996,6 @@ export class AppBskyUnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
-  }
-
-  applyPrivateWrite<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyUnspeccedApplyPrivateWrite.Handler<ExtractAuth<AV>>,
-      AppBskyUnspeccedApplyPrivateWrite.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.applyPrivateWrite' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 
   getConfig<AV extends AuthVerifier>(

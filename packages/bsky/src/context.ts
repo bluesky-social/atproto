@@ -18,6 +18,7 @@ import {
   defaultLabelerHeader,
   parseLabelerHeader,
 } from './util'
+import { VaultClient } from './vault'
 import { Views } from './views'
 
 export class AppContext {
@@ -35,6 +36,7 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       bsyncClient: BsyncClient
+      vaultClient: VaultClient
       courierClient: CourierClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
@@ -92,6 +94,10 @@ export class AppContext {
 
   get bsyncClient(): BsyncClient {
     return this.opts.bsyncClient
+  }
+
+  get vaultClient(): VaultClient {
+    return this.opts.vaultClient
   }
 
   get courierClient(): CourierClient | undefined {
