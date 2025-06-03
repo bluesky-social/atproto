@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Insertable, Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
@@ -6,10 +6,13 @@ import * as Like from '../../../../lexicon/types/app/bsky/feed/like'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppBskyFeedLike
+
+type Notif = Insertable<Notification>
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
 
 const insertFn = async (
@@ -27,6 +30,8 @@ const insertFn = async (
       creator: uri.host,
       subject: obj.subject.uri,
       subjectCid: obj.subject.cid,
+      via: obj.via?.uri,
+      viaCid: obj.via?.cid,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
@@ -53,20 +58,45 @@ const findDuplicate = async (
 const notifsForInsert = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
   // prevent self-notifications
-  const isSelf = subjectUri.host === obj.creator
-  return isSelf
-    ? []
-    : [
+  const isLikeFromSubjectUser = subjectUri.host === obj.creator
+  if (isLikeFromSubjectUser) {
+    return []
+  }
+
+  const notifs: Notif[] = [
+    // Notification to the author of the liked record.
+    {
+      did: subjectUri.host,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'like' as const,
+      reasonSubject: subjectUri.toString(),
+      sortAt: obj.sortAt,
+    },
+  ]
+
+  if (obj.via) {
+    const viaUri = new AtUri(obj.via)
+    const isLikeFromViaSubjectUser = viaUri.host === obj.creator
+    // prevent self-notifications
+    if (!isLikeFromViaSubjectUser) {
+      notifs.push(
+        // Notification to the reposter via whose repost the like was made.
         {
-          did: subjectUri.host,
+          did: viaUri.host,
           author: obj.creator,
           recordUri: obj.uri,
           recordCid: obj.cid,
-          reason: 'like' as const,
-          reasonSubject: subjectUri.toString(),
+          reason: 'like-via-repost' as const,
+          reasonSubject: viaUri.toString(),
           sortAt: obj.sortAt,
         },
-      ]
+      )
+    }
+  }
+
+  return notifs
 }
 
 const deleteFn = async (

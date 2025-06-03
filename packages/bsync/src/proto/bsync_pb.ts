@@ -14,6 +14,38 @@ import type {
 import { Message, proto3 } from '@bufbuild/protobuf'
 
 /**
+ * @generated from enum bsync.Method
+ */
+export enum Method {
+  /**
+   * @generated from enum value: METHOD_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: METHOD_CREATE = 1;
+   */
+  CREATE = 1,
+
+  /**
+   * @generated from enum value: METHOD_UPDATE = 2;
+   */
+  UPDATE = 2,
+
+  /**
+   * @generated from enum value: METHOD_DELETE = 3;
+   */
+  DELETE = 3,
+}
+// Retrieve enum metadata with: proto3.getEnumType(Method)
+proto3.util.setEnumType(Method, 'bsync.Method', [
+  { no: 0, name: 'METHOD_UNSPECIFIED' },
+  { no: 1, name: 'METHOD_CREATE' },
+  { no: 2, name: 'METHOD_UPDATE' },
+  { no: 3, name: 'METHOD_DELETE' },
+])
+
+/**
  * @generated from message bsync.MuteOperation
  */
 export class MuteOperation extends Message<MuteOperation> {
@@ -686,6 +718,329 @@ export class ScanNotifOperationsResponse extends Message<ScanNotifOperationsResp
       | undefined,
   ): boolean {
     return proto3.util.equals(ScanNotifOperationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.Operation
+ */
+export class Operation extends Message<Operation> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = ''
+
+  /**
+   * @generated from field: string actor_did = 2;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string collection = 3;
+   */
+  collection = ''
+
+  /**
+   * @generated from field: string rkey = 4;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: bsync.Method method = 5;
+   */
+  method = Method.UNSPECIFIED
+
+  /**
+   * @generated from field: bytes payload = 6;
+   */
+  payload = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<Operation>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.Operation'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
+    { no: 6, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): Operation {
+    return new Operation().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): Operation {
+    return new Operation().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): Operation {
+    return new Operation().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: Operation | PlainMessage<Operation> | undefined,
+    b: Operation | PlainMessage<Operation> | undefined,
+  ): boolean {
+    return proto3.util.equals(Operation, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.PutOperationRequest
+ */
+export class PutOperationRequest extends Message<PutOperationRequest> {
+  /**
+   * @generated from field: string collection = 1;
+   */
+  collection = ''
+
+  /**
+   * @generated from field: string actor_did = 2;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string rkey = 3;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: bsync.Method method = 4;
+   */
+  method = Method.UNSPECIFIED
+
+  /**
+   * @generated from field: bytes payload = 5;
+   */
+  payload = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<PutOperationRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.PutOperationRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
+    { no: 5, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): PutOperationRequest {
+    return new PutOperationRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): PutOperationRequest {
+    return new PutOperationRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): PutOperationRequest {
+    return new PutOperationRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: PutOperationRequest | PlainMessage<PutOperationRequest> | undefined,
+    b: PutOperationRequest | PlainMessage<PutOperationRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(PutOperationRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.PutOperationResponse
+ */
+export class PutOperationResponse extends Message<PutOperationResponse> {
+  /**
+   * @generated from field: bsync.Operation operation = 1;
+   */
+  operation?: Operation
+
+  constructor(data?: PartialMessage<PutOperationResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.PutOperationResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'operation', kind: 'message', T: Operation },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): PutOperationResponse {
+    return new PutOperationResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): PutOperationResponse {
+    return new PutOperationResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): PutOperationResponse {
+    return new PutOperationResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: PutOperationResponse | PlainMessage<PutOperationResponse> | undefined,
+    b: PutOperationResponse | PlainMessage<PutOperationResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(PutOperationResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.ScanOperationsRequest
+ */
+export class ScanOperationsRequest extends Message<ScanOperationsRequest> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<ScanOperationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.ScanOperationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ScanOperationsRequest {
+    return new ScanOperationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ScanOperationsRequest {
+    return new ScanOperationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ScanOperationsRequest {
+    return new ScanOperationsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: ScanOperationsRequest | PlainMessage<ScanOperationsRequest> | undefined,
+    b: ScanOperationsRequest | PlainMessage<ScanOperationsRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(ScanOperationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsync.ScanOperationsResponse
+ */
+export class ScanOperationsResponse extends Message<ScanOperationsResponse> {
+  /**
+   * @generated from field: repeated bsync.Operation operations = 1;
+   */
+  operations: Operation[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<ScanOperationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsync.ScanOperationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'operations',
+      kind: 'message',
+      T: Operation,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ScanOperationsResponse {
+    return new ScanOperationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ScanOperationsResponse {
+    return new ScanOperationsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ScanOperationsResponse {
+    return new ScanOperationsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ScanOperationsResponse
+      | PlainMessage<ScanOperationsResponse>
+      | undefined,
+    b:
+      | ScanOperationsResponse
+      | PlainMessage<ScanOperationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ScanOperationsResponse, a, b)
   }
 }
 

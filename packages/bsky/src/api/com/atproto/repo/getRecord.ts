@@ -25,7 +25,10 @@ export default function (server: Server, ctx: AppContext) {
       const result = await ctx.hydrator.getRecord(uri, includeTakedowns)
 
       if (!result || (cid && result.cid !== cid)) {
-        throw new InvalidRequestError(`Could not locate record: ${uri}`)
+        throw new InvalidRequestError(
+          `Could not locate record: ${uri}`,
+          'RecordNotFound',
+        )
       }
 
       return {

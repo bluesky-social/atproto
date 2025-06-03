@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
 import {
   LayoutTitlePage,
@@ -20,8 +20,10 @@ export type SignInViewProps = Override<
       credentials: SignInFormOutput,
       signal: AbortSignal,
     ) => void | PromiseLike<void>
+    onSignUp?: () => void
     onForgotPassword?: (emailHint?: string) => void
     onBack?: () => void
+    backLabel?: ReactNode
   }
 >
 
@@ -31,8 +33,10 @@ export function SignInView({
   selectSub,
 
   onSignIn,
+  onSignUp,
   onForgotPassword,
   onBack,
+  backLabel,
 
   // LayoutTitlePage
   title,
@@ -89,6 +93,7 @@ export function SignInView({
           onSubmit={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
+          backLabel={backLabel}
           usernameDefault={loginHint}
           usernameReadonly={true}
         />
@@ -107,6 +112,7 @@ export function SignInView({
           onSubmit={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
+          backLabel={backLabel}
         />
       </LayoutTitlePage>
     )
@@ -139,6 +145,8 @@ export function SignInView({
         onAccount={(a) => selectSub(a.sub)}
         onOther={() => setShowSignInForm(true)}
         onBack={onBack}
+        backLabel={backLabel}
+        onSignUp={onSignUp}
       />
     </LayoutTitlePage>
   )

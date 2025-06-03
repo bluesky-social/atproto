@@ -125,6 +125,8 @@ export class BskyAppView {
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,
       indexedAtEpoch: config.indexedAtEpoch,
+      threadTagsBumpDown: [...config.threadTagsBumpDown],
+      threadTagsHide: [...config.threadTagsHide],
     })
 
     const bsyncClient = createBsyncClient({

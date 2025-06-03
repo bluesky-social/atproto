@@ -67,6 +67,44 @@ message ScanNotifOperationsResponse {
 }
 
 
+enum Method {
+  METHOD_UNSPECIFIED = 0;
+  METHOD_CREATE = 1;
+  METHOD_UPDATE = 2;
+  METHOD_DELETE = 3;
+}
+
+message Operation {
+  string id = 1;
+  string actor_did = 2;
+  string collection = 3;
+  string rkey = 4;
+  Method method = 5;
+  bytes payload = 6;
+}
+
+message PutOperationRequest {
+  string collection = 1;
+  string actor_did = 2;
+  string rkey = 3;
+  Method method = 4;
+  bytes payload = 5;
+}
+
+message PutOperationResponse {
+  Operation operation = 1;
+}
+
+message ScanOperationsRequest {
+  string cursor = 1;
+  int32 limit = 2;
+}
+
+message ScanOperationsResponse {
+  repeated Operation operations = 1;
+  string cursor = 2;
+}
+
 
 // Ping
 message PingRequest {}
@@ -79,6 +117,8 @@ service Service {
   rpc ScanMuteOperations(ScanMuteOperationsRequest) returns (ScanMuteOperationsResponse);
   rpc AddNotifOperation(AddNotifOperationRequest) returns (AddNotifOperationResponse);
   rpc ScanNotifOperations(ScanNotifOperationsRequest) returns (ScanNotifOperationsResponse);
+  rpc PutOperation(PutOperationRequest) returns (PutOperationResponse);
+  rpc ScanOperations(ScanOperationsRequest) returns (ScanOperationsResponse);
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }

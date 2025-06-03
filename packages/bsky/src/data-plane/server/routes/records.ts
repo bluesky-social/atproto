@@ -61,6 +61,7 @@ export const getRecords =
         sortedAt: compositeTime(createdAt, indexedAt),
         takenDown: !!row?.takedownRef,
         takedownRef: row?.takedownRef ?? undefined,
+        tags: row?.tags ?? undefined,
       })
     })
     return { records }

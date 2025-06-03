@@ -10,8 +10,8 @@ import { ErrorView } from './views/error/error-view.tsx'
 
 const {
   __authorizeData: authorizeData,
-  __sessions: sessions,
   __customizationData: customizationData,
+  __sessions: initialSessions,
 } = window as typeof window & HydrationData['authorization-page']
 
 // When the user is logging in, make sure the page URL contains the
@@ -39,9 +39,9 @@ createRoot(container).render(
         )}
       >
         <AuthorizeView
-          customizationData={customizationData}
           authorizeData={authorizeData}
-          sessions={sessions}
+          customizationData={customizationData}
+          initialSessions={initialSessions}
         />
       </ErrorBoundary>
     </LocaleProvider>

@@ -8,6 +8,8 @@ export interface Like {
   creator: string
   subject: string
   subjectCid: string
+  via: string | null
+  viaCid: string | null
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>
