@@ -196,12 +196,12 @@ export class RequestManager {
       )
     }
 
-    if (
+    if (clientAuth === null) {
       // @NOTE we allow the client to be unauthenticated when creating the request
       // as it might not always be possible to authenticate the client at this
       // stage (e.g. when the client directed the user to the authorization
       // endpoint).
-      clientAuth !== null &&
+    } else if (
       clientAuth.method !== client.metadata.token_endpoint_auth_method
     ) {
       throw new InvalidParametersError(
@@ -296,7 +296,7 @@ export class RequestManager {
     if (
       !client.info.isTrusted &&
       !client.info.isFirstParty &&
-      (!clientAuth || clientAuth.method === 'none')
+      client.metadata.token_endpoint_auth_method === 'none'
     ) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
