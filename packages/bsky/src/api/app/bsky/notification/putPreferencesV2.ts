@@ -1,7 +1,6 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { Preference } from '../../../../lexicon/types/app/bsky/notification/defs'
-import { OutputSchema } from '../../../../lexicon/types/app/bsky/notification/putPreferencesV2'
 import { Method } from '../../../../proto/bsync_pb'
 
 export default function (server: Server, ctx: AppContext) {
@@ -21,32 +20,35 @@ export default function (server: Server, ctx: AppContext) {
         method: Method.CREATE,
       })
 
-      const output: OutputSchema = {
-        likeNotification: emptyPreference(),
-        repostNotification: emptyPreference(),
-        followNotification: emptyPreference(),
-        replyNotification: emptyPreference(),
-        mentionNotification: emptyPreference(),
-        quoteNotification: emptyPreference(),
-        starterpackJoinedNotification: emptyPreference(),
-        verifiedNotification: emptyPreference(),
-        unverifiedNotification: emptyPreference(),
-        likeViaRepostNotification: emptyPreference(),
-        repostViaRepostNotification: emptyPreference(),
-        subscribedPostNotification: emptyPreference(),
-        chatNotification: emptyPreference(),
-        ...record,
-      }
-
       return {
         encoding: 'application/json',
-        body: output,
+        body: {
+          preferences: {
+            likeNotification: emptyPreference(),
+            repostNotification: emptyPreference(),
+            followNotification: emptyPreference(),
+            replyNotification: emptyPreference(),
+            mentionNotification: emptyPreference(),
+            quoteNotification: emptyPreference(),
+            starterpackJoinedNotification: emptyPreference(),
+            verifiedNotification: emptyPreference(),
+            unverifiedNotification: emptyPreference(),
+            likeViaRepostNotification: emptyPreference(),
+            repostViaRepostNotification: emptyPreference(),
+            subscribedPostNotification: emptyPreference(),
+            chatNotification: emptyPreference(),
+            ...record,
+          },
+        },
       }
     },
   })
 }
 
 const emptyPreference = (): Preference => ({
-  channels: [],
+  channels: {
+    inApp: false,
+    push: false,
+  },
   filter: 'all',
 })
