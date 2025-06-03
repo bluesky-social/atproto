@@ -20,7 +20,7 @@ export type AuthorizeViewProps = Override<
   {
     customizationData?: CustomizationData
     authorizeData: AuthorizeData
-    sessions: readonly Session[]
+    initialSessions: readonly Session[]
   }
 >
 
@@ -35,7 +35,7 @@ enum View {
 
 export function AuthorizeView({
   authorizeData,
-  sessions: initialSessions,
+  initialSessions,
   customizationData,
 
   // LayoutTitlePage
@@ -43,9 +43,14 @@ export function AuthorizeView({
 }: AuthorizeViewProps) {
   const { t } = useLingui()
 
-  const forceSignIn = authorizeData?.loginHint != null
+  const forceSignIn = authorizeData.loginHint != null
 
-  const initialView = forceSignIn ? View.SignIn : View.Welcome
+  const canSignUp =
+    !forceSignIn && Boolean(customizationData?.availableUserDomains?.length)
+
+  const initialView =
+    !canSignUp || initialSessions.length ? View.SignIn : View.Welcome
+
   const [view, setView] = useState<View>(initialView)
 
   const showDone = useBoundDispatch(setView, View.Done)
@@ -53,7 +58,6 @@ export function AuthorizeView({
   const showResetPassword = useBoundDispatch(setView, View.ResetPassword)
   const showSignUp = useBoundDispatch(setView, View.SignUp)
   const showAccept = useBoundDispatch(setView, View.Accept)
-  const showWelcome = useBoundDispatch(setView, View.Welcome)
 
   const [resetPasswordHint, setResetPasswordHint] = useState<
     string | undefined
@@ -74,6 +78,10 @@ export function AuthorizeView({
     onRedirected: showDone,
   })
 
+  const homeView = !canSignUp || sessions.length ? View.SignIn : View.Welcome
+  const showHome = useBoundDispatch(setView, homeView)
+  const showSignUpIfAllowed = canSignUp ? showSignUp : undefined
+
   // Navigate when the user signs-in (selects a new session)
   const session = sessions.find((s) => s.selected && !s.loginRequired)
   useEffect(() => {
@@ -83,16 +91,16 @@ export function AuthorizeView({
     }
   }, [session, doAccept, showAccept])
 
-  const canSignUp =
-    Boolean(customizationData?.availableUserDomains?.length) &&
-    !authorizeData.loginHint
-
   // Fool-proofing
-  const resetNeeded =
-    (view === View.SignUp && !canSignUp) || (view === View.Accept && !session)
   useEffect(() => {
-    if (resetNeeded) showWelcome()
-  }, [resetNeeded, showWelcome])
+    if (view === View.SignUp && !canSignUp) setView(homeView)
+  }, [view, homeView, !canSignUp])
+  useEffect(() => {
+    if (view === View.Accept && !session) setView(homeView)
+  }, [view, homeView, !session])
+  useEffect(() => {
+    if (view === View.Welcome && homeView !== View.Welcome) setView(homeView)
+  }, [view, homeView])
 
   if (view === View.Welcome) {
     return (
@@ -100,8 +108,8 @@ export function AuthorizeView({
         {...props}
         customizationData={customizationData}
         onSignIn={showSignIn}
-        onSignUp={canSignUp ? showSignUp : undefined}
-        onCancel={() => doReject()}
+        onSignUp={showSignUpIfAllowed}
+        onCancel={doReject}
       />
     )
   }
@@ -112,7 +120,7 @@ export function AuthorizeView({
         {...props}
         customizationData={customizationData}
         onValidateNewHandle={doValidateNewHandle}
-        onBack={showWelcome}
+        onBack={showHome}
         onDone={doSignUp}
       />
     )
@@ -125,7 +133,7 @@ export function AuthorizeView({
         emailDefault={resetPasswordHint}
         onresetPasswordRequest={doInitiatePasswordReset}
         onResetPasswordConfirm={doConfirmResetPassword}
-        onBack={forceSignIn ? showSignIn : showWelcome}
+        onBack={showHome}
       />
     )
   }
@@ -138,7 +146,9 @@ export function AuthorizeView({
         sessions={sessions}
         selectSub={selectSub}
         onSignIn={doSignIn}
-        onBack={forceSignIn ? () => doReject() : showWelcome}
+        onSignUp={showSignUpIfAllowed}
+        onBack={homeView === View.SignIn ? doReject : showHome}
+        backLabel={homeView === View.SignIn ? t`Cancel` : undefined}
         onForgotPassword={(email) => {
           showResetPassword()
           setResetPasswordHint(email)
@@ -160,13 +170,13 @@ export function AuthorizeView({
         account={session.account}
         scopeDetails={authorizeData.scopeDetails}
         onAccept={() => doAccept(session.account.sub)}
-        onReject={() => doReject()}
+        onReject={doReject}
         onBack={
           forceSignIn
             ? undefined
             : () => {
                 selectSub(null)
-                setView(sessions.length ? View.SignIn : View.Welcome)
+                showHome()
               }
         }
       />
