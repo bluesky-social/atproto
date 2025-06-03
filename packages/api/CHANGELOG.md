@@ -1,5 +1,54 @@
 # @atproto/api
 
+## 0.15.12
+
+### Patch Changes
+
+- [#3912](https://github.com/bluesky-social/atproto/pull/3912) [`a5cd018bd`](https://github.com/bluesky-social/atproto/commit/a5cd018bd5f237221902ab1b6956b46233c92187) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Unify `getPostThreadV2` and `getPostThreadHiddenV2` responses under `app.bsky.unspecced.defs` namespace and a single interface via `threadItemPost`.
+
+## 0.15.11
+
+### Patch Changes
+
+- [#3910](https://github.com/bluesky-social/atproto/pull/3910) [`a978681fd`](https://github.com/bluesky-social/atproto/commit/a978681fde1c138a5298bae77e5dc36ce155f955) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Updates to app.bsky.unspecced.getPostThreadHiddenV2 done in f6d5a467e71fb54996754cce7747b1e98a34442b (https://github.com/bluesky-social/atproto/pull/3909)
+
+## 0.15.10
+
+### Patch Changes
+
+- [#3825](https://github.com/bluesky-social/atproto/pull/3825) [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add app.bsky.unspecced.getPostThreadV2
+
+- [#3825](https://github.com/bluesky-social/atproto/pull/3825) [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add app.bsky.unspecced.getPostThreadHiddenV2
+
+## 0.15.9
+
+### Patch Changes
+
+- [#3882](https://github.com/bluesky-social/atproto/pull/3882) [`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159) Thanks [@mozzius](https://github.com/mozzius)! - add a "via" field to reposts and likes allowing a reference a repost, and then give a notification when a repost is liked or reposted.
+
+## 0.15.8
+
+### Patch Changes
+
+- [#3869](https://github.com/bluesky-social/atproto/pull/3869) [`80f402f36`](https://github.com/bluesky-social/atproto/commit/80f402f3663af08fd048300738d04c67aa2b9cb8) Thanks [@haileyok](https://github.com/haileyok)! - add `reqId` to feed interactions
+
+## 0.15.7
+
+### Patch Changes
+
+- [#3860](https://github.com/bluesky-social/atproto/pull/3860) [`86b315388`](https://github.com/bluesky-social/atproto/commit/86b3153884099ceeb0cfdb9d2bfdd447c39fb35a) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add liveNow to app.bsky.unspecced.getConfig
+
+## 0.15.6
+
+### Patch Changes
+
+- [#3824](https://github.com/bluesky-social/atproto/pull/3824) [`3a65b68f7`](https://github.com/bluesky-social/atproto/commit/3a65b68f7dc63c8bfbea0ae615f8ae984272f2e4) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add app.bsky.actor.status lexicon
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/common-web@0.4.2
+  - @atproto/xrpc@0.7.0
+  - @atproto/lexicon@0.4.11
+
 ## 0.15.5
 
 ### Patch Changes

@@ -152,6 +152,8 @@ import {
   GetStarterPackCountsResponse,
   GetStarterPackRecordsRequest,
   GetStarterPackRecordsResponse,
+  GetStatusRecordsRequest,
+  GetStatusRecordsResponse,
   GetSuggestedEntitiesRequest,
   GetSuggestedEntitiesResponse,
   GetSuggestedFeedsRequest,
@@ -301,6 +303,15 @@ export const Service = {
       name: 'GetActorChatDeclarationRecords',
       I: GetActorChatDeclarationRecordsRequest,
       O: GetActorChatDeclarationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetStatusRecords
+     */
+    getStatusRecords: {
+      name: 'GetStatusRecords',
+      I: GetStatusRecordsRequest,
+      O: GetStatusRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**

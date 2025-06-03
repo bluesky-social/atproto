@@ -1,4 +1,10 @@
 import assert from 'node:assert'
+import { subLogger as log } from './logger'
+
+type LiveNowConfig = {
+  did: string
+  domains: string[]
+}[]
 
 export interface ServerConfigValues {
   // service
@@ -9,6 +15,7 @@ export interface ServerConfigValues {
   serverDid: string
   alternateAudienceDids: string[]
   entrywayJwtPublicKeyHex?: string
+  liveNowConfig?: LiveNowConfig
   // external services
   etcdHosts: string[]
   dataplaneUrls: string[]
@@ -49,6 +56,9 @@ export interface ServerConfigValues {
   bigThreadUris: Set<string>
   bigThreadDepth?: number
   maxThreadDepth?: number
+  maxThreadParents: number
+  threadTagsHide: Set<string>
+  threadTagsBumpDown: Set<string>
   // notifications
   notificationsDelayMs?: number
   // client config
@@ -81,6 +91,19 @@ export class ServerConfig {
     const alternateAudienceDids = envList(process.env.BSKY_ALT_AUDIENCE_DIDS)
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
+    let liveNowConfig: LiveNowConfig | undefined
+    if (process.env.BSKY_LIVE_NOW_CONFIG) {
+      try {
+        const parsed = JSON.parse(process.env.BSKY_LIVE_NOW_CONFIG)
+        if (isLiveNowConfig(parsed)) {
+          liveNowConfig = parsed
+        } else {
+          throw new Error('Live Now config failed format validation')
+        }
+      } catch (err) {
+        log.error({ err }, 'Invalid BSKY_LIVE_NOW_CONFIG')
+      }
+    }
     const handleResolveNameservers = envList(
       process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
     )
@@ -171,6 +194,13 @@ export class ServerConfig {
     const maxThreadDepth = process.env.BSKY_MAX_THREAD_DEPTH
       ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
       : undefined
+    const maxThreadParents = process.env.BSKY_MAX_THREAD_PARENTS
+      ? parseInt(process.env.BSKY_MAX_THREAD_PARENTS || '', 10)
+      : 50
+    const threadTagsHide = new Set(envList(process.env.BSKY_THREAD_TAGS_HIDE))
+    const threadTagsBumpDown = new Set(
+      envList(process.env.BSKY_THREAD_TAGS_BUMP_DOWN),
+    )
 
     const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
@@ -200,6 +230,7 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      liveNowConfig,
       etcdHosts,
       dataplaneUrls,
       dataplaneUrlsEtcdKeyPrefix,
@@ -237,6 +268,9 @@ export class ServerConfig {
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
+      maxThreadParents,
+      threadTagsHide,
+      threadTagsBumpDown,
       notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
@@ -283,6 +317,10 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get liveNowConfig() {
+    return this.cfg.liveNowConfig
   }
 
   get etcdHosts() {
@@ -433,6 +471,17 @@ export class ServerConfig {
     return this.cfg.maxThreadDepth
   }
 
+  get maxThreadParents() {
+    return this.cfg.maxThreadParents
+  }
+
+  get threadTagsHide() {
+    return this.cfg.threadTagsHide
+  }
+  get threadTagsBumpDown() {
+    return this.cfg.threadTagsBumpDown
+  }
+
   get notificationsDelayMs() {
     return this.cfg.notificationsDelayMs ?? 0
   }
@@ -481,4 +530,18 @@ function stripUndefineds(
 function envList(str: string | undefined): string[] {
   if (str === undefined || str.length === 0) return []
   return str.split(',')
+}
+
+function isLiveNowConfig(data: any): data is LiveNowConfig {
+  return (
+    Array.isArray(data) &&
+    data.every(
+      (item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof item.did === 'string' &&
+        Array.isArray(item.domains) &&
+        item.domains.every((domain: any) => typeof domain === 'string'),
+    )
+  )
 }

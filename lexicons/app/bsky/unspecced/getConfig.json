@@ -11,7 +11,24 @@
           "type": "object",
           "required": [],
           "properties": {
-            "checkEmailConfirmed": { "type": "boolean" }
+            "checkEmailConfirmed": { "type": "boolean" },
+            "liveNow": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#liveNowConfig" }
+            }
+          }
+        }
+      }
+    },
+    "liveNowConfig": {
+      "type": "object",
+      "required": ["did", "domains"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }

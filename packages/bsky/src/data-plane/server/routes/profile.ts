@@ -25,37 +25,46 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const profileUris = dids.map(
       (did) => `at://${did}/app.bsky.actor.profile/self`,
     )
+    const statusUris = dids.map(
+      (did) => `at://${did}/app.bsky.actor.status/self`,
+    )
     const chatDeclarationUris = dids.map(
       (did) => `at://${did}/chat.bsky.actor.declaration/self`,
     )
     const { ref } = db.db.dynamic
-    const [handlesRes, verificationsReceived, profiles, chatDeclarations] =
-      await Promise.all([
-        db.db
-          .selectFrom('actor')
-          .leftJoin('actor_state', 'actor_state.did', 'actor.did')
-          .where('actor.did', 'in', dids)
-          .selectAll('actor')
-          .select('actor_state.priorityNotifs')
-          .select([
-            db.db
-              .selectFrom('labeler')
-              .whereRef('creator', '=', ref('actor.did'))
-              .select(sql<true>`${true}`.as('val'))
-              .as('isLabeler'),
-          ])
-          .execute(),
-        db.db
-          .selectFrom('verification')
-          .selectAll('verification')
-          .innerJoin('actor', 'actor.did', 'verification.creator')
-          .where('verification.subject', 'in', dids)
-          .where('actor.trustedVerifier', '=', true)
-          .orderBy('sortedAt', 'asc')
-          .execute(),
-        getRecords(db)({ uris: profileUris }),
-        getRecords(db)({ uris: chatDeclarationUris }),
-      ])
+    const [
+      handlesRes,
+      verificationsReceived,
+      profiles,
+      statuses,
+      chatDeclarations,
+    ] = await Promise.all([
+      db.db
+        .selectFrom('actor')
+        .leftJoin('actor_state', 'actor_state.did', 'actor.did')
+        .where('actor.did', 'in', dids)
+        .selectAll('actor')
+        .select('actor_state.priorityNotifs')
+        .select([
+          db.db
+            .selectFrom('labeler')
+            .whereRef('creator', '=', ref('actor.did'))
+            .select(sql<true>`${true}`.as('val'))
+            .as('isLabeler'),
+        ])
+        .execute(),
+      db.db
+        .selectFrom('verification')
+        .selectAll('verification')
+        .innerJoin('actor', 'actor.did', 'verification.creator')
+        .where('verification.subject', 'in', dids)
+        .where('actor.trustedVerifier', '=', true)
+        .orderBy('sortedAt', 'asc')
+        .execute(),
+      getRecords(db)({ uris: profileUris }),
+      getRecords(db)({ uris: statusUris }),
+      getRecords(db)({ uris: chatDeclarationUris }),
+    ])
 
     const verificationsBySubjectDid = verificationsReceived.reduce(
       (acc, cur) => {
@@ -70,6 +79,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const byDid = keyBy(handlesRes, 'did')
     const actors = dids.map((did, i) => {
       const row = byDid.get(did)
+
+      const status = statuses.records[i]
+
       const chatDeclaration = parseRecordBytes(
         chatDeclarations.records[i].record,
       )
@@ -102,6 +114,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         priorityNotifications: row?.priorityNotifs ?? false,
         trustedVerifier: row?.trustedVerifier ?? false,
         verifiedBy,
+        statusRecord: status,
+        tags: [],
+        profileTags: [],
       }
     })
     return { actors }

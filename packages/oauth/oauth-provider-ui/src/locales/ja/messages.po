@@ -17,7 +17,7 @@ msgstr ""
 msgid "<0/> is asking for permission to access your account (<1/>)."
 msgstr "<0/> があなたのアカウント (<1/>) へのアクセス権限を要求しています。"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:217
+#: src/views/authorize/sign-in/sign-in-form.tsx:219
 msgid "2FA Confirmation"
 msgstr "２要素認証の確認"
 
@@ -25,11 +25,11 @@ msgstr "２要素認証の確認"
 msgid "A second authentication factor is required"
 msgstr "２番目の認証要素が必要です"
 
-#: src/views/authorize/accept/accept-form.tsx:148
+#: src/views/authorize/accept/accept-form.tsx:150
 msgid "Access your account data (except chat messages)"
 msgstr "あなたのアカウントデータにアクセス （チャットメッセージを除く）"
 
-#: src/views/authorize/accept/accept-form.tsx:150
+#: src/views/authorize/accept/accept-form.tsx:152
 msgid "Access your chat messages"
 msgstr "チャットメッセージにアクセス"
 
@@ -45,7 +45,7 @@ msgstr "デバイス上のアプリ"
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:104
+#: src/views/authorize/sign-in/sign-in-picker.tsx:115
 msgid "Another account"
 msgstr "他のアカウント"
 
@@ -58,12 +58,12 @@ msgstr "認証"
 msgid "Authorize"
 msgstr "承認する"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:68
+#: src/views/authorize/sign-in/sign-in-picker.tsx:79
 msgid "Avatar"
 msgstr "アバター"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:47
-#: src/views/authorize/sign-in/sign-in-form.tsx:130
+#: src/views/authorize/sign-in/sign-in-picker.tsx:59
+#: src/views/authorize/sign-in/sign-in-form.tsx:132
 #: src/views/authorize/reset-password/reset-password-view.tsx:65
 #: src/views/authorize/reset-password/reset-password-view.tsx:95
 #: src/components/forms/wizard-card.tsx:93
@@ -84,17 +84,18 @@ msgstr "<0>承認する</0>をクリックすると、<1>利用規約</1>と<2>�
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "アカウントを作成することで、このサービスの {0} および {1} に同意したものとみなされます。"
 
+#: src/views/authorize/authorize-view.tsx:151
 #: src/views/authorize/welcome/welcome-view.tsx:51
 #: src/components/forms/form-card-async.tsx:85
 msgid "Cancel"
 msgstr "キャンセル"
 
 #. placeholder {0}: secondFactor.hint
-#: src/views/authorize/sign-in/sign-in-form.tsx:230
+#: src/views/authorize/sign-in/sign-in-form.tsx:232
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:94
+#: src/views/authorize/sign-up/sign-up-view.tsx:97
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
@@ -102,15 +103,15 @@ msgstr "ユーザー名を選んでください"
 msgid "Code"
 msgstr "コード"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:135
+#: src/views/authorize/sign-in/sign-in-form.tsx:137
 msgid "Confirm"
 msgstr "確認"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:65
+#: src/views/authorize/sign-in/sign-in-view.tsx:69
 msgid "Confirm your password to continue"
 msgstr "続けるにはパスワードを確認してください"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:221
+#: src/views/authorize/sign-in/sign-in-form.tsx:223
 msgid "Confirmation code"
 msgstr "確認コード"
 
@@ -118,7 +119,7 @@ msgstr "確認コード"
 msgid "Create a new account"
 msgstr "新規アカウントの作成"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:78
+#: src/views/authorize/sign-up/sign-up-view.tsx:80
 msgid "Create Account"
 msgstr "アカウントを作成"
 
@@ -160,12 +161,12 @@ msgstr "メールアドレスを入力してください"
 msgid "Enter your new password"
 msgstr "新しいパスワードを入力してください"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:86
+#: src/views/authorize/sign-in/sign-in-view.tsx:90
 msgid "Enter your password"
 msgstr "パスワードを入力"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:104
-#: src/views/authorize/sign-in/sign-in-view.tsx:120
+#: src/views/authorize/sign-in/sign-in-view.tsx:109
+#: src/views/authorize/sign-in/sign-in-view.tsx:126
 msgid "Enter your username and password"
 msgstr "ユーザー名とパスワードを入力してください"
 
@@ -185,7 +186,7 @@ msgstr "最強"
 msgid "Forgot Password"
 msgstr "パスワードを忘れた"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:181
+#: src/views/authorize/sign-in/sign-in-form.tsx:183
 msgid "Forgot?"
 msgstr "忘れた？"
 
@@ -206,8 +207,8 @@ msgstr "隠す"
 msgid "Home"
 msgstr "ホーム"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:81
-#: src/views/authorize/sign-in/sign-in-form.tsx:138
+#: src/views/authorize/sign-in/sign-in-picker.tsx:92
+#: src/views/authorize/sign-in/sign-in-form.tsx:140
 msgid "Identifier"
 msgstr "識別子"
 
@@ -228,11 +229,11 @@ msgstr "招待コード"
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/views/authorize/authorize-view.tsx:178
+#: src/views/authorize/authorize-view.tsx:188
 msgid "Login complete"
 msgstr "ログイン完了"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:97
+#: src/views/authorize/sign-in/sign-in-picker.tsx:108
 msgid "Login to account that is not listed"
 msgstr "リストにないアカウントにログイン"
 
@@ -256,7 +257,7 @@ msgstr "無し"
 msgid "Moderate"
 msgstr "中程度"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:74
+#: src/views/authorize/sign-in/sign-in-picker.tsx:85
 msgid "Name"
 msgstr "名前"
 
@@ -279,7 +280,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:128
-#: src/views/authorize/sign-in/sign-in-form.tsx:162
+#: src/views/authorize/sign-in/sign-in-form.tsx:164
 #: src/components/forms/input-password.tsx:53
 msgid "Password"
 msgstr "パスワード"
@@ -304,7 +305,7 @@ msgstr "パスワードが更新されました！"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:196
+#: src/views/authorize/sign-in/sign-in-form.tsx:198
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "パスワードを入力する前に、ウェブサイトのドメインを確認してください。信用できないドメインには絶対にパスワードを入力しないでください。"
 
@@ -314,8 +315,12 @@ msgstr "パスワードを入力する前に、ウェブサイトのドメイン
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:205
-#: src/views/authorize/sign-in/sign-in-form.tsx:210
+#: src/views/authorize/accept/accept-form.tsx:148
+msgid "Read your email address"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:207
+#: src/views/authorize/sign-in/sign-in-form.tsx:212
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
@@ -331,7 +336,7 @@ msgstr "リセットコード"
 msgid "Reset Password"
 msgstr "パスワードをリセット"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:179
+#: src/views/authorize/sign-in/sign-in-form.tsx:181
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
@@ -339,26 +344,27 @@ msgstr "パスワードをリセット"
 msgid "Select domain"
 msgstr "ドメインを選択"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:135
+#: src/views/authorize/sign-in/sign-in-view.tsx:141
 msgid "Select from an existing account"
 msgstr "既存のアカウントから選択"
 
 #: src/views/authorize/welcome/welcome-view.tsx:45
-#: src/views/authorize/sign-in/sign-in-view.tsx:48
-#: src/views/authorize/sign-in/sign-in-form.tsx:135
+#: src/views/authorize/sign-in/sign-in-view.tsx:52
+#: src/views/authorize/sign-in/sign-in-form.tsx:137
 msgid "Sign in"
 msgstr "サインイン"
 
 #. placeholder {0}: account.name
-#: src/views/authorize/sign-in/sign-in-picker.tsx:67
+#: src/views/authorize/sign-in/sign-in-picker.tsx:78
 msgid "Sign in as {0}"
 msgstr "{0} でサインイン"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:53
+#: src/views/authorize/sign-in/sign-in-picker.tsx:64
 msgid "Sign in as..."
 msgstr "アカウントの選択"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:84
+#: src/views/authorize/sign-up/sign-up-view.tsx:86
+#: src/views/authorize/sign-in/sign-in-picker.tsx:53
 msgid "Sign up"
 msgstr "サインアップ"
 
@@ -440,7 +446,7 @@ msgstr "予期しないサーバー応答"
 msgid "Uniquely identify you"
 msgstr "あなたを一意に識別"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:143
+#: src/views/authorize/sign-in/sign-in-form.tsx:145
 msgid "Username or email address"
 msgstr "ユーザー名またはメールアドレス"
 
@@ -448,15 +454,15 @@ msgstr "ユーザー名またはメールアドレス"
 msgid "Valid"
 msgstr "有効"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:135
+#: src/views/authorize/sign-up/sign-up-view.tsx:138
 msgid "Verify you are human"
 msgstr "あなたが人間であることを確認"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:193
+#: src/views/authorize/sign-in/sign-in-form.tsx:195
 msgid "Warning"
 msgstr "警告"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:80
+#: src/views/authorize/sign-up/sign-up-view.tsx:82
 msgid "We're so excited to have you join us!"
 msgstr "私たちはあなたが参加してくれることをとても楽しみにしています！"
 
@@ -468,7 +474,7 @@ msgstr "弱い"
 msgid "Wrong identifier or password"
 msgstr "識別子またはパスワードが間違っています"
 
-#: src/views/authorize/authorize-view.tsx:179
+#: src/views/authorize/authorize-view.tsx:189
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
@@ -484,7 +490,7 @@ msgstr "新しいパスワードでサインインできるようになりまし
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "「リセットコード」が記載されたメールが届きます。ここにコードを入力し、新しいパスワードを入力します。"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:116
+#: src/views/authorize/sign-up/sign-up-view.tsx:119
 msgid "Your account"
 msgstr "あなたのアカウント"
 

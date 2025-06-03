@@ -1,5 +1,25 @@
 # @atproto/oauth-provider-ui
 
+## 0.1.6
+
+### Patch Changes
+
+- [`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve auto completion of sing-in & reset password flows
+
+## 0.1.5
+
+### Patch Changes
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `transition:email` oauth scope
+
+## 0.1.4
+
+### Patch Changes
+
+- [#3810](https://github.com/bluesky-social/atproto/pull/3810) [`e1bda27e5`](https://github.com/bluesky-social/atproto/commit/e1bda27e550d3ba9dab1fab1f27726c185d8bf9f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix CORS issue on `<img>` tags
+
+- [#3797](https://github.com/bluesky-social/atproto/pull/3797) [`a48b093f0`](https://github.com/bluesky-social/atproto/commit/a48b093f0ba3cf67b7abc50d309afcb336d8ead8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use more consistent UI regardless of profile completion
+
 ## 0.1.3
 
 ### Patch Changes

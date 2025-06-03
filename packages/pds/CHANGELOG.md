@@ -1,5 +1,94 @@
 # @atproto/pds
 
+## 0.4.142
+
+### Patch Changes
+
+- [#3912](https://github.com/bluesky-social/atproto/pull/3912) [`a5cd018bd`](https://github.com/bluesky-social/atproto/commit/a5cd018bd5f237221902ab1b6956b46233c92187) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Unify `getPostThreadV2` and `getPostThreadHiddenV2` responses under `app.bsky.unspecced.defs` namespace and a single interface via `threadItemPost`.
+
+- Updated dependencies [[`a5cd018bd`](https://github.com/bluesky-social/atproto/commit/a5cd018bd5f237221902ab1b6956b46233c92187)]:
+  - @atproto/api@0.15.12
+
+## 0.4.141
+
+### Patch Changes
+
+- [#3900](https://github.com/bluesky-social/atproto/pull/3900) [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add max length limit to passwords
+
+- Updated dependencies [[`a978681fd`](https://github.com/bluesky-social/atproto/commit/a978681fde1c138a5298bae77e5dc36ce155f955), [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e)]:
+  - @atproto/api@0.15.11
+  - @atproto/oauth-provider@0.7.9
+
+## 0.4.140
+
+### Patch Changes
+
+- Updated dependencies [[`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9), [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9)]:
+  - @atproto/api@0.15.10
+
+## 0.4.139
+
+### Patch Changes
+
+- [#3882](https://github.com/bluesky-social/atproto/pull/3882) [`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159) Thanks [@mozzius](https://github.com/mozzius)! - add a "via" field to reposts and likes allowing a reference a repost, and then give a notification when a repost is liked or reposted.
+
+- Updated dependencies [[`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5), [`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159)]:
+  - @atproto/oauth-provider@0.7.8
+  - @atproto/api@0.15.9
+
+## 0.4.138
+
+### Patch Changes
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow access to `com.atproto.server.getSession` when authenticated using oauth credentials. Email info (`email`, `emailConfirmed`) will only be exposed if the credentials were issued with the `transition:email` scope.
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `transition:email` oauth scope
+
+- [#3868](https://github.com/bluesky-social/atproto/pull/3868) [`eab7c9fb8`](https://github.com/bluesky-social/atproto/commit/eab7c9fb8a9fed4017455ea06666c919aea61336) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use the PDS's hostname as fallback PDS "name" in the auth screen
+
+- Updated dependencies [[`80f402f36`](https://github.com/bluesky-social/atproto/commit/80f402f3663af08fd048300738d04c67aa2b9cb8), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`36dbd4155`](https://github.com/bluesky-social/atproto/commit/36dbd41551f74052a3f584719a1a7edd86eca201), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`43861a452`](https://github.com/bluesky-social/atproto/commit/43861a452b70268e738ef12033297cddacbe25d4), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337)]:
+  - @atproto/api@0.15.8
+  - @atproto-labs/fetch-node@0.1.9
+  - @atproto/oauth-provider@0.7.7
+
+## 0.4.137
+
+### Patch Changes
+
+- [#3850](https://github.com/bluesky-social/atproto/pull/3850) [`efc64ba92`](https://github.com/bluesky-social/atproto/commit/efc64ba92511933c2100b45c0e7f4bcae9199240) Thanks [@devinivy](https://github.com/devinivy)! - calculate client ip relative to trusted ips, e.g. for rate limiting purposes
+
+- Updated dependencies [[`86b315388`](https://github.com/bluesky-social/atproto/commit/86b3153884099ceeb0cfdb9d2bfdd447c39fb35a)]:
+  - @atproto/api@0.15.7
+
+## 0.4.136
+
+### Patch Changes
+
+- [#3840](https://github.com/bluesky-social/atproto/pull/3840) [`088d06204`](https://github.com/bluesky-social/atproto/commit/088d06204f779412b94ae3363ff548a6c8d1299a) Thanks [@devinivy](https://github.com/devinivy)! - fix account management migration 005.
+
+## 0.4.135
+
+### Patch Changes
+
+- [#3816](https://github.com/bluesky-social/atproto/pull/3816) [`ab4e72084`](https://github.com/bluesky-social/atproto/commit/ab4e72084dd0ea1eb12b45cbb913595434b88675) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Improve handle resolution mechanism
+
+- [#3814](https://github.com/bluesky-social/atproto/pull/3814) [`eccbce278`](https://github.com/bluesky-social/atproto/commit/eccbce278da72c3fbbf8fbbcfcafe76ae28dcd6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Small memory leak fix.
+
+- [#3700](https://github.com/bluesky-social/atproto/pull/3700) [`b5afb723b`](https://github.com/bluesky-social/atproto/commit/b5afb723be392d236799bbcb6a55956bd12316ba) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Consistenlty log errors
+
+- Updated dependencies [[`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b), [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`b5afb723b`](https://github.com/bluesky-social/atproto/commit/b5afb723be392d236799bbcb6a55956bd12316ba), [`3a65b68f7`](https://github.com/bluesky-social/atproto/commit/3a65b68f7dc63c8bfbea0ae615f8ae984272f2e4)]:
+  - @atproto/xrpc@0.7.0
+  - @atproto/lexicon@0.4.11
+  - @atproto/xrpc-server@0.7.18
+  - @atproto/api@0.15.6
+  - @atproto/oauth-provider@0.7.6
+  - @atproto/common@0.4.11
+  - @atproto/identity@0.4.8
+  - @atproto/repo@0.8.1
+  - @atproto-labs/xrpc-utils@0.0.14
+  - @atproto/aws@0.2.21
+  - @atproto/crypto@0.4.4
+
 ## 0.4.134
 
 ### Patch Changes

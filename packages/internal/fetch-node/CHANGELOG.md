@@ -1,5 +1,21 @@
 # @atproto-labs/fetch-node
 
+## 0.1.9
+
+### Patch Changes
+
+- [#3821](https://github.com/bluesky-social/atproto/pull/3821) [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow explicit `follow` mode in safe fetch wrap.
+
+- [#3819](https://github.com/bluesky-social/atproto/pull/3819) [`36dbd4155`](https://github.com/bluesky-social/atproto/commit/36dbd41551f74052a3f584719a1a7edd86eca201) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix potential memory leak
+
+- [#3821](https://github.com/bluesky-social/atproto/pull/3821) [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow disabling the need for an explicit `redirect` mode
+
+- [#3818](https://github.com/bluesky-social/atproto/pull/3818) [`43861a452`](https://github.com/bluesky-social/atproto/commit/43861a452b70268e738ef12033297cddacbe25d4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on the Public Suffix List
+
+- Updated dependencies [[`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4)]:
+  - @atproto-labs/pipe@0.1.1
+  - @atproto-labs/fetch@0.2.3
+
 ## 0.1.8
 
 ### Patch Changes

@@ -22,6 +22,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   checkEmailConfirmed?: boolean
+  liveNow?: LiveNowConfig[]
 }
 
 export type HandlerInput = undefined
@@ -49,3 +50,19 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface LiveNowConfig {
+  $type?: 'app.bsky.unspecced.getConfig#liveNowConfig'
+  did: string
+  domains: string[]
+}
+
+const hashLiveNowConfig = 'liveNowConfig'
+
+export function isLiveNowConfig<V>(v: V) {
+  return is$typed(v, id, hashLiveNowConfig)
+}
+
+export function validateLiveNowConfig<V>(v: V) {
+  return validate<LiveNowConfig & V>(v, id, hashLiveNowConfig)
+}

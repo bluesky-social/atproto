@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds thread views fetches ancestors 1`] = `
+exports[`appview thread views fetches ancestors 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -210,7 +210,7 @@ Object {
 }
 `;
 
-exports[`pds thread views fetches deep post thread 1`] = `
+exports[`appview thread views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -470,7 +470,7 @@ Object {
 }
 `;
 
-exports[`pds thread views fetches shallow post thread 1`] = `
+exports[`appview thread views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -661,7 +661,7 @@ Object {
 }
 `;
 
-exports[`pds thread views fetches thread with handle in uri 1`] = `
+exports[`appview thread views fetches thread with handle in uri 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -852,7 +852,7 @@ Object {
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 1`] = `
+exports[`appview thread views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -1019,7 +1019,7 @@ Object {
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 2`] = `
+exports[`appview thread views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -1075,7 +1075,7 @@ Object {
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 3`] = `
+exports[`appview thread views handles deleted posts correctly 3`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -1146,7 +1146,199 @@ Object {
 }
 `;
 
-exports[`pds thread views takedown blocks ancestors by actor 1`] = `
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by private takedown 1`] = `
+Object {
+  "$type": "app.bsky.feed.defs#blockedPost",
+  "author": Object {
+    "did": "user(0)",
+    "viewer": Object {
+      "blockedBy": true,
+    },
+  },
+  "blocked": true,
+  "uri": "record(0)",
+}
+`;
+
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by private takedown 2`] = `
+Object {
+  "$type": "app.bsky.feed.defs#threadViewPost",
+  "parent": Object {
+    "$type": "app.bsky.feed.defs#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "did": "user(2)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "cid": "cids(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "quoteCount": 0,
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "I'm carol",
+      },
+      "replyCount": 1,
+      "repostCount": 0,
+      "uri": "record(2)",
+      "viewer": Object {
+        "embeddingDisabled": false,
+        "threadMuted": false,
+      },
+    },
+    "threadContext": Object {},
+  },
+  "post": Object {
+    "author": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "likeCount": 0,
+    "quoteCount": 0,
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+      },
+      "text": "hi carol",
+    },
+    "replyCount": 0,
+    "repostCount": 0,
+    "uri": "record(0)",
+    "viewer": Object {
+      "embeddingDisabled": false,
+      "threadMuted": false,
+    },
+  },
+  "replies": Array [],
+  "threadContext": Object {},
+}
+`;
+
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by takedown label 1`] = `
+Object {
+  "$type": "app.bsky.feed.defs#blockedPost",
+  "author": Object {
+    "did": "user(0)",
+    "viewer": Object {
+      "blockedBy": true,
+    },
+  },
+  "blocked": true,
+  "uri": "record(0)",
+}
+`;
+
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by takedown label 2`] = `
+Object {
+  "$type": "app.bsky.feed.defs#threadViewPost",
+  "parent": Object {
+    "$type": "app.bsky.feed.defs#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "did": "user(2)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "cid": "cids(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "quoteCount": 0,
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "I'm carol",
+      },
+      "replyCount": 1,
+      "repostCount": 0,
+      "uri": "record(2)",
+      "viewer": Object {
+        "embeddingDisabled": false,
+        "threadMuted": false,
+      },
+    },
+    "threadContext": Object {},
+  },
+  "post": Object {
+    "author": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "likeCount": 0,
+    "quoteCount": 0,
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+      },
+      "text": "hi carol",
+    },
+    "replyCount": 0,
+    "repostCount": 0,
+    "uri": "record(0)",
+    "viewer": Object {
+      "embeddingDisabled": false,
+      "threadMuted": false,
+    },
+  },
+  "replies": Array [],
+  "threadContext": Object {},
+}
+`;
+
+exports[`appview thread views takedown blocks ancestors by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -1220,7 +1412,7 @@ Object {
 }
 `;
 
-exports[`pds thread views takedown blocks ancestors by record 1`] = `
+exports[`appview thread views takedown blocks ancestors by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -1294,7 +1486,7 @@ Object {
 }
 `;
 
-exports[`pds thread views takedown blocks replies by actor 1`] = `
+exports[`appview thread views takedown blocks replies by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -1508,7 +1700,7 @@ Object {
 }
 `;
 
-exports[`pds thread views takedown blocks replies by record 1`] = `
+exports[`appview thread views takedown blocks replies by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {

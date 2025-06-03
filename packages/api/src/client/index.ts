@@ -109,6 +109,7 @@ import * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -182,6 +183,8 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetPostThreadHiddenV2 from './types/app/bsky/unspecced/getPostThreadHiddenV2.js'
+import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
@@ -369,6 +372,7 @@ export * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
 export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -442,6 +446,8 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetPostThreadHiddenV2 from './types/app/bsky/unspecced/getPostThreadHiddenV2.js'
+export * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
@@ -537,6 +543,9 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
+export const APP_BSKY_ACTOR = {
+  StatusLive: 'app.bsky.actor.status#live',
 }
 export const APP_BSKY_FEED = {
   DefsRequestLess: 'app.bsky.feed.defs#requestLess',
@@ -1736,10 +1745,12 @@ export class AppBskyNS {
 export class AppBskyActorNS {
   _client: XrpcClient
   profile: AppBskyActorProfileRecord
+  status: AppBskyActorStatusRecord
 
   constructor(client: XrpcClient) {
     this._client = client
     this.profile = new AppBskyActorProfileRecord(client)
+    this.status = new AppBskyActorStatusRecord(client)
   }
 
   getPreferences(
@@ -1888,6 +1899,72 @@ export class AppBskyActorProfileRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.actor.profile', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyActorStatusRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyActorStatus.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.actor.status',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyActorStatus.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.actor.status',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyActorStatus.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.actor.status'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.actor.status', ...params },
       { headers },
     )
   }
@@ -3360,6 +3437,30 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetPopularFeedGenerators.Response> {
     return this._client.call(
       'app.bsky.unspecced.getPopularFeedGenerators',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPostThreadHiddenV2(
+    params?: AppBskyUnspeccedGetPostThreadHiddenV2.QueryParams,
+    opts?: AppBskyUnspeccedGetPostThreadHiddenV2.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPostThreadHiddenV2.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadHiddenV2',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPostThreadV2(
+    params?: AppBskyUnspeccedGetPostThreadV2.QueryParams,
+    opts?: AppBskyUnspeccedGetPostThreadV2.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPostThreadV2.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadV2',
       params,
       undefined,
       opts,

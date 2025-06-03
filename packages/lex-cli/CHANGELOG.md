@@ -1,5 +1,18 @@
 # @atproto/lex-cli
 
+## 0.8.2
+
+### Patch Changes
+
+- [#3906](https://github.com/bluesky-social/atproto/pull/3906) [`d880665e6`](https://github.com/bluesky-social/atproto/commit/d880665e63100e9e06b0ef2d287e5c3e0272e7ca) Thanks [@mozzius](https://github.com/mozzius)! - Fix type generation for arrays of strings with known values
+
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/lexicon@0.4.11
+
 ## 0.8.0
 
 ### Minor Changes

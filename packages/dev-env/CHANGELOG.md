@@ -1,5 +1,94 @@
 # @atproto/dev-env
 
+## 0.3.136
+
+### Patch Changes
+
+- Updated dependencies [[`a5cd018bd`](https://github.com/bluesky-social/atproto/commit/a5cd018bd5f237221902ab1b6956b46233c92187)]:
+  - @atproto/bsync@0.0.20
+  - @atproto/bsky@0.0.154
+  - @atproto/api@0.15.12
+  - @atproto/pds@0.4.142
+  - @atproto/ozone@0.1.115
+
+## 0.3.135
+
+### Patch Changes
+
+- Updated dependencies [[`a978681fd`](https://github.com/bluesky-social/atproto/commit/a978681fde1c138a5298bae77e5dc36ce155f955), [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e)]:
+  - @atproto/api@0.15.11
+  - @atproto/pds@0.4.141
+  - @atproto/bsky@0.0.153
+  - @atproto/ozone@0.1.114
+
+## 0.3.134
+
+### Patch Changes
+
+- Updated dependencies [[`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9), [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9)]:
+  - @atproto/api@0.15.10
+  - @atproto/bsky@0.0.152
+  - @atproto/ozone@0.1.113
+  - @atproto/pds@0.4.140
+
+## 0.3.133
+
+### Patch Changes
+
+- [#3882](https://github.com/bluesky-social/atproto/pull/3882) [`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159) Thanks [@mozzius](https://github.com/mozzius)! - add a "via" field to reposts and likes allowing a reference a repost, and then give a notification when a repost is liked or reposted.
+
+- Updated dependencies [[`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159)]:
+  - @atproto/ozone@0.1.112
+  - @atproto/bsky@0.0.151
+  - @atproto/api@0.15.9
+  - @atproto/pds@0.4.139
+
+## 0.3.132
+
+### Patch Changes
+
+- Updated dependencies [[`80f402f36`](https://github.com/bluesky-social/atproto/commit/80f402f3663af08fd048300738d04c67aa2b9cb8), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`eab7c9fb8`](https://github.com/bluesky-social/atproto/commit/eab7c9fb8a9fed4017455ea06666c919aea61336)]:
+  - @atproto/bsky@0.0.150
+  - @atproto/api@0.15.8
+  - @atproto/pds@0.4.138
+  - @atproto/ozone@0.1.111
+
+## 0.3.131
+
+### Patch Changes
+
+- Updated dependencies [[`86b315388`](https://github.com/bluesky-social/atproto/commit/86b3153884099ceeb0cfdb9d2bfdd447c39fb35a), [`efc64ba92`](https://github.com/bluesky-social/atproto/commit/efc64ba92511933c2100b45c0e7f4bcae9199240)]:
+  - @atproto/api@0.15.7
+  - @atproto/pds@0.4.137
+  - @atproto/bsky@0.0.149
+  - @atproto/ozone@0.1.110
+
+## 0.3.130
+
+### Patch Changes
+
+- Updated dependencies [[`088d06204`](https://github.com/bluesky-social/atproto/commit/088d06204f779412b94ae3363ff548a6c8d1299a)]:
+  - @atproto/pds@0.4.136
+  - @atproto/bsky@0.0.148
+  - @atproto/ozone@0.1.109
+
+## 0.3.129
+
+### Patch Changes
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`ab4e72084`](https://github.com/bluesky-social/atproto/commit/ab4e72084dd0ea1eb12b45cbb913595434b88675), [`3301a2697`](https://github.com/bluesky-social/atproto/commit/3301a2697f2ad32d4912ba4781c515755cf1386e), [`eccbce278`](https://github.com/bluesky-social/atproto/commit/eccbce278da72c3fbbf8fbbcfcafe76ae28dcd6c), [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`b5afb723b`](https://github.com/bluesky-social/atproto/commit/b5afb723be392d236799bbcb6a55956bd12316ba), [`3a65b68f7`](https://github.com/bluesky-social/atproto/commit/3a65b68f7dc63c8bfbea0ae615f8ae984272f2e4)]:
+  - @atproto/common-web@0.4.2
+  - @atproto/bsky@0.0.148
+  - @atproto/pds@0.4.135
+  - @atproto/ozone@0.1.109
+  - @atproto/lexicon@0.4.11
+  - @atproto/xrpc-server@0.7.18
+  - @atproto/api@0.15.6
+  - @atproto/identity@0.4.8
+  - @atproto/sync@0.1.23
+  - @atproto/bsync@0.0.19
+  - @atproto/crypto@0.4.4
+
 ## 0.3.128
 
 ### Patch Changes

@@ -100,6 +100,8 @@ export interface FeedViewPost {
   reason?: $Typed<ReasonRepost> | $Typed<ReasonPin> | { $type: string }
   /** Context provided by feed generator that may be passed back alongside interactions. */
   feedContext?: string
+  /** Unique identifier per request that may be passed back alongside interactions. */
+  reqId?: string
 }
 
 const hashFeedViewPost = 'feedViewPost'
@@ -140,6 +142,8 @@ export function validateReplyRef<V>(v: V) {
 export interface ReasonRepost {
   $type?: 'app.bsky.feed.defs#reasonRepost'
   by: AppBskyActorDefs.ProfileViewBasic
+  uri?: string
+  cid?: string
   indexedAt: string
 }
 
@@ -376,6 +380,8 @@ export interface Interaction {
     | (string & {})
   /** Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton. */
   feedContext?: string
+  /** Unique identifier per request that may be passed back alongside interactions. */
+  reqId?: string
 }
 
 const hashInteraction = 'interaction'

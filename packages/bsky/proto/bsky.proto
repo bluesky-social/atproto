@@ -17,6 +17,7 @@ message Record {
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp sorted_at = 7;
   string takedown_ref = 8;
+  repeated string tags = 9;
 }
 
 message GetBlockRecordsRequest {
@@ -107,6 +108,14 @@ message GetActorChatDeclarationRecordsRequest {
 }
 
 message GetActorChatDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetStatusRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetStatusRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -459,6 +468,11 @@ message ActorInfo {
   double pagerank = 12;
   bool trusted_verifier = 13;
   map<string, VerificationMeta> verified_by = 14;
+  // Tags being applied to the account itself
+  repeated string tags = 15;
+  // Tags being applied to the profile record
+  repeated string profile_tags = 16;
+  Record status_record = 17;
 }
 
 message GetActorsResponse {
@@ -1168,6 +1182,7 @@ service Service {
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
+  rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
   rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);

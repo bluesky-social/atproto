@@ -27,6 +27,10 @@
         "verification": {
           "type": "ref",
           "ref": "#verificationState"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#statusView"
         }
       }
     },
@@ -61,6 +65,10 @@
         "verification": {
           "type": "ref",
           "ref": "#verificationState"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#statusView"
         }
       }
     },
@@ -107,6 +115,10 @@
         "verification": {
           "type": "ref",
           "ref": "#verificationState"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#statusView"
         }
       }
     },
@@ -570,6 +582,32 @@
             "type": "union",
             "refs": ["app.bsky.feed.postgate#disableRule"]
           }
+        }
+      }
+    },
+    "statusView": {
+      "type": "object",
+      "required": ["status", "record"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status for the account.",
+          "knownValues": ["app.bsky.actor.status#live"]
+        },
+        "record": { "type": "unknown" },
+        "embed": {
+          "type": "union",
+          "description": "An optional embed associated with the status.",
+          "refs": ["app.bsky.embed.external#view"]
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "The date when this status will expire. The application might choose to no longer return the status after expiration.",
+          "format": "datetime"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "True if the status is not expired, false if it is expired. Only present if expiration was set."
         }
       }
     }
