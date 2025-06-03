@@ -25,7 +25,7 @@ import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
-import { isRequestDataAuthorized } from './request-data.js'
+import { RequestData, isRequestDataAuthorized } from './request-data.js'
 import { generateRequestId } from './request-id.js'
 import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
@@ -443,11 +443,7 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     code: Code,
-  ): Promise<{
-    parameters: OAuthAuthorizationRequestParameters
-    sub: string
-    deviceId: DeviceId
-  }> {
+  ): Promise<RequestData> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
@@ -493,8 +489,7 @@ export class RequestManager {
         })
       }
 
-      const { sub, deviceId, parameters } = data
-      return { sub, deviceId, parameters }
+      return data
     } finally {
       // A "code" can only be used once
       await this.store.deleteRequest(id)
