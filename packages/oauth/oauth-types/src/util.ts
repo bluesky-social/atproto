@@ -78,3 +78,11 @@ export const jsonObjectPreprocess = (val: unknown) => {
 
   return val
 }
+
+export const numberPreprocess = (val: unknown): unknown => {
+  if (typeof val === 'string') {
+    const number = Number(val)
+    if (!Number.isNaN(number)) return number
+  }
+  return val
+}
