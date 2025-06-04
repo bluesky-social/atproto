@@ -367,6 +367,7 @@ export class AppContext {
               'transition:email',
               'transition:generic',
               'transition:chat.bsky',
+              'transition:identity',
             ],
           },
           // If the PDS is both an authorization server & resource server (no
