@@ -6,6 +6,16 @@ import { NonNullableKeys } from '../lib/util/type.js'
 import { Sub } from '../oidc/sub.js'
 import { Code } from './code.js'
 
+export type {
+  ClientAuth,
+  ClientAuthLegacy,
+  ClientId,
+  Code,
+  DeviceId,
+  OAuthAuthorizationRequestParameters,
+  Sub,
+}
+
 export type RequestData = {
   clientId: ClientId
   clientAuth: null | ClientAuth | ClientAuthLegacy
