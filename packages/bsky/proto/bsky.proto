@@ -758,29 +758,42 @@ message GetNotificationPreferencesRequest {
 }
 
 message NotificationChannels {
-  bool in_app = 1;
+  bool list = 1;
   bool push = 2;
 }
 
-message NotificationPreference {
+message NotificationChannelsPush {
+  bool push = 1;
+}
+
+message NotificationPreferenceFull {
   NotificationChannels channels = 1;
   string filter = 2;
 }
 
+message NotificationPreferenceNoFilter {
+  NotificationChannels channels = 1;
+}
+
+message NotificationPreferencePush {
+  NotificationChannelsPush channels = 1;
+  string filter = 2;
+}
+
 message GetNotificationPreferencesResponse {
-  NotificationPreference like = 1;
-  NotificationPreference repost = 2;
-  NotificationPreference follow = 3;
-  NotificationPreference reply = 4;
-  NotificationPreference mention = 5;
-  NotificationPreference quote = 6;
-  NotificationPreference starterpack_joined = 7;
-  NotificationPreference verified = 8;
-  NotificationPreference unverified = 9;
-  NotificationPreference like_via_repost = 10;
-  NotificationPreference repost_via_repost = 11;
-  NotificationPreference subscribed_post = 12;
-  NotificationPreference chat = 13;
+  NotificationPreferencePush chat = 1;
+  NotificationPreferenceFull follow = 2;
+  NotificationPreferenceFull like = 3;
+  NotificationPreferenceFull like_via_repost = 4;
+  NotificationPreferenceFull mention = 5;
+  NotificationPreferenceFull quote = 6;
+  NotificationPreferenceFull reply = 7;
+  NotificationPreferenceFull repost = 8;
+  NotificationPreferenceFull repost_via_repost = 9;
+  NotificationPreferenceNoFilter starterpack_joined = 10;
+  NotificationPreferenceNoFilter subscribed_post = 11;
+  NotificationPreferenceNoFilter unverified = 12;
+  NotificationPreferenceNoFilter verified = 13;
 }
 
 // - list recent notifications for a user

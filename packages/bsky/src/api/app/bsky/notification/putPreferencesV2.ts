@@ -5,7 +5,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
 import { HandlerInput } from '../../../../lexicon/types/app/bsky/notification/putPreferencesV2'
-import { ensureNotificationPreferences } from './util'
+import { ensurePreferences } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.putPreferencesV2({
@@ -56,7 +56,7 @@ const computePreferences = async (
     const res = await ctx.dataplane.getNotificationPreferences({
       actorDid,
     })
-    const currentPreferences = ensureNotificationPreferences(res)
+    const currentPreferences = ensurePreferences(res)
     preferences = { ...currentPreferences, ...input.body }
     exists = true
   } catch (err) {
@@ -65,7 +65,7 @@ const computePreferences = async (
         'cannot get current notification preferences',
       )
     }
-    preferences = ensureNotificationPreferences({
+    preferences = ensurePreferences({
       ...input.body,
     })
   }

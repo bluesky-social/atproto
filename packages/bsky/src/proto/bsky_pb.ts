@@ -8243,9 +8243,9 @@ export class GetNotificationPreferencesRequest extends Message<GetNotificationPr
  */
 export class NotificationChannels extends Message<NotificationChannels> {
   /**
-   * @generated from field: bool in_app = 1;
+   * @generated from field: bool list = 1;
    */
-  inApp = false
+  list = false
 
   /**
    * @generated from field: bool push = 2;
@@ -8260,7 +8260,7 @@ export class NotificationChannels extends Message<NotificationChannels> {
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsky.NotificationChannels'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'in_app', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    { no: 1, name: 'list', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
     { no: 2, name: 'push', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
@@ -8294,9 +8294,64 @@ export class NotificationChannels extends Message<NotificationChannels> {
 }
 
 /**
- * @generated from message bsky.NotificationPreference
+ * @generated from message bsky.NotificationChannelsPush
  */
-export class NotificationPreference extends Message<NotificationPreference> {
+export class NotificationChannelsPush extends Message<NotificationChannelsPush> {
+  /**
+   * @generated from field: bool push = 1;
+   */
+  push = false
+
+  constructor(data?: PartialMessage<NotificationChannelsPush>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.NotificationChannelsPush'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'push', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): NotificationChannelsPush {
+    return new NotificationChannelsPush().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationChannelsPush {
+    return new NotificationChannelsPush().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationChannelsPush {
+    return new NotificationChannelsPush().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | NotificationChannelsPush
+      | PlainMessage<NotificationChannelsPush>
+      | undefined,
+    b:
+      | NotificationChannelsPush
+      | PlainMessage<NotificationChannelsPush>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(NotificationChannelsPush, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.NotificationPreferenceFull
+ */
+export class NotificationPreferenceFull extends Message<NotificationPreferenceFull> {
   /**
    * @generated from field: bsky.NotificationChannels channels = 1;
    */
@@ -8307,13 +8362,13 @@ export class NotificationPreference extends Message<NotificationPreference> {
    */
   filter = ''
 
-  constructor(data?: PartialMessage<NotificationPreference>) {
+  constructor(data?: PartialMessage<NotificationPreferenceFull>) {
     super()
     proto3.util.initPartial(data, this)
   }
 
   static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.NotificationPreference'
+  static readonly typeName = 'bsky.NotificationPreferenceFull'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'channels', kind: 'message', T: NotificationChannels },
     { no: 2, name: 'filter', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
@@ -8322,35 +8377,154 @@ export class NotificationPreference extends Message<NotificationPreference> {
   static fromBinary(
     bytes: Uint8Array,
     options?: Partial<BinaryReadOptions>,
-  ): NotificationPreference {
-    return new NotificationPreference().fromBinary(bytes, options)
+  ): NotificationPreferenceFull {
+    return new NotificationPreferenceFull().fromBinary(bytes, options)
   }
 
   static fromJson(
     jsonValue: JsonValue,
     options?: Partial<JsonReadOptions>,
-  ): NotificationPreference {
-    return new NotificationPreference().fromJson(jsonValue, options)
+  ): NotificationPreferenceFull {
+    return new NotificationPreferenceFull().fromJson(jsonValue, options)
   }
 
   static fromJsonString(
     jsonString: string,
     options?: Partial<JsonReadOptions>,
-  ): NotificationPreference {
-    return new NotificationPreference().fromJsonString(jsonString, options)
+  ): NotificationPreferenceFull {
+    return new NotificationPreferenceFull().fromJsonString(jsonString, options)
   }
 
   static equals(
     a:
-      | NotificationPreference
-      | PlainMessage<NotificationPreference>
+      | NotificationPreferenceFull
+      | PlainMessage<NotificationPreferenceFull>
       | undefined,
     b:
-      | NotificationPreference
-      | PlainMessage<NotificationPreference>
+      | NotificationPreferenceFull
+      | PlainMessage<NotificationPreferenceFull>
       | undefined,
   ): boolean {
-    return proto3.util.equals(NotificationPreference, a, b)
+    return proto3.util.equals(NotificationPreferenceFull, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.NotificationPreferenceNoFilter
+ */
+export class NotificationPreferenceNoFilter extends Message<NotificationPreferenceNoFilter> {
+  /**
+   * @generated from field: bsky.NotificationChannels channels = 1;
+   */
+  channels?: NotificationChannels
+
+  constructor(data?: PartialMessage<NotificationPreferenceNoFilter>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.NotificationPreferenceNoFilter'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'channels', kind: 'message', T: NotificationChannels },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): NotificationPreferenceNoFilter {
+    return new NotificationPreferenceNoFilter().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreferenceNoFilter {
+    return new NotificationPreferenceNoFilter().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreferenceNoFilter {
+    return new NotificationPreferenceNoFilter().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | NotificationPreferenceNoFilter
+      | PlainMessage<NotificationPreferenceNoFilter>
+      | undefined,
+    b:
+      | NotificationPreferenceNoFilter
+      | PlainMessage<NotificationPreferenceNoFilter>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(NotificationPreferenceNoFilter, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.NotificationPreferencePush
+ */
+export class NotificationPreferencePush extends Message<NotificationPreferencePush> {
+  /**
+   * @generated from field: bsky.NotificationChannelsPush channels = 1;
+   */
+  channels?: NotificationChannelsPush
+
+  /**
+   * @generated from field: string filter = 2;
+   */
+  filter = ''
+
+  constructor(data?: PartialMessage<NotificationPreferencePush>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.NotificationPreferencePush'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'channels', kind: 'message', T: NotificationChannelsPush },
+    { no: 2, name: 'filter', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): NotificationPreferencePush {
+    return new NotificationPreferencePush().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreferencePush {
+    return new NotificationPreferencePush().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreferencePush {
+    return new NotificationPreferencePush().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | NotificationPreferencePush
+      | PlainMessage<NotificationPreferencePush>
+      | undefined,
+    b:
+      | NotificationPreferencePush
+      | PlainMessage<NotificationPreferencePush>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(NotificationPreferencePush, a, b)
   }
 }
 
@@ -8359,69 +8533,69 @@ export class NotificationPreference extends Message<NotificationPreference> {
  */
 export class GetNotificationPreferencesResponse extends Message<GetNotificationPreferencesResponse> {
   /**
-   * @generated from field: bsky.NotificationPreference like = 1;
+   * @generated from field: bsky.NotificationPreferencePush chat = 1;
    */
-  like?: NotificationPreference
+  chat?: NotificationPreferencePush
 
   /**
-   * @generated from field: bsky.NotificationPreference repost = 2;
+   * @generated from field: bsky.NotificationPreferenceFull follow = 2;
    */
-  repost?: NotificationPreference
+  follow?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference follow = 3;
+   * @generated from field: bsky.NotificationPreferenceFull like = 3;
    */
-  follow?: NotificationPreference
+  like?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference reply = 4;
+   * @generated from field: bsky.NotificationPreferenceFull like_via_repost = 4;
    */
-  reply?: NotificationPreference
+  likeViaRepost?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference mention = 5;
+   * @generated from field: bsky.NotificationPreferenceFull mention = 5;
    */
-  mention?: NotificationPreference
+  mention?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference quote = 6;
+   * @generated from field: bsky.NotificationPreferenceFull quote = 6;
    */
-  quote?: NotificationPreference
+  quote?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference starterpack_joined = 7;
+   * @generated from field: bsky.NotificationPreferenceFull reply = 7;
    */
-  starterpackJoined?: NotificationPreference
+  reply?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference verified = 8;
+   * @generated from field: bsky.NotificationPreferenceFull repost = 8;
    */
-  verified?: NotificationPreference
+  repost?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference unverified = 9;
+   * @generated from field: bsky.NotificationPreferenceFull repost_via_repost = 9;
    */
-  unverified?: NotificationPreference
+  repostViaRepost?: NotificationPreferenceFull
 
   /**
-   * @generated from field: bsky.NotificationPreference like_via_repost = 10;
+   * @generated from field: bsky.NotificationPreferenceNoFilter starterpack_joined = 10;
    */
-  likeViaRepost?: NotificationPreference
+  starterpackJoined?: NotificationPreferenceNoFilter
 
   /**
-   * @generated from field: bsky.NotificationPreference repost_via_repost = 11;
+   * @generated from field: bsky.NotificationPreferenceNoFilter subscribed_post = 11;
    */
-  repostViaRepost?: NotificationPreference
+  subscribedPost?: NotificationPreferenceNoFilter
 
   /**
-   * @generated from field: bsky.NotificationPreference subscribed_post = 12;
+   * @generated from field: bsky.NotificationPreferenceNoFilter unverified = 12;
    */
-  subscribedPost?: NotificationPreference
+  unverified?: NotificationPreferenceNoFilter
 
   /**
-   * @generated from field: bsky.NotificationPreference chat = 13;
+   * @generated from field: bsky.NotificationPreferenceNoFilter verified = 13;
    */
-  chat?: NotificationPreference
+  verified?: NotificationPreferenceNoFilter
 
   constructor(data?: PartialMessage<GetNotificationPreferencesResponse>) {
     super()
@@ -8431,39 +8605,49 @@ export class GetNotificationPreferencesResponse extends Message<GetNotificationP
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsky.GetNotificationPreferencesResponse'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'like', kind: 'message', T: NotificationPreference },
-    { no: 2, name: 'repost', kind: 'message', T: NotificationPreference },
-    { no: 3, name: 'follow', kind: 'message', T: NotificationPreference },
-    { no: 4, name: 'reply', kind: 'message', T: NotificationPreference },
-    { no: 5, name: 'mention', kind: 'message', T: NotificationPreference },
-    { no: 6, name: 'quote', kind: 'message', T: NotificationPreference },
+    { no: 1, name: 'chat', kind: 'message', T: NotificationPreferencePush },
+    { no: 2, name: 'follow', kind: 'message', T: NotificationPreferenceFull },
+    { no: 3, name: 'like', kind: 'message', T: NotificationPreferenceFull },
     {
-      no: 7,
-      name: 'starterpack_joined',
-      kind: 'message',
-      T: NotificationPreference,
-    },
-    { no: 8, name: 'verified', kind: 'message', T: NotificationPreference },
-    { no: 9, name: 'unverified', kind: 'message', T: NotificationPreference },
-    {
-      no: 10,
+      no: 4,
       name: 'like_via_repost',
       kind: 'message',
-      T: NotificationPreference,
+      T: NotificationPreferenceFull,
+    },
+    { no: 5, name: 'mention', kind: 'message', T: NotificationPreferenceFull },
+    { no: 6, name: 'quote', kind: 'message', T: NotificationPreferenceFull },
+    { no: 7, name: 'reply', kind: 'message', T: NotificationPreferenceFull },
+    { no: 8, name: 'repost', kind: 'message', T: NotificationPreferenceFull },
+    {
+      no: 9,
+      name: 'repost_via_repost',
+      kind: 'message',
+      T: NotificationPreferenceFull,
+    },
+    {
+      no: 10,
+      name: 'starterpack_joined',
+      kind: 'message',
+      T: NotificationPreferenceNoFilter,
     },
     {
       no: 11,
-      name: 'repost_via_repost',
+      name: 'subscribed_post',
       kind: 'message',
-      T: NotificationPreference,
+      T: NotificationPreferenceNoFilter,
     },
     {
       no: 12,
-      name: 'subscribed_post',
+      name: 'unverified',
       kind: 'message',
-      T: NotificationPreference,
+      T: NotificationPreferenceNoFilter,
     },
-    { no: 13, name: 'chat', kind: 'message', T: NotificationPreference },
+    {
+      no: 13,
+      name: 'verified',
+      kind: 'message',
+      T: NotificationPreferenceNoFilter,
+    },
   ])
 
   static fromBinary(

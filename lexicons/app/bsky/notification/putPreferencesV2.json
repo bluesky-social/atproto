@@ -10,57 +10,57 @@
         "schema": {
           "type": "object",
           "properties": {
-            "like": {
+            "chat": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "repost": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preferencePush"
             },
             "follow": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preferenceFull"
             },
-            "reply": {
+            "like": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "mention": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "quote": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "starterpackJoined": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "verified": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "unverified": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preferenceFull"
             },
             "likeViaRepost": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preferenceFull"
+            },
+            "mention": {
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#preferenceFull"
+            },
+            "quote": {
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#preferenceFull"
+            },
+            "reply": {
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#preferenceFull"
+            },
+            "repost": {
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#preferenceFull"
             },
             "repostViaRepost": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preferenceFull"
+            },
+            "starterpackJoined": {
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#preferenceNoFilter"
             },
             "subscribedPost": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preferenceNoFilter"
             },
-            "chat": {
+            "unverified": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preferenceNoFilter"
+            },
+            "verified": {
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#preferenceNoFilter"
             }
           }
         }

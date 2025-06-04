@@ -1,48 +1,84 @@
+import { Un$Typed } from '@atproto/api'
 import {
-  Preference,
+  Channels,
+  ChannelsPush,
+  PreferenceFull,
+  PreferenceNoFilter,
+  PreferencePush,
   Preferences,
 } from '../../../../lexicon/types/app/bsky/notification/defs'
-import { NotificationPreference } from '../../../../proto/bsky_pb'
+import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb'
 
-type OptionalPreference = {
-  channels?: {
-    inApp?: boolean
-    push?: boolean
-  }
-  filter?: NotificationPreference['filter']
-}
+type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>
+    }
+  : T
 
-type OptionalPreferences = {
-  [Property in Extract<keyof Preferences, string>]?: OptionalPreference
-}
+type OptionalPreferenceFull = DeepPartial<PreferenceFull>
+type OptionalPreferenceNoFilter = DeepPartial<PreferenceNoFilter>
+type OptionalPreferencePush = DeepPartial<PreferencePush>
 
-const ensureNotificationPreference = (p?: OptionalPreference): Preference => {
-  const filters: Preference['filter'][] = ['all', 'follows']
-  const defaultChannels = { inApp: false, push: false }
+const filters = ['all', 'follows']
+const defaultFilter = 'all'
+
+const defaultChannels = { list: true, push: true }
+const defaultChannelsPush = { push: true }
+
+const ensureChannels = <T extends Un$Typed<Channels> | Un$Typed<ChannelsPush>>(
+  fallback: T,
+  p?:
+    | OptionalPreferenceFull
+    | OptionalPreferenceNoFilter
+    | OptionalPreferencePush,
+): T => (p?.channels ? { ...fallback, ...p.channels } : fallback)
+
+const ensureFilter = (
+  fallback: (typeof filters)[number],
+  p?: OptionalPreferenceFull | OptionalPreferencePush,
+) =>
+  typeof p?.filter === 'string' && filters.includes(p.filter)
+    ? p.filter
+    : fallback
+
+const ensurePreferenceFull = (p?: OptionalPreferenceFull): PreferenceFull => {
   return {
-    channels: p?.channels
-      ? { ...defaultChannels, ...p.channels }
-      : defaultChannels,
-    filter: p?.filter && filters.includes(p.filter) ? p.filter : 'all',
+    channels: ensureChannels(defaultChannels, p),
+    filter: ensureFilter(defaultFilter, p),
   }
 }
 
-export const ensureNotificationPreferences = (
-  p: OptionalPreferences,
+const ensurePreferenceNoFilter = (
+  p?: OptionalPreferenceNoFilter,
+): PreferenceNoFilter => {
+  return {
+    channels: ensureChannels(defaultChannels, p),
+  }
+}
+
+const ensurePreferencePush = (p?: OptionalPreferencePush): PreferencePush => {
+  return {
+    channels: ensureChannels(defaultChannelsPush, p),
+    filter: ensureFilter(defaultFilter, p),
+  }
+}
+
+export const ensurePreferences = (
+  res: DeepPartial<GetNotificationPreferencesResponse>,
 ): Preferences => {
   return {
-    like: ensureNotificationPreference(p.like),
-    repost: ensureNotificationPreference(p.repost),
-    follow: ensureNotificationPreference(p.follow),
-    reply: ensureNotificationPreference(p.reply),
-    mention: ensureNotificationPreference(p.mention),
-    quote: ensureNotificationPreference(p.quote),
-    starterpackJoined: ensureNotificationPreference(p.starterpackJoined),
-    verified: ensureNotificationPreference(p.verified),
-    unverified: ensureNotificationPreference(p.unverified),
-    likeViaRepost: ensureNotificationPreference(p.likeViaRepost),
-    repostViaRepost: ensureNotificationPreference(p.repostViaRepost),
-    subscribedPost: ensureNotificationPreference(p.subscribedPost),
-    chat: ensureNotificationPreference(p.chat),
+    chat: ensurePreferencePush(res.chat),
+    follow: ensurePreferenceFull(res.follow),
+    like: ensurePreferenceFull(res.like),
+    likeViaRepost: ensurePreferenceFull(res.likeViaRepost),
+    mention: ensurePreferenceFull(res.mention),
+    quote: ensurePreferenceFull(res.quote),
+    reply: ensurePreferenceFull(res.reply),
+    repost: ensurePreferenceFull(res.repost),
+    repostViaRepost: ensurePreferenceFull(res.repostViaRepost),
+    starterpackJoined: ensurePreferenceNoFilter(res.starterpackJoined),
+    subscribedPost: ensurePreferenceNoFilter(res.subscribedPost),
+    unverified: ensurePreferenceNoFilter(res.unverified),
+    verified: ensurePreferenceNoFilter(res.verified),
   }
 }

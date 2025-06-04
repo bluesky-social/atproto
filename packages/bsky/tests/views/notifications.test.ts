@@ -3,7 +3,9 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import {
-  Preference,
+  PreferenceFull,
+  PreferenceNoFilter,
+  PreferencePush,
   Preferences,
 } from '../../src/lexicon/types/app/bsky/notification/defs'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
@@ -921,99 +923,19 @@ describe('notification views', () => {
       await clearPrivateData(db)
     })
 
-    const defaultPref: Preference = {
-      channels: { inApp: false, push: false },
+    const defaultFull: PreferenceFull = {
+      channels: { list: true, push: true },
+      filter: 'all',
+    }
+    const defaultNoFilter: PreferenceNoFilter = {
+      channels: { list: true, push: true },
+    }
+    const defaultPush: PreferencePush = {
+      channels: { push: true },
       filter: 'all',
     }
 
-    it('stores the preferences setting the defaults', async () => {
-      const actorDid = sc.dids.carol
-
-      const putAndAssert = async (
-        input: InputSchema,
-        expected: Preferences,
-      ) => {
-        const { data } = await agent.app.bsky.notification.putPreferencesV2(
-          input,
-          {
-            encoding: 'application/json',
-            headers: await network.serviceHeaders(
-              actorDid,
-              ids.AppBskyNotificationPutPreferencesV2,
-            ),
-          },
-        )
-        await network.processAll()
-
-        expect(data.preferences).toStrictEqual(expected)
-
-        const dbResult = await db.db
-          .selectFrom('private_data')
-          .selectAll()
-          .where('actorDid', '=', actorDid)
-          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
-          .where('key', '=', 'self')
-          .executeTakeFirstOrThrow()
-        expect(dbResult).toStrictEqual({
-          actorDid: actorDid,
-          namespace: 'app.bsky.notification.defs#preferences',
-          key: 'self',
-          indexedAt: expect.any(String),
-          payload: expect.anything(), // Better to compare payload parsed.
-          updatedAt: expect.any(String),
-        })
-        expect(JSON.parse(dbResult.payload)).toStrictEqual(expected)
-      }
-
-      const input0: InputSchema = {
-        chat: {
-          channels: { inApp: false, push: true },
-          filter: 'follows',
-        },
-      }
-      const expected0 = {
-        like: defaultPref,
-        repost: defaultPref,
-        follow: defaultPref,
-        reply: defaultPref,
-        mention: defaultPref,
-        quote: defaultPref,
-        starterpackJoined: defaultPref,
-        verified: defaultPref,
-        unverified: defaultPref,
-        likeViaRepost: defaultPref,
-        repostViaRepost: defaultPref,
-        subscribedPost: defaultPref,
-        chat: { channels: { inApp: false, push: true }, filter: 'follows' },
-      }
-      await putAndAssert(input0, expected0)
-
-      const input1: InputSchema = {
-        mention: {
-          channels: { inApp: true, push: true },
-          filter: 'follows',
-        },
-      }
-      const expected1 = {
-        like: defaultPref,
-        repost: defaultPref,
-        follow: defaultPref,
-        reply: defaultPref,
-        mention: { channels: { inApp: true, push: true }, filter: 'follows' },
-        quote: defaultPref,
-        starterpackJoined: defaultPref,
-        verified: defaultPref,
-        unverified: defaultPref,
-        likeViaRepost: defaultPref,
-        repostViaRepost: defaultPref,
-        subscribedPost: defaultPref,
-        // Kept from the previous call.
-        chat: { channels: { inApp: false, push: true }, filter: 'follows' },
-      }
-      await putAndAssert(input1, expected1)
-    })
-
-    it('gets preferences', async () => {
+    it('gets preferences filling up with the defaults', async () => {
       const actorDid = sc.dids.carol
 
       const getAndAssert = async (
@@ -1029,8 +951,6 @@ describe('notification views', () => {
             ),
           },
         )
-        await network.processAll()
-
         expect(data.preferences).toStrictEqual(expectedApi)
 
         const dbResult = await db.db
@@ -1055,27 +975,27 @@ describe('notification views', () => {
         }
       }
 
-      const expectedApi0 = {
-        like: defaultPref,
-        repost: defaultPref,
-        follow: defaultPref,
-        reply: defaultPref,
-        mention: defaultPref,
-        quote: defaultPref,
-        starterpackJoined: defaultPref,
-        verified: defaultPref,
-        unverified: defaultPref,
-        likeViaRepost: defaultPref,
-        repostViaRepost: defaultPref,
-        subscribedPost: defaultPref,
-        chat: defaultPref,
+      const expectedApi0: Preferences = {
+        chat: defaultPush,
+        follow: defaultFull,
+        like: defaultFull,
+        likeViaRepost: defaultFull,
+        mention: defaultFull,
+        quote: defaultFull,
+        reply: defaultFull,
+        repost: defaultFull,
+        repostViaRepost: defaultFull,
+        starterpackJoined: defaultNoFilter,
+        subscribedPost: defaultNoFilter,
+        unverified: defaultNoFilter,
+        verified: defaultNoFilter,
       }
       // The user has no preferences set yet, so nothing stored.
       const expectedDb0 = undefined
       await getAndAssert(expectedApi0, expectedDb0)
 
       await agent.app.bsky.notification.putPreferencesV2(
-        { verified: { channels: { inApp: true, push: true }, filter: 'all' } },
+        { verified: { channels: { list: false, push: false } } },
         {
           encoding: 'application/json',
           headers: await network.serviceHeaders(
@@ -1086,24 +1006,110 @@ describe('notification views', () => {
       )
       await network.processAll()
 
-      const expectedApi1 = {
-        like: defaultPref,
-        repost: defaultPref,
-        follow: defaultPref,
-        reply: defaultPref,
-        mention: defaultPref,
-        quote: defaultPref,
-        starterpackJoined: defaultPref,
-        verified: { channels: { inApp: true, push: true }, filter: 'all' },
-        unverified: defaultPref,
-        likeViaRepost: defaultPref,
-        repostViaRepost: defaultPref,
-        subscribedPost: defaultPref,
-        chat: defaultPref,
+      const expectedApi1: Preferences = {
+        chat: defaultPush,
+        follow: defaultFull,
+        like: defaultFull,
+        likeViaRepost: defaultFull,
+        mention: defaultFull,
+        quote: defaultFull,
+        reply: defaultFull,
+        repost: defaultFull,
+        repostViaRepost: defaultFull,
+        starterpackJoined: defaultNoFilter,
+        subscribedPost: defaultNoFilter,
+        unverified: defaultNoFilter,
+        verified: { channels: { list: false, push: false } },
       }
       // Stored all the defaults.
       const expectedDb1 = expectedApi1
       await getAndAssert(expectedApi1, expectedDb1)
+    })
+
+    it('stores the preferences setting the defaults', async () => {
+      const actorDid = sc.dids.carol
+
+      const putAndAssert = async (
+        input: InputSchema,
+        expected: Preferences,
+      ) => {
+        const { data } = await agent.app.bsky.notification.putPreferencesV2(
+          input,
+          {
+            encoding: 'application/json',
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutPreferencesV2,
+            ),
+          },
+        )
+        await network.processAll()
+        expect(data.preferences).toStrictEqual(expected)
+
+        const dbResult = await db.db
+          .selectFrom('private_data')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('key', '=', 'self')
+          .executeTakeFirstOrThrow()
+        expect(dbResult).toStrictEqual({
+          actorDid: actorDid,
+          namespace: 'app.bsky.notification.defs#preferences',
+          key: 'self',
+          indexedAt: expect.any(String),
+          payload: expect.anything(), // Better to compare payload parsed.
+          updatedAt: expect.any(String),
+        })
+        expect(JSON.parse(dbResult.payload)).toStrictEqual(expected)
+      }
+
+      const input0 = {
+        chat: {
+          channels: { push: false },
+          filter: 'follows',
+        },
+      }
+      const expected0: Preferences = {
+        chat: input0.chat,
+        follow: defaultFull,
+        like: defaultFull,
+        likeViaRepost: defaultFull,
+        mention: defaultFull,
+        quote: defaultFull,
+        reply: defaultFull,
+        repost: defaultFull,
+        repostViaRepost: defaultFull,
+        starterpackJoined: defaultNoFilter,
+        subscribedPost: defaultNoFilter,
+        unverified: defaultNoFilter,
+        verified: defaultNoFilter,
+      }
+      await putAndAssert(input0, expected0)
+
+      const input1 = {
+        mention: {
+          channels: { list: false, push: false },
+          filter: 'follows',
+        },
+      }
+      const expected1: Preferences = {
+        // Kept from the previous call.
+        chat: input0.chat,
+        follow: defaultFull,
+        like: defaultFull,
+        likeViaRepost: defaultFull,
+        mention: input1.mention,
+        quote: defaultFull,
+        reply: defaultFull,
+        repost: defaultFull,
+        repostViaRepost: defaultFull,
+        starterpackJoined: defaultNoFilter,
+        subscribedPost: defaultNoFilter,
+        unverified: defaultNoFilter,
+        verified: defaultNoFilter,
+      }
+      await putAndAssert(input1, expected1)
     })
   })
 })

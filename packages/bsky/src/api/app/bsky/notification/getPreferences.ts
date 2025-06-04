@@ -4,7 +4,7 @@ import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
-import { ensureNotificationPreferences } from './util'
+import { ensurePreferences } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getPreferences({
@@ -30,7 +30,7 @@ const computePreferences = async (
     const res = await ctx.dataplane.getNotificationPreferences({
       actorDid,
     })
-    return ensureNotificationPreferences(res)
+    return ensurePreferences(res)
   } catch (err) {
     if (err instanceof ConnectError && err.code !== Code.NotFound) {
       throw new UpstreamFailureError(
@@ -38,5 +38,5 @@ const computePreferences = async (
       )
     }
   }
-  return ensureNotificationPreferences({})
+  return ensurePreferences({})
 }

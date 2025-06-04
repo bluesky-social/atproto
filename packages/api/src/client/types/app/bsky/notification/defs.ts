@@ -30,7 +30,7 @@ export function validateRecordDeleted<V>(v: V) {
 
 export interface Channels {
   $type?: 'app.bsky.notification.defs#channels'
-  inApp: boolean
+  list: boolean
   push: boolean
 }
 
@@ -44,37 +44,83 @@ export function validateChannels<V>(v: V) {
   return validate<Channels & V>(v, id, hashChannels)
 }
 
-export interface Preference {
-  $type?: 'app.bsky.notification.defs#preference'
+export interface ChannelsPush {
+  $type?: 'app.bsky.notification.defs#channelsPush'
+  push: boolean
+}
+
+const hashChannelsPush = 'channelsPush'
+
+export function isChannelsPush<V>(v: V) {
+  return is$typed(v, id, hashChannelsPush)
+}
+
+export function validateChannelsPush<V>(v: V) {
+  return validate<ChannelsPush & V>(v, id, hashChannelsPush)
+}
+
+export interface PreferenceFull {
+  $type?: 'app.bsky.notification.defs#preferenceFull'
   channels: Channels
   filter: 'all' | 'follows' | (string & {})
 }
 
-const hashPreference = 'preference'
+const hashPreferenceFull = 'preferenceFull'
 
-export function isPreference<V>(v: V) {
-  return is$typed(v, id, hashPreference)
+export function isPreferenceFull<V>(v: V) {
+  return is$typed(v, id, hashPreferenceFull)
 }
 
-export function validatePreference<V>(v: V) {
-  return validate<Preference & V>(v, id, hashPreference)
+export function validatePreferenceFull<V>(v: V) {
+  return validate<PreferenceFull & V>(v, id, hashPreferenceFull)
+}
+
+export interface PreferenceNoFilter {
+  $type?: 'app.bsky.notification.defs#preferenceNoFilter'
+  channels: Channels
+}
+
+const hashPreferenceNoFilter = 'preferenceNoFilter'
+
+export function isPreferenceNoFilter<V>(v: V) {
+  return is$typed(v, id, hashPreferenceNoFilter)
+}
+
+export function validatePreferenceNoFilter<V>(v: V) {
+  return validate<PreferenceNoFilter & V>(v, id, hashPreferenceNoFilter)
+}
+
+export interface PreferencePush {
+  $type?: 'app.bsky.notification.defs#preferencePush'
+  channels: ChannelsPush
+  filter: 'all' | 'follows' | (string & {})
+}
+
+const hashPreferencePush = 'preferencePush'
+
+export function isPreferencePush<V>(v: V) {
+  return is$typed(v, id, hashPreferencePush)
+}
+
+export function validatePreferencePush<V>(v: V) {
+  return validate<PreferencePush & V>(v, id, hashPreferencePush)
 }
 
 export interface Preferences {
   $type?: 'app.bsky.notification.defs#preferences'
-  like: Preference
-  repost: Preference
-  follow: Preference
-  reply: Preference
-  mention: Preference
-  quote: Preference
-  starterpackJoined: Preference
-  verified: Preference
-  unverified: Preference
-  likeViaRepost: Preference
-  repostViaRepost: Preference
-  subscribedPost: Preference
-  chat: Preference
+  chat: PreferencePush
+  follow: PreferenceFull
+  like: PreferenceFull
+  likeViaRepost: PreferenceFull
+  mention: PreferenceFull
+  quote: PreferenceFull
+  reply: PreferenceFull
+  repost: PreferenceFull
+  repostViaRepost: PreferenceFull
+  starterpackJoined: PreferenceNoFilter
+  subscribedPost: PreferenceNoFilter
+  unverified: PreferenceNoFilter
+  verified: PreferenceNoFilter
 }
 
 const hashPreferences = 'preferences'

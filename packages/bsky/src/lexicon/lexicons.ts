@@ -9734,19 +9734,29 @@ export const schemaDict = {
       },
       channels: {
         type: 'object',
-        required: ['inApp', 'push'],
+        required: ['list', 'push'],
         properties: {
-          inApp: {
+          list: {
             type: 'boolean',
-            default: false,
+            default: true,
           },
           push: {
             type: 'boolean',
-            default: false,
+            default: true,
           },
         },
       },
-      preference: {
+      channelsPush: {
+        type: 'object',
+        required: ['push'],
+        properties: {
+          push: {
+            type: 'boolean',
+            default: true,
+          },
+        },
+      },
+      preferenceFull: {
         type: 'object',
         required: ['channels', 'filter'],
         properties: {
@@ -9757,78 +9767,104 @@ export const schemaDict = {
           filter: {
             type: 'string',
             knownValues: ['all', 'follows'],
+            default: 'all',
+          },
+        },
+      },
+      preferenceNoFilter: {
+        type: 'object',
+        required: ['channels'],
+        properties: {
+          channels: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#channels',
+          },
+        },
+      },
+      preferencePush: {
+        type: 'object',
+        required: ['channels', 'filter'],
+        properties: {
+          channels: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#channelsPush',
+          },
+          filter: {
+            type: 'string',
+            knownValues: ['all', 'follows'],
+            default: 'all',
           },
         },
       },
       preferences: {
         type: 'object',
         required: [
-          'like',
-          'repost',
+          'chat',
           'follow',
-          'reply',
+          'like',
+          'likeViaRepost',
           'mention',
           'quote',
-          'starterpackJoined',
-          'verified',
-          'unverified',
-          'likeViaRepost',
+          'reply',
+          'repost',
           'repostViaRepost',
+          'starterpackJoined',
           'subscribedPost',
-          'chat',
+          'unverified',
+          'verified',
         ],
         properties: {
-          like: {
+          chat: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
-          },
-          repost: {
-            type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
+            ref: 'lex:app.bsky.notification.defs#preferencePush',
           },
           follow: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
           },
-          reply: {
+          like: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
-          },
-          mention: {
-            type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
-          },
-          quote: {
-            type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
-          },
-          starterpackJoined: {
-            type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
-          },
-          verified: {
-            type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
-          },
-          unverified: {
-            type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
           },
           likeViaRepost: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
+          },
+          mention: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
+          },
+          quote: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
+          },
+          reply: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
+          },
+          repost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
           },
           repostViaRepost: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
+            ref: 'lex:app.bsky.notification.defs#preferenceFull',
+          },
+          starterpackJoined: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
           },
           subscribedPost: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
+            ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
           },
-          chat: {
+          unverified: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.defs#preference',
+            ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
+          },
+          verified: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
           },
         },
       },
@@ -10065,57 +10101,57 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              like: {
+              chat: {
                 type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
-              },
-              repost: {
-                type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
+                ref: 'lex:app.bsky.notification.defs#preferencePush',
               },
               follow: {
                 type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
               },
-              reply: {
+              like: {
                 type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
-              },
-              mention: {
-                type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
-              },
-              quote: {
-                type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
-              },
-              starterpackJoined: {
-                type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
-              },
-              verified: {
-                type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
-              },
-              unverified: {
-                type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
               },
               likeViaRepost: {
                 type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
+              },
+              mention: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
+              },
+              quote: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
+              },
+              reply: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
+              },
+              repost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
               },
               repostViaRepost: {
                 type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
+                ref: 'lex:app.bsky.notification.defs#preferenceFull',
+              },
+              starterpackJoined: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
               },
               subscribedPost: {
                 type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
+                ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
               },
-              chat: {
+              unverified: {
                 type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#preference',
+                ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
+              },
+              verified: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferenceNoFilter',
               },
             },
           },
