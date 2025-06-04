@@ -317,9 +317,21 @@ function entryHasDefinedValue(
 }
 
 function stringifyEntryValue(entry: [string, unknown]): [string, string] {
-  const value: unknown = entry[1]
-  if (typeof value === 'string') return entry as [string, string]
+  const name = entry[0]
+  const value = entry[1]
 
-  const name: string = entry[0]
-  return [name, JSON.stringify(value)]
+  switch (typeof value) {
+    case 'string':
+      return entry as [string, string]
+    case 'number':
+    case 'boolean':
+      return [name, String(value)]
+    default: {
+      const enc = JSON.stringify(value)
+      if (enc === undefined) {
+        throw new Error(`Unsupported value type for ${name}: ${String(value)}`)
+      }
+      return [name, enc]
+    }
+  }
 }
