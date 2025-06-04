@@ -10,55 +10,55 @@
         "schema": {
           "type": "object",
           "properties": {
-            "likeNotification": {
+            "like": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "repostNotification": {
+            "repost": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "followNotification": {
+            "follow": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "replyNotification": {
+            "reply": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "mentionNotification": {
+            "mention": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "quoteNotification": {
+            "quote": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "starterpackJoinedNotification": {
+            "starterpackJoined": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "verifiedNotification": {
+            "verified": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "unverifiedNotification": {
+            "unverified": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "likeViaRepostNotification": {
+            "likeViaRepost": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "repostViaRepostNotification": {
+            "repostViaRepost": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "subscribedPostNotification": {
+            "subscribedPost": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             },
-            "chatNotification": {
+            "chat": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#preference"
             }

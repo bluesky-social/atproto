@@ -5,6 +5,8 @@ export const createVaultClient = (bsyncClient: BsyncClient): VaultClient => {
   return new VaultClient(bsyncClient)
 }
 
+// VaultClient is an abstraction over the BsyncClient, that uses the bsync `PutOperation` RPC
+// to store private data, which can be indexed by the dataplane and queried by the appview.
 export class VaultClient {
   constructor(private readonly bsyncClient: BsyncClient) {}
 

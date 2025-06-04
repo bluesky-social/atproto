@@ -1,56 +1,74 @@
+import { Code, ConnectError } from '@connectrpc/connect'
+import { Un$Typed } from '@atproto/api'
+import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { Preference } from '../../../../lexicon/types/app/bsky/notification/defs'
-import { Method } from '../../../../proto/bsync_pb'
+import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
+import { HandlerInput } from '../../../../lexicon/types/app/bsky/notification/putPreferencesV2'
+import { ensureNotificationPreferences } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.putPreferencesV2({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
+      const { preferences, exists } = await computePreferences(
+        ctx,
+        actorDid,
+        input,
+      )
+
+      // @TODO: lexicon validation?
       const namespace = 'app.bsky.notification.defs#preferences'
       const key = 'self'
-      const entry = { ...input.body }
 
-      // await ctx.vaultClient.create({})
-
-      await ctx.bsyncClient.putOperation({
+      const vaultInput = {
         actorDid,
         namespace,
         key,
-        payload: Buffer.from(JSON.stringify(entry)),
-        method: Method.CREATE,
-      })
+        payload: preferences,
+      }
+
+      if (exists) {
+        await ctx.vaultClient.update(vaultInput)
+      } else {
+        await ctx.vaultClient.create(vaultInput)
+      }
 
       return {
         encoding: 'application/json',
         body: {
-          preferences: {
-            likeNotification: emptyPreference(),
-            repostNotification: emptyPreference(),
-            followNotification: emptyPreference(),
-            replyNotification: emptyPreference(),
-            mentionNotification: emptyPreference(),
-            quoteNotification: emptyPreference(),
-            starterpackJoinedNotification: emptyPreference(),
-            verifiedNotification: emptyPreference(),
-            unverifiedNotification: emptyPreference(),
-            likeViaRepostNotification: emptyPreference(),
-            repostViaRepostNotification: emptyPreference(),
-            subscribedPostNotification: emptyPreference(),
-            chatNotification: emptyPreference(),
-            ...entry,
-          },
+          preferences,
         },
       }
     },
   })
 }
 
-const emptyPreference = (): Preference => ({
-  channels: {
-    inApp: false,
-    push: false,
-  },
-  filter: 'all',
-})
+const computePreferences = async (
+  ctx: AppContext,
+  actorDid: string,
+  input: HandlerInput,
+): Promise<{ preferences: Un$Typed<Preferences>; exists: boolean }> => {
+  let preferences: Preferences
+  let exists = false
+  try {
+    const res = await ctx.dataplane.getNotificationPreferences({
+      actorDid,
+    })
+    const currentPreferences = ensureNotificationPreferences(res)
+    preferences = { ...currentPreferences, ...input.body }
+    exists = true
+  } catch (err) {
+    if (err instanceof ConnectError && err.code !== Code.NotFound) {
+      throw new UpstreamFailureError(
+        'cannot get current notification preferences',
+      )
+    }
+    preferences = ensureNotificationPreferences({
+      ...input.body,
+    })
+  }
+  delete preferences.$type
+  return { preferences, exists }
+}

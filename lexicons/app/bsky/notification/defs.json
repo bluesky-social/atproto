@@ -10,8 +10,8 @@
       "type": "object",
       "required": ["inApp", "push"],
       "properties": {
-        "inApp": { "type": "boolean", "default": true },
-        "push": { "type": "boolean", "default": true }
+        "inApp": { "type": "boolean", "default": false },
+        "push": { "type": "boolean", "default": false }
       }
     },
     "preference": {
@@ -24,77 +24,78 @@
         },
         "filter": {
           "type": "string",
-          "knownValues": ["all", "follows"]
+          "knownValues": ["all", "follows"],
+          "default": "all"
         }
       }
     },
     "preferences": {
       "type": "object",
       "required": [
-        "likeNotification",
-        "repostNotification",
-        "followNotification",
-        "replyNotification",
-        "mentionNotification",
-        "quoteNotification",
-        "starterpackJoinedNotification",
-        "verifiedNotification",
-        "unverifiedNotification",
-        "likeViaRepostNotification",
-        "repostViaRepostNotification",
-        "subscribedPostNotification",
-        "chatNotification"
+        "like",
+        "repost",
+        "follow",
+        "reply",
+        "mention",
+        "quote",
+        "starterpackJoined",
+        "verified",
+        "unverified",
+        "likeViaRepost",
+        "repostViaRepost",
+        "subscribedPost",
+        "chat"
       ],
       "properties": {
-        "likeNotification": {
+        "like": {
           "type": "ref",
           "ref": "#preference"
         },
-        "repostNotification": {
+        "repost": {
           "type": "ref",
           "ref": "#preference"
         },
-        "followNotification": {
+        "follow": {
           "type": "ref",
           "ref": "#preference"
         },
-        "replyNotification": {
+        "reply": {
           "type": "ref",
           "ref": "#preference"
         },
-        "mentionNotification": {
+        "mention": {
           "type": "ref",
           "ref": "#preference"
         },
-        "quoteNotification": {
+        "quote": {
           "type": "ref",
           "ref": "#preference"
         },
-        "starterpackJoinedNotification": {
+        "starterpackJoined": {
           "type": "ref",
           "ref": "#preference"
         },
-        "verifiedNotification": {
+        "verified": {
           "type": "ref",
           "ref": "#preference"
         },
-        "unverifiedNotification": {
+        "unverified": {
           "type": "ref",
           "ref": "#preference"
         },
-        "likeViaRepostNotification": {
+        "likeViaRepost": {
           "type": "ref",
           "ref": "#preference"
         },
-        "repostViaRepostNotification": {
+        "repostViaRepost": {
           "type": "ref",
           "ref": "#preference"
         },
-        "subscribedPostNotification": {
+        "subscribedPost": {
           "type": "ref",
           "ref": "#preference"
         },
-        "chatNotification": {
+        "chat": {
           "type": "ref",
           "ref": "#preference"
         }

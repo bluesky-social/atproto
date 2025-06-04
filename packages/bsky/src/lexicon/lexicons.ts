@@ -9738,11 +9738,11 @@ export const schemaDict = {
         properties: {
           inApp: {
             type: 'boolean',
-            default: true,
+            default: false,
           },
           push: {
             type: 'boolean',
-            default: true,
+            default: false,
           },
         },
       },
@@ -9763,70 +9763,70 @@ export const schemaDict = {
       preferences: {
         type: 'object',
         required: [
-          'likeNotification',
-          'repostNotification',
-          'followNotification',
-          'replyNotification',
-          'mentionNotification',
-          'quoteNotification',
-          'starterpackJoinedNotification',
-          'verifiedNotification',
-          'unverifiedNotification',
-          'likeViaRepostNotification',
-          'repostViaRepostNotification',
-          'subscribedPostNotification',
-          'chatNotification',
+          'like',
+          'repost',
+          'follow',
+          'reply',
+          'mention',
+          'quote',
+          'starterpackJoined',
+          'verified',
+          'unverified',
+          'likeViaRepost',
+          'repostViaRepost',
+          'subscribedPost',
+          'chat',
         ],
         properties: {
-          likeNotification: {
+          like: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          repostNotification: {
+          repost: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          followNotification: {
+          follow: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          replyNotification: {
+          reply: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          mentionNotification: {
+          mention: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          quoteNotification: {
+          quote: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          starterpackJoinedNotification: {
+          starterpackJoined: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          verifiedNotification: {
+          verified: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          unverifiedNotification: {
+          unverified: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          likeViaRepostNotification: {
+          likeViaRepost: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          repostViaRepostNotification: {
+          repostViaRepost: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          subscribedPostNotification: {
+          subscribedPost: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
-          chatNotification: {
+          chat: {
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#preference',
           },
@@ -10065,55 +10065,55 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              likeNotification: {
+              like: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              repostNotification: {
+              repost: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              followNotification: {
+              follow: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              replyNotification: {
+              reply: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              mentionNotification: {
+              mention: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              quoteNotification: {
+              quote: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              starterpackJoinedNotification: {
+              starterpackJoined: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              verifiedNotification: {
+              verified: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              unverifiedNotification: {
+              unverified: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              likeViaRepostNotification: {
+              likeViaRepost: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              repostViaRepostNotification: {
+              repostViaRepost: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              subscribedPostNotification: {
+              subscribedPost: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },
-              chatNotification: {
+              chat: {
                 type: 'ref',
                 ref: 'lex:app.bsky.notification.defs#preference',
               },

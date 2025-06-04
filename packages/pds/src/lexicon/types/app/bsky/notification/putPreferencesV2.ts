@@ -20,19 +20,19 @@ const id = 'app.bsky.notification.putPreferencesV2'
 export interface QueryParams {}
 
 export interface InputSchema {
-  likeNotification?: AppBskyNotificationDefs.Preference
-  repostNotification?: AppBskyNotificationDefs.Preference
-  followNotification?: AppBskyNotificationDefs.Preference
-  replyNotification?: AppBskyNotificationDefs.Preference
-  mentionNotification?: AppBskyNotificationDefs.Preference
-  quoteNotification?: AppBskyNotificationDefs.Preference
-  starterpackJoinedNotification?: AppBskyNotificationDefs.Preference
-  verifiedNotification?: AppBskyNotificationDefs.Preference
-  unverifiedNotification?: AppBskyNotificationDefs.Preference
-  likeViaRepostNotification?: AppBskyNotificationDefs.Preference
-  repostViaRepostNotification?: AppBskyNotificationDefs.Preference
-  subscribedPostNotification?: AppBskyNotificationDefs.Preference
-  chatNotification?: AppBskyNotificationDefs.Preference
+  like?: AppBskyNotificationDefs.Preference
+  repost?: AppBskyNotificationDefs.Preference
+  follow?: AppBskyNotificationDefs.Preference
+  reply?: AppBskyNotificationDefs.Preference
+  mention?: AppBskyNotificationDefs.Preference
+  quote?: AppBskyNotificationDefs.Preference
+  starterpackJoined?: AppBskyNotificationDefs.Preference
+  verified?: AppBskyNotificationDefs.Preference
+  unverified?: AppBskyNotificationDefs.Preference
+  likeViaRepost?: AppBskyNotificationDefs.Preference
+  repostViaRepost?: AppBskyNotificationDefs.Preference
+  subscribedPost?: AppBskyNotificationDefs.Preference
+  chat?: AppBskyNotificationDefs.Preference
 }
 
 export interface OutputSchema {

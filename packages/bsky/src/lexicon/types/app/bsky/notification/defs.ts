@@ -62,19 +62,19 @@ export function validatePreference<V>(v: V) {
 
 export interface Preferences {
   $type?: 'app.bsky.notification.defs#preferences'
-  likeNotification: Preference
-  repostNotification: Preference
-  followNotification: Preference
-  replyNotification: Preference
-  mentionNotification: Preference
-  quoteNotification: Preference
-  starterpackJoinedNotification: Preference
-  verifiedNotification: Preference
-  unverifiedNotification: Preference
-  likeViaRepostNotification: Preference
-  repostViaRepostNotification: Preference
-  subscribedPostNotification: Preference
-  chatNotification: Preference
+  like: Preference
+  repost: Preference
+  follow: Preference
+  reply: Preference
+  mention: Preference
+  quote: Preference
+  starterpackJoined: Preference
+  verified: Preference
+  unverified: Preference
+  likeViaRepost: Preference
+  repostViaRepost: Preference
+  subscribedPost: Preference
+  chat: Preference
 }
 
 const hashPreferences = 'preferences'
