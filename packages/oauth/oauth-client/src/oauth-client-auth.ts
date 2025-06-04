@@ -19,7 +19,7 @@ export function negotiateClientAuthMethod(
   clientMetadata: ClientMetadata,
   keyset?: Keyset,
 ): ClientAuthMethod {
-  const method = clientMetadata['token_endpoint_auth_method']
+  const method = clientMetadata.token_endpoint_auth_method
 
   // @NOTE ATproto spec requires that AS support both "none" and
   // "private_key_jwt", and that clients use one of the other. The following
