@@ -122,7 +122,7 @@ export class TokenManager {
       throw new InvalidDpopKeyBindingError()
     }
 
-    if ('jkt' in clientAuth) {
+    if (clientAuth.method === 'private_key_jwt') {
       // Clients **must not** use their private key to sign DPoP proofs.
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
         throw new InvalidRequestError(
@@ -383,18 +383,12 @@ export class TokenManager {
         {
           updatedAt: now,
           expiresAt,
-          // When clients rotate their public keys, we store the key that was
-          // used by the client to authenticate itself while requesting new
-          // tokens. The validateAccess() method will ensure that the client
-          // still advertises the key that was used to issue the previous
-          // refresh token. If a client stops advertising a key, all tokens
-          // bound to that key will no longer be be refreshable. This allows
-          // clients to proactively invalidate tokens when a key is compromised.
-          // Note that the original DPoP key cannot be rotated. This protects
-          // users in case the ownership of the client id changes. In the latter
-          // case, a malicious actor could still advertises the public keys of
-          // the previous owner, but the new owner would not be able to present
-          // a valid DPoP proof.
+          // @NOTE Normally, the clientAuth not change over time. There are two
+          // exceptions:
+          // - Upgrade from a legacy representation of client authentication to
+          //   a modern one.
+          // - Allow clients to become "confidential" if they were previously
+          //   "public
           clientAuth,
         },
       )

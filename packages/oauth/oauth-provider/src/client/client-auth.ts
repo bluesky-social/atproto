@@ -3,9 +3,7 @@ import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from '@atproto/oauth-types'
 export type ClientAuth =
   | { method: 'none' }
   | {
-      method:
-        | typeof CLIENT_ASSERTION_TYPE_JWT_BEARER // LEGACY
-        | 'private_key_jwt'
+      method: 'private_key_jwt'
 
       /**
        * Algorithm used for client authentication.
@@ -34,3 +32,16 @@ export type ClientAuth =
        */
       jkt: string
     }
+
+/**
+ * @note In its previous version, the code was storing the
+ * "client_assertion_type" instead of the authentication method, which was
+ * confusing and prevented proper comparison with the client's
+ * "token_endpoint_auth_method" metadata.
+ */
+export type ClientAuthLegacy = {
+  method: typeof CLIENT_ASSERTION_TYPE_JWT_BEARER
+  alg: string
+  kid: string
+  jkt: string
+}

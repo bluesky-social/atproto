@@ -30,7 +30,6 @@ import {
   isRequestDataAuthorized,
 } from './request-data.js'
 import { generateRequestId } from './request-id.js'
-import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
 import {
   RequestUri,
@@ -312,11 +311,7 @@ export class RequestManager {
     return parameters
   }
 
-  async get(
-    uri: RequestUri,
-    deviceId: DeviceId,
-    clientId?: ClientId,
-  ): Promise<RequestInfo> {
+  async get(uri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
@@ -367,12 +362,10 @@ export class RequestManager {
     }
 
     return {
-      id,
       uri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
       clientId: data.clientId,
-      clientAuth: data.clientAuth,
     }
   }
 
@@ -475,14 +468,6 @@ export class RequestManager {
         // place *is* authenticated (`clientAuth`), we allow "upgrading" the
         // authentication method (the token created will be bound to the current
         // clientAuth).
-      } else if (data.clientAuth.method === 'none') {
-        // LEGACY before being represented as "null", unauthenticated
-        // authorization request creation were represented as "none". This is a
-        // legacy case that should be removed in the (very near) future.
-        //
-        // @TODO remove this whole "else if" check & block after the current
-        // code was deployed for at least 1 day (to allow for the changes to
-        // propagate).
       } else {
         // Otherwise, the authentication method currently used must match the
         // one that was used to initiate the session.

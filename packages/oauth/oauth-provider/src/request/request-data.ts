@@ -1,5 +1,5 @@
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { ClientAuth } from '../client/client-auth.js'
+import { ClientAuth, ClientAuthLegacy } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { NonNullableKeys } from '../lib/util/type.js'
@@ -8,7 +8,7 @@ import { Code } from './code.js'
 
 export type RequestData = {
   clientId: ClientId
-  clientAuth: ClientAuth | null
+  clientAuth: null | ClientAuth | ClientAuthLegacy
   parameters: Readonly<OAuthAuthorizationRequestParameters>
   expiresAt: Date
   deviceId: DeviceId | null
