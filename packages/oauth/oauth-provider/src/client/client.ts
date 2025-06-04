@@ -163,7 +163,7 @@ export class Client {
     // for replay protection
     nonce?: string
   }> {
-    const method = this.metadata[`token_endpoint_auth_method`]
+    const method = this.metadata.token_endpoint_auth_method
 
     if (method === 'none') {
       const clientAuth: ClientAuth = { method: 'none' }
@@ -171,13 +171,9 @@ export class Client {
     }
 
     if (method === 'private_key_jwt') {
-      if (!('client_assertion_type' in input) || !input.client_assertion_type) {
+      if (!('client_assertion_type' in input)) {
         throw new InvalidRequestError(
           `client_assertion_type required for "${method}"`,
-        )
-      } else if (!input.client_assertion) {
-        throw new InvalidRequestError(
-          `client_assertion required for "${method}"`,
         )
       }
 
