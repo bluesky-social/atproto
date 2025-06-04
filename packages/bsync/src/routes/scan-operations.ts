@@ -55,9 +55,9 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     return new ScanOperationsResponse({
       operations: ops.map((op) => ({
         id: op.id.toString(),
-        collection: op.collection,
         actorDid: op.actorDid,
-        rkey: op.rkey,
+        namespace: op.namespace,
+        key: op.key,
         method: op.method,
         payload: op.payload,
       })),

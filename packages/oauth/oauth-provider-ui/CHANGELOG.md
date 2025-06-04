@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.1.7
+
+### Patch Changes
+
+- [#3916](https://github.com/bluesky-social/atproto/pull/3916) [`71b9dcda9`](https://github.com/bluesky-social/atproto/commit/71b9dcda9611ab3662ccb2c4e175579396f16b3a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Show sign-in screen instead of welcome screen when user already signed-in
+
 ## 0.1.6
 
 ### Patch Changes
