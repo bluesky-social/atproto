@@ -21,7 +21,6 @@ import {
 } from '@atproto/xrpc-server'
 import { AccountManager } from './account-manager/account-manager'
 import { softDeleted } from './db'
-import { oauthLogger } from './logger'
 
 type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
 
