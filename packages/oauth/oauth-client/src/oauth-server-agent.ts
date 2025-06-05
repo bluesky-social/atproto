@@ -322,7 +322,7 @@ function stringifyEntryValue(entry: [string, unknown]): [string, string] {
 
   switch (typeof value) {
     case 'string':
-      return entry as [string, string]
+      return [name, value]
     case 'number':
     case 'boolean':
       return [name, String(value)]
