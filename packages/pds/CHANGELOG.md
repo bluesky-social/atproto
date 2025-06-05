@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.4.144
+
+### Patch Changes
+
+- [#3879](https://github.com/bluesky-social/atproto/pull/3879) [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Log clients using invalid "htu" claim in DPoP proof
+
+- Updated dependencies [[`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05), [`9214bd017`](https://github.com/bluesky-social/atproto/commit/9214bd01705381aed6b5bde2900d6dc5486b6e9f), [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05)]:
+  - @atproto/oauth-provider@0.8.0
+  - @atproto/xrpc-server@0.7.19
+  - @atproto-labs/xrpc-utils@0.0.15
+
 ## 0.4.143
 
 ### Patch Changes

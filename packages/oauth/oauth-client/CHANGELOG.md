@@ -1,5 +1,15 @@
 # @atproto/oauth-client
 
+## 0.3.20
+
+### Patch Changes
+
+- [#3919](https://github.com/bluesky-social/atproto/pull/3919) [`a3b24ca77`](https://github.com/bluesky-social/atproto/commit/a3b24ca77ca24ac19b17cf9ee2a5ca9612ccf96c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `application/x-www-form-urlencoded` content instead of JSON for OAuth requests
+
+- Updated dependencies [[`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05), [`a3b24ca77`](https://github.com/bluesky-social/atproto/commit/a3b24ca77ca24ac19b17cf9ee2a5ca9612ccf96c)]:
+  - @atproto/jwk@0.2.0
+  - @atproto/oauth-types@0.2.8
+
 ## 0.3.19
 
 ### Patch Changes
