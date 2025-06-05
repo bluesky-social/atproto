@@ -1,11 +1,11 @@
 import { TestNetwork } from '@atproto/dev-env'
-import { VaultClient } from '../../dist/vault'
+import { StashClient } from '../../src/stash'
 
 type Database = TestNetwork['bsky']['db']
 
 describe('private data', () => {
   let network: TestNetwork
-  let vaultClient: VaultClient
+  let stashClient: StashClient
   let db: Database
 
   const actorDid = 'did:plc:example'
@@ -17,7 +17,7 @@ describe('private data', () => {
       dbPostgresSchema: 'bsky_private_data',
     })
     db = network.bsky.db
-    vaultClient = network.bsky.ctx.vaultClient
+    stashClient = network.bsky.ctx.stashClient
   })
 
   afterEach(async () => {
@@ -30,7 +30,7 @@ describe('private data', () => {
 
   describe('create', () => {
     it('creates entry', async () => {
-      await vaultClient.create({
+      await stashClient.create({
         actorDid,
         namespace,
         key,
@@ -58,7 +58,7 @@ describe('private data', () => {
 
   describe('update', () => {
     it('updates entry', async () => {
-      await vaultClient.create({
+      await stashClient.create({
         actorDid,
         namespace,
         key,
@@ -66,7 +66,7 @@ describe('private data', () => {
       })
       await network.processAll()
 
-      await vaultClient.update({
+      await stashClient.update({
         actorDid,
         namespace,
         key,
@@ -94,7 +94,7 @@ describe('private data', () => {
 
   describe('delete', () => {
     it('deletes entry', async () => {
-      await vaultClient.create({
+      await stashClient.create({
         actorDid,
         namespace,
         key,
@@ -102,7 +102,7 @@ describe('private data', () => {
       })
       await network.processAll()
 
-      await vaultClient.delete({
+      await stashClient.delete({
         actorDid,
         namespace,
         key,

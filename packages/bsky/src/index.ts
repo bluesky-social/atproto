@@ -29,7 +29,7 @@ import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
 import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
-import { createVaultClient } from './vault'
+import { createStashClient } from './stash'
 import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
 
@@ -137,7 +137,7 @@ export class BskyAppView {
       interceptors: config.bsyncApiKey ? [bsyncAuth(config.bsyncApiKey)] : [],
     })
 
-    const vaultClient = createVaultClient(bsyncClient)
+    const stashClient = createStashClient(bsyncClient)
 
     const courierClient = config.courierUrl
       ? createCourierClient({
@@ -181,7 +181,7 @@ export class BskyAppView {
       signingKey,
       idResolver,
       bsyncClient,
-      vaultClient,
+      stashClient,
       courierClient,
       authVerifier,
       featureGates,

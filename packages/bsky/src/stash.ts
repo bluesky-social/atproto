@@ -1,13 +1,13 @@
 import { BsyncClient } from './bsync'
 import { Method } from './proto/bsync_pb'
 
-export const createVaultClient = (bsyncClient: BsyncClient): VaultClient => {
-  return new VaultClient(bsyncClient)
+export const createStashClient = (bsyncClient: BsyncClient): StashClient => {
+  return new StashClient(bsyncClient)
 }
 
-// VaultClient is an abstraction over the BsyncClient, that uses the bsync `PutOperation` RPC
+// An abstraction over the BsyncClient, that uses the bsync `PutOperation` RPC
 // to store private data, which can be indexed by the dataplane and queried by the appview.
-export class VaultClient {
+export class StashClient {
   constructor(private readonly bsyncClient: BsyncClient) {}
 
   create(input: CreateInput) {

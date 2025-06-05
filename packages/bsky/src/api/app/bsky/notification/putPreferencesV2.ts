@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       const namespace = 'app.bsky.notification.defs#preferences'
       const key = 'self'
 
-      const vaultInput = {
+      const stashInput = {
         actorDid,
         namespace,
         key,
@@ -30,9 +30,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (exists) {
-        await ctx.vaultClient.update(vaultInput)
+        await ctx.stashClient.update(stashInput)
       } else {
-        await ctx.vaultClient.create(vaultInput)
+        await ctx.stashClient.create(stashInput)
       }
 
       return {
