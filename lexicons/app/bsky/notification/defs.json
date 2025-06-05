@@ -10,15 +10,15 @@
       "type": "object",
       "required": ["list", "push"],
       "properties": {
-        "list": { "type": "boolean", "default": true },
-        "push": { "type": "boolean", "default": true }
+        "list": { "type": "boolean" },
+        "push": { "type": "boolean" }
       }
     },
     "channelsPush": {
       "type": "object",
       "required": ["push"],
       "properties": {
-        "push": { "type": "boolean", "default": true }
+        "push": { "type": "boolean" }
       }
     },
     "preferenceFull": {
@@ -31,8 +31,7 @@
         },
         "filter": {
           "type": "string",
-          "knownValues": ["all", "follows"],
-          "default": "all"
+          "knownValues": ["all", "follows"]
         }
       }
     },
@@ -56,8 +55,7 @@
         },
         "filter": {
           "type": "string",
-          "knownValues": ["all", "follows"],
-          "default": "all"
+          "knownValues": ["all", "follows"]
         }
       }
     },

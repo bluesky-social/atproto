@@ -9738,11 +9738,9 @@ export const schemaDict = {
         properties: {
           list: {
             type: 'boolean',
-            default: true,
           },
           push: {
             type: 'boolean',
-            default: true,
           },
         },
       },
@@ -9752,7 +9750,6 @@ export const schemaDict = {
         properties: {
           push: {
             type: 'boolean',
-            default: true,
           },
         },
       },
@@ -9767,7 +9764,6 @@ export const schemaDict = {
           filter: {
             type: 'string',
             knownValues: ['all', 'follows'],
-            default: 'all',
           },
         },
       },
@@ -9792,7 +9788,6 @@ export const schemaDict = {
           filter: {
             type: 'string',
             knownValues: ['all', 'follows'],
-            default: 'all',
           },
         },
       },
