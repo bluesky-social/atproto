@@ -49,7 +49,7 @@ import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
-import getPostThreadHiddenV2 from './app/bsky/unspecced/getPostThreadHiddenV2'
+import getPostThreadOtherV2 from './app/bsky/unspecced/getPostThreadOtherV2'
 import getPostThreadV2 from './app/bsky/unspecced/getPostThreadV2'
 import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
@@ -84,7 +84,7 @@ export default function (server: Server, ctx: AppContext) {
   getListFeed(server, ctx)
   getQuotes(server, ctx)
   getPostThread(server, ctx)
-  getPostThreadHiddenV2(server, ctx)
+  getPostThreadOtherV2(server, ctx)
   getPostThreadV2(server, ctx)
   getPosts(server, ctx)
   searchPosts(server, ctx)

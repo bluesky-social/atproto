@@ -85,7 +85,7 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const { hasHiddenReplies, thread } = ctx.views.threadV2(skeleton, hydration, {
+  const { hasOtherReplies, thread } = ctx.views.threadV2(skeleton, hydration, {
     above: calculateAbove(ctx, params),
     below: calculateBelow(ctx, skeleton.anchor, params),
     branchingFactor: params.branchingFactor,
@@ -100,7 +100,7 @@ const presentation = (
     postUriToThreadgateUri(rootUri),
     hydration,
   )
-  return { hasHiddenReplies, thread, threadgate }
+  return { hasOtherReplies, thread, threadgate }
 }
 
 type Context = {
