@@ -23,6 +23,8 @@ describe('account timeline', () => {
     agent = network.ozone.getClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
+
+    // Trigger some moderation events
     await Promise.all([
       sc.createReport({
         subject: {
