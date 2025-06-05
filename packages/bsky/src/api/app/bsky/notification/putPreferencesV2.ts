@@ -62,6 +62,8 @@ const computePreferences = async (
     if (err instanceof ConnectError && err.code !== Code.NotFound) {
       throw new UpstreamFailureError(
         'cannot get current notification preferences',
+        'NotificationPreferencesFailed',
+        { cause: err },
       )
     }
     preferences = ensurePreferences({
