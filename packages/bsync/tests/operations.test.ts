@@ -16,6 +16,14 @@ describe('operations', () => {
   let bsync: BsyncService
   let client: BsyncClient
 
+  const validPayload0 = Buffer.from(
+    new TextEncoder().encode(JSON.stringify({ value: 0 })),
+  )
+  const validPayload1 = Buffer.from(
+    new TextEncoder().encode(JSON.stringify({ value: 1 })),
+  )
+  const invalidPayload = Buffer.from(new TextEncoder().encode('{invalid json}'))
+
   beforeAll(async () => {
     bsync = await BsyncService.create(
       envToCfg({
@@ -55,7 +63,7 @@ describe('operations', () => {
         namespace: 'app.bsky.some.col',
         key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       await expect(tryPutOperation1).rejects.toEqual(
         new ConnectError('missing auth', Code.Unauthenticated),
@@ -71,7 +79,7 @@ describe('operations', () => {
         namespace: 'app.bsky.some.col',
         key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       await expect(tryPutOperation2).rejects.toEqual(
         new ConnectError('invalid api key', Code.Unauthenticated),
@@ -85,7 +93,7 @@ describe('operations', () => {
           namespace: 'bad-namespace',
           key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError(
@@ -99,7 +107,7 @@ describe('operations', () => {
           namespace: 'app.bsky.some.col',
           key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError(
@@ -113,7 +121,7 @@ describe('operations', () => {
           namespace: 'app.bsky.some.col',
           key: '',
           method: Method.CREATE,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError('operation key is required', Code.InvalidArgument),
@@ -124,7 +132,7 @@ describe('operations', () => {
           namespace: 'app.bsky.some.col',
           key: 'key1',
           method: Method.UNSPECIFIED,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError('operation method is invalid', Code.InvalidArgument),
@@ -134,8 +142,36 @@ describe('operations', () => {
           actorDid: 'did:example:a',
           namespace: 'app.bsky.some.col',
           key: 'key1',
+          method: Method.CREATE,
+          payload: invalidPayload,
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'payload must be a valid JSON when method is CREATE or UPDATE',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.putOperation({
+          actorDid: 'did:example:a',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
+          method: Method.UPDATE,
+          payload: invalidPayload,
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'payload must be a valid JSON when method is CREATE or UPDATE',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.putOperation({
+          actorDid: 'did:example:a',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
           method: Method.DELETE,
-          payload: Buffer.from([1, 2, 3]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError(
@@ -151,14 +187,14 @@ describe('operations', () => {
         namespace: 'app.bsky.some.col',
         key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       const res2 = await client.putOperation({
         actorDid: 'did:example:a',
         namespace: 'app.bsky.some.col',
         key: 'key1',
         method: Method.UPDATE,
-        payload: Buffer.from([4, 5, 6]),
+        payload: validPayload1,
       })
 
       expect(res1.operation?.id).toBe('1')
@@ -170,7 +206,7 @@ describe('operations', () => {
           namespace: 'app.bsky.some.col',
           key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([1, 2, 3]),
+          payload: validPayload0,
           createdAt: expect.any(Date),
         },
         {
@@ -179,7 +215,7 @@ describe('operations', () => {
           namespace: 'app.bsky.some.col',
           key: 'key1',
           method: Method.UPDATE,
-          payload: Buffer.from([4, 5, 6]),
+          payload: validPayload1,
           createdAt: expect.any(Date),
         },
       ])
@@ -191,7 +227,7 @@ describe('operations', () => {
         namespace: 'app.bsky.some.col',
         key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
 
       const op = res.operation
@@ -202,7 +238,7 @@ describe('operations', () => {
       expect(op.namespace).toBe('app.bsky.some.col')
       expect(op.key).toBe('key1')
       expect(op.method).toBe(Method.CREATE)
-      expect(op.payload).toEqual(Uint8Array.from([1, 2, 3]))
+      expect(op.payload).toEqual(new Uint8Array(validPayload0))
     })
   })
 
@@ -237,7 +273,7 @@ describe('operations', () => {
           namespace: 'app.bsky.some.col',
           key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([1, 2, 3]),
+          payload: validPayload0,
         })
       }
 
@@ -266,7 +302,7 @@ describe('operations', () => {
         namespace: 'app.bsky.some.col',
         key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       const res = await scanPromise
       expect(res.operations.length).toEqual(1)

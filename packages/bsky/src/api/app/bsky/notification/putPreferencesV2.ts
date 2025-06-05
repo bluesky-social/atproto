@@ -18,7 +18,6 @@ export default function (server: Server, ctx: AppContext) {
         input,
       )
 
-      // @TODO: lexicon validation?
       const namespace = 'app.bsky.notification.defs#preferences'
       const key = 'self'
 

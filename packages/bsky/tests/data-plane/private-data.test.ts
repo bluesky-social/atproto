@@ -1,5 +1,5 @@
 import { TestNetwork } from '@atproto/dev-env'
-import { StashClient } from '../../src/stash'
+import { StashClient } from '../../dist/stash'
 
 type Database = TestNetwork['bsky']['db']
 

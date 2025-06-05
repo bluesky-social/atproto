@@ -22,6 +22,7 @@ export class StashClient {
     return this.putOperation(Method.DELETE, { ...input, payload: undefined })
   }
 
+  // @TODO: lexicon validation?
   private async putOperation(method: Method, input: PutOperationInput) {
     const { actorDid, namespace, key, payload } = input
     await this.bsyncClient.putOperation({
