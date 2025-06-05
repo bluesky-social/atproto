@@ -224,8 +224,11 @@ export class RouteRateLimiter implements RateLimiterI {
     private readonly options: Readonly<RouteRateLimiterOptions> = {},
   ) {}
 
-  async handle(ctx: XRPCReqContext) {
-    if (this.options.bypass?.call(null, ctx)) return
+  async handle(ctx: XRPCReqContext): Promise<RateLimiterStatus | null> {
+    const { bypass } = this.options
+    if (bypass && bypass(ctx)) {
+      return null
+    }
 
     const result = await this.consume(ctx)
     if (result instanceof RateLimitExceededError) {
@@ -234,6 +237,8 @@ export class RouteRateLimiter implements RateLimiterI {
     } else if (result != null) {
       setStatusHeaders(ctx, result)
     }
+
+    return result
   }
 
   async consume(...args: Parameters<RateLimiterConsume>) {
