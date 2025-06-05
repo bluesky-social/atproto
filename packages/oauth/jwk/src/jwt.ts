@@ -61,35 +61,47 @@ export const jwtHeaderSchema = z
 
 export type JwtHeader = z.infer<typeof jwtHeaderSchema>
 
-export const htuSchema = z
-  .string()
-  .url()
-  .superRefine((value, ctx) => {
-    // https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6
+export const htuSchema = z.string().superRefine((value, ctx) => {
+  // https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6
 
-    if (!value.startsWith('http:') && !value.startsWith('https:')) {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Invalid HTTP URI: only http and https protocols are allowed',
+        message: 'Only http: and https: protocols are allowed',
       })
     }
 
-    if (value.includes('?')) {
+    if (url.username || url.password) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Invalid HTTP URI: query string not allowed',
+        message: 'Credentials not allowed',
       })
     }
 
-    if (value.includes('#')) {
+    if (url.search) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Invalid HTTP URI: fragment not allowed',
+        message: 'Query string not allowed',
       })
     }
 
-    return value
-  })
+    if (url.hash) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Fragment not allowed',
+      })
+    }
+  } catch (err) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.invalid_string,
+      validation: 'url',
+    })
+  }
+
+  return value
+})
 
 // https://www.iana.org/assignments/jwt/jwt.xhtml
 export const jwtPayloadSchema = z

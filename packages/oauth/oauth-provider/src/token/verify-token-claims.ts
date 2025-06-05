@@ -32,17 +32,40 @@ export function verifyTokenClaims(
 ): VerifyTokenClaimsResult {
   const dateReference = Date.now()
 
-  const expectedTokenType: OAuthTokenType = tokenClaims.cnf?.jkt
-    ? 'DPoP'
-    : 'Bearer'
-  if (expectedTokenType !== tokenType) {
-    throw new InvalidTokenError(expectedTokenType, `Invalid token type`)
-  }
-  if (tokenType === 'DPoP' && !dpopResult) {
-    throw new InvalidDpopProofError(`DPoP proof required`)
-  }
-  if (tokenClaims.cnf?.jkt !== dpopResult?.jkt) {
-    throw new InvalidDpopKeyBindingError()
+  if (tokenClaims.cnf?.jkt) {
+    // An access token with a cnf.jkt claim must be a DPoP token
+    if (tokenType !== 'DPoP') {
+      throw new InvalidTokenError(
+        tokenType,
+        `DPoP token type must be used with a DPoP proof`,
+      )
+    }
+
+    // DPoP token type must be used with a DPoP proof
+    if (!dpopResult) {
+      throw new InvalidDpopProofError(`DPoP proof required`)
+    }
+
+    // DPoP proof must be signed with the key that matches the "cnf" claim
+    if (tokenClaims.cnf.jkt !== dpopResult.jkt) {
+      throw new InvalidDpopKeyBindingError()
+    }
+  } else {
+    // An access token without a cnf.jkt claim must be a Bearer token
+    if (tokenType !== 'Bearer') {
+      throw new InvalidTokenError(
+        tokenType,
+        `Bearer token type must be used without a DPoP proof`,
+      )
+    }
+
+    // DPoP proof not expected for Bearer tokens
+    if (dpopResult) {
+      throw new InvalidTokenError(
+        tokenType,
+        `DPoP proof not expected for Bearer token type`,
+      )
+    }
   }
 
   if (options?.audience) {

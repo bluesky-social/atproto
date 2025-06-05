@@ -491,25 +491,12 @@ export class AuthVerifier {
       const originalUrl =
         ('originalUrl' in req && req.originalUrl) || req.url || '/'
       const url = new URL(originalUrl, this._publicUrl)
-      const { tokenClaims, dpopResult } =
-        await this.oauthVerifier.authenticateRequest(
-          req.method || 'GET',
-          url,
-          req.headers,
-          { audience: [this.dids.pds] },
-        )
-
-      // @TODO drop this once oauth provider no longer accepts DPoP proof with
-      // query or fragment in "htu" claim.
-      if (dpopResult?.htu.match(/[?#]/)) {
-        oauthLogger.info(
-          {
-            client_id: tokenClaims.client_id,
-            htu: dpopResult.htu,
-          },
-          'DPoP proof "htu" contains query or fragment',
-        )
-      }
+      const { tokenClaims } = await this.oauthVerifier.authenticateRequest(
+        req.method || 'GET',
+        url,
+        req.headers,
+        { audience: [this.dids.pds] },
+      )
 
       const { sub } = tokenClaims
       if (typeof sub !== 'string' || !sub.startsWith('did:')) {

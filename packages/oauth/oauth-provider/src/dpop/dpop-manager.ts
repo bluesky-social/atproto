@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto'
 import { EmbeddedJWK, calculateJwkThumbprint, errors, jwtVerify } from 'jose'
 import { z } from 'zod'
+import { ValidationError } from '@atproto/jwk'
 import { DPOP_NONCE_MAX_AGE } from '../constants.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { UseDpopNonceError } from '../errors/use-dpop-nonce-error.js'
+import { ifURL } from '../lib/util/cast.js'
 import {
   DpopNonce,
   DpopSecret,
@@ -58,27 +60,15 @@ export class DpopManager {
       throw new TypeError('HTTP method is required')
     }
 
-    const proof =
-      Array.isArray(httpHeaders['dpop']) && httpHeaders['dpop'].length === 1
-        ? httpHeaders['dpop'][0]!
-        : httpHeaders['dpop']
-
-    if (proof === undefined) {
-      return null
-    }
-
-    if (!proof || typeof proof !== 'string') {
-      throw new InvalidDpopProofError('DPoP proof required')
-    }
+    const proof = extractProof(httpHeaders)
+    if (!proof) return null
 
     const { protectedHeader, payload } = await jwtVerify(proof, EmbeddedJWK, {
       typ: 'dpop+jwt',
       maxTokenAge: 10, // Will ensure presence & validity of "iat" claim
       clockTolerance: DPOP_NONCE_MAX_AGE / 1e3,
     }).catch((err) => {
-      throw err instanceof JOSEError
-        ? new InvalidDpopProofError(err.message, err)
-        : new InvalidDpopProofError('Invalid DPoP proof', err)
+      throw newInvalidDpopProofError('Failed to verify DPoP proof', err)
     })
 
     // @NOTE For legacy & backwards compatibility reason, we cannot use
@@ -88,29 +78,28 @@ export class DpopManager {
     // const { ath, htm, htu, jti, nonce } = await jwtPayloadSchema
     //   .parseAsync(payload)
     //   .catch((err) => {
-    //     throw err instanceof ValidationError
-    //       ? new InvalidDpopProofError(err.message, err)
-    //       : new InvalidDpopProofError('Invalid DPoP proof', err)
+    //     throw buildInvalidDpopProofError('Invalid DPoP proof', err)
     //   })
 
-    // @TODO Uncomment previous lines once we decide to drop legacy support.
+    // @TODO Uncomment previous lines (and remove redundant checks bellow) once
+    // we decide to drop legacy support.
     const { ath, htm, htu, jti, nonce } = payload
 
     if (nonce !== undefined && typeof nonce !== 'string') {
-      throw new InvalidDpopProofError('Invalid DPoP "nonce" type')
+      throw newInvalidDpopProofError('Invalid DPoP "nonce" type')
     }
 
     if (!jti || typeof jti !== 'string') {
-      throw new InvalidDpopProofError('DPoP "jti" missing')
+      throw newInvalidDpopProofError('DPoP "jti" missing')
     }
 
     // Note rfc9110#section-9.1 states that the method name is case-sensitive
     if (!htm || htm !== httpMethod) {
-      throw new InvalidDpopProofError('DPoP "htm" mismatch')
+      throw newInvalidDpopProofError('DPoP "htm" mismatch')
     }
 
     if (!htu || typeof htu !== 'string') {
-      throw new InvalidDpopProofError('Invalid DPoP "htu" type')
+      throw newInvalidDpopProofError('Invalid DPoP "htu" type')
     }
 
     // > To reduce the likelihood of false negatives, servers SHOULD employ
@@ -120,7 +109,7 @@ export class DpopManager {
     //
     // RFC9449 section 4.3. Checking DPoP Proofs - https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
     if (!htu || normalizeHtu(htu) !== urlToHtu(httpUrl)) {
-      throw new InvalidDpopProofError('DPoP "htu" mismatch')
+      throw newInvalidDpopProofError('DPoP "htu" mismatch')
     }
 
     if (!nonce && this.dpopNonce) {
@@ -134,22 +123,38 @@ export class DpopManager {
     if (accessToken) {
       const accessTokenHash = createHash('sha256').update(accessToken).digest()
       if (ath !== accessTokenHash.toString('base64url')) {
-        throw new InvalidDpopProofError('DPoP "ath" mismatch')
+        throw newInvalidDpopProofError('DPoP "ath" mismatch')
       }
     } else if (ath !== undefined) {
-      throw new InvalidDpopProofError('DPoP "ath" claim not allowed')
+      throw newInvalidDpopProofError('DPoP "ath" claim not allowed')
     }
 
     // @NOTE we can assert there is a jwk because the jwtVerify used the
     // EmbeddedJWK key getter mechanism.
     const jwk = protectedHeader.jwk!
     const jkt = await calculateJwkThumbprint(jwk, 'sha256').catch((err) => {
-      throw err instanceof JOSEError
-        ? new InvalidDpopProofError(err.message)
-        : new InvalidDpopProofError('Failed to calculate jkt', err)
+      throw newInvalidDpopProofError('Failed to calculate jkt', err)
     })
 
     return { jti, jkt, htm, htu }
+  }
+}
+
+function extractProof(
+  httpHeaders: Record<string, undefined | string | string[]>,
+): string | null {
+  const dpopHeader = httpHeaders['dpop']
+  switch (typeof dpopHeader) {
+    case 'string':
+      if (dpopHeader) return dpopHeader
+      throw newInvalidDpopProofError('DPoP header cannot be empty')
+    case 'object':
+      // @NOTE the "0" case should never happen a node.js HTTP server will only
+      // return an array if the header is set multiple times.
+      if (dpopHeader.length === 1 && dpopHeader[0]) return dpopHeader[0]!
+      throw newInvalidDpopProofError('DPoP header must contain a single proof')
+    default:
+      return null
   }
 }
 
@@ -166,36 +171,43 @@ export class DpopManager {
  * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-4.3}
  */
 function urlToHtu(url: Readonly<URL>): string {
-  // NodeJS's `URL` normalizes the pathname by default, so we can just use the `href` property.
-  const urlNorm = url.href
-
-  // Strip the query and fragment from the URL.
-  const queryIdx = urlNorm.indexOf('?')
-  const fragmentIdx = urlNorm.indexOf('#')
-
-  const endIdx =
-    queryIdx === -1
-      ? fragmentIdx
-      : fragmentIdx === -1
-        ? queryIdx
-        : Math.min(queryIdx, fragmentIdx)
-
-  return endIdx === -1 ? urlNorm : urlNorm.slice(0, endIdx)
+  // NodeJS's `URL` normalizes the pathname, so we can just use it.
+  return url.origin + url.pathname
 }
 
-function normalizeHtu(htu: string): string | null {
-  try {
-    // @NOTE For legacy & backwards compatibility reason, we strip the query and
-    // fragment from the DPoP proof's htu. This is not a standard behavior as
-    // the htu is not supposed to contain query or fragment.
-
-    // return new URL(htu).href
-
-    // @TODO Uncomment previous lines once we decide to drop legacy support.
-    // (when `checkProof` uses `jwtPayloadSchema`)
-
-    return urlToHtu(new URL(htu))
-  } catch {
-    return null
+function normalizeHtu(htu: string): string {
+  const url = ifURL(htu)
+  if (!url) {
+    throw newInvalidDpopProofError('DPoP "htu" is not a valid URL')
   }
+
+  // @NOTE the check bellow can be removed once once jwtPayloadSchema is used to
+  // validate the DPoP proof payload as it already performs these checks (though
+  // the htuSchema).
+
+  if (url.password || url.username) {
+    throw newInvalidDpopProofError('DPoP "htu" must not contain credentials')
+  }
+
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw newInvalidDpopProofError('DPoP "htu" must be http or https')
+  }
+
+  // @NOTE For legacy & backwards compatibility reason, we allow a query and
+  // fragment in the DPoP proof's htu. This is not a standard behavior as the
+  // htu is not supposed to contain query or fragment.
+
+  // NodeJS's `URL` normalizes the pathname.
+  return urlToHtu(url)
+}
+
+function newInvalidDpopProofError(
+  title: string,
+  err?: unknown,
+): InvalidDpopProofError {
+  const msg =
+    err instanceof JOSEError || err instanceof ValidationError
+      ? `${title}: ${err.message}`
+      : title
+  return new InvalidDpopProofError(msg, err)
 }
