@@ -667,7 +667,7 @@ function makeType(
   const types = ([] as string[]).concat(_types)
   if (opts?.nullable) types.push('null')
   const arr = opts?.array ? '[]' : ''
-  if (types.length === 1) return `${types[0]}${arr}`
+  if (types.length === 1) return `(${types[0]})${arr}`
   if (arr) return `(${types.join(' | ')})${arr}`
   return types.join(' | ')
 }

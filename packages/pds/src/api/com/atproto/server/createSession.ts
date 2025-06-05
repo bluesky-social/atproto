@@ -2,6 +2,7 @@ import { DAY, MINUTE } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
+import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { resultPassthru } from '../../../proxy'
@@ -28,6 +29,12 @@ export default function (server: Server, ctx: AppContext) {
             input.body,
             ctx.entrywayPassthruHeaders(req),
           ),
+        )
+      }
+
+      if (input.body.password.length > OLD_PASSWORD_MAX_LENGTH) {
+        throw new AuthRequiredError(
+          'Password too long. Consider resetting your password.',
         )
       }
 

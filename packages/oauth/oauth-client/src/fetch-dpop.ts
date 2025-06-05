@@ -31,6 +31,7 @@ export type DpopFetchWrapperOptions<C = FetchContext> = {
 export function dpopFetchWrapper<C = FetchContext>({
   key,
   iss,
+  // @TODO we should provide a default based on specs
   supportedAlgs,
   nonces,
   sha256 = typeof subtle !== 'undefined' ? subtleSha256 : undefined,
@@ -43,13 +44,10 @@ export function dpopFetchWrapper<C = FetchContext>({
     )
   }
 
+  // Throws if negotiation fails
   const alg = negotiateAlg(key, supportedAlgs)
 
   return async function (this: C, input, init) {
-    if (!key.algorithms.includes(alg)) {
-      throw new TypeError(`Key does not support the algorithm ${alg}`)
-    }
-
     const request: Request =
       init == null && input instanceof Request
         ? input

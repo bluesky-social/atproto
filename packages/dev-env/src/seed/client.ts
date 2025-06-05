@@ -85,6 +85,7 @@ export class SeedClient<
   >
   follows: Record<string, Record<string, RecordRef>>
   blocks: Record<string, Record<string, RecordRef>>
+  mutes: Record<string, Set<string>>
   posts: Record<
     string,
     { text: string; ref: RecordRef; images: ImageRef[]; quote?: RecordRef }[]
@@ -128,6 +129,7 @@ export class SeedClient<
     this.profiles = {}
     this.follows = {}
     this.blocks = {}
+    this.mutes = {}
     this.posts = {}
     this.likes = {}
     this.replies = {}
@@ -299,6 +301,18 @@ export class SeedClient<
     delete this.blocks[from][to]
   }
 
+  async mute(from: string, to: string) {
+    await this.agent.app.bsky.graph.muteActor(
+      {
+        actor: to,
+      },
+      { headers: this.getHeaders(from) },
+    )
+    this.mutes[from] ??= new Set()
+    this.mutes[from].add(to)
+    return this.mutes[from][to]
+  }
+
   async post(
     by: string,
     text: string,
@@ -395,6 +409,7 @@ export class SeedClient<
     text: string,
     facets?: AppBskyRichtextFacet.Main[],
     images?: ImageRef[],
+    overrides?: Partial<AppBskyFeedPost.Record>,
   ) {
     const embed = images
       ? {
@@ -413,6 +428,7 @@ export class SeedClient<
         facets,
         embed,
         createdAt: new Date().toISOString(),
+        ...overrides,
       },
       this.getHeaders(by),
     )
