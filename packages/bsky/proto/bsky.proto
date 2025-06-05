@@ -754,46 +754,63 @@ message GetBlocklistSubscriptionsResponse {
 //
 
 message GetNotificationPreferencesRequest {
-  string actor_did = 1;
+  repeated string dids = 1;
 }
 
-message NotificationChannels {
-  bool list = 1;
-  bool push = 2;
+message NotificationChannelList {
+  bool enabled = 1;
 }
 
-message NotificationChannelsPush {
-  bool push = 1;
+message NotificationChannelPush {
+  bool enabled = 1;
 }
 
-message NotificationPreferenceFull {
-  NotificationChannels channels = 1;
-  string filter = 2;
+enum NotificationFilter {
+  NOTIFICATION_FILTER_UNSPECIFIED = 0;
+  NOTIFICATION_FILTER_ALL = 1;
+  NOTIFICATION_FILTER_FOLLOWS = 2;
 }
 
-message NotificationPreferenceNoFilter {
-  NotificationChannels channels = 1;
+message FilterableNotificationPreference {
+  NotificationFilter filter = 1;
+  NotificationChannelList list = 2;
+  NotificationChannelPush push = 3;
 }
 
-message NotificationPreferencePush {
-  NotificationChannelsPush channels = 1;
-  string filter = 2;
+message NotificationPreference {
+  NotificationChannelList list = 1;
+  NotificationChannelPush push = 2;
+}
+
+enum ChatNotificationFilter {
+  CHAT_NOTIFICATION_FILTER_UNSPECIFIED = 0;
+  CHAT_NOTIFICATION_FILTER_ALL = 1;
+  CHAT_NOTIFICATION_FILTER_ACCEPTED = 2;
+}
+
+message ChatNotificationPreference {
+  ChatNotificationFilter filter = 1;
+  NotificationChannelPush push = 2;
+}
+
+message NotificationPreferences {
+  ChatNotificationPreference chat = 1;
+  FilterableNotificationPreference follow = 2;
+  FilterableNotificationPreference like = 3;
+  FilterableNotificationPreference like_via_repost = 4;
+  FilterableNotificationPreference mention = 5;
+  FilterableNotificationPreference quote = 6;
+  FilterableNotificationPreference reply = 7;
+  FilterableNotificationPreference repost = 8;
+  FilterableNotificationPreference repost_via_repost = 9;
+  NotificationPreference starterpack_joined = 10;
+  NotificationPreference subscribed_post = 11;
+  NotificationPreference unverified = 12;
+  NotificationPreference verified = 13;
 }
 
 message GetNotificationPreferencesResponse {
-  NotificationPreferencePush chat = 1;
-  NotificationPreferenceFull follow = 2;
-  NotificationPreferenceFull like = 3;
-  NotificationPreferenceFull like_via_repost = 4;
-  NotificationPreferenceFull mention = 5;
-  NotificationPreferenceFull quote = 6;
-  NotificationPreferenceFull reply = 7;
-  NotificationPreferenceFull repost = 8;
-  NotificationPreferenceFull repost_via_repost = 9;
-  NotificationPreferenceNoFilter starterpack_joined = 10;
-  NotificationPreferenceNoFilter subscribed_post = 11;
-  NotificationPreferenceNoFilter unverified = 12;
-  NotificationPreferenceNoFilter verified = 13;
+  repeated NotificationPreferences preferences = 1;
 }
 
 // - list recent notifications for a user

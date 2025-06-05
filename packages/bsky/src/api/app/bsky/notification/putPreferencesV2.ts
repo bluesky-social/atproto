@@ -1,11 +1,11 @@
-import { Code, ConnectError } from '@connectrpc/connect'
 import { Un$Typed } from '@atproto/api'
-import { UpstreamFailureError } from '@atproto/xrpc-server'
+import { InternalServerError, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
 import { HandlerInput } from '../../../../lexicon/types/app/bsky/notification/putPreferencesV2'
-import { ensurePreferences } from './util'
+import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb'
+import { protobufToLex } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.putPreferencesV2({
@@ -49,27 +49,28 @@ const computePreferences = async (
   actorDid: string,
   input: HandlerInput,
 ): Promise<{ preferences: Un$Typed<Preferences>; exists: boolean }> => {
-  let preferences: Preferences
-  let exists = false
+  let res: GetNotificationPreferencesResponse
   try {
-    const res = await ctx.dataplane.getNotificationPreferences({
-      actorDid,
+    res = await ctx.dataplane.getNotificationPreferences({
+      dids: [actorDid],
     })
-    const currentPreferences = ensurePreferences(res)
-    preferences = { ...currentPreferences, ...input.body }
-    exists = true
   } catch (err) {
-    if (err instanceof ConnectError && err.code !== Code.NotFound) {
-      throw new UpstreamFailureError(
-        'cannot get current notification preferences',
-        'NotificationPreferencesFailed',
-        { cause: err },
-      )
-    }
-    preferences = ensurePreferences({
-      ...input.body,
-    })
+    throw new UpstreamFailureError(
+      'cannot get current notification preferences',
+      'NotificationPreferencesFailed',
+      { cause: err },
+    )
   }
-  delete preferences.$type
+
+  if (res.preferences.length !== 1) {
+    throw new InternalServerError(
+      `expected exactly one preferences entry, got ${res.preferences.length}`,
+      'NotificationPreferencesWrongResult',
+    )
+  }
+
+  const exists = Object.values(res.preferences[0]).some((v) => v !== undefined)
+  const currentPreferences = protobufToLex(res.preferences[0])
+  const preferences = { ...currentPreferences, ...input.body }
   return { preferences, exists }
 }

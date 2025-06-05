@@ -6,57 +6,29 @@
       "type": "object",
       "properties": {}
     },
-    "channels": {
+    "chatPreference": {
+      "type": "object",
+      "required": ["filter", "push"],
+      "properties": {
+        "filter": { "type": "string", "knownValues": ["all", "accepted"] },
+        "push": { "type": "boolean" }
+      }
+    },
+    "filterablePreference": {
+      "type": "object",
+      "required": ["filter", "list", "push"],
+      "properties": {
+        "filter": { "type": "string", "knownValues": ["all", "follows"] },
+        "list": { "type": "boolean" },
+        "push": { "type": "boolean" }
+      }
+    },
+    "preference": {
       "type": "object",
       "required": ["list", "push"],
       "properties": {
         "list": { "type": "boolean" },
         "push": { "type": "boolean" }
-      }
-    },
-    "channelsPush": {
-      "type": "object",
-      "required": ["push"],
-      "properties": {
-        "push": { "type": "boolean" }
-      }
-    },
-    "preferenceFull": {
-      "type": "object",
-      "required": ["channels", "filter"],
-      "properties": {
-        "channels": {
-          "type": "ref",
-          "ref": "#channels"
-        },
-        "filter": {
-          "type": "string",
-          "knownValues": ["all", "follows"]
-        }
-      }
-    },
-    "preferenceNoFilter": {
-      "type": "object",
-      "required": ["channels"],
-      "properties": {
-        "channels": {
-          "type": "ref",
-          "ref": "#channels"
-        }
-      }
-    },
-    "preferencePush": {
-      "type": "object",
-      "required": ["channels", "filter"],
-      "properties": {
-        "channels": {
-          "type": "ref",
-          "ref": "#channelsPush"
-        },
-        "filter": {
-          "type": "string",
-          "knownValues": ["all", "follows"]
-        }
       }
     },
     "preferences": {
@@ -77,19 +49,19 @@
         "verified"
       ],
       "properties": {
-        "chat": { "type": "ref", "ref": "#preferencePush" },
-        "follow": { "type": "ref", "ref": "#preferenceFull" },
-        "like": { "type": "ref", "ref": "#preferenceFull" },
-        "likeViaRepost": { "type": "ref", "ref": "#preferenceFull" },
-        "mention": { "type": "ref", "ref": "#preferenceFull" },
-        "quote": { "type": "ref", "ref": "#preferenceFull" },
-        "reply": { "type": "ref", "ref": "#preferenceFull" },
-        "repost": { "type": "ref", "ref": "#preferenceFull" },
-        "repostViaRepost": { "type": "ref", "ref": "#preferenceFull" },
-        "starterpackJoined": { "type": "ref", "ref": "#preferenceNoFilter" },
-        "subscribedPost": { "type": "ref", "ref": "#preferenceNoFilter" },
-        "unverified": { "type": "ref", "ref": "#preferenceNoFilter" },
-        "verified": { "type": "ref", "ref": "#preferenceNoFilter" }
+        "chat": { "type": "ref", "ref": "#chatPreference" },
+        "follow": { "type": "ref", "ref": "#filterablePreference" },
+        "like": { "type": "ref", "ref": "#filterablePreference" },
+        "likeViaRepost": { "type": "ref", "ref": "#filterablePreference" },
+        "mention": { "type": "ref", "ref": "#filterablePreference" },
+        "quote": { "type": "ref", "ref": "#filterablePreference" },
+        "reply": { "type": "ref", "ref": "#filterablePreference" },
+        "repost": { "type": "ref", "ref": "#filterablePreference" },
+        "repostViaRepost": { "type": "ref", "ref": "#filterablePreference" },
+        "starterpackJoined": { "type": "ref", "ref": "#preference" },
+        "subscribedPost": { "type": "ref", "ref": "#preference" },
+        "unverified": { "type": "ref", "ref": "#preference" },
+        "verified": { "type": "ref", "ref": "#preference" }
       }
     }
   }

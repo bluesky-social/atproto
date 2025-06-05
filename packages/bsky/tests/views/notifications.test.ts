@@ -3,9 +3,9 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import {
-  PreferenceFull,
-  PreferenceNoFilter,
-  PreferencePush,
+  ChatPreference,
+  FilterablePreference,
+  Preference,
   Preferences,
 } from '../../src/lexicon/types/app/bsky/notification/defs'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
@@ -923,16 +923,19 @@ describe('notification views', () => {
       await clearPrivateData(db)
     })
 
-    const defaultFull: PreferenceFull = {
-      channels: { list: true, push: true },
+    // Defaults
+    const fp: FilterablePreference = {
       filter: 'all',
+      list: true,
+      push: true,
     }
-    const defaultNoFilter: PreferenceNoFilter = {
-      channels: { list: true, push: true },
+    const p: Preference = {
+      list: true,
+      push: true,
     }
-    const defaultPush: PreferencePush = {
-      channels: { push: true },
+    const cp: ChatPreference = {
       filter: 'all',
+      push: true,
     }
 
     it('gets preferences filling up with the defaults', async () => {
@@ -976,26 +979,26 @@ describe('notification views', () => {
       }
 
       const expectedApi0: Preferences = {
-        chat: defaultPush,
-        follow: defaultFull,
-        like: defaultFull,
-        likeViaRepost: defaultFull,
-        mention: defaultFull,
-        quote: defaultFull,
-        reply: defaultFull,
-        repost: defaultFull,
-        repostViaRepost: defaultFull,
-        starterpackJoined: defaultNoFilter,
-        subscribedPost: defaultNoFilter,
-        unverified: defaultNoFilter,
-        verified: defaultNoFilter,
+        chat: cp,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
       }
       // The user has no preferences set yet, so nothing stored.
       const expectedDb0 = undefined
       await getAndAssert(expectedApi0, expectedDb0)
 
       await agent.app.bsky.notification.putPreferencesV2(
-        { verified: { channels: { list: false, push: false } } },
+        { verified: { list: false, push: false } },
         {
           encoding: 'application/json',
           headers: await network.serviceHeaders(
@@ -1007,19 +1010,19 @@ describe('notification views', () => {
       await network.processAll()
 
       const expectedApi1: Preferences = {
-        chat: defaultPush,
-        follow: defaultFull,
-        like: defaultFull,
-        likeViaRepost: defaultFull,
-        mention: defaultFull,
-        quote: defaultFull,
-        reply: defaultFull,
-        repost: defaultFull,
-        repostViaRepost: defaultFull,
-        starterpackJoined: defaultNoFilter,
-        subscribedPost: defaultNoFilter,
-        unverified: defaultNoFilter,
-        verified: { channels: { list: false, push: false } },
+        chat: cp,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: { list: false, push: false },
       }
       // Stored all the defaults.
       const expectedDb1 = expectedApi1
@@ -1066,48 +1069,49 @@ describe('notification views', () => {
 
       const input0 = {
         chat: {
-          channels: { push: false },
-          filter: 'follows',
+          push: false,
+          filter: 'accepted',
         },
       }
       const expected0: Preferences = {
         chat: input0.chat,
-        follow: defaultFull,
-        like: defaultFull,
-        likeViaRepost: defaultFull,
-        mention: defaultFull,
-        quote: defaultFull,
-        reply: defaultFull,
-        repost: defaultFull,
-        repostViaRepost: defaultFull,
-        starterpackJoined: defaultNoFilter,
-        subscribedPost: defaultNoFilter,
-        unverified: defaultNoFilter,
-        verified: defaultNoFilter,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
       }
       await putAndAssert(input0, expected0)
 
       const input1 = {
         mention: {
-          channels: { list: false, push: false },
+          list: false,
+          push: false,
           filter: 'follows',
         },
       }
       const expected1: Preferences = {
         // Kept from the previous call.
         chat: input0.chat,
-        follow: defaultFull,
-        like: defaultFull,
-        likeViaRepost: defaultFull,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
         mention: input1.mention,
-        quote: defaultFull,
-        reply: defaultFull,
-        repost: defaultFull,
-        repostViaRepost: defaultFull,
-        starterpackJoined: defaultNoFilter,
-        subscribedPost: defaultNoFilter,
-        unverified: defaultNoFilter,
-        verified: defaultNoFilter,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
       }
       await putAndAssert(input1, expected1)
     })

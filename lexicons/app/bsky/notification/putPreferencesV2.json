@@ -12,55 +12,55 @@
           "properties": {
             "chat": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferencePush"
+              "ref": "app.bsky.notification.defs#chatPreference"
             },
             "follow": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "like": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "likeViaRepost": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "mention": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "quote": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "reply": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "repost": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "repostViaRepost": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceFull"
+              "ref": "app.bsky.notification.defs#filterablePreference"
             },
             "starterpackJoined": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceNoFilter"
+              "ref": "app.bsky.notification.defs#preference"
             },
             "subscribedPost": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceNoFilter"
+              "ref": "app.bsky.notification.defs#preference"
             },
             "unverified": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceNoFilter"
+              "ref": "app.bsky.notification.defs#preference"
             },
             "verified": {
               "type": "ref",
-              "ref": "app.bsky.notification.defs#preferenceNoFilter"
+              "ref": "app.bsky.notification.defs#preference"
             }
           }
         }

@@ -1,10 +1,10 @@
-import { Code, ConnectError } from '@connectrpc/connect'
 import { Un$Typed } from '@atproto/api'
-import { UpstreamFailureError } from '@atproto/xrpc-server'
+import { InternalServerError, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
-import { ensurePreferences } from './util'
+import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb'
+import { protobufToLex } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getPreferences({
@@ -26,19 +26,25 @@ const computePreferences = async (
   ctx: AppContext,
   actorDid: string,
 ): Promise<Un$Typed<Preferences>> => {
+  let res: GetNotificationPreferencesResponse
   try {
-    const res = await ctx.dataplane.getNotificationPreferences({
-      actorDid,
+    res = await ctx.dataplane.getNotificationPreferences({
+      dids: [actorDid],
     })
-    return ensurePreferences(res)
   } catch (err) {
-    if (err instanceof ConnectError && err.code !== Code.NotFound) {
-      throw new UpstreamFailureError(
-        'cannot get current notification preferences',
-        'NotificationPreferencesFailed',
-        { cause: err },
-      )
-    }
+    throw new UpstreamFailureError(
+      'cannot get current notification preferences',
+      'NotificationPreferencesFailed',
+      { cause: err },
+    )
   }
-  return ensurePreferences({})
+
+  if (res.preferences.length !== 1) {
+    throw new InternalServerError(
+      `expected exactly one preferences entry, got ${res.preferences.length}`,
+      'NotificationPreferencesWrongResult',
+    )
+  }
+  const currentPreferences = protobufToLex(res.preferences[0])
+  return currentPreferences
 }
