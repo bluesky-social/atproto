@@ -280,3 +280,37 @@ function stringifyEntryValue(entry: [string, unknown]): [string, string] {
     }
   }
 }
+
+function wwwFormUrlEncode(payload: Record<string, undefined | unknown>) {
+  return new URLSearchParams(
+    Object.entries(payload)
+      .filter(entryHasDefinedValue)
+      .map(stringifyEntryValue),
+  ).toString()
+}
+
+function entryHasDefinedValue(
+  entry: [string, unknown],
+): entry is [string, null | NonNullable<unknown>] {
+  return entry[1] !== undefined
+}
+
+function stringifyEntryValue(entry: [string, unknown]): [string, string] {
+  const name = entry[0]
+  const value = entry[1]
+
+  switch (typeof value) {
+    case 'string':
+      return [name, value]
+    case 'number':
+    case 'boolean':
+      return [name, String(value)]
+    default: {
+      const enc = JSON.stringify(value)
+      if (enc === undefined) {
+        throw new Error(`Unsupported value type for ${name}: ${String(value)}`)
+      }
+      return [name, enc]
+    }
+  }
+}

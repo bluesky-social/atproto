@@ -68,7 +68,11 @@ import { LocalizedString, MultiLangString } from './lib/util/locale.js'
 import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
-import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
+import {
+  DpopProof,
+  OAuthVerifier,
+  OAuthVerifierOptions,
+} from './oauth-verifier.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
@@ -431,7 +435,7 @@ export class OAuthProvider extends OAuthVerifier {
   public async pushedAuthorizationRequest(
     credentials: OAuthClientCredentials,
     authorizationRequest: OAuthAuthorizationRequestPar,
-    dpopJkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthParResponse> {
     try {
       const [client, clientAuth] = await this.authenticateClient(credentials)
@@ -447,7 +451,7 @@ export class OAuthProvider extends OAuthVerifier {
           clientAuth,
           parameters,
           null,
-          dpopJkt,
+          dpopProof,
         )
 
       return {
@@ -675,7 +679,7 @@ export class OAuthProvider extends OAuthVerifier {
     clientCredentials: OAuthClientCredentials,
     clientMetadata: RequestMetadata,
     request: OAuthTokenRequest,
-    dpopJkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const [client, clientAuth] =
       await this.authenticateClient(clientCredentials)
@@ -698,7 +702,7 @@ export class OAuthProvider extends OAuthVerifier {
         clientAuth,
         clientMetadata,
         request,
-        dpopJkt,
+        dpopProof,
       )
     }
 
@@ -708,7 +712,7 @@ export class OAuthProvider extends OAuthVerifier {
         clientAuth,
         clientMetadata,
         request,
-        dpopJkt,
+        dpopProof,
       )
     }
 
@@ -722,7 +726,7 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     input: OAuthAuthorizationCodeGrantTokenRequest,
-    dpopJkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const code = codeSchema.parse(input.code)
     try {
@@ -765,7 +769,7 @@ export class OAuthProvider extends OAuthVerifier {
         deviceId,
         parameters,
         input,
-        dpopJkt,
+        dpopProof,
       )
     } catch (err) {
       // If a token is replayed, requestManager.findCode will throw. In that
@@ -793,14 +797,14 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     input: OAuthRefreshTokenGrantTokenRequest,
-    dpopJkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     return this.tokenManager.refresh(
       client,
       clientAuth,
       clientMetadata,
       input,
-      dpopJkt,
+      dpopProof,
     )
   }
 
@@ -834,24 +838,24 @@ export class OAuthProvider extends OAuthVerifier {
   protected override async verifyToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
-    dpopJkt: string | null,
+    dpopProof: null | DpopProof,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
     if (this.accessTokenMode === AccessTokenMode.stateless) {
-      return super.verifyToken(tokenType, token, dpopJkt, verifyOptions)
+      return super.verifyToken(tokenType, token, dpopProof, verifyOptions)
     }
 
     if (this.accessTokenMode === AccessTokenMode.light) {
-      const { claims } = await super.verifyToken(
+      const { tokenClaims } = await super.verifyToken(
         tokenType,
         token,
-        dpopJkt,
+        dpopProof,
         // Do not verify the scope and audience in case of "light" tokens.
         // these will be checked through the tokenManager hereafter.
         undefined,
       )
 
-      const tokenId = claims.jti
+      const tokenId = tokenClaims.jti
 
       // In addition to verifying the signature (through the verifier above), we
       // also verify the tokenId is still valid using a database to fetch
@@ -860,7 +864,7 @@ export class OAuthProvider extends OAuthVerifier {
         token,
         tokenType,
         tokenId,
-        dpopJkt,
+        dpopProof,
         verifyOptions,
       )
     }
