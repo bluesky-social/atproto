@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig/isomorphic.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "moduleResolution": "Node16",
+    "module": "Node16",
+    "strictNullChecks": true,
+    "noImplicitAny": true
+  },
+  "include": ["./src"]
+}
