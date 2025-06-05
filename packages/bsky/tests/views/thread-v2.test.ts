@@ -9,8 +9,8 @@ import {
   QueryParams as QueryParamsThread,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import {
-  ThreadOtherItemValuePost,
   ThreadItemValuePost,
+  ThreadOtherItemValuePost,
 } from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'

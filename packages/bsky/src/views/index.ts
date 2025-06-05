@@ -75,13 +75,13 @@ import {
   uriToDid as creatorFromUri,
 } from '../util/uris'
 import {
-  ThreadOtherAnchorPostNode,
-  ThreadOtherItemValuePost,
-  ThreadOtherPostNode,
   ThreadItemValueBlocked,
   ThreadItemValueNoUnauthenticated,
   ThreadItemValueNotFound,
   ThreadItemValuePost,
+  ThreadOtherAnchorPostNode,
+  ThreadOtherItemValuePost,
+  ThreadOtherPostNode,
   ThreadTree,
   ThreadTreeVisible,
   sortTrimFlattenThreadTree,
