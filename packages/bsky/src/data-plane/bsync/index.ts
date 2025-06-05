@@ -4,7 +4,7 @@ import http from 'node:http'
 import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
-import * as crypto from '@atproto/crypto'
+import { TID } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
 import { Service } from '../../proto/bsync_connect'
@@ -142,6 +142,8 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
     async putOperation(req) {
       const { actorDid, namespace, key, method, payload } = req
 
+      const now = new Date().toISOString()
+
       if (method === Method.CREATE) {
         await db.db
           .insertInto('private_data')
@@ -150,8 +152,8 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
             namespace,
             key,
             payload: Buffer.from(payload).toString('utf8'),
-            indexedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            indexedAt: now,
+            updatedAt: now,
           })
           .execute()
       } else if (method === Method.UPDATE) {
@@ -162,7 +164,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           .where('key', '=', key)
           .set({
             payload: Buffer.from(payload).toString('utf8'),
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           })
           .execute()
       } else if (method === Method.DELETE) {
@@ -176,9 +178,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
         throw new Error(`Unsupported method: ${method}`)
       }
 
-      // @NOTE: This operation ID is opaque to the client, and is used as a cursor to scan.
-      // Since we don't implement scanning for dev-env, it can random, doesn't have to be sequential.
-      const operationId = crypto.randomStr(16, 'hex')
+      const operationId = TID.nextStr()
 
       return {
         operation: {
