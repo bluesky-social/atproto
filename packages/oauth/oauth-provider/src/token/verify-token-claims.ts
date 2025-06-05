@@ -7,6 +7,9 @@ import { DpopResult } from '../oauth-verifier.js'
 import { SignedTokenPayload } from '../signer/signed-token-payload.js'
 import { TokenId } from './token-id.js'
 
+const BEARER = 'Bearer' satisfies OAuthTokenType
+const DPOP = 'DPoP' satisfies OAuthTokenType
+
 export type VerifyTokenClaimsOptions = {
   /** One of these audience must be included in the token audience(s) */
   audience?: [string, ...string[]]
@@ -34,10 +37,10 @@ export function verifyTokenClaims(
 
   if (tokenClaims.cnf?.jkt) {
     // An access token with a cnf.jkt claim must be a DPoP token
-    if (tokenType !== 'DPoP') {
+    if (tokenType !== DPOP) {
       throw new InvalidTokenError(
-        tokenType,
-        `DPoP token type must be used with a DPoP proof`,
+        DPOP,
+        `Access token is bound to a DPoP proof, but token type is ${tokenType}`,
       )
     }
 
@@ -52,17 +55,17 @@ export function verifyTokenClaims(
     }
   } else {
     // An access token without a cnf.jkt claim must be a Bearer token
-    if (tokenType !== 'Bearer') {
+    if (tokenType !== BEARER) {
       throw new InvalidTokenError(
-        tokenType,
+        BEARER,
         `Bearer token type must be used without a DPoP proof`,
       )
     }
 
-    // DPoP proof not expected for Bearer tokens
+    // Unexpected DPoP proof received for a Bearer token
     if (dpopResult) {
       throw new InvalidTokenError(
-        tokenType,
+        BEARER,
         `DPoP proof not expected for Bearer token type`,
       )
     }

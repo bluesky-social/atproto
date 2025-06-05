@@ -61,9 +61,11 @@ export const jwtHeaderSchema = z
 
 export type JwtHeader = z.infer<typeof jwtHeaderSchema>
 
+/**
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6}
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9110#section-7.1}
+ */
 export const htuSchema = z.string().superRefine((value, ctx) => {
-  // https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6
-
   try {
     const url = new URL(value)
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {

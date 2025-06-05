@@ -108,7 +108,7 @@ export class DpopManager {
     // > comparing the htu claim.
     //
     // RFC9449 section 4.3. Checking DPoP Proofs - https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
-    if (!htu || normalizeHtu(htu) !== urlToHtu(httpUrl)) {
+    if (!htu || parseHtu(htu) !== normalizeHtuUrl(httpUrl)) {
       throw newInvalidDpopProofError('DPoP "htu" mismatch')
     }
 
@@ -166,24 +166,23 @@ function extractProof(
  * removing the search and hash components, as well as by using an URL object to
  * simplify the pathname (e.g. removing dot segments).
  *
- * @param inputUrl - The URL of the HTTP request.
  * @returns The normalized URL as a string.
  * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-4.3}
  */
-function urlToHtu(url: Readonly<URL>): string {
-  // NodeJS's `URL` normalizes the pathname, so we can just use it.
+function normalizeHtuUrl(url: Readonly<URL>): string {
+  // NodeJS's `URL` normalizes the pathname, so we can just use that.
   return url.origin + url.pathname
 }
 
-function normalizeHtu(htu: string): string {
+function parseHtu(htu: string): string {
   const url = ifURL(htu)
   if (!url) {
     throw newInvalidDpopProofError('DPoP "htu" is not a valid URL')
   }
 
-  // @NOTE the check bellow can be removed once once jwtPayloadSchema is used to
-  // validate the DPoP proof payload as it already performs these checks (though
-  // the htuSchema).
+  // @NOTE the checks bellow can be removed once once jwtPayloadSchema is used
+  // to validate the DPoP proof payload as it already performs these checks
+  // (though the htuSchema).
 
   if (url.password || url.username) {
     throw newInvalidDpopProofError('DPoP "htu" must not contain credentials')
@@ -198,7 +197,7 @@ function normalizeHtu(htu: string): string {
   // htu is not supposed to contain query or fragment.
 
   // NodeJS's `URL` normalizes the pathname.
-  return urlToHtu(url)
+  return normalizeHtuUrl(url)
 }
 
 function newInvalidDpopProofError(

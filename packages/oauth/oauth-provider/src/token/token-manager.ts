@@ -119,7 +119,7 @@ export class TokenManager {
       // token request if they didn't provide a "dpop_jkt" during the
       // authorization request.
       if (dpopResult) parameters = { ...parameters, dpop_jkt: dpopResult.jkt }
-    } else if (parameters.dpop_jkt !== dpopResult?.jkt) {
+    } else if (!dpopResult || parameters.dpop_jkt !== dpopResult.jkt) {
       throw new InvalidDpopKeyBindingError()
     }
 

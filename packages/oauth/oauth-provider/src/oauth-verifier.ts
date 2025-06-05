@@ -110,9 +110,7 @@ export class OAuthVerifier {
 
     if (dpopResult) {
       const unique = await this.replayManager.uniqueDpop(dpopResult.jti)
-      if (!unique) {
-        throw new InvalidDpopProofError('DPoP proof jti is not unique')
-      }
+      if (!unique) throw new InvalidDpopProofError('DPoP proof replayed')
     }
 
     return dpopResult
