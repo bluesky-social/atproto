@@ -1,4 +1,4 @@
-export type DpopResult = {
+export type DpopProof = {
   jti: string
   jkt: string
   htm: string

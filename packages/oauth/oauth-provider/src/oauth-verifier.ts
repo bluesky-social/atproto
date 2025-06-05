@@ -8,7 +8,7 @@ import {
 } from '@atproto/oauth-types'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
-import { DpopResult } from './dpop/dpop-result.js'
+import { DpopProof } from './dpop/dpop-proof.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidTokenError } from './errors/invalid-token-error.js'
 import { UseDpopNonceError } from './errors/use-dpop-nonce-error.js'
@@ -51,7 +51,7 @@ export type OAuthVerifierOptions = Override<
 >
 
 export { DpopNonce, Key, Keyset }
-export type { DpopResult, RedisOptions, ReplayStore, VerifyTokenClaimsOptions }
+export type { DpopProof, RedisOptions, ReplayStore, VerifyTokenClaimsOptions }
 
 export class OAuthVerifier {
   public readonly issuer: OAuthIssuerIdentifier
@@ -100,26 +100,26 @@ export class OAuthVerifier {
     httpUrl: Readonly<URL>,
     httpHeaders: Record<string, undefined | string | string[]>,
     accessToken?: string,
-  ): Promise<null | DpopResult> {
-    const dpopResult = await this.dpopManager.checkProof(
+  ): Promise<null | DpopProof> {
+    const dpopProof = await this.dpopManager.checkProof(
       httpMethod,
       httpUrl,
       httpHeaders,
       accessToken,
     )
 
-    if (dpopResult) {
-      const unique = await this.replayManager.uniqueDpop(dpopResult.jti)
+    if (dpopProof) {
+      const unique = await this.replayManager.uniqueDpop(dpopProof.jti)
       if (!unique) throw new InvalidDpopProofError('DPoP proof replayed')
     }
 
-    return dpopResult
+    return dpopProof
   }
 
   protected async verifyToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
-    dpopResult: null | DpopResult,
+    dpopProof: null | DpopProof,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
     if (!isSignedJwt(token)) {
@@ -137,7 +137,7 @@ export class OAuthVerifier {
       payload.jti,
       tokenType,
       payload,
-      dpopResult,
+      dpopProof,
       verifyOptions,
     )
   }
@@ -152,7 +152,7 @@ export class OAuthVerifier {
       httpHeaders['authorization'],
     )
     try {
-      const dpopResult = await this.checkDpopProof(
+      const dpopProof = await this.checkDpopProof(
         httpMethod,
         httpUrl,
         httpHeaders,
@@ -162,7 +162,7 @@ export class OAuthVerifier {
       const tokenResult = await this.verifyToken(
         tokenType,
         token,
-        dpopResult,
+        dpopProof,
         verifyOptions,
       )
 

@@ -70,7 +70,7 @@ import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import {
-  DpopResult,
+  DpopProof,
   OAuthVerifier,
   OAuthVerifierOptions,
 } from './oauth-verifier.js'
@@ -462,7 +462,7 @@ export class OAuthProvider extends OAuthVerifier {
   public async pushedAuthorizationRequest(
     credentials: OAuthClientCredentials,
     authorizationRequest: OAuthAuthorizationRequestPar,
-    dpopResult: null | DpopResult,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthParResponse> {
     try {
       const [client, clientAuth] = await this.authenticateClient(credentials)
@@ -478,7 +478,7 @@ export class OAuthProvider extends OAuthVerifier {
           clientAuth,
           parameters,
           null,
-          dpopResult,
+          dpopProof,
         )
 
       return {
@@ -721,7 +721,7 @@ export class OAuthProvider extends OAuthVerifier {
     clientCredentials: OAuthClientCredentials,
     clientMetadata: RequestMetadata,
     request: OAuthTokenRequest,
-    dpopResult: null | DpopResult,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const [client, clientAuth] =
       await this.authenticateClient(clientCredentials)
@@ -744,7 +744,7 @@ export class OAuthProvider extends OAuthVerifier {
         clientAuth,
         clientMetadata,
         request,
-        dpopResult,
+        dpopProof,
       )
     }
 
@@ -754,7 +754,7 @@ export class OAuthProvider extends OAuthVerifier {
         clientAuth,
         clientMetadata,
         request,
-        dpopResult,
+        dpopProof,
       )
     }
 
@@ -768,7 +768,7 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     input: OAuthAuthorizationCodeGrantTokenRequest,
-    dpopResult: null | DpopResult,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const code = codeSchema.parse(input.code)
     try {
@@ -811,7 +811,7 @@ export class OAuthProvider extends OAuthVerifier {
         deviceId,
         parameters,
         input,
-        dpopResult,
+        dpopProof,
       )
     } catch (err) {
       // If a token is replayed, requestManager.findCode will throw. In that
@@ -839,14 +839,14 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     input: OAuthRefreshTokenGrantTokenRequest,
-    dpopResult: null | DpopResult,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     return this.tokenManager.refresh(
       client,
       clientAuth,
       clientMetadata,
       input,
-      dpopResult,
+      dpopProof,
     )
   }
 
@@ -878,18 +878,18 @@ export class OAuthProvider extends OAuthVerifier {
   protected override async verifyToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
-    dpopResult: null | DpopResult,
+    dpopProof: null | DpopProof,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
     if (this.accessTokenMode === AccessTokenMode.stateless) {
-      return super.verifyToken(tokenType, token, dpopResult, verifyOptions)
+      return super.verifyToken(tokenType, token, dpopProof, verifyOptions)
     }
 
     if (this.accessTokenMode === AccessTokenMode.light) {
       const { tokenClaims } = await super.verifyToken(
         tokenType,
         token,
-        dpopResult,
+        dpopProof,
         // Do not verify the scope and audience in case of "light" tokens.
         // these will be checked through the tokenManager hereafter.
         undefined,
@@ -904,7 +904,7 @@ export class OAuthProvider extends OAuthVerifier {
         token,
         tokenType,
         tokenId,
-        dpopResult,
+        dpopProof,
         verifyOptions,
       )
     }

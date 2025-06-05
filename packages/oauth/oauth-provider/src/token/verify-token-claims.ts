@@ -3,7 +3,7 @@ import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-e
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { asArray } from '../lib/util/cast.js'
 import { InvalidTokenError } from '../oauth-errors.js'
-import { DpopResult } from '../oauth-verifier.js'
+import { DpopProof } from '../oauth-verifier.js'
 import { SignedTokenPayload } from '../signer/signed-token-payload.js'
 import { TokenId } from './token-id.js'
 
@@ -22,7 +22,7 @@ export type VerifyTokenClaimsResult = {
   tokenId: TokenId
   tokenType: OAuthTokenType
   tokenClaims: SignedTokenPayload
-  dpopResult: null | DpopResult
+  dpopProof: null | DpopProof
 }
 
 export function verifyTokenClaims(
@@ -30,7 +30,7 @@ export function verifyTokenClaims(
   tokenId: TokenId,
   tokenType: OAuthTokenType,
   tokenClaims: SignedTokenPayload,
-  dpopResult: null | DpopResult,
+  dpopProof: null | DpopProof,
   options?: VerifyTokenClaimsOptions,
 ): VerifyTokenClaimsResult {
   const dateReference = Date.now()
@@ -45,12 +45,12 @@ export function verifyTokenClaims(
     }
 
     // DPoP token type must be used with a DPoP proof
-    if (!dpopResult) {
+    if (!dpopProof) {
       throw new InvalidDpopProofError(`DPoP proof required`)
     }
 
     // DPoP proof must be signed with the key that matches the "cnf" claim
-    if (tokenClaims.cnf.jkt !== dpopResult.jkt) {
+    if (tokenClaims.cnf.jkt !== dpopProof.jkt) {
       throw new InvalidDpopKeyBindingError()
     }
   } else {
@@ -63,7 +63,7 @@ export function verifyTokenClaims(
     }
 
     // Unexpected DPoP proof received for a Bearer token
-    if (dpopResult) {
+    if (dpopProof) {
       throw new InvalidTokenError(
         BEARER,
         `DPoP proof not expected for Bearer token type`,
@@ -89,5 +89,5 @@ export function verifyTokenClaims(
     throw new InvalidTokenError(tokenType, `Token expired`)
   }
 
-  return { token, tokenId, tokenType, tokenClaims, dpopResult }
+  return { token, tokenId, tokenType, tokenClaims, dpopProof }
 }

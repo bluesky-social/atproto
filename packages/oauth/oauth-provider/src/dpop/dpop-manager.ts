@@ -12,7 +12,7 @@ import {
   dpopSecretSchema,
   rotationIntervalSchema,
 } from './dpop-nonce.js'
-import { DpopResult } from './dpop-result.js'
+import { DpopProof } from './dpop-proof.js'
 
 const { JOSEError } = errors
 
@@ -54,7 +54,7 @@ export class DpopManager {
     httpUrl: Readonly<URL>,
     httpHeaders: Record<string, undefined | string | string[]>,
     accessToken?: string,
-  ): Promise<null | DpopResult> {
+  ): Promise<null | DpopProof> {
     // Fool proofing against use of empty string
     if (!httpMethod) {
       throw new TypeError('HTTP method is required')
