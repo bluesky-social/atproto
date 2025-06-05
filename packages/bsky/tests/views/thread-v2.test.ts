@@ -1,22 +1,17 @@
 import assert from 'node:assert'
-import {
-  AppBskyUnspeccedGetPostThreadHiddenV2,
-  AppBskyUnspeccedGetPostThreadV2,
-  AtpAgent,
-} from '@atproto/api'
+import { AppBskyUnspeccedDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import {
-  OutputSchema as OutputSchemaHiddenThread,
-  ThreadHiddenItem,
-  ThreadHiddenItemPost,
-} from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
+import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
 import {
   OutputSchema as OutputSchemaThread,
   QueryParams as QueryParamsThread,
-  ThreadItemPost,
 } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import { ThreadItemValuePost } from '../../src/views/threads-v2'
+import {
+  ThreadHiddenItemValuePost,
+  ThreadItemValuePost,
+} from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
 import * as seeds from '../seed/thread-v2'
 import { TAG_BUMP_DOWN, TAG_HIDE } from '../seed/thread-v2'
@@ -29,7 +24,7 @@ const props = (overrides: Partial<PostProps> = {}): PostProps => ({
 })
 
 type PostPropsHidden = Pick<
-  ThreadHiddenItemPost,
+  ThreadItemPost,
   'hiddenByThreadgate' | 'mutedByViewer'
 >
 const propsHidden = (
@@ -76,7 +71,7 @@ describe('appview thread views v2', () => {
         expect.objectContaining({
           depth: 0,
           value: {
-            $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
+            $type: 'app.bsky.unspecced.defs#threadItemNotFound',
           },
         }),
       ])
@@ -1259,7 +1254,7 @@ describe('appview thread views v2', () => {
             uri: seed.r['0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+              $type: 'app.bsky.unspecced.defs#threadItemBlocked',
             }),
           }),
         ])
@@ -1284,14 +1279,14 @@ describe('appview thread views v2', () => {
             uri: seed.r['0'].ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+              $type: 'app.bsky.unspecced.defs#threadItemBlocked',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['0.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
         ])
@@ -1343,14 +1338,14 @@ describe('appview thread views v2', () => {
             uri: seed.root.ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+              $type: 'app.bsky.unspecced.defs#threadItemBlocked',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['1'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
           // 1.0 is blocked, but 1.1 is not
@@ -1358,7 +1353,7 @@ describe('appview thread views v2', () => {
             uri: seed.r['1.1'].ref.uriStr,
             depth: 1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
         ])
@@ -1383,14 +1378,14 @@ describe('appview thread views v2', () => {
             uri: seed.r['1'].ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+              $type: 'app.bsky.unspecced.defs#threadItemBlocked',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['1.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
         ])
@@ -1415,21 +1410,21 @@ describe('appview thread views v2', () => {
             uri: seed.root.ref.uriStr,
             depth: -2,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemBlocked',
+              $type: 'app.bsky.unspecced.defs#threadItemBlocked',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['1'].ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['1.1'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
         ])
@@ -1479,14 +1474,14 @@ describe('appview thread views v2', () => {
             uri: seed.r['2'].ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemNotFound',
+              $type: 'app.bsky.unspecced.defs#threadItemNotFound',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['2.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
         ])
@@ -1511,21 +1506,21 @@ describe('appview thread views v2', () => {
             uri: seed.root.ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['0'].ref.uriStr,
             depth: 1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['0.0'].ref.uriStr,
             depth: 2,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
         ])
@@ -1548,15 +1543,14 @@ describe('appview thread views v2', () => {
             uri: seed.root.ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['3'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type:
-                'app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
+              $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
             }),
           }),
         ])
@@ -1579,30 +1573,28 @@ describe('appview thread views v2', () => {
             uri: seed.root.ref.uriStr,
             depth: -3,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['3'].ref.uriStr,
             depth: -2,
             value: expect.objectContaining({
-              $type:
-                'app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
+              $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['3.0'].ref.uriStr,
             depth: -1,
             value: expect.objectContaining({
-              $type:
-                'app.bsky.unspecced.getPostThreadV2#threadItemNoUnauthenticated',
+              $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
             }),
           }),
           expect.objectContaining({
             uri: seed.r['3.0.0'].ref.uriStr,
             depth: 0,
             value: expect.objectContaining({
-              $type: 'app.bsky.unspecced.getPostThreadV2#threadItemPost',
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
             }),
           }),
         ])
@@ -2103,7 +2095,7 @@ function assertPosts(
 ): asserts t is ThreadItemValuePost[] {
   t.forEach((i) => {
     assert(
-      AppBskyUnspeccedGetPostThreadV2.isThreadItemPost(i.value),
+      AppBskyUnspeccedDefs.isThreadItemPost(i.value),
       `Expected thread item to have a post as value`,
     )
   })
@@ -2111,10 +2103,10 @@ function assertPosts(
 
 function assertHiddenPosts(
   t: OutputSchemaHiddenThread['thread'],
-): asserts t is ThreadHiddenItem[] {
+): asserts t is ThreadHiddenItemValuePost[] {
   t.forEach((i) => {
     assert(
-      AppBskyUnspeccedGetPostThreadHiddenV2.isThreadHiddenItemPost(i.value),
+      AppBskyUnspeccedDefs.isThreadItemPost(i.value),
       `Expected thread item to have a hidden post as value`,
     )
   })

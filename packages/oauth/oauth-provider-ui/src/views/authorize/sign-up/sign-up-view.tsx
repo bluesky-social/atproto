@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { useCallback, useState } from 'react'
+import { ReactNode, useCallback, useState } from 'react'
 import type { CustomizationData } from '@atproto/oauth-provider-api'
 import { WizardCard } from '../../../components/forms/wizard-card.tsx'
 import {
@@ -22,6 +22,7 @@ export type SignUpViewProps = Override<
     customizationData?: CustomizationData
 
     onBack?: () => void
+    backLabel?: ReactNode
     onValidateNewHandle: (
       data: { handle: string },
       signal?: AbortSignal,
@@ -47,6 +48,7 @@ export function SignUpView({
   onValidateNewHandle,
   onDone,
   onBack,
+  backLabel,
 
   // LayoutTitlePage
   ...props
@@ -83,6 +85,7 @@ export function SignUpView({
       <WizardCard
         doneLabel={<Trans>Sign up</Trans>}
         onBack={onBack}
+        backLabel={backLabel}
         onDone={doDone}
         steps={[
           // We use the handle input first since the "onValidateNewHandle" check

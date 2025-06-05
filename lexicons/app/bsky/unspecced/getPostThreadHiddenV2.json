@@ -29,7 +29,7 @@
           "properties": {
             "thread": {
               "type": "array",
-              "description": "A flat list of thread hidden items. The depth of each item is indicated by the depth property inside the item.",
+              "description": "A flat list of hidden thread items. The depth of each item is indicated by the depth property inside the item.",
               "items": {
                 "type": "ref",
                 "ref": "#threadHiddenItem"
@@ -53,22 +53,7 @@
         },
         "value": {
           "type": "union",
-          "refs": ["#threadHiddenItemPost"]
-        }
-      }
-    },
-    "threadHiddenItemPost": {
-      "type": "object",
-      "required": ["post", "hiddenByThreadgate", "mutedByViewer"],
-      "properties": {
-        "post": { "type": "ref", "ref": "app.bsky.feed.defs#postView" },
-        "hiddenByThreadgate": {
-          "type": "boolean",
-          "description": "The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread."
-        },
-        "mutedByViewer": {
-          "type": "boolean",
-          "description": "This is by an account muted by the viewer requesting it."
+          "refs": ["app.bsky.unspecced.defs#threadItemPost"]
         }
       }
     }
