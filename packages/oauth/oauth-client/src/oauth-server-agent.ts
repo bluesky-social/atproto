@@ -207,10 +207,17 @@ export class OAuthServerAgent {
 
     const auth = await this.buildClientAuth(endpoint)
 
+    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13#section-3.2.2
+    // https://datatracker.ietf.org/doc/html/rfc7009#section-2.1
+    // https://datatracker.ietf.org/doc/html/rfc7662#section-2.1
+    // https://datatracker.ietf.org/doc/html/rfc9126#section-2
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
-      headers: { ...auth.headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, ...auth.payload }),
+      headers: {
+        ...auth.headers,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: wwwFormUrlEncode({ ...payload, ...auth.payload }),
     }).then(fetchJsonProcessor())
 
     if (response.ok) {
@@ -292,5 +299,39 @@ export class OAuthServerAgent {
     }
 
     throw new Error(`Unsupported ${endpoint} authentication method`)
+  }
+}
+
+function wwwFormUrlEncode(payload: Record<string, undefined | unknown>) {
+  return new URLSearchParams(
+    Object.entries(payload)
+      .filter(entryHasDefinedValue)
+      .map(stringifyEntryValue),
+  ).toString()
+}
+
+function entryHasDefinedValue(
+  entry: [string, unknown],
+): entry is [string, null | NonNullable<unknown>] {
+  return entry[1] !== undefined
+}
+
+function stringifyEntryValue(entry: [string, unknown]): [string, string] {
+  const name = entry[0]
+  const value = entry[1]
+
+  switch (typeof value) {
+    case 'string':
+      return [name, value]
+    case 'number':
+    case 'boolean':
+      return [name, String(value)]
+    default: {
+      const enc = JSON.stringify(value)
+      if (enc === undefined) {
+        throw new Error(`Unsupported value type for ${name}: ${String(value)}`)
+      }
+      return [name, enc]
+    }
   }
 }
