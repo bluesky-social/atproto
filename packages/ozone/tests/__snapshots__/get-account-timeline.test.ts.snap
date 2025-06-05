@@ -3,7 +3,7 @@
 exports[`account timeline Returns entire timeline of events for a given account 1`] = `
 Array [
   Object {
-    "day": "2025-06-03",
+    "day": "2025-06-05",
     "summary": Array [
       Object {
         "count": 1,
@@ -29,6 +29,11 @@ Array [
         "count": 1,
         "eventSubjectType": "account",
         "eventType": "tools.ozone.moderation.defs#modEventTakedown",
+      },
+      Object {
+        "count": 1,
+        "eventSubjectType": "account",
+        "eventType": "plc_operation",
       },
     ],
   },
