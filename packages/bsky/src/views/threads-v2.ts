@@ -7,18 +7,18 @@ import {
   ThreadItemNotFound,
   ThreadItemPost,
 } from '../lexicon/types/app/bsky/unspecced/defs'
-import { ThreadHiddenItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import { ThreadItem as ThreadOtherItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
 import {
   QueryParams as GetPostThreadV2QueryParams,
   ThreadItem,
 } from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { $Typed } from '../lexicon/util'
 
-type ThreadMaybeHiddenPostNode = ThreadPostNode | ThreadHiddenPostNode
+type ThreadMaybeOtherPostNode = ThreadPostNode | ThreadOtherPostNode
 type ThreadNodeWithReplies =
   | ThreadPostNode
-  | ThreadHiddenPostNode
-  | ThreadHiddenAnchorPostNode
+  | ThreadOtherPostNode
+  | ThreadOtherAnchorPostNode
 
 type ThreadItemValue<T extends ThreadItem['value']> = Omit<
   ThreadItem,
@@ -63,37 +63,37 @@ type ThreadPostNode = {
   replies: ThreadTree[] | undefined
 }
 
-type ThreadHiddenItemValue<T extends ThreadHiddenItem['value']> = Omit<
-  ThreadHiddenItem,
+type ThreadOtherItemValue<T extends ThreadOtherItem['value']> = Omit<
+  ThreadOtherItem,
   'value'
 > & {
   value: T
 }
 
-export type ThreadHiddenItemValuePost = ThreadHiddenItemValue<
+export type ThreadOtherItemValuePost = ThreadOtherItemValue<
   $Typed<ThreadItemPost>
 >
 
 // This is an intermediary type that doesn't map to the views.
 // It is useful to differentiate between the anchor post and the replies for the hidden case,
 // while also differentiating between hidden and visible cases.
-export type ThreadHiddenAnchorPostNode = {
+export type ThreadOtherAnchorPostNode = {
   type: 'hiddenAnchor'
-  item: Omit<ThreadHiddenItem, 'value'> & { value: undefined }
-  replies: ThreadHiddenPostNode[] | undefined
+  item: Omit<ThreadOtherItem, 'value'> & { value: undefined }
+  replies: ThreadOtherPostNode[] | undefined
 }
 
-export type ThreadHiddenPostNode = {
+export type ThreadOtherPostNode = {
   type: 'hiddenPost'
-  item: ThreadHiddenItemValuePost
+  item: ThreadOtherItemValuePost
   tags: Set<string>
-  replies: ThreadHiddenPostNode[] | undefined
+  replies: ThreadOtherPostNode[] | undefined
 }
 
 const isNodeWithReplies = (node: ThreadTree): node is ThreadNodeWithReplies =>
   'replies' in node && node.replies !== undefined
 
-const isPostNode = (node: ThreadTree): node is ThreadMaybeHiddenPostNode =>
+const isPostNode = (node: ThreadTree): node is ThreadMaybeOtherPostNode =>
   node.type === 'post' || node.type === 'hiddenPost'
 
 export type ThreadTreeVisible =
@@ -102,9 +102,9 @@ export type ThreadTreeVisible =
   | ThreadNotFoundNode
   | ThreadPostNode
 
-export type ThreadTreeHidden = ThreadHiddenAnchorPostNode | ThreadHiddenPostNode
+export type ThreadTreeOther = ThreadOtherAnchorPostNode | ThreadOtherPostNode
 
-export type ThreadTree = ThreadTreeVisible | ThreadTreeHidden
+export type ThreadTree = ThreadTreeVisible | ThreadTreeOther
 
 /** This function mutates the tree parameter. */
 export function sortTrimFlattenThreadTree(
@@ -146,8 +146,8 @@ function sortTrimThreadTree(
       if (!isPostNode(bn)) {
         return -1
       }
-      const aNode: ThreadMaybeHiddenPostNode = an
-      const bNode: ThreadMaybeHiddenPostNode = bn
+      const aNode: ThreadMaybeOtherPostNode = an
+      const bNode: ThreadMaybeOtherPostNode = bn
 
       // First applies bumping.
       const bump = applyBumping(aNode, bNode, opts)
@@ -171,8 +171,8 @@ function sortTrimThreadTree(
 }
 
 function applyBumping(
-  aNode: ThreadMaybeHiddenPostNode,
-  bNode: ThreadMaybeHiddenPostNode,
+  aNode: ThreadMaybeOtherPostNode,
+  bNode: ThreadMaybeOtherPostNode,
   opts: SortTrimFlattenOptions,
 ): number | null {
   if (!isPostNode(aNode)) {
@@ -191,7 +191,7 @@ function applyBumping(
   } = opts
 
   type BumpDirection = 'up' | 'down'
-  type BumpPredicateFn = (i: ThreadMaybeHiddenPostNode) => boolean
+  type BumpPredicateFn = (i: ThreadMaybeOtherPostNode) => boolean
 
   const maybeBump = (
     bump: BumpDirection,
@@ -276,8 +276,8 @@ function applyBumping(
 }
 
 function applySorting(
-  aNode: ThreadMaybeHiddenPostNode,
-  bNode: ThreadMaybeHiddenPostNode,
+  aNode: ThreadMaybeOtherPostNode,
+  bNode: ThreadMaybeOtherPostNode,
   opts: SortTrimFlattenOptions,
 ): number {
   const a = aNode.item.value
