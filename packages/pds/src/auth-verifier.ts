@@ -21,6 +21,7 @@ import {
 } from '@atproto/xrpc-server'
 import { AccountManager } from './account-manager/account-manager'
 import { softDeleted } from './db'
+import { oauthLogger } from './logger'
 
 type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
 
@@ -490,12 +491,25 @@ export class AuthVerifier {
       const originalUrl =
         ('originalUrl' in req && req.originalUrl) || req.url || '/'
       const url = new URL(originalUrl, this._publicUrl)
-      const { tokenClaims } = await this.oauthVerifier.authenticateRequest(
-        req.method || 'GET',
-        url,
-        req.headers,
-        { audience: [this.dids.pds] },
-      )
+      const { tokenClaims, dpopProof } =
+        await this.oauthVerifier.authenticateRequest(
+          req.method || 'GET',
+          url,
+          req.headers,
+          { audience: [this.dids.pds] },
+        )
+
+      // @TODO drop this once oauth provider no longer accepts DPoP proof with
+      // query or fragment in "htu" claim.
+      if (dpopProof?.htu.match(/[?#]/)) {
+        oauthLogger.info(
+          {
+            client_id: tokenClaims.client_id,
+            htu: dpopProof.htu,
+          },
+          'DPoP proof "htu" contains query or fragment',
+        )
+      }
 
       const { sub } = tokenClaims
       if (typeof sub !== 'string' || !sub.startsWith('did:')) {
