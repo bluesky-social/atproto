@@ -122,7 +122,22 @@ export function dpopFetchWrapper<C = FetchContext>({
     const nextRequest = new Request(input, init)
     nextRequest.headers.set('DPoP', nextProof)
 
-    return fetch.call(this, nextRequest)
+    const retryRequest = await fetch.call(this, nextRequest)
+    const retryNonce = retryRequest.headers.get('DPoP-Nonce')
+    if (!retryNonce || retryNonce === initNonce) {
+      // No nonce was returned or it is the same as the one we sent. No need to
+      // update the nonce store, or retry the request.
+      return retryRequest
+    }
+
+    // Store the fresh nonce for future requests
+    try {
+      await nonces.set(origin, retryNonce)
+    } catch {
+      // Ignore set errors
+    }
+
+    return retryRequest
   }
 }
 
