@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.3.21
+
+### Patch Changes
+
+- [#3935](https://github.com/bluesky-social/atproto/pull/3935) [`cd4bed3c9`](https://github.com/bluesky-social/atproto/commit/cd4bed3c9e68878c3f79620fe19f6994ebcb932e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Cache new DPoP nonces from successful retries
+
 ## 0.3.20
 
 ### Patch Changes

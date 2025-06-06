@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.3.139",
+  "version": "0.3.140",
   "license": "MIT",
   "description": "Local development environment helper for atproto development",
   "keywords": [
