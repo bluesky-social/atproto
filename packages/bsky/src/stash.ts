@@ -1,4 +1,4 @@
-import { LexValue } from '@atproto/lexicon'
+import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
 import { Method } from './proto/bsync_pb'
@@ -42,7 +42,7 @@ export class StashClient {
       method,
       payload: payload
         ? Buffer.from(
-            JSON.stringify({
+            stringifyLex({
               $type: namespace,
               ...payload,
             }),

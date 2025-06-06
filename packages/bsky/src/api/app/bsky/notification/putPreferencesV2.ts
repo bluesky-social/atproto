@@ -12,27 +12,15 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
-      const { preferences, exists } = await computePreferences(
-        ctx,
-        actorDid,
-        input,
-      )
+      const preferences = await computePreferences(ctx, actorDid, input)
 
-      const namespace = 'app.bsky.notification.defs#preferences'
-      const key = 'self'
-
-      const stashInput = {
+      // Notification preferences are created automatically on the dataplane on signup, so we just update.
+      await ctx.stashClient.update({
         actorDid,
-        namespace,
-        key,
+        namespace: 'app.bsky.notification.defs#preferences',
+        key: 'self',
         payload: preferences,
-      }
-
-      if (exists) {
-        await ctx.stashClient.update(stashInput)
-      } else {
-        await ctx.stashClient.create(stashInput)
-      }
+      })
 
       return {
         encoding: 'application/json',
@@ -48,7 +36,7 @@ const computePreferences = async (
   ctx: AppContext,
   actorDid: string,
   input: HandlerInput,
-): Promise<{ preferences: Un$Typed<Preferences>; exists: boolean }> => {
+): Promise<Un$Typed<Preferences>> => {
   let res: GetNotificationPreferencesResponse
   try {
     res = await ctx.dataplane.getNotificationPreferences({
@@ -69,8 +57,7 @@ const computePreferences = async (
     )
   }
 
-  const exists = Object.values(res.preferences[0]).some((v) => v !== undefined)
   const currentPreferences = protobufToLex(res.preferences[0])
   const preferences = { ...currentPreferences, ...input.body }
-  return { preferences, exists }
+  return preferences
 }

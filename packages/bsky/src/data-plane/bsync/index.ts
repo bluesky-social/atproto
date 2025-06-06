@@ -8,7 +8,11 @@ import { TID } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
 import { Service } from '../../proto/bsync_connect'
-import { Method, MuteOperation_Type } from '../../proto/bsync_pb'
+import {
+  Method,
+  MuteOperation_Type,
+  PutOperationRequest,
+} from '../../proto/bsync_pb'
 import { Database } from '../server/db'
 
 export class MockBsync {
@@ -141,48 +145,24 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
 
     async putOperation(req) {
       const { actorDid, namespace, key, method, payload } = req
-
-      const now = new Date().toISOString()
-
-      if (method === Method.CREATE) {
-        await db.db
-          .insertInto('private_data')
-          .values({
-            actorDid,
-            namespace,
-            key,
-            payload: Buffer.from(payload).toString('utf8'),
-            indexedAt: now,
-            updatedAt: now,
-          })
-          .execute()
-      } else if (method === Method.UPDATE) {
-        await db.db
-          .updateTable('private_data')
-          .where('actorDid', '=', actorDid)
-          .where('namespace', '=', namespace)
-          .where('key', '=', key)
-          .set({
-            payload: Buffer.from(payload).toString('utf8'),
-            updatedAt: now,
-          })
-          .execute()
-      } else if (method === Method.DELETE) {
-        await db.db
-          .deleteFrom('private_data')
-          .where('actorDid', '=', actorDid)
-          .where('namespace', '=', namespace)
-          .where('key', '=', key)
-          .execute()
-      } else {
+      if (
+        method !== Method.CREATE &&
+        method !== Method.UPDATE &&
+        method !== Method.DELETE
+      ) {
         throw new Error(`Unsupported method: ${method}`)
       }
 
-      const operationId = TID.nextStr()
+      const now = new Date().toISOString()
+      if (namespace === 'app.bsky.notification.defs#preferences') {
+        await handleNotificationPreferencesOperation(db, req, now)
+      } else {
+        await handleGenericOperation(db, req, now)
+      }
 
       return {
         operation: {
-          id: operationId,
+          id: TID.nextStr(),
           actorDid,
           namespace,
           key,
@@ -200,3 +180,73 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       return {}
     },
   })
+
+const handleNotificationPreferencesOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, namespace, key, method, payload } = req
+  if (method === Method.CREATE || method === Method.UPDATE) {
+    return db.db
+      .insertInto('private_data')
+      .values({
+        actorDid,
+        namespace,
+        key,
+        payload: Buffer.from(payload).toString('utf8'),
+        indexedAt: now,
+        updatedAt: now,
+      })
+      .onConflict((oc) =>
+        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
+          payload: Buffer.from(payload).toString('utf8'),
+          updatedAt: now,
+        }),
+      )
+      .execute()
+  }
+
+  return handleGenericOperation(db, req, now)
+}
+
+const handleGenericOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, namespace, key, method, payload } = req
+  if (method === Method.CREATE) {
+    return db.db
+      .insertInto('private_data')
+      .values({
+        actorDid,
+        namespace,
+        key,
+        payload: Buffer.from(payload).toString('utf8'),
+        indexedAt: now,
+        updatedAt: now,
+      })
+      .execute()
+  }
+
+  if (method === Method.UPDATE) {
+    return db.db
+      .updateTable('private_data')
+      .where('actorDid', '=', actorDid)
+      .where('namespace', '=', namespace)
+      .where('key', '=', key)
+      .set({
+        payload: Buffer.from(payload).toString('utf8'),
+        updatedAt: now,
+      })
+      .execute()
+  }
+
+  return db.db
+    .deleteFrom('private_data')
+    .where('actorDid', '=', actorDid)
+    .where('namespace', '=', namespace)
+    .where('key', '=', key)
+    .execute()
+}
