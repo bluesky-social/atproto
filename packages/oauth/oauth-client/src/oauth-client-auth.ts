@@ -39,23 +39,24 @@ export function negotiateClientAuthMethod(
     // "validateClientMetadata" already check this.
     if (!keyset) throw new Error('A keyset is required for private_key_jwt')
 
+    const alg = supportedAlgs(serverMetadata)
+
     // @NOTE we can't use `keyset.findPrivateKey` here because we can't enforce
     // that the returned key contains a "kid". The following implementation is
     // more robust against keysets containing keys without a "kid" property.
-    for (const key of keyset.list({
-      use: 'sig',
-      alg: supportedAlgs(serverMetadata),
-    })) {
-      // We need a private key to be able to sign the JWT.
-      if (!key.isPrivate) continue
-
+    for (const key of keyset.list({ use: 'sig', alg })) {
       // Return the first key from the key set that matches the server's
       // supported algorithms.
-      if (key.kid) return { method: 'private_key_jwt', kid: key.kid }
+      if (key.isPrivate && key.kid) {
+        return { method: 'private_key_jwt', kid: key.kid }
+      }
     }
 
     throw new Error(
-      `Client authentication method "${method}" requires at least one "${FALLBACK_ALG}" signing key with a "kid" property`,
+      alg.includes(FALLBACK_ALG)
+        ? `Client authentication method "${method}" requires at least one "${FALLBACK_ALG}" signing key with a "kid" property`
+        : // AS is not compliant with the ATproto OAuth spec.
+          `Authorization server requires "${method}" authentication method, but does not support "${FALLBACK_ALG}" algorithm.`,
     )
   }
 

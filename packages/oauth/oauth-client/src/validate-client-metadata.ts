@@ -91,7 +91,7 @@ export function validateClientMetadata(
 
     default:
       throw new TypeError(
-        `Invalid "token_endpoint_auth_method" value: ${method}`,
+        `Unsupported "token_endpoint_auth_method" value: ${method}`,
       )
   }
 
