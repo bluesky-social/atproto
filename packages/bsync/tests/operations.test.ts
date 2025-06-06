@@ -22,7 +22,7 @@ describe('operations', () => {
   const validPayload1 = Buffer.from(
     new TextEncoder().encode(JSON.stringify({ value: 1 })),
   )
-  const invalidPayload = Buffer.from(new TextEncoder().encode('{invalid json}'))
+  const invalidPayload = Buffer.from('{invalid json}', 'utf-8')
 
   beforeAll(async () => {
     bsync = await BsyncService.create(
