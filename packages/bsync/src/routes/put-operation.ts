@@ -82,6 +82,17 @@ const validateOp = (req: PutOperationRequest): Operation => {
     throw new ConnectError('operation method is invalid', Code.InvalidArgument)
   }
 
+  if (req.method === Method.CREATE || req.method === Method.UPDATE) {
+    try {
+      JSON.parse(new TextDecoder().decode(req.payload))
+    } catch (error) {
+      throw new ConnectError(
+        'payload must be a valid JSON when method is CREATE or UPDATE',
+        Code.InvalidArgument,
+      )
+    }
+  }
+
   if (req.method === Method.DELETE && req.payload.length > 0) {
     throw new ConnectError(
       'cannot specify a payload when method is DELETE',

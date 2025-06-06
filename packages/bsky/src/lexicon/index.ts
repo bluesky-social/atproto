@@ -138,9 +138,11 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
 import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
+import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
+import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
@@ -1853,6 +1855,17 @@ export class AppBskyNotificationNS {
     this._server = server
   }
 
+  getPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationGetPreferences.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationGetPreferences.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.getPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getUnreadCount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1883,6 +1896,17 @@ export class AppBskyNotificationNS {
     >,
   ) {
     const nsid = 'app.bsky.notification.putPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putPreferencesV2<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationPutPreferencesV2.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationPutPreferencesV2.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putPreferencesV2' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

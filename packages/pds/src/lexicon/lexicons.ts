@@ -9732,6 +9732,147 @@ export const schemaDict = {
         type: 'object',
         properties: {},
       },
+      chatPreference: {
+        type: 'object',
+        required: ['filter', 'push'],
+        properties: {
+          filter: {
+            type: 'string',
+            knownValues: ['all', 'accepted'],
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      filterablePreference: {
+        type: 'object',
+        required: ['filter', 'list', 'push'],
+        properties: {
+          filter: {
+            type: 'string',
+            knownValues: ['all', 'follows'],
+          },
+          list: {
+            type: 'boolean',
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      preference: {
+        type: 'object',
+        required: ['list', 'push'],
+        properties: {
+          list: {
+            type: 'boolean',
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      preferences: {
+        type: 'object',
+        required: [
+          'chat',
+          'follow',
+          'like',
+          'likeViaRepost',
+          'mention',
+          'quote',
+          'reply',
+          'repost',
+          'repostViaRepost',
+          'starterpackJoined',
+          'subscribedPost',
+          'unverified',
+          'verified',
+        ],
+        properties: {
+          chat: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#chatPreference',
+          },
+          follow: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          like: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          likeViaRepost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          mention: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          quote: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          reply: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          repost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          repostViaRepost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          starterpackJoined: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          subscribedPost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          unverified: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          verified: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationGetPreferences: {
+    lexicon: 1,
+    id: 'app.bsky.notification.getPreferences',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get notification-related preferences for an account. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferences',
+              },
+            },
+          },
+        },
+      },
     },
   },
   AppBskyNotificationGetUnreadCount: {
@@ -9917,6 +10058,90 @@ export const schemaDict = {
             properties: {
               priority: {
                 type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutPreferencesV2: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putPreferencesV2',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Set notification-related preferences for an account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              chat: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#chatPreference',
+              },
+              follow: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              like: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              likeViaRepost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              mention: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              quote: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              reply: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              repost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              repostViaRepost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              starterpackJoined: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              subscribedPost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              unverified: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              verified: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferences',
               },
             },
           },
@@ -16557,10 +16782,12 @@ export const ids = {
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
+  AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
+  AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',

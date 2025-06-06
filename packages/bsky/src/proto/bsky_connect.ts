@@ -126,6 +126,8 @@ import {
   GetMutesResponse,
   GetNewUserCountForRangeRequest,
   GetNewUserCountForRangeResponse,
+  GetNotificationPreferencesRequest,
+  GetNotificationPreferencesResponse,
   GetNotificationSeenRequest,
   GetNotificationSeenResponse,
   GetNotificationsRequest,
@@ -732,6 +734,15 @@ export const Service = {
     /**
      * Notifications
      *
+     * @generated from rpc bsky.Service.GetNotificationPreferences
+     */
+    getNotificationPreferences: {
+      name: 'GetNotificationPreferences',
+      I: GetNotificationPreferencesRequest,
+      O: GetNotificationPreferencesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.GetNotifications
      */
     getNotifications: {
