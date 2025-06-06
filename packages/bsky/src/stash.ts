@@ -30,7 +30,14 @@ export class StashClient {
       namespace,
       key,
       method,
-      payload: payload ? Buffer.from(JSON.stringify(payload)) : undefined,
+      payload: payload
+        ? Buffer.from(
+            JSON.stringify({
+              $type: namespace,
+              ...payload,
+            }),
+          )
+        : undefined,
     })
   }
 }

@@ -974,7 +974,10 @@ describe('notification views', () => {
             payload: expect.anything(), // Better to compare payload parsed.
             updatedAt: expect.any(String),
           })
-          expect(JSON.parse(dbResult.payload)).toStrictEqual(expectedDb)
+          expect(JSON.parse(dbResult.payload)).toStrictEqual({
+            $type: 'app.bsky.notification.defs#preferences',
+            ...expectedDb,
+          })
         }
       }
 
@@ -1064,7 +1067,10 @@ describe('notification views', () => {
           payload: expect.anything(), // Better to compare payload parsed.
           updatedAt: expect.any(String),
         })
-        expect(JSON.parse(dbResult.payload)).toStrictEqual(expected)
+        expect(JSON.parse(dbResult.payload)).toStrictEqual({
+          $type: 'app.bsky.notification.defs#preferences',
+          ...expected,
+        })
       }
 
       const input0 = {

@@ -1,5 +1,5 @@
 import { TestNetwork } from '@atproto/dev-env'
-import { StashClient } from '../../dist/stash'
+import { StashClient } from '../dist/stash'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -49,7 +49,7 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: JSON.stringify({ theme: 'light' }),
+        payload: JSON.stringify({ $type: namespace, theme: 'light' }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
@@ -85,7 +85,7 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: JSON.stringify({ theme: 'dark' }),
+        payload: JSON.stringify({ $type: namespace, theme: 'dark' }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
