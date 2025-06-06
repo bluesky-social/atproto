@@ -16,13 +16,9 @@ describe('operations', () => {
   let bsync: BsyncService
   let client: BsyncClient
 
-  const validPayload0 = Buffer.from(
-    new TextEncoder().encode(JSON.stringify({ value: 0 })),
-  )
-  const validPayload1 = Buffer.from(
-    new TextEncoder().encode(JSON.stringify({ value: 1 })),
-  )
-  const invalidPayload = Buffer.from('{invalid json}', 'utf-8')
+  const validPayload0 = Buffer.from(JSON.stringify({ value: 0 }))
+  const validPayload1 = Buffer.from(JSON.stringify({ value: 1 }))
+  const invalidPayload = Buffer.from('{invalid json}')
 
   beforeAll(async () => {
     bsync = await BsyncService.create(
