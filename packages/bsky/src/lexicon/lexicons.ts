@@ -4732,6 +4732,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
           },
+          activitySubscriptions: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscriptions',
+          },
         },
       },
       profileAssociatedChat: {
@@ -4739,6 +4743,16 @@ export const schemaDict = {
         required: ['allowIncoming'],
         properties: {
           allowIncoming: {
+            type: 'string',
+            knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedActivitySubscriptions: {
+        type: 'object',
+        required: ['allowSubscriptions'],
+        properties: {
+          allowSubscriptions: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
           },
@@ -9728,6 +9742,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationActivitySubscriptionDeclaration: {
+    lexicon: 1,
+    id: 'app.bsky.notification.activitySubscriptionDeclaration',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "A declaration of the user's preference for allowing activity subscriptions. Absence of this declaration implies 'following'.",
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['allowSubscriptions'],
+          properties: {
+            allowSubscriptions: {
+              type: 'string',
+              knownValues: ['all', 'none', 'following'],
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationDefs: {
     lexicon: 1,
     id: 'app.bsky.notification.defs',
@@ -13248,6 +13284,8 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationActivitySubscriptionDeclaration:
+    'app.bsky.notification.activitySubscriptionDeclaration',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
   AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
