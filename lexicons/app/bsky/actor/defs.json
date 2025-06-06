@@ -129,7 +129,11 @@
         "feedgens": { "type": "integer" },
         "starterPacks": { "type": "integer" },
         "labeler": { "type": "boolean" },
-        "chat": { "type": "ref", "ref": "#profileAssociatedChat" }
+        "chat": { "type": "ref", "ref": "#profileAssociatedChat" },
+        "activitySubscriptions": {
+          "type": "ref",
+          "ref": "#profileAssociatedActivitySubscriptions"
+        }
       }
     },
     "profileAssociatedChat": {
@@ -137,6 +141,16 @@
       "required": ["allowIncoming"],
       "properties": {
         "allowIncoming": {
+          "type": "string",
+          "knownValues": ["all", "none", "following"]
+        }
+      }
+    },
+    "profileAssociatedActivitySubscriptions": {
+      "type": "object",
+      "required": ["allowSubscriptions"],
+      "properties": {
+        "allowSubscriptions": {
           "type": "string",
           "knownValues": ["all", "none", "following"]
         }
