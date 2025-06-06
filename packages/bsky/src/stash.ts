@@ -1,4 +1,6 @@
+import { LexValue, lexObject } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
+import { lexicons } from './lexicon/lexicons'
 import { Method } from './proto/bsync_pb'
 
 export const createStashClient = (bsyncClient: BsyncClient): StashClient => {
@@ -11,10 +13,12 @@ export class StashClient {
   constructor(private readonly bsyncClient: BsyncClient) {}
 
   create(input: CreateInput) {
+    this.validateLexicon(input.namespace, input.payload)
     return this.putOperation(Method.CREATE, input)
   }
 
   update(input: UpdateInput) {
+    this.validateLexicon(input.namespace, input.payload)
     return this.putOperation(Method.UPDATE, input)
   }
 
@@ -22,7 +26,13 @@ export class StashClient {
     return this.putOperation(Method.DELETE, { ...input, payload: undefined })
   }
 
-  // @TODO: lexicon validation?
+  private validateLexicon(namespace: string, payload: LexValue) {
+    const result = lexicons.validate(namespace, payload)
+    if (!result.success) {
+      throw result.error
+    }
+  }
+
   private async putOperation(method: Method, input: PutOperationInput) {
     const { actorDid, namespace, key, payload } = input
     await this.bsyncClient.putOperation({
@@ -46,14 +56,14 @@ type PutOperationInput = {
   actorDid: string
   namespace: string
   key: string
-  payload: Record<string, unknown> | undefined
+  payload: LexValue | undefined
 }
 
 type CreateInput = {
   actorDid: string
   namespace: string
   key: string
-  payload: Record<string, unknown>
+  payload: LexValue
 }
 
 type UpdateInput = CreateInput
