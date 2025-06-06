@@ -473,7 +473,7 @@ export class RequestManager {
       } else {
         // Otherwise, the authentication method currently used must match the
         // one that was used to initiate the session.
-        clientAuthCheck(client, clientAuth, {
+        await clientAuthCheck(client, clientAuth, {
           clientId: data.clientId,
           clientAuth: data.clientAuth,
         })

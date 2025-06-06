@@ -491,6 +491,16 @@ export class OAuthProvider extends OAuthVerifier {
 
     // JAR
     if ('request' in query) {
+      // @NOTE Since JAR are signed with the client's private key, a JAR *could*
+      // technically be used to authenticate the client when requests are
+      // created without PAR (i.e. created on the fly by the authorize
+      // endpoint). This implementation actually used to support this
+      // (un-spec'd) behavior. That support was removed:
+      // - Because it was not actually used
+      // - Because it was not part of any standard
+      // - Because it makes extending the client authentication mechanism more
+      //   complex since any extension would not only need to affect the
+      //   "private_key_jwt" auth method but also the JAR "request" object.
       const parameters = await this.decodeJAR(client, query)
 
       return this.requestManager.createAuthorizationRequest(
@@ -817,17 +827,20 @@ export class OAuthProvider extends OAuthVerifier {
   ) {
     // > The authorization server first validates the client credentials (in
     // > case of a confidential client)
-    const [client] = await this.authenticateClient(credentials)
+    const [client, clientAuth] = await this.authenticateClient(credentials)
 
     const tokenInfo = await this.tokenManager.findToken(token)
 
     // > [...] and then verifies whether the token was issued to the client
     // > making the revocation request.
-    if (client.id !== tokenInfo.data.clientId) {
-      // > If this validation fails, the request is refused and the client is
-      // > informed of the error by the authorization server as described below.
-      throw new InvalidGrantError(`Token was not issued to this client`)
-    }
+    await this.tokenManager
+      .validateAccess(client, clientAuth, tokenInfo)
+      .catch((err) => {
+        // > If this validation fails, the request is refused and the client is
+        // > informed of the error by the authorization server as described
+        // > below.
+        throw new InvalidGrantError(`Token was not issued to this client`, err)
+      })
 
     // > In the next step, the authorization server invalidates the token. The
     // > invalidation takes place immediately, and the token cannot be used

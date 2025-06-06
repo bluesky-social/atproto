@@ -299,6 +299,14 @@ export class TokenManager {
     }
   }
 
+  public async validateAccess(
+    client: Client,
+    clientAuth: ClientAuth,
+    tokenInfo: TokenInfo,
+  ): Promise<void> {
+    await clientAuthCheck(client, clientAuth, tokenInfo.data)
+  }
+
   public async validateRefresh(
     client: Client,
     clientAuth: ClientAuth,
@@ -355,7 +363,7 @@ export class TokenManager {
     const { parameters } = data
 
     try {
-      clientAuthCheck(client, clientAuth, tokenInfo.data)
+      await this.validateAccess(client, clientAuth, tokenInfo)
       await this.validateRefresh(client, clientAuth, tokenInfo)
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {

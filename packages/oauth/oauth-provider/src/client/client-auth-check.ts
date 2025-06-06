@@ -6,16 +6,16 @@ import { Client } from './client.js'
 
 /**
  * Ensures that a {@link ClientAuth} used by a current request matches a
- * {@link previous} authentication method currently.
+ * {@link initial} authentication method currently.
  */
-export function clientAuthCheck<C extends ClientAuth>(
+export async function clientAuthCheck(
   client: Client,
-  clientAuth: C,
-  previous: {
+  clientAuth: ClientAuth,
+  initial: {
     clientId: ClientId
     clientAuth: ClientAuth | ClientAuthLegacy
   },
-): asserts previous is { clientId: ClientId; clientAuth: C } {
+): Promise<void> {
   // Fool proofing, ensure that the client is authenticating using the right method
   if (clientAuth.method !== client.metadata.token_endpoint_auth_method) {
     throw new InvalidGrantError(
@@ -23,22 +23,22 @@ export function clientAuthCheck<C extends ClientAuth>(
     )
   }
 
-  if (previous.clientId !== client.id) {
+  if (initial.clientId !== client.id) {
     throw new InvalidGrantError(`Token was not issued to this client`)
   }
 
-  switch (previous.clientAuth.method) {
+  switch (initial.clientAuth.method) {
     case CLIENT_ASSERTION_TYPE_JWT_BEARER: // LEGACY
     case 'private_key_jwt':
       if (clientAuth.method !== 'private_key_jwt') {
         throw new InvalidGrantError(
-          `Client authentication method mismatch (expected ${previous.clientAuth.method})`,
+          `Client authentication method mismatch (expected ${initial.clientAuth.method})`,
         )
       }
       if (
-        clientAuth.kid !== previous.clientAuth.kid ||
-        clientAuth.alg !== previous.clientAuth.alg ||
-        clientAuth.jkt !== previous.clientAuth.jkt
+        clientAuth.kid !== initial.clientAuth.kid ||
+        clientAuth.alg !== initial.clientAuth.alg ||
+        clientAuth.jkt !== initial.clientAuth.jkt
       ) {
         throw new InvalidGrantError(
           `The session was initiated with a different key than the client assertion currently used`,
@@ -52,7 +52,7 @@ export function clientAuthCheck<C extends ClientAuth>(
     default:
       throw new InvalidGrantError(
         // @ts-expect-error (future proof, backwards compatibility)
-        `Invalid method "${previous.clientAuth.method}"`,
+        `Invalid method "${initial.clientAuth.method}"`,
       )
   }
 }
