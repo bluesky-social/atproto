@@ -1,5 +1,11 @@
 # @atproto/jwk
 
+## 0.2.0
+
+### Minor Changes
+
+- [#3879](https://github.com/bluesky-social/atproto/pull/3879) [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly validate JWK `htu` claim by enforcing URL without query or fragment
+
 ## 0.1.5
 
 ### Patch Changes
