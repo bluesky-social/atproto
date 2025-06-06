@@ -83,15 +83,6 @@
     }
   },
   {
-    "identifier": "!no-subscribe",
-    "configurable": false,
-    "defaultSetting": "warn",
-    "flags": ["no-override"],
-    "severity": "none",
-    "blurs": "none",
-    "behaviors": {}
-  },
-  {
     "identifier": "porn",
     "configurable": true,
     "defaultSetting": "hide",

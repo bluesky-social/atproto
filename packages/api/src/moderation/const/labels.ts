@@ -5,7 +5,6 @@ export type KnownLabelValue =
   | '!hide'
   | '!warn'
   | '!no-unauthenticated'
-  | '!no-subscribe'
   | 'porn'
   | 'sexual'
   | 'nudity'
@@ -105,16 +104,6 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
           contentView: 'blur',
         },
       },
-      locales: [],
-    },
-    '!no-subscribe': {
-      identifier: '!no-subscribe',
-      configurable: false,
-      defaultSetting: 'warn',
-      flags: ['no-override'],
-      severity: 'none',
-      blurs: 'none',
-      behaviors: {},
       locales: [],
     },
     porn: {

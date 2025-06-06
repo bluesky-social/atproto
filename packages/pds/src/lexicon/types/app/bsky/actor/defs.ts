@@ -110,6 +110,7 @@ export interface ProfileAssociated {
   starterPacks?: number
   labeler?: boolean
   chat?: ProfileAssociatedChat
+  activitySubscriptions?: ProfileAssociatedActivitySubscriptions
 }
 
 const hashProfileAssociated = 'profileAssociated'
@@ -135,6 +136,26 @@ export function isProfileAssociatedChat<V>(v: V) {
 
 export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
+}
+
+export interface ProfileAssociatedActivitySubscriptions {
+  $type?: 'app.bsky.actor.defs#profileAssociatedActivitySubscriptions'
+  allowSubscriptions: 'all' | 'none' | 'following' | (string & {})
+}
+
+const hashProfileAssociatedActivitySubscriptions =
+  'profileAssociatedActivitySubscriptions'
+
+export function isProfileAssociatedActivitySubscriptions<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedActivitySubscriptions)
+}
+
+export function validateProfileAssociatedActivitySubscriptions<V>(v: V) {
+  return validate<ProfileAssociatedActivitySubscriptions & V>(
+    v,
+    id,
+    hashProfileAssociatedActivitySubscriptions,
+  )
 }
 
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */

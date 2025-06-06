@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.activitySubscriptionDeclaration",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A declaration of the user's preference for allowing activity subscriptions. Absence of this declaration implies 'following'.",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["allowSubscriptions"],
+        "properties": {
+          "allowSubscriptions": {
+            "type": "string",
+            "knownValues": ["all", "none", "following"]
+          }
+        }
+      }
+    }
+  }
+}
