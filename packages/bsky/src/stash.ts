@@ -1,4 +1,4 @@
-import { LexValue, lexObject } from '@atproto/lexicon'
+import { LexValue } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
 import { Method } from './proto/bsync_pb'

@@ -1,4 +1,5 @@
 import { TestNetwork } from '@atproto/dev-env'
+import { ProfileAssociatedChat } from '../dist/lexicon/types/app/bsky/actor/defs'
 import { StashClient } from '../dist/stash'
 
 type Database = TestNetwork['bsky']['db']
@@ -9,8 +10,15 @@ describe('private data', () => {
   let db: Database
 
   const actorDid = 'did:plc:example'
-  const namespace = 'com.test.defs#preferences'
+  // This lexicon has nothing special other than being simple, convenient to use in a test.
+  const namespace = 'app.bsky.actor.defs#profileAssociatedChat'
   const key = 'self'
+
+  const validPayload0: ProfileAssociatedChat = { allowIncoming: 'all' }
+  const validPayload1: ProfileAssociatedChat = { allowIncoming: 'following' }
+  const invalidPayload: ProfileAssociatedChat = {
+    invalid: 'all',
+  } as unknown as ProfileAssociatedChat
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -34,7 +42,7 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: { theme: 'light' },
+        payload: validPayload0,
       })
       await network.processAll()
 
@@ -49,10 +57,21 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: JSON.stringify({ $type: namespace, theme: 'light' }),
+        payload: JSON.stringify({ $type: namespace, ...validPayload0 }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
+    })
+
+    it('validates lexicon', async () => {
+      expect(() =>
+        stashClient.create({
+          actorDid,
+          namespace,
+          key,
+          payload: invalidPayload,
+        }),
+      ).toThrow('Object must have the property "allowIncoming"')
     })
   })
 
@@ -62,7 +81,7 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: { theme: 'light' },
+        payload: validPayload0,
       })
       await network.processAll()
 
@@ -70,7 +89,7 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: { theme: 'dark' },
+        payload: validPayload1,
       })
       await network.processAll()
 
@@ -85,10 +104,21 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: JSON.stringify({ $type: namespace, theme: 'dark' }),
+        payload: JSON.stringify({ $type: namespace, ...validPayload1 }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
+    })
+
+    it('validates lexicon', async () => {
+      expect(() =>
+        stashClient.update({
+          actorDid,
+          namespace,
+          key,
+          payload: invalidPayload,
+        }),
+      ).toThrow('Object must have the property "allowIncoming"')
     })
   })
 
@@ -98,7 +128,7 @@ describe('private data', () => {
         actorDid,
         namespace,
         key,
-        payload: { theme: 'light' },
+        payload: validPayload0,
       })
       await network.processAll()
 
