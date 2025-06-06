@@ -1,9 +1,11 @@
+import { isAtprotoDid } from '@atproto/did'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
+import { isValidHandle } from '@atproto/syntax'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -303,6 +305,24 @@ export class RequestManager {
 
       // force "consent" for unauthenticated, third party clients
       parameters = { ...parameters, prompt: 'consent' }
+    }
+
+    // atproto extension: ensure that the login_hint is a valid handle or DID
+    // @NOTE we to allow invalid case here, which is not spec'd anywhere.
+    const hint = parameters.login_hint?.toLowerCase()
+    if (hint) {
+      if (!isAtprotoDid(hint) && !isValidHandle(hint)) {
+        throw new InvalidParametersError(
+          parameters,
+          `Invalid login_hint "${hint}"`,
+        )
+      }
+
+      // @TODO: ensure that the account actually exists on this server (there is
+      // no point in showing the UI to the user if the account does not exist).
+
+      // Update the parameters to ensure the right case is used
+      parameters = { ...parameters, login_hint: hint }
     }
 
     return parameters
