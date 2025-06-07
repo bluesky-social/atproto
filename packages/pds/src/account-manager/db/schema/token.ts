@@ -1,6 +1,7 @@
 import { Generated, Selectable } from 'kysely'
 import {
   ClientAuth,
+  ClientAuthLegacy,
   Code,
   DeviceId,
   OAuthAuthorizationDetails,
@@ -21,7 +22,7 @@ export interface Token {
   updatedAt: DateISO
   expiresAt: DateISO
   clientId: OAuthClientId
-  clientAuth: JsonEncoded<ClientAuth>
+  clientAuth: JsonEncoded<ClientAuth | ClientAuthLegacy>
   deviceId: DeviceId | null
   parameters: JsonEncoded<OAuthAuthorizationRequestParameters>
   details: JsonEncoded<OAuthAuthorizationDetails> | null

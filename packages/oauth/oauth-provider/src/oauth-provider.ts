@@ -1,8 +1,8 @@
 import type { Redis, RedisOptions } from 'ioredis'
+import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
   OAuthAuthorizationCodeGrantTokenRequest,
   OAuthAuthorizationRequestJar,
@@ -33,7 +33,7 @@ import {
   DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
-import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
+import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import {
   ClientManager,
@@ -59,7 +59,6 @@ import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
-import { InvalidParametersError } from './errors/invalid-parameters-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
@@ -76,7 +75,6 @@ import {
 } from './oauth-verifier.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
-import { RequestInfo } from './request/request-info.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
@@ -402,58 +400,33 @@ export class OAuthProvider extends OAuthVerifier {
   protected async decodeJAR(
     client: Client,
     input: OAuthAuthorizationRequestJar,
-  ): Promise<
-    | {
-        payload: OAuthAuthorizationRequestParameters
-      }
-    | {
-        payload: OAuthAuthorizationRequestParameters
-        protectedHeader: { kid: string; alg: string }
-        jkt: string
-      }
-  > {
-    const result = await client.decodeRequestObject(input.request)
-    const payload = oauthAuthorizationRequestParametersSchema.parse(
-      result.payload,
+  ): Promise<OAuthAuthorizationRequestParameters> {
+    const { payload } = await client.decodeRequestObject(
+      input.request,
+      this.issuer,
     )
 
-    if (!result.payload.jti) {
-      throw new InvalidParametersError(
-        payload,
-        'Request object must contain a jti claim',
+    const { jti } = payload
+    if (!jti) {
+      throw new InvalidRequestError(
+        'Request object payload must contain a "jti" claim',
       )
     }
-
-    if (!(await this.replayManager.uniqueJar(result.payload.jti, client.id))) {
-      throw new InvalidParametersError(
-        payload,
-        'Request object jti is not unique',
-      )
+    if (!(await this.replayManager.uniqueJar(jti, client.id))) {
+      throw new InvalidRequestError('Request object was replayed')
     }
 
-    if ('protectedHeader' in result) {
-      if (!result.protectedHeader.kid) {
-        throw new InvalidParametersError(payload, 'Missing "kid" in header')
-      }
+    const parameters = await oauthAuthorizationRequestParametersSchema
+      .parseAsync(payload)
+      .catch((err) => {
+        const message =
+          err instanceof ZodError
+            ? `Invalid request parameters: ${err.message}`
+            : `Invalid "request" object`
+        throw InvalidRequestError.from(err, message)
+      })
 
-      return {
-        jkt: await authJwkThumbprint(result.key),
-        payload,
-        protectedHeader: result.protectedHeader as {
-          alg: string
-          kid: string
-        },
-      }
-    }
-
-    if ('header' in result) {
-      return {
-        payload,
-      }
-    }
-
-    // Should never happen
-    throw new Error('Invalid request object')
+    return parameters
   }
 
   /**
@@ -467,10 +440,10 @@ export class OAuthProvider extends OAuthVerifier {
     try {
       const [client, clientAuth] = await this.authenticateClient(credentials)
 
-      const { payload: parameters } =
+      const parameters =
         'request' in authorizationRequest // Handle JAR
           ? await this.decodeJAR(client, authorizationRequest)
-          : { payload: authorizationRequest }
+          : authorizationRequest
 
       const { uri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
@@ -501,7 +474,8 @@ export class OAuthProvider extends OAuthVerifier {
     client: Client,
     deviceId: DeviceId,
     query: OAuthAuthorizationRequestQuery,
-  ): Promise<RequestInfo> {
+  ) {
+    // PAR
     if ('request_uri' in query) {
       const requestUri = await requestUriSchema
         .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
@@ -515,40 +489,34 @@ export class OAuthProvider extends OAuthVerifier {
       return this.requestManager.get(requestUri, deviceId, client.id)
     }
 
+    // JAR
     if ('request' in query) {
-      const requestObject = await this.decodeJAR(client, query)
-
-      if ('protectedHeader' in requestObject && requestObject.protectedHeader) {
-        // Allow using signed JAR during "/authorize" as client authentication.
-        // This allows clients to skip PAR to initiate trusted sessions.
-        const clientAuth: ClientAuth = {
-          method: CLIENT_ASSERTION_TYPE_JWT_BEARER,
-          kid: requestObject.protectedHeader.kid,
-          alg: requestObject.protectedHeader.alg,
-          jkt: requestObject.jkt,
-        }
-
-        return this.requestManager.createAuthorizationRequest(
-          client,
-          clientAuth,
-          requestObject.payload,
-          deviceId,
-          null,
-        )
-      }
+      // @NOTE Since JAR are signed with the client's private key, a JAR *could*
+      // technically be used to authenticate the client when requests are
+      // created without PAR (i.e. created on the fly by the authorize
+      // endpoint). This implementation actually used to support this
+      // (un-spec'd) behavior. That support was removed:
+      // - Because it was not actually used
+      // - Because it was not part of any standard
+      // - Because it makes extending the client authentication mechanism more
+      //   complex since any extension would not only need to affect the
+      //   "private_key_jwt" auth method but also the JAR "request" object.
+      const parameters = await this.decodeJAR(client, query)
 
       return this.requestManager.createAuthorizationRequest(
         client,
-        { method: 'none' },
-        requestObject.payload,
+        null,
+        parameters,
         deviceId,
         null,
       )
     }
 
+    // "Regular" authorization request (created on the fly by directing the user
+    // to the authorization endpoint with all the parameters in the url).
     return this.requestManager.createAuthorizationRequest(
       client,
-      { method: 'none' },
+      null,
       query,
       deviceId,
       null,
@@ -864,10 +832,15 @@ export class OAuthProvider extends OAuthVerifier {
     const tokenInfo = await this.tokenManager.findToken(token)
 
     // > [...] and then verifies whether the token was issued to the client
-    // > making the revocation request. If this validation fails, the request is
-    // > refused and the client is informed of the error by the authorization
-    // > server as described below.
-    await this.tokenManager.validateAccess(client, clientAuth, tokenInfo)
+    // > making the revocation request.
+    await this.tokenManager
+      .validateAccess(client, clientAuth, tokenInfo)
+      .catch((err) => {
+        // > If this validation fails, the request is refused and the client is
+        // > informed of the error by the authorization server as described
+        // > below.
+        throw new InvalidGrantError(`Token was not issued to this client`, err)
+      })
 
     // > In the next step, the authorization server invalidates the token. The
     // > invalidation takes place immediately, and the token cannot be used

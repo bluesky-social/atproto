@@ -311,13 +311,7 @@ export class ClientManager {
       )
     }
 
-    const method = metadata[`token_endpoint_auth_method`]
-    switch (method) {
-      case undefined:
-        throw new InvalidClientMetadataError(
-          'Missing token_endpoint_auth_method client metadata',
-        )
-
+    switch (metadata.token_endpoint_auth_method) {
       case 'none':
         if (metadata.token_endpoint_auth_signing_alg) {
           throw new InvalidClientMetadataError(
@@ -346,7 +340,7 @@ export class ClientManager {
 
       default:
         throw new InvalidClientMetadataError(
-          `${method} is not a supported "token_endpoint_auth_method". Use "private_key_jwt" or "none".`,
+          `Unsupported client authentication method "${metadata.token_endpoint_auth_method}". Make sure "token_endpoint_auth_method" is set to one of: "${Client.AUTH_METHODS_SUPPORTED.join('", "')}"`,
         )
     }
 
@@ -670,7 +664,7 @@ export class ClientManager {
       )
     }
 
-    const method = metadata[`token_endpoint_auth_method`]
+    const method = metadata.token_endpoint_auth_method
     if (method !== 'none') {
       throw new InvalidClientMetadataError(
         `Loopback clients are not allowed to use "token_endpoint_auth_method" ${method}`,
@@ -736,24 +730,6 @@ export class ClientManager {
           )
         }
       }
-    }
-
-    const method = metadata[`token_endpoint_auth_method`]
-    switch (method) {
-      case 'none':
-      case 'private_key_jwt':
-      case undefined:
-        break
-      case 'client_secret_post':
-      case 'client_secret_basic':
-      case 'client_secret_jwt':
-        throw new InvalidClientMetadataError(
-          `Client authentication method "${method}" is not allowed for discoverable clients`,
-        )
-      default:
-        throw new InvalidClientMetadataError(
-          `Unsupported client authentication method "${method}"`,
-        )
     }
 
     for (const redirectUri of metadata.redirect_uris) {

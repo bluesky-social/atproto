@@ -1,18 +1,21 @@
 import {
+  JWTClaimVerificationOptions,
+  type JWTHeaderParameters,
   type JWTPayload,
-  type JWTVerifyGetKey,
   type JWTVerifyOptions,
   type JWTVerifyResult,
   type KeyLike,
   type ResolvedKey,
   UnsecuredJWT,
   type UnsecuredResult,
+  calculateJwkThumbprint,
   createLocalJWKSet,
   createRemoteJWKSet,
   errors,
+  exportJWK,
   jwtVerify,
 } from 'jose'
-import { Jwks } from '@atproto/jwk'
+import { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
@@ -28,7 +31,8 @@ import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
-import { ClientAuth, authJwkThumbprint } from './client-auth.js'
+import { Awaitable } from '../lib/util/type.js'
+import { ClientAuth } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'
 
@@ -40,7 +44,9 @@ export class Client {
    */
   static readonly AUTH_METHODS_SUPPORTED = ['none', 'private_key_jwt'] as const
 
-  private readonly keyGetter: JWTVerifyGetKey
+  private readonly keyGetter: (
+    protectedHeader: JWTHeaderParameters,
+  ) => Awaitable<KeyLike | Uint8Array>
 
   constructor(
     public readonly id: ClientId,
@@ -55,22 +61,53 @@ export class Client {
         : createRemoteJWKSet(new URL(metadata.jwks_uri), {})
   }
 
-  public async decodeRequestObject(jar: string) {
+  /**
+   * @see {@link https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2}
+   */
+  public async decodeRequestObject(
+    jar: SignedJwt | UnsignedJwt,
+    audience: string,
+  ) {
+    // > If signed, the Authorization Request Object SHOULD contain the Claims
+    // > iss (issuer) and aud (audience) as members with their semantics being
+    // > the same as defined in the JWT [RFC7519] specification. The value of
+    // > aud should be the value of the authorization server (AS) issuer, as
+    // > defined in RFC 8414 [RFC8414].
     try {
       switch (this.metadata.request_object_signing_alg) {
-        case 'none':
-          return await this.jwtVerifyUnsecured(jar, {
+        case 'none': {
+          // @NOTE there is no point in verifying the issuer and audience claims
+          // of an un-signed request object. rfc9101 only requires that the
+          // "iss" and "aud" claims are present if the request object is signed.
+          const result = await this.jwtVerifyUnsecured(jar, {
+            // "audience" will be checked hereafter only if provided.
             maxTokenAge: JAR_MAX_AGE / 1000,
           })
+
+          if (result.payload.aud && result.payload.aud !== audience) {
+            throw new JOSEError(
+              `Invalid "aud" claim "${result.payload.aud}" (expected ${audience})`,
+            )
+          }
+
+          return result
+        }
+
         case undefined:
           // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
+          //
           // > The default, if omitted, is that any algorithm supported by the OP
           // > and the RP MAY be used.
+          //
+          // @TODO we could actually support unsigned JARs here
           return await this.jwtVerify(jar, {
+            audience,
             maxTokenAge: JAR_MAX_AGE / 1000,
           })
+
         default:
           return await this.jwtVerify(jar, {
+            audience,
             maxTokenAge: JAR_MAX_AGE / 1000,
             algorithms: [this.metadata.request_object_signing_alg],
           })
@@ -87,12 +124,18 @@ export class Client {
 
   protected async jwtVerifyUnsecured<PayloadType = JWTPayload>(
     token: string,
-    options?: Omit<JWTVerifyOptions, 'issuer'>,
+    options?: JWTClaimVerificationOptions,
   ): Promise<UnsecuredResult<PayloadType>> {
-    return UnsecuredJWT.decode(token, {
-      ...options,
-      issuer: this.id,
-    })
+    const result = await UnsecuredJWT.decode<PayloadType>(token, options)
+    // Ensure that the issuer, if present, matches the client id. There is no
+    // point in forcing its presence in an unsigned token as they can be easily
+    // forged.
+    if (result.payload.iss && result.payload.iss !== this.id) {
+      throw new JOSEError(
+        `Invalid "iss" claim "${result.payload.iss}" (expected ${this.id})`,
+      )
+    }
+    return result
   }
 
   protected async jwtVerify<PayloadType = JWTPayload>(
@@ -120,7 +163,7 @@ export class Client {
     // for replay protection
     nonce?: string
   }> {
-    const method = this.metadata[`token_endpoint_auth_method`]
+    const method = this.metadata.token_endpoint_auth_method
 
     if (method === 'none') {
       const clientAuth: ClientAuth = { method: 'none' }
@@ -128,13 +171,9 @@ export class Client {
     }
 
     if (method === 'private_key_jwt') {
-      if (!('client_assertion_type' in input) || !input.client_assertion_type) {
+      if (!('client_assertion_type' in input)) {
         throw new InvalidRequestError(
           `client_assertion_type required for "${method}"`,
-        )
-      } else if (!input.client_assertion) {
-        throw new InvalidRequestError(
-          `client_assertion required for "${method}"`,
         )
       }
 
@@ -147,12 +186,12 @@ export class Client {
           maxTokenAge: CLIENT_ASSERTION_MAX_AGE / 1000,
           requiredClaims: ['jti'],
         }).catch((err) => {
-          if (err instanceof JOSEError) {
-            const msg = `Validation of "client_assertion" failed: ${err.message}`
-            throw new InvalidClientError(msg, err)
-          }
+          const msg =
+            err instanceof JOSEError
+              ? `Validation of "client_assertion" failed: ${err.message}`
+              : `Unable to verify "client_assertion" JWT`
 
-          throw err
+          throw new InvalidClientError(msg, err)
         })
 
         if (!result.protectedHeader.kid) {
@@ -160,7 +199,7 @@ export class Client {
         }
 
         const clientAuth: ClientAuth = {
-          method: CLIENT_ASSERTION_TYPE_JWT_BEARER,
+          method: 'private_key_jwt',
           jkt: await authJwkThumbprint(result.key),
           alg: result.protectedHeader.alg,
           kid: result.protectedHeader.kid,
@@ -187,41 +226,6 @@ export class Client {
     throw new InvalidClientMetadataError(
       `Unsupported token_endpoint_auth_method "${method}"`,
     )
-  }
-
-  /**
-   * Ensures that a {@link ClientAuth} generated in the past is still valid wrt
-   * the current client metadata & jwks. This is used to invalidate tokens when
-   * the client stops advertising the key that it used to authenticate itself
-   * during the initial token request.
-   */
-  public async validateClientAuth(clientAuth: ClientAuth): Promise<boolean> {
-    if (clientAuth.method === 'none') {
-      return this.metadata[`token_endpoint_auth_method`] === 'none'
-    }
-
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-      if (this.metadata[`token_endpoint_auth_method`] !== 'private_key_jwt') {
-        return false
-      }
-      try {
-        const key = await this.keyGetter(
-          {
-            kid: clientAuth.kid,
-            alg: clientAuth.alg,
-          },
-          { payload: '', signature: '' },
-        )
-        const jtk = await authJwkThumbprint(key)
-
-        return jtk === clientAuth.jkt
-      } catch (e) {
-        return false
-      }
-    }
-
-    // @ts-expect-error
-    throw new Error(`Invalid method "${clientAuth.method}"`)
   }
 
   /**
@@ -326,5 +330,15 @@ export class Client {
   get defaultRedirectUri(): OAuthRedirectUri | undefined {
     const { redirect_uris } = this.metadata
     return redirect_uris.length === 1 ? redirect_uris[0] : undefined
+  }
+}
+
+export async function authJwkThumbprint(
+  key: Uint8Array | KeyLike,
+): Promise<string> {
+  try {
+    return await calculateJwkThumbprint(await exportJWK(key), 'sha512')
+  } catch (err) {
+    throw new InvalidClientError('Unable to compute JWK thumbprint', err)
   }
 }

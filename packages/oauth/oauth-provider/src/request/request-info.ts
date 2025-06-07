@@ -10,5 +10,5 @@ export type RequestInfo = {
   parameters: Readonly<OAuthAuthorizationRequestParameters>
   expiresAt: Date
   clientId: ClientId
-  clientAuth: ClientAuth
+  clientAuth: null | ClientAuth
 }

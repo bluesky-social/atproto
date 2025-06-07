@@ -1,9 +1,9 @@
 import type { Account } from '@atproto/oauth-provider-api'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
+import { clientAuthCheck } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -33,7 +33,6 @@ import {
   isRequestDataAuthorized,
 } from './request-data.js'
 import { generateRequestId } from './request-id.js'
-import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
 import {
   RequestUri,
@@ -56,21 +55,13 @@ export class RequestManager {
 
   async createAuthorizationRequest(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
     dpopProof: null | DpopProof,
-  ): Promise<RequestInfo> {
+  ) {
     const parameters = await this.validate(client, clientAuth, input, dpopProof)
-    return this.create(client, clientAuth, parameters, deviceId)
-  }
 
-  protected async create(
-    client: Client,
-    clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    deviceId: null | DeviceId = null,
-  ): Promise<RequestInfo> {
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
     const id = await generateRequestId()
 
@@ -85,12 +76,12 @@ export class RequestManager {
     })
 
     const uri = encodeRequestUri(id)
-    return { id, uri, expiresAt, parameters, clientId: client.id, clientAuth }
+    return { uri, expiresAt, parameters }
   }
 
   protected async validate(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
     dpopProof: null | DpopProof,
   ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
@@ -206,7 +197,21 @@ export class RequestManager {
       throw new InvalidDpopKeyBindingError()
     }
 
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
+    if (clientAuth === null) {
+      // @NOTE we allow the client to be unauthenticated when creating the request
+      // as it might not always be possible to authenticate the client at this
+      // stage (e.g. when the client directed the user to the authorization
+      // endpoint).
+    } else if (
+      clientAuth.method !== client.metadata.token_endpoint_auth_method
+    ) {
+      throw new InvalidParametersError(
+        parameters,
+        `Client authentication method "${clientAuth.method}" is not supported by this client`,
+      )
+    }
+
+    if (clientAuth?.method === 'private_key_jwt') {
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
         throw new InvalidParametersError(
           parameters,
@@ -292,7 +297,7 @@ export class RequestManager {
     if (
       !client.info.isTrusted &&
       !client.info.isFirstParty &&
-      clientAuth.method === 'none'
+      client.metadata.token_endpoint_auth_method === 'none'
     ) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
@@ -308,11 +313,7 @@ export class RequestManager {
     return parameters
   }
 
-  async get(
-    uri: RequestUri,
-    deviceId: DeviceId,
-    clientId?: ClientId,
-  ): Promise<RequestInfo> {
+  async get(uri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
@@ -363,12 +364,10 @@ export class RequestManager {
     }
 
     return {
-      id,
       uri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
       clientId: data.clientId,
-      clientAuth: data.clientAuth,
     }
   }
 
@@ -442,7 +441,7 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     code: Code,
-  ): Promise<RequestDataAuthorized & { requestUri: RequestUri }> {
+  ): Promise<RequestDataAuthorized> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
@@ -464,23 +463,23 @@ export class RequestManager {
         throw new InvalidGrantError('This code has expired')
       }
 
-      if (data.clientAuth.method === 'none') {
+      if (data.clientAuth === null) {
         // If the client did not use PAR, it was not authenticated when the
-        // request was created (see authorize() method above). Since PAR is not
-        // mandatory, and since the token exchange currently taking place *is*
-        // authenticated (`clientAuth`), we allow "upgrading" the authentication
-        // method (the token created will be bound to the current clientAuth).
+        // request was created (see authorize() method in OAuthProvider). Since
+        // PAR is not mandatory, and since the token exchange currently taking
+        // place *is* authenticated (`clientAuth`), we allow "upgrading" the
+        // authentication method (the token created will be bound to the current
+        // clientAuth).
       } else {
-        if (clientAuth.method !== data.clientAuth.method) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
-
-        if (!(await client.validateClientAuth(data.clientAuth))) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
+        // Otherwise, the authentication method currently used must match the
+        // one that was used to initiate the session.
+        await clientAuthCheck(client, clientAuth, {
+          clientId: data.clientId,
+          clientAuth: data.clientAuth,
+        })
       }
 
-      return { ...data, requestUri: encodeRequestUri(id) }
+      return data
     } finally {
       // A "code" can only be used once
       await this.store.deleteRequest(id)
