@@ -17,9 +17,6 @@ import {
 } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
-  RateLimiter,
-  RateLimiterCreator,
-  RateLimiterOpts,
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
@@ -66,7 +63,6 @@ export type AppContextOptions = {
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
-  ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
   bskyAppView?: BskyAppView
   moderationAgent?: AtpAgent
@@ -94,7 +90,6 @@ export class AppContext {
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
-  public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
   public bskyAppView?: BskyAppView
   public moderationAgent: AtpAgent | undefined
@@ -121,7 +116,6 @@ export class AppContext {
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
-    this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
     this.bskyAppView = opts.bskyAppView
     this.moderationAgent = opts.moderationAgent
@@ -201,30 +195,6 @@ export class AppContext {
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
-
-    let ratelimitCreator: RateLimiterCreator | undefined = undefined
-    if (cfg.rateLimits.enabled) {
-      const bypassSecret = cfg.rateLimits.bypassKey
-      const bypassIps = cfg.rateLimits.bypassIps
-      if (cfg.rateLimits.mode === 'redis') {
-        if (!redisScratch) {
-          throw new Error('Redis not set up for ratelimiting mode: `redis`')
-        }
-        ratelimitCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.redis(redisScratch, {
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      } else {
-        ratelimitCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.memory({
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      }
-    }
 
     const bskyAppView = cfg.bskyAppView
       ? new BskyAppView(cfg.bskyAppView)
@@ -415,7 +385,6 @@ export class AppContext {
       sequencer,
       backgroundQueue,
       redisScratch,
-      ratelimitCreator,
       crawlers,
       bskyAppView,
       moderationAgent,

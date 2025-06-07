@@ -29,6 +29,7 @@ export type Options = {
     creator: RateLimiterCreator
     global?: ServerRateLimitDescription[]
     shared?: ServerRateLimitDescription[]
+    bypass?: (ctx: XRPCReqContext) => boolean
   }
   /**
    * By default, errors are converted to {@link XRPCError} using
@@ -148,14 +149,23 @@ export interface RateLimiterI {
   reset: RateLimiterReset
 }
 
+export type RateLimiterConsumeOptions = {
+  calcKey?: CalcKeyFn
+  calcPoints?: CalcPointsFn
+}
+
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
-  opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
+  opts?: RateLimiterConsumeOptions,
 ) => Promise<RateLimiterStatus | RateLimitExceededError | null>
+
+export type RateLimiterResetOptions = {
+  calcKey?: CalcKeyFn
+}
 
 export type RateLimiterReset = (
   ctx: XRPCReqContext,
-  opts?: { calcKey?: CalcKeyFn },
+  opts?: RateLimiterResetOptions,
 ) => Promise<void>
 
 export type RateLimiterCreator = (opts: {

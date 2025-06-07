@@ -10,18 +10,19 @@ import {
   CalcPointsFn,
   RateLimitExceededError,
   RateLimiterConsume,
+  RateLimiterConsumeOptions,
   RateLimiterI,
   RateLimiterReset,
+  RateLimiterResetOptions,
   RateLimiterStatus,
   XRPCReqContext,
 } from './types'
+import { setHeaders } from './util'
 
 export type RateLimiterOpts = {
   keyPrefix: string
   durationMs: number
   points: number
-  bypassSecret?: string
-  bypassIps?: string[]
   calcKey?: CalcKeyFn
   calcPoints?: CalcPointsFn
   failClosed?: boolean
@@ -29,16 +30,13 @@ export type RateLimiterOpts = {
 
 export class RateLimiter implements RateLimiterI {
   public limiter: RateLimiterAbstract
-  private bypassSecret?: string
-  private bypassIps?: string[]
+
   private failClosed?: boolean
   public calcKey: CalcKeyFn
   public calcPoints: CalcPointsFn
 
   constructor(limiter: RateLimiterAbstract, opts: RateLimiterOpts) {
     this.limiter = limiter
-    this.bypassSecret = opts.bypassSecret
-    this.bypassIps = opts.bypassIps
     this.calcKey = opts.calcKey ?? defaultKey
     this.calcPoints = opts.calcPoints ?? defaultPoints
   }
@@ -64,17 +62,8 @@ export class RateLimiter implements RateLimiterI {
 
   async consume(
     ctx: XRPCReqContext,
-    opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
+    opts?: RateLimiterConsumeOptions,
   ): Promise<RateLimiterStatus | RateLimitExceededError | null> {
-    if (
-      this.bypassSecret &&
-      ctx.req.header('x-ratelimit-bypass') === this.bypassSecret
-    ) {
-      return null
-    }
-    if (this.bypassIps && this.bypassIps.includes(ctx.req.ip)) {
-      return null
-    }
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
     if (key === null) {
       return null
@@ -113,7 +102,7 @@ export class RateLimiter implements RateLimiterI {
 
   async reset(
     ctx: XRPCReqContext,
-    opts?: { calcKey?: CalcKeyFn },
+    opts?: RateLimiterResetOptions,
   ): Promise<void> {
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
     if (key === null) {
@@ -142,46 +131,72 @@ export const formatLimiterStatus = (
   }
 }
 
-export const consumeMany = async (
-  ctx: XRPCReqContext,
-  fns: RateLimiterConsume[],
-): Promise<RateLimiterStatus | RateLimitExceededError | null> => {
-  if (fns.length === 0) return null
-  const results = await Promise.all(fns.map((fn) => fn(ctx)))
-  const tightestLimit = getTightestLimit(results)
-  if (tightestLimit === null) {
-    return null
-  } else if (tightestLimit instanceof RateLimitExceededError) {
-    setResHeaders(ctx, tightestLimit.status)
-    return tightestLimit
-  } else {
-    setResHeaders(ctx, tightestLimit)
-    return tightestLimit
+export type WrappedRateLimiterOptions = {
+  calcKey?: CalcKeyFn
+  calcPoints?: CalcPointsFn
+}
+
+/**
+ * Wraps a {@link RateLimiterI} instance with custom key and points calculation
+ * functions.
+ */
+export class WrappedRateLimiter implements RateLimiterI {
+  private constructor(
+    private readonly rateLimiter: RateLimiterI,
+    private readonly options: Readonly<WrappedRateLimiterOptions>,
+  ) {}
+
+  async consume(ctx: XRPCReqContext, opts?: RateLimiterConsumeOptions) {
+    return this.rateLimiter.consume(ctx, {
+      calcKey: opts?.calcKey ?? this.options.calcKey,
+      calcPoints: opts?.calcPoints ?? this.options.calcPoints,
+    })
+  }
+
+  async reset(ctx: XRPCReqContext, opts?: RateLimiterResetOptions) {
+    return this.rateLimiter.reset(ctx, {
+      calcKey: opts?.calcKey ?? this.options.calcKey,
+    })
+  }
+
+  static from(
+    rateLimiter: RateLimiterI,
+    { calcKey, calcPoints }: WrappedRateLimiterOptions = {},
+  ): RateLimiterI {
+    if (!calcKey && !calcPoints) return rateLimiter
+    return new WrappedRateLimiter(rateLimiter, { calcKey, calcPoints })
   }
 }
 
-export const resetMany = async (
-  ctx: XRPCReqContext,
-  fns: RateLimiterReset[],
-): Promise<void> => {
-  if (fns.length === 0) return
-  await Promise.all(fns.map((fn) => fn(ctx)))
+/**
+ * Combines multiple rate limiters into one.
+ *
+ * The combined rate limiter will return the tightest (most restrictive) of all
+ * the provided rate limiters.
+ */
+export class CombinedRateLimiter implements RateLimiterI {
+  private constructor(private readonly rateLimiters: readonly RateLimiterI[]) {}
+
+  async consume(ctx: XRPCReqContext, opts?: RateLimiterConsumeOptions) {
+    const promises: ReturnType<RateLimiterConsume>[] = []
+    for (const rl of this.rateLimiters) promises.push(rl.consume(ctx, opts))
+    return Promise.all(promises).then(getTightestLimit)
+  }
+
+  async reset(ctx: XRPCReqContext, opts?: RateLimiterResetOptions) {
+    const promises: ReturnType<RateLimiterReset>[] = []
+    for (const rl of this.rateLimiters) promises.push(rl.reset(ctx, opts))
+    await Promise.all(promises)
+  }
+
+  static from(rateLimiters: readonly RateLimiterI[]): RateLimiterI | undefined {
+    if (rateLimiters.length === 0) return undefined
+    if (rateLimiters.length === 1) return rateLimiters[0]
+    return new CombinedRateLimiter(rateLimiters)
+  }
 }
 
-export const setResHeaders = (
-  ctx: XRPCReqContext,
-  status: RateLimiterStatus,
-) => {
-  ctx.res.setHeader('RateLimit-Limit', status.limit)
-  ctx.res.setHeader('RateLimit-Remaining', status.remainingPoints)
-  ctx.res.setHeader(
-    'RateLimit-Reset',
-    Math.floor((Date.now() + status.msBeforeNext) / 1000),
-  )
-  ctx.res.setHeader('RateLimit-Policy', `${status.limit};w=${status.duration}`)
-}
-
-export const getTightestLimit = (
+const getTightestLimit = (
   resps: (RateLimiterStatus | RateLimitExceededError | null)[],
 ): RateLimiterStatus | RateLimitExceededError | null => {
   let lowest: RateLimiterStatus | null = null
@@ -193,6 +208,65 @@ export const getTightestLimit = (
     }
   }
   return lowest
+}
+
+export type RouteRateLimiterOptions = {
+  bypass?: (ctx: XRPCReqContext) => boolean
+}
+
+/**
+ * Wraps a {@link RateLimiterI} interface into a class that will apply the
+ * appropriate headers to the response if a limit is exceeded.
+ */
+export class RouteRateLimiter implements RateLimiterI {
+  constructor(
+    private readonly rateLimiter: RateLimiterI,
+    private readonly options: Readonly<RouteRateLimiterOptions> = {},
+  ) {}
+
+  async handle(ctx: XRPCReqContext): Promise<RateLimiterStatus | null> {
+    const { bypass } = this.options
+    if (bypass && bypass(ctx)) {
+      return null
+    }
+
+    const result = await this.consume(ctx)
+    if (result instanceof RateLimitExceededError) {
+      setStatusHeaders(ctx, result.status)
+      throw result
+    } else if (result != null) {
+      setStatusHeaders(ctx, result)
+    }
+
+    return result
+  }
+
+  async consume(...args: Parameters<RateLimiterConsume>) {
+    return this.rateLimiter.consume(...args)
+  }
+
+  async reset(...args: Parameters<RateLimiterReset>) {
+    return this.rateLimiter.reset(...args)
+  }
+
+  static from(
+    rateLimiters: readonly RateLimiterI[],
+    { bypass }: RouteRateLimiterOptions = {},
+  ): RouteRateLimiter | undefined {
+    const rateLimiter = CombinedRateLimiter.from(rateLimiters)
+    if (!rateLimiter) return undefined
+
+    return new RouteRateLimiter(rateLimiter, { bypass })
+  }
+}
+
+function setStatusHeaders(ctx: XRPCReqContext, status: RateLimiterStatus) {
+  setHeaders(ctx.res, {
+    'RateLimit-Limit': status.limit,
+    'RateLimit-Reset': Math.floor((Date.now() + status.msBeforeNext) / 1000),
+    'RateLimit-Remaining': status.remainingPoints,
+    'RateLimit-Policy': `${status.limit};w=${status.duration}`,
+  })
 }
 
 // when using a proxy, ensure headers are getting forwarded correctly: `app.set('trust proxy', true)`
