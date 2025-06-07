@@ -56,7 +56,6 @@ export class OAuthServerAgent {
   ) {
     this.dpopFetch = dpopFetchWrapper<void>({
       fetch: bindFetch(fetch),
-      iss: clientMetadata.client_id,
       key: dpopKey,
       supportedAlgs: serverMetadata.dpop_signing_alg_values_supported,
       sha256: async (v) => runtime.sha256(v),

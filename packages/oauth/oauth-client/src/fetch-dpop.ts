@@ -12,7 +12,6 @@ const ReadableStream = globalThis.ReadableStream as
 
 export type DpopFetchWrapperOptions<C = FetchContext> = {
   key: Key
-  iss: string
   nonces: SimpleStore<string, string>
   supportedAlgs?: string[]
   sha256?: (input: string) => Promise<string>
@@ -30,7 +29,6 @@ export type DpopFetchWrapperOptions<C = FetchContext> = {
 
 export function dpopFetchWrapper<C = FetchContext>({
   key,
-  iss,
   // @TODO we should provide a default based on specs
   supportedAlgs,
   nonces,
@@ -70,7 +68,7 @@ export function dpopFetchWrapper<C = FetchContext>({
       // Ignore get errors, we will just not send a nonce
     }
 
-    const initProof = await buildProof(key, alg, iss, htm, htu, initNonce, ath)
+    const initProof = await buildProof(key, alg, htm, htu, initNonce, ath)
     request.headers.set('DPoP', initProof)
 
     const initResponse = await fetch.call(this, request)
@@ -118,7 +116,7 @@ export function dpopFetchWrapper<C = FetchContext>({
     // The initial response body must be consumed (see cancelBody's doc).
     await cancelBody(initResponse, 'log')
 
-    const nextProof = await buildProof(key, alg, iss, htm, htu, nextNonce, ath)
+    const nextProof = await buildProof(key, alg, htm, htu, nextNonce, ath)
     const nextRequest = new Request(input, init)
     nextRequest.headers.set('DPoP', nextProof)
 
@@ -163,7 +161,6 @@ function buildHtu(url: string): string {
 async function buildProof(
   key: Key,
   alg: string,
-  iss: string,
   htm: string,
   htu: string,
   nonce?: string,
@@ -184,7 +181,6 @@ async function buildProof(
       jwk,
     },
     {
-      iss,
       iat: now,
       // Any collision will cause the request to be rejected by the server. no biggie.
       jti: Math.random().toString(36).slice(2),
