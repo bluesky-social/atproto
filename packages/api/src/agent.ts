@@ -385,12 +385,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async like(uri: string, cid: string) {
+  async like(uri: string, cid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.feed.like.create(
       { repo: this.accountDid },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }
@@ -405,12 +406,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async repost(uri: string, cid: string) {
+  async repost(uri: string, cid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.feed.repost.create(
       { repo: this.accountDid },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }

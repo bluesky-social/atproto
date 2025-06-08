@@ -5,6 +5,7 @@ export interface Record {
   json: string
   indexedAt: string
   takedownRef: string | null
+  tags: string[] | null
 }
 
 export const tableName = 'record'

@@ -1,5 +1,49 @@
 # @atproto/api
 
+## 0.15.14
+
+### Patch Changes
+
+- [#3901](https://github.com/bluesky-social/atproto/pull/3901) [`a48671e73`](https://github.com/bluesky-social/atproto/commit/a48671e730681f692a88053e8f137bd9e2aed5f1) Thanks [@mozzius](https://github.com/mozzius)! - Add notification preferences V2 lexicons
+
+## 0.15.13
+
+### Patch Changes
+
+- [#3929](https://github.com/bluesky-social/atproto/pull/3929) [`c6eb8a12e`](https://github.com/bluesky-social/atproto/commit/c6eb8a12e291c88fea79da447f9da8608d02300d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Rename `getPostThreadHiddenV2` to `getPostThreadOtherV2` to better reflect the intent of the API.
+
+## 0.15.12
+
+### Patch Changes
+
+- [#3912](https://github.com/bluesky-social/atproto/pull/3912) [`a5cd018bd`](https://github.com/bluesky-social/atproto/commit/a5cd018bd5f237221902ab1b6956b46233c92187) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Unify `getPostThreadV2` and `getPostThreadHiddenV2` responses under `app.bsky.unspecced.defs` namespace and a single interface via `threadItemPost`.
+
+## 0.15.11
+
+### Patch Changes
+
+- [#3910](https://github.com/bluesky-social/atproto/pull/3910) [`a978681fd`](https://github.com/bluesky-social/atproto/commit/a978681fde1c138a5298bae77e5dc36ce155f955) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Updates to app.bsky.unspecced.getPostThreadHiddenV2 done in f6d5a467e71fb54996754cce7747b1e98a34442b (https://github.com/bluesky-social/atproto/pull/3909)
+
+## 0.15.10
+
+### Patch Changes
+
+- [#3825](https://github.com/bluesky-social/atproto/pull/3825) [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add app.bsky.unspecced.getPostThreadV2
+
+- [#3825](https://github.com/bluesky-social/atproto/pull/3825) [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add app.bsky.unspecced.getPostThreadHiddenV2
+
+## 0.15.9
+
+### Patch Changes
+
+- [#3882](https://github.com/bluesky-social/atproto/pull/3882) [`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159) Thanks [@mozzius](https://github.com/mozzius)! - add a "via" field to reposts and likes allowing a reference a repost, and then give a notification when a repost is liked or reposted.
+
+## 0.15.8
+
+### Patch Changes
+
+- [#3869](https://github.com/bluesky-social/atproto/pull/3869) [`80f402f36`](https://github.com/bluesky-social/atproto/commit/80f402f3663af08fd048300738d04c67aa2b9cb8) Thanks [@haileyok](https://github.com/haileyok)! - add `reqId` to feed interactions
+
 ## 0.15.7
 
 ### Patch Changes

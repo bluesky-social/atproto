@@ -1,5 +1,61 @@
 # @atproto/oauth-provider
 
+## 0.8.0
+
+### Minor Changes
+
+- [#3879](https://github.com/bluesky-social/atproto/pull/3879) [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve validation of DPoP proofs
+
+### Patch Changes
+
+- [#3879](https://github.com/bluesky-social/atproto/pull/3879) [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return DPoP validation result from `authenticateRequest`
+
+- Updated dependencies [[`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05), [`a3b24ca77`](https://github.com/bluesky-social/atproto/commit/a3b24ca77ca24ac19b17cf9ee2a5ca9612ccf96c)]:
+  - @atproto/jwk@0.2.0
+  - @atproto/oauth-types@0.2.8
+  - @atproto/jwk-jose@0.1.7
+  - @atproto/oauth-provider-api@0.1.3
+  - @atproto/oauth-provider-frontend@0.1.6
+  - @atproto/oauth-provider-ui@0.1.8
+
+## 0.7.10
+
+### Patch Changes
+
+- Updated dependencies [[`71b9dcda9`](https://github.com/bluesky-social/atproto/commit/71b9dcda9611ab3662ccb2c4e175579396f16b3a)]:
+  - @atproto/oauth-provider-ui@0.1.7
+
+## 0.7.9
+
+### Patch Changes
+
+- [#3900](https://github.com/bluesky-social/atproto/pull/3900) [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add max length limit to passwords
+
+## 0.7.8
+
+### Patch Changes
+
+- [`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `/.well-known/change-password` endpoint
+
+- Updated dependencies [[`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5)]:
+  - @atproto/oauth-provider-frontend@0.1.5
+  - @atproto/oauth-provider-ui@0.1.6
+
+## 0.7.7
+
+### Patch Changes
+
+- [#3818](https://github.com/bluesky-social/atproto/pull/3818) [`43861a452`](https://github.com/bluesky-social/atproto/commit/43861a452b70268e738ef12033297cddacbe25d4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on the Public Suffix List
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `transition:email` oauth scope
+
+- Updated dependencies [[`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`36dbd4155`](https://github.com/bluesky-social/atproto/commit/36dbd41551f74052a3f584719a1a7edd86eca201), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`43861a452`](https://github.com/bluesky-social/atproto/commit/43861a452b70268e738ef12033297cddacbe25d4), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4)]:
+  - @atproto-labs/fetch-node@0.1.9
+  - @atproto-labs/pipe@0.1.1
+  - @atproto/oauth-provider-ui@0.1.5
+  - @atproto-labs/fetch@0.2.3
+  - @atproto/oauth-provider-frontend@0.1.4
+
 ## 0.7.6
 
 ### Patch Changes

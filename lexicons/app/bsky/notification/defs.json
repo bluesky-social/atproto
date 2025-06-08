@@ -5,6 +5,64 @@
     "recordDeleted": {
       "type": "object",
       "properties": {}
+    },
+    "chatPreference": {
+      "type": "object",
+      "required": ["filter", "push"],
+      "properties": {
+        "filter": { "type": "string", "knownValues": ["all", "accepted"] },
+        "push": { "type": "boolean" }
+      }
+    },
+    "filterablePreference": {
+      "type": "object",
+      "required": ["filter", "list", "push"],
+      "properties": {
+        "filter": { "type": "string", "knownValues": ["all", "follows"] },
+        "list": { "type": "boolean" },
+        "push": { "type": "boolean" }
+      }
+    },
+    "preference": {
+      "type": "object",
+      "required": ["list", "push"],
+      "properties": {
+        "list": { "type": "boolean" },
+        "push": { "type": "boolean" }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "required": [
+        "chat",
+        "follow",
+        "like",
+        "likeViaRepost",
+        "mention",
+        "quote",
+        "reply",
+        "repost",
+        "repostViaRepost",
+        "starterpackJoined",
+        "subscribedPost",
+        "unverified",
+        "verified"
+      ],
+      "properties": {
+        "chat": { "type": "ref", "ref": "#chatPreference" },
+        "follow": { "type": "ref", "ref": "#filterablePreference" },
+        "like": { "type": "ref", "ref": "#filterablePreference" },
+        "likeViaRepost": { "type": "ref", "ref": "#filterablePreference" },
+        "mention": { "type": "ref", "ref": "#filterablePreference" },
+        "quote": { "type": "ref", "ref": "#filterablePreference" },
+        "reply": { "type": "ref", "ref": "#filterablePreference" },
+        "repost": { "type": "ref", "ref": "#filterablePreference" },
+        "repostViaRepost": { "type": "ref", "ref": "#filterablePreference" },
+        "starterpackJoined": { "type": "ref", "ref": "#preference" },
+        "subscribedPost": { "type": "ref", "ref": "#preference" },
+        "unverified": { "type": "ref", "ref": "#preference" },
+        "verified": { "type": "ref", "ref": "#preference" }
+      }
     }
   }
 }

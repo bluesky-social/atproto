@@ -174,15 +174,19 @@ import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
 import * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
+import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
+import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
+import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
@@ -435,15 +439,19 @@ export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
 export * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
+export * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
 export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
+export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
+export * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
@@ -3339,6 +3347,18 @@ export class AppBskyNotificationNS {
     this._client = client
   }
 
+  getPreferences(
+    params?: AppBskyNotificationGetPreferences.QueryParams,
+    opts?: AppBskyNotificationGetPreferences.CallOptions,
+  ): Promise<AppBskyNotificationGetPreferences.Response> {
+    return this._client.call(
+      'app.bsky.notification.getPreferences',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getUnreadCount(
     params?: AppBskyNotificationGetUnreadCount.QueryParams,
     opts?: AppBskyNotificationGetUnreadCount.CallOptions,
@@ -3369,6 +3389,18 @@ export class AppBskyNotificationNS {
   ): Promise<AppBskyNotificationPutPreferences.Response> {
     return this._client.call(
       'app.bsky.notification.putPreferences',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  putPreferencesV2(
+    data?: AppBskyNotificationPutPreferencesV2.InputSchema,
+    opts?: AppBskyNotificationPutPreferencesV2.CallOptions,
+  ): Promise<AppBskyNotificationPutPreferencesV2.Response> {
+    return this._client.call(
+      'app.bsky.notification.putPreferencesV2',
       opts?.qp,
       data,
       opts,
@@ -3433,6 +3465,30 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetPopularFeedGenerators.Response> {
     return this._client.call(
       'app.bsky.unspecced.getPopularFeedGenerators',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPostThreadOtherV2(
+    params?: AppBskyUnspeccedGetPostThreadOtherV2.QueryParams,
+    opts?: AppBskyUnspeccedGetPostThreadOtherV2.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPostThreadOtherV2.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadOtherV2',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPostThreadV2(
+    params?: AppBskyUnspeccedGetPostThreadV2.QueryParams,
+    opts?: AppBskyUnspeccedGetPostThreadV2.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPostThreadV2.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadV2',
       params,
       undefined,
       opts,

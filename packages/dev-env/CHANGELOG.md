@@ -1,5 +1,98 @@
 # @atproto/dev-env
 
+## 0.3.140
+
+### Patch Changes
+
+- Updated dependencies [[`a48671e73`](https://github.com/bluesky-social/atproto/commit/a48671e730681f692a88053e8f137bd9e2aed5f1)]:
+  - @atproto/ozone@0.1.118
+  - @atproto/bsky@0.0.157
+  - @atproto/api@0.15.14
+  - @atproto/pds@0.4.146
+
+## 0.3.139
+
+### Patch Changes
+
+- Updated dependencies [[`c6eb8a12e`](https://github.com/bluesky-social/atproto/commit/c6eb8a12e291c88fea79da447f9da8608d02300d), [`598fcb693`](https://github.com/bluesky-social/atproto/commit/598fcb693d154fe4222f84a3ad24ed3d0b19c58d)]:
+  - @atproto/bsky@0.0.156
+  - @atproto/api@0.15.13
+  - @atproto/pds@0.4.145
+  - @atproto/ozone@0.1.117
+
+## 0.3.138
+
+### Patch Changes
+
+- Updated dependencies [[`9214bd017`](https://github.com/bluesky-social/atproto/commit/9214bd01705381aed6b5bde2900d6dc5486b6e9f), [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05)]:
+  - @atproto/xrpc-server@0.7.19
+  - @atproto/pds@0.4.144
+  - @atproto/bsky@0.0.155
+  - @atproto/ozone@0.1.116
+  - @atproto/sync@0.1.24
+
+## 0.3.137
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.143
+  - @atproto/bsky@0.0.154
+  - @atproto/ozone@0.1.115
+
+## 0.3.136
+
+### Patch Changes
+
+- Updated dependencies [[`a5cd018bd`](https://github.com/bluesky-social/atproto/commit/a5cd018bd5f237221902ab1b6956b46233c92187)]:
+  - @atproto/bsync@0.0.20
+  - @atproto/bsky@0.0.154
+  - @atproto/api@0.15.12
+  - @atproto/pds@0.4.142
+  - @atproto/ozone@0.1.115
+
+## 0.3.135
+
+### Patch Changes
+
+- Updated dependencies [[`a978681fd`](https://github.com/bluesky-social/atproto/commit/a978681fde1c138a5298bae77e5dc36ce155f955), [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e)]:
+  - @atproto/api@0.15.11
+  - @atproto/pds@0.4.141
+  - @atproto/bsky@0.0.153
+  - @atproto/ozone@0.1.114
+
+## 0.3.134
+
+### Patch Changes
+
+- Updated dependencies [[`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9), [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9)]:
+  - @atproto/api@0.15.10
+  - @atproto/bsky@0.0.152
+  - @atproto/ozone@0.1.113
+  - @atproto/pds@0.4.140
+
+## 0.3.133
+
+### Patch Changes
+
+- [#3882](https://github.com/bluesky-social/atproto/pull/3882) [`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159) Thanks [@mozzius](https://github.com/mozzius)! - add a "via" field to reposts and likes allowing a reference a repost, and then give a notification when a repost is liked or reposted.
+
+- Updated dependencies [[`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159)]:
+  - @atproto/ozone@0.1.112
+  - @atproto/bsky@0.0.151
+  - @atproto/api@0.15.9
+  - @atproto/pds@0.4.139
+
+## 0.3.132
+
+### Patch Changes
+
+- Updated dependencies [[`80f402f36`](https://github.com/bluesky-social/atproto/commit/80f402f3663af08fd048300738d04c67aa2b9cb8), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`eab7c9fb8`](https://github.com/bluesky-social/atproto/commit/eab7c9fb8a9fed4017455ea06666c919aea61336)]:
+  - @atproto/bsky@0.0.150
+  - @atproto/api@0.15.8
+  - @atproto/pds@0.4.138
+  - @atproto/ozone@0.1.111
+
 ## 0.3.131
 
 ### Patch Changes

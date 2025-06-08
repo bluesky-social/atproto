@@ -1,5 +1,42 @@
 # @atproto/oauth-client
 
+## 0.3.21
+
+### Patch Changes
+
+- [#3935](https://github.com/bluesky-social/atproto/pull/3935) [`cd4bed3c9`](https://github.com/bluesky-social/atproto/commit/cd4bed3c9e68878c3f79620fe19f6994ebcb932e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Cache new DPoP nonces from successful retries
+
+## 0.3.20
+
+### Patch Changes
+
+- [#3919](https://github.com/bluesky-social/atproto/pull/3919) [`a3b24ca77`](https://github.com/bluesky-social/atproto/commit/a3b24ca77ca24ac19b17cf9ee2a5ca9612ccf96c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `application/x-www-form-urlencoded` content instead of JSON for OAuth requests
+
+- Updated dependencies [[`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05), [`a3b24ca77`](https://github.com/bluesky-social/atproto/commit/a3b24ca77ca24ac19b17cf9ee2a5ca9612ccf96c)]:
+  - @atproto/jwk@0.2.0
+  - @atproto/oauth-types@0.2.8
+
+## 0.3.19
+
+### Patch Changes
+
+- [#3877](https://github.com/bluesky-social/atproto/pull/3877) [`a03f0b906`](https://github.com/bluesky-social/atproto/commit/a03f0b906b108f8c766a5700f0d68b55748f23bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove un-necessary validation of `alg` on every dpop token creation
+
+## 0.3.18
+
+### Patch Changes
+
+- [`36d0d370c`](https://github.com/bluesky-social/atproto/commit/36d0d370c24498f74c243ebfb01564e5050c672d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove query & fragment from DPoP proof `htu` claim
+
+## 0.3.17
+
+### Patch Changes
+
+- Updated dependencies [[`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4)]:
+  - @atproto-labs/fetch@0.2.3
+  - @atproto-labs/did-resolver@0.1.13
+  - @atproto-labs/identity-resolver@0.1.17
+
 ## 0.3.16
 
 ### Patch Changes

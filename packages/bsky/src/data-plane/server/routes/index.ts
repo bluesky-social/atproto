@@ -14,6 +14,7 @@ import lists from './lists'
 import moderation from './moderation'
 import mutes from './mutes'
 import notifs from './notifs'
+import privateData from './private-data'
 import profile from './profile'
 import quotes from './quotes'
 import records from './records'
@@ -40,6 +41,7 @@ export default (db: Database, idResolver: IdResolver) =>
       ...moderation(db),
       ...mutes(db),
       ...notifs(db),
+      ...privateData(db),
       ...profile(db),
       ...quotes(db),
       ...records(db),

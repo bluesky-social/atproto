@@ -19,6 +19,7 @@ export interface Record {
   $type: 'app.bsky.feed.repost'
   subject: ComAtprotoRepoStrongRef.Main
   createdAt: string
+  via?: ComAtprotoRepoStrongRef.Main
   [k: string]: unknown
 }
 
