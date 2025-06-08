@@ -128,16 +128,6 @@ export function genUserType(
     case 'token':
       genToken(file, lexUri, def)
       break
-    case 'ref': {
-      const ifaceName: string = toTitleCase(getHash(lexUri))
-      genRef(file, imports, lexUri, def, ifaceName)
-      break
-    }
-    case 'union': {
-      const ifaceName: string = toTitleCase(getHash(lexUri))
-      genRefUnion(file, imports, lexUri, def, ifaceName)
-      break
-    }
     case 'object': {
       const ifaceName: string = toTitleCase(getHash(lexUri))
       genObject(file, imports, lexUri, def, ifaceName, {
@@ -146,6 +136,16 @@ export function genUserType(
       genObjHelpers(file, lexUri, ifaceName, {
         requireTypeProperty: false,
       })
+      break
+    }
+    case 'ref': {
+      const ifaceName: string = toTitleCase(getHash(lexUri))
+      genRef(file, imports, lexUri, def, ifaceName)
+      break
+    }
+    case 'union': {
+      const ifaceName: string = toTitleCase(getHash(lexUri))
+      genRefUnion(file, imports, lexUri, def, ifaceName)
       break
     }
 
