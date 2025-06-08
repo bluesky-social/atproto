@@ -192,13 +192,12 @@ function genRefUnion(
 )
 {
   const types = def.refs.map((ref) => refToUnionType(ref, lexUri, imports))
-  //const iface =
-  file.addTypeAlias({
+  const iface = file.addTypeAlias({
     name: ifaceName,
     type: makeType(types, {nullable: false}),
     isExported: true,
   })
-  //genComment(iface, def)
+  genComment(iface, def)
 }
 
 function genObject(
