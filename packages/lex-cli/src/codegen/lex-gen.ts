@@ -10,6 +10,7 @@ import {
   type LexPrimitive,
   type LexToken,
   type LexUserType,
+  type LexRef,
   Lexicons,
 } from '@atproto/lexicon'
 import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util'
@@ -126,6 +127,11 @@ export function genUserType(
     case 'token':
       genToken(file, lexUri, def)
       break
+    case 'ref': {
+      const ifaceName: string = toTitleCase(getHash(lexUri))
+      genRef(file, imports, lexUri, def, ifaceName)
+      break;
+    }
     case 'object': {
       const ifaceName: string = toTitleCase(getHash(lexUri))
       genObject(file, imports, lexUri, def, ifaceName, {
@@ -152,6 +158,23 @@ export function genUserType(
         `genLexUserType() called with wrong definition type (${def.type}) in ${lexUri}`,
       )
   }
+}
+
+function genRef(
+  file: SourceFile,
+  imports: Set<string>,
+  lexUri: string,
+  def: LexRef,
+  ifaceName: string
+)
+{
+  const type = refToType(def.ref, stripScheme(stripHash(lexUri)), imports)
+  const iface = file.addTypeAlias({
+    name: ifaceName,
+    type: makeType(type, {nullable: false}),
+    isExported: true,
+  })
+  genComment(iface, def)
 }
 
 function genObject(
