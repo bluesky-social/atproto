@@ -66,11 +66,10 @@
     },
     "activitySubscription": {
       "type": "object",
+      "required": ["post", "reply"],
       "properties": {
-        "posts": {
-          "type": "string",
-          "knownValues": ["posts_no_replies", "posts_with_replies"]
-        }
+        "post": { "type": "boolean" },
+        "reply": { "type": "boolean" }
       }
     }
   }

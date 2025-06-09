@@ -106,7 +106,8 @@ export function validatePreferences<V>(v: V) {
 
 export interface ActivitySubscription {
   $type?: 'app.bsky.notification.defs#activitySubscription'
-  posts?: 'posts_no_replies' | 'posts_with_replies' | (string & {})
+  post: boolean
+  reply: boolean
 }
 
 const hashActivitySubscription = 'activitySubscription'

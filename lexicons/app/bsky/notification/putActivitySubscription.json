@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.putActivitySubscription",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Puts an activity subscription entry. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject"],
+          "properties": {
+            "subject": { "type": "string", "format": "did" },
+            "post": { "type": "boolean" },
+            "reply": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}
