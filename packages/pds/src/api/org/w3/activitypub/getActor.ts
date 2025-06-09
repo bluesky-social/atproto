@@ -1,18 +1,17 @@
 import { InvalidRequestError } from '@atproto/oauth-provider'
 //import { AtUri } from '@atproto/syntax'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-//import { ids } from '../../../../lexicon/lexicons'
-//import { pipethrough } from '../../../../pipethrough'
-import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
 import {
   genDomainPrefix,
   inferPubHandle,
   makeImageURL,
   makeLDContext,
-  makeObject
+  makeObject,
 } from '../../../../activitypub/util'
-
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
+//import { ids } from '../../../../lexicon/lexicons'
+//import { pipethrough } from '../../../../pipethrough'
+import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
 
 export default function (server: Server, ctx: AppContext) {
   server.org.w3.activitypub.getActor({
@@ -23,9 +22,10 @@ export default function (server: Server, ctx: AppContext) {
       const atUser = await ctx.accountManager.getAccount(repo)
       if (!atUser) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
-      }
-      else if (!atUser.handle) {
-        throw new InvalidRequestError(`Unable to read handle from repo: ${repo}`)
+      } else if (!atUser.handle) {
+        throw new InvalidRequestError(
+          `Unable to read handle from repo: ${repo}`,
+        )
       }
       const did = atUser.did
 
@@ -34,7 +34,9 @@ export default function (server: Server, ctx: AppContext) {
         profile = (await actor.record.getProfileRecord()) as ProfileRecord
       })
       if (!profile) {
-        throw new InvalidRequestError(`Unable to fetch profile from repo: ${repo}`)
+        throw new InvalidRequestError(
+          `Unable to fetch profile from repo: ${repo}`,
+        )
       }
 
       const uriPrefix = `${genDomainPrefix(ctx, req)}/xrpc`
@@ -81,8 +83,8 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/activity+json', // 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
         body: {
           '@context': makeLDContext(apResponse),
-          ...apResponse
-        }
+          ...apResponse,
+        },
       }
     },
   })
