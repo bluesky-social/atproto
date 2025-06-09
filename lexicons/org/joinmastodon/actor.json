@@ -59,7 +59,7 @@
     },
     "actorTypes": {
       "type": "ref",
-      "ref": "org.w3.activitpub.actor#actorTypes"
+      "ref": "org.w3.activitypub.actor#actorTypes"
     }
   }
 }
