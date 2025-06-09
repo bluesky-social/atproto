@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "org.w3.activitystreams.intransitiveActivity",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "IMPLEMENTS activity (DOES NOT EXTEND object)",
+      "properties": {
+        "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
+
+        "actor": { "type": "ref", "ref": "org.w3.activitystreams.properties#actor" },
+        "object": { "type": "ref", "ref": "org.w3.activitystreams.properties#object" },
+        "target": { "type": "ref", "ref": "org.w3.activitystreams.properties#target" },
+        "result": { "type": "ref", "ref": "org.w3.activitystreams.properties#result" },
+        "origin": { "type": "ref", "ref": "org.w3.activitystreams.properties#origin" },
+        "instrument": { "type": "ref", "ref": "org.w3.activitystreams.properties#instrument" }
+      }
+    }
+  }
+}

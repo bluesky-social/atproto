@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "org.w3.activitypub.getActor",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Fetches a user (actor) as an ActivityPub ",
+      "parameters": {
+        "type": "params",
+        "required": ["repo"],
+        "properties": {
+          "repo": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The handle or DID of the repo."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/activity+json",
+        "schema": {
+          "type": "ref",
+          "ref": "org.w3.activitypub.actor"
+        }
+      }
+    }
+  }
+}

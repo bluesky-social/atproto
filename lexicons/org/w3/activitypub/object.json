@@ -1,0 +1,25 @@
+{
+  "lexicon": 1,
+  "id": "org.w3.activitypub.object",
+  "defs": {
+    "main": {
+      "type": "object",
+      "properties": {
+        "@context": { "type": "array", "items": { "type": "string"} },
+        "id": { "type": "string", "format": "uri" },
+        "atId": { "type": "string", "format": "at-uri", "description": "AtProto identifier (not actually necessary)" },
+        "type": { "type": "string", "knownValues": ["Note"] },
+        "summary": { "type": "string", "description": "HTML encoded profile page" },
+        "content": { "type": "string" },
+        "source": { "type": "ref", "ref": "#sourceType" }
+      }
+    },
+    "sourceType" : {
+      "type": "object",
+      "properties": {
+        "content" : { "type": "string" },
+        "mediaType": { "type": "string" }
+      }
+    }
+  }
+}

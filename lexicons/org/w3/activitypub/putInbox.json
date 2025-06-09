@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "org.w3.activitypub.putInbox",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "ActivityPub Inbox",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "priority": { "type": "boolean" }
+          }
+        }
+
+    },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      "errors": []
+    }
+  }
+}
