@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "object",
-      "description": "EXTENDS collectionPage",
+      "description": "EXTENDS collectionPage, IMPLEMENTS orderedCollectionPage",
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 

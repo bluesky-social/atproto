@@ -2,14 +2,14 @@
   "lexicon": 1,
   "id": "org.joinmastodon.link",
   "defs": {
-    "hashtag": {
+     "main": {
       "type": "object",
-      "description": "EXTENDS link, IMPLEMENTS hashtag",
+      "description": "EXTENDS org.w3.activitypub.link, IMPLEMENTS link",
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 
         "id": { "type": "ref", "ref": "org.w3.activitystreams.properties#id" },
-        "type": { "type": "string", "const": "Hashtag" },
+        "type": { "type": "ref", "ref": "#linkTypes" },
         "href": { "type": "ref", "ref": "org.w3.activitystreams.properties#href" },
         "rel": { "type": "ref", "ref": "org.w3.activitystreams.properties#rel" },
         "mediaType": { "type": "ref", "ref": "org.w3.activitystreams.properties#mediaType" },
@@ -19,6 +19,16 @@
         "width": { "type": "ref", "ref": "org.w3.activitystreams.properties#width" },
         "preview": { "type": "ref", "ref": "org.w3.activitystreams.properties#preview" }
       }
+    },
+    "linkTypes": {
+      "type": "string",
+      "knownValues": [
+        "Link",
+        "Mention",
+
+        "Hashtag"
+      ]
     }
+
   }
 }

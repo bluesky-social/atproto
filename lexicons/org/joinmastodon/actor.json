@@ -5,7 +5,7 @@
     "main": {
       "type": "object",
       "required": ["id", "type", "inbox", "outbox"],
-      "description": "EXTENDS org.w3.activitypub.actor",
+      "description": "EXTENDS org.w3.activitypub.actor, IMPLEMENTS actor",
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 

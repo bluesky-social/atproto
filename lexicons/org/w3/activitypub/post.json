@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "object",
+      "description": "deprecated",
       "properties": {
         "@context": { "type": "array", "items": { "type": "string"} },
         "id": { "type": "string", "format": "uri" },

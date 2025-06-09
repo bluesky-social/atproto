@@ -4,12 +4,12 @@
   "defs": {
     "main": {
       "type": "object",
-      "description": "EXTENDS activitypub.object",
+      "description": "EXTENDS org.w3.activitypub.object, IMPLEMENTS object",
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 
         "id": { "type": "ref", "ref": "org.w3.activitystreams.properties#id" },
-        "type": { "type": "ref", "ref": "org.w3.activitystreams.properties#type" },
+        "type": { "type": "ref", "ref": "#objectTypes" },
         "attachment": { "type": "ref", "ref": "org.w3.activitystreams.properties#attachment" },
         "attributedTo": { "type": "ref", "ref": "org.w3.activitystreams.properties#attributedTo" },
         "audience": { "type": "ref", "ref": "org.w3.activitystreams.properties#audience" },
@@ -39,6 +39,67 @@
 
         "source": { "type": "ref", "ref": "org.w3.activitypub.properties#source" }
       }
+    },
+    "objectTypes": {
+      "type": "string",
+      "knownValues": [
+        "Activity",
+        "Collection",
+        "CollectionPage",
+        "OrderedCollection",
+        "OrderedCollectionPage",
+
+        "Article",
+        "Audio",
+        "Document",
+        "Event",
+        "Image",
+        "Note",
+        "Page",
+        "Place",
+        "Profile",
+        "Relationship",
+        "Tombstone",
+        "Video",
+
+        "Application",
+        "Group",
+        "Organization",
+        "Person",
+        "Service",
+
+        "Accept",
+        "Add",
+        "Announce",
+        "Arrive",
+        "Block",
+        "Create",
+        "Delete",
+        "Dislike",
+        "Flag",
+        "Follow",
+        "Ignore",
+        "Invite",
+        "Join",
+        "Leave",
+        "Like",
+        "Listen",
+        "Move",
+        "Offer",
+        "Question",
+        "Reject",
+        "Read",
+        "Remove",
+        "TentativeReject",
+        "TentativeAccept",
+        "Travel",
+        "Undo",
+        "Update",
+        "View",
+
+        "PropertyValue",
+        "Emoji"
+      ]
     },
 
 

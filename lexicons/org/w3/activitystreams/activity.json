@@ -9,7 +9,7 @@
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 
         "id": { "type": "ref", "ref": "org.w3.activitystreams.properties#id" },
-        "type": { "type": "ref", "ref": "org.w3.activitystreams.properties#type" },
+        "type": { "type": "ref", "ref": "#activityTypes" },
         "attachment": { "type": "ref", "ref": "org.w3.activitystreams.properties#attachment" },
         "attributedTo": { "type": "ref", "ref": "org.w3.activitystreams.properties#attributedTo" },
         "audience": { "type": "ref", "ref": "org.w3.activitystreams.properties#audience" },
@@ -44,6 +44,39 @@
         "origin": { "type": "ref", "ref": "org.w3.activitystreams.properties#origin" },
         "instrument": { "type": "ref", "ref": "org.w3.activitystreams.properties#instrument" }
       }
+    },
+    "activityTypes": {
+      "type": "string",
+      "knownValues": [
+        "Accept",
+        "Add",
+        "Announce",
+        "Arrive",
+        "Block",
+        "Create",
+        "Delete",
+        "Dislike",
+        "Flag",
+        "Follow",
+        "Ignore",
+        "Invite",
+        "Join",
+        "Leave",
+        "Like",
+        "Listen",
+        "Move",
+        "Offer",
+        "Question",
+        "Reject",
+        "Read",
+        "Remove",
+        "TentativeReject",
+        "TentativeAccept",
+        "Travel",
+        "Undo",
+        "Update",
+        "View"
+      ]
     }
   }
 }

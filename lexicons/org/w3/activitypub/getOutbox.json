@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetches a user (actor) as an ActivityPub ",
+      "description": "Fetches a user' outbox, in ActivityPub format",
       "parameters": {
         "type": "params",
         "required": ["repo"],
