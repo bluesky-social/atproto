@@ -1,7 +1,7 @@
 import { RequestHandler, Router, json } from 'express'
 //import { AuthScope } from '../auth-verifier'
 import { AppContext } from '../context'
-import { inferPubHandle, genDomainPrefix } from './util'
+import { genDomainPrefix, inferPubHandle } from './util'
 
 export const pubRoutePrefix = '/activitypub'
 export const atRoutePrefix = '/atpub'
@@ -60,9 +60,9 @@ export const createRouter = (ctx: AppContext): Router => {
     if (!ret.did) {
       // Test with the alternate hostname, or without if its the same as the given hostname
       const atHandle =
-        host === ctx.cfg.service.hostnameRoot
+        host === ctx.cfg.service.hostnameAlt
           ? actor
-          : `${actor}.${ctx.cfg.service.hostnameRoot}`
+          : `${actor}.${ctx.cfg.service.hostnameAlt}`
       const atUser = await ctx.accountManager.getAccount(atHandle)
       ret.did = atUser?.did
       if (ret.did) {

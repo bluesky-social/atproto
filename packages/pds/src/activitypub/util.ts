@@ -1,23 +1,29 @@
-import { ContextType, ObjectType } from '../lexicon/types/org/w3/activitystreams/defs'
-
+import {
+  ContextType,
+  ObjectType,
+} from '../lexicon/types/org/w3/activitystreams/defs'
 
 export const genDomainPrefix = (ctx, req) =>
-    `${req.protocol}://${req.hostname}${ctx.cfg.service.devMode && ctx.cfg.service.port ? ':' + ctx.cfg.service.port : ''}`
+  `${req.protocol}://${req.hostname}${ctx.cfg.service.devMode && ctx.cfg.service.port ? ':' + ctx.cfg.service.port : ''}`
 
-export const inferPubHandle = (ctx, hostname: string, handle: string, actor?: string) =>
-    actor && !actor.startsWith('did:')
-      ? `${actor}@${handle.substring(actor.length + 1)}`
-      : handle !== ctx.cfg.service.hostname &&
-          handle.endsWith(ctx.cfg.service.hostname)
-        ? `${handle.substring(0, handle.length - ctx.cfg.service.hostname.length - 1)}@${ctx.cfg.service.hostname}`
-        : ctx.cfg.service.hostnameRoot &&
-            handle !== ctx.cfg.service.hostnameRoot &&
-            handle.endsWith(ctx.cfg.service.hostnameRoot)
-          ? `${handle.substring(0, handle.length - ctx.cfg.service.hostnameRoot.length - 1)}@${ctx.cfg.service.hostnameRoot}`
-          : handle !== hostname && handle.endsWith(hostname)
-            ? `${handle.substring(0, handle.length - hostname.length - 1)}@${hostname}`
-            : `${handle}@${hostname}`
-
+export const inferPubHandle = (
+  ctx,
+  hostname: string,
+  handle: string,
+  actor?: string,
+) =>
+  actor && !actor.startsWith('did:')
+    ? `${actor}@${handle.substring(actor.length + 1)}`
+    : handle !== ctx.cfg.service.hostname &&
+        handle.endsWith(ctx.cfg.service.hostname)
+      ? `${handle.substring(0, handle.length - ctx.cfg.service.hostname.length - 1)}@${ctx.cfg.service.hostname}`
+      : ctx.cfg.service.hostnameRoot &&
+          handle !== ctx.cfg.service.hostnameRoot &&
+          handle.endsWith(ctx.cfg.service.hostnameRoot)
+        ? `${handle.substring(0, handle.length - ctx.cfg.service.hostnameRoot.length - 1)}@${ctx.cfg.service.hostnameRoot}`
+        : handle !== hostname && handle.endsWith(hostname)
+          ? `${handle.substring(0, handle.length - hostname.length - 1)}@${hostname}`
+          : `${handle}@${hostname}`
 
 const defaultImagePrefix = 'https://cdn.bsky.app/img'
 type BskyImageTypes = 'banner' | 'avatar'
@@ -40,97 +46,96 @@ export const makeImageURL = function (
 /** Used to generate the JSON-LD `@context` section of an ActivityPub object or link */
 export function makeLDContext(obj: any) {
   const asNamespace = 'https://www.w3.org/ns/activitystreams'
-  const secNamespace = "https://w3id.org/security/v1"
-  const atNamespace = "https://atproto.com/specs/#"   // Dummy
-  const mastodonNamespace = "http://joinmastodon.org/ns#"
+  const secNamespace = 'https://w3id.org/security/v1'
+  const atNamespace = 'https://atproto.com/specs/#' // Dummy
+  const mastodonNamespace = 'http://joinmastodon.org/ns#'
   //const schemaNamespace = "http://schema.org#" // Incorrect version (used by Mastodon)
   //const schemaNamespace = "https://schema.org/" // Correction version
 
-  let namespaces: (string | unknown)[] = [asNamespace]
-  let dictionary: {
+  const namespaces: (string | unknown)[] = [asNamespace]
+  const dictionary: {
     //as?: string,
-    Hashtag?: string,
-    manuallyApprovesFollowers?: string,
-    movedTo?: string,
-    sensitive?: string,
+    Hashtag?: string
+    manuallyApprovesFollowers?: string
+    movedTo?: string
+    sensitive?: string
 
     //sec?: string,
-    publicKey?: string,
-    publicKeyPem?: string,
-    owner?: string,
-    signature?: string,
-    signatureValue?: string,
+    publicKey?: string
+    publicKeyPem?: string
+    owner?: string
+    signature?: string
+    signatureValue?: string
 
-    toot?: string,
-    Emoji?: string,
-    attributionDomain?: string,
-    blurhash?: string,
-    discoverable?: string,
-    featured?: string,
-    featuredTags?: string,
-    focalPoint?: string,
-    indexable?: string,
-    memorial?: string,
-    suspended?: string,
-    votersCount?: string,
+    toot?: string
+    Emoji?: string
+    attributionDomain?: string
+    blurhash?: string
+    discoverable?: string
+    featured?: string
+    featuredTags?: string
+    focalPoint?: string
+    indexable?: string
+    memorial?: string
+    suspended?: string
+    votersCount?: string
 
-    schema?: string,
-    PropertyValue?: string,
-    value?: string,
+    schema?: string
+    PropertyValue?: string
+    value?: string
 
-    atproto?: string,
+    atproto?: string
     atUri?: string
   } = {}
 
-  if ("manuallyApprovesFollowers" in obj) {
-    dictionary.manuallyApprovesFollowers = "as:manuallyApprovesFollowers"
+  if ('manuallyApprovesFollowers' in obj) {
+    dictionary.manuallyApprovesFollowers = 'as:manuallyApprovesFollowers'
   }
-  if ("sensitive" in obj) {
-    dictionary.sensitive = "as:sensitive"
+  if ('sensitive' in obj) {
+    dictionary.sensitive = 'as:sensitive'
   }
 
   let secUsed = false
-  if ("publicKey" in obj) {
+  if ('publicKey' in obj) {
     secUsed = true
-    dictionary.publicKey = "sec:publicKey"
-    dictionary.owner = "sec:owner"
-    dictionary.publicKeyPem = "sec:publicKeyPem"
+    dictionary.publicKey = 'sec:publicKey'
+    dictionary.owner = 'sec:owner'
+    dictionary.publicKeyPem = 'sec:publicKeyPem'
   }
 
-  if ("discoverable" in obj) {
+  if ('discoverable' in obj) {
     dictionary.toot = mastodonNamespace
-    dictionary.discoverable = "toot:discoverable"
+    dictionary.discoverable = 'toot:discoverable'
   }
-  if ("featured" in obj) {
+  if ('featured' in obj) {
     dictionary.toot = mastodonNamespace
-    dictionary.featured = "toot:featured"
+    dictionary.featured = 'toot:featured'
   }
-  if ("featuredTags" in obj) {
+  if ('featuredTags' in obj) {
     dictionary.toot = mastodonNamespace
-    dictionary.featuredTags = "toot:featuredTags"
+    dictionary.featuredTags = 'toot:featuredTags'
   }
-  if ("indexable" in obj) {
+  if ('indexable' in obj) {
     dictionary.toot = mastodonNamespace
-    dictionary.indexable = "toot:indexable"
+    dictionary.indexable = 'toot:indexable'
   }
-  if ("memorial" in obj) {
+  if ('memorial' in obj) {
     dictionary.toot = mastodonNamespace
-    dictionary.memorial = "toot:memorial"
+    dictionary.memorial = 'toot:memorial'
   }
-  if ("discoverable" in obj) {
+  if ('discoverable' in obj) {
     dictionary.toot = mastodonNamespace
-    dictionary.memorial = "toot:discoverable"
+    dictionary.memorial = 'toot:discoverable'
   }
-  if ("suspended" in obj) {
+  if ('suspended' in obj) {
     dictionary.toot = mastodonNamespace
-    dictionary.suspended = "toot:suspended"
+    dictionary.suspended = 'toot:suspended'
   }
 
-  if ("atUri" in obj) {
+  if ('atUri' in obj) {
     dictionary.atproto = atNamespace
-    dictionary.atUri = "atproto:atUri"
+    dictionary.atUri = 'atproto:atUri'
   }
-
 
   if (secUsed) {
     namespaces.push(secNamespace)
@@ -140,13 +145,12 @@ export function makeLDContext(obj: any) {
     namespaces.push(dictionary)
   }
 
-  return ((namespaces.length > 1) ? namespaces : asNamespace) as ContextType
+  return (namespaces.length > 1 ? namespaces : asNamespace) as ContextType
 }
 
 export function makeObject(value) {
   return value as ObjectType
 }
-
 
 export const atUriToParts = function (uri: string) {
   if (!uri.startsWith('at://')) {
@@ -161,11 +165,8 @@ export const atUriToTID = function (uri: string) {
   return atUriToParts(uri)?.tid
 }
 
-
-
-
 export const makeActivity = function (
-  type: string,// Pick<ActivityPubActivity, 'type'>['type'],
+  type: string, // Pick<ActivityPubActivity, 'type'>['type'],
   options: {
     uriHandle: string
     postId: string
