@@ -5,6 +5,7 @@
     "main": {
       "type": "object",
       "description": "EXTENDS collectionPage, IMPLEMENTS orderedCollectionPage",
+      "required": ["type"],
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 

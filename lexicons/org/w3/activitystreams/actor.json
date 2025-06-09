@@ -4,8 +4,8 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": ["type"],
       "description": "EXTENDS object, IMPLEMENTS actor",
+      "required": ["type"],
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 

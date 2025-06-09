@@ -4,13 +4,13 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": ["id", "type", "inbox", "outbox"],
       "description": "EXTENDS org.w3.activitypub.actor, IMPLEMENTS actor",
+      "required": ["id", "type", "inbox", "outbox"],
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 
         "id": { "type": "ref", "ref": "org.w3.activitystreams.properties#id" },
-        "type": { "type": "ref", "ref": "org.w3.activitystreams.actor#actorTypes" },
+        "type": { "type": "ref", "ref": "#actorTypes" },
         "attachment": { "type": "ref", "ref": "org.w3.activitystreams.properties#attachment" },
         "attributedTo": { "type": "ref", "ref": "org.w3.activitystreams.properties#attributedTo" },
         "audience": { "type": "ref", "ref": "org.w3.activitystreams.properties#audience" },
@@ -56,6 +56,10 @@
         "suspended": {"type": "ref", "ref": "org.joinmastodon.properties#suspended"},
         "memorial": {"type": "ref", "ref": "org.joinmastodon.properties#memorial"}
       }
+    },
+    "actorTypes": {
+      "type": "ref",
+      "ref": "org.w3.activitpub.actor#actorTypes"
     }
   }
 }

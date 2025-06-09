@@ -10,7 +10,7 @@
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 
         "id": { "type": "ref", "ref": "org.w3.activitystreams.properties#id" },
-        "type": { "type": "ref", "ref": "org.w3.activitystreams.actor#actorTypes" },
+        "type": { "type": "ref", "ref": "#actorTypes" },
         "attachment": { "type": "ref", "ref": "org.w3.activitystreams.properties#attachment" },
         "attributedTo": { "type": "ref", "ref": "org.w3.activitystreams.properties#attributedTo" },
         "audience": { "type": "ref", "ref": "org.w3.activitystreams.properties#audience" },
@@ -48,6 +48,10 @@
         "preferredUsername": { "type": "ref", "ref": "org.w3.activitypub.actor#preferredUsername" },
         "endpoints": { "type": "ref", "ref": "org.w3.activitypub.actor#endpoints" }
       }
+    },
+    "actorTypes": {
+      "type": "ref",
+      "ref": "org.w3.activitystreams.actor#actorTypes"
     },
 
     "endpointType": { "type": "ref", "ref": "org.w3.activitystreams.defs#anyURI" },

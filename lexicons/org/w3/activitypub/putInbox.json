@@ -9,7 +9,6 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": [],
           "properties": {
             "priority": { "type": "boolean" }
           }

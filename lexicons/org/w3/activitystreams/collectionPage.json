@@ -5,6 +5,7 @@
     "main": {
       "type": "object",
       "description": "EXTENDS collection, IMPLEMENTS collectionPage",
+      "required": ["type"],
       "properties": {
         "@context": { "type": "ref", "ref": "org.w3.activitystreams.defs#contextType" },
 
