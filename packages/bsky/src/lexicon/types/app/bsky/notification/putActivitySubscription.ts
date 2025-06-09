@@ -11,17 +11,17 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import type * as AppBskyNotificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.notification.setActivitySubscription'
+const id = 'app.bsky.notification.putActivitySubscription'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   subject: string
-  activity: AppBskyNotificationDefs.ActivitySubscription
+  post?: boolean
+  reply?: boolean
 }
 
 export interface HandlerInput {

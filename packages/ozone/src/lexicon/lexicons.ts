@@ -9749,7 +9749,7 @@ export const schemaDict = {
       main: {
         type: 'record',
         description:
-          "A declaration of the user's preference for allowing activity subscriptions. Absence of this declaration implies 'following'.",
+          "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of this declaration implies 'following'.",
         key: 'literal:self',
         record: {
           type: 'object',
@@ -9887,10 +9887,13 @@ export const schemaDict = {
       },
       activitySubscription: {
         type: 'object',
+        required: ['post', 'reply'],
         properties: {
-          posts: {
-            type: 'string',
-            knownValues: ['posts_no_replies', 'posts_with_replies'],
+          post: {
+            type: 'boolean',
+          },
+          reply: {
+            type: 'boolean',
           },
         },
       },
@@ -10135,6 +10138,35 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationPutActivitySubscription: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putActivitySubscription',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Puts an activity subscription entry. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              post: {
+                type: 'boolean',
+              },
+              reply: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationPutPreferences: {
     lexicon: 1,
     id: 'app.bsky.notification.putPreferences',
@@ -10269,34 +10301,6 @@ export const schemaDict = {
               },
               appId: {
                 type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyNotificationSetActivitySubscription: {
-    lexicon: 1,
-    id: 'app.bsky.notification.setActivitySubscription',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Subscribe to receive notifications for activity on an account. Requires auth.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject', 'activity'],
-            properties: {
-              subject: {
-                type: 'string',
-                format: 'did',
-              },
-              activity: {
-                type: 'ref',
-                ref: 'lex:app.bsky.notification.defs#activitySubscription',
               },
             },
           },
@@ -16911,11 +16915,11 @@ export const ids = {
     'app.bsky.notification.listActivitySubscriptions',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutActivitySubscription:
+    'app.bsky.notification.putActivitySubscription',
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
-  AppBskyNotificationSetActivitySubscription:
-    'app.bsky.notification.setActivitySubscription',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
