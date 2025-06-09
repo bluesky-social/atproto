@@ -7,6 +7,7 @@ import express from 'express'
 import { TID } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
+import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
 import { Service } from '../../proto/bsync_connect'
 import {
   Method,
@@ -156,6 +157,10 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       const now = new Date().toISOString()
       if (namespace === 'app.bsky.notification.defs#preferences') {
         await handleNotificationPreferencesOperation(db, req, now)
+      } else if (
+        namespace === 'app.bsky.notification.defs#subjectActivitySubscription'
+      ) {
+        await handleSubjectActivitySubscriptionOperation(db, req, now)
       } else {
         await handleGenericOperation(db, req, now)
       }
@@ -204,6 +209,32 @@ const handleNotificationPreferencesOperation = async (
           updatedAt: now,
         }),
       )
+      .execute()
+  }
+
+  return handleGenericOperation(db, req, now)
+}
+
+const handleSubjectActivitySubscriptionOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, namespace, key, method, payload } = req
+
+  const parsed: SubjectActivitySubscription = JSON.parse(
+    Buffer.from(payload).toString('utf8'),
+  )
+  const {
+    activitySubscription: { post, reply },
+  } = parsed
+
+  if (method === Method.UPDATE && !post && !reply) {
+    return db.db
+      .deleteFrom('private_data')
+      .where('actorDid', '=', actorDid)
+      .where('namespace', '=', namespace)
+      .where('key', '=', key)
       .execute()
   }
 

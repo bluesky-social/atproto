@@ -1122,6 +1122,180 @@ describe('notification views', () => {
       await putAndAssert(input1, expected1)
     })
   })
+
+  describe('subscriptions', () => {
+    beforeEach(async () => {
+      await clearPrivateData(db)
+    })
+
+    it('inserts a subscription entry when no key is provided', async () => {
+      const actorDid = alice
+
+      const { data } =
+        await agent.app.bsky.notification.putActivitySubscription(
+          {
+            subject: carol,
+            activitySubscription: {
+              post: true,
+              reply: false,
+            },
+          },
+          {
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutActivitySubscription,
+            ),
+          },
+        )
+
+      const dbResult = await db.db
+        .selectFrom('private_data')
+        .selectAll()
+        .where('actorDid', '=', actorDid)
+        .where(
+          'namespace',
+          '=',
+          'app.bsky.notification.defs#subjectActivitySubscription',
+        )
+        .where('key', '=', data.key)
+        .executeTakeFirstOrThrow()
+      expect(dbResult).toStrictEqual({
+        actorDid: actorDid,
+        namespace: 'app.bsky.notification.defs#subjectActivitySubscription',
+        key: data.key,
+        indexedAt: expect.any(String),
+        payload: expect.anything(), // Better to compare payload parsed.
+        updatedAt: expect.any(String),
+      })
+      expect(JSON.parse(dbResult.payload)).toStrictEqual({
+        $type: 'app.bsky.notification.defs#subjectActivitySubscription',
+        subject: carol,
+        activitySubscription: {
+          post: true,
+          reply: false,
+        },
+      })
+    })
+
+    it('updates a subscription entry when key is provided', async () => {
+      const actorDid = alice
+
+      const { data: creation } =
+        await agent.app.bsky.notification.putActivitySubscription(
+          {
+            subject: carol,
+            activitySubscription: {
+              post: true,
+              reply: false,
+            },
+          },
+          {
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutActivitySubscription,
+            ),
+          },
+        )
+      const { data: update } =
+        await agent.app.bsky.notification.putActivitySubscription(
+          {
+            key: creation.key,
+            subject: carol,
+            activitySubscription: {
+              post: false,
+              reply: true,
+            },
+          },
+          {
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutActivitySubscription,
+            ),
+          },
+        )
+      expect(update.key).toBe(creation.key)
+
+      const dbResult = await db.db
+        .selectFrom('private_data')
+        .selectAll()
+        .where('actorDid', '=', actorDid)
+        .where(
+          'namespace',
+          '=',
+          'app.bsky.notification.defs#subjectActivitySubscription',
+        )
+        .where('key', '=', update.key)
+        .executeTakeFirstOrThrow()
+      expect(dbResult).toStrictEqual({
+        actorDid: actorDid,
+        namespace: 'app.bsky.notification.defs#subjectActivitySubscription',
+        key: update.key,
+        indexedAt: expect.any(String),
+        payload: expect.anything(), // Better to compare payload parsed.
+        updatedAt: expect.any(String),
+      })
+      expect(JSON.parse(dbResult.payload)).toStrictEqual({
+        $type: 'app.bsky.notification.defs#subjectActivitySubscription',
+        subject: carol,
+        activitySubscription: {
+          post: false,
+          reply: true,
+        },
+      })
+    })
+
+    it('deletes a subscription entry when all options are turned off', async () => {
+      const actorDid = alice
+
+      const { data: creation } =
+        await agent.app.bsky.notification.putActivitySubscription(
+          {
+            subject: carol,
+            activitySubscription: {
+              post: true,
+              reply: false,
+            },
+          },
+          {
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutActivitySubscription,
+            ),
+          },
+        )
+      const { data: update } =
+        await agent.app.bsky.notification.putActivitySubscription(
+          {
+            key: creation.key,
+            subject: carol,
+            activitySubscription: {
+              post: false,
+              reply: false,
+            },
+          },
+          {
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutActivitySubscription,
+            ),
+          },
+        )
+      expect(update.key).toBe(creation.key)
+
+      const dbResult = await db.db
+        .selectFrom('private_data')
+        .selectAll()
+        .where('actorDid', '=', actorDid)
+        .where(
+          'namespace',
+          '=',
+          'app.bsky.notification.defs#subjectActivitySubscription',
+        )
+        .where('key', '=', update.key)
+        .executeTakeFirst()
+      expect(dbResult).toBeUndefined()
+    })
+  })
 })
 
 const clearPrivateData = async (db: Database) => {
