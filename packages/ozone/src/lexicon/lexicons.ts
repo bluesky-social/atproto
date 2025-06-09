@@ -9897,6 +9897,22 @@ export const schemaDict = {
           },
         },
       },
+      subjectActivitySubscription: {
+        description:
+          'Object used to store activity subscription data in stash (bsync).',
+        type: 'object',
+        required: ['subject', 'activitySubscription'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
+          },
+        },
+      },
     },
   },
   AppBskyNotificationGetPreferences: {
@@ -10144,22 +10160,38 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Puts an activity subscription entry. Requires auth.',
+        description:
+          'Puts an activity subscription entry. The key should be omitted for creation and provided for updates. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject'],
+            required: ['subject', 'activitySubscription'],
             properties: {
+              key: {
+                type: 'string',
+                format: 'record-key',
+              },
               subject: {
                 type: 'string',
                 format: 'did',
               },
-              post: {
-                type: 'boolean',
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
               },
-              reply: {
-                type: 'boolean',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['key'],
+            properties: {
+              key: {
+                type: 'string',
+                format: 'record-key',
               },
             },
           },

@@ -11,6 +11,7 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import type * as AppBskyNotificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -19,9 +20,13 @@ const id = 'app.bsky.notification.putActivitySubscription'
 export interface QueryParams {}
 
 export interface InputSchema {
+  key?: string
   subject: string
-  post?: boolean
-  reply?: boolean
+  activitySubscription: AppBskyNotificationDefs.ActivitySubscription
+}
+
+export interface OutputSchema {
+  key: string
 }
 
 export interface HandlerInput {
@@ -29,12 +34,18 @@ export interface HandlerInput {
   body: InputSchema
 }
 
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
 export interface HandlerError {
   status: number
   message?: string
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

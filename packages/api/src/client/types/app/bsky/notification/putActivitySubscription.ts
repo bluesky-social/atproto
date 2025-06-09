@@ -10,6 +10,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyNotificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -18,9 +19,13 @@ const id = 'app.bsky.notification.putActivitySubscription'
 export interface QueryParams {}
 
 export interface InputSchema {
+  key?: string
   subject: string
-  post?: boolean
-  reply?: boolean
+  activitySubscription: AppBskyNotificationDefs.ActivitySubscription
+}
+
+export interface OutputSchema {
+  key: string
 }
 
 export interface CallOptions {
@@ -33,6 +38,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {
