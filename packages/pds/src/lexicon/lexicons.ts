@@ -7239,48 +7239,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7342,6 +7300,48 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -15222,6 +15222,516 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneSafelinkAddRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.addRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a new URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#urlRule',
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidUrl',
+            description: 'The provided URL is invalid',
+          },
+          {
+            name: 'RuleAlreadyExists',
+            description: 'A rule for this URL/domain already exists',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSafelinkDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.defs',
+    defs: {
+      event: {
+        type: 'object',
+        description: 'An event for URL safety decisions',
+        required: [
+          'id',
+          'eventType',
+          'url',
+          'pattern',
+          'action',
+          'reason',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Auto-incrementing row ID',
+          },
+          eventType: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#eventType',
+          },
+          url: {
+            type: 'string',
+            description: 'The URL that this rule applies to',
+          },
+          pattern: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#patternType',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#actionType',
+          },
+          reason: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#reasonType',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who created this rule',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional comment about the decision',
+          },
+        },
+      },
+      eventType: {
+        type: 'string',
+        knownValues: [
+          'lex:tools.ozone.safelink.defs#addRule',
+          'lex:tools.ozone.safelink.defs#updateRule',
+          'lex:tools.ozone.safelink.defs#removeRule',
+        ],
+      },
+      addRule: {
+        type: 'token',
+        description: 'Add a new URL safety rule',
+      },
+      updateRule: {
+        type: 'token',
+        description: 'Update an existing URL safety rule',
+      },
+      removeRule: {
+        type: 'token',
+        description: 'Remove an existing URL safety rule',
+      },
+      patternType: {
+        type: 'string',
+        knownValues: [
+          'lex:tools.ozone.safelink.defs#domain',
+          'lex:tools.ozone.safelink.defs#url',
+        ],
+      },
+      domain: {
+        type: 'token',
+        description: 'Pattern type: Apply rule to entire domain',
+      },
+      url: {
+        type: 'token',
+        description: 'Pattern type: Apply rule to specific URL',
+      },
+      actionType: {
+        type: 'string',
+        knownValues: [
+          'lex:tools.ozone.safelink.defs#block',
+          'lex:tools.ozone.safelink.defs#warn',
+          'lex:tools.ozone.safelink.defs#whitelist',
+        ],
+      },
+      block: {
+        type: 'token',
+        description: 'Action type: Block access to URL/domain',
+      },
+      warn: {
+        type: 'token',
+        description: 'Action type: Show warning interstitial',
+      },
+      whitelist: {
+        type: 'token',
+        description: 'Action type: Explicitly allow URL/domain',
+      },
+      reasonType: {
+        type: 'string',
+        knownValues: [
+          'lex:tools.ozone.safelink.defs#csam',
+          'lex:tools.ozone.safelink.defs#spam',
+          'lex:tools.ozone.safelink.defs#phishing',
+          'lex:tools.ozone.safelink.defs#none',
+        ],
+      },
+      csam: {
+        type: 'token',
+        description: 'Reason type: Child Sexual Abuse Material',
+      },
+      spam: {
+        type: 'token',
+        description: 'Reason type: Spam content',
+      },
+      phishing: {
+        type: 'token',
+        description: 'Reason type: Phishing attempt',
+      },
+      none: {
+        type: 'token',
+        description: 'Reason type: No specific reason',
+      },
+      urlRule: {
+        type: 'object',
+        description: 'Input for creating a URL safety rule',
+        required: ['url', 'pattern', 'action', 'reason'],
+        properties: {
+          url: {
+            type: 'string',
+            description: 'The URL or domain to apply the rule to',
+          },
+          pattern: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#patternType',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#actionType',
+          },
+          reason: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#reasonType',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional comment about the decision',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description:
+              'Optional DID to credit as the creator. Only respected for admin_token authentication.',
+          },
+        },
+      },
+      activeRule: {
+        type: 'object',
+        description: 'A currently active URL safety rule',
+        required: [
+          'url',
+          'pattern',
+          'action',
+          'reason',
+          'createdAt',
+          'createdBy',
+        ],
+        properties: {
+          url: {
+            type: 'string',
+            description: 'The URL or domain this rule applies to',
+          },
+          pattern: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#patternType',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#actionType',
+          },
+          reason: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#reasonType',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who created this rule',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional comment about the decision',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkQueryEvents: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.queryEvents',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Query URL safety audit events for Ozone UI with filtering and sorting',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              urls: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by specific URLs',
+              },
+              domains: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by specific domains',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+                description:
+                  'Next cursor for pagination. Only present if there are more results.',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.safelink.defs#event',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkQueryRules: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.queryRules',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Query URL safety rules for Ozone UI with filtering and sorting',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              urls: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by specific URLs or domains',
+              },
+              domains: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by domains',
+              },
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by action types',
+              },
+              reason: {
+                type: 'string',
+                description: 'Filter by reason type',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description: 'Filter by rule creator',
+              },
+              sortDirection: {
+                type: 'string',
+                knownValues: ['asc', 'desc'],
+                default: 'desc',
+                description: 'Sort direction',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['rules'],
+            properties: {
+              cursor: {
+                type: 'string',
+                description:
+                  'Next cursor for pagination. Only present if there are more results.',
+              },
+              rules: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.safelink.defs#activeRule',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkRemoveRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.removeRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove an existing URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to remove the rule for',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional comment about why the rule is being removed',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'Optional DID of the user. Only respected when using admin auth.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'RuleNotFound',
+            description: 'No active rule found for this URL/domain',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSafelinkUpdateRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.updateRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Update an existing URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern', 'action', 'reason'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to update the rule for',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              action: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#actionType',
+              },
+              reason: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#reasonType',
+              },
+              comment: {
+                type: 'string',
+                description: 'Optional comment about the update',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'Optional DID to credit as the creator. Only respected for admin_token authentication.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'RuleNotFound',
+            description: 'No active rule found for this URL/domain',
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneServerGetConfig: {
     lexicon: 1,
     id: 'tools.ozone.server.getConfig',
@@ -16735,8 +17245,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
@@ -16872,6 +17382,12 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
+  ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
+  ToolsOzoneSafelinkQueryEvents: 'tools.ozone.safelink.queryEvents',
+  ToolsOzoneSafelinkQueryRules: 'tools.ozone.safelink.queryRules',
+  ToolsOzoneSafelinkRemoveRule: 'tools.ozone.safelink.removeRule',
+  ToolsOzoneSafelinkUpdateRule: 'tools.ozone.safelink.updateRule',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
   ToolsOzoneSetAddValues: 'tools.ozone.set.addValues',
   ToolsOzoneSetDefs: 'tools.ozone.set.defs',

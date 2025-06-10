@@ -17,6 +17,7 @@ import { BlobDiverter } from './daemon/blob-diverter'
 import { Database } from './db'
 import { ImageInvalidator } from './image-invalidator'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
+import { SafelinkService, SafelinkServiceCreator } from './safelink/service'
 import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
@@ -42,6 +43,7 @@ export type AppContextOptions = {
   cfg: OzoneConfig
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  safelinkService: SafelinkServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   teamService: TeamServiceCreator
@@ -130,6 +132,7 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
+    const safelinkService = SafelinkService.creator()
     const teamService = TeamService.creator(
       appviewAgent,
       cfg.appview.did,
@@ -154,6 +157,7 @@ export class AppContext {
         cfg,
         modService,
         communicationTemplateService,
+        safelinkService,
         teamService,
         setService,
         settingService,
@@ -202,6 +206,10 @@ export class AppContext {
 
   get communicationTemplateService(): CommunicationTemplateServiceCreator {
     return this.opts.communicationTemplateService
+  }
+
+  get safelinkService(): SafelinkServiceCreator {
+    return this.opts.safelinkService
   }
 
   get teamService(): TeamServiceCreator {

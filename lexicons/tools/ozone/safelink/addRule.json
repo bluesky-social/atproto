@@ -1,0 +1,34 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.safelink.addRule",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a new URL safety rule",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "tools.ozone.safelink.defs#urlRule"
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "tools.ozone.safelink.defs#event"
+        }
+      },
+      "errors": [
+        {
+          "name": "InvalidUrl",
+          "description": "The provided URL is invalid"
+        },
+        {
+          "name": "RuleAlreadyExists",
+          "description": "A rule for this URL/domain already exists"
+        }
+      ]
+    }
+  }
+}
