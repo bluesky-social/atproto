@@ -5,6 +5,7 @@ import { ClientAuthMethod } from './oauth-client-auth.js'
 export type InternalStateData = {
   iss: string
   dpopKey: Key
+  /** @note optional for legacy reasons */
   authMethod?: ClientAuthMethod
   verifier?: string
   appState?: string

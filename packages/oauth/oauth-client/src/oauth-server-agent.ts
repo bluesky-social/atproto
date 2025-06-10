@@ -219,7 +219,7 @@ export class OAuthServerAgent {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
-    const credentials = await this.clientCredentialsFactory()
+    const auth = await this.clientCredentialsFactory()
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13#section-3.2.2
     // https://datatracker.ietf.org/doc/html/rfc7009#section-2.1
@@ -227,8 +227,11 @@ export class OAuthServerAgent {
     // https://datatracker.ietf.org/doc/html/rfc9126#section-2
     const { response, json } = await this.dpopFetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: wwwFormUrlEncode({ ...payload, ...credentials }),
+      headers: {
+        ...auth.headers,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: wwwFormUrlEncode({ ...payload, ...auth.payload }),
     }).then(fetchJsonProcessor())
 
     if (response.ok) {

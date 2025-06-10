@@ -72,7 +72,10 @@ export function negotiateClientAuthMethod(
   )
 }
 
-export type ClientCredentialsFactory = () => Awaitable<OAuthClientCredentials>
+export type ClientCredentialsFactory = () => Awaitable<{
+  headers?: Record<string, string>
+  payload?: OAuthClientCredentials
+}>
 
 /**
  * @throws {AuthMethodUnsatisfiableError} if the authentication method is no
@@ -95,7 +98,9 @@ export function createClientCredentialsFactory(
 
   if (authMethod.method === 'none') {
     return () => ({
-      client_id: clientMetadata.client_id,
+      payload: {
+        client_id: clientMetadata.client_id,
+      },
     })
   }
 
@@ -112,18 +117,20 @@ export function createClientCredentialsFactory(
       })
 
       return async () => ({
-        client_id: clientMetadata.client_id,
-        client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
-        client_assertion: await key.createJwt(
-          { alg },
-          {
-            iss: clientMetadata.client_id,
-            sub: clientMetadata.client_id,
-            aud: serverMetadata.issuer,
-            jti: await runtime.generateNonce(),
-            iat: Math.floor(Date.now() / 1000),
-          },
-        ),
+        payload: {
+          client_id: clientMetadata.client_id,
+          client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
+          client_assertion: await key.createJwt(
+            { alg },
+            {
+              iss: clientMetadata.client_id,
+              sub: clientMetadata.client_id,
+              aud: serverMetadata.issuer,
+              jti: await runtime.generateNonce(),
+              iat: Math.floor(Date.now() / 1000),
+            },
+          ),
+        },
       })
     } catch (cause) {
       throw new AuthMethodUnsatisfiableError('Failed to load private key', {

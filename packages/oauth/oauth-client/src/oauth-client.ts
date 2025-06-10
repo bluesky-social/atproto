@@ -435,6 +435,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const server = await this.serverFactory.fromIssuer(
         stateData.iss,
+        // Using the literal 'legacy' if the authMethod is not defined (because stateData was created through an old version of this lib)
         stateData.authMethod ?? 'legacy',
         stateData.dpopKey,
       )
