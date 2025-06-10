@@ -794,19 +794,20 @@ message ChatNotificationPreference {
 }
 
 message NotificationPreferences {
-  ChatNotificationPreference chat = 1;
-  FilterableNotificationPreference follow = 2;
-  FilterableNotificationPreference like = 3;
-  FilterableNotificationPreference like_via_repost = 4;
-  FilterableNotificationPreference mention = 5;
-  FilterableNotificationPreference quote = 6;
-  FilterableNotificationPreference reply = 7;
-  FilterableNotificationPreference repost = 8;
-  FilterableNotificationPreference repost_via_repost = 9;
-  NotificationPreference starterpack_joined = 10;
-  NotificationPreference subscribed_post = 11;
-  NotificationPreference unverified = 12;
-  NotificationPreference verified = 13;
+  bytes entry = 1;
+  ChatNotificationPreference chat = 2;
+  FilterableNotificationPreference follow = 3;
+  FilterableNotificationPreference like = 4;
+  FilterableNotificationPreference like_via_repost = 5;
+  FilterableNotificationPreference mention = 6;
+  FilterableNotificationPreference quote = 7;
+  FilterableNotificationPreference reply = 8;
+  FilterableNotificationPreference repost = 9;
+  FilterableNotificationPreference repost_via_repost = 10;
+  NotificationPreference starterpack_joined = 11;
+  NotificationPreference subscribed_post = 12;
+  NotificationPreference unverified = 13;
+  NotificationPreference verified = 14;
 }
 
 message GetNotificationPreferencesResponse {
