@@ -1,5 +1,23 @@
 # @atproto/xrpc-server
 
+## 0.8.0
+
+### Minor Changes
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `bypassSecret` and `bypassIps` from rate limiter options.
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Now applies global rate limiter to every single route. Previously, the global rate limiter was not applied if a route defined a local rate limit option.
+
+### Patch Changes
+
+- [#3884](https://github.com/bluesky-social/atproto/pull/3884) [`b675fbbf1`](https://github.com/bluesky-social/atproto/commit/b675fbbf17e000fad2b38a52db550702830a807d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return an error if the wrong HTTP verb is used for a known XRPC method, even when a `catchall` is provided.
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add optional `bypass` callback to global rate limits options
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Refactor route rate limiter builder
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Performance improvement: avoid computing rate limit bypass multiple times per request
+
 ## 0.7.19
 
 ### Patch Changes
