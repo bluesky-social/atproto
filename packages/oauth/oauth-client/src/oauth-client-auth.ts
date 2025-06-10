@@ -145,7 +145,13 @@ function supportedMethods(serverMetadata: OAuthAuthorizationServerMetadata) {
 function supportedAlgs(serverMetadata: OAuthAuthorizationServerMetadata) {
   return (
     serverMetadata['token_endpoint_auth_signing_alg_values_supported'] ?? [
-      // @TODO Make sure that this fallback is reflected in the spec
+      // @NOTE If not specified, assume that the server supports the ES256
+      // algorithm, as prescribed by the spec:
+      //
+      // > Clients and Authorization Servers currently must support the ES256
+      // > cryptographic system [for client authentication].
+      //
+      // https://atproto.com/specs/oauth#confidential-client-authentication
       FALLBACK_ALG,
     ]
   )
