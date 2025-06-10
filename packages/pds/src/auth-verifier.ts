@@ -21,6 +21,7 @@ import {
 } from '@atproto/xrpc-server'
 import { AccountManager } from './account-manager/account-manager'
 import { softDeleted } from './db'
+import { oauthLogger } from './logger'
 
 type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
 
@@ -490,19 +491,32 @@ export class AuthVerifier {
       const originalUrl =
         ('originalUrl' in req && req.originalUrl) || req.url || '/'
       const url = new URL(originalUrl, this._publicUrl)
-      const result = await this.oauthVerifier.authenticateRequest(
-        req.method || 'GET',
-        url,
-        req.headers,
-        { audience: [this.dids.pds] },
-      )
+      const { tokenClaims, dpopProof } =
+        await this.oauthVerifier.authenticateRequest(
+          req.method || 'GET',
+          url,
+          req.headers,
+          { audience: [this.dids.pds] },
+        )
 
-      const { sub } = result.claims
+      // @TODO drop this once oauth provider no longer accepts DPoP proof with
+      // query or fragment in "htu" claim.
+      if (dpopProof?.htu.match(/[?#]/)) {
+        oauthLogger.info(
+          {
+            client_id: tokenClaims.client_id,
+            htu: dpopProof.htu,
+          },
+          'DPoP proof "htu" contains query or fragment',
+        )
+      }
+
+      const { sub } = tokenClaims
       if (typeof sub !== 'string' || !sub.startsWith('did:')) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
-      const oauthScopes = new Set(result.claims.scope?.split(' '))
+      const oauthScopes = new Set(tokenClaims.scope?.split(' '))
 
       if (!oauthScopes.has('transition:generic')) {
         throw new AuthRequiredError(
@@ -535,7 +549,7 @@ export class AuthVerifier {
       return {
         credentials: {
           type: 'oauth',
-          did: result.claims.sub,
+          did: tokenClaims.sub,
           scope: scopeEquivalent,
           oauthScopes,
           isPrivileged: scopeEquivalent === AuthScope.AppPassPrivileged,

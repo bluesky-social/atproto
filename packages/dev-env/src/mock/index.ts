@@ -2,6 +2,7 @@ import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
 import { AtUri } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
+import * as seedThreadV2 from '../seed/thread-v2'
 import { postTexts, replyTexts } from './data'
 import blurHashB64 from './img/blur-hash-avatar-b64'
 import labeledImgB64 from './img/labeled-img-b64'
@@ -500,6 +501,22 @@ export async function generateMockSetup(env: TestNetwork) {
   }
 
   await setVerifier(env.bsky.db, alice.accountDid)
+
+  const sc = env.getSeedClient()
+  await seedThreadV2.simple(sc)
+  await seedThreadV2.long(sc)
+  await seedThreadV2.deep(sc)
+  await seedThreadV2.branchingFactor(sc)
+  await seedThreadV2.annotateMoreReplies(sc)
+  await seedThreadV2.annotateOP(sc)
+  await seedThreadV2.sort(sc)
+  await seedThreadV2.bumpOpAndViewer(sc)
+  await seedThreadV2.bumpGroupSorting(sc)
+  await seedThreadV2.bumpFollows(sc)
+  await seedThreadV2.blockDeletionAuth(sc, env.bsky.ctx.cfg.modServiceDid)
+  await seedThreadV2.mutes(sc)
+  await seedThreadV2.threadgated(sc)
+  await seedThreadV2.tags(sc)
 }
 
 function ucfirst(str: string): string {

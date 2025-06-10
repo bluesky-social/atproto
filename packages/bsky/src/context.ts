@@ -13,6 +13,7 @@ import { DataPlaneClient, HostList } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import { httpLogger as log } from './logger'
+import { StashClient } from './stash'
 import {
   ParsedLabelers,
   defaultLabelerHeader,
@@ -35,6 +36,7 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       bsyncClient: BsyncClient
+      stashClient: StashClient
       courierClient: CourierClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
@@ -92,6 +94,10 @@ export class AppContext {
 
   get bsyncClient(): BsyncClient {
     return this.opts.bsyncClient
+  }
+
+  get stashClient(): StashClient {
+    return this.opts.stashClient
   }
 
   get courierClient(): CourierClient | undefined {

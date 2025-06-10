@@ -32,6 +32,7 @@ import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
+import { DpopProof } from '../oauth-verifier.js'
 import { Sub } from '../oidc/sub.js'
 import { Code, isCode } from '../request/code.js'
 import { SignedTokenPayload } from '../signer/signed-token-payload.js'
@@ -104,12 +105,12 @@ export class TokenManager {
       | OAuthAuthorizationCodeGrantTokenRequest
       | OAuthClientCredentialsGrantTokenRequest
       | OAuthPasswordGrantTokenRequest,
-    dpopJkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     // @NOTE the atproto specific DPoP requirement is enforced though the
     // "dpop_bound_access_tokens" metadata, which is enforced by the
     // ClientManager class.
-    if (client.metadata.dpop_bound_access_tokens && !dpopJkt) {
+    if (client.metadata.dpop_bound_access_tokens && !dpopProof) {
       throw new InvalidDpopProofError('DPoP proof required')
     }
 
@@ -117,8 +118,10 @@ export class TokenManager {
       // Allow clients to bind their access tokens to a DPoP key during
       // token request if they didn't provide a "dpop_jkt" during the
       // authorization request.
-      if (dpopJkt) parameters = { ...parameters, dpop_jkt: dpopJkt }
-    } else if (parameters.dpop_jkt !== dpopJkt) {
+      if (dpopProof) parameters = { ...parameters, dpop_jkt: dpopProof.jkt }
+    } else if (!dpopProof) {
+      throw new InvalidDpopProofError('DPoP proof required')
+    } else if (parameters.dpop_jkt !== dpopProof.jkt) {
       throw new InvalidDpopKeyBindingError()
     }
 
@@ -347,7 +350,7 @@ export class TokenManager {
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     input: OAuthRefreshTokenGrantTokenRequest,
-    dpopJkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const refreshTokenParsed = refreshTokenSchema.safeParse(input.refresh_token)
     if (!refreshTokenParsed.success) {
@@ -381,9 +384,9 @@ export class TokenManager {
       }
 
       if (parameters.dpop_jkt) {
-        if (!dpopJkt) {
+        if (!dpopProof) {
           throw new InvalidDpopProofError('DPoP proof required')
-        } else if (parameters.dpop_jkt !== dpopJkt) {
+        } else if (parameters.dpop_jkt !== dpopProof.jkt) {
           throw new InvalidDpopKeyBindingError()
         }
       }
@@ -531,7 +534,7 @@ export class TokenManager {
     token: OAuthAccessToken,
     tokenType: OAuthTokenType,
     tokenId: TokenId,
-    dpopJkt: string | null,
+    dpopProof: null | DpopProof,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
     const tokenInfo = await this.getTokenInfo(tokenId).catch((err) => {
@@ -547,7 +550,7 @@ export class TokenManager {
     const { parameters } = data
 
     // Construct a list of claim, as if the token was a JWT.
-    const claims: SignedTokenPayload = {
+    const tokenClaims: SignedTokenPayload = {
       iss: this.signer.issuer,
       jti: tokenId,
       sub: account.sub,
@@ -566,8 +569,8 @@ export class TokenManager {
       token,
       tokenId,
       tokenType,
-      dpopJkt,
-      claims,
+      tokenClaims,
+      dpopProof,
       verifyOptions,
     )
   }

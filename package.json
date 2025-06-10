@@ -54,7 +54,7 @@
     "prettier": "^3.2.5",
     "prettier-config-standard": "^7.0.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "workspaces": {
     "packages": [

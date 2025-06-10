@@ -66,3 +66,23 @@ export function extractUrlPath(url) {
 
   return url.substring(pathStart, pathEnd)
 }
+
+export const jsonObjectPreprocess = (val: unknown) => {
+  if (typeof val === 'string' && val.startsWith('{') && val.endsWith('}')) {
+    try {
+      return JSON.parse(val)
+    } catch {
+      return val
+    }
+  }
+
+  return val
+}
+
+export const numberPreprocess = (val: unknown): unknown => {
+  if (typeof val === 'string') {
+    const number = Number(val)
+    if (!Number.isNaN(number)) return number
+  }
+  return val
+}

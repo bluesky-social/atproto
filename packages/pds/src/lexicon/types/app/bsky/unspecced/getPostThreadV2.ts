@@ -39,8 +39,8 @@ export interface OutputSchema {
   /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
   thread: ThreadItem[]
   threadgate?: AppBskyFeedDefs.ThreadgateView
-  /** Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them. */
-  hasHiddenReplies: boolean
+  /** Whether this thread has additional replies. If true, a call can be made to the `getPostThreadOtherV2` endpoint to retrieve them. */
+  hasOtherReplies: boolean
 }
 
 export type HandlerInput = undefined

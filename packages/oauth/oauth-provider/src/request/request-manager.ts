@@ -1,9 +1,11 @@
+import { isAtprotoDid } from '@atproto/did'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
+import { isValidHandle } from '@atproto/syntax'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -16,6 +18,8 @@ import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
+import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
+import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
@@ -23,6 +27,7 @@ import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
+import { DpopProof } from '../oauth-verifier.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
 import {
@@ -56,9 +61,9 @@ export class RequestManager {
     clientAuth: ClientAuth,
     input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
-    dpopJkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<RequestInfo> {
-    const parameters = await this.validate(client, clientAuth, input, dpopJkt)
+    const parameters = await this.validate(client, clientAuth, input, dpopProof)
     return this.create(client, clientAuth, parameters, deviceId)
   }
 
@@ -89,7 +94,7 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    dpop_jkt: null | string,
+    dpopProof: null | DpopProof,
   ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
     // -------------------------------
     // Validate unsupported parameters
@@ -196,12 +201,11 @@ export class RequestManager {
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-10
     if (!parameters.dpop_jkt) {
-      if (dpop_jkt) parameters = { ...parameters, dpop_jkt }
-    } else if (parameters.dpop_jkt !== dpop_jkt) {
-      throw new InvalidParametersError(
-        parameters,
-        '"dpop_jkt" parameters does not match the DPoP proof',
-      )
+      if (dpopProof) parameters = { ...parameters, dpop_jkt: dpopProof.jkt }
+    } else if (!dpopProof) {
+      throw new InvalidDpopProofError('DPoP proof required')
+    } else if (parameters.dpop_jkt !== dpopProof.jkt) {
+      throw new InvalidDpopKeyBindingError()
     }
 
     if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
@@ -301,6 +305,24 @@ export class RequestManager {
 
       // force "consent" for unauthenticated, third party clients
       parameters = { ...parameters, prompt: 'consent' }
+    }
+
+    // atproto extension: ensure that the login_hint is a valid handle or DID
+    // @NOTE we to allow invalid case here, which is not spec'd anywhere.
+    const hint = parameters.login_hint?.toLowerCase()
+    if (hint) {
+      if (!isAtprotoDid(hint) && !isValidHandle(hint)) {
+        throw new InvalidParametersError(
+          parameters,
+          `Invalid login_hint "${hint}"`,
+        )
+      }
+
+      // @TODO: ensure that the account actually exists on this server (there is
+      // no point in showing the UI to the user if the account does not exist).
+
+      // Update the parameters to ensure the right case is used
+      parameters = { ...parameters, login_hint: hint }
     }
 
     return parameters
