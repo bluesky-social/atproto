@@ -8613,67 +8613,72 @@ export class ChatNotificationPreference extends Message<ChatNotificationPreferen
  */
 export class NotificationPreferences extends Message<NotificationPreferences> {
   /**
-   * @generated from field: bsky.ChatNotificationPreference chat = 1;
+   * @generated from field: bytes entry = 1;
+   */
+  entry = new Uint8Array(0)
+
+  /**
+   * @generated from field: bsky.ChatNotificationPreference chat = 2;
    */
   chat?: ChatNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference follow = 2;
+   * @generated from field: bsky.FilterableNotificationPreference follow = 3;
    */
   follow?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference like = 3;
+   * @generated from field: bsky.FilterableNotificationPreference like = 4;
    */
   like?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference like_via_repost = 4;
+   * @generated from field: bsky.FilterableNotificationPreference like_via_repost = 5;
    */
   likeViaRepost?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference mention = 5;
+   * @generated from field: bsky.FilterableNotificationPreference mention = 6;
    */
   mention?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference quote = 6;
+   * @generated from field: bsky.FilterableNotificationPreference quote = 7;
    */
   quote?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference reply = 7;
+   * @generated from field: bsky.FilterableNotificationPreference reply = 8;
    */
   reply?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference repost = 8;
+   * @generated from field: bsky.FilterableNotificationPreference repost = 9;
    */
   repost?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.FilterableNotificationPreference repost_via_repost = 9;
+   * @generated from field: bsky.FilterableNotificationPreference repost_via_repost = 10;
    */
   repostViaRepost?: FilterableNotificationPreference
 
   /**
-   * @generated from field: bsky.NotificationPreference starterpack_joined = 10;
+   * @generated from field: bsky.NotificationPreference starterpack_joined = 11;
    */
   starterpackJoined?: NotificationPreference
 
   /**
-   * @generated from field: bsky.NotificationPreference subscribed_post = 11;
+   * @generated from field: bsky.NotificationPreference subscribed_post = 12;
    */
   subscribedPost?: NotificationPreference
 
   /**
-   * @generated from field: bsky.NotificationPreference unverified = 12;
+   * @generated from field: bsky.NotificationPreference unverified = 13;
    */
   unverified?: NotificationPreference
 
   /**
-   * @generated from field: bsky.NotificationPreference verified = 13;
+   * @generated from field: bsky.NotificationPreference verified = 14;
    */
   verified?: NotificationPreference
 
@@ -8685,69 +8690,70 @@ export class NotificationPreferences extends Message<NotificationPreferences> {
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsky.NotificationPreferences'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'chat', kind: 'message', T: ChatNotificationPreference },
+    { no: 1, name: 'entry', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 2, name: 'chat', kind: 'message', T: ChatNotificationPreference },
     {
-      no: 2,
+      no: 3,
       name: 'follow',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 3,
+      no: 4,
       name: 'like',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 4,
+      no: 5,
       name: 'like_via_repost',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 5,
+      no: 6,
       name: 'mention',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 6,
+      no: 7,
       name: 'quote',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 7,
+      no: 8,
       name: 'reply',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 8,
+      no: 9,
       name: 'repost',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 9,
+      no: 10,
       name: 'repost_via_repost',
       kind: 'message',
       T: FilterableNotificationPreference,
     },
     {
-      no: 10,
+      no: 11,
       name: 'starterpack_joined',
       kind: 'message',
       T: NotificationPreference,
     },
     {
-      no: 11,
+      no: 12,
       name: 'subscribed_post',
       kind: 'message',
       T: NotificationPreference,
     },
-    { no: 12, name: 'unverified', kind: 'message', T: NotificationPreference },
-    { no: 13, name: 'verified', kind: 'message', T: NotificationPreference },
+    { no: 13, name: 'unverified', kind: 'message', T: NotificationPreference },
+    { no: 14, name: 'verified', kind: 'message', T: NotificationPreference },
   ])
 
   static fromBinary(

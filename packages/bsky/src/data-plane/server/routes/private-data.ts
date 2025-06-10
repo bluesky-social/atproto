@@ -35,15 +35,19 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         return {}
       }
       const p: Preferences = JSON.parse(row.payload)
-      return lexToProtobuf(p)
+      return lexToProtobuf(p, row.payload)
     })
 
     return { preferences }
   },
 })
 
-export const lexToProtobuf = (p: Preferences): NotificationPreferences => {
+export const lexToProtobuf = (
+  p: Preferences,
+  json: string,
+): NotificationPreferences => {
   return new NotificationPreferences({
+    entry: Buffer.from(json),
     chat: lexChatPreferenceToProtobuf(p.chat),
     follow: lexFilterablePreferenceToProtobuf(p.follow),
     like: lexFilterablePreferenceToProtobuf(p.like),
