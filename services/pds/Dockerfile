@@ -19,6 +19,7 @@ COPY ./packages/aws ./packages/aws
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
+COPY ./packages/did ./packages/did
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/identity ./packages/identity
 COPY ./packages/lex-cli ./packages/lex-cli
