@@ -11,12 +11,8 @@ import cors from 'cors'
 import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
-import {
-  Options as XrpcServerOptions,
-  ResponseType,
-  XRPCError,
-} from '@atproto/xrpc-server'
-import API from './api'
+import { RateLimiter, ResponseType, XRPCError } from '@atproto/xrpc-server'
+import apiRoutes from './api'
 import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
 import { ServerConfig, ServerSecrets } from './config'
@@ -61,7 +57,9 @@ export class PDS {
   ): Promise<PDS> {
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
-    const xrpcOpts: XrpcServerOptions = {
+    const { rateLimits } = ctx.cfg
+
+    const server = createServer({
       validateResponse: false,
       payload: {
         jsonLimit: 150 * 1024, // 150kb
@@ -91,9 +89,24 @@ export class PDS {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: ctx.ratelimitCreator
+      rateLimits: rateLimits.enabled
         ? {
-            creator: ctx.ratelimitCreator,
+            creator: ctx.redisScratch
+              ? (opts) => RateLimiter.redis(ctx.redisScratch, opts)
+              : (opts) => RateLimiter.memory(opts),
+            bypass: ({ req }) => {
+              const { bypassKey, bypassIps } = rateLimits
+              if (
+                bypassKey &&
+                bypassKey === req.headers['x-ratelimit-bypass']
+              ) {
+                return true
+              }
+              if (bypassIps && bypassIps.includes(req.ip)) {
+                return true
+              }
+              return false
+            },
             global: [
               {
                 name: 'global-ip',
@@ -115,11 +128,9 @@ export class PDS {
             ],
           }
         : undefined,
-    }
+    })
 
-    let server = createServer(xrpcOpts)
-
-    server = API(server, ctx)
+    apiRoutes(server, ctx)
 
     const app = express()
     app.set('trust proxy', [
