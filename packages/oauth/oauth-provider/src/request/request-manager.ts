@@ -5,7 +5,7 @@ import {
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 import { isValidHandle } from '@atproto/syntax'
-import { clientAuthCheck } from '../client/client-auth-check.js'
+import { validateClientAuth } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -493,7 +493,7 @@ export class RequestManager {
       } else {
         // Otherwise, the authentication method currently used must match the
         // one that was used to initiate the session.
-        await clientAuthCheck(client, clientAuth, {
+        await validateClientAuth(client, clientAuth, {
           clientId: data.clientId,
           clientAuth: data.clientAuth,
         })

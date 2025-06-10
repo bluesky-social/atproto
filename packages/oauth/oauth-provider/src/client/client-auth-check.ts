@@ -8,7 +8,7 @@ import { Client } from './client.js'
  * Ensures that a {@link ClientAuth} used by a current request matches a
  * {@link initial} authentication method currently.
  */
-export async function clientAuthCheck(
+export async function validateClientAuth(
   client: Client,
   clientAuth: ClientAuth,
   initial: {

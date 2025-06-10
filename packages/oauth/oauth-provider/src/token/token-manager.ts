@@ -12,7 +12,7 @@ import {
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { AccessTokenMode } from '../access-token/access-token-mode.js'
-import { clientAuthCheck } from '../client/client-auth-check.js'
+import { validateClientAuth } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import {
@@ -304,7 +304,7 @@ export class TokenManager {
     clientAuth: ClientAuth,
     tokenInfo: TokenInfo,
   ): Promise<void> {
-    await clientAuthCheck(client, clientAuth, tokenInfo.data)
+    await validateClientAuth(client, clientAuth, tokenInfo.data)
   }
 
   public async validateRefresh(
