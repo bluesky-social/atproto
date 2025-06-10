@@ -299,7 +299,7 @@ export class TokenManager {
     }
   }
 
-  public async validateAccess(
+  public async validateClientAuth(
     client: Client,
     clientAuth: ClientAuth,
     tokenInfo: TokenInfo,
@@ -310,19 +310,21 @@ export class TokenManager {
   public async validateRefresh(
     client: Client,
     clientAuth: ClientAuth,
-    { data }: TokenInfo,
+    tokenInfo: TokenInfo,
   ): Promise<void> {
+    await this.validateClientAuth(client, clientAuth, tokenInfo)
+
     // @TODO This value should be computable even if we don't have the "client"
     // (because fetching client info could be flaky). Instead, all the info
     // needed should be stored in the token info.
     const allowLongerLifespan =
-      client.info.isFirstParty || data.clientAuth.method !== 'none'
+      client.info.isFirstParty || tokenInfo.data.clientAuth.method !== 'none'
 
     const lifetime = allowLongerLifespan
       ? AUTHENTICATED_REFRESH_LIFETIME
       : UNAUTHENTICATED_REFRESH_LIFETIME
 
-    if (data.createdAt.getTime() + lifetime < Date.now()) {
+    if (tokenInfo.data.createdAt.getTime() + lifetime < Date.now()) {
       throw new InvalidGrantError(`Refresh token expired`)
     }
 
@@ -330,7 +332,7 @@ export class TokenManager {
       ? AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
       : UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
 
-    if (data.updatedAt.getTime() + inactivityTimeout < Date.now()) {
+    if (tokenInfo.data.updatedAt.getTime() + inactivityTimeout < Date.now()) {
       throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
     }
   }
@@ -363,7 +365,6 @@ export class TokenManager {
     const { parameters } = data
 
     try {
-      await this.validateAccess(client, clientAuth, tokenInfo)
       await this.validateRefresh(client, clientAuth, tokenInfo)
 
       if (!client.metadata.grant_types.includes(input.grant_type)) {

@@ -834,7 +834,7 @@ export class OAuthProvider extends OAuthVerifier {
     // > [...] and then verifies whether the token was issued to the client
     // > making the revocation request.
     await this.tokenManager
-      .validateAccess(client, clientAuth, tokenInfo)
+      .validateClientAuth(client, clientAuth, tokenInfo)
       .catch((err) => {
         // > If this validation fails, the request is refused and the client is
         // > informed of the error by the authorization server as described
