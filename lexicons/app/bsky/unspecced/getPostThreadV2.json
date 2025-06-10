@@ -50,7 +50,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["thread", "hasHiddenReplies"],
+          "required": ["thread", "hasOtherReplies"],
           "properties": {
             "thread": {
               "type": "array",
@@ -64,9 +64,9 @@
               "type": "ref",
               "ref": "app.bsky.feed.defs#threadgateView"
             },
-            "hasHiddenReplies": {
+            "hasOtherReplies": {
               "type": "boolean",
-              "description": "Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them."
+              "description": "Whether this thread has additional replies. If true, a call can be made to the `getPostThreadOtherV2` endpoint to retrieve them."
             }
           }
         }
