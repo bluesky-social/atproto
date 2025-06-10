@@ -22,6 +22,8 @@ import {
   DeleteActorMuteResponse,
   DeleteThreadMuteRequest,
   DeleteThreadMuteResponse,
+  GetActivitySubscriptionsRequest,
+  GetActivitySubscriptionsResponse,
   GetActorChatDeclarationRecordsRequest,
   GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
@@ -767,6 +769,15 @@ export const Service = {
       name: 'GetUnreadNotificationCount',
       I: GetUnreadNotificationCountRequest,
       O: GetUnreadNotificationCountResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetActivitySubscriptions
+     */
+    getActivitySubscriptions: {
+      name: 'GetActivitySubscriptions',
+      I: GetActivitySubscriptionsRequest,
+      O: GetActivitySubscriptionsResponse,
       kind: MethodKind.Unary,
     },
     /**

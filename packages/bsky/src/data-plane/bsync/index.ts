@@ -229,7 +229,13 @@ const handleSubjectActivitySubscriptionOperation = async (
     activitySubscription: { post, reply },
   } = parsed
 
-  if (method === Method.UPDATE && !post && !reply) {
+  const subscriptionEnabled = post || reply
+
+  if (method === Method.CREATE && !subscriptionEnabled) {
+    return
+  }
+
+  if (method === Method.UPDATE && !subscriptionEnabled) {
     return db.db
       .deleteFrom('private_data')
       .where('actorDid', '=', actorDid)

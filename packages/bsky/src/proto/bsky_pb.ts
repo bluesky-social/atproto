@@ -9461,6 +9461,146 @@ export class GetUnreadNotificationCountResponse extends Message<GetUnreadNotific
 }
 
 /**
+ * @generated from message bsky.GetActivitySubscriptionsRequest
+ */
+export class GetActivitySubscriptionsRequest extends Message<GetActivitySubscriptionsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActivitySubscriptionsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActivitySubscriptionsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionsRequest {
+    return new GetActivitySubscriptionsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsRequest {
+    return new GetActivitySubscriptionsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsRequest {
+    return new GetActivitySubscriptionsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionsRequest
+      | PlainMessage<GetActivitySubscriptionsRequest>
+      | undefined,
+    b:
+      | GetActivitySubscriptionsRequest
+      | PlainMessage<GetActivitySubscriptionsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActivitySubscriptionsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionsResponse
+ */
+export class GetActivitySubscriptionsResponse extends Message<GetActivitySubscriptionsResponse> {
+  /**
+   * @generated from field: repeated string dids = 1;
+   */
+  dids: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActivitySubscriptionsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActivitySubscriptionsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionsResponse {
+    return new GetActivitySubscriptionsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsResponse {
+    return new GetActivitySubscriptionsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsResponse {
+    return new GetActivitySubscriptionsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionsResponse
+      | PlainMessage<GetActivitySubscriptionsResponse>
+      | undefined,
+    b:
+      | GetActivitySubscriptionsResponse
+      | PlainMessage<GetActivitySubscriptionsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActivitySubscriptionsResponse, a, b)
+  }
+}
+
+/**
  * - Return uris of feed generator records created by user A
  *     - `getActorFeeds`
  *
