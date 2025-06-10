@@ -2,6 +2,7 @@ import { TID } from '@atproto/common'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { SubjectActivitySubscription } from '../../../../lexicon/types/app/bsky/notification/defs'
+import { NamespaceAppBskyNotificationDefsSubjectActivitySubscription } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.putActivitySubscription({
@@ -14,7 +15,6 @@ export default function (server: Server, ctx: AppContext) {
         activitySubscription: { post, reply },
       } = input.body
 
-      const namespace = 'app.bsky.notification.defs#subjectActivitySubscription'
       const payload: SubjectActivitySubscription = {
         subject,
         activitySubscription: { post, reply },
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       const key = existingKey ?? TID.nextStr()
       const stashInput = {
         actorDid,
-        namespace,
+        namespace: NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
         payload,
         key,
       }

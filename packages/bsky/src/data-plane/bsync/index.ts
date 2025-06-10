@@ -14,6 +14,10 @@ import {
   MuteOperation_Type,
   PutOperationRequest,
 } from '../../proto/bsync_pb'
+import {
+  NamespaceAppBskyNotificationDefsPreferences,
+  NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
+} from '../../stash'
 import { Database } from '../server/db'
 
 export class MockBsync {
@@ -155,10 +159,11 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       }
 
       const now = new Date().toISOString()
-      if (namespace === 'app.bsky.notification.defs#preferences') {
+      if (namespace === NamespaceAppBskyNotificationDefsPreferences) {
         await handleNotificationPreferencesOperation(db, req, now)
       } else if (
-        namespace === 'app.bsky.notification.defs#subjectActivitySubscription'
+        namespace ===
+        NamespaceAppBskyNotificationDefsSubjectActivitySubscription
       ) {
         await handleSubjectActivitySubscriptionOperation(db, req, now)
       } else {

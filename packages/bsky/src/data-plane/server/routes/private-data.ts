@@ -16,6 +16,10 @@ import {
   NotificationPreference,
   NotificationPreferences,
 } from '../../../proto/bsky_pb'
+import {
+  NamespaceAppBskyNotificationDefsPreferences,
+  NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
+} from '../../../stash'
 import { Database } from '../db'
 import { IndexedAtKeyKeyset } from '../db/pagination'
 
@@ -30,7 +34,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where(
         'namespace',
         '=',
-        'app.bsky.notification.defs#subjectActivitySubscription',
+        NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
       )
       .orderBy('indexedAt', 'desc')
 
@@ -65,7 +69,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('private_data')
       .selectAll()
       .where('actorDid', 'in', dids)
-      .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+      .where('namespace', '=', NamespaceAppBskyNotificationDefsPreferences)
       .where('key', '=', 'self')
       .execute()
 
