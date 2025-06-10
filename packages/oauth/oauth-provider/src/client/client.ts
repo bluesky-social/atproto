@@ -15,7 +15,7 @@ import {
   exportJWK,
   jwtVerify,
 } from 'jose'
-import { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
+import { Jwks, SignedJwt, UnsignedJwt, isSignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
@@ -68,73 +68,71 @@ export class Client {
     jar: SignedJwt | UnsignedJwt,
     audience: string,
   ) {
+    // https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2
     // > If signed, the Authorization Request Object SHOULD contain the Claims
     // > iss (issuer) and aud (audience) as members with their semantics being
     // > the same as defined in the JWT [RFC7519] specification. The value of
     // > aud should be the value of the authorization server (AS) issuer, as
     // > defined in RFC 8414 [RFC8414].
     try {
-      switch (this.metadata.request_object_signing_alg) {
-        case 'none': {
-          // @NOTE there is no point in verifying the issuer and audience claims
-          // of an un-signed request object. rfc9101 only requires that the
-          // "iss" and "aud" claims are present if the request object is signed.
-          const result = await this.jwtVerifyUnsecured(jar, {
-            // "audience" will be checked hereafter only if provided.
-            maxTokenAge: JAR_MAX_AGE / 1000,
-          })
-
-          if (result.payload.aud && result.payload.aud !== audience) {
-            throw new JOSEError(
-              `Invalid "aud" claim "${result.payload.aud}" (expected ${audience})`,
-            )
-          }
-
-          return result
+      // We need to special case the "none" algorithm, as the validation method
+      // is different for signed and unsigned JWTs.
+      if (this.metadata.request_object_signing_alg === 'none') {
+        if (isSignedJwt(jar)) {
+          throw new InvalidRequestError(
+            'Request object is signed, but "request_object_signing_alg" is set to "none"',
+          )
         }
-
-        case undefined:
-          // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
-          //
-          // > The default, if omitted, is that any algorithm supported by the OP
-          // > and the RP MAY be used.
-          //
-          // @TODO we could actually support unsigned JARs here
-          return await this.jwtVerify(jar, {
-            audience,
-            maxTokenAge: JAR_MAX_AGE / 1000,
-          })
-
-        default:
-          return await this.jwtVerify(jar, {
-            audience,
-            maxTokenAge: JAR_MAX_AGE / 1000,
-            algorithms: [this.metadata.request_object_signing_alg],
-          })
+        return await this.jwtVerifyUnsecured(jar, {
+          audience,
+          maxTokenAge: JAR_MAX_AGE / 1e3,
+        })
       }
+
+      if (!isSignedJwt(jar)) {
+        throw new InvalidRequestError('A signed request object is required')
+      }
+      return await this.jwtVerify(jar, {
+        audience,
+        maxTokenAge: JAR_MAX_AGE / 1e3,
+        algorithms: this.metadata.request_object_signing_alg
+          ? [this.metadata.request_object_signing_alg]
+          : // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
+            //
+            // > The default, if omitted, is that any algorithm supported by the OP
+            // > and the RP MAY be used.
+            undefined,
+      })
     } catch (err) {
       const message =
         err instanceof JOSEError
           ? `Invalid "request" object: ${err.message}`
           : `Invalid "request" object`
 
-      throw new InvalidRequestError(message, err)
+      throw InvalidRequestError.from(err, message)
     }
   }
 
   protected async jwtVerifyUnsecured<PayloadType = JWTPayload>(
     token: string,
-    options?: JWTClaimVerificationOptions,
+    {
+      audience,
+      ...options
+    }: Omit<JWTClaimVerificationOptions, 'issuer'> & { audience: string },
   ): Promise<UnsecuredResult<PayloadType>> {
-    const result = await UnsecuredJWT.decode<PayloadType>(token, options)
+    const result = UnsecuredJWT.decode<PayloadType>(token, options)
+
     // Ensure that the issuer, if present, matches the client id. There is no
     // point in forcing its presence in an unsigned token as they can be easily
     // forged.
     if (result.payload.iss && result.payload.iss !== this.id) {
-      throw new JOSEError(
-        `Invalid "iss" claim "${result.payload.iss}" (expected ${this.id})`,
-      )
+      throw new JOSEError(`Invalid "iss" claim "${result.payload.iss}"`)
     }
+
+    if (result.payload.aud && result.payload.aud !== audience) {
+      throw new JOSEError(`Invalid "aud" claim "${result.payload.aud}"`)
+    }
+
     return result
   }
 
