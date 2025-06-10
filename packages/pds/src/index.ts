@@ -11,13 +11,8 @@ import cors from 'cors'
 import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
-import {
-  Options as XrpcServerOptions,
-  RateLimiter,
-  ResponseType,
-  XRPCError,
-} from '@atproto/xrpc-server'
-import API from './api'
+import { RateLimiter, ResponseType, XRPCError } from '@atproto/xrpc-server'
+import apiRoutes from './api'
 import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
 import { ServerConfig, ServerSecrets } from './config'
@@ -64,7 +59,7 @@ export class PDS {
 
     const { rateLimits } = ctx.cfg
 
-    const xrpcOpts: XrpcServerOptions = {
+    const server = createServer({
       validateResponse: false,
       payload: {
         jsonLimit: 150 * 1024, // 150kb
@@ -96,10 +91,9 @@ export class PDS {
       },
       rateLimits: rateLimits.enabled
         ? {
-            creator:
-              rateLimits.mode === 'redis'
-                ? (opts) => RateLimiter.redis(ctx.redisScratch!, opts)
-                : (opts) => RateLimiter.memory(opts),
+            creator: ctx.redisScratch
+              ? (opts) => RateLimiter.redis(ctx.redisScratch, opts)
+              : (opts) => RateLimiter.memory(opts),
             bypass: ({ req }) => {
               const { bypassKey, bypassIps } = rateLimits
               if (
@@ -134,11 +128,9 @@ export class PDS {
             ],
           }
         : undefined,
-    }
+    })
 
-    let server = createServer(xrpcOpts)
-
-    server = API(server, ctx)
+    apiRoutes(server, ctx)
 
     const app = express()
     app.set('trust proxy', [
