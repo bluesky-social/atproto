@@ -473,6 +473,7 @@ message ActorInfo {
   // Tags being applied to the profile record
   repeated string profile_tags = 16;
   Record status_record = 17;
+  string allow_activity_subscriptions_from = 18;
 }
 
 message GetActorsResponse {

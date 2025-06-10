@@ -29,6 +29,7 @@ export type Actor = {
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
+  allowActivitySubscriptionsFrom?: string
 }
 
 export type VerificationHydrationState = {
@@ -194,6 +195,8 @@ export class ActorHydrator {
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
+        allowActivitySubscriptionsFrom:
+          actor.allowActivitySubscriptionsFrom || undefined,
       })
     }, new HydrationMap<Actor>())
   }

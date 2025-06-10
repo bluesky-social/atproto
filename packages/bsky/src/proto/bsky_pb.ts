@@ -5464,6 +5464,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   statusRecord?: Record
 
+  /**
+   * @generated from field: string allow_activity_subscriptions_from = 18;
+   */
+  allowActivitySubscriptionsFrom = ''
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5532,6 +5537,12 @@ export class ActorInfo extends Message<ActorInfo> {
       repeated: true,
     },
     { no: 17, name: 'status_record', kind: 'message', T: Record },
+    {
+      no: 18,
+      name: 'allow_activity_subscriptions_from',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
   ])
 
   static fromBinary(

@@ -284,6 +284,9 @@ export class Views {
         chat: actor.allowIncomingChatsFrom
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
+        activitySubscriptions: actor.allowActivitySubscriptionsFrom
+          ? { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
+          : undefined,
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
@@ -346,12 +349,17 @@ export class Views {
       // associated.feedgens and associated.lists info not necessarily included
       // on profile and profile-basic views, but should be on profile-detailed.
       associated:
-        actor.isLabeler || actor.allowIncomingChatsFrom
+        actor.isLabeler ||
+        actor.allowIncomingChatsFrom ||
+        actor.allowActivitySubscriptionsFrom
           ? {
               labeler: actor.isLabeler ? true : undefined,
               // @TODO apply default chat policy?
               chat: actor.allowIncomingChatsFrom
                 ? { allowIncoming: actor.allowIncomingChatsFrom }
+                : undefined,
+              activitySubscriptions: actor.allowActivitySubscriptionsFrom
+                ? { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
                 : undefined,
             }
           : undefined,

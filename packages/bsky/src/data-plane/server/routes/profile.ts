@@ -1,6 +1,10 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
+import {
+  AppBskyNotificationActivitySubscriptionDeclaration,
+  ChatBskyActorDeclaration,
+} from '@atproto/api'
 import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'
 import { Service } from '../../../proto/bsky_connect'
@@ -31,6 +35,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const chatDeclarationUris = dids.map(
       (did) => `at://${did}/chat.bsky.actor.declaration/self`,
     )
+    const activitySubscriptionDeclarationUris = dids.map(
+      (did) =>
+        `at://${did}/app.bsky.notification.activitySubscriptionDeclaration/self`,
+    )
     const { ref } = db.db.dynamic
     const [
       handlesRes,
@@ -38,6 +46,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       profiles,
       statuses,
       chatDeclarations,
+      activitySubscriptionDeclarations,
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
@@ -64,6 +73,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       getRecords(db)({ uris: profileUris }),
       getRecords(db)({ uris: statusUris }),
       getRecords(db)({ uris: chatDeclarationUris }),
+      getRecords(db)({ uris: activitySubscriptionDeclarationUris }),
     ])
 
     const verificationsBySubjectDid = verificationsReceived.reduce(
@@ -82,9 +92,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const status = statuses.records[i]
 
-      const chatDeclaration = parseRecordBytes(
+      const chatDeclaration = parseRecordBytes<ChatBskyActorDeclaration.Record>(
         chatDeclarations.records[i].record,
       )
+      const activitySubscriptionDeclaration =
+        parseRecordBytes<AppBskyNotificationActivitySubscriptionDeclaration.Record>(
+          activitySubscriptionDeclarations.records[i].record,
+        )
 
       const verifications = verificationsBySubjectDid.get(did) ?? []
       const verifiedBy: VerifiedBy = verifications.reduce((acc, cur) => {
@@ -117,6 +131,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         statusRecord: status,
         tags: [],
         profileTags: [],
+        allowActivitySubscriptionsFrom:
+          typeof activitySubscriptionDeclaration?.['allowSubscriptions'] ===
+          'string'
+            ? activitySubscriptionDeclaration['allowSubscriptions']
+            : undefined,
       }
     })
     return { actors }

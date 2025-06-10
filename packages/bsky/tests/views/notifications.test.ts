@@ -1,4 +1,7 @@
-import { AtpAgent } from '@atproto/api'
+import {
+  AppBskyNotificationActivitySubscriptionDeclaration,
+  AtpAgent,
+} from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
@@ -23,6 +26,7 @@ describe('notification views', () => {
   let db: Database
 
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -39,6 +43,7 @@ describe('notification views', () => {
     })
     db = network.bsky.db
     agent = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.bsky.db.db
@@ -1149,7 +1154,7 @@ describe('notification views', () => {
       await clearPrivateData(db)
     })
 
-    describe('putActivitySubscription', () => {
+    describe('put', () => {
       it('inserts a subscription entry when no key is provided', async () => {
         const actorDid = alice
 
@@ -1321,7 +1326,7 @@ describe('notification views', () => {
       })
     })
 
-    describe('listActivitySubscriptions', () => {
+    describe('list', () => {
       it('lists inserted subscriptions', async () => {
         const actorDid = alice
 
@@ -1452,6 +1457,51 @@ describe('notification views', () => {
 
         expect(full.data.subscriptions.length).toEqual(5)
         expect(results(paginatedAll)).toEqual(results([full.data]))
+      })
+    })
+
+    describe('activity subscription declaration', () => {
+      it('includes the declaration in the profile view', async () => {
+        const declarationFor = async (did: string, value: string) => {
+          await pdsAgent.com.atproto.repo.createRecord(
+            {
+              repo: did,
+              collection:
+                ids.AppBskyNotificationActivitySubscriptionDeclaration,
+              rkey: 'self',
+              record: {
+                allowSubscriptions: value,
+              } as AppBskyNotificationActivitySubscriptionDeclaration.Record,
+            },
+            { headers: sc.getHeaders(did), encoding: 'application/json' },
+          )
+        }
+
+        await declarationFor(alice, 'all')
+        await declarationFor(bob, 'none')
+        await declarationFor(carol, 'following')
+        await network.processAll()
+
+        const viewer = alice
+        const getAllowSubscriptions = async (actor: string) => {
+          const { data } = await agent.app.bsky.actor.getProfile(
+            {
+              actor,
+            },
+            {
+              headers: await network.serviceHeaders(
+                viewer,
+                ids.AppBskyActorGetProfile,
+              ),
+            },
+          )
+          return data.associated?.activitySubscriptions?.allowSubscriptions
+        }
+
+        await expect(getAllowSubscriptions(alice)).resolves.toBe('all')
+        await expect(getAllowSubscriptions(bob)).resolves.toBe('none')
+        await expect(getAllowSubscriptions(carol)).resolves.toBe('following')
+        await expect(getAllowSubscriptions(dan)).resolves.toBeUndefined()
       })
     })
   })
