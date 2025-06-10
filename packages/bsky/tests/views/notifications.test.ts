@@ -10,6 +10,10 @@ import {
 } from '../../src/lexicon/types/app/bsky/notification/defs'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
+import {
+  NamespaceAppBskyNotificationDefsPreferences,
+  NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
+} from '../../src/stash'
 import { forSnapshot, paginateAll } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
@@ -977,7 +981,7 @@ describe('notification views', () => {
           .selectFrom('private_data')
           .selectAll()
           .where('actorDid', '=', actorDid)
-          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('namespace', '=', NamespaceAppBskyNotificationDefsPreferences)
           .where('key', '=', 'self')
           .executeTakeFirst()
         if (dbResult === undefined) {
@@ -985,14 +989,14 @@ describe('notification views', () => {
         } else {
           expect(dbResult).toStrictEqual({
             actorDid: actorDid,
-            namespace: 'app.bsky.notification.defs#preferences',
+            namespace: NamespaceAppBskyNotificationDefsPreferences,
             key: 'self',
             indexedAt: expect.any(String),
             payload: expect.anything(), // Better to compare payload parsed.
             updatedAt: expect.any(String),
           })
           expect(JSON.parse(dbResult.payload)).toStrictEqual({
-            $type: 'app.bsky.notification.defs#preferences',
+            $type: NamespaceAppBskyNotificationDefsPreferences,
             ...expectedDb,
           })
         }
@@ -1073,19 +1077,19 @@ describe('notification views', () => {
           .selectFrom('private_data')
           .selectAll()
           .where('actorDid', '=', actorDid)
-          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('namespace', '=', NamespaceAppBskyNotificationDefsPreferences)
           .where('key', '=', 'self')
           .executeTakeFirstOrThrow()
         expect(dbResult).toStrictEqual({
           actorDid: actorDid,
-          namespace: 'app.bsky.notification.defs#preferences',
+          namespace: NamespaceAppBskyNotificationDefsPreferences,
           key: 'self',
           indexedAt: expect.any(String),
           payload: expect.anything(), // Better to compare payload parsed.
           updatedAt: expect.any(String),
         })
         expect(JSON.parse(dbResult.payload)).toStrictEqual({
-          $type: 'app.bsky.notification.defs#preferences',
+          $type: NamespaceAppBskyNotificationDefsPreferences,
           ...expected,
         })
       }
@@ -1173,20 +1177,21 @@ describe('notification views', () => {
           .where(
             'namespace',
             '=',
-            'app.bsky.notification.defs#subjectActivitySubscription',
+            NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
           )
           .where('key', '=', data.key)
           .executeTakeFirstOrThrow()
         expect(dbResult).toStrictEqual({
           actorDid: actorDid,
-          namespace: 'app.bsky.notification.defs#subjectActivitySubscription',
+          namespace:
+            NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
           key: data.key,
           indexedAt: expect.any(String),
           payload: expect.anything(), // Better to compare payload parsed.
           updatedAt: expect.any(String),
         })
         expect(JSON.parse(dbResult.payload)).toStrictEqual({
-          $type: 'app.bsky.notification.defs#subjectActivitySubscription',
+          $type: NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
           subject: carol,
           activitySubscription: {
             post: true,
@@ -1240,20 +1245,21 @@ describe('notification views', () => {
           .where(
             'namespace',
             '=',
-            'app.bsky.notification.defs#subjectActivitySubscription',
+            NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
           )
           .where('key', '=', update.key)
           .executeTakeFirstOrThrow()
         expect(dbResult).toStrictEqual({
           actorDid: actorDid,
-          namespace: 'app.bsky.notification.defs#subjectActivitySubscription',
+          namespace:
+            NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
           key: update.key,
           indexedAt: expect.any(String),
           payload: expect.anything(), // Better to compare payload parsed.
           updatedAt: expect.any(String),
         })
         expect(JSON.parse(dbResult.payload)).toStrictEqual({
-          $type: 'app.bsky.notification.defs#subjectActivitySubscription',
+          $type: NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
           subject: carol,
           activitySubscription: {
             post: false,
@@ -1307,7 +1313,7 @@ describe('notification views', () => {
           .where(
             'namespace',
             '=',
-            'app.bsky.notification.defs#subjectActivitySubscription',
+            NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
           )
           .where('key', '=', update.key)
           .executeTakeFirst()
