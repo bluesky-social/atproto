@@ -43,14 +43,7 @@ import {
 } from './client/client-manager.js'
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
-import {
-  AUTHENTICATION_MAX_AGE,
-  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-  PUBLIC_CLIENT_REFRESH_LIFETIME,
-  PUBLIC_CLIENT_SESSION_LIFETIME,
-  TOKEN_MAX_AGE,
-} from './constants.js'
+import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { Branding, BrandingInput } from './customization/branding.js'
 import {
   Customization,
@@ -100,6 +93,7 @@ import {
   asTokenStore,
   refreshTokenSchema,
 } from './token/token-store.js'
+import { validateRefreshToken } from './token/validate-refresh-token.js'
 import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
@@ -740,7 +734,7 @@ export class OAuthProvider extends OAuthVerifier {
     }
 
     if (request.grant_type === 'authorization_code') {
-      return this.codeGrant(
+      return this.authorizationCodeGrant(
         client,
         clientAuth,
         clientMetadata,
@@ -764,7 +758,7 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  protected async codeGrant(
+  protected async authorizationCodeGrant(
     client: Client,
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
@@ -897,54 +891,16 @@ export class OAuthProvider extends OAuthVerifier {
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const refreshToken = await refreshTokenSchema
-      .parseAsync(input.refresh_token)
+      .parseAsync(input.refresh_token, { path: ['refresh_token'] })
       .catch((err) => {
         throw InvalidGrantError.from(err, `Invalid refresh token`)
       })
 
-    const tokenInfo = await this.tokenManager
-      .findByRefreshToken(refreshToken)
-      .catch((err) => {
-        throw InvalidGrantError.from(err, `Invalid refresh token`)
-      })
-
-    if (!tokenInfo) {
-      throw new InvalidGrantError(`Invalid refresh token`)
-    }
-
-    // Check before try/catch to allow the client to retry with a DPoP proof
-    const { parameters } = tokenInfo.data
-    if (parameters.dpop_jkt && !dpopProof) {
-      throw new InvalidDpopProofError('DPoP proof required')
-    }
+    const tokenInfo = await this.tokenManager.consumeRefreshToken(refreshToken)
 
     try {
       await validateClientAuth(client, clientAuth, dpopProof, tokenInfo.data)
-
-      if (tokenInfo.currentRefreshToken !== refreshToken) {
-        throw new InvalidGrantError(`Refresh token replayed`)
-      }
-
-      const allowLongerLifespan =
-        client.info.isFirstParty || tokenInfo.data.clientAuth.method !== 'none'
-
-      const [sessionLifetime, refreshLifetime] = allowLongerLifespan
-        ? [
-            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-          ]
-        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
-
-      const sessionAge = Date.now() - tokenInfo.data.createdAt.getTime()
-      const refreshAge = Date.now() - tokenInfo.data.updatedAt.getTime()
-
-      if (sessionAge > sessionLifetime) {
-        throw new InvalidGrantError(`Session expired`)
-      } else if (refreshAge > refreshLifetime) {
-        throw new InvalidGrantError(`Refresh token expired`)
-      } else if (refreshAge > sessionAge) {
-        throw new InvalidGrantError(`Refresh token is older than session`)
-      }
+      await validateRefreshToken(client, clientAuth, refreshToken, tokenInfo)
 
       return await this.tokenManager.rotateToken(
         client,
@@ -953,7 +909,10 @@ export class OAuthProvider extends OAuthVerifier {
         tokenInfo,
       )
     } catch (err) {
+      // If any error occurs while validating or rotating the token,
+      // we delete the session to prevent replay attacks.
       await this.tokenManager.deleteToken(tokenInfo.id)
+
       throw err
     }
   }

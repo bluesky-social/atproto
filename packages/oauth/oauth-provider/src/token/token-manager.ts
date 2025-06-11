@@ -281,10 +281,35 @@ export class TokenManager {
     return tokenInfo
   }
 
-  public async findByRefreshToken(
+  protected async findByRefreshToken(
     token: RefreshToken,
   ): Promise<null | TokenInfo> {
     return this.store.findTokenByRefreshToken(token)
+  }
+
+  public async consumeRefreshToken(token: RefreshToken): Promise<TokenInfo> {
+    // @NOTE concurrent refreshes of the same refresh token could theoricaly
+    // lead to two new tokens (access & refresh) being created. This is deemed
+    // acceptable for now (as the mechanism can only be used once since only one
+    // of the two refresh token created will be valid, and any future refresh
+    // attempts from outdated tokens will cause the entire session to be
+    // invalidated). Ideally, the store should be able to handle this case by
+    // atomically consuming the refresh token and returning the token info.
+
+    // @TODO Add another store method that atomically consumes the refresh token
+    // with a lock.
+    const tokenInfo = await this.findByRefreshToken(token).catch((err) => {
+      throw InvalidTokenError.from(err, `Invalid refresh token`)
+    })
+
+    if (!tokenInfo) throw new InvalidGrantError(`Invalid refresh token`)
+
+    if (tokenInfo.currentRefreshToken !== token) {
+      await this.deleteToken(tokenInfo.id)
+      throw new InvalidGrantError(`Refresh token replayed`)
+    }
+
+    return tokenInfo
   }
 
   public async findByCode(code: Code): Promise<null | TokenInfo> {
