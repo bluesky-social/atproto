@@ -1,5 +1,16 @@
 # @atproto/oauth-client
 
+## 0.3.22
+
+### Patch Changes
+
+- [#3933](https://github.com/bluesky-social/atproto/pull/3933) [`192f3ab89`](https://github.com/bluesky-social/atproto/commit/192f3ab89c943216683541f42cc1332e9c305eee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use resolved handle or did instead of raw input as "login_hint"
+
+- [#3926](https://github.com/bluesky-social/atproto/pull/3926) [`4e96e2c7b`](https://github.com/bluesky-social/atproto/commit/4e96e2c7b7cc0231607d3065c95704069c4ca2a2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `iss` claim from DPoP proofs
+
+- Updated dependencies [[`192f3ab89`](https://github.com/bluesky-social/atproto/commit/192f3ab89c943216683541f42cc1332e9c305eee)]:
+  - @atproto-labs/identity-resolver@0.1.18
+
 ## 0.3.21
 
 ### Patch Changes

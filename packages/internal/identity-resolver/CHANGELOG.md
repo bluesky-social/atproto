@@ -1,5 +1,11 @@
 # @atproto-labs/identity-resolver
 
+## 0.1.18
+
+### Patch Changes
+
+- [#3933](https://github.com/bluesky-social/atproto/pull/3933) [`192f3ab89`](https://github.com/bluesky-social/atproto/commit/192f3ab89c943216683541f42cc1332e9c305eee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return atproto handle in identity resolution result
+
 ## 0.1.17
 
 ### Patch Changes

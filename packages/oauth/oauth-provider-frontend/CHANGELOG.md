@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-frontend
 
+## 0.1.7
+
+### Patch Changes
+
+- [#3934](https://github.com/bluesky-social/atproto/pull/3934) [`30f851dee`](https://github.com/bluesky-social/atproto/commit/30f851dee8495b5034743fda1c095509f1fd95bf) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix footer links not working in account page
+
 ## 0.1.6
 
 ## 0.1.5
