@@ -32,6 +32,19 @@ export type MuteWordMatch = {
   predicate: string
 }
 
+export type Params = {
+  mutedWords: AppBskyActorDefs.MutedWord[]
+  text: string
+  facets?: AppBskyRichtextFacet.Main[]
+  outlineTags?: string[]
+  languages?: string[]
+  actor?: AppBskyActorDefs.ProfileView | AppBskyActorDefs.ProfileViewBasic
+}
+
+/**
+ * Checks if the given text matches any of the muted words, returning an array
+ * of matches. If no matches are found, returns `undefined`.
+ */
 export function matchMuteWords({
   mutedWords,
   text,
@@ -39,14 +52,7 @@ export function matchMuteWords({
   outlineTags,
   languages,
   actor,
-}: {
-  mutedWords: AppBskyActorDefs.MutedWord[]
-  text: string
-  facets?: AppBskyRichtextFacet.Main[]
-  outlineTags?: string[]
-  languages?: string[]
-  actor?: AppBskyActorDefs.ProfileView | AppBskyActorDefs.ProfileViewBasic
-}): MuteWordMatch[] | undefined {
+}: Params): MuteWordMatch[] | undefined {
   const exception = LANGUAGE_EXCEPTIONS.includes(languages?.[0] || '')
   const tags = ([] as string[])
     .concat(outlineTags || [])
@@ -144,4 +150,12 @@ export function matchMuteWords({
   }
 
   return matches.length ? matches : undefined
+}
+
+/**
+ * Checks if the given text matches any of the muted words, returning a boolean
+ * if any matches are found.
+ */
+export function hasMutedWord(params: Params) {
+  return !!matchMuteWords(params)
 }

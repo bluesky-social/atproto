@@ -1,5 +1,4 @@
 import { ModerationDecision } from './decision'
-import { matchMuteWords } from './mutewords'
 import { decideAccount } from './subjects/account'
 import { decideFeedGenerator } from './subjects/feed-generator'
 import { decideNotification } from './subjects/notification'
@@ -17,11 +16,7 @@ import {
 
 export { ModerationUI } from './ui'
 export { ModerationDecision } from './decision'
-export { matchMuteWords } from './mutewords'
-/**
- * @deprecated Use `matchMuteWords` instead.
- */
-export const hasMutedWord = matchMuteWords
+export { matchMuteWords, hasMutedWord } from './mutewords'
 export {
   interpretLabelValueDefinition,
   interpretLabelValueDefinitions,
