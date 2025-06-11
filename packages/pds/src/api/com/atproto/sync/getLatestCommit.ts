@@ -1,11 +1,11 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getLatestCommit({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken(),
     handler: async ({ params, auth }) => {
       const { did } = params
       await assertRepoAvailability(

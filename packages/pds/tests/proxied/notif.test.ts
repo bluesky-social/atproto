@@ -1,12 +1,12 @@
-import { once } from 'events'
-import http from 'http'
-import { AddressInfo } from 'net'
+import { once } from 'node:events'
+import http from 'node:http'
+import { AddressInfo } from 'node:net'
 import express from 'express'
 import { AtpAgent } from '@atproto/api'
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-import usersSeed from '../seeds/users'
 import { createServer } from '../../src/lexicon'
+import usersSeed from '../seeds/users'
 
 describe('notif service proxy', () => {
   let network: TestNetworkNoAppView

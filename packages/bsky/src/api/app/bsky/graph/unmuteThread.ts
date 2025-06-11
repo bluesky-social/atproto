@@ -1,5 +1,5 @@
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { MuteOperation_Type } from '../../../../proto/bsync_pb'
 
 export default function (server: Server, ctx: AppContext) {

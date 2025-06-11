@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { CODE_BYTES_LENGTH, CODE_PREFIX } from '../constants.js'
 import { randomHexId } from '../lib/util/crypto.js'
 

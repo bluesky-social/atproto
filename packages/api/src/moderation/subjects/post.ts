@@ -1,18 +1,31 @@
-import { ModerationDecision } from '../decision'
 import {
-  AppBskyFeedPost,
+  AppBskyActorDefs,
+  AppBskyEmbedExternal,
   AppBskyEmbedImages,
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
-  AppBskyEmbedExternal,
-  AppBskyActorDefs,
+  AppBskyFeedPost,
 } from '../../client'
-import { ModerationSubjectPost, ModerationOpts } from '../types'
-import { matchMuteWord, MuteWordMatch } from '../mutewords'
+import { $Typed } from '../../client/util'
+import { ModerationDecision } from '../decision'
+import { MuteWordMatch, matchMuteWord } from '../mutewords'
+import { ModerationOpts, ModerationSubjectPost } from '../types'
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
 
 export function decidePost(
+  subject: ModerationSubjectPost,
+  opts: ModerationOpts,
+): ModerationDecision {
+  return ModerationDecision.merge(
+    decideSubject(subject, opts),
+    decideEmbed(subject.embed, opts)?.downgrade(),
+    decideAccount(subject.author, opts),
+    decideProfile(subject.author, opts),
+  )
+}
+
+function decideSubject(
   subject: ModerationSubjectPost,
   opts: ModerationOpts,
 ): ModerationDecision {
@@ -30,35 +43,48 @@ export function decidePost(
     acc.addMutedWord(findFirstMuteWordMatch(subject, opts.prefs.mutedWords))
   }
 
-  let embedAcc
-  if (subject.embed) {
-    if (AppBskyEmbedRecord.isViewRecord(subject.embed.record)) {
+  return acc
+}
+
+function decideEmbed(
+  embed:
+    | undefined
+    | $Typed<AppBskyEmbedRecord.View>
+    | $Typed<AppBskyEmbedRecordWithMedia.View>
+    | { $type: string },
+  opts: ModerationOpts,
+) {
+  if (embed) {
+    if (
+      (AppBskyEmbedRecord.isView(embed) ||
+        AppBskyEmbedRecordWithMedia.isView(embed)) &&
+      AppBskyEmbedRecord.isViewRecord(embed.record)
+    ) {
       // quote post
-      embedAcc = decideQuotedPost(subject.embed.record, opts)
+      return decideQuotedPost(embed.record, opts)
     } else if (
-      AppBskyEmbedRecordWithMedia.isView(subject.embed) &&
-      AppBskyEmbedRecord.isViewRecord(subject.embed.record.record)
+      AppBskyEmbedRecordWithMedia.isView(embed) &&
+      AppBskyEmbedRecord.isViewRecord(embed.record.record)
     ) {
       // quoted post with media
-      embedAcc = decideQuotedPost(subject.embed.record.record, opts)
-    } else if (AppBskyEmbedRecord.isViewBlocked(subject.embed.record)) {
-      // blocked quote post
-      embedAcc = decideBlockedQuotedPost(subject.embed.record, opts)
+      return decideQuotedPost(embed.record.record, opts)
     } else if (
-      AppBskyEmbedRecordWithMedia.isView(subject.embed) &&
-      AppBskyEmbedRecord.isViewBlocked(subject.embed.record.record)
+      (AppBskyEmbedRecord.isView(embed) ||
+        AppBskyEmbedRecordWithMedia.isView(embed)) &&
+      AppBskyEmbedRecord.isViewBlocked(embed.record)
+    ) {
+      // blocked quote post
+      return decideBlockedQuotedPost(embed.record, opts)
+    } else if (
+      AppBskyEmbedRecordWithMedia.isView(embed) &&
+      AppBskyEmbedRecord.isViewBlocked(embed.record.record)
     ) {
       // blocked quoted post with media
-      embedAcc = decideBlockedQuotedPost(subject.embed.record.record, opts)
+      return decideBlockedQuotedPost(embed.record.record, opts)
     }
   }
 
-  return ModerationDecision.merge(
-    acc,
-    embedAcc?.downgrade(),
-    decideAccount(subject.author, opts),
-    decideProfile(subject.author, opts),
-  )
+  return undefined
 }
 
 function decideQuotedPost(
@@ -117,6 +143,7 @@ function checkHiddenPost(
   }
   if (subject.embed) {
     if (
+      AppBskyEmbedRecord.isView(subject.embed) &&
       AppBskyEmbedRecord.isViewRecord(subject.embed.record) &&
       hiddenPosts.includes(subject.embed.record.uri)
     ) {
@@ -144,12 +171,14 @@ function findFirstMuteWordMatch(
   const postAuthor = subject.author
 
   if (AppBskyFeedPost.isRecord(subject.record)) {
+    const post = subject.record as AppBskyFeedPost.Record
+
     const match = matchMuteWord({
       mutedWords,
-      text: subject.record.text,
-      facets: subject.record.facets,
-      outlineTags: subject.record.tags,
-      languages: subject.record.langs,
+      text: post.text,
+      facets: post.facets,
+      outlineTags: post.tags,
+      languages: post.langs,
       actor: postAuthor,
     })
     // post text
@@ -157,16 +186,13 @@ function findFirstMuteWordMatch(
       return match
     }
 
-    if (
-      subject.record.embed &&
-      AppBskyEmbedImages.isMain(subject.record.embed)
-    ) {
+    if (subject.record.embed && AppBskyEmbedImages.isMain(post.embed)) {
       // post images
-      for (const image of subject.record.embed.images) {
+      for (const image of post.embed.images) {
         const match = matchMuteWord({
           mutedWords,
           text: image.alt,
-          languages: subject.record.langs,
+          languages: post.langs,
           actor: postAuthor,
         })
         if (match) {
@@ -176,12 +202,17 @@ function findFirstMuteWordMatch(
     }
   }
 
-  if (subject.embed) {
+  const { embed } = subject
+  if (embed) {
     // quote post
-    if (AppBskyEmbedRecord.isViewRecord(subject.embed.record)) {
-      if (AppBskyFeedPost.isRecord(subject.embed.record.value)) {
-        const embeddedPost = subject.embed.record.value
-        const embedAuthor = subject.embed.record.author
+    if (
+      (AppBskyEmbedRecord.isView(embed) ||
+        AppBskyEmbedRecordWithMedia.isView(embed)) &&
+      AppBskyEmbedRecord.isViewRecord(embed.record)
+    ) {
+      if (AppBskyFeedPost.isRecord(embed.record.value)) {
+        const embeddedPost = embed.record.value as AppBskyFeedPost.Record
+        const embedAuthor = embed.record.author
         const match = matchMuteWord({
           mutedWords,
           text: embeddedPost.text,
@@ -274,14 +305,14 @@ function findFirstMuteWordMatch(
     }
     // quote post with media
     else if (
-      AppBskyEmbedRecordWithMedia.isView(subject.embed) &&
-      AppBskyEmbedRecord.isViewRecord(subject.embed.record.record)
+      AppBskyEmbedRecordWithMedia.isView(embed) &&
+      AppBskyEmbedRecord.isViewRecord(embed.record.record)
     ) {
-      const embedAuthor = subject.embed.record.record.author
+      const embedAuthor = embed.record.record.author
 
       // quoted post text
-      if (AppBskyFeedPost.isRecord(subject.embed.record.record.value)) {
-        const post = subject.embed.record.record.value
+      if (AppBskyFeedPost.isRecord(embed.record.record.value)) {
+        const post = embed.record.record.value as AppBskyFeedPost.Record
         const match = matchMuteWord({
           mutedWords,
           text: post.text,
@@ -296,13 +327,13 @@ function findFirstMuteWordMatch(
       }
 
       // quoted post images
-      if (AppBskyEmbedImages.isView(subject.embed.media)) {
-        for (const image of subject.embed.media.images) {
+      if (AppBskyEmbedImages.isView(embed.media)) {
+        for (const image of embed.media.images) {
           const match = matchMuteWord({
             mutedWords,
             text: image.alt,
             languages: AppBskyFeedPost.isRecord(subject.record)
-              ? subject.record.langs
+              ? (subject.record as AppBskyFeedPost.Record).langs
               : [],
             actor: embedAuthor,
           })
@@ -312,8 +343,8 @@ function findFirstMuteWordMatch(
         }
       }
 
-      if (AppBskyEmbedExternal.isView(subject.embed.media)) {
-        const { external } = subject.embed.media
+      if (AppBskyEmbedExternal.isView(embed.media)) {
+        const { external } = embed.media
         const match = matchMuteWord({
           mutedWords,
           text: external.title + ' ' + external.description,

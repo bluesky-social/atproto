@@ -1,5 +1,5 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('label hydration', () => {
   let network: TestNetwork
@@ -13,7 +13,7 @@ describe('label hydration', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_label_hydration',
+      dbPostgresSchema: 'bsky_query_labels',
     })
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -76,6 +76,7 @@ describe('label hydration', () => {
         cid: opts.cid,
         val: opts.val,
         cts: new Date().toISOString(),
+        exp: null,
         neg: false,
         src: opts.src ?? labelerDid,
       })

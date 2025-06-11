@@ -1,18 +1,18 @@
+import * as plc from '@did-plc/lib'
+import { isEmailValid } from '@hapi/address'
+import { isDisposableEmail } from 'disposable-email-domains-js'
 import { DidDocument, MINUTE, check } from '@atproto/common'
+import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import * as plc from '@did-plc/lib'
-import disposable from 'disposable-email'
-import {
-  baseNormalizeAndValidate,
-  normalizeAndValidateHandle,
-} from '../../../../handle'
+import { AccountStatus } from '../../../../account-manager/account-manager'
+import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
+import { AppContext } from '../../../../context'
+import { baseNormalizeAndValidate } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
-import AppContext from '../../../../context'
+import { syncEvtDataFromCommit } from '../../../../sequencer'
 import { safeResolveDidDoc } from './util'
-import { AccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -22,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
     },
     auth: ctx.authVerifier.userServiceAuthOptional,
     handler: async ({ input, auth, req }) => {
+      // @NOTE Until this code and the OAuthStore's `createAccount` are
+      // refactored together, any change made here must be reflected over there.
+
       const requester = auth.credentials?.did ?? null
       const {
         did,
@@ -59,7 +62,7 @@ export default function (server: Server, ctx: AppContext) {
 
         didDoc = await safeResolveDidDoc(ctx, did, true)
 
-        creds = await ctx.accountManager.createAccount({
+        creds = await ctx.accountManager.createAccountAndSession({
           did,
           handle,
           email,
@@ -73,7 +76,11 @@ export default function (server: Server, ctx: AppContext) {
         if (!deactivated) {
           await ctx.sequencer.sequenceIdentityEvt(did, handle)
           await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
-          await ctx.sequencer.sequenceCommit(did, commit, [])
+          await ctx.sequencer.sequenceCommit(did, commit)
+          await ctx.sequencer.sequenceSyncEvt(
+            did,
+            syncEvtDataFromCommit(commit),
+          )
         }
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
@@ -166,6 +173,12 @@ const validateInputsForLocalPds = async (
     throw new InvalidRequestError('Unsupported input: "plcOp"')
   }
 
+  if (password && password.length > NEW_PASSWORD_MAX_LENGTH) {
+    throw new InvalidRequestError(
+      `Password too long. Maximum length is ${NEW_PASSWORD_MAX_LENGTH} characters.`,
+    )
+  }
+
   if (ctx.cfg.invites.required && !inviteCode) {
     throw new InvalidRequestError(
       'No invite code provided',
@@ -175,18 +188,17 @@ const validateInputsForLocalPds = async (
 
   if (!email) {
     throw new InvalidRequestError('Email is required')
-  } else if (!disposable.validate(email)) {
+  } else if (!isEmailValid(email) || isDisposableEmail(email)) {
     throw new InvalidRequestError(
       'This email address is not supported, please use a different email.',
     )
   }
 
   // normalize & ensure valid handle
-  const handle = await normalizeAndValidateHandle({
-    ctx,
-    handle: input.handle,
-    did: input.did,
-  })
+  const handle = await ctx.accountManager.normalizeAndValidateHandle(
+    input.handle,
+    { did: input.did },
+  )
 
   // check that the invite code still has uses
   if (ctx.cfg.invites.required && inviteCode) {

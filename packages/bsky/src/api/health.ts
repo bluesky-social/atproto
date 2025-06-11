@@ -1,14 +1,28 @@
-import express from 'express'
-import AppContext from '../context'
+import { Router } from 'express'
+import { AppContext } from '../context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   router.get('/', function (req, res) {
     res.type('text/plain')
-    res.send(
-      'This is an AT Protocol Application View (AppView) for the "bsky.app" application: https://github.com/bluesky-social/atproto\n\nMost API routes are under /xrpc/',
-    )
+    res.send(`
+  _         _
+ | |       | |
+ | |__  ___| | ___   _
+ | '_ \\/ __| |/ / | | |
+ | |_) \\__ \\   <| |_| |
+ |_.__/|___/_|\\_\\\\__, |
+                  __/ |
+                 |___/
+
+This is an AT Protocol Application View (AppView) for the "bsky.app" application.
+
+Most API routes are under /xrpc/
+
+      Code: https://github.com/bluesky-social/atproto
+  Protocol: https://atproto.com
+`)
   })
 
   router.get('/robots.txt', function (req, res) {
@@ -23,7 +37,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
     try {
       await ctx.dataplane.ping({})
     } catch (err) {
-      req.log.error(err, 'failed health check')
+      req.log.error({ err }, 'failed health check')
       return res.status(503).send({ version, error: 'Service Unavailable' })
     }
     res.send({ version })

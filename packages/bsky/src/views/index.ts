@@ -1,48 +1,96 @@
+import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { mapDefined } from '@atproto/common'
-import { ImageUriBuilder } from '../image/uri'
+import { ProfileViewerState } from '../hydration/actor'
+import { FeedItem, Like, Post, Repost } from '../hydration/feed'
+import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
+import { Label } from '../hydration/label'
+import { RecordInfo } from '../hydration/util'
+import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
-  ProfileViewDetailed,
+  KnownFollowers,
   ProfileView,
   ProfileViewBasic,
-  ViewerState as ProfileViewerState,
+  ProfileViewDetailed,
+  StatusView,
+  VerificationState,
+  VerificationView,
+  ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
+import {
+  Record as ProfileRecord,
+  isRecord as isProfileRecord,
+} from '../lexicon/types/app/bsky/actor/profile'
 import {
   BlockedPost,
   FeedViewPost,
   GeneratorView,
   NotFoundPost,
   PostView,
-  ReasonRepost,
   ReasonPin,
+  ReasonRepost,
   ReplyRef,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
-import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
+import {
+  Record as PostRecord,
+  isRecord as isPostRecord,
+} from '../lexicon/types/app/bsky/feed/post'
+import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
+import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
   ListView,
   ListViewBasic,
   StarterPackView,
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
+import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
+import { Record as VerificationRecord } from '../lexicon/types/app/bsky/graph/verification'
 import {
-  parseThreadGate,
-  cidFromBlobJson,
-  VideoUriBuilder,
-  parsePostgate,
-} from './util'
-import { uriToDid as creatorFromUri, safePinnedPost } from '../util/uris'
-import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+  LabelerView,
+  LabelerViewDetailed,
+} from '../lexicon/types/app/bsky/labeler/defs'
+import {
+  Record as LabelerRecord,
+  isRecord as isLabelerRecord,
+} from '../lexicon/types/app/bsky/labeler/service'
+import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
+import { ThreadItem as ThreadOtherItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
+import {
+  QueryParams as GetPostThreadV2QueryParams,
+  ThreadItem,
+} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
+import { $Typed, Un$Typed } from '../lexicon/util'
+import { Notification } from '../proto/bsky_pb'
+import {
+  postUriToPostgateUri,
+  postUriToThreadgateUri,
+  safePinnedPost,
+  uriToDid,
+  uriToDid as creatorFromUri,
+} from '../util/uris'
+import {
+  ThreadItemValueBlocked,
+  ThreadItemValueNoUnauthenticated,
+  ThreadItemValueNotFound,
+  ThreadItemValuePost,
+  ThreadOtherAnchorPostNode,
+  ThreadOtherItemValuePost,
+  ThreadOtherPostNode,
+  ThreadTree,
+  ThreadTreeVisible,
+  sortTrimFlattenThreadTree,
+} from './threads-v2'
 import {
   Embed,
   EmbedBlocked,
-  EmbedNotFound,
   EmbedDetached,
+  EmbedNotFound,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -64,20 +112,35 @@ import {
   isRecordWithMedia,
   isVideoEmbed,
 } from './types'
-import { Label } from '../hydration/label'
-import { FeedItem, Post, Repost } from '../hydration/feed'
-import { RecordInfo } from '../hydration/util'
 import {
-  LabelerView,
-  LabelerViewDetailed,
-} from '../lexicon/types/app/bsky/labeler/defs'
-import { Notification } from '../proto/bsky_pb'
-import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
+  VideoUriBuilder,
+  cidFromBlobJson,
+  parsePostgate,
+  parseThreadGate,
+} from './util'
+
+const notificationDeletedRecord = {
+  $type: 'app.bsky.notification.defs#recordDeleted' as const,
+}
+
+// Pre-computed CID for the `notificationDeletedRecord`.
+const notificationDeletedRecordCid =
+  'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim'
 
 export class Views {
+  public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
+  public videoUriBuilder: VideoUriBuilder = this.opts.videoUriBuilder
+  public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
+  private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
+  private threadTagsHide: readonly string[] = this.opts.threadTagsHide
   constructor(
-    public imgUriBuilder: ImageUriBuilder,
-    public videoUriBuilder: VideoUriBuilder,
+    private opts: {
+      imgUriBuilder: ImageUriBuilder
+      videoUriBuilder: VideoUriBuilder
+      indexedAtEpoch: Date | undefined
+      threadTagsBumpDown: readonly string[]
+      threadTagsHide: readonly string[]
+    },
   ) {}
 
   // Actor
@@ -95,28 +158,82 @@ export class Views {
   }
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    if (state.actors?.get(did)?.takedownRef) return true
-    if (state.actors?.get(did)?.upstreamStatus === 'takendown') return true
-    if (state.actors?.get(did)?.upstreamStatus === 'suspended') return true
+    const actor = state.actors?.get(did)
+    if (actor?.takedownRef) return true
+    if (actor?.upstreamStatus === 'takendown') return true
+    if (actor?.upstreamStatus === 'suspended') return true
     if (state.labels?.get(did)?.isTakendown) return true
     return false
   }
 
+  noUnauthenticatedPost(state: HydrationState, post: PostView): boolean {
+    const isNoUnauthenticated = post.author.labels?.some(
+      (l) => l.val === '!no-unauthenticated',
+    )
+    return !state.ctx?.viewer && !!isNoUnauthenticated
+  }
+
   viewerBlockExists(did: string, state: HydrationState): boolean {
-    const actor = state.profileViewers?.get(did)
-    if (!actor) return false
-    return (
-      !!actor.blockedBy ||
-      !!actor.blocking ||
-      !!actor.blockedByList ||
-      !!actor.blockingByList
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!(
+      viewer.blockedBy ||
+      viewer.blocking ||
+      this.blockedByList(viewer, state) ||
+      this.blockingByList(viewer, state)
     )
   }
 
   viewerMuteExists(did: string, state: HydrationState): boolean {
-    const actor = state.profileViewers?.get(did)
-    if (!actor) return false
-    return actor.muted || !!actor.mutedByList
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!(viewer.muted || this.mutedByList(viewer, state))
+  }
+
+  blockingByList(viewer: ProfileViewerState, state: HydrationState) {
+    return (
+      viewer.blockingByList && this.recordActive(viewer.blockingByList, state)
+    )
+  }
+
+  blockedByList(viewer: ProfileViewerState, state: HydrationState) {
+    return (
+      viewer.blockedByList && this.recordActive(viewer.blockedByList, state)
+    )
+  }
+
+  mutedByList(viewer: ProfileViewerState, state: HydrationState) {
+    return viewer.mutedByList && this.recordActive(viewer.mutedByList, state)
+  }
+
+  recordActive(uri: string, state: HydrationState) {
+    const did = uriToDid(uri)
+    const actor = state.actors?.get(did)
+    if (!actor || this.actorIsTakendown(did, state)) {
+      // actor may not be present when takedowns are eagerly applied during hydration.
+      // so it's important to _try_ to hydrate the actor for records checked this way.
+      return
+    }
+    return uri
+  }
+
+  viewerSeesNeedsReview(
+    { did, uri }: { did?: string; uri?: string },
+    state: HydrationState,
+  ): boolean {
+    const { labels, profileViewers, ctx } = state
+    did = did || (uri && uriToDid(uri))
+    if (!did) {
+      return true
+    }
+    if (
+      labels?.get(did)?.needsReview ||
+      (uri && labels?.get(uri)?.needsReview)
+    ) {
+      // content marked as needs review
+      return ctx?.viewer === did || !!profileViewers?.get(did)?.following
+    }
+    return true
   }
 
   replyIsHiddenByThreadgate(
@@ -132,13 +249,14 @@ export class Views {
   profileDetailed(
     did: string,
     state: HydrationState,
-  ): ProfileViewDetailed | undefined {
+  ): Un$Typed<ProfileViewDetailed> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
     const baseView = this.profile(did, state)
     if (!baseView) return
     const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
+
     return {
       ...baseView,
       viewer: baseView.viewer
@@ -173,8 +291,10 @@ export class Views {
       pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
     }
   }
-
-  profile(did: string, state: HydrationState): ProfileView | undefined {
+  profile(
+    did: string,
+    state: HydrationState,
+  ): Un$Typed<ProfileView> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
     const basicView = this.profileBasic(did, state)
@@ -182,14 +302,20 @@ export class Views {
     return {
       ...basicView,
       description: actor.profile?.description || undefined,
-      indexedAt: actor.sortedAt?.toISOString(),
+      indexedAt:
+        actor.indexedAt && actor.sortedAt
+          ? this.indexedAt({
+              sortedAt: actor.sortedAt,
+              indexedAt: actor.indexedAt,
+            }).toISOString()
+          : undefined,
     }
   }
 
   profileBasic(
     did: string,
     state: HydrationState,
-  ): ProfileViewBasic | undefined {
+  ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
     const profileUri = AtUri.make(
@@ -232,6 +358,8 @@ export class Views {
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
+      verification: this.verification(did, state),
+      status: this.status(did, state),
     }
   }
 
@@ -255,31 +383,32 @@ export class Views {
     }
   }
 
-  profileViewer(
-    did: string,
-    state: HydrationState,
-  ): ProfileViewerState | undefined {
+  profileViewer(did: string, state: HydrationState): ProfileViewer | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
-    const blockedByUri = viewer.blockedBy || viewer.blockedByList
-    const blockingUri = viewer.blocking || viewer.blockingByList
+    const blockedByList = this.blockedByList(viewer, state)
+    const blockedByUri = viewer.blockedBy || blockedByList
+    const blockingByList = this.blockingByList(viewer, state)
+    const blockingUri = viewer.blocking || blockingByList
     const block = !!blockedByUri || !!blockingUri
+    const mutedByList = this.mutedByList(viewer, state)
     return {
-      muted: viewer.muted || !!viewer.mutedByList,
-      mutedByList: viewer.mutedByList
-        ? this.listBasic(viewer.mutedByList, state)
-        : undefined,
+      muted: !!(viewer.muted || mutedByList),
+      mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
-      blockingByList: viewer.blockingByList
-        ? this.listBasic(viewer.blockingByList, state)
+      blockingByList: blockingByList
+        ? this.listBasic(blockingByList, state)
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
     }
   }
 
-  knownFollowers(did: string, state: HydrationState) {
+  knownFollowers(
+    did: string,
+    state: HydrationState,
+  ): KnownFollowers | undefined {
     const knownFollowers = state.knownFollowers?.get(did)
     if (!knownFollowers) return
     const blocks = state.bidirectionalBlocks?.get(did)
@@ -287,7 +416,7 @@ export class Views {
       if (this.viewerBlockExists(followerDid, state)) {
         return undefined
       }
-      if (blocks?.get(followerDid) === true) {
+      if (blocks?.get(followerDid)) {
         return undefined
       }
       if (this.actorIsNoHosted(followerDid, state)) {
@@ -299,14 +428,103 @@ export class Views {
     return { count: knownFollowers.count, followers }
   }
 
+  verification(
+    did: string,
+    state: HydrationState,
+  ): VerificationState | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor) return
+
+    const isImpersonation = state.labels?.get(did)?.isImpersonation
+
+    const verifications: VerificationView[] = actor.verifications.map(
+      ({ issuer, uri, displayName, handle, createdAt }) => {
+        // @NOTE: We don't factor-in impersonation when evaluating the validity of each verification,
+        // only in the overall profile verification validity.
+        const isValid =
+          !!displayName &&
+          displayName === actor.profile?.displayName &&
+          !!handle &&
+          handle === actor.handle
+
+        return {
+          issuer,
+          uri,
+          isValid,
+          createdAt,
+        }
+      },
+    )
+    const hasValidVerification = verifications.some((v) => v.isValid)
+
+    const verifiedStatus = verifications.length
+      ? hasValidVerification && !isImpersonation
+        ? 'valid'
+        : 'invalid'
+      : 'none'
+    const trustedVerifierStatus = actor.trustedVerifier
+      ? isImpersonation
+        ? 'invalid'
+        : 'valid'
+      : 'none'
+
+    if (
+      verifications.length === 0 &&
+      verifiedStatus === 'none' &&
+      trustedVerifierStatus === 'none'
+    ) {
+      return undefined
+    }
+
+    return {
+      verifications,
+      verifiedStatus,
+      trustedVerifierStatus,
+    }
+  }
+
+  status(did: string, state: HydrationState): StatusView | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor?.status) return
+
+    const { status } = actor
+    const { record, sortedAt } = status
+
+    const minDuration = 5 * MINUTE
+    const maxDuration = 4 * HOUR
+
+    const expiresAtMs = record.durationMinutes
+      ? sortedAt.getTime() +
+        Math.max(
+          Math.min(record.durationMinutes * MINUTE, maxDuration),
+          minDuration,
+        )
+      : undefined
+    const expiresAt = expiresAtMs
+      ? new Date(expiresAtMs).toISOString()
+      : undefined
+
+    const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
+
+    return {
+      record: record,
+      status: record.status,
+      embed: isExternalEmbed(record.embed)
+        ? this.externalEmbed(did, record.embed)
+        : undefined,
+      expiresAt,
+      isActive,
+    }
+  }
+
   blockedProfileViewer(
     did: string,
     state: HydrationState,
-  ): ProfileViewerState | undefined {
+  ): ProfileViewer | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
-    const blockedByUri = viewer.blockedBy || viewer.blockedByList
-    const blockingUri = viewer.blocking || viewer.blockingByList
+    const blockedByUri = viewer.blockedBy || this.blockedByList(viewer, state)
+    const blockingUri = viewer.blocking || this.blockingByList(viewer, state)
     return {
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
@@ -316,7 +534,7 @@ export class Views {
   // Graph
   // ------------
 
-  list(uri: string, state: HydrationState): ListView | undefined {
+  list(uri: string, state: HydrationState): Un$Typed<ListView> | undefined {
     const creatorDid = creatorFromUri(uri)
     const list = state.lists?.get(uri)
     if (!list) return
@@ -330,11 +548,14 @@ export class Views {
       creator,
       description: list.record.description,
       descriptionFacets: list.record.descriptionFacets,
-      indexedAt: list.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(list).toISOString(),
     }
   }
 
-  listBasic(uri: string, state: HydrationState): ListViewBasic | undefined {
+  listBasic(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<ListViewBasic> | undefined {
     const list = state.lists?.get(uri)
     if (!list) {
       return undefined
@@ -356,7 +577,7 @@ export class Views {
           )
         : undefined,
       listItemCount: listAgg?.listItems ?? 0,
-      indexedAt: list.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(list).toISOString(),
       labels,
       viewer: listViewer
         ? {
@@ -370,7 +591,7 @@ export class Views {
   starterPackBasic(
     uri: string,
     state: HydrationState,
-  ): StarterPackViewBasic | undefined {
+  ): Un$Typed<StarterPackViewBasic> | undefined {
     const sp = state.starterPacks?.get(uri)
     if (!sp) return
     const parsedUri = new AtUri(uri)
@@ -386,11 +607,14 @@ export class Views {
       joinedAllTimeCount: agg?.joinedAllTime ?? 0,
       joinedWeekCount: agg?.joinedWeek ?? 0,
       labels,
-      indexedAt: sp.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(sp).toISOString(),
     }
   }
 
-  starterPack(uri: string, state: HydrationState): StarterPackView | undefined {
+  starterPack(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<StarterPackView> | undefined {
     const sp = state.starterPacks?.get(uri)
     const basicView = this.starterPackBasic(uri, state)
     if (!sp || !basicView) return
@@ -417,14 +641,39 @@ export class Views {
   // Labels
   // ------------
 
-  selfLabels(details: {
+  selfLabels({
+    uri,
+    cid,
+    record,
+  }: {
     uri?: string
     cid?: string
-    record?: Record<string, unknown>
+    record?:
+      | PostRecord
+      | LikeRecord
+      | RepostRecord
+      | FollowRecord
+      | ProfileRecord
+      | LabelerRecord
+      | VerificationRecord
+      | NotificationRecordDeleted
   }): Label[] {
-    const { uri, cid, record } = details
     if (!uri || !cid || !record) return []
-    if (!isSelfLabels(record.labels)) return []
+
+    // Only these have a "labels" property:
+    if (
+      !isPostRecord(record) &&
+      !isProfileRecord(record) &&
+      !isLabelerRecord(record)
+    ) {
+      return []
+    }
+
+    // Ignore if no labels defines
+    if (!isSelfLabels(record.labels) || !record.labels.values.length) {
+      return []
+    }
+
     const src = creatorFromUri(uri) // record creator
     const cts =
       typeof record.createdAt === 'string'
@@ -435,7 +684,10 @@ export class Views {
     })
   }
 
-  labeler(did: string, state: HydrationState): LabelerView | undefined {
+  labeler(
+    did: string,
+    state: HydrationState,
+  ): Un$Typed<LabelerView> | undefined {
     const labeler = state.labelers?.get(did)
     if (!labeler) return
     const creator = this.profile(did, state)
@@ -463,7 +715,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: labeler.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(labeler).toISOString(),
       labels,
     }
   }
@@ -471,15 +723,18 @@ export class Views {
   labelerDetailed(
     did: string,
     state: HydrationState,
-  ): LabelerViewDetailed | undefined {
+  ): Un$Typed<LabelerViewDetailed> | undefined {
     const baseView = this.labeler(did, state)
     if (!baseView) return
-    const record = state.labelers?.get(did)
-    if (!record) return
+    const labeler = state.labelers?.get(did)
+    if (!labeler) return
 
     return {
       ...baseView,
-      policies: record.record.policies,
+      policies: labeler.record.policies,
+      reasonTypes: labeler.record.reasonTypes,
+      subjectTypes: labeler.record.subjectTypes,
+      subjectCollections: labeler.record.subjectCollections,
     }
   }
 
@@ -519,7 +774,10 @@ export class Views {
     }
   }
 
-  feedGenerator(uri: string, state: HydrationState): GeneratorView | undefined {
+  feedGenerator(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<GeneratorView> | undefined {
     const feedgen = state.feedgens?.get(uri)
     if (!feedgen) return
     const creatorDid = creatorFromUri(uri)
@@ -551,11 +809,15 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: feedgen.sortedAt.toISOString(),
+      contentMode: feedgen.record.contentMode,
+      indexedAt: this.indexedAt(feedgen).toISOString(),
     }
   }
 
-  threadgate(uri: string, state: HydrationState): ThreadgateView | undefined {
+  threadgate(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<ThreadgateView> | undefined {
     const gate = state.threadgates?.get(uri)
     if (!gate) return
     return {
@@ -569,7 +831,11 @@ export class Views {
     }
   }
 
-  post(uri: string, state: HydrationState, depth = 0): PostView | undefined {
+  post(
+    uri: string,
+    state: HydrationState,
+    depth = 0,
+  ): Un$Typed<PostView> | undefined {
     const post = state.posts?.get(uri)
     if (!post) return
     const parsedUri = new AtUri(uri)
@@ -600,7 +866,7 @@ export class Views {
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
       quoteCount: aggs?.quotes ?? 0,
-      indexedAt: post.sortedAt.toISOString(),
+      indexedAt: this.indexedAt(post).toISOString(),
       viewer: viewer
         ? {
             repost: viewer.repost,
@@ -621,16 +887,16 @@ export class Views {
   feedViewPost(
     item: FeedItem,
     state: HydrationState,
-  ): FeedViewPost | undefined {
+  ): Un$Typed<FeedViewPost> | undefined {
     const postInfo = state.posts?.get(item.post.uri)
-    let reason: ReasonRepost | ReasonPin | undefined
+    let reason: $Typed<ReasonRepost> | $Typed<ReasonPin> | undefined
     if (item.authorPinned) {
       reason = this.reasonPin()
     } else if (item.repost) {
       const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
       if (repost.record.subject.uri !== item.post.uri) return
-      reason = this.reasonRepost(creatorFromUri(item.repost.uri), repost, state)
+      reason = this.reasonRepost(item.repost.uri, repost, state)
       if (!reason) return
     }
     const post = this.post(item.post.uri, state)
@@ -645,7 +911,7 @@ export class Views {
     }
   }
 
-  replyRef(uri: string, state: HydrationState): ReplyRef | undefined {
+  replyRef(uri: string, state: HydrationState): Un$Typed<ReplyRef> | undefined {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
@@ -663,8 +929,13 @@ export class Views {
       }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
-    if (isPostRecord(parent.record) && parent.record.reply) {
+    if (
+      isPostView(parent) &&
+      isPostRecord(parent.record) &&
+      parent.record.reply
+    ) {
       grandparentAuthor = this.profileBasic(
+        // @ts-expect-error isValidPostRecord(parent.record) should be used but the "parent" is not IPDL decoded
         creatorFromUri(parent.record.reply.parent.uri),
         state,
       )
@@ -676,7 +947,7 @@ export class Views {
     }
   }
 
-  maybePost(uri: string, state: HydrationState): MaybePostView {
+  maybePost(uri: string, state: HydrationState): $Typed<MaybePostView> {
     const post = this.post(uri, state)
     if (!post) {
       return this.notFoundPost(uri)
@@ -685,8 +956,8 @@ export class Views {
       return this.blockedPost(uri, post.author.did, state)
     }
     return {
-      $type: 'app.bsky.feed.defs#postView',
       ...post,
+      $type: 'app.bsky.feed.defs#postView',
     }
   }
 
@@ -694,7 +965,7 @@ export class Views {
     uri: string,
     authorDid: string,
     state: HydrationState,
-  ): BlockedPost {
+  ): $Typed<BlockedPost> {
     return {
       $type: 'app.bsky.feed.defs#blockedPost',
       uri,
@@ -706,7 +977,7 @@ export class Views {
     }
   }
 
-  notFoundPost(uri: string): NotFoundPost {
+  notFoundPost(uri: string): $Typed<NotFoundPost> {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri,
@@ -715,20 +986,23 @@ export class Views {
   }
 
   reasonRepost(
-    creatorDid: string,
+    uri: string,
     repost: Repost,
     state: HydrationState,
-  ): ReasonRepost | undefined {
+  ): $Typed<ReasonRepost> | undefined {
+    const creatorDid = creatorFromUri(uri)
     const creator = this.profileBasic(creatorDid, state)
     if (!creator) return
     return {
       $type: 'app.bsky.feed.defs#reasonRepost',
       by: creator,
-      indexedAt: repost.sortedAt.toISOString(),
+      uri,
+      cid: repost.cid,
+      indexedAt: this.indexedAt(repost).toISOString(),
     }
   }
 
-  reasonPin() {
+  reasonPin(): $Typed<ReasonPin> {
     return {
       $type: 'app.bsky.feed.defs#reasonPin',
     }
@@ -741,7 +1015,7 @@ export class Views {
     skele: { anchor: string; uris: string[] },
     state: HydrationState,
     opts: { height: number; depth: number },
-  ): ThreadViewPost | NotFoundPost | BlockedPost {
+  ): $Typed<ThreadViewPost> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
     const { anchor, uris } = skele
     const post = this.post(anchor, state)
     const postInfo = state.posts?.get(anchor)
@@ -778,6 +1052,9 @@ export class Views {
             opts.depth,
           )
         : undefined,
+      threadContext: {
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -786,7 +1063,11 @@ export class Views {
     rootUri: string,
     state: HydrationState,
     height: number,
-  ): ThreadViewPost | NotFoundPost | BlockedPost | undefined {
+  ):
+    | $Typed<ThreadViewPost>
+    | $Typed<NotFoundPost>
+    | $Typed<BlockedPost>
+    | undefined {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
@@ -807,6 +1088,9 @@ export class Views {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
+      threadContext: {
+        rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+      },
     }
   }
 
@@ -816,7 +1100,7 @@ export class Views {
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
-  ): (ThreadViewPost | BlockedPost)[] | undefined {
+  ): ($Typed<ThreadViewPost> | $Typed<BlockedPost>)[] | undefined {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
@@ -838,6 +1122,9 @@ export class Views {
       if (this.viewerBlockExists(post.author.did, state)) {
         return this.blockedPost(uri, post.author.did, state)
       }
+      if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
+        return undefined
+      }
       return {
         $type: 'app.bsky.feed.defs#threadViewPost',
         post,
@@ -848,8 +1135,769 @@ export class Views {
           state,
           depth - 1,
         ),
+        threadContext: {
+          rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
+        },
       }
     })
+  }
+
+  // Threads V2
+  // ------------
+
+  threadV2(
+    skeleton: { anchor: string; uris: string[] },
+    state: HydrationState,
+    {
+      above,
+      below,
+      branchingFactor,
+      prioritizeFollowedUsers,
+      sort,
+    }: {
+      above: number
+      below: number
+      branchingFactor: number
+      prioritizeFollowedUsers: boolean
+      sort: GetPostThreadV2QueryParams['sort']
+    },
+  ): { hasOtherReplies: boolean; thread: ThreadItem[] } {
+    const { anchor: anchorUri, uris } = skeleton
+
+    // Not found.
+    const postView = this.post(anchorUri, state)
+    const post = state.posts?.get(anchorUri)
+    if (!post || !postView) {
+      return {
+        hasOtherReplies: false,
+        thread: [
+          this.threadV2ItemNotFound({
+            uri: anchorUri,
+            depth: 0,
+          }),
+        ],
+      }
+    }
+
+    // Blocked (only 1p for anchor).
+    if (this.viewerBlockExists(postView.author.did, state)) {
+      return {
+        hasOtherReplies: false,
+        thread: [
+          this.threadV2ItemBlocked({
+            uri: anchorUri,
+            depth: 0,
+            authorDid: postView.author.did,
+            state,
+          }),
+        ],
+      }
+    }
+
+    const childrenByParentUri = this.groupThreadChildrenByParent(
+      anchorUri,
+      uris,
+      state,
+    )
+    const rootUri = getRootUri(anchorUri, post)
+    const opDid = uriToDid(rootUri)
+    const authorDid = postView.author.did
+    const isOPPost = authorDid === opDid
+    const anchorViolatesThreadGate = post.violatesThreadGate
+
+    // Builds the parent tree, and whether it is a contiguous OP thread.
+    const parentTree = !anchorViolatesThreadGate
+      ? this.threadV2Parent(
+          {
+            childUri: anchorUri,
+            opDid,
+            rootUri,
+
+            above,
+            depth: -1,
+          },
+          state,
+        )
+      : undefined
+
+    const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
+      parentTree ?? { tree: undefined, isOPThread: false }
+
+    const isOPThread = parent
+      ? isOPThreadFromRootToParent && isOPPost
+      : isOPPost
+
+    const anchorDepth = 0 // The depth of the anchor post is always 0.
+    let anchorTree: ThreadTree
+    let hasOtherReplies = false
+
+    if (this.noUnauthenticatedPost(state, postView)) {
+      anchorTree = {
+        type: 'noUnauthenticated',
+        item: this.threadV2ItemNoUnauthenticated({
+          uri: anchorUri,
+          depth: anchorDepth,
+        }),
+        parent,
+      }
+    } else {
+      const { replies, hasOtherReplies: hasOtherRepliesShadow } =
+        !anchorViolatesThreadGate
+          ? this.threadV2Replies(
+              {
+                parentUri: anchorUri,
+                isOPThread,
+                opDid,
+                rootUri,
+                childrenByParentUri,
+                below,
+                depth: 1,
+                branchingFactor,
+                prioritizeFollowedUsers,
+              },
+              state,
+            )
+          : { replies: undefined, hasOtherReplies: false }
+      hasOtherReplies = hasOtherRepliesShadow
+
+      anchorTree = {
+        type: 'post',
+        item: this.threadV2ItemPost({
+          depth: anchorDepth,
+          isOPThread,
+          postView,
+          repliesAllowance: Infinity, // While we don't have pagination.
+          uri: anchorUri,
+        }),
+        tags: post.tags,
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+        parent,
+        replies,
+      }
+    }
+
+    const thread = sortTrimFlattenThreadTree(anchorTree, {
+      opDid,
+      branchingFactor,
+      sort,
+      prioritizeFollowedUsers,
+      viewer: state.ctx?.viewer ?? null,
+      threadTagsBumpDown: this.threadTagsBumpDown,
+      threadTagsHide: this.threadTagsHide,
+    })
+
+    return {
+      hasOtherReplies,
+      thread,
+    }
+  }
+
+  private threadV2Parent(
+    {
+      childUri,
+      opDid,
+      rootUri,
+      above,
+      depth,
+    }: {
+      childUri: string
+      opDid: string
+      rootUri: string
+      above: number
+      depth: number
+    },
+    state: HydrationState,
+  ): { tree: ThreadTreeVisible; isOPThread: boolean } | undefined {
+    // Reached the `above` limit.
+    if (Math.abs(depth) > above) {
+      return undefined
+    }
+
+    // Not found.
+    const uri = state.posts?.get(childUri)?.record.reply?.parent.uri
+    if (!uri) {
+      return undefined
+    }
+    const postView = this.post(uri, state)
+    const post = state.posts?.get(uri)
+    if (!post || !postView) {
+      return {
+        tree: {
+          type: 'notFound',
+          item: this.threadV2ItemNotFound({ uri, depth }),
+        },
+        isOPThread: false,
+      }
+    }
+    if (rootUri !== getRootUri(uri, post)) {
+      // Outside thread boundary.
+      return undefined
+    }
+
+    // Blocked (1p and 3p for parent).
+    const authorDid = postView.author.did
+    const has1pBlock = this.viewerBlockExists(authorDid, state)
+    const has3pBlock =
+      !state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.parent
+    if (has1pBlock || has3pBlock) {
+      return {
+        tree: {
+          type: 'blocked',
+          item: this.threadV2ItemBlocked({
+            uri,
+            depth,
+            authorDid,
+            state,
+          }),
+        },
+        isOPThread: false,
+      }
+    }
+
+    // Recurse up.
+    const parentTree = this.threadV2Parent(
+      {
+        childUri: uri,
+        opDid,
+        rootUri,
+        above,
+        depth: depth - 1,
+      },
+      state,
+    )
+    const { tree: parent, isOPThread: isOPThreadFromRootToParent } =
+      parentTree ?? { tree: undefined, isOPThread: false }
+
+    const isOPPost = authorDid === opDid
+    const isOPThread = parent
+      ? isOPThreadFromRootToParent && isOPPost
+      : isOPPost
+
+    if (this.noUnauthenticatedPost(state, postView)) {
+      return {
+        tree: {
+          type: 'noUnauthenticated',
+          item: this.threadV2ItemNoUnauthenticated({
+            uri,
+            depth,
+          }),
+          parent,
+        },
+        isOPThread,
+      }
+    }
+
+    const parentUri = post.record.reply?.parent.uri
+    const hasMoreParents = !!parentUri && !parent
+
+    return {
+      tree: {
+        type: 'post',
+        item: this.threadV2ItemPost({
+          depth,
+          isOPThread,
+          moreParents: hasMoreParents,
+          postView,
+          uri,
+        }),
+        tags: post.tags,
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+        parent,
+        replies: undefined,
+      },
+      isOPThread,
+    }
+  }
+
+  private threadV2Replies(
+    {
+      parentUri,
+      isOPThread: isOPThreadFromRootToParent,
+      opDid,
+      rootUri,
+      childrenByParentUri,
+      below,
+      depth,
+      branchingFactor,
+      prioritizeFollowedUsers,
+    }: {
+      parentUri: string
+      isOPThread: boolean
+      opDid: string
+      rootUri: string
+      childrenByParentUri: Record<string, string[]>
+      below: number
+      depth: number
+      branchingFactor: number
+      prioritizeFollowedUsers: boolean
+    },
+    state: HydrationState,
+  ): { replies: ThreadTreeVisible[] | undefined; hasOtherReplies: boolean } {
+    // Reached the `below` limit.
+    if (depth > below) {
+      return { replies: undefined, hasOtherReplies: false }
+    }
+
+    const childrenUris = childrenByParentUri[parentUri] ?? []
+    let hasOtherReplies = false
+    const replies = mapDefined(childrenUris, (uri) => {
+      const replyInclusion = this.checkThreadV2ReplyInclusion({
+        uri,
+        rootUri,
+        state,
+      })
+      if (!replyInclusion) {
+        return undefined
+      }
+      const { authorDid, post, postView } = replyInclusion
+
+      // Hidden.
+      const { isOther } = this.isOtherThreadPost(
+        { post, postView, prioritizeFollowedUsers, rootUri, uri },
+        state,
+      )
+      if (isOther) {
+        // Only care about anchor replies
+        if (depth === 1) {
+          hasOtherReplies = true
+        }
+        return undefined
+      }
+
+      // Recurse down.
+      const isOPThread = isOPThreadFromRootToParent && authorDid === opDid
+      const { replies: nestedReplies } = this.threadV2Replies(
+        {
+          parentUri: uri,
+          isOPThread,
+          opDid,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: depth + 1,
+          branchingFactor,
+          prioritizeFollowedUsers,
+        },
+        state,
+      )
+
+      const reachedDepth = depth === below
+      const repliesAllowance = reachedDepth ? 0 : branchingFactor
+
+      const tree: ThreadTree = {
+        type: 'post',
+        item: this.threadV2ItemPost({
+          depth,
+          isOPThread,
+          postView,
+          repliesAllowance,
+          uri,
+        }),
+        tags: post.tags,
+        hasOPLike: !!state.threadContexts?.get(postView.uri)?.like,
+        parent: undefined,
+        replies: nestedReplies,
+      }
+
+      return tree
+    })
+
+    return {
+      replies,
+      hasOtherReplies,
+    }
+  }
+
+  private threadV2ItemPost({
+    depth,
+    isOPThread,
+    moreParents,
+    postView,
+    repliesAllowance,
+    uri,
+  }: {
+    depth: number
+    isOPThread: boolean
+    moreParents?: boolean
+    postView: PostView
+    repliesAllowance?: number
+    uri: string
+  }): ThreadItemValuePost {
+    const moreReplies =
+      repliesAllowance === undefined
+        ? 0
+        : Math.max((postView.replyCount ?? 0) - repliesAllowance, 0)
+
+    return {
+      uri,
+      depth,
+      value: {
+        $type: 'app.bsky.unspecced.defs#threadItemPost',
+        post: postView,
+        moreParents: moreParents ?? false,
+        moreReplies,
+        opThread: isOPThread,
+        hiddenByThreadgate: false, // Hidden posts are handled by threadOtherV2
+        mutedByViewer: false, // Hidden posts are handled by threadOtherV2
+      },
+    }
+  }
+
+  private threadV2ItemNoUnauthenticated({
+    uri,
+    depth,
+  }: {
+    uri: string
+    depth: number
+  }): ThreadItemValueNoUnauthenticated {
+    return {
+      uri,
+      depth,
+      value: {
+        $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
+      },
+    }
+  }
+
+  private threadV2ItemNotFound({
+    uri,
+    depth,
+  }: {
+    uri: string
+    depth: number
+  }): ThreadItemValueNotFound {
+    return {
+      uri,
+      depth,
+      value: {
+        $type: 'app.bsky.unspecced.defs#threadItemNotFound',
+      },
+    }
+  }
+
+  private threadV2ItemBlocked({
+    uri,
+    depth,
+    authorDid,
+    state,
+  }: {
+    uri: string
+    depth: number
+    authorDid: string
+    state: HydrationState
+  }): ThreadItemValueBlocked {
+    return {
+      uri,
+      depth,
+      value: {
+        $type: 'app.bsky.unspecced.defs#threadItemBlocked',
+        author: {
+          did: authorDid,
+          viewer: this.blockedProfileViewer(authorDid, state),
+        },
+      },
+    }
+  }
+
+  threadOtherV2(
+    skeleton: { anchor: string; uris: string[] },
+    state: HydrationState,
+    {
+      below,
+      branchingFactor,
+      prioritizeFollowedUsers,
+    }: {
+      below: number
+      branchingFactor: number
+      prioritizeFollowedUsers: boolean
+    },
+  ): ThreadOtherItem[] {
+    const { anchor: anchorUri, uris } = skeleton
+
+    // Not found.
+    const postView = this.post(anchorUri, state)
+    const post = state.posts?.get(anchorUri)
+    if (!post || !postView) {
+      return []
+    }
+
+    // Blocked (only 1p for anchor).
+    if (this.viewerBlockExists(postView.author.did, state)) {
+      return []
+    }
+
+    const childrenByParentUri = this.groupThreadChildrenByParent(
+      anchorUri,
+      uris,
+      state,
+    )
+    const rootUri = getRootUri(anchorUri, post)
+    const opDid = uriToDid(rootUri)
+
+    const anchorTree: ThreadOtherAnchorPostNode = {
+      type: 'hiddenAnchor',
+      item: this.threadOtherV2ItemPostAnchor({ depth: 0, uri: anchorUri }),
+      replies: this.threadOtherV2Replies(
+        {
+          parentUri: anchorUri,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: 1,
+          prioritizeFollowedUsers,
+        },
+        state,
+      ),
+    }
+
+    return sortTrimFlattenThreadTree(anchorTree, {
+      opDid,
+      branchingFactor,
+      prioritizeFollowedUsers: false,
+      viewer: state.ctx?.viewer ?? null,
+      threadTagsBumpDown: this.threadTagsBumpDown,
+      threadTagsHide: this.threadTagsHide,
+    })
+  }
+
+  private threadOtherV2Replies(
+    {
+      parentUri,
+      rootUri,
+      childrenByParentUri,
+      below,
+      depth,
+      prioritizeFollowedUsers,
+    }: {
+      parentUri: string
+      rootUri: string
+      childrenByParentUri: Record<string, string[]>
+      below: number
+      depth: number
+      prioritizeFollowedUsers: boolean
+    },
+    state: HydrationState,
+  ): ThreadOtherPostNode[] | undefined {
+    // Reached the `below` limit.
+    if (depth > below) {
+      return undefined
+    }
+
+    const childrenUris = childrenByParentUri[parentUri] ?? []
+    return mapDefined(childrenUris, (uri) => {
+      const replyInclusion = this.checkThreadV2ReplyInclusion({
+        uri,
+        rootUri,
+        state,
+      })
+      if (!replyInclusion) {
+        return undefined
+      }
+      const { post, postView } = replyInclusion
+
+      // Other posts to pull out
+      const { isOther, hiddenByThreadgate, mutedByViewer } =
+        this.isOtherThreadPost(
+          { post, postView, rootUri, prioritizeFollowedUsers, uri },
+          state,
+        )
+      if (isOther) {
+        // Only show hidden anchor replies, not all hidden.
+        if (depth > 1) {
+          return undefined
+        }
+      } else if (depth === 1) {
+        // Don't include non-hidden anchor replies.
+        return undefined
+      }
+
+      // Recurse down.
+      const replies = this.threadOtherV2Replies(
+        {
+          parentUri: uri,
+          rootUri,
+          childrenByParentUri,
+          below,
+          depth: depth + 1,
+          prioritizeFollowedUsers,
+        },
+        state,
+      )
+
+      const item = this.threadOtherV2ItemPost({
+        depth,
+        hiddenByThreadgate,
+        mutedByViewer,
+        postView,
+        uri,
+      })
+
+      const tree: ThreadOtherPostNode = {
+        type: 'hiddenPost',
+        item: item,
+        tags: post.tags,
+        replies,
+      }
+
+      return tree
+    })
+  }
+
+  private threadOtherV2ItemPostAnchor({
+    depth,
+    uri,
+  }: {
+    depth: number
+    uri: string
+  }): ThreadOtherAnchorPostNode['item'] {
+    return {
+      uri,
+      depth,
+      // In hidden replies, the anchor value is undefined, so it doesn't include the anchor in the result.
+      // This is helpful so we can use the same internal structure for hidden and non-hidden, while omitting anchor for hidden.
+      value: undefined,
+    }
+  }
+
+  private threadOtherV2ItemPost({
+    depth,
+    hiddenByThreadgate,
+    mutedByViewer,
+    postView,
+    uri,
+  }: {
+    depth: number
+    hiddenByThreadgate: boolean
+    mutedByViewer: boolean
+    postView: PostView
+    uri: string
+  }): ThreadOtherItemValuePost {
+    const base = this.threadOtherV2ItemPostAnchor({ depth, uri })
+    return {
+      ...base,
+      value: {
+        $type: 'app.bsky.unspecced.defs#threadItemPost',
+        post: postView,
+        hiddenByThreadgate,
+        mutedByViewer,
+        moreParents: false, // "Other" replies don't have parents.
+        moreReplies: 0, // "Other" replies don't have replies hydrated.
+        opThread: false, // "Other" replies don't contain OP threads.
+      },
+    }
+  }
+
+  private checkThreadV2ReplyInclusion({
+    uri,
+    rootUri,
+    state,
+  }: {
+    uri: string
+    rootUri: string
+    state: HydrationState
+  }): {
+    authorDid: string
+    post: Post
+    postView: PostView
+  } | null {
+    // Not found.
+    const post = state.posts?.get(uri)
+    if (post?.violatesThreadGate) {
+      return null
+    }
+    const postView = this.post(uri, state)
+    if (!post || !postView) {
+      return null
+    }
+    const authorDid = postView.author.did
+    if (rootUri !== getRootUri(uri, post)) {
+      // outside thread boundary
+      return null
+    }
+
+    // Blocked (1p and 3p for replies).
+    const has1pBlock = this.viewerBlockExists(authorDid, state)
+    const has3pBlock =
+      !state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent
+    if (has1pBlock || has3pBlock) {
+      return null
+    }
+    if (!this.viewerSeesNeedsReview({ uri, did: authorDid }, state)) {
+      return null
+    }
+
+    // No unauthenticated.
+    if (this.noUnauthenticatedPost(state, postView)) {
+      return null
+    }
+
+    return { authorDid, post, postView }
+  }
+
+  private isOtherThreadPost(
+    {
+      post,
+      postView,
+      prioritizeFollowedUsers,
+      rootUri,
+      uri,
+    }: {
+      post: Post
+      postView: PostView
+      prioritizeFollowedUsers: boolean
+      rootUri: string
+      uri: string
+    },
+    state: HydrationState,
+  ): {
+    isOther: boolean
+    hiddenByTag: boolean
+    hiddenByThreadgate: boolean
+    mutedByViewer: boolean
+  } {
+    const opDid = creatorFromUri(rootUri)
+    const authorDid = creatorFromUri(uri)
+
+    const showBecauseFollowing =
+      prioritizeFollowedUsers && !!postView.author.viewer?.following
+    const hiddenByTag =
+      authorDid !== opDid &&
+      authorDid !== state.ctx?.viewer &&
+      !showBecauseFollowing &&
+      this.threadTagsHide.some((t) => post.tags.has(t))
+
+    const hiddenByThreadgate =
+      state.ctx?.viewer !== authorDid &&
+      this.replyIsHiddenByThreadgate(uri, rootUri, state)
+
+    const mutedByViewer = this.viewerMuteExists(authorDid, state)
+
+    return {
+      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer,
+      hiddenByTag,
+      hiddenByThreadgate,
+      mutedByViewer,
+    }
+  }
+
+  private groupThreadChildrenByParent(
+    anchorUri: string,
+    uris: string[],
+    state: HydrationState,
+  ): Record<string, string[]> {
+    // Groups children of each parent.
+    const includedPosts = new Set<string>([anchorUri])
+    const childrenByParentUri: Record<string, string[]> = {}
+    uris.forEach((uri) => {
+      const post = state.posts?.get(uri)
+      const parentUri = post?.record.reply?.parent.uri
+      if (!parentUri) return
+      if (includedPosts.has(uri)) return
+      includedPosts.add(uri)
+      childrenByParentUri[parentUri] ??= []
+      childrenByParentUri[parentUri].push(uri)
+    })
+    return childrenByParentUri
   }
 
   // Embeds
@@ -860,7 +1908,7 @@ export class Views {
     embed: Embed | { $type: string },
     state: HydrationState,
     depth: number,
-  ): EmbedView | undefined {
+  ): $Typed<EmbedView> | undefined {
     if (isImagesEmbed(embed)) {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isVideoEmbed(embed)) {
@@ -876,7 +1924,7 @@ export class Views {
     }
   }
 
-  imagesEmbed(did: string, embed: ImagesEmbed): ImagesEmbedView {
+  imagesEmbed(did: string, embed: ImagesEmbed): $Typed<ImagesEmbedView> {
     const imgViews = embed.images.map((img) => ({
       thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
@@ -897,7 +1945,7 @@ export class Views {
     }
   }
 
-  videoEmbed(did: string, embed: VideoEmbed): VideoEmbedView {
+  videoEmbed(did: string, embed: VideoEmbed): $Typed<VideoEmbedView> {
     const cid = cidFromBlobJson(embed.video)
     return {
       $type: 'app.bsky.embed.video#view',
@@ -909,7 +1957,7 @@ export class Views {
     }
   }
 
-  externalEmbed(did: string, embed: ExternalEmbed): ExternalEmbedView {
+  externalEmbed(did: string, embed: ExternalEmbed): $Typed<ExternalEmbedView> {
     const { uri, title, description, thumb } = embed.external
     return {
       $type: 'app.bsky.embed.external#view',
@@ -928,7 +1976,10 @@ export class Views {
     }
   }
 
-  embedNotFound(uri: string): { $type: string; record: EmbedNotFound } {
+  embedNotFound(uri: string): {
+    $type: 'app.bsky.embed.record#view'
+    record: $Typed<EmbedNotFound>
+  } {
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -939,7 +1990,10 @@ export class Views {
     }
   }
 
-  embedDetached(uri: string): { $type: string; record: EmbedDetached } {
+  embedDetached(uri: string): {
+    $type: 'app.bsky.embed.record#view'
+    record: $Typed<EmbedDetached>
+  } {
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -953,7 +2007,10 @@ export class Views {
   embedBlocked(
     uri: string,
     state: HydrationState,
-  ): { $type: string; record: EmbedBlocked } {
+  ): {
+    $type: 'app.bsky.embed.record#view'
+    record: $Typed<EmbedBlocked>
+  } {
     const creator = creatorFromUri(uri)
     return {
       $type: 'app.bsky.embed.record#view',
@@ -973,7 +2030,7 @@ export class Views {
     uri: string,
     state: HydrationState,
     depth: number,
-  ): PostEmbedView | undefined {
+  ): $Typed<PostEmbedView> | undefined {
     const postView = this.post(uri, state, depth)
     if (!postView) return
     return {
@@ -992,6 +2049,20 @@ export class Views {
     }
   }
 
+  recordEmbed(
+    postUri: string,
+    embed: RecordEmbed,
+    state: HydrationState,
+    depth: number,
+    withTypeTag: false,
+  ): RecordEmbedView
+  recordEmbed(
+    postUri: string,
+    embed: RecordEmbed,
+    state: HydrationState,
+    depth: number,
+    withTypeTag?: true,
+  ): $Typed<RecordEmbedView>
   recordEmbed(
     postUri: string,
     embed: RecordEmbed,
@@ -1025,35 +2096,43 @@ export class Views {
     } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.feed.defs#generatorView'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.feed.defs#generatorView' },
+        withTypeTag,
+      )
     } else if (parsedUri.collection === ids.AppBskyGraphList) {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.graph.defs#listView'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.graph.defs#listView' },
+        withTypeTag,
+      )
     } else if (parsedUri.collection === ids.AppBskyLabelerService) {
       const view = this.labeler(parsedUri.hostname, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.labeler.defs#labelerView'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.labeler.defs#labelerView' },
+        withTypeTag,
+      )
     } else if (parsedUri.collection === ids.AppBskyGraphStarterpack) {
       const view = this.starterPackBasic(uri, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.graph.defs#starterPackViewBasic'
-      return this.recordEmbedWrapper(view, withTypeTag)
+      return this.recordEmbedWrapper(
+        { ...view, $type: 'app.bsky.graph.defs#starterPackViewBasic' },
+        withTypeTag,
+      )
     }
     return this.embedNotFound(uri)
   }
 
-  private recordEmbedWrapper(
-    record: RecordEmbedViewInternal,
+  private recordEmbedWrapper<T extends $Typed<RecordEmbedViewInternal>>(
+    record: T,
     withTypeTag: boolean,
-  ): RecordEmbedView {
+  ) {
     return {
-      $type: withTypeTag ? 'app.bsky.embed.record#view' : undefined,
+      $type: withTypeTag ? ('app.bsky.embed.record#view' as const) : undefined,
       record,
-    }
+    } satisfies RecordEmbedView
   }
 
   recordWithMediaEmbed(
@@ -1061,9 +2140,12 @@ export class Views {
     embed: RecordWithMedia,
     state: HydrationState,
     depth: number,
-  ): RecordWithMediaView | undefined {
+  ): $Typed<RecordWithMediaView> | undefined {
     const creator = creatorFromUri(postUri)
-    let mediaEmbed: ImagesEmbedView | VideoEmbedView | ExternalEmbedView
+    let mediaEmbed:
+      | $Typed<ImagesEmbedView>
+      | $Typed<VideoEmbedView>
+      | $Typed<ExternalEmbedView>
     if (isImagesEmbed(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
     } else if (isVideoEmbed(embed.media)) {
@@ -1097,10 +2179,14 @@ export class Views {
     const ownerDid = creatorFromUri(rootUriStr)
     const {
       canReply,
+      allowFollower,
       allowFollowing,
       allowListUris = [],
     } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
     if (canReply) {
+      return false
+    }
+    if (allowFollower && state.profileViewers?.get(ownerDid)?.following) {
       return false
     }
     if (allowFollowing && state.profileViewers?.get(ownerDid)?.followedBy) {
@@ -1152,13 +2238,24 @@ export class Views {
     notif: Notification,
     lastSeenAt: string | undefined,
     state: HydrationState,
-  ): NotificationView | undefined {
+  ): Un$Typed<NotificationView> | undefined {
     if (!notif.timestamp || !notif.reason) return
     const uri = new AtUri(notif.uri)
     const authorDid = uri.hostname
     const author = this.profile(authorDid, state)
     if (!author) return
-    let recordInfo: RecordInfo<Record<string, unknown>> | null | undefined
+
+    let recordInfo:
+      | Post
+      | Like
+      | Repost
+      | Follow
+      | RecordInfo<ProfileRecord>
+      | Verification
+      | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
+      | undefined
+      | null
+
     if (uri.collection === ids.AppBskyFeedPost) {
       recordInfo = state.posts?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyFeedLike) {
@@ -1167,19 +2264,28 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyGraphFollow) {
       recordInfo = state.follows?.get(notif.uri)
+    } else if (uri.collection === ids.AppBskyGraphVerification) {
+      // When a verification record is removed, the record won't be found,
+      // both for the `verified` and `unverified` notifications.
+      recordInfo = state.verifications?.get(notif.uri) ?? {
+        record: notificationDeletedRecord,
+        cid: notificationDeletedRecordCid,
+      }
     } else if (uri.collection === ids.AppBskyActorProfile) {
       const actor = state.actors?.get(authorDid)
       recordInfo =
-        actor && actor.profile && actor.profileCid && actor.sortedAt
+        actor && actor.profile && actor.profileCid
           ? {
               record: actor.profile,
               cid: actor.profileCid,
-              sortedAt: actor.sortedAt,
+              sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
+              indexedAt: actor.indexedAt ?? new Date(0), // @NOTE will be present since profile record is present
               takedownRef: actor.profileTakedownRef,
             }
-          : null
+          : undefined
     }
     if (!recordInfo) return
+
     const labels = state.labels?.getBySubject(notif.uri) ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,
@@ -1201,6 +2307,11 @@ export class Views {
       indexedAt: notif.timestamp.toDate().toISOString(),
       labels: [...labels, ...selfLabels],
     }
+  }
+
+  indexedAt({ sortedAt, indexedAt }: { sortedAt: Date; indexedAt: Date }) {
+    if (!this.indexedAtEpoch) return sortedAt
+    return indexedAt && indexedAt > this.indexedAtEpoch ? indexedAt : sortedAt
   }
 }
 

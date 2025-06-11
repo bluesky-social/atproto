@@ -1,6 +1,7 @@
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import axios from 'axios'
+import { MINUTE } from '@atproto/common'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('label hydration', () => {
   let network: TestNetwork
@@ -11,6 +12,7 @@ describe('label hydration', () => {
   let bob: string
   let carol: string
   let labelerDid: string
+  let labeler2Did: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -23,6 +25,7 @@ describe('label hydration', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     labelerDid = network.bsky.ctx.cfg.labelsFromIssuerDids[0]
+    labeler2Did = network.bsky.ctx.cfg.labelsFromIssuerDids[1]
     await createLabel({ src: alice, uri: carol, cid: '', val: 'spam' })
     await createLabel({ src: bob, uri: carol, cid: '', val: 'impersonation' })
     await createLabel({
@@ -30,6 +33,20 @@ describe('label hydration', () => {
       uri: carol,
       cid: '',
       val: 'misleading',
+    })
+    await createLabel({
+      src: labeler2Did,
+      uri: carol,
+      cid: '',
+      val: 'expired',
+      exp: new Date(Date.now() - MINUTE).toISOString(),
+    })
+    await createLabel({
+      src: labeler2Did,
+      uri: carol,
+      cid: '',
+      val: 'not-expired',
+      exp: new Date(Date.now() + MINUTE).toISOString(),
     })
     await network.processAll()
   })
@@ -40,17 +57,33 @@ describe('label hydration', () => {
 
   it('hydrates labels based on a supplied labeler header', async () => {
     AtpAgent.configure({ appLabelers: [alice] })
-    pdsAgent.configureLabelers([])
+    pdsAgent.configureLabelers([labeler2Did])
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
       {
         headers: sc.getHeaders(bob),
       },
     )
-    expect(res.data.labels?.length).toBe(1)
-    expect(res.data.labels?.[0].src).toBe(alice)
-    expect(res.data.labels?.[0].val).toBe('spam')
-    expect(res.headers['atproto-content-labelers']).toEqual(`${alice};redact`)
+    expect(res.data.labels?.length).toBe(2)
+    assert(res.data.labels)
+
+    const sortedLabels = res.data.labels.sort((a, b) =>
+      a.src.localeCompare(b.src),
+    )
+    const sortedExpected = [
+      { src: labeler2Did, val: 'not-expired' },
+      { src: alice, val: 'spam' },
+    ].sort((a, b) => a.src.localeCompare(b.src))
+
+    expect(sortedLabels[0].src).toBe(sortedExpected[0].src)
+    expect(sortedLabels[0].val).toBe(sortedExpected[0].val)
+
+    expect(sortedLabels[1].src).toBe(sortedExpected[1].src)
+    expect(sortedLabels[1].val).toBe(sortedExpected[1].val)
+
+    expect(res.headers['atproto-content-labelers']).toEqual(
+      `${alice};redact,${labeler2Did}`,
+    )
   })
 
   it('hydrates labels based on multiple a supplied labelers', async () => {
@@ -74,22 +107,38 @@ describe('label hydration', () => {
     expect(res.data.labels?.find((l) => l.src === labelerDid)?.val).toEqual(
       'misleading',
     )
-    const labelerHeaderDids = res.headers['atproto-content-labelers'].split(',')
-    expect(labelerHeaderDids.sort()).toEqual(
+    const labelerHeaderDids = res.headers['atproto-content-labelers']
+      ?.split(',')
+      .sort()
+
+    expect(labelerHeaderDids).toEqual(
       [alice, `${bob};redact`, labelerDid].sort(),
     )
   })
 
   it('defaults to service labels when no labeler header is provided', async () => {
-    const res = await axios.get(
+    const res = await fetch(
       `${network.pds.url}/xrpc/app.bsky.actor.getProfile?actor=${carol}`,
       { headers: sc.getHeaders(bob) },
     )
-    expect(res.data.labels?.length).toBe(1)
-    expect(res.data.labels?.[0].src).toBe(labelerDid)
-    expect(res.data.labels?.[0].val).toBe('misleading')
+    const data = await res.json()
 
-    expect(res.headers['atproto-content-labelers']).toEqual(
+    expect(data.labels?.length).toBe(2)
+    assert(data.labels)
+
+    const sortedLabels = data.labels.sort((a, b) => a.src.localeCompare(b.src))
+    const sortedExpected = [
+      { src: labeler2Did, val: 'not-expired' },
+      { src: labelerDid, val: 'misleading' },
+    ].sort((a, b) => a.src.localeCompare(b.src))
+
+    expect(sortedLabels[0].src).toBe(sortedExpected[0].src)
+    expect(sortedLabels[0].val).toBe(sortedExpected[0].val)
+
+    expect(sortedLabels[1].src).toBe(sortedExpected[1].src)
+    expect(sortedLabels[1].val).toBe(sortedExpected[1].val)
+
+    expect(res.headers.get('atproto-content-labelers')).toEqual(
       network.bsky.ctx.cfg.labelsFromIssuerDids
         .map((did) => `${did};redact`)
         .join(','),
@@ -178,6 +227,7 @@ describe('label hydration', () => {
     uri: string
     cid: string
     val: string
+    exp?: string
   }) => {
     await network.bsky.db.db
       .insertInto('label')
@@ -186,6 +236,7 @@ describe('label hydration', () => {
         cid: opts.cid,
         val: opts.val,
         cts: new Date().toISOString(),
+        exp: opts.exp ?? null,
         neg: false,
         src: opts.src ?? labelerDid,
       })

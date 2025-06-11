@@ -116,5 +116,3 @@ export class MstWalker {
     }
   }
 }
-
-export default MstWalker

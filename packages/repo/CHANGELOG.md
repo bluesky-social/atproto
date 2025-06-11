@@ -1,5 +1,132 @@
 # @atproto/repo
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/common-web@0.4.2
+  - @atproto/lexicon@0.4.11
+  - @atproto/common@0.4.11
+  - @atproto/crypto@0.4.4
+
+## 0.8.0
+
+### Minor Changes
+
+- [#3672](https://github.com/bluesky-social/atproto/pull/3672) [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144) Thanks [@dholms](https://github.com/dholms)! - Rewrite CAR implementation
+
+### Patch Changes
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144), [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/common-web@0.4.1
+  - @atproto/common@0.4.10
+  - @atproto/lexicon@0.4.10
+  - @atproto/crypto@0.4.4
+
+## 0.7.3
+
+### Patch Changes
+
+- [#2519](https://github.com/bluesky-social/atproto/pull/2519) [`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f) Thanks [@dholms](https://github.com/dholms)! - Add revOverride in repo constructor
+
+- Updated dependencies [[`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f)]:
+  - @atproto/common@0.4.9
+  - @atproto/crypto@0.4.4
+
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.9
+
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.8
+
+## 0.7.0
+
+### Minor Changes
+
+- [#3449](https://github.com/bluesky-social/atproto/pull/3449) [`7e3678c08`](https://github.com/bluesky-social/atproto/commit/7e3678c089d2faa1a884a52a4fb80b8116c9854f) Thanks [@dholms](https://github.com/dholms)! - Updated subscribeRepo to include prev CIDs for operations and covering proofs for all ops.
+
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/lexicon@0.4.7
+
+## 0.6.4
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`8a30e0ed9`](https://github.com/bluesky-social/atproto/commit/8a30e0ed9239cb2037d54fb98e70e8b0cfbc3e39), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto/common-web@0.4.0
+  - @atproto/lexicon@0.4.6
+  - @atproto/common@0.4.8
+  - @atproto/crypto@0.4.4
+
+## 0.6.3
+
+### Patch Changes
+
+- Updated dependencies [[`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4)]:
+  - @atproto/common@0.4.7
+  - @atproto/crypto@0.4.3
+
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [[`1abfd74ec`](https://github.com/bluesky-social/atproto/commit/1abfd74ec7114e5d8e2411f7a4fa10bdce97e277)]:
+  - @atproto/crypto@0.4.3
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto/common-web@0.3.2
+  - @atproto/common@0.4.6
+  - @atproto/lexicon@0.4.5
+  - @atproto/crypto@0.4.2
+
+## 0.6.0
+
+### Minor Changes
+
+- [#3033](https://github.com/bluesky-social/atproto/pull/3033) [`c9848edaf`](https://github.com/bluesky-social/atproto/commit/c9848edaf0947727aa5a60e3c67eecda3f48d46a) Thanks [@dholms](https://github.com/dholms)! - Add relevant proof blocks to commit data
+
+### Patch Changes
+
+- Updated dependencies [[`588baae12`](https://github.com/bluesky-social/atproto/commit/588baae1212a3cba3bf0d95d2f268e80513fd9c4), [`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95)]:
+  - @atproto/common@0.4.5
+  - @atproto/lexicon@0.4.4
+  - @atproto/crypto@0.4.2
+
+## 0.5.5
+
+### Patch Changes
+
+- Updated dependencies [[`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d)]:
+  - @atproto/lexicon@0.4.3
+
+## 0.5.4
+
+### Patch Changes
+
+- Updated dependencies [[`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0)]:
+  - @atproto/crypto@0.4.2
+
 ## 0.5.3
 
 ### Patch Changes

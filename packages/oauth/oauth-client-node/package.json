@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-node",
-  "version": "0.2.0",
+  "version": "0.2.22",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the NodeJS",
   "keywords": [
@@ -23,6 +23,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=18.7.0"
   },
   "files": [
     "dist"

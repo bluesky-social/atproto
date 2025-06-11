@@ -1,5 +1,882 @@
 # @atproto/dev-env
 
+## 0.3.140
+
+### Patch Changes
+
+- Updated dependencies [[`a48671e73`](https://github.com/bluesky-social/atproto/commit/a48671e730681f692a88053e8f137bd9e2aed5f1)]:
+  - @atproto/ozone@0.1.118
+  - @atproto/bsky@0.0.157
+  - @atproto/api@0.15.14
+  - @atproto/pds@0.4.146
+
+## 0.3.139
+
+### Patch Changes
+
+- Updated dependencies [[`c6eb8a12e`](https://github.com/bluesky-social/atproto/commit/c6eb8a12e291c88fea79da447f9da8608d02300d), [`598fcb693`](https://github.com/bluesky-social/atproto/commit/598fcb693d154fe4222f84a3ad24ed3d0b19c58d)]:
+  - @atproto/bsky@0.0.156
+  - @atproto/api@0.15.13
+  - @atproto/pds@0.4.145
+  - @atproto/ozone@0.1.117
+
+## 0.3.138
+
+### Patch Changes
+
+- Updated dependencies [[`9214bd017`](https://github.com/bluesky-social/atproto/commit/9214bd01705381aed6b5bde2900d6dc5486b6e9f), [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05)]:
+  - @atproto/xrpc-server@0.7.19
+  - @atproto/pds@0.4.144
+  - @atproto/bsky@0.0.155
+  - @atproto/ozone@0.1.116
+  - @atproto/sync@0.1.24
+
+## 0.3.137
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.143
+  - @atproto/bsky@0.0.154
+  - @atproto/ozone@0.1.115
+
+## 0.3.136
+
+### Patch Changes
+
+- Updated dependencies [[`a5cd018bd`](https://github.com/bluesky-social/atproto/commit/a5cd018bd5f237221902ab1b6956b46233c92187)]:
+  - @atproto/bsync@0.0.20
+  - @atproto/bsky@0.0.154
+  - @atproto/api@0.15.12
+  - @atproto/pds@0.4.142
+  - @atproto/ozone@0.1.115
+
+## 0.3.135
+
+### Patch Changes
+
+- Updated dependencies [[`a978681fd`](https://github.com/bluesky-social/atproto/commit/a978681fde1c138a5298bae77e5dc36ce155f955), [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e)]:
+  - @atproto/api@0.15.11
+  - @atproto/pds@0.4.141
+  - @atproto/bsky@0.0.153
+  - @atproto/ozone@0.1.114
+
+## 0.3.134
+
+### Patch Changes
+
+- Updated dependencies [[`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9), [`1dae6c59a`](https://github.com/bluesky-social/atproto/commit/1dae6c59abe0e5aa4a7b7d0cc1dfee88f458d4b9)]:
+  - @atproto/api@0.15.10
+  - @atproto/bsky@0.0.152
+  - @atproto/ozone@0.1.113
+  - @atproto/pds@0.4.140
+
+## 0.3.133
+
+### Patch Changes
+
+- [#3882](https://github.com/bluesky-social/atproto/pull/3882) [`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159) Thanks [@mozzius](https://github.com/mozzius)! - add a "via" field to reposts and likes allowing a reference a repost, and then give a notification when a repost is liked or reposted.
+
+- Updated dependencies [[`79a75bb1e`](https://github.com/bluesky-social/atproto/commit/79a75bb1ed8fc14cefa246621fe1faeebf3fc159)]:
+  - @atproto/ozone@0.1.112
+  - @atproto/bsky@0.0.151
+  - @atproto/api@0.15.9
+  - @atproto/pds@0.4.139
+
+## 0.3.132
+
+### Patch Changes
+
+- Updated dependencies [[`80f402f36`](https://github.com/bluesky-social/atproto/commit/80f402f3663af08fd048300738d04c67aa2b9cb8), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`eab7c9fb8`](https://github.com/bluesky-social/atproto/commit/eab7c9fb8a9fed4017455ea06666c919aea61336)]:
+  - @atproto/bsky@0.0.150
+  - @atproto/api@0.15.8
+  - @atproto/pds@0.4.138
+  - @atproto/ozone@0.1.111
+
+## 0.3.131
+
+### Patch Changes
+
+- Updated dependencies [[`86b315388`](https://github.com/bluesky-social/atproto/commit/86b3153884099ceeb0cfdb9d2bfdd447c39fb35a), [`efc64ba92`](https://github.com/bluesky-social/atproto/commit/efc64ba92511933c2100b45c0e7f4bcae9199240)]:
+  - @atproto/api@0.15.7
+  - @atproto/pds@0.4.137
+  - @atproto/bsky@0.0.149
+  - @atproto/ozone@0.1.110
+
+## 0.3.130
+
+### Patch Changes
+
+- Updated dependencies [[`088d06204`](https://github.com/bluesky-social/atproto/commit/088d06204f779412b94ae3363ff548a6c8d1299a)]:
+  - @atproto/pds@0.4.136
+  - @atproto/bsky@0.0.148
+  - @atproto/ozone@0.1.109
+
+## 0.3.129
+
+### Patch Changes
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`ab4e72084`](https://github.com/bluesky-social/atproto/commit/ab4e72084dd0ea1eb12b45cbb913595434b88675), [`3301a2697`](https://github.com/bluesky-social/atproto/commit/3301a2697f2ad32d4912ba4781c515755cf1386e), [`eccbce278`](https://github.com/bluesky-social/atproto/commit/eccbce278da72c3fbbf8fbbcfcafe76ae28dcd6c), [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`b5afb723b`](https://github.com/bluesky-social/atproto/commit/b5afb723be392d236799bbcb6a55956bd12316ba), [`3a65b68f7`](https://github.com/bluesky-social/atproto/commit/3a65b68f7dc63c8bfbea0ae615f8ae984272f2e4)]:
+  - @atproto/common-web@0.4.2
+  - @atproto/bsky@0.0.148
+  - @atproto/pds@0.4.135
+  - @atproto/ozone@0.1.109
+  - @atproto/lexicon@0.4.11
+  - @atproto/xrpc-server@0.7.18
+  - @atproto/api@0.15.6
+  - @atproto/identity@0.4.8
+  - @atproto/sync@0.1.23
+  - @atproto/bsync@0.0.19
+  - @atproto/crypto@0.4.4
+
+## 0.3.128
+
+### Patch Changes
+
+- [#3765](https://github.com/bluesky-social/atproto/pull/3765) [`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9) Thanks [@foysalit](https://github.com/foysalit)! - Add verification lexicons to ozone
+
+- Updated dependencies [[`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9), [`45354c84f`](https://github.com/bluesky-social/atproto/commit/45354c84f898d79f58c14b5c0da3661beb7353f9)]:
+  - @atproto/ozone@0.1.108
+  - @atproto/api@0.15.5
+  - @atproto/pds@0.4.134
+  - @atproto/xrpc-server@0.7.17
+  - @atproto/bsky@0.0.147
+  - @atproto/sync@0.1.22
+
+## 0.3.127
+
+### Patch Changes
+
+- Updated dependencies [[`da168588d`](https://github.com/bluesky-social/atproto/commit/da168588de59e5048d255866205bd16c5ab5f95c), [`7af77f3ed`](https://github.com/bluesky-social/atproto/commit/7af77f3edfe52f77729f61de4188e8375f03b4ef)]:
+  - @atproto/xrpc-server@0.7.16
+  - @atproto/ozone@0.1.107
+  - @atproto/api@0.15.4
+  - @atproto/bsky@0.0.146
+  - @atproto/pds@0.4.133
+  - @atproto/sync@0.1.21
+
+## 0.3.126
+
+### Patch Changes
+
+- Updated dependencies [[`9ef52d829`](https://github.com/bluesky-social/atproto/commit/9ef52d82923c9c82a73f39690182bd7f75bbc67a)]:
+  - @atproto/bsky@0.0.145
+  - @atproto/pds@0.4.132
+
+## 0.3.125
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.132
+  - @atproto/bsky@0.0.144
+  - @atproto/ozone@0.1.106
+
+## 0.3.124
+
+### Patch Changes
+
+- [#3773](https://github.com/bluesky-social/atproto/pull/3773) [`0087dc1c0`](https://github.com/bluesky-social/atproto/commit/0087dc1c0bafad1d0a0a1a16683d250dea031bf9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add verification notifications
+
+- Updated dependencies [[`0087dc1c0`](https://github.com/bluesky-social/atproto/commit/0087dc1c0bafad1d0a0a1a16683d250dea031bf9)]:
+  - @atproto/bsky@0.0.144
+  - @atproto/api@0.15.3
+  - @atproto/pds@0.4.131
+  - @atproto/ozone@0.1.106
+
+## 0.3.123
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.130
+  - @atproto/bsky@0.0.143
+  - @atproto/ozone@0.1.105
+
+## 0.3.122
+
+### Patch Changes
+
+- [#3764](https://github.com/bluesky-social/atproto/pull/3764) [`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use white as primary contrast color
+
+- Updated dependencies [[`30f9b6690`](https://github.com/bluesky-social/atproto/commit/30f9b6690e0e2c5810772e94e631322b9d89c65a), [`6db9faa4a`](https://github.com/bluesky-social/atproto/commit/6db9faa4a121b573fa73e29e41dd1c183543f7f8)]:
+  - @atproto/pds@0.4.129
+  - @atproto/bsky@0.0.143
+  - @atproto/ozone@0.1.105
+
+## 0.3.121
+
+### Patch Changes
+
+- Updated dependencies [[`553c988f1`](https://github.com/bluesky-social/atproto/commit/553c988f1d226b3d2fbe94c117b088f5c82db794)]:
+  - @atproto/api@0.15.2
+  - @atproto/bsky@0.0.143
+  - @atproto/ozone@0.1.105
+  - @atproto/pds@0.4.128
+
+## 0.3.120
+
+### Patch Changes
+
+- Updated dependencies [[`688268b6a`](https://github.com/bluesky-social/atproto/commit/688268b6a5ee30f0922ee152ffbd26583d164ae4), [`8d99915ce`](https://github.com/bluesky-social/atproto/commit/8d99915ce02c73b9b37bf121ccd2703fa14a906a)]:
+  - @atproto/api@0.15.1
+  - @atproto/pds@0.4.127
+  - @atproto/bsky@0.0.142
+  - @atproto/ozone@0.1.104
+
+## 0.3.119
+
+### Patch Changes
+
+- Updated dependencies [[`23462184d`](https://github.com/bluesky-social/atproto/commit/23462184dc941ba2fc3b4d054985a53715585020)]:
+  - @atproto/api@0.15.0
+  - @atproto/bsky@0.0.141
+  - @atproto/ozone@0.1.103
+  - @atproto/pds@0.4.126
+
+## 0.3.118
+
+### Patch Changes
+
+- Updated dependencies [[`1e461eab0`](https://github.com/bluesky-social/atproto/commit/1e461eab033f728f537db554b3072b7eda7e5e8f), [`0759f0fee`](https://github.com/bluesky-social/atproto/commit/0759f0feeded73cfc15d4eb4231bd74354076ea4)]:
+  - @atproto/ozone@0.1.102
+  - @atproto/bsky@0.0.140
+  - @atproto/pds@0.4.125
+
+## 0.3.117
+
+### Patch Changes
+
+- Updated dependencies [[`371e04aad`](https://github.com/bluesky-social/atproto/commit/371e04aad2a3e8ae3fe185ce15fc8eb051cab78e)]:
+  - @atproto/pds@0.4.124
+  - @atproto/bsky@0.0.139
+  - @atproto/ozone@0.1.101
+
+## 0.3.116
+
+### Patch Changes
+
+- Updated dependencies [[`fc61662d7`](https://github.com/bluesky-social/atproto/commit/fc61662d7b88597f78383e37ee54264a8bb4b670), [`ca07871c4`](https://github.com/bluesky-social/atproto/commit/ca07871c487abc99fe7b7f8671aa8d98eb5dc4bb)]:
+  - @atproto/api@0.14.22
+  - @atproto/bsky@0.0.139
+  - @atproto/ozone@0.1.101
+  - @atproto/pds@0.4.123
+
+## 0.3.115
+
+### Patch Changes
+
+- Updated dependencies [[`8b7bf7e8f`](https://github.com/bluesky-social/atproto/commit/8b7bf7e8f0e5447c68633a87a2a3cff99f9e7e1c)]:
+  - @atproto/bsky@0.0.138
+  - @atproto/api@0.14.21
+  - @atproto/pds@0.4.122
+  - @atproto/ozone@0.1.100
+
+## 0.3.114
+
+### Patch Changes
+
+- Updated dependencies [[`0e681d303`](https://github.com/bluesky-social/atproto/commit/0e681d3036fd0b35c6d2198638392051b2ce4c81)]:
+  - @atproto/bsky@0.0.137
+  - @atproto/api@0.14.20
+  - @atproto/pds@0.4.121
+  - @atproto/ozone@0.1.99
+
+## 0.3.113
+
+### Patch Changes
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144), [`efb302db1`](https://github.com/bluesky-social/atproto/commit/efb302db1a615b68795c725a22489dbd0400e011)]:
+  - @atproto/common-web@0.4.1
+  - @atproto/bsky@0.0.136
+  - @atproto/api@0.14.19
+  - @atproto/identity@0.4.7
+  - @atproto/lexicon@0.4.10
+  - @atproto/pds@0.4.120
+  - @atproto/sync@0.1.20
+  - @atproto/ozone@0.1.98
+  - @atproto/bsync@0.0.18
+  - @atproto/crypto@0.4.4
+  - @atproto/xrpc-server@0.7.15
+
+## 0.3.112
+
+### Patch Changes
+
+- Updated dependencies [[`04b6230cd`](https://github.com/bluesky-social/atproto/commit/04b6230cd2fbfe4a06cb00ab8ccb8e6c87c6c546)]:
+  - @atproto/bsky@0.0.135
+  - @atproto/api@0.14.18
+  - @atproto/pds@0.4.119
+  - @atproto/ozone@0.1.97
+
+## 0.3.111
+
+### Patch Changes
+
+- Updated dependencies [[`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f), [`2b7efb6cb`](https://github.com/bluesky-social/atproto/commit/2b7efb6cb1c93a108570efdafe9d9ec3f1018dfa), [`b0a0f1484`](https://github.com/bluesky-social/atproto/commit/b0a0f1484378adeb5e2aa20b9b6ff2c2eca0f740), [`0eea698be`](https://github.com/bluesky-social/atproto/commit/0eea698bef76520ae4cc0e1f2efbb588a0459556), [`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f)]:
+  - @atproto/api@0.14.17
+  - @atproto/bsky@0.0.134
+  - @atproto/pds@0.4.118
+  - @atproto/ozone@0.1.96
+  - @atproto/sync@0.1.19
+  - @atproto/bsync@0.0.17
+  - @atproto/crypto@0.4.4
+  - @atproto/xrpc-server@0.7.14
+
+## 0.3.110
+
+### Patch Changes
+
+- Updated dependencies [[`652894308`](https://github.com/bluesky-social/atproto/commit/65289430806976ec13177ed9c9f0e883e8f9330c)]:
+  - @atproto/ozone@0.1.95
+  - @atproto/bsky@0.0.133
+  - @atproto/api@0.14.16
+  - @atproto/pds@0.4.117
+
+## 0.3.109
+
+### Patch Changes
+
+- Updated dependencies [[`b4ab5011b`](https://github.com/bluesky-social/atproto/commit/b4ab5011bcc64f9f05122a8773806af8e0c13146)]:
+  - @atproto/api@0.14.15
+  - @atproto/pds@0.4.116
+  - @atproto/bsky@0.0.132
+  - @atproto/ozone@0.1.94
+
+## 0.3.108
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.115
+  - @atproto/bsky@0.0.131
+  - @atproto/ozone@0.1.93
+
+## 0.3.107
+
+### Patch Changes
+
+- Updated dependencies [[`9a05892f6`](https://github.com/bluesky-social/atproto/commit/9a05892f6fd405bf6bb96c9c8d2a9a89d5e94bc5)]:
+  - @atproto/ozone@0.1.93
+  - @atproto/bsky@0.0.131
+  - @atproto/api@0.14.14
+  - @atproto/pds@0.4.114
+
+## 0.3.106
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.113
+  - @atproto/bsky@0.0.130
+  - @atproto/ozone@0.1.92
+
+## 0.3.105
+
+### Patch Changes
+
+- Updated dependencies [[`076c2f987`](https://github.com/bluesky-social/atproto/commit/076c2f9872387217806624306e3af08878d1adcd)]:
+  - @atproto/ozone@0.1.92
+  - @atproto/api@0.14.13
+  - @atproto/pds@0.4.112
+  - @atproto/bsky@0.0.130
+
+## 0.3.104
+
+### Patch Changes
+
+- Updated dependencies [[`44f5c3639`](https://github.com/bluesky-social/atproto/commit/44f5c3639fcaf73865d21ec4b0c64baa641006c0)]:
+  - @atproto/ozone@0.1.91
+  - @atproto/bsky@0.0.129
+  - @atproto/api@0.14.12
+  - @atproto/pds@0.4.111
+
+## 0.3.103
+
+### Patch Changes
+
+- Updated dependencies [[`d87ffc7bf`](https://github.com/bluesky-social/atproto/commit/d87ffc7bfe3c1e792dc84a320544eb2e053d61ce)]:
+  - @atproto/api@0.14.11
+  - @atproto/bsky@0.0.128
+  - @atproto/ozone@0.1.90
+  - @atproto/pds@0.4.110
+
+## 0.3.102
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.109
+  - @atproto/bsky@0.0.127
+  - @atproto/ozone@0.1.89
+
+## 0.3.101
+
+### Patch Changes
+
+- Updated dependencies [[`03fc0aa27`](https://github.com/bluesky-social/atproto/commit/03fc0aa270884523719e67bea701ef19e2dd5696), [`670b6b5de`](https://github.com/bluesky-social/atproto/commit/670b6b5de2bf91e6944761c98eb1126fb6a681ee)]:
+  - @atproto/pds@0.4.108
+  - @atproto/syntax@0.4.0
+  - @atproto/bsky@0.0.127
+  - @atproto/ozone@0.1.89
+  - @atproto/api@0.14.10
+  - @atproto/bsync@0.0.16
+  - @atproto/lexicon@0.4.9
+  - @atproto/sync@0.1.18
+  - @atproto/xrpc-server@0.7.13
+
+## 0.3.100
+
+### Patch Changes
+
+- Updated dependencies [[`0ae7f416e`](https://github.com/bluesky-social/atproto/commit/0ae7f416e8055fe4d05b283449e44457161f6a93)]:
+  - @atproto/pds@0.4.107
+  - @atproto/api@0.14.9
+  - @atproto/bsky@0.0.126
+  - @atproto/ozone@0.1.88
+
+## 0.3.99
+
+### Patch Changes
+
+- [#3587](https://github.com/bluesky-social/atproto/pull/3587) [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952) Thanks [@foysalit](https://github.com/foysalit)! - Add searchable handle and displayName to ozone team members
+
+- Updated dependencies [[`b20907a70`](https://github.com/bluesky-social/atproto/commit/b20907a7056970ab627e6c661882cb16491801e2), [`d96b03956`](https://github.com/bluesky-social/atproto/commit/d96b03956d5c26c238f586c6bdf257c080f12746), [`18fbfa000`](https://github.com/bluesky-social/atproto/commit/18fbfa00057dda9ef4eba77d8b4e87994893c952), [`eab9c003f`](https://github.com/bluesky-social/atproto/commit/eab9c003f838d43f0135ded9d3ede3f449997597)]:
+  - @atproto/sync@0.1.17
+  - @atproto/ozone@0.1.88
+  - @atproto/api@0.14.9
+  - @atproto/pds@0.4.106
+  - @atproto/bsky@0.0.126
+
+## 0.3.98
+
+### Patch Changes
+
+- Updated dependencies [[`38320191e`](https://github.com/bluesky-social/atproto/commit/38320191e559f8b928c6e951a9b4a6207240bfc1), [`6bcbb6d8c`](https://github.com/bluesky-social/atproto/commit/6bcbb6d8cd3696280935ff7892d8e191fd21fa49), [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29), [`dc6e4ecb0`](https://github.com/bluesky-social/atproto/commit/dc6e4ecb0e09bbf4bc7a79c6ac43fb6da4166200), [`850e39843`](https://github.com/bluesky-social/atproto/commit/850e39843cb0ec9ea716675f7568c0c601f45e29)]:
+  - @atproto/api@0.14.8
+  - @atproto/pds@0.4.105
+  - @atproto/syntax@0.3.4
+  - @atproto/bsky@0.0.125
+  - @atproto/ozone@0.1.87
+  - @atproto/bsync@0.0.15
+  - @atproto/lexicon@0.4.8
+  - @atproto/sync@0.1.16
+  - @atproto/xrpc-server@0.7.12
+
+## 0.3.97
+
+### Patch Changes
+
+- Updated dependencies [[`d4e14b7bd`](https://github.com/bluesky-social/atproto/commit/d4e14b7bdc7752476757ecfe96343d146411b784), [`99e2809ca`](https://github.com/bluesky-social/atproto/commit/99e2809ca2ebf70acaa10254f140a8dd0fad4305), [`11d8d21be`](https://github.com/bluesky-social/atproto/commit/11d8d21beac4b79ac44b930197761f9d08dbb492), [`27b0a7be1`](https://github.com/bluesky-social/atproto/commit/27b0a7be1ed1b6e098114791d84ec9dc844db552), [`11d8d21be`](https://github.com/bluesky-social/atproto/commit/11d8d21beac4b79ac44b930197761f9d08dbb492), [`5cce76670`](https://github.com/bluesky-social/atproto/commit/5cce7667058981561340107e0124093203e796e3)]:
+  - @atproto/pds@0.4.104
+  - @atproto/api@0.14.7
+  - @atproto/bsky@0.0.124
+  - @atproto/ozone@0.1.86
+
+## 0.3.96
+
+### Patch Changes
+
+- Updated dependencies [[`82d5a2d36`](https://github.com/bluesky-social/atproto/commit/82d5a2d3617c40caab7a18e46c709c4b3c48e7f8)]:
+  - @atproto/pds@0.4.103
+  - @atproto/bsky@0.0.123
+  - @atproto/ozone@0.1.85
+
+## 0.3.95
+
+### Patch Changes
+
+- Updated dependencies [[`44f81f2eb`](https://github.com/bluesky-social/atproto/commit/44f81f2eb9229e21aec4472b3a05e855396dbec5)]:
+  - @atproto/api@0.14.6
+  - @atproto/bsky@0.0.123
+  - @atproto/ozone@0.1.85
+  - @atproto/pds@0.4.102
+
+## 0.3.94
+
+### Patch Changes
+
+- Updated dependencies [[`7e3678c08`](https://github.com/bluesky-social/atproto/commit/7e3678c089d2faa1a884a52a4fb80b8116c9854f), [`9b643fbec`](https://github.com/bluesky-social/atproto/commit/9b643fbecac30de5cfdb80d0671bfa55e9f4512a), [`6e382f67a`](https://github.com/bluesky-social/atproto/commit/6e382f67aa73532efadfea80ff96a27b526cb178)]:
+  - @atproto/api@0.14.5
+  - @atproto/pds@0.4.101
+  - @atproto/ozone@0.1.84
+  - @atproto/bsky@0.0.122
+  - @atproto/sync@0.1.15
+
+## 0.3.93
+
+### Patch Changes
+
+- Updated dependencies [[`b9cb049d9`](https://github.com/bluesky-social/atproto/commit/b9cb049d940cc706681142ef498238f74e2f539c)]:
+  - @atproto/ozone@0.1.83
+  - @atproto/api@0.14.4
+  - @atproto/pds@0.4.100
+  - @atproto/bsky@0.0.121
+
+## 0.3.92
+
+### Patch Changes
+
+- Updated dependencies [[`22af31a89`](https://github.com/bluesky-social/atproto/commit/22af31a898476c5e317aea263af366bddda120d6), [`01874c4be`](https://github.com/bluesky-social/atproto/commit/01874c4be73a41ffb8fe28378f674949aa2c938f)]:
+  - @atproto/api@0.14.3
+  - @atproto/bsky@0.0.120
+  - @atproto/ozone@0.1.82
+  - @atproto/pds@0.4.99
+
+## 0.3.91
+
+### Patch Changes
+
+- Updated dependencies [[`7449f8607`](https://github.com/bluesky-social/atproto/commit/7449f8607c1be948a0b55611c21075757c3d7261)]:
+  - @atproto/ozone@0.1.81
+
+## 0.3.90
+
+### Patch Changes
+
+- Updated dependencies [[`010f10c6f`](https://github.com/bluesky-social/atproto/commit/010f10c6f212f699ad42c0349a58bbcf2172e3cc), [`a9887f687`](https://github.com/bluesky-social/atproto/commit/a9887f68778c49932d92cfea98aadcfa4d5b62e9)]:
+  - @atproto/api@0.14.2
+  - @atproto/ozone@0.1.80
+  - @atproto/pds@0.4.98
+  - @atproto/bsky@0.0.119
+
+## 0.3.89
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.97
+  - @atproto/bsky@0.0.118
+  - @atproto/ozone@0.1.79
+
+## 0.3.88
+
+### Patch Changes
+
+- Updated dependencies [[`3f58dd0e7`](https://github.com/bluesky-social/atproto/commit/3f58dd0e742cdfed9c3eae0118bc57f539de78f1), [`20e57bacf`](https://github.com/bluesky-social/atproto/commit/20e57bacf9bb2ae8a118eadbfc291f3213b8dc2f), [`ba5bb6e66`](https://github.com/bluesky-social/atproto/commit/ba5bb6e667fb58bbefd332844957de575e102ca3), [`6ea9c961a`](https://github.com/bluesky-social/atproto/commit/6ea9c961af964cd9b0d00b5073c695c5e0b3345a)]:
+  - @atproto/bsky@0.0.118
+  - @atproto/ozone@0.1.79
+  - @atproto/api@0.14.1
+  - @atproto/pds@0.4.96
+
+## 0.3.87
+
+### Patch Changes
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/api@0.14.0
+  - @atproto/ozone@0.1.78
+  - @atproto/bsky@0.0.117
+  - @atproto/pds@0.4.95
+  - @atproto/syntax@0.3.3
+  - @atproto/lexicon@0.4.7
+  - @atproto/bsync@0.0.14
+  - @atproto/sync@0.1.14
+  - @atproto/xrpc-server@0.7.11
+
+## 0.3.86
+
+### Patch Changes
+
+- Updated dependencies [[`709a85b0b`](https://github.com/bluesky-social/atproto/commit/709a85b0b633b5483b7161db64b429c746239153)]:
+  - @atproto/ozone@0.1.77
+  - @atproto/api@0.13.35
+  - @atproto/pds@0.4.94
+  - @atproto/bsky@0.0.116
+
+## 0.3.85
+
+### Patch Changes
+
+- Updated dependencies [[`dc8a7842e`](https://github.com/bluesky-social/atproto/commit/dc8a7842e67f5f3709e88310d2a60d384453b486), [`636951e47`](https://github.com/bluesky-social/atproto/commit/636951e4728cd52c2e5355eb93b47d7e869b67e9), [`dc8a7842e`](https://github.com/bluesky-social/atproto/commit/dc8a7842e67f5f3709e88310d2a60d384453b486)]:
+  - @atproto/api@0.13.34
+  - @atproto/bsky@0.0.115
+  - @atproto/ozone@0.1.76
+  - @atproto/pds@0.4.93
+
+## 0.3.84
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`8a30e0ed9`](https://github.com/bluesky-social/atproto/commit/8a30e0ed9239cb2037d54fb98e70e8b0cfbc3e39), [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`8a30e0ed9`](https://github.com/bluesky-social/atproto/commit/8a30e0ed9239cb2037d54fb98e70e8b0cfbc3e39), [`53a577fd4`](https://github.com/bluesky-social/atproto/commit/53a577fd4bfb1c7301e14db85b42f4758b053dee), [`87ed907a6`](https://github.com/bluesky-social/atproto/commit/87ed907a6b96b408c02c9af819cec8380a453254)]:
+  - @atproto/xrpc-server@0.7.10
+  - @atproto/common-web@0.4.0
+  - @atproto/identity@0.4.6
+  - @atproto/lexicon@0.4.6
+  - @atproto/crypto@0.4.4
+  - @atproto/syntax@0.3.2
+  - @atproto/bsync@0.0.13
+  - @atproto/ozone@0.1.75
+  - @atproto/bsky@0.0.114
+  - @atproto/sync@0.1.13
+  - @atproto/api@0.13.33
+  - @atproto/pds@0.4.92
+
+## 0.3.83
+
+### Patch Changes
+
+- Updated dependencies [[`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`da7a831a7`](https://github.com/bluesky-social/atproto/commit/da7a831a7318343ba1ee98de3811ba337c043dbd), [`7f52e6735`](https://github.com/bluesky-social/atproto/commit/7f52e67354906c3bf9830d7a2924ab58d6160905), [`8810885b8`](https://github.com/bluesky-social/atproto/commit/8810885b8e7fa0377e6c000c091eec1dd85ed261), [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75), [`8810885b8`](https://github.com/bluesky-social/atproto/commit/8810885b8e7fa0377e6c000c091eec1dd85ed261), [`4f2841efe`](https://github.com/bluesky-social/atproto/commit/4f2841efeb410e710e0c8da7c9204468f6256a75)]:
+  - @atproto/xrpc-server@0.7.9
+  - @atproto/ozone@0.1.74
+  - @atproto/api@0.13.32
+  - @atproto/pds@0.4.91
+  - @atproto/bsky@0.0.113
+  - @atproto/sync@0.1.12
+  - @atproto/bsync@0.0.12
+  - @atproto/crypto@0.4.3
+
+## 0.3.82
+
+### Patch Changes
+
+- Updated dependencies [[`8c6c7813a`](https://github.com/bluesky-social/atproto/commit/8c6c7813a9c2110c8fe21acdca8f09554a1983ce)]:
+  - @atproto/api@0.13.31
+  - @atproto/pds@0.4.90
+  - @atproto/bsky@0.0.112
+  - @atproto/ozone@0.1.73
+
+## 0.3.81
+
+### Patch Changes
+
+- Updated dependencies [[`1ada2d093`](https://github.com/bluesky-social/atproto/commit/1ada2d093427e45b6d59a16cf146bf5282560c7b), [`e6e6aea38`](https://github.com/bluesky-social/atproto/commit/e6e6aea3814e3d0bb42a537f80d77947e85fa73f), [`c0a75d310`](https://github.com/bluesky-social/atproto/commit/c0a75d310aa92c067799a97d1acc5bd0543114c5)]:
+  - @atproto/ozone@0.1.72
+  - @atproto/api@0.13.30
+  - @atproto/bsky@0.0.111
+  - @atproto/pds@0.4.89
+
+## 0.3.80
+
+### Patch Changes
+
+- Updated dependencies [[`1015d9692`](https://github.com/bluesky-social/atproto/commit/1015d96925898149cc60b434561e19730a1bea12)]:
+  - @atproto/xrpc-server@0.7.8
+  - @atproto/bsky@0.0.110
+  - @atproto/ozone@0.1.71
+  - @atproto/pds@0.4.88
+  - @atproto/sync@0.1.11
+
+## 0.3.79
+
+### Patch Changes
+
+- Updated dependencies [[`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6), [`50603b4f2`](https://github.com/bluesky-social/atproto/commit/50603b4f2ef08bd618730107ec164a57f27dcca6)]:
+  - @atproto/ozone@0.1.70
+  - @atproto/api@0.13.29
+  - @atproto/pds@0.4.87
+  - @atproto/bsky@0.0.109
+
+## 0.3.78
+
+### Patch Changes
+
+- Updated dependencies [[`cbf17066f`](https://github.com/bluesky-social/atproto/commit/cbf17066f314fbc7f2e943127ee4a9f589f8bec2)]:
+  - @atproto/bsky@0.0.108
+  - @atproto/api@0.13.28
+  - @atproto/pds@0.4.86
+  - @atproto/ozone@0.1.69
+
+## 0.3.77
+
+### Patch Changes
+
+- Updated dependencies [[`0832a377d`](https://github.com/bluesky-social/atproto/commit/0832a377d269584a906d5062ebb5e2e6307f9c61)]:
+  - @atproto/xrpc-server@0.7.7
+  - @atproto/bsky@0.0.107
+  - @atproto/ozone@0.1.68
+  - @atproto/pds@0.4.85
+  - @atproto/sync@0.1.10
+
+## 0.3.76
+
+### Patch Changes
+
+- [#3344](https://github.com/bluesky-social/atproto/pull/3344) [`48a0e9d60`](https://github.com/bluesky-social/atproto/commit/48a0e9d6060c2dc93899f13f2fc7cc76c04fbcd9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly dispose of unused http responses
+
+- Updated dependencies [[`48a0e9d60`](https://github.com/bluesky-social/atproto/commit/48a0e9d6060c2dc93899f13f2fc7cc76c04fbcd9), [`e277158f7`](https://github.com/bluesky-social/atproto/commit/e277158f70a831b04fde3ec84b3c1eaa6ce82e9d)]:
+  - @atproto/ozone@0.1.67
+  - @atproto/api@0.13.27
+  - @atproto/bsky@0.0.106
+  - @atproto/pds@0.4.84
+
+## 0.3.75
+
+### Patch Changes
+
+- Updated dependencies [[`1abfd74ec`](https://github.com/bluesky-social/atproto/commit/1abfd74ec7114e5d8e2411f7a4fa10bdce97e277)]:
+  - @atproto/crypto@0.4.3
+  - @atproto/bsky@0.0.105
+  - @atproto/identity@0.4.5
+  - @atproto/ozone@0.1.66
+  - @atproto/pds@0.4.83
+  - @atproto/xrpc-server@0.7.6
+  - @atproto/sync@0.1.9
+
+## 0.3.74
+
+### Patch Changes
+
+- [#3177](https://github.com/bluesky-social/atproto/pull/3177) [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on Axios
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto/bsky@0.0.104
+  - @atproto/common-web@0.3.2
+  - @atproto/identity@0.4.4
+  - @atproto/ozone@0.1.65
+  - @atproto/pds@0.4.82
+  - @atproto/api@0.13.26
+  - @atproto/lexicon@0.4.5
+  - @atproto/sync@0.1.8
+  - @atproto/bsync@0.0.11
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc-server@0.7.5
+
+## 0.3.73
+
+### Patch Changes
+
+- [#3271](https://github.com/bluesky-social/atproto/pull/3271) [`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a) Thanks [@foysalit](https://github.com/foysalit)! - Allow setting policy names with takedown actions and when querying events
+
+- Updated dependencies [[`53621f8e1`](https://github.com/bluesky-social/atproto/commit/53621f8e100a3aa3c1caff10a08d3f4ea919875a)]:
+  - @atproto/ozone@0.1.64
+  - @atproto/api@0.13.25
+  - @atproto/bsky@0.0.103
+  - @atproto/pds@0.4.81
+
+## 0.3.72
+
+### Patch Changes
+
+- Updated dependencies [[`d90d999de`](https://github.com/bluesky-social/atproto/commit/d90d999defda01a9b04dbce129e254990062c283), [`6d1ad3783`](https://github.com/bluesky-social/atproto/commit/6d1ad37836f275e03bc115e944a3195b82f3398d)]:
+  - @atproto/ozone@0.1.63
+  - @atproto/api@0.13.24
+  - @atproto/bsky@0.0.102
+  - @atproto/pds@0.4.80
+
+## 0.3.71
+
+### Patch Changes
+
+- Updated dependencies [[`6d308b857`](https://github.com/bluesky-social/atproto/commit/6d308b857ba2a514ee3c75ebdef7225e298ed7d7), [`6d308b857`](https://github.com/bluesky-social/atproto/commit/6d308b857ba2a514ee3c75ebdef7225e298ed7d7), [`9ea2cce9a`](https://github.com/bluesky-social/atproto/commit/9ea2cce9a4c0a08994a8cb5abc81dc4bc2221d0c), [`b4674a61a`](https://github.com/bluesky-social/atproto/commit/b4674a61a92ca96f89ac06e705e08c2e6af07e1b)]:
+  - @atproto/pds@0.4.79
+  - @atproto/api@0.13.23
+  - @atproto/ozone@0.1.62
+  - @atproto/bsky@0.0.101
+
+## 0.3.70
+
+### Patch Changes
+
+- Updated dependencies [[`f22383cee`](https://github.com/bluesky-social/atproto/commit/f22383cee8feb8b9f761c801ab6e07ad8dc019ed)]:
+  - @atproto/api@0.13.22
+  - @atproto/bsky@0.0.100
+  - @atproto/ozone@0.1.61
+  - @atproto/pds@0.4.78
+
+## 0.3.69
+
+### Patch Changes
+
+- [#3266](https://github.com/bluesky-social/atproto/pull/3266) [`638f5a831`](https://github.com/bluesky-social/atproto/commit/638f5a8312136e8666d9390a73cb273459ffe082) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Fix avatar path resolution
+
+## 0.3.68
+
+### Patch Changes
+
+- Updated dependencies [[`dced566de`](https://github.com/bluesky-social/atproto/commit/dced566de5079ef4208801db476a7e7416f5e5aa)]:
+  - @atproto/api@0.13.21
+  - @atproto/bsky@0.0.99
+  - @atproto/ozone@0.1.60
+  - @atproto/pds@0.4.77
+
+## 0.3.67
+
+### Patch Changes
+
+- Updated dependencies [[`c9848edaf`](https://github.com/bluesky-social/atproto/commit/c9848edaf0947727aa5a60e3c67eecda3f48d46a), [`9fd65ba0f`](https://github.com/bluesky-social/atproto/commit/9fd65ba0fa4caca59fd0e6156145e4c2618e3a95), [`207728d2b`](https://github.com/bluesky-social/atproto/commit/207728d2b3b819af297ecb90e6373eb7721cbe34), [`0bec389a1`](https://github.com/bluesky-social/atproto/commit/0bec389a1c53adbcfab7b877df9b291d44d8ea33)]:
+  - @atproto/pds@0.4.76
+  - @atproto/lexicon@0.4.4
+  - @atproto/ozone@0.1.59
+  - @atproto/bsky@0.0.98
+  - @atproto/api@0.13.20
+  - @atproto/sync@0.1.7
+  - @atproto/bsync@0.0.10
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc-server@0.7.4
+
+## 0.3.66
+
+### Patch Changes
+
+- Updated dependencies [[`ed2236220`](https://github.com/bluesky-social/atproto/commit/ed2236220900ab9a6132c525289cfdd959733a42)]:
+  - @atproto/ozone@0.1.58
+  - @atproto/api@0.13.19
+  - @atproto/pds@0.4.75
+  - @atproto/bsky@0.0.97
+
+## 0.3.65
+
+### Patch Changes
+
+- Updated dependencies [[`1e367cba2`](https://github.com/bluesky-social/atproto/commit/1e367cba2bd1ff5560c2ec5c2a5d348cd9342b65), [`5ddd51235`](https://github.com/bluesky-social/atproto/commit/5ddd51235c7e064bddcad2dd218df05d144d18d3), [`1e367cba2`](https://github.com/bluesky-social/atproto/commit/1e367cba2bd1ff5560c2ec5c2a5d348cd9342b65)]:
+  - @atproto/pds@0.4.74
+  - @atproto/bsky@0.0.96
+  - @atproto/ozone@0.1.57
+
+## 0.3.64
+
+### Patch Changes
+
+- Updated dependencies [[`a3ce23c4c`](https://github.com/bluesky-social/atproto/commit/a3ce23c4ccf4f40998b9d1f5731e5c905390aedc)]:
+  - @atproto/ozone@0.1.57
+  - @atproto/bsky@0.0.96
+  - @atproto/api@0.13.18
+  - @atproto/pds@0.4.73
+
+## 0.3.63
+
+### Patch Changes
+
+- Updated dependencies [[`a4b528e5f`](https://github.com/bluesky-social/atproto/commit/a4b528e5f51c8bfca56b293b0059b88d138ec421), [`2e7aa211d`](https://github.com/bluesky-social/atproto/commit/2e7aa211d2cbc629899c7f87f1713b13b932750b), [`90399c859`](https://github.com/bluesky-social/atproto/commit/90399c85955301babc689c293bd3e7e1a94505a3)]:
+  - @atproto/api@0.13.17
+  - @atproto/pds@0.4.72
+  - @atproto/bsky@0.0.95
+  - @atproto/ozone@0.1.56
+
+## 0.3.62
+
+### Patch Changes
+
+- Updated dependencies [[`24423fc2d`](https://github.com/bluesky-social/atproto/commit/24423fc2dd394c99a29dbe4419b356090ef19546), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`48d08a469`](https://github.com/bluesky-social/atproto/commit/48d08a469f75837e3b7e879d286d12780440b8b8), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`bac9be2d3`](https://github.com/bluesky-social/atproto/commit/bac9be2d3ec904d1f984a871f43cf89aca17289d), [`561431fe4`](https://github.com/bluesky-social/atproto/commit/561431fe4897e81767dc768e9a31020d09bf86ff)]:
+  - @atproto/pds@0.4.71
+  - @atproto/syntax@0.3.1
+  - @atproto/ozone@0.1.55
+  - @atproto/api@0.13.16
+  - @atproto/lexicon@0.4.3
+  - @atproto/bsky@0.0.94
+  - @atproto/bsync@0.0.9
+  - @atproto/sync@0.1.6
+  - @atproto/xrpc-server@0.7.3
+
+## 0.3.61
+
+### Patch Changes
+
+- Updated dependencies [[`d6f33b474`](https://github.com/bluesky-social/atproto/commit/d6f33b4742e0b94722a993efc7d18833d9416bb6), [`b6eeb81c6`](https://github.com/bluesky-social/atproto/commit/b6eeb81c6d454b5ae91b05a21fc1820274c1b429), [`9e18ab6a3`](https://github.com/bluesky-social/atproto/commit/9e18ab6a35f47e0a9cee76221bfa0817c8a624a1), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`9ffeb5216`](https://github.com/bluesky-social/atproto/commit/9ffeb5216ab29919a2c1f3cc18af26c21a077d4a), [`1982693e3`](https://github.com/bluesky-social/atproto/commit/1982693e3ea1fef4db76ac9aca3db8dc5ebf3fe0), [`839202a3d`](https://github.com/bluesky-social/atproto/commit/839202a3d2b01de25de900cec7540019545798c6), [`e680d55ca`](https://github.com/bluesky-social/atproto/commit/e680d55ca2d7f6b213e2a8693eba6be39163ba41), [`c4b5e5395`](https://github.com/bluesky-social/atproto/commit/c4b5e53957463c37dd16fdd1b897d4ab02ab8e84), [`9ffeb5216`](https://github.com/bluesky-social/atproto/commit/9ffeb5216ab29919a2c1f3cc18af26c21a077d4a)]:
+  - @atproto/ozone@0.1.54
+  - @atproto/api@0.13.15
+  - @atproto/pds@0.4.70
+  - @atproto/crypto@0.4.2
+  - @atproto/xrpc-server@0.7.2
+  - @atproto/bsky@0.0.93
+  - @atproto/identity@0.4.3
+  - @atproto/sync@0.1.5
+
 ## 0.3.60
 
 ### Patch Changes

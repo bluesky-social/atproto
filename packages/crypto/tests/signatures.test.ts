@@ -1,20 +1,20 @@
 import fs from 'node:fs'
-import * as uint8arrays from 'uint8arrays'
-import { secp256k1 as nobleK256 } from '@noble/curves/secp256k1'
 import { p256 as nobleP256 } from '@noble/curves/p256'
+import { secp256k1 as nobleK256 } from '@noble/curves/secp256k1'
+import * as uint8arrays from 'uint8arrays'
 import { cborEncode } from '@atproto/common'
-import EcdsaKeypair from '../src/p256/keypair'
-import Secp256k1Keypair from '../src/secp256k1/keypair'
-import * as p256 from '../src/p256/operations'
-import * as secp from '../src/secp256k1/operations'
 import {
+  P256_JWT_ALG,
+  SECP256K1_JWT_ALG,
   bytesToMultibase,
   multibaseToBytes,
   parseDidKey,
-  P256_JWT_ALG,
-  SECP256K1_JWT_ALG,
   sha256,
 } from '../src'
+import { P256Keypair } from '../src/p256/keypair'
+import * as p256 from '../src/p256/operations'
+import { Secp256k1Keypair } from '../src/secp256k1/keypair'
+import * as secp from '../src/secp256k1/operations'
 
 describe('signatures', () => {
   let vectors: TestVector[]
@@ -140,7 +140,7 @@ describe('signatures', () => {
 // @ts-expect-error
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function generateTestVectors(): Promise<TestVector[]> {
-  const p256Key = await EcdsaKeypair.create({ exportable: true })
+  const p256Key = await P256Keypair.create({ exportable: true })
   const secpKey = await Secp256k1Keypair.create({ exportable: true })
   const messageBytes = cborEncode({ hello: 'world' })
   const messageBase64 = uint8arrays.toString(messageBytes, 'base64')

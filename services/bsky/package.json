@@ -1,6 +1,7 @@
 {
   "name": "bsky-app-view-service",
   "private": true,
+  "packageManager": "pnpm@8.15.9",
   "dependencies": {
     "@atproto/bsky": "workspace:^",
     "@atproto/crypto": "workspace:^",

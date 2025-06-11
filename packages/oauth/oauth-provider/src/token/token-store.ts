@@ -1,22 +1,21 @@
-import { DeviceAccountInfo } from '../account/account-store.js'
-import { Account } from '../account/account.js'
-import { Awaitable } from '../lib/util/type.js'
+import type { Account } from '@atproto/oauth-provider-api'
+import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import { Sub } from '../oidc/sub.js'
 import { Code } from '../request/code.js'
 import { RefreshToken } from './refresh-token.js'
 import { TokenData } from './token-data.js'
 import { TokenId } from './token-id.js'
 
 // Export all types needed to implement the TokenStore interface
-export * from './token-id.js'
-export * from './token-data.js'
 export * from './refresh-token.js'
-export type { Awaitable }
+export * from './token-data.js'
+export * from './token-id.js'
+export type { Account, Awaitable, Sub }
 
 export type TokenInfo = {
   id: TokenId
   data: TokenData
   account: Account
-  info?: DeviceAccountInfo
   currentRefreshToken: null | RefreshToken
 }
 
@@ -53,24 +52,23 @@ export interface TokenStore {
   ): Awaitable<null | TokenInfo>
 
   findTokenByCode(code: Code): Awaitable<null | TokenInfo>
+
+  listAccountTokens(sub: Sub): Awaitable<TokenInfo[]>
 }
 
-export function isTokenStore(
-  implementation: Record<string, unknown> & Partial<TokenStore>,
-): implementation is Record<string, unknown> & TokenStore {
-  return (
-    typeof implementation.createToken === 'function' &&
-    typeof implementation.readToken === 'function' &&
-    typeof implementation.rotateToken === 'function' &&
-    typeof implementation.deleteToken === 'function' &&
-    typeof implementation.findTokenByCode === 'function' &&
-    typeof implementation.findTokenByRefreshToken === 'function'
-  )
-}
+export const isTokenStore = buildInterfaceChecker<TokenStore>([
+  'createToken',
+  'readToken',
+  'deleteToken',
+  'rotateToken',
+  'findTokenByRefreshToken',
+  'findTokenByCode',
+  'listAccountTokens',
+])
 
-export function asTokenStore(
-  implementation?: Record<string, unknown> & Partial<TokenStore>,
-): TokenStore {
+export function asTokenStore<V extends Partial<TokenStore>>(
+  implementation?: V,
+): V & TokenStore {
   if (!implementation || !isTokenStore(implementation)) {
     throw new Error('Invalid TokenStore implementation')
   }

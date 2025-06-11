@@ -1,6 +1,9 @@
+import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { Label } from '../lexicon/types/com/atproto/label/defs'
+import { ids } from '../lexicon/lexicons'
 import { Record as LabelerRecord } from '../lexicon/types/app/bsky/labeler/service'
+import { Label } from '../lexicon/types/com/atproto/label/defs'
+import { ParsedLabelers } from '../util'
 import {
   HydrationMap,
   Merges,
@@ -9,14 +12,13 @@ import {
   parseRecord,
   parseString,
 } from './util'
-import { AtUri } from '@atproto/syntax'
-import { ids } from '../lexicon/lexicons'
-import { ParsedLabelers } from '../util'
 
 export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
 export type SubjectLabels = {
+  isImpersonation: boolean
   isTakendown: boolean
+  needsReview: boolean
   labels: HydrationMap<Label> // src + val -> label
 }
 
@@ -83,12 +85,24 @@ export class LabelHydrator {
       let entry = acc.get(label.uri)
       if (!entry) {
         entry = {
+          isImpersonation: false,
           isTakendown: false,
+          needsReview: false,
           labels: new HydrationMap(),
         }
         acc.set(label.uri, entry)
       }
-      entry.labels.set(Labels.key(label), label)
+
+      const isActionableNeedsReview =
+        label.val === NEEDS_REVIEW_LABEL &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+
+      // we action needs review labels on backend for now so don't send to client until client has proper logic for them
+      if (!isActionableNeedsReview) {
+        entry.labels.set(Labels.key(label), label)
+      }
+
       if (
         TAKEDOWN_LABELS.includes(label.val) &&
         !label.neg &&
@@ -96,6 +110,17 @@ export class LabelHydrator {
       ) {
         entry.isTakendown = true
       }
+      if (isActionableNeedsReview) {
+        entry.needsReview = true
+      }
+      if (
+        label.val === IMPERSONATION_LABEL &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+      ) {
+        entry.isImpersonation = true
+      }
+
       return acc
     }, new Labels())
   }
@@ -131,9 +156,15 @@ export class LabelHydrator {
     }, new HydrationMap<LabelerViewerState>())
   }
 
-  async getLabelerAggregates(dids: string[]): Promise<LabelerAggs> {
+  async getLabelerAggregates(
+    dids: string[],
+    viewer: string | null,
+  ): Promise<LabelerAggs> {
     const refs = dids.map((did) => ({ uri: labelerDidToUri(did) }))
-    const counts = await this.dataplane.getInteractionCounts({ refs })
+    const counts = await this.dataplane.getInteractionCounts({
+      refs,
+      skipCacheForDids: viewer ? [viewer] : undefined,
+    })
     return dids.reduce((acc, did, i) => {
       return acc.set(did, {
         likes: counts.likes[i] ?? 0,
@@ -146,4 +177,6 @@ const labelerDidToUri = (did: string): string => {
   return AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
 }
 
+const IMPERSONATION_LABEL = 'impersonation'
 const TAKEDOWN_LABELS = ['!takedown', '!suspend']
+const NEEDS_REVIEW_LABEL = 'needs-review'

@@ -5,6 +5,7 @@ com.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle.middle
 
 # valid examples
 com.example.fooBar
+com.example.fooBarV2
 net.users.bob.ping
 a.b.c
 m.xn--masekowski-d0b.pl
@@ -18,6 +19,8 @@ test.12345.record
 a01.thing.record
 a.0.c
 xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two
+a0.b1.c3
+com.example.f00
 
 # allows onion (Tor) NSIDs
 onion.expyuzz4wqqyqhjn.spec.getThing

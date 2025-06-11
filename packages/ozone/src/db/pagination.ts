@@ -1,4 +1,4 @@
-import { sql, DynamicModule } from 'kysely'
+import { DynamicModule, sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AnyQb, DbRef } from './types'
 
@@ -154,6 +154,37 @@ export class TimeIdKeyset extends GenericKeyset<TimeIdKeysetParam, Cursor> {
   labelResult(result: TimeIdResult): Cursor
   labelResult(result: TimeIdResult) {
     return { primary: result.createdAt, secondary: result.id.toString() }
+  }
+  labeledResultToCursor(labeled: Cursor) {
+    return {
+      primary: new Date(labeled.primary).getTime().toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    const primaryDate = new Date(parseInt(cursor.primary, 10))
+    if (isNaN(primaryDate.getTime())) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: primaryDate.toISOString(),
+      secondary: cursor.secondary,
+    }
+  }
+}
+
+type CreatedAtUriKeysetParam = {
+  createdAt: string
+  uri: string
+}
+
+export class CreatedAtUriKeyset extends GenericKeyset<
+  CreatedAtUriKeysetParam,
+  Cursor
+> {
+  labelResult(result: CreatedAtUriKeysetParam): Cursor
+  labelResult(result: CreatedAtUriKeysetParam) {
+    return { primary: result.createdAt, secondary: result.uri }
   }
   labeledResultToCursor(labeled: Cursor) {
     return {

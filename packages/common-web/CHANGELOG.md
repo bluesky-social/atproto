@@ -1,5 +1,35 @@
 # @atproto/common-web
 
+## 0.4.2
+
+### Patch Changes
+
+- [#3798](https://github.com/bluesky-social/atproto/pull/3798) [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Optimize parsing of `CID` values
+
+## 0.4.1
+
+### Patch Changes
+
+- [#3672](https://github.com/bluesky-social/atproto/pull/3672) [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144) Thanks [@dholms](https://github.com/dholms)! - Add CAR Header type
+
+## 0.4.0
+
+### Minor Changes
+
+- [#3445](https://github.com/bluesky-social/atproto/pull/3445) [`8a30e0ed9`](https://github.com/bluesky-social/atproto/commit/8a30e0ed9239cb2037d54fb98e70e8b0cfbc3e39) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Make keyBy typing stricter
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+## 0.3.2
+
+### Patch Changes
+
+- [#3177](https://github.com/bluesky-social/atproto/pull/3177) [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `createRetryable` utility function
+
+- [#3177](https://github.com/bluesky-social/atproto/pull/3177) [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `allFulfilled` utility
+
 ## 0.3.1
 
 ### Patch Changes

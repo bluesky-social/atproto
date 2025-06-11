@@ -1,22 +1,28 @@
+import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 import {
-  isModEventDivert,
+  ModEventTag,
+  isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
   isModEventMuteReporter,
+  isModEventReport,
   isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
   isModEventUnmuteReporter,
-  ModEventTag,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { subjectFromInput } from '../../mod-service/subject'
+import { ProtectedTagSettingKey } from '../../setting/constants'
+import { SettingService } from '../../setting/service'
+import { ProtectedTagSetting } from '../../setting/types'
 import { TagService } from '../../tag-service'
+import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
-import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
 
 const handleModerationEvent = async ({
   ctx,
@@ -34,7 +40,9 @@ const handleModerationEvent = async ({
       : input.body.createdBy
   const db = ctx.db
   const moderationService = ctx.modService(db)
+  const settingService = ctx.settingService(db)
   const { event } = input.body
+  const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
   const isLabelEvent = isModEventLabel(event)
@@ -86,6 +94,17 @@ const handleModerationEvent = async ({
       throw new InvalidRequestError(`Subject is not taken down`)
     }
 
+    if (status?.tags?.length) {
+      const protectedTags = await getProtectedTags(
+        settingService,
+        ctx.cfg.service.did,
+      )
+
+      if (protectedTags) {
+        assertProtectedTagAction(protectedTags, status.tags, createdBy, auth)
+      }
+    }
+
     if (status?.takendown && isReverseTakedownEvent && subject.isRecord()) {
       // due to the way blob status is modeled, we should reverse takedown on all
       // blobs for the record being restored, which aren't taken down on another record.
@@ -125,7 +144,7 @@ const handleModerationEvent = async ({
   }
 
   if (isModEventTag(event)) {
-    assertTagAuth(event, auth)
+    await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
   }
 
   const moderationEvent = await db.transaction(async (dbTxn) => {
@@ -143,7 +162,11 @@ const handleModerationEvent = async ({
       ctx.cfg.service.did,
       moderationTxn,
     )
-    await tagService.evaluateForSubject()
+
+    const initialTags = isModEventReport(event)
+      ? [getTagForReport(event.reportType)]
+      : undefined
+    await tagService.evaluateForSubject(initialTags)
 
     if (subject.isRepo()) {
       if (isTakedownEvent) {
@@ -162,8 +185,15 @@ const handleModerationEvent = async ({
       }
     }
 
-    if (isTakedownEvent && result.event.meta?.acknowledgeAccountSubjects) {
-      await moderationTxn.resolveSubjectsForAccount(subject.did, createdBy)
+    if (
+      (isTakedownEvent || isAcknowledgeEvent) &&
+      result.event.meta?.acknowledgeAccountSubjects
+    ) {
+      await moderationTxn.resolveSubjectsForAccount(
+        subject.did,
+        createdBy,
+        result.event,
+      )
     }
 
     if (isLabelEvent) {
@@ -178,6 +208,7 @@ const handleModerationEvent = async ({
             ? result.event.negateLabelVals.split(' ')
             : undefined,
         },
+        result.event.durationInHours ?? undefined,
       )
     }
 
@@ -225,29 +256,135 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const TAG_AUTH: Record<string, 'triage' | 'moderator' | 'admin'> = {
-  'chat-disabled': 'moderator',
+const assertProtectedTagAction = (
+  protectedTags: ProtectedTagSetting,
+  subjectTags: string[],
+  actionAuthor: string,
+  auth: ModeratorOutput | AdminTokenOutput,
+) => {
+  subjectTags.forEach((tag) => {
+    if (!Object.hasOwn(protectedTags, tag)) return
+    if (
+      protectedTags[tag]['moderators'] &&
+      !protectedTags[tag]['moderators'].includes(actionAuthor)
+    ) {
+      throw new InvalidRequestError(
+        `Not allowed to action on protected tag: ${tag}`,
+      )
+    }
+
+    if (protectedTags[tag]['roles']) {
+      if (auth.credentials.isAdmin) {
+        if (
+          protectedTags[tag]['roles'].includes(
+            'tools.ozone.team.defs#roleAdmin',
+          )
+        ) {
+          return
+        }
+        throw new InvalidRequestError(
+          `Not allowed to action on protected tag: ${tag}`,
+        )
+      }
+
+      if (auth.credentials.isModerator) {
+        if (
+          protectedTags[tag]['roles'].includes(
+            'tools.ozone.team.defs#roleModerator',
+          )
+        ) {
+          return
+        }
+
+        throw new InvalidRequestError(
+          `Not allowed to action on protected tag: ${tag}`,
+        )
+      }
+
+      if (auth.credentials.isTriage) {
+        if (
+          protectedTags[tag]['roles'].includes(
+            'tools.ozone.team.defs#roleTriage',
+          )
+        ) {
+          return
+        }
+
+        throw new InvalidRequestError(
+          `Not allowed to action on protected tag: ${tag}`,
+        )
+      }
+    }
+  })
 }
 
-const assertTagAuth = (
+const assertTagAuth = async (
+  settingService: SettingService,
+  serviceDid: string,
   event: ModEventTag,
   auth: ModeratorOutput | AdminTokenOutput,
 ) => {
   // admins can add/remove any tag
   if (auth.credentials.isAdmin) return
 
-  for (const tag of Object.keys(TAG_AUTH)) {
+  const protectedTags = await getProtectedTags(settingService, serviceDid)
+
+  if (!protectedTags) {
+    return
+  }
+
+  for (const tag of Object.keys(protectedTags)) {
     if (event.add.includes(tag) || event.remove.includes(tag)) {
-      if (TAG_AUTH[tag] === 'admin' && !auth.credentials.isAdmin) {
-        throw new Error(`Must be an admin to add tag: ${tag}`)
-      } else if (
-        TAG_AUTH[tag] === 'moderator' &&
-        !auth.credentials.isModerator
+      // if specific moderators are configured to manage this tag but the current user
+      // is not one of them, then throw an error
+      const configuredModerators = protectedTags[tag]?.['moderators']
+      if (
+        configuredModerators &&
+        !configuredModerators.includes(auth.credentials.iss)
       ) {
-        throw new Error(`Must be a full moderator to add tag: ${tag}`)
+        throw new InvalidRequestError(`Not allowed to manage tag: ${tag}`)
+      }
+
+      const configuredRoles = protectedTags[tag]?.['roles']
+      if (configuredRoles) {
+        // admins can already do everything so we only check for moderator and triage role config
+        if (
+          auth.credentials.isModerator &&
+          !configuredRoles.includes('tools.ozone.team.defs#roleModerator')
+        ) {
+          throw new InvalidRequestError(
+            `Can not manage tag ${tag} with moderator role`,
+          )
+        } else if (
+          auth.credentials.isTriage &&
+          !configuredRoles.includes('tools.ozone.team.defs#roleTriage')
+        ) {
+          throw new InvalidRequestError(
+            `Can not manage tag ${tag} with triage role`,
+          )
+        }
       }
     }
   }
+}
+
+const getProtectedTags = async (
+  settingService: SettingService,
+  serviceDid: string,
+) => {
+  const protectedTagSetting = await settingService.query({
+    keys: [ProtectedTagSettingKey],
+    scope: 'instance',
+    did: serviceDid,
+    limit: 1,
+  })
+
+  // if no protected tags are configured, then no need to do further check
+  if (!protectedTagSetting.options.length) {
+    return
+  }
+
+  return protectedTagSetting.options[0].value as ProtectedTagSetting
 }
 
 const validateLabels = (labels: string[]) => {

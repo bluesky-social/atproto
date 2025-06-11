@@ -1,4 +1,4 @@
-import { IncomingMessage } from './types.js'
+import type { IncomingMessage } from 'node:http'
 
 export type MethodMatcherInput = string | Iterable<string> | MethodMatcher
 export type MethodMatcher = (req: IncomingMessage) => boolean

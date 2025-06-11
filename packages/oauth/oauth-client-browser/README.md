@@ -185,7 +185,7 @@ result of an authorization redirect (both `session` and `state` are defined).
 
 ### Initiating an OAuth flow
 
-In order to initiate an OAuth flow, we must fist determine which PDS the
+In order to initiate an OAuth flow, we must first determine which PDS the
 authentication flow will be initiated from. This means that the user must
 provide one of the following information:
 

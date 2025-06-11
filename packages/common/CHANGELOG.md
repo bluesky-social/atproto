@@ -1,5 +1,57 @@
 # @atproto/common
 
+## 0.4.11
+
+### Patch Changes
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/common-web@0.4.2
+
+## 0.4.10
+
+### Patch Changes
+
+- [#3672](https://github.com/bluesky-social/atproto/pull/3672) [`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144) Thanks [@dholms](https://github.com/dholms)! - Add DASL CID parser
+
+- Updated dependencies [[`4db923ca1`](https://github.com/bluesky-social/atproto/commit/4db923ca1c4fadd31d41c851933659e5186ee144)]:
+  - @atproto/common-web@0.4.1
+
+## 0.4.9
+
+### Patch Changes
+
+- [#2519](https://github.com/bluesky-social/atproto/pull/2519) [`bdbd3c3e3`](https://github.com/bluesky-social/atproto/commit/bdbd3c3e3f8fe8476a3fecac73810554846c938f) Thanks [@dholms](https://github.com/dholms)! - Add renameIfExists function
+
+## 0.4.8
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update NodeJS engine requirement to >=18.7.0
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd), [`8a30e0ed9`](https://github.com/bluesky-social/atproto/commit/8a30e0ed9239cb2037d54fb98e70e8b0cfbc3e39)]:
+  - @atproto/common-web@0.4.0
+
+## 0.4.7
+
+### Patch Changes
+
+- [#3481](https://github.com/bluesky-social/atproto/pull/3481) [`52c687a05`](https://github.com/bluesky-social/atproto/commit/52c687a05c70d5660fae1de9e1bbc6297f37f1f4) Thanks [@dholms](https://github.com/dholms)! - Parse safe uint64 as number
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies [[`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99), [`72eba67af`](https://github.com/bluesky-social/atproto/commit/72eba67af1af8320b5400bcb9319d5c3c8407d99)]:
+  - @atproto/common-web@0.3.2
+
+## 0.4.5
+
+### Patch Changes
+
+- [#3178](https://github.com/bluesky-social/atproto/pull/3178) [`588baae12`](https://github.com/bluesky-social/atproto/commit/588baae1212a3cba3bf0d95d2f268e80513fd9c4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor adaptation of VerifyCidTransform
+
 ## 0.4.4
 
 ### Patch Changes

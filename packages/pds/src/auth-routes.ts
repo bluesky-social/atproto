@@ -1,9 +1,12 @@
-import { oauthProtectedResourceMetadataSchema } from '@atproto/oauth-provider'
 import { Router } from 'express'
+import {
+  oauthMiddleware,
+  oauthProtectedResourceMetadataSchema,
+} from '@atproto/oauth-provider'
+import { AppContext } from './context'
+import { oauthLogger } from './logger'
 
-import AppContext from './context'
-
-export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
+export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
   const router = Router()
 
   const oauthProtectedResourceMetadata =
@@ -15,6 +18,13 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
       resource_documentation: 'https://atproto.com',
     })
 
+  if (
+    !cfg.service.devMode &&
+    !oauthProtectedResourceMetadata.resource.startsWith('https://')
+  ) {
+    throw new Error('Resource URL must use the https scheme')
+  }
+
   router.get('/.well-known/oauth-protected-resource', (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Method', '*')
@@ -22,8 +32,14 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
     res.status(200).json(oauthProtectedResourceMetadata)
   })
 
-  if (authProvider) {
-    router.use(authProvider.createRouter())
+  if (oauthProvider) {
+    router.use(
+      oauthMiddleware(oauthProvider, {
+        onError: (req, res, err, message) => {
+          oauthLogger.error({ err, req }, message)
+        },
+      }),
+    )
   }
 
   return router

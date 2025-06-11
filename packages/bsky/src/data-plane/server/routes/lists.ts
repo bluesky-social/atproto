@@ -1,9 +1,9 @@
-import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
+import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
-import { countAll } from '../db/util'
 import { TimeCidKeyset, paginate } from '../db/pagination'
+import { countAll } from '../db/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorLists(req) {
@@ -69,7 +69,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const byListUri = keyBy(res, 'listUri')
-    const listitemUris = listUris.map((uri) => byListUri[uri]?.uri ?? '')
+    const listitemUris = listUris.map((uri) => byListUri.get(uri)?.uri ?? '')
     return {
       listitemUris,
     }

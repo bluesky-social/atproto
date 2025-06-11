@@ -1,6 +1,5 @@
 import { Resolver, lookup, resolveTxt } from 'node:dns/promises'
 import { isIP } from 'node:net'
-
 import { ResolveTxt } from '@atproto-labs/handle-resolver'
 
 export const nodeResolveTxtDefault: ResolveTxt = (hostname) =>

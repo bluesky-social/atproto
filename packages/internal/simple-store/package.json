@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/simple-store",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Simple store interfaces & utilities",
   "keywords": [
@@ -22,7 +22,6 @@
       "default": "./dist/index.js"
     }
   },
-  "dependencies": {},
   "devDependencies": {
     "typescript": "^5.6.3"
   },

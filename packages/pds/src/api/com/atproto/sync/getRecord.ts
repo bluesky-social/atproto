@@ -1,16 +1,15 @@
-import stream from 'stream'
-import { CID } from 'multiformats/cid'
+import stream from 'node:stream'
+import { byteIterableToStream } from '@atproto/common'
 import * as repo from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { byteIterableToStream } from '@atproto/common'
 import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken(),
     handler: async ({ params, auth }) => {
       const { did, collection, rkey } = params
       await assertRepoAvailability(
@@ -25,9 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       let carStream: stream.Readable
       try {
         const storage = new SqlRepoReader(actorDb)
-        const commit = params.commit
-          ? CID.parse(params.commit)
-          : await storage.getRoot()
+        const commit = await storage.getRoot()
 
         if (!commit) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)

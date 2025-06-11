@@ -1,15 +1,11 @@
 import {
-  Main as ImagesEmbed,
-  View as ImagesEmbedView,
-} from '../lexicon/types/app/bsky/embed/images'
-import {
-  Main as VideoEmbed,
-  View as VideoEmbedView,
-} from '../lexicon/types/app/bsky/embed/video'
-import {
   Main as ExternalEmbed,
   View as ExternalEmbedView,
 } from '../lexicon/types/app/bsky/embed/external'
+import {
+  Main as ImagesEmbed,
+  View as ImagesEmbedView,
+} from '../lexicon/types/app/bsky/embed/images'
 import {
   Main as RecordEmbed,
   View as RecordEmbedView,
@@ -20,12 +16,19 @@ import {
   View as RecordWithMediaView,
 } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
+  Main as VideoEmbed,
+  View as VideoEmbedView,
+} from '../lexicon/types/app/bsky/embed/video'
+import {
   BlockedPost,
   GeneratorView,
   NotFoundPost,
   PostView,
 } from '../lexicon/types/app/bsky/feed/defs'
-import { ListView } from '../lexicon/types/app/bsky/graph/defs'
+import {
+  ListView,
+  StarterPackViewBasic,
+} from '../lexicon/types/app/bsky/graph/defs'
 import { LabelerView } from '../lexicon/types/app/bsky/labeler/defs'
 
 export type {
@@ -47,8 +50,8 @@ export type {
   Main as RecordEmbed,
   View as RecordEmbedView,
   ViewBlocked as EmbedBlocked,
-  ViewNotFound as EmbedNotFound,
   ViewDetached as EmbedDetached,
+  ViewNotFound as EmbedNotFound,
   ViewRecord as PostEmbedView,
 } from '../lexicon/types/app/bsky/embed/record'
 export { isMain as isRecordEmbed } from '../lexicon/types/app/bsky/embed/record'
@@ -89,3 +92,4 @@ export type RecordEmbedViewInternal =
   | GeneratorView
   | ListView
   | LabelerView
+  | StarterPackViewBasic

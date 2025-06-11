@@ -1,19 +1,19 @@
-import {
-  ModerationSubjectProfile,
-  ModerationSubjectPost,
-  ModerationSubjectNotification,
-  ModerationSubjectFeedGenerator,
-  ModerationSubjectUserList,
-  ModerationOpts,
-} from './types'
-import { decideAccount } from './subjects/account'
-import { decideProfile } from './subjects/profile'
-import { decideNotification } from './subjects/notification'
-import { decidePost } from './subjects/post'
-import { decideFeedGenerator } from './subjects/feed-generator'
-import { decideUserList } from './subjects/user-list'
 import { ModerationDecision } from './decision'
 import { matchMuteWord } from './mutewords'
+import { decideAccount } from './subjects/account'
+import { decideFeedGenerator } from './subjects/feed-generator'
+import { decideNotification } from './subjects/notification'
+import { decidePost } from './subjects/post'
+import { decideProfile } from './subjects/profile'
+import { decideUserList } from './subjects/user-list'
+import {
+  ModerationOpts,
+  ModerationSubjectFeedGenerator,
+  ModerationSubjectNotification,
+  ModerationSubjectPost,
+  ModerationSubjectProfile,
+  ModerationSubjectUserList,
+} from './types'
 
 export { ModerationUI } from './ui'
 export { ModerationDecision } from './decision'

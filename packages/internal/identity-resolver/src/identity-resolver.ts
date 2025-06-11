@@ -1,3 +1,4 @@
+import { isValidHandle, normalizeAndEnsureValidHandle } from '@atproto/syntax'
 import {
   Did,
   DidDocument,
@@ -8,15 +9,15 @@ import {
 import {
   AtprotoIdentityDidMethods,
   HandleResolver,
-  isResolvedHandle,
-  ResolvedHandle,
   ResolveHandleOptions,
+  ResolvedHandle,
+  isResolvedHandle,
 } from '@atproto-labs/handle-resolver'
-import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 
 export type ResolvedIdentity = {
   did: NonNullable<ResolvedHandle>
   pds: URL
+  handle?: string
 }
 
 export type ResolveIdentityOptions = ResolveDidOptions & ResolveHandleOptions
@@ -49,6 +50,7 @@ export class IdentityResolver {
     return {
       did: document.id,
       pds: new URL(service.serviceEndpoint),
+      handle: extractHandle(document),
     }
   }
 
@@ -87,6 +89,21 @@ export class IdentityResolver {
 
     return document
   }
+}
+
+function extractHandle(
+  document: DidDocument<AtprotoIdentityDidMethods>,
+): string | undefined {
+  if (document.alsoKnownAs) {
+    for (const h of document.alsoKnownAs) {
+      if (h.startsWith('at://')) {
+        const handle = h.slice(5)
+        if (isValidHandle(handle)) return handle
+      }
+    }
+  }
+
+  return undefined
 }
 
 function isAtprotoPersonalDataServerService<M extends string>(

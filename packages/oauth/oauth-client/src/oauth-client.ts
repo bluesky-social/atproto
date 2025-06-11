@@ -1,11 +1,20 @@
+import { Key, Keyset } from '@atproto/jwk'
 import {
-  assertAtprotoDid,
+  OAuthAuthorizationRequestParameters,
+  OAuthClientIdDiscoverable,
+  OAuthClientMetadata,
+  OAuthClientMetadataInput,
+  OAuthResponseMode,
+  oauthClientMetadataSchema,
+} from '@atproto/oauth-types'
+import {
   AtprotoDid,
   DidCache,
   DidResolverCached,
   DidResolverCommon,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type DidResolverCommonOptions,
+  assertAtprotoDid,
 } from '@atproto-labs/did-resolver'
 import { Fetch } from '@atproto-labs/fetch'
 import {
@@ -16,16 +25,6 @@ import {
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-import { Key, Keyset } from '@atproto/jwk'
-import {
-  OAuthAuthorizationRequestParameters,
-  OAuthClientIdDiscoverable,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  oauthClientMetadataSchema,
-  OAuthResponseMode,
-} from '@atproto/oauth-types'
-
 import { FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
@@ -308,12 +307,23 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       code_challenge: pkce.challenge,
       code_challenge_method: pkce.method,
       state,
-      login_hint: identity
-        ? input // If input is a handle or a DID, use it as a login_hint
-        : undefined,
+      login_hint: identity?.handle ?? identity?.did,
       response_mode: this.responseMode,
       response_type: 'code' as const,
       scope: options?.scope ?? this.clientMetadata.scope,
+    }
+
+    const authorizationUrl = new URL(metadata.authorization_endpoint)
+
+    // Since the user will be redirected to the authorization_endpoint url using
+    // a browser, we need to make sure that the url is valid.
+    if (
+      authorizationUrl.protocol !== 'https:' &&
+      authorizationUrl.protocol !== 'http:'
+    ) {
+      throw new TypeError(
+        `Invalid authorization endpoint protocol: ${authorizationUrl.protocol}`,
+      )
     }
 
     if (metadata.pushed_authorization_request_endpoint) {
@@ -323,7 +333,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         parameters,
       )
 
-      const authorizationUrl = new URL(metadata.authorization_endpoint)
       authorizationUrl.searchParams.set(
         'client_id',
         this.clientMetadata.client_id,
@@ -335,7 +344,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         'Server requires pushed authorization requests (PAR) but no PAR endpoint is available',
       )
     } else {
-      const authorizationUrl = new URL(metadata.authorization_endpoint)
       for (const [key, value] of Object.entries(parameters)) {
         if (value) authorizationUrl.searchParams.set(key, String(value))
       }

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/identity",
-  "version": "0.4.2",
+  "version": "0.4.8",
   "license": "MIT",
   "description": "Library for decentralized identities in atproto using DIDs and handles",
   "keywords": [
@@ -21,10 +21,12 @@
     "test:log": "cat test.log | pino-pretty",
     "build": "tsc --build tsconfig.build.json"
   },
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
-    "@atproto/crypto": "workspace:^",
-    "axios": "^0.27.2"
+    "@atproto/crypto": "workspace:^"
   },
   "devDependencies": {
     "@did-plc/lib": "^0.0.1",

@@ -1,10 +1,10 @@
 import { AtpAgent } from '@atproto/api'
 import { wait } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot, verifyRepo } from '@atproto/repo'
-import AppContext from '../src/context'
+import { AppContext } from '../src/context'
 import { PreparedCreate, prepareCreate } from '../src/repo'
-import { Keypair } from '@atproto/crypto'
 
 describe('races', () => {
   let network: TestNetworkNoAppView

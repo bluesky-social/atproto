@@ -1,32 +1,41 @@
-import express from 'express'
+import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
+import express from 'express'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Database } from './db'
-import { OzoneConfig, OzoneSecrets } from './config'
-import { ModerationService, ModerationServiceCreator } from './mod-service'
+import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
-import assert from 'assert'
-import { EventPusher } from './daemon'
-import Sequencer from './sequencer/sequencer'
 import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
+import { OzoneConfig, OzoneSecrets } from './config'
+import { EventPusher } from './daemon'
 import { BlobDiverter } from './daemon/blob-diverter'
-import { AuthVerifier } from './auth-verifier'
+import { Database } from './db'
 import { ImageInvalidator } from './image-invalidator'
+import { ModerationService, ModerationServiceCreator } from './mod-service'
+import { Sequencer } from './sequencer/sequencer'
+import { SetService, SetServiceCreator } from './set/service'
+import { SettingService, SettingServiceCreator } from './setting/service'
 import { TeamService, TeamServiceCreator } from './team'
 import {
-  defaultLabelerHeader,
-  getSigningKeyId,
   LABELER_HEADER_NAME,
   ParsedLabelers,
+  defaultLabelerHeader,
+  getSigningKeyId,
   parseLabelerHeader,
 } from './util'
-import { SetService, SetServiceCreator } from './set/service'
+import {
+  VerificationIssuer,
+  VerificationIssuerCreator,
+} from './verification/issuer'
+import {
+  VerificationService,
+  VerificationServiceCreator,
+} from './verification/service'
 
 export type AppContextOptions = {
   db: Database
@@ -34,6 +43,7 @@ export type AppContextOptions = {
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
   setService: SetServiceCreator
+  settingService: SettingServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
@@ -47,6 +57,8 @@ export type AppContextOptions = {
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   authVerifier: AuthVerifier
+  verificationService: VerificationServiceCreator
+  verificationIssuer: VerificationIssuerCreator
 }
 
 export class AppContext {
@@ -118,8 +130,15 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
-    const teamService = TeamService.creator()
+    const teamService = TeamService.creator(
+      appviewAgent,
+      cfg.appview.did,
+      createAuthHeaders,
+    )
     const setService = SetService.creator()
+    const settingService = SettingService.creator()
+    const verificationService = VerificationService.creator()
+    const verificationIssuer = VerificationIssuer.creator()
 
     const sequencer = new Sequencer(modService(db))
 
@@ -137,6 +156,7 @@ export class AppContext {
         communicationTemplateService,
         teamService,
         setService,
+        settingService,
         appviewAgent,
         pdsAgent,
         chatAgent,
@@ -148,6 +168,8 @@ export class AppContext {
         sequencer,
         authVerifier,
         blobDiverter,
+        verificationService,
+        verificationIssuer,
         ...(overrides ?? {}),
       },
       secrets,
@@ -188,6 +210,18 @@ export class AppContext {
 
   get setService(): SetServiceCreator {
     return this.opts.setService
+  }
+
+  get settingService(): SettingServiceCreator {
+    return this.opts.settingService
+  }
+
+  get verificationService(): VerificationServiceCreator {
+    return this.opts.verificationService
+  }
+
+  get verificationIssuer(): VerificationIssuerCreator {
+    return this.opts.verificationIssuer
   }
 
   get appviewAgent(): AtpAgent {
@@ -281,4 +315,3 @@ export class AppContext {
     return parsed
   }
 }
-export default AppContext

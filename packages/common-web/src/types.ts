@@ -2,15 +2,29 @@ import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { Def } from './check'
 
-const cidSchema = z
-  .any()
-  .refine((obj: unknown) => CID.asCID(obj) !== null, {
-    message: 'Not a CID',
-  })
-  .transform((obj: unknown) => CID.asCID(obj) as CID)
+const cidSchema = z.unknown().transform((obj, ctx): CID => {
+  const cid = CID.asCID(obj)
+
+  if (cid == null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Not a valid CID',
+    })
+    return z.NEVER
+  }
+
+  return cid
+})
+
+const carHeader = z.object({
+  version: z.literal(1),
+  roots: z.array(cidSchema),
+})
+export type CarHeader = z.infer<typeof carHeader>
 
 export const schema = {
   cid: cidSchema,
+  carHeader,
   bytes: z.instanceof(Uint8Array),
   string: z.string(),
   array: z.array(z.unknown()),
@@ -23,6 +37,10 @@ export const def = {
     name: 'cid',
     schema: schema.cid,
   } as Def<CID>,
+  carHeader: {
+    name: 'CAR header',
+    schema: schema.carHeader,
+  } as Def<CarHeader>,
   bytes: {
     name: 'bytes',
     schema: schema.bytes,

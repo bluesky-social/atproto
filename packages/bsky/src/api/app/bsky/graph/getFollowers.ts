@@ -1,8 +1,13 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import {
+  HydrateCtx,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers'
-import AppContext from '../../../../context'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -11,11 +16,6 @@ import {
   createPipeline,
 } from '../../../../pipeline'
 import { uriToDid as didFromUri } from '../../../../util/uris'
-import {
-  HydrateCtx,
-  Hydrator,
-  mergeStates,
-} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
@@ -74,7 +74,10 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { followUris, subjectDid } = skeleton
-  const followState = await ctx.hydrator.hydrateFollows(followUris)
+  const followState = await ctx.hydrator.hydrateFollows(
+    followUris,
+    params.hydrateCtx,
+  )
   const dids = [subjectDid]
   if (followState.follows) {
     for (const [uri, follow] of followState.follows) {

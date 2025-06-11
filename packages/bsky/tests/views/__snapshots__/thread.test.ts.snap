@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds thread views fetches ancestors 1`] = `
+exports[`appview thread views fetches ancestors 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -56,6 +56,7 @@ Object {
           "threadMuted": false,
         },
       },
+      "threadContext": Object {},
     },
     "post": Object {
       "author": Object {
@@ -75,7 +76,7 @@ Object {
         "$type": "app.bsky.embed.images#view",
         "images": Array [
           Object {
-            "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+            "alt": "../dev-env/assets/key-landscape-small.jpg",
             "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)@jpeg",
             "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)@jpeg",
           },
@@ -98,7 +99,7 @@ Object {
           "val": "test-label-2",
         },
       ],
-      "likeCount": 0,
+      "likeCount": 1,
       "quoteCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -107,7 +108,7 @@ Object {
           "$type": "app.bsky.embed.images",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "image": Object {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -138,6 +139,9 @@ Object {
         "embeddingDisabled": false,
         "threadMuted": false,
       },
+    },
+    "threadContext": Object {
+      "rootAuthorLike": "record(8)",
     },
   },
   "post": Object {
@@ -173,7 +177,7 @@ Object {
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "likeCount": 0,
+    "likeCount": 1,
     "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -200,10 +204,13 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {
+    "rootAuthorLike": "record(9)",
+  },
 }
 `;
 
-exports[`pds thread views fetches deep post thread 1`] = `
+exports[`appview thread views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -272,7 +279,7 @@ Object {
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -298,6 +305,9 @@ Object {
         },
       },
       "replies": Array [],
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
+      },
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
@@ -319,7 +329,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
             },
@@ -331,18 +341,18 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -351,7 +361,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -377,7 +387,7 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
@@ -419,7 +429,7 @@ Object {
             "cid": "cids(6)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
-            "likeCount": 0,
+            "likeCount": 1,
             "quoteCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
@@ -427,7 +437,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(4)",
-                  "uri": "record(7)",
+                  "uri": "record(8)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -438,22 +448,29 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 2,
-            "uri": "record(8)",
+            "uri": "record(9)",
             "viewer": Object {
               "embeddingDisabled": false,
-              "repost": "record(9)",
+              "repost": "record(10)",
               "threadMuted": false,
             },
           },
           "replies": Array [],
+          "threadContext": Object {
+            "rootAuthorLike": "record(11)",
+          },
         },
       ],
+      "threadContext": Object {
+        "rootAuthorLike": "record(12)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
-exports[`pds thread views fetches shallow post thread 1`] = `
+exports[`appview thread views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -522,7 +539,7 @@ Object {
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -547,6 +564,9 @@ Object {
           "threadMuted": false,
         },
       },
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
+      },
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
@@ -568,7 +588,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
             },
@@ -580,18 +600,18 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -600,7 +620,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -626,18 +646,22 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
-exports[`pds thread views fetches thread with handle in uri 1`] = `
+exports[`appview thread views fetches thread with handle in uri 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -706,7 +730,7 @@ Object {
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -731,6 +755,9 @@ Object {
           "threadMuted": false,
         },
       },
+      "threadContext": Object {
+        "rootAuthorLike": "record(7)",
+      },
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
@@ -752,7 +779,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
             },
@@ -764,18 +791,18 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "did:example:labeler",
-            "uri": "record(7)",
+            "uri": "record(8)",
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -784,7 +811,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -810,18 +837,22 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(7)",
+        "uri": "record(8)",
         "viewer": Object {
           "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 1`] = `
+exports[`appview thread views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -978,14 +1009,17 @@ Object {
             },
           },
           "replies": Array [],
+          "threadContext": Object {},
         },
       ],
+      "threadContext": Object {},
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 2`] = `
+exports[`appview thread views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -1037,10 +1071,11 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {},
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 3`] = `
+exports[`appview thread views handles deleted posts correctly 3`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -1107,10 +1142,203 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {},
 }
 `;
 
-exports[`pds thread views takedown blocks ancestors by actor 1`] = `
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by private takedown 1`] = `
+Object {
+  "$type": "app.bsky.feed.defs#blockedPost",
+  "author": Object {
+    "did": "user(0)",
+    "viewer": Object {
+      "blockedBy": true,
+    },
+  },
+  "blocked": true,
+  "uri": "record(0)",
+}
+`;
+
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by private takedown 2`] = `
+Object {
+  "$type": "app.bsky.feed.defs#threadViewPost",
+  "parent": Object {
+    "$type": "app.bsky.feed.defs#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "did": "user(2)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "cid": "cids(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "quoteCount": 0,
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "I'm carol",
+      },
+      "replyCount": 1,
+      "repostCount": 0,
+      "uri": "record(2)",
+      "viewer": Object {
+        "embeddingDisabled": false,
+        "threadMuted": false,
+      },
+    },
+    "threadContext": Object {},
+  },
+  "post": Object {
+    "author": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "likeCount": 0,
+    "quoteCount": 0,
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+      },
+      "text": "hi carol",
+    },
+    "replyCount": 0,
+    "repostCount": 0,
+    "uri": "record(0)",
+    "viewer": Object {
+      "embeddingDisabled": false,
+      "threadMuted": false,
+    },
+  },
+  "replies": Array [],
+  "threadContext": Object {},
+}
+`;
+
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by takedown label 1`] = `
+Object {
+  "$type": "app.bsky.feed.defs#blockedPost",
+  "author": Object {
+    "did": "user(0)",
+    "viewer": Object {
+      "blockedBy": true,
+    },
+  },
+  "blocked": true,
+  "uri": "record(0)",
+}
+`;
+
+exports[`appview thread views listblock doesn't apply listblock if list was taken down by takedown label 2`] = `
+Object {
+  "$type": "app.bsky.feed.defs#threadViewPost",
+  "parent": Object {
+    "$type": "app.bsky.feed.defs#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "did": "user(2)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "cid": "cids(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "quoteCount": 0,
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "I'm carol",
+      },
+      "replyCount": 1,
+      "repostCount": 0,
+      "uri": "record(2)",
+      "viewer": Object {
+        "embeddingDisabled": false,
+        "threadMuted": false,
+      },
+    },
+    "threadContext": Object {},
+  },
+  "post": Object {
+    "author": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "likeCount": 0,
+    "quoteCount": 0,
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+      },
+      "text": "hi carol",
+    },
+    "replyCount": 0,
+    "repostCount": 0,
+    "uri": "record(0)",
+    "viewer": Object {
+      "embeddingDisabled": false,
+      "threadMuted": false,
+    },
+  },
+  "replies": Array [],
+  "threadContext": Object {},
+}
+`;
+
+exports[`appview thread views takedown blocks ancestors by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -1151,7 +1379,7 @@ Object {
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "likeCount": 0,
+    "likeCount": 1,
     "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1178,10 +1406,13 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {
+    "rootAuthorLike": "record(7)",
+  },
 }
 `;
 
-exports[`pds thread views takedown blocks ancestors by record 1`] = `
+exports[`appview thread views takedown blocks ancestors by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -1222,7 +1453,7 @@ Object {
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "likeCount": 0,
+    "likeCount": 1,
     "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1249,10 +1480,13 @@ Object {
     },
   },
   "replies": Array [],
+  "threadContext": Object {
+    "rootAuthorLike": "record(7)",
+  },
 }
 `;
 
-exports[`pds thread views takedown blocks replies by actor 1`] = `
+exports[`appview thread views takedown blocks replies by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -1325,7 +1559,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
             },
@@ -1348,7 +1582,7 @@ Object {
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1357,7 +1591,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1425,7 +1659,7 @@ Object {
             "cid": "cids(5)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
-            "likeCount": 0,
+            "likeCount": 1,
             "quoteCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
@@ -1452,14 +1686,21 @@ Object {
             },
           },
           "replies": Array [],
+          "threadContext": Object {
+            "rootAuthorLike": "record(8)",
+          },
         },
       ],
+      "threadContext": Object {
+        "rootAuthorLike": "record(9)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;
 
-exports[`pds thread views takedown blocks replies by record 1`] = `
+exports[`appview thread views takedown blocks replies by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -1532,7 +1773,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
             },
@@ -1555,7 +1796,7 @@ Object {
             "val": "test-label-2",
           },
         ],
-        "likeCount": 0,
+        "likeCount": 1,
         "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1564,7 +1805,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1597,7 +1838,11 @@ Object {
         },
       },
       "replies": Array [],
+      "threadContext": Object {
+        "rootAuthorLike": "record(6)",
+      },
     },
   ],
+  "threadContext": Object {},
 }
 `;

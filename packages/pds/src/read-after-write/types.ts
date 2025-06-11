@@ -1,8 +1,8 @@
-import { Headers } from '@atproto/xrpc'
-import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { AtUri } from '@atproto/syntax'
+import { Headers } from '@atproto/xrpc'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { LocalViewer } from './viewer'
 
 export type LocalRecords = {

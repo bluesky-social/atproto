@@ -1,5 +1,5 @@
+import { AppContext } from '../../context'
 import { Server, TOOLS_OZONE_TEAM } from '../../lexicon'
-import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.server.getConfig({
@@ -27,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
                 ? TOOLS_OZONE_TEAM.DefsRoleModerator
                 : TOOLS_OZONE_TEAM.DefsRoleTriage,
           },
+          verifierDid: ctx.cfg.verifier?.did || undefined,
         },
       }
     },

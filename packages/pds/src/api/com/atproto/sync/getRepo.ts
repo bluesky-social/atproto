@@ -1,16 +1,20 @@
-import stream from 'stream'
+import stream from 'node:stream'
+import { byteIterableToStream } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import {
   RepoRootNotFoundError,
   SqlRepoReader,
 } from '../../../../actor-store/repo/sql-repo-reader'
+import { AuthScope } from '../../../../auth-verifier'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken({
+      additional: [AuthScope.Takendown],
+    }),
     handler: async ({ params, auth }) => {
       const { did, since } = params
       await assertRepoAvailability(
@@ -38,7 +42,8 @@ export const getCarStream = async (
   let carStream: stream.Readable
   try {
     const storage = new SqlRepoReader(actorDb)
-    carStream = await storage.getCarStream(since)
+    const carIter = await storage.getCarStream(since)
+    carStream = byteIterableToStream(carIter)
   } catch (err) {
     await actorDb.close()
     if (err instanceof RepoRootNotFoundError) {

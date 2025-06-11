@@ -1,8 +1,7 @@
+import { TypeOf, z } from 'zod'
 import { atprotoDidSchema } from '@atproto/did'
 import { oauthTokenResponseSchema } from '@atproto/oauth-types'
-import { z } from 'zod'
-
-import { includesSpaceSeparatedValue, SpaceSeparatedValue } from './util'
+import { SpaceSeparatedValue, includesSpaceSeparatedValue } from './util'
 
 export type AtprotoScope = SpaceSeparatedValue<'atproto'>
 export const isAtprotoScope = (input: string): input is AtprotoScope =>
@@ -19,4 +18,4 @@ export const atprotoTokenResponseSchema = oauthTokenResponseSchema.extend({
   id_token: z.never().optional(),
 })
 
-export type AtprotoTokenResponse = z.infer<typeof atprotoTokenResponseSchema>
+export type AtprotoTokenResponse = TypeOf<typeof atprotoTokenResponseSchema>

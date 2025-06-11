@@ -2,10 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.getSession'
 
 export interface QueryParams {}
 
@@ -17,11 +25,10 @@ export interface OutputSchema {
   email?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
-  didDoc?: {}
+  didDoc?: { [_ in string]: unknown }
   active?: boolean
   /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
   status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
-  [k: string]: unknown
 }
 
 export interface CallOptions {

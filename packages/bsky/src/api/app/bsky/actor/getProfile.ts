@@ -1,15 +1,15 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
-import AppContext from '../../../../context'
-import { resHeaders } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
+import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
@@ -60,7 +60,9 @@ const hydration = async (input: {
   const { ctx, params, skeleton } = input
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
-    params.hydrateCtx.copy({ includeTakedowns: true }),
+    params.hydrateCtx.copy({
+      includeActorTakedowns: true,
+    }),
   )
 }
 

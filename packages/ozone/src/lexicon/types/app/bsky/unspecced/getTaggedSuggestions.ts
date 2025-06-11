@@ -2,11 +2,19 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.unspecced.getTaggedSuggestions'
 
 export interface QueryParams {}
 
@@ -14,7 +22,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   suggestions: Suggestion[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -37,29 +44,25 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Suggestion {
+  $type?: 'app.bsky.unspecced.getTaggedSuggestions#suggestion'
   tag: string
   subjectType: 'actor' | 'feed' | (string & {})
   subject: string
-  [k: string]: unknown
 }
 
-export function isSuggestion(v: unknown): v is Suggestion {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.unspecced.getTaggedSuggestions#suggestion'
-  )
+const hashSuggestion = 'suggestion'
+
+export function isSuggestion<V>(v: V) {
+  return is$typed(v, id, hashSuggestion)
 }
 
-export function validateSuggestion(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'app.bsky.unspecced.getTaggedSuggestions#suggestion',
-    v,
-  )
+export function validateSuggestion<V>(v: V) {
+  return validate<Suggestion & V>(v, id, hashSuggestion)
 }

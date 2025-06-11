@@ -1,21 +1,22 @@
 import { CID } from 'multiformats/cid'
+import { BlobRef } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { CommitData } from '@atproto/repo'
-import { BlobRef } from '@atproto/lexicon'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { prepareUpdate, prepareCreate } from '../../../../repo'
-import AppContext from '../../../../context'
+import { ids } from '../../../../lexicon/lexicons'
+import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
   InvalidRecordError,
   PreparedCreate,
   PreparedUpdate,
+  prepareCreate,
+  prepareUpdate,
 } from '../../../../repo'
-import { ids } from '../../../../lexicon/lexicons'
-import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
-import { ActorStoreTransactor } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -103,26 +104,34 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
 
-          let commit: CommitData
-          try {
-            commit = await actorTxn.repo.processWrites([write], swapCommitCid)
-          } catch (err) {
-            if (
-              err instanceof BadCommitSwapError ||
-              err instanceof BadRecordSwapError
-            ) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            } else {
-              throw err
-            }
-          }
+          const commit = await actorTxn.repo
+            .processWrites([write], swapCommitCid)
+            .catch((err) => {
+              if (
+                err instanceof BadCommitSwapError ||
+                err instanceof BadRecordSwapError
+              ) {
+                throw new InvalidRequestError(err.message, 'InvalidSwap')
+              } else {
+                throw err
+              }
+            })
+
+          await ctx.sequencer.sequenceCommit(did, commit)
+
           return { commit, write }
         },
       )
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit, [write])
-        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+        await ctx.accountManager
+          .updateRepoRoot(did, commit.cid, commit.rev)
+          .catch((err) => {
+            dbLogger.error(
+              { err, did, cid: commit.cid, rev: commit.rev },
+              'failed to update account root',
+            )
+          })
       }
 
       return {
@@ -146,7 +155,7 @@ export default function (server: Server, ctx: AppContext) {
 // WARNING: mutates object
 const updateProfileLegacyBlobRef = async (
   actorStore: ActorStoreTransactor,
-  record: ProfileRecord,
+  record: Partial<ProfileRecord>,
 ) => {
   if (record.avatar && !record.avatar.original['$type']) {
     const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)

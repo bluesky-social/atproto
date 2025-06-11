@@ -1,21 +1,21 @@
 import { AppBskyGraphDefs } from '../client/index'
-import {
-  BLOCK_BEHAVIOR,
-  MUTE_BEHAVIOR,
-  MUTEWORD_BEHAVIOR,
-  HIDE_BEHAVIOR,
-  NOOP_BEHAVIOR,
-  Label,
-  LabelPreference,
-  ModerationCause,
-  ModerationOpts,
-  LabelTarget,
-  ModerationBehavior,
-  CUSTOM_LABEL_VALUE_RE,
-} from './types'
-import { ModerationUI } from './ui'
 import { LABELS } from './const/labels'
 import { MuteWordMatch } from './mutewords'
+import {
+  BLOCK_BEHAVIOR,
+  CUSTOM_LABEL_VALUE_RE,
+  HIDE_BEHAVIOR,
+  Label,
+  LabelPreference,
+  LabelTarget,
+  MUTEWORD_BEHAVIOR,
+  MUTE_BEHAVIOR,
+  ModerationBehavior,
+  ModerationCause,
+  ModerationOpts,
+  NOOP_BEHAVIOR,
+} from './types'
+import { ModerationUI } from './ui'
 
 enum ModerationBehaviorSeverity {
   High,
@@ -33,9 +33,7 @@ export class ModerationDecision {
   static merge(
     ...decisions: (ModerationDecision | undefined)[]
   ): ModerationDecision {
-    const decisionsFiltered: ModerationDecision[] = decisions.filter(
-      (v) => !!v,
-    ) as ModerationDecision[]
+    const decisionsFiltered = decisions.filter((v) => v != null)
     const decision = new ModerationDecision()
     if (decisionsFiltered[0]) {
       decision.did = decisionsFiltered[0].did

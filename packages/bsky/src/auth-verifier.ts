@@ -1,13 +1,16 @@
-import { KeyObject, createPublicKey } from 'node:crypto'
+import crypto, { KeyObject } from 'node:crypto'
+import express from 'express'
+import * as jose from 'jose'
+import KeyEncoder from 'key-encoder'
+import * as ui8 from 'uint8arrays'
+import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import {
   AuthRequiredError,
+  VerifySignatureWithKeyFn,
+  cryptoVerifySignatureWithKey,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import KeyEncoder from 'key-encoder'
-import * as ui8 from 'uint8arrays'
-import * as jose from 'jose'
-import express from 'express'
 import {
   Code,
   DataPlaneClient,
@@ -343,6 +346,7 @@ export class AuthVerifier {
       opts.aud,
       null,
       getSigningKey,
+      verifySignatureWithKey,
     )
     if (
       !payload.iss.endsWith('#atproto_labeler') ||
@@ -440,5 +444,48 @@ export const buildBasicAuth = (username: string, password: string): string => {
 const keyEncoder = new KeyEncoder('secp256k1')
 export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
   const key = keyEncoder.encodePublic(publicKeyHex, 'raw', 'pem')
-  return createPublicKey({ format: 'pem', key })
+  return crypto.createPublicKey({ format: 'pem', key })
+}
+
+const verifySig = (
+  publicKey: Uint8Array,
+  data: Uint8Array,
+  sig: Uint8Array,
+) => {
+  const keyEncoder = new KeyEncoder('secp256k1')
+
+  const pemKey = keyEncoder.encodePublic(
+    ui8.toString(publicKey, 'hex'),
+    'raw',
+    'pem',
+  )
+  const key = crypto.createPublicKey({ format: 'pem', key: pemKey })
+
+  return crypto.verify(
+    'sha256',
+    data,
+    {
+      key,
+      dsaEncoding: 'ieee-p1363',
+    },
+    sig,
+  )
+}
+
+export const verifySignatureWithKey: VerifySignatureWithKeyFn = async (
+  didKey: string,
+  msgBytes: Uint8Array,
+  sigBytes: Uint8Array,
+  alg: string,
+) => {
+  if (alg === SECP256K1_JWT_ALG) {
+    const parsed = parseDidKey(didKey)
+    if (alg !== parsed.jwtAlg) {
+      throw new Error(`Expected key alg ${alg}, got ${parsed.jwtAlg}`)
+    }
+
+    return verifySig(parsed.keyBytes, msgBytes, sigBytes)
+  }
+
+  return cryptoVerifySignatureWithKey(didKey, msgBytes, sigBytes, alg)
 }

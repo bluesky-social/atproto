@@ -8,13 +8,27 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "q": {
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
             "default": 50
           },
-          "cursor": { "type": "string" }
+          "cursor": {
+            "type": "string"
+          }
         }
       },
       "output": {
@@ -23,7 +37,9 @@
           "type": "object",
           "required": ["members"],
           "properties": {
-            "cursor": { "type": "string" },
+            "cursor": {
+              "type": "string"
+            },
             "members": {
               "type": "array",
               "items": {

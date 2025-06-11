@@ -1,15 +1,15 @@
-import {
-  SeedClient,
-  TestNetwork,
-  basicSeed,
-  TestOzone,
-  ModeratorClient,
-  createOzoneDid,
-} from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { LABELER_HEADER_NAME } from '../src/util'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  TestOzone,
+  basicSeed,
+  createOzoneDid,
+} from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
+import { LABELER_HEADER_NAME } from '../src/util'
 
 describe('labels from 3p labelers', () => {
   let network: TestNetwork
@@ -23,7 +23,7 @@ describe('labels from 3p labelers', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_admin_third_party_labeler',
+      dbPostgresSchema: 'ozone_admin_third_party_labeler_main',
     })
     ozone = network.ozone
 
@@ -34,7 +34,7 @@ describe('labels from 3p labelers', () => {
       plcUrl: network.plc.url,
       signingKey: ozoneKey,
       serverDid: ozoneDid,
-      dbPostgresSchema: `ozone_admin_third_party_labeler`,
+      dbPostgresSchema: `ozone_admin_third_party_labeler_third_party`,
       dbPostgresUrl: ozone.ctx.cfg.db.postgresUrl,
       appviewUrl: network.bsky.url,
       appviewDid: network.bsky.ctx.cfg.serverDid,

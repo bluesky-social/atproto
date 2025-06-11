@@ -1,6 +1,6 @@
 import assert from 'node:assert'
-import { OzoneEnvironment } from './env'
 import { DAY, HOUR } from '@atproto/common'
+import { OzoneEnvironment } from './env'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -24,6 +24,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+    materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
+    teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
   }
 
   assert(env.appviewUrl, 'appviewUrl is required')
@@ -77,6 +79,15 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     moderators: env.moderatorDids,
     triage: env.triageDids,
   }
+  const verifierCfg: OzoneConfig['verifier'] =
+    env.verifierUrl && env.verifierDid && env.verifierPassword
+      ? {
+          url: env.verifierUrl,
+          did: env.verifierDid,
+          password: env.verifierPassword,
+          issuersToIndex: env.verifierIssuersToIndex,
+        }
+      : null
 
   return {
     service: serviceCfg,
@@ -88,6 +99,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     identity: identityCfg,
     blobDivert: blobDivertServiceCfg,
     access: accessCfg,
+    verifier: verifierCfg,
+    jetstreamUrl: env.jetstreamUrl,
   }
 }
 
@@ -101,6 +114,8 @@ export type OzoneConfig = {
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
+  jetstreamUrl?: string
+  verifier: VerifierConfig | null
 }
 
 export type ServiceConfig = {
@@ -122,6 +137,8 @@ export type DatabaseConfig = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+  materializedViewRefreshIntervalMs?: number
+  teamProfileRefreshIntervalMs?: number
 }
 
 export type AppviewConfig = {
@@ -154,4 +171,12 @@ export type AccessConfig = {
   admins: string[]
   moderators: string[]
   triage: string[]
+}
+
+export type VerifierConfig = {
+  url: string
+  did: string
+  password: string
+  jetstreamUrl?: string
+  issuersToIndex?: string[]
 }

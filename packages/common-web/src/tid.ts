@@ -1,4 +1,4 @@
-import { s32encode, s32decode } from './util'
+import { s32decode, s32encode } from './util'
 
 const TID_LEN = 13
 
@@ -108,5 +108,3 @@ export class TID {
     return this.compareTo(other) < 0
   }
 }
-
-export default TID

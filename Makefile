@@ -28,12 +28,7 @@ run-dev-env-logged: ## Run a "development environment" shell (with logging)
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files
-	cd packages/api; pnpm run codegen
-	cd packages/pds; pnpm run codegen
-	cd packages/bsky; pnpm run codegen
-	cd packages/ozone; pnpm run codegen
-	# clean up codegen output
-	pnpm format
+	pnpm codegen
 
 .PHONY: lint
 lint: ## Run style checks and verify syntax
@@ -42,6 +37,10 @@ lint: ## Run style checks and verify syntax
 .PHONY: fmt
 fmt: ## Run syntax re-formatting
 	pnpm format
+
+.PHONY: fmt-lexicons
+fmt-lexicons: ## Run syntax re-formatting, just on .json files
+	pnpm exec eslint ./lexicons/ --ext .json --fix
 
 .PHONY: deps
 deps: ## Installs dependent libs using 'pnpm install'

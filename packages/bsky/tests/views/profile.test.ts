@@ -1,8 +1,10 @@
-import fs from 'fs/promises'
-import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewer } from '../_util'
+import assert from 'node:assert'
+import fs from 'node:fs/promises'
+import { AppBskyEmbedExternal, AtpAgent } from '@atproto/api'
+import { HOUR, MINUTE } from '@atproto/common'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot, stripViewer } from '../_util'
 
 describe('pds profile views', () => {
   let network: TestNetwork
@@ -118,10 +120,10 @@ describe('pds profile views', () => {
 
   it('presents avatars & banners', async () => {
     const avatarImg = await fs.readFile(
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
+      '../dev-env/assets/key-portrait-small.jpg',
     )
     const bannerImg = await fs.readFile(
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
     )
     const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
       avatarImg,
@@ -222,6 +224,192 @@ describe('pds profile views', () => {
     // Cleanup
     await network.bsky.ctx.dataplane.untakedownActor({
       did: alice,
+    })
+  })
+
+  describe('status', () => {
+    const embed: AppBskyEmbedExternal.Main = {
+      $type: 'app.bsky.embed.external',
+      external: {
+        uri: 'https://example.com',
+        title: 'TestImage',
+        description: 'testLink',
+      },
+    }
+
+    it(`omits status if doesn't exist`, async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.status).toBeUndefined()
+    })
+
+    it('returns active status when within the duration', async () => {
+      await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: alice,
+          collection: ids.AppBskyActorStatus,
+          rkey: 'self',
+          record: {
+            status: 'app.bsky.actor.status#live',
+            embed,
+            durationMinutes: 10,
+            createdAt: new Date().toISOString(),
+          },
+        },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(forSnapshot(data.status)).toMatchSnapshot()
+    })
+
+    it('limits the minimum duration', async () => {
+      await sc.agent.com.atproto.repo.putRecord(
+        {
+          repo: alice,
+          collection: ids.AppBskyActorStatus,
+          rkey: 'self',
+          record: {
+            status: 'app.bsky.actor.status#live',
+            embed,
+            durationMinutes: 1,
+            createdAt: new Date().toISOString(),
+          },
+        },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+
+      assert(data.status)
+      const createdAt = new Date(data.status.record.createdAt as string)
+      const expiresAt = new Date(data.status.expiresAt as string)
+      expect(expiresAt.getTime() - createdAt.getTime()).toBe(5 * MINUTE)
+    })
+
+    it('limits the maximum duration', async () => {
+      await sc.agent.com.atproto.repo.putRecord(
+        {
+          repo: alice,
+          collection: ids.AppBskyActorStatus,
+          rkey: 'self',
+          record: {
+            status: 'app.bsky.actor.status#live',
+            embed,
+            durationMinutes: 1_440, // 1 day in minutes
+            createdAt: new Date().toISOString(),
+          },
+        },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+
+      assert(data.status)
+      const createdAt = new Date(data.status.record.createdAt as string)
+      const expiresAt = new Date(data.status.expiresAt as string)
+      expect(expiresAt.getTime() - createdAt.getTime()).toBe(4 * HOUR)
+    })
+
+    describe('when outside the duration', () => {
+      const now = '2021-01-01T01:00:00.000Z'
+      const nowPlus15M = '2021-01-01T01:15:00.000Z'
+
+      beforeAll(() => {
+        jest.useFakeTimers({
+          doNotFake: [
+            'nextTick',
+            'performance',
+            'setImmediate',
+            'setInterval',
+            'setTimeout',
+          ],
+        })
+        jest.setSystemTime(new Date(now))
+      })
+
+      afterAll(async () => {
+        jest.useRealTimers()
+      })
+
+      it('returns inactive status', async () => {
+        await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: alice,
+            collection: ids.AppBskyActorStatus,
+            rkey: 'self',
+            record: {
+              status: 'app.bsky.actor.status#live',
+              embed,
+              durationMinutes: 10,
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            headers: sc.getHeaders(alice),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+
+        jest.setSystemTime(new Date(nowPlus15M))
+
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              alice,
+              ids.AppBskyActorGetProfile,
+            ),
+          },
+        )
+
+        // Doesn't need `forSnapshot` because the dates are already mocked.
+        expect(data.status).toMatchSnapshot()
+      })
     })
   })
 

@@ -9,20 +9,19 @@ import {
   SessionEventMap,
 } from '@atproto/oauth-client'
 import {
+  OAuthClientMetadataInput,
+  OAuthResponseMode,
   assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
   isOAuthClientIdLoopback,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
 } from '@atproto/oauth-types'
-
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
 import {
-  buildLoopbackClientId,
   Simplify,
   TypedBroadcastChannel,
+  buildLoopbackClientId,
 } from './util.js'
 
 export type BrowserOAuthClientOptions = Simplify<
@@ -143,7 +142,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
         database.getProtectedResourceMetadataCache(),
     })
 
-    // TODO: replace with AsyncDisposableStack once they are standardized
+    // @TODO replace with AsyncDisposableStack once they are standardized
     const ac = new AbortController()
     const { signal } = ac
     this[Symbol.dispose] = () => ac.abort()
@@ -294,7 +293,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       }
 
       const cancel = () => {
-        // @TODO: Store fact that the request was cancelled, allowing any
+        // @TODO Store fact that the request was cancelled, allowing any
         // callback (e.g. in the popup) to revoke the session or credentials.
 
         reject(new Error(options?.signal?.aborted ? 'Aborted' : 'Timeout'))

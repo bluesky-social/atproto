@@ -1,9 +1,9 @@
 import {
-  moderatePost,
-  mock,
-  ModerationOpts,
   InterpretedLabelValueDefinition,
+  ModerationOpts,
   interpretLabelValueDefinition,
+  mock,
+  moderatePost,
 } from '../src'
 import './util/moderation-behavior'
 
@@ -193,6 +193,7 @@ describe('Moderation: custom labels', () => {
 
       const post = mock.postView({
         record: {
+          $type: 'app.bsky.feed.post',
           text: 'Hello',
           createdAt: new Date().toISOString(),
         },

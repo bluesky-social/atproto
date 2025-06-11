@@ -4,189 +4,226 @@
 import {
   createServer as createXrpcServer,
   Server as XrpcServer,
-  Options as XrpcOptions,
-  AuthVerifier,
-  StreamAuthVerifier,
+  type Options as XrpcOptions,
+  type AuthVerifier,
+  type StreamAuthVerifier,
 } from '@atproto/xrpc-server'
-import { schemas } from './lexicons'
-import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
-import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
-import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
-import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
-import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
-import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
-import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
-import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
-import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
-import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
-import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
-import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
-import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
-import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
-import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
-import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
-import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation'
-import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
-import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
-import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
-import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
-import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
-import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
-import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
-import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
-import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
-import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
-import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
-import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
-import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
-import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
-import * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
-import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
-import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
-import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
-import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
-import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
-import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
-import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
-import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
-import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
-import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
-import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
-import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
-import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
-import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
-import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
-import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
-import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
-import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
-import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
-import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
-import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
-import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
-import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
-import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
-import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
-import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
-import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
-import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
-import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
-import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
-import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
-import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
-import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
-import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
-import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
-import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
-import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
-import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
-import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
-import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
-import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
-import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
-import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
-import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
-import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
-import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
-import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
-import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
-import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
-import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
-import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
-import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
-import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
-import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
-import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
-import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
-import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
-import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
-import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
-import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
-import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
-import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
-import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
-import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
-import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
-import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
-import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
-import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
-import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
-import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
-import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
-import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
-import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
-import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
-import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
-import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
-import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
-import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
-import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
-import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
-import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
-import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
-import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig'
-import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
-import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
-import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
-import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
-import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
-import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
-import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
-import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
-import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
-import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
-import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
-import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
-import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
-import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
-import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
-import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
-import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
-import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
-import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
-import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
-import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
-import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
-import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
-import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
-import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
-import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
-import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
-import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
-import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
-import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
-import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
-import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
-import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords'
-import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
-import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos'
-import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
-import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
-import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
-import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
-import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues'
-import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet'
-import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues'
-import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues'
-import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets'
-import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet'
-import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation'
-import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts'
-import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts'
-import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
-import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
-import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
-import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
+import { schemas } from './lexicons.js'
+import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
+import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
+import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes.js'
+import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites.js'
+import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo.js'
+import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos.js'
+import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes.js'
+import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus.js'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
+import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
+import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
+import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
+import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
+import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
+import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
+import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
+import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature.js'
+import * as ComAtprotoIdentityResolveDid from './types/com/atproto/identity/resolveDid.js'
+import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle.js'
+import * as ComAtprotoIdentityResolveIdentity from './types/com/atproto/identity/resolveIdentity.js'
+import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation.js'
+import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation.js'
+import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle.js'
+import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
+import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
+import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites.js'
+import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord.js'
+import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord.js'
+import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo.js'
+import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord.js'
+import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo.js'
+import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs.js'
+import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords.js'
+import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord.js'
+import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob.js'
+import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount.js'
+import * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus.js'
+import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail.js'
+import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount.js'
+import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword.js'
+import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode.js'
+import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes.js'
+import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession.js'
+import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount.js'
+import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount.js'
+import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession.js'
+import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer.js'
+import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes.js'
+import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth.js'
+import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession.js'
+import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords.js'
+import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession.js'
+import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete.js'
+import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation.js'
+import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate.js'
+import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset.js'
+import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey.js'
+import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
+import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
+import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
+import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
+import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
+import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
+import * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
+import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
+import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
+import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
+import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
+import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
+import * as ComAtprotoSyncListHosts from './types/com/atproto/sync/listHosts.js'
+import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
+import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
+import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
+import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
+import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
+import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
+import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
+import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
+import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences.js'
+import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile.js'
+import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles.js'
+import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions.js'
+import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
+import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
+import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
+import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
+import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
+import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
+import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
+import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
+import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
+import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
+import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
+import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
+import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline.js'
+import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts.js'
+import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions.js'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks.js'
+import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
+import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
+import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
+import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
+import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
+import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
+import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
+import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
+import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
+import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks.js'
+import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
+import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
+import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
+import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
+import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
+import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
+import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
+import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
+import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
+import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
+import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
+import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
+import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
+import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
+import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
+import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
+import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
+import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
+import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
+import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
+import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
+import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo.js'
+import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
+import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
+import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
+import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
+import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
+import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet.js'
+import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues.js'
+import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues.js'
+import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets.js'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet.js'
+import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions.js'
+import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions.js'
+import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption.js'
+import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation.js'
+import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts.js'
+import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts.js'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember.js'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember.js'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers.js'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember.js'
+import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/verification/grantVerifications.js'
+import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
+import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -197,6 +234,9 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
+export const APP_BSKY_ACTOR = {
+  StatusLive: 'app.bsky.actor.status#live',
+}
 export const APP_BSKY_FEED = {
   DefsRequestLess: 'app.bsky.feed.defs#requestLess',
   DefsRequestMore: 'app.bsky.feed.defs#requestMore',
@@ -204,6 +244,8 @@ export const APP_BSKY_FEED = {
   DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
   DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
   DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsContentModeUnspecified: 'app.bsky.feed.defs#contentModeUnspecified',
+  DefsContentModeVideo: 'app.bsky.feed.defs#contentModeVideo',
   DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
   DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
   DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
@@ -226,6 +268,7 @@ export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
   DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
   DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
+  DefsRoleVerifier: 'tools.ozone.team.defs#roleVerifier',
 }
 
 export function createServer(options?: XrpcOptions): Server {
@@ -263,6 +306,7 @@ export class ComAtprotoNS {
   admin: ComAtprotoAdminNS
   identity: ComAtprotoIdentityNS
   label: ComAtprotoLabelNS
+  lexicon: ComAtprotoLexiconNS
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
@@ -274,6 +318,7 @@ export class ComAtprotoNS {
     this.admin = new ComAtprotoAdminNS(server)
     this.identity = new ComAtprotoIdentityNS(server)
     this.label = new ComAtprotoLabelNS(server)
+    this.lexicon = new ComAtprotoLexiconNS(server)
     this.moderation = new ComAtprotoModerationNS(server)
     this.repo = new ComAtprotoRepoNS(server)
     this.server = new ComAtprotoServerNS(server)
@@ -432,6 +477,17 @@ export class ComAtprotoAdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  updateAccountSigningKey<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateAccountSigningKey.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminUpdateAccountSigningKey.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateAccountSigningKey' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   updateSubjectStatus<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -464,6 +520,17 @@ export class ComAtprotoIdentityNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  refreshIdentity<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoIdentityRefreshIdentity.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentityRefreshIdentity.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.identity.refreshIdentity' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   requestPlcOperationSignature<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -477,6 +544,17 @@ export class ComAtprotoIdentityNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  resolveDid<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoIdentityResolveDid.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentityResolveDid.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.identity.resolveDid' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   resolveHandle<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -485,6 +563,17 @@ export class ComAtprotoIdentityNS {
     >,
   ) {
     const nsid = 'com.atproto.identity.resolveHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  resolveIdentity<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoIdentityResolveIdentity.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentityResolveIdentity.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.identity.resolveIdentity' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -549,6 +638,14 @@ export class ComAtprotoLabelNS {
   ) {
     const nsid = 'com.atproto.label.subscribeLabels' // @ts-ignore
     return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+}
+
+export class ComAtprotoLexiconNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 
@@ -1023,6 +1120,17 @@ export class ComAtprotoSyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getHostStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncGetHostStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncGetHostStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.getHostStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getLatestCommit<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1078,6 +1186,17 @@ export class ComAtprotoSyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  listHosts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncListHosts.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncListHosts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.listHosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listRepos<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1086,6 +1205,17 @@ export class ComAtprotoSyncNS {
     >,
   ) {
     const nsid = 'com.atproto.sync.listRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listReposByCollection<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncListReposByCollection.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncListReposByCollection.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.listReposByCollection' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1128,6 +1258,17 @@ export class ComAtprotoTempNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  addReservedHandle<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempAddReservedHandle.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempAddReservedHandle.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.addReservedHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   checkSignupQueue<AV extends AuthVerifier>(
@@ -1410,17 +1551,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getPostThread<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyFeedGetPostThread.Handler<ExtractAuth<AV>>,
-      AppBskyFeedGetPostThread.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getPosts<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1429,6 +1559,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetPostThread.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetPostThread.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1693,6 +1834,17 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  searchStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphSearchStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphSearchStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.searchStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   unmuteActor<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1753,6 +1905,17 @@ export class AppBskyNotificationNS {
     this._server = server
   }
 
+  getPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationGetPreferences.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationGetPreferences.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.getPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getUnreadCount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1783,6 +1946,17 @@ export class AppBskyNotificationNS {
     >,
   ) {
     const nsid = 'app.bsky.notification.putPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putPreferencesV2<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationPutPreferencesV2.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationPutPreferencesV2.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putPreferencesV2' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1846,6 +2020,96 @@ export class AppBskyUnspeccedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getPostThreadOtherV2<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetPostThreadOtherV2.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetPostThreadOtherV2.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPostThreadOtherV2' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThreadV2<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetPostThreadV2.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetPostThreadV2.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPostThreadV2' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedFeeds<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedFeeds.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedFeeds.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedFeeds' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedFeedsSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedFeedsSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedFeedsSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedFeedsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedStarterPacksSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.HandlerReqCtx<
+        ExtractAuth<AV>
+      >
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedStarterPacksSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedUsers.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedUsers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestedUsersSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestedUsersSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getSuggestionsSkeleton<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1868,6 +2132,39 @@ export class AppBskyUnspeccedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getTrendingTopics<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetTrendingTopics.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetTrendingTopics.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTrendingTopics' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTrends<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetTrends.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetTrends.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTrends' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTrendsSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetTrendsSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetTrendsSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTrendsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   searchActorsSkeleton<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1887,6 +2184,17 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchStarterPacksSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedSearchStarterPacksSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedSearchStarterPacksSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.searchStarterPacksSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -1993,6 +2301,28 @@ export class ChatBskyConvoNS {
     this._server = server
   }
 
+  acceptConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoAcceptConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoAcceptConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.acceptConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  addReaction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoAddReaction.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoAddReaction.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.addReaction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   deleteMessageForSelf<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2012,6 +2342,17 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoAvailability<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvoAvailability.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvoAvailability.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoAvailability' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2081,6 +2422,17 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  removeReaction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoRemoveReaction.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoRemoveReaction.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.removeReaction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   sendMessage<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2111,6 +2463,17 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.unmuteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateAllRead<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUpdateAllRead.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUpdateAllRead.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.updateAllRead' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2180,20 +2543,26 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
+  hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
+  setting: ToolsOzoneSettingNS
   signature: ToolsOzoneSignatureNS
   team: ToolsOzoneTeamNS
+  verification: ToolsOzoneVerificationNS
 
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
+    this.hosting = new ToolsOzoneHostingNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
+    this.setting = new ToolsOzoneSettingNS(server)
     this.signature = new ToolsOzoneSignatureNS(server)
     this.team = new ToolsOzoneTeamNS(server)
+    this.verification = new ToolsOzoneVerificationNS(server)
   }
 }
 
@@ -2245,6 +2614,25 @@ export class ToolsOzoneCommunicationNS {
     >,
   ) {
     const nsid = 'tools.ozone.communication.updateTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneHostingNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAccountHistory<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHostingGetAccountHistory.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHostingGetAccountHistory.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.hosting.getAccountHistory' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -2311,6 +2699,17 @@ export class ToolsOzoneModerationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getReporterStats<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetReporterStats.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetReporterStats.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getReporterStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRepos<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2319,6 +2718,17 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.getRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubjects<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetSubjects.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetSubjects.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getSubjects' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2449,6 +2859,47 @@ export class ToolsOzoneSetNS {
   }
 }
 
+export class ToolsOzoneSettingNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  listOptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingListOptions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingListOptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.listOptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeOptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingRemoveOptions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingRemoveOptions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.removeOptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  upsertOption<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSettingUpsertOption.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSettingUpsertOption.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.setting.upsertOption' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
 export class ToolsOzoneSignatureNS {
   _server: Server
 
@@ -2542,15 +2993,56 @@ export class ToolsOzoneTeamNS {
   }
 }
 
+export class ToolsOzoneVerificationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  grantVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationGrantVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationGrantVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.grantVerifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationListVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationListVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.listVerifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  revokeVerifications<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneVerificationRevokeVerifications.Handler<ExtractAuth<AV>>,
+      ToolsOzoneVerificationRevokeVerifications.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.verification.revokeVerifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
 type SharedRateLimitOpts<T> = {
   name: string
-  calcKey?: (ctx: T) => string
+  calcKey?: (ctx: T) => string | null
   calcPoints?: (ctx: T) => number
 }
 type RouteRateLimitOpts<T> = {
   durationMs: number
   points: number
-  calcKey?: (ctx: T) => string
+  calcKey?: (ctx: T) => string | null
   calcPoints?: (ctx: T) => number
 }
 type HandlerOpts = { blobLimit?: number }

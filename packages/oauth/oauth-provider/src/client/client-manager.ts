@@ -1,40 +1,32 @@
+import { Jwks, Keyset, jwksSchema } from '@atproto/jwk'
 import {
-  bindFetch,
+  OAuthAuthorizationServerMetadata,
+  OAuthClientIdDiscoverable,
+  OAuthClientIdLoopback,
+  OAuthClientMetadata,
+  OAuthClientMetadataInput,
+  isLoopbackHost,
+  isOAuthClientIdDiscoverable,
+  isOAuthClientIdLoopback,
+  oauthClientMetadataSchema,
+} from '@atproto/oauth-types'
+import {
   Fetch,
-  FetchError,
+  bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
-  FetchResponseError,
 } from '@atproto-labs/fetch'
+import { isLocalHostname } from '@atproto-labs/fetch-node'
 import { pipe } from '@atproto-labs/pipe'
 import {
   CachedGetter,
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-import { Jwks, jwksSchema, Keyset } from '@atproto/jwk'
-import {
-  isLoopbackHost,
-  isOAuthClientIdDiscoverable,
-  isOAuthClientIdLoopback,
-  OAuthAuthorizationServerMetadata,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  oauthClientMetadataSchema,
-} from '@atproto/oauth-types'
-import { ZodError } from 'zod'
-
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
-import { OAuthError } from '../errors/oauth-error.js'
-import {
-  isInternetHost,
-  isInternetUrl,
-  parseUrlPublicSuffix,
-} from '../lib/util/hostname.js'
+import { callAsync } from '../lib/util/function.js'
 import { Awaitable } from '../lib/util/type.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { ClientId } from './client-id.js'
@@ -97,53 +89,69 @@ export class ClientManager {
    *
    * @see {@link https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2 OIDC Client Registration}
    */
-  public async getClient(clientId: string) {
-    try {
-      const metadata = await this.getClientMetadata(clientId)
-
-      const jwks = metadata.jwks_uri
-        ? await this.jwks.get(metadata.jwks_uri)
-        : undefined
-
-      const partialInfo = await this.hooks.onClientInfo?.(clientId, {
-        metadata,
-        jwks,
-      })
-
-      const isFirstParty = partialInfo?.isFirstParty ?? false
-      const isTrusted = partialInfo?.isTrusted ?? isFirstParty
-
-      return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
-    } catch (err) {
-      if (err instanceof OAuthError) {
-        throw err
-      }
-      if (err instanceof FetchError) {
-        const message =
-          err instanceof FetchResponseError || err.statusCode !== 500
-            ? // Only expose 500 message if it was generated on another server
-              `Failed to fetch client information: ${err.message}`
-            : `Failed to fetch client information due to an internal error`
-        throw new InvalidClientMetadataError(message, err)
-      }
-      if (err instanceof ZodError) {
-        const issues = err.issues
-          .map(
-            ({ path, message }) =>
-              `Validation${path.length ? ` of "${path.join('.')}"` : ''} failed with error: ${message}`,
-          )
-          .join(' ')
-        throw new InvalidClientMetadataError(issues || err.message, err)
-      }
-      if (err?.['code'] === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
-        throw new InvalidClientMetadataError('Self-signed certificate', err)
-      }
-
+  public async getClient(clientId: ClientId) {
+    const metadata = await this.getClientMetadata(clientId).catch((err) => {
       throw InvalidClientMetadataError.from(
         err,
-        `Unable to load client information for "${clientId}"`,
+        `Unable to obtain client metadata for "${clientId}"`,
       )
-    }
+    })
+
+    const jwks = metadata.jwks_uri
+      ? await this.jwks.get(metadata.jwks_uri).catch((err) => {
+          throw InvalidClientMetadataError.from(
+            err,
+            `Unable to obtain jwks from "${metadata.jwks_uri}" for "${clientId}"`,
+          )
+        })
+      : undefined
+
+    const partialInfo = await callAsync(this.hooks.getClientInfo, clientId, {
+      metadata,
+      jwks,
+    }).catch((err) => {
+      throw InvalidClientMetadataError.from(
+        err,
+        `Rejected client information for "${clientId}"`,
+      )
+    })
+
+    const isFirstParty = partialInfo?.isFirstParty ?? false
+    const isTrusted = partialInfo?.isTrusted ?? isFirstParty
+
+    return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
+  }
+
+  public async loadClients(
+    clientIds: Iterable<ClientId>,
+    {
+      onError = (err) => {
+        throw err
+      },
+    }: {
+      onError?: (
+        err: unknown,
+        clientId: ClientId,
+      ) => Awaitable<Client | null | undefined>
+    } = {},
+  ): Promise<Map<ClientId, Client>> {
+    // Make sure we don't load the same client multiple times
+    const uniqueClientIds =
+      clientIds instanceof Set ? clientIds : new Set(clientIds)
+
+    // Load all (unique) clients in parallel
+    const clients = await Promise.all(
+      Array.from(uniqueClientIds, async (clientId) =>
+        this.getClient(clientId).catch((err) => onError(err, clientId)),
+      ),
+    )
+
+    // Return a map for easy lookups
+    return new Map(
+      clients
+        .filter((c) => c != null && c instanceof Client)
+        .map((c) => [c.id, c]),
+    )
   }
 
   protected async getClientMetadata(
@@ -231,11 +239,8 @@ export class ClientManager {
     const clientUriUrl = metadata.client_uri
       ? new URL(metadata.client_uri)
       : null
-    const clientUriDomain = clientUriUrl
-      ? parseUrlPublicSuffix(clientUriUrl)
-      : null
 
-    if (clientUriUrl && !clientUriDomain) {
+    if (clientUriUrl && isLocalHostname(clientUriUrl.hostname)) {
       throw new InvalidClientMetadataError('client_uri hostname is invalid')
     }
 
@@ -277,7 +282,7 @@ export class ClientManager {
             `Grant type "${grantType}" is not allowed`,
           )
 
-        // @TODO: Add support (e.g. for first party client)
+        // @TODO Add support (e.g. for first party client)
         // case 'client_credentials':
         // case 'password':
         case 'authorization_code':
@@ -534,9 +539,9 @@ export class ClientManager {
         }
 
         case url.protocol === 'https:': {
-          if (!isInternetUrl(url)) {
+          if (isLocalHostname(url.hostname)) {
             throw new InvalidRedirectUriError(
-              `Redirect URI "${url}"'s domain name must belong to the Public Suffix List (PSL)`,
+              `Redirect URI "${url}"'s domain name must not be a local hostname`,
             )
           }
 
@@ -603,9 +608,9 @@ export class ClientManager {
 
           const urlDomain = reverseDomain(url.protocol.slice(0, -1))
 
-          if (!isInternetHost(urlDomain)) {
+          if (isLocalHostname(urlDomain)) {
             throw new InvalidRedirectUriError(
-              `Private-use URI Scheme redirect URI must be based on a valid domain name`,
+              `Private-use URI Scheme redirect URI must not be a local hostname`,
             )
           }
 

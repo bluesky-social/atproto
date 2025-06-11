@@ -2,12 +2,20 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoLabelDefs from './defs'
+import type * as ComAtprotoLabelDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.label.queryLabels'
 
 export interface QueryParams {
   /** List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI. */
@@ -23,7 +31,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   labels: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -46,6 +53,7 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,

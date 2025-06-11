@@ -1,18 +1,18 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
+import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
-import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
+import { DatabaseSchema } from '../db/schema'
+import { jsonb } from '../db/types'
+import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
-  REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,
+  REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
-import { HOUR } from '@atproto/common'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
-import { jsonb } from '../db/types'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,
@@ -77,6 +77,8 @@ const getSubjectStatusForModerationEvent = ({
       }
     case 'tools.ozone.moderation.defs#modEventTakedown':
       return {
+        // If we are doing a takedown, safe to move the item out of appealed state
+        ...(currentStatus?.appealed ? { appealed: false } : {}),
         takendown: true,
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
@@ -126,6 +128,133 @@ const getSubjectStatusForModerationEvent = ({
   }
 }
 
+const hostingEvents = [
+  'tools.ozone.moderation.defs#accountEvent',
+  'tools.ozone.moderation.defs#identityEvent',
+  'tools.ozone.moderation.defs#recordEvent',
+]
+
+const getSubjectStatusForRecordEvent = ({
+  event,
+  currentStatus,
+}: {
+  event: ModerationEventRow
+  currentStatus?: ModerationSubjectStatusRow
+}): Partial<ModerationSubjectStatusRow> => {
+  const timestamp =
+    typeof event.meta?.timestamp === 'string'
+      ? event.meta?.timestamp
+      : event.createdAt
+
+  if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
+    if (event.meta?.op === 'delete') {
+      return {
+        hostingStatus: 'deleted',
+        hostingDeletedAt: timestamp,
+      }
+    } else if (event.meta?.op === 'update') {
+      return {
+        hostingStatus: 'active',
+        hostingUpdatedAt: timestamp,
+      }
+    }
+    return {}
+  }
+
+  if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
+    const status: Partial<ModerationSubjectStatusRow> = {
+      hostingUpdatedAt: timestamp,
+    }
+
+    if (event.meta?.status) {
+      status.hostingStatus = `${event.meta?.status}`
+    }
+
+    if (event.meta?.status === 'deleted') {
+      status.hostingDeletedAt = timestamp
+    } else if (event.meta?.status === 'deactivated') {
+      status.hostingDeactivatedAt = timestamp
+    } else {
+      // When deactivated accounts are re-activated, we receive the event with just the active flag set to true
+      // so we want to make sure that the hostingStatus is not set to an outdated value
+      if (
+        currentStatus?.hostingStatus === 'deactivated' &&
+        event.meta?.active
+      ) {
+        status.hostingStatus = 'active'
+        status.hostingReactivatedAt = timestamp
+      }
+    }
+
+    return status
+  }
+
+  if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
+    const status: Partial<ModerationSubjectStatusRow> = {
+      hostingUpdatedAt: timestamp,
+    }
+
+    if (event.meta?.tombstone) {
+      status.hostingStatus = 'tombstoned'
+      status.hostingDeletedAt = timestamp
+    }
+
+    return status
+  }
+
+  return {}
+}
+
+export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
+  // @NOTE: Using select() instead of selectAll() below because the materialized
+  // views might be incomplete, and we don't want the null `did` columns to
+  // interfere with the (never null) `did` column from the
+  // `moderation_subject_status` table in the results
+  return db
+    .selectFrom('moderation_subject_status')
+    .selectAll('moderation_subject_status')
+    .leftJoin('account_events_stats', (join) =>
+      join.onRef(
+        'moderation_subject_status.did',
+        '=',
+        'account_events_stats.subjectDid',
+      ),
+    )
+    .select([
+      'account_events_stats.takedownCount',
+      'account_events_stats.suspendCount',
+      'account_events_stats.escalateCount',
+      'account_events_stats.reportCount',
+      'account_events_stats.appealCount',
+    ])
+    .leftJoin('account_record_events_stats', (join) =>
+      join.onRef(
+        'moderation_subject_status.did',
+        '=',
+        'account_record_events_stats.subjectDid',
+      ),
+    )
+    .select([
+      'account_record_events_stats.totalReports',
+      'account_record_events_stats.reportedCount',
+      'account_record_events_stats.escalatedCount',
+      'account_record_events_stats.appealedCount',
+    ])
+    .leftJoin('account_record_status_stats', (join) =>
+      join.onRef(
+        'moderation_subject_status.did',
+        '=',
+        'account_record_status_stats.did',
+      ),
+    )
+    .select([
+      'account_record_status_stats.subjectCount',
+      'account_record_status_stats.pendingCount',
+      'account_record_status_stats.processedCount',
+      'account_record_status_stats.takendownCount',
+    ])
+}
+
 // Based on a given moderation action event, this function will update the moderation status of the subject
 // If there's no existing status, it will create one
 // If the action event does not affect the status, it will do nothing
@@ -133,7 +262,7 @@ export const adjustModerationSubjectStatus = async (
   db: Database,
   moderationEvent: ModerationEventRow,
   blobCids?: string[],
-) => {
+): Promise<ModerationSubjectStatusRow | null> => {
   const {
     action,
     subjectDid,
@@ -152,6 +281,7 @@ export const adjustModerationSubjectStatus = async (
 
   db.assertTransaction()
 
+  const now = new Date().toISOString()
   const currentStatus = await db.db
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
@@ -160,6 +290,41 @@ export const adjustModerationSubjectStatus = async (
     .forUpdate()
     .selectAll()
     .executeTakeFirst()
+
+  if (hostingEvents.includes(action)) {
+    const newStatus = getSubjectStatusForRecordEvent({
+      event: moderationEvent,
+      currentStatus,
+    })
+    if (!Object.keys(newStatus).length) {
+      return currentStatus || null
+    }
+
+    const status = await db.db
+      .insertInto('moderation_subject_status')
+      .values({
+        ...identifier,
+        ...newStatus,
+        // newStatus doesn't contain a reviewState or takendown so in case this is a new entry
+        // we need to set a default values so that the insert doesn't fail
+        reviewState: currentStatus ? currentStatus.reviewState : REVIEWNONE,
+        // @TODO: should we try to update this based on status property of account event?
+        // For now we're the only one emitting takedowns so i don't think it makes too much of a difference
+        takendown: currentStatus ? currentStatus.takendown : false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflict((oc) =>
+        oc.constraint('moderation_status_unique_idx').doUpdateSet({
+          ...newStatus,
+          updatedAt: now,
+        }),
+      )
+      .returningAll()
+      .executeTakeFirst()
+
+    return status || null
+  }
 
   // If reporting is muted for this reporter, we don't want to update the subject status
   if (meta?.isReporterMuted) {
@@ -178,7 +343,6 @@ export const adjustModerationSubjectStatus = async (
     durationInHours: moderationEvent.durationInHours,
   })
 
-  const now = new Date().toISOString()
   if (
     currentStatus?.reviewState === REVIEWESCALATED &&
     subjectStatus.reviewState !== REVIEWCLOSED
@@ -206,6 +370,14 @@ export const adjustModerationSubjectStatus = async (
   const newStatus = {
     ...defaultData,
     ...subjectStatus,
+  }
+
+  if (
+    action === 'tools.ozone.moderation.defs#modEventPriorityScore' &&
+    typeof meta?.priorityScore === 'number'
+  ) {
+    newStatus.priorityScore = meta?.priorityScore
+    subjectStatus.priorityScore = meta?.priorityScore
   }
 
   if (
@@ -279,29 +451,6 @@ export const adjustModerationSubjectStatus = async (
 
   const status = await insertQuery.returningAll().executeTakeFirst()
   return status || null
-}
-
-type ModerationSubjectStatusFilter =
-  | Pick<ModerationSubjectStatus, 'did'>
-  | Pick<ModerationSubjectStatus, 'did' | 'recordPath'>
-  | Pick<ModerationSubjectStatus, 'did' | 'recordPath' | 'recordCid'>
-export const getModerationSubjectStatus = async (
-  db: Database,
-  filters: ModerationSubjectStatusFilter,
-) => {
-  let builder = db.db
-    .selectFrom('moderation_subject_status')
-    // DID will always be passed at the very least
-    .where('did', '=', filters.did)
-    .where('recordPath', '=', 'recordPath' in filters ? filters.recordPath : '')
-
-  if ('recordCid' in filters) {
-    builder = builder.where('recordCid', '=', filters.recordCid)
-  } else {
-    builder = builder.where('recordCid', 'is', null)
-  }
-
-  return builder.executeTakeFirst()
 }
 
 export const getStatusIdentifierFromSubject = (

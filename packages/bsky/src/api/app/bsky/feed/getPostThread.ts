@@ -1,16 +1,14 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ServerConfig } from '../../../../config'
+import { AppContext } from '../../../../context'
+import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
+import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
-  isNotFoundPost,
-  isThreadViewPost,
-} from '../../../../lexicon/types/app/bsky/feed/defs'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import {
-  QueryParams,
   OutputSchema,
+  QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
-import AppContext from '../../../../context'
-import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -18,10 +16,9 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
 import { postUriToThreadgateUri } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -75,7 +72,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     const res = await ctx.dataplane.getThread({
       postUri: anchor,
       above: params.parentHeight,
-      below: params.depth,
+      below: getDepth(ctx, anchor, params),
     })
     return {
       anchor,
@@ -109,7 +106,7 @@ const presentation = (
   const { ctx, params, skeleton, hydration } = inputs
   const thread = ctx.views.thread(skeleton, hydration, {
     height: params.parentHeight,
-    depth: params.depth,
+    depth: getDepth(ctx, skeleton.anchor, params),
   })
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
@@ -132,6 +129,7 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
+  cfg: ServerConfig
 }
 
 type Params = QueryParams & { hydrateCtx: HydrateCtx }
@@ -139,4 +137,12 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
+}
+
+const getDepth = (ctx: Context, anchor: string, params: Params) => {
+  let maxDepth = ctx.cfg.maxThreadDepth
+  if (ctx.cfg.bigThreadUris.has(anchor) && ctx.cfg.bigThreadDepth) {
+    maxDepth = ctx.cfg.bigThreadDepth
+  }
+  return maxDepth ? Math.min(maxDepth, params.depth) : params.depth
 }

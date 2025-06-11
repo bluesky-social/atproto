@@ -24,24 +24,6 @@ export function isIp(hostname: string) {
   return false
 }
 
-const plainObjectProto = Object.prototype
-export const ifObject = <V>(v: V) => {
-  if (typeof v === 'object' && v != null && !Array.isArray(v)) {
-    const proto = Object.getPrototypeOf(v)
-    if (proto === null || proto === plainObjectProto) {
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      return v as V extends JsonScalar | JsonArray | Function | symbol
-        ? never
-        : V extends Json
-          ? V
-          : // Plain object are (mostly) safe to access using a string index
-            Record<string, unknown>
-    }
-  }
-
-  return undefined
-}
-
 export const ifString = <V>(v: V) => (typeof v === 'string' ? v : undefined)
 
 export class MaxBytesTransformStream extends TransformStream<

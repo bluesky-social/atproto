@@ -1,9 +1,9 @@
 import { Generated } from 'kysely'
 import {
   REVIEWCLOSED,
-  REVIEWOPEN,
   REVIEWESCALATED,
   REVIEWNONE,
+  REVIEWOPEN,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 
 export const subjectStatusTableName = 'moderation_subject_status'
@@ -25,6 +25,12 @@ export interface ModerationSubjectStatus {
   lastReviewedAt: string | null
   lastReportedAt: string | null
   lastAppealedAt: string | null
+  hostingUpdatedAt: string | null
+  hostingDeletedAt: string | null
+  hostingCreatedAt: string | null
+  hostingDeactivatedAt: string | null
+  hostingReactivatedAt: string | null
+  hostingStatus: string | null
   muteUntil: string | null
   muteReportingUntil: string | null
   suspendUntil: string | null
@@ -32,6 +38,7 @@ export interface ModerationSubjectStatus {
   appealed: boolean | null
   comment: string | null
   tags: string[] | null
+  priorityScore?: number
 }
 
 export type PartialDB = {

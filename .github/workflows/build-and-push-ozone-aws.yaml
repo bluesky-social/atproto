@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - divy/ozone-passthru
+      - divy/ozone-metadata
 env:
   REGISTRY: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
   USERNAME: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
@@ -13,7 +13,7 @@ env:
 jobs:
   ozone-container-aws:
     if: github.repository == 'bluesky-social/atproto'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write

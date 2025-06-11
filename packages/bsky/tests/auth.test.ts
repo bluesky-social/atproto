@@ -1,13 +1,17 @@
 import { AtpAgent } from '@atproto/api'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('auth', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+
+  // account dids, for convenience
+  let alice: string
+  let bob: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -17,6 +21,8 @@ describe('auth', () => {
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
+    alice = sc.dids.alice
+    bob = sc.dids.bob
   })
 
   afterAll(async () => {
@@ -62,5 +68,25 @@ describe('auth', () => {
     await expect(attemptWithKey(origSigningKey)).rejects.toThrow(
       'jwt signature does not match jwt issuer',
     )
+  })
+
+  it('throws if the user key is incorrect', async () => {
+    const bobKeypair = await network.pds.ctx.actorStore.keypair(bob)
+
+    const jwt = await createServiceJwt({
+      iss: alice,
+      aud: network.bsky.ctx.cfg.serverDid,
+      lxm: ids.AppBskyFeedGetTimeline,
+      keypair: bobKeypair,
+    })
+
+    await expect(
+      agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.carol },
+        {
+          headers: { authorization: `Bearer ${jwt}` },
+        },
+      ),
+    ).rejects.toThrow()
   })
 })

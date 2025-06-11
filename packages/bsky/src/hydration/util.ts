@@ -1,7 +1,7 @@
-import { AtUri } from '@atproto/syntax'
-import { jsonToLex } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
+import { jsonToLex } from '@atproto/lexicon'
+import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
 
@@ -18,10 +18,13 @@ export interface Merges {
   merge<T extends this>(map: T): this
 }
 
-export type RecordInfo<T> = {
+type UnknownRecord = { $type: string; [x: string]: unknown }
+
+export type RecordInfo<T extends UnknownRecord> = {
   record: T
   cid: string
   sortedAt: Date
+  indexedAt: Date
   takedownRef: string | undefined
 }
 
@@ -55,7 +58,7 @@ export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
 
 export type ItemRef = { uri: string; cid?: string }
 
-export const parseRecord = <T>(
+export const parseRecord = <T extends UnknownRecord>(
   entry: Record,
   includeTakedowns: boolean,
 ): RecordInfo<T> | undefined => {
@@ -65,6 +68,7 @@ export const parseRecord = <T>(
   const record = parseRecordBytes<T>(entry.record)
   const cid = entry.cid
   const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
+  const indexedAt = entry.indexedAt?.toDate() ?? new Date(0)
   if (!record || !cid) return
   if (!isValidRecord(record)) {
     return
@@ -73,6 +77,7 @@ export const parseRecord = <T>(
     record,
     cid,
     sortedAt,
+    indexedAt,
     takedownRef: safeTakedownRef(entry),
   }
 }

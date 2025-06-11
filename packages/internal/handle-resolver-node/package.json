@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver-node",
-  "version": "0.1.7",
+  "version": "0.1.16",
   "license": "MIT",
   "description": "Node specific ATProto handle to DID resolver",
   "keywords": [
@@ -24,6 +24,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=18.7.0"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:*",

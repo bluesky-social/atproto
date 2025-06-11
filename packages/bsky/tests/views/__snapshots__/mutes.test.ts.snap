@@ -196,6 +196,7 @@ Object {
           "threadMuted": false,
         },
       },
+      "threadContext": Object {},
     },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
@@ -219,7 +220,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+              "alt": "../dev-env/assets/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
             },
@@ -251,7 +252,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -283,7 +284,9 @@ Object {
           "threadMuted": false,
         },
       },
+      "threadContext": Object {},
     },
   ],
+  "threadContext": Object {},
 }
 `;

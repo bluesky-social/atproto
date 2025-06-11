@@ -145,7 +145,21 @@ export const lexArray = z
   .object({
     type: z.literal('array'),
     description: z.string().optional(),
-    items: z.union([lexPrimitive, lexIpldType, lexBlob, lexRefVariant]),
+    items: z.discriminatedUnion('type', [
+      // lexPrimitive
+      lexBoolean,
+      lexInteger,
+      lexString,
+      lexUnknown,
+      // lexIpldType
+      lexBytes,
+      lexCidLink,
+      // lexRefVariant
+      lexRef,
+      lexRefUnion,
+      // other
+      lexBlob,
+    ]),
     minLength: z.number().int().optional(),
     maxLength: z.number().int().optional(),
   })
@@ -176,7 +190,23 @@ export const lexObject = z
     required: z.string().array().optional(),
     nullable: z.string().array().optional(),
     properties: z.record(
-      z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
+      z.discriminatedUnion('type', [
+        lexArray,
+
+        // lexPrimitive
+        lexBoolean,
+        lexInteger,
+        lexString,
+        lexUnknown,
+        // lexIpldType
+        lexBytes,
+        lexCidLink,
+        // lexRefVariant
+        lexRef,
+        lexRefUnion,
+        // other
+        lexBlob,
+      ]),
     ),
   })
   .strict()
@@ -191,7 +221,17 @@ export const lexXrpcParameters = z
     type: z.literal('params'),
     description: z.string().optional(),
     required: z.string().array().optional(),
-    properties: z.record(z.union([lexPrimitive, lexPrimitiveArray])),
+    properties: z.record(
+      z.discriminatedUnion('type', [
+        lexPrimitiveArray,
+
+        // lexPrimitive
+        lexBoolean,
+        lexInteger,
+        lexString,
+        lexUnknown,
+      ]),
+    ),
   })
   .strict()
   .superRefine(requiredPropertiesRefinement)
@@ -201,6 +241,7 @@ export const lexXrpcBody = z
   .object({
     description: z.string().optional(),
     encoding: z.string(),
+    // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
     schema: z.union([lexRefVariant, lexObject]).optional(),
   })
   .strict()
@@ -209,6 +250,7 @@ export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 export const lexXrpcSubscriptionMessage = z
   .object({
     description: z.string().optional(),
+    // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
     schema: z.union([lexRefVariant, lexObject]).optional(),
   })
   .strict()
@@ -353,6 +395,13 @@ export const lexUserType = z.custom<
       }
     }
 
+    if (typeof val['type'] !== 'string') {
+      return {
+        message: 'Type property must be a string',
+        fatal: true,
+      }
+    }
+
     return {
       message: `Invalid type: ${val['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
       fatal: true,
@@ -398,23 +447,13 @@ export function isValidLexiconDoc(v: unknown): v is LexiconDoc {
   return lexiconDoc.safeParse(v).success
 }
 
-export function isObj(obj: unknown): obj is Record<string, unknown> {
-  return obj !== null && typeof obj === 'object'
+export function isObj<V>(v: V): v is V & object {
+  return v != null && typeof v === 'object'
 }
 
-export function hasProp<K extends PropertyKey>(
-  data: object,
-  prop: K,
-): data is Record<K, unknown> {
-  return prop in data
-}
-
-export const discriminatedObject = z.object({ $type: z.string() })
-export type DiscriminatedObject = z.infer<typeof discriminatedObject>
-export function isDiscriminatedObject(
-  value: unknown,
-): value is DiscriminatedObject {
-  return discriminatedObject.safeParse(value).success
+export type DiscriminatedObject = { $type: string }
+export function isDiscriminatedObject(v: unknown): v is DiscriminatedObject {
+  return isObj(v) && '$type' in v && typeof v.$type === 'string'
 }
 
 export function parseLexiconDoc(v: unknown): LexiconDoc {
@@ -422,10 +461,10 @@ export function parseLexiconDoc(v: unknown): LexiconDoc {
   return v as LexiconDoc
 }
 
-export type ValidationResult =
+export type ValidationResult<V = unknown> =
   | {
       success: true
-      value: unknown
+      value: V
     }
   | {
       success: false
