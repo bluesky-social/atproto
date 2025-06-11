@@ -8,7 +8,10 @@ import {
 import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'
 import { Service } from '../../../proto/bsky_connect'
-import { VerificationMeta } from '../../../proto/bsky_pb'
+import {
+  ActivitySubscriptionsFrom,
+  VerificationMeta,
+} from '../../../proto/bsky_pb'
 import { Database } from '../db'
 import { Verification } from '../db/tables/verification'
 import { getRecords } from './records'
@@ -95,10 +98,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const chatDeclaration = parseRecordBytes<ChatBskyActorDeclaration.Record>(
         chatDeclarations.records[i].record,
       )
-      const activitySubscriptionDeclaration =
-        parseRecordBytes<AppBskyNotificationActivitySubscriptionDeclaration.Record>(
-          activitySubscriptionDeclarations.records[i].record,
-        )
 
       const verifications = verificationsBySubjectDid.get(did) ?? []
       const verifiedBy: VerifiedBy = verifications.reduce((acc, cur) => {
@@ -110,6 +109,28 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         }
         return acc
       }, {} as VerifiedBy)
+
+      const activitySubscription = () => {
+        const record =
+          parseRecordBytes<AppBskyNotificationActivitySubscriptionDeclaration.Record>(
+            activitySubscriptionDeclarations.records[i].record,
+          )
+
+        if (typeof record?.allowSubscriptions !== 'string') {
+          return ActivitySubscriptionsFrom.UNSPECIFIED
+        }
+
+        switch (record.allowSubscriptions) {
+          case 'all':
+            return ActivitySubscriptionsFrom.ALL
+          case 'following':
+            return ActivitySubscriptionsFrom.FOLLOWING
+          case 'none':
+            return ActivitySubscriptionsFrom.NONE
+          default:
+            return ActivitySubscriptionsFrom.UNSPECIFIED
+        }
+      }
 
       return {
         exists: !!row,
@@ -131,11 +152,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         statusRecord: status,
         tags: [],
         profileTags: [],
-        allowActivitySubscriptionsFrom:
-          typeof activitySubscriptionDeclaration?.['allowSubscriptions'] ===
-          'string'
-            ? activitySubscriptionDeclaration['allowSubscriptions']
-            : undefined,
+        allowActivitySubscriptionsFrom: activitySubscription(),
       }
     })
     return { actors }

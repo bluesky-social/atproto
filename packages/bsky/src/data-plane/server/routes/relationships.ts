@@ -93,9 +93,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         blockingByList: row?.blockingByList ?? '',
         following: row?.following ?? '',
         followedBy: row?.followedBy ?? '',
-        activitySubscription: row?.activitySubscription ?? {
-          post: false,
-          reply: false,
+        activitySubscription: {
+          post: row?.activitySubscription?.post ? {} : undefined,
+          reply: row?.activitySubscription?.reply ? {} : undefined,
         },
       }
     })

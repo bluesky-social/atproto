@@ -4,7 +4,11 @@ import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
+import {
+  ActivitySubscription,
+  ActivitySubscriptionsFrom,
+  VerificationMeta,
+} from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
@@ -190,12 +194,18 @@ export class ActorHydrator {
       )
 
       const allowActivitySubscriptionsFrom = (
-        val: string,
+        val: ActivitySubscriptionsFrom,
       ): AllowActivitySubscriptions | undefined => {
-        if (val === 'all' || val === 'none' || val === 'following') {
-          return val
+        switch (val) {
+          case ActivitySubscriptionsFrom.ALL:
+            return 'all'
+          case ActivitySubscriptionsFrom.FOLLOWING:
+            return 'following'
+          case ActivitySubscriptionsFrom.NONE:
+            return 'none'
+          default:
+            return undefined
         }
-        return undefined
       }
 
       return acc.set(did, {
@@ -261,8 +271,14 @@ export class ActorHydrator {
 
     const activitySubscription = (val: ActivitySubscription | undefined) => {
       if (!val) return undefined
-      if (!isActivitySubscriptionEnabled(val)) return undefined
-      return val
+
+      const result = {
+        post: !!val.post,
+        reply: !!val.reply,
+      }
+      if (!isActivitySubscriptionEnabled(result)) return undefined
+
+      return result
     }
 
     return dids.reduce((acc, did, i) => {
