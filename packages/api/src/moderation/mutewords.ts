@@ -57,7 +57,8 @@ export function matchMuteWords({
     const postText = text.toLowerCase()
 
     // expired, ignore
-    if (muteWord.expiresAt && muteWord.expiresAt < new Date().toISOString()) continue
+    if (muteWord.expiresAt && muteWord.expiresAt < new Date().toISOString())
+      continue
 
     if (
       muteWord.actorTarget === 'exclude-following' &&
