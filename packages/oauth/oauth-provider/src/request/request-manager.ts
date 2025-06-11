@@ -457,7 +457,7 @@ export class RequestManager {
    * the same `code` **must** me revoked.
    */
   public async findCode(code: Code): Promise<RequestDataAuthorized> {
-    const result = await this.store.findRequestByCode(code)
+    const result = await this.store.consumeRequestCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
     const { id, data } = result

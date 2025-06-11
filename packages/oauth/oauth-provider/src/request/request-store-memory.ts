@@ -28,11 +28,14 @@ export class RequestStoreMemory implements RequestStore {
     this.#requests.delete(id)
   }
 
-  async findRequestByCode(
+  async consumeRequestCode(
     code: Code,
   ): Promise<{ id: RequestId; data: RequestData } | null> {
     for (const [id, data] of this.#requests) {
-      if (data.code === code) return { id, data }
+      if (data.code === code) {
+        this.#requests.delete(id)
+        return { id, data }
+      }
     }
     return null
   }

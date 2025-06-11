@@ -32,10 +32,14 @@ export interface RequestStore {
   updateRequest(id: RequestId, data: UpdateRequestData): Awaitable<void>
   deleteRequest(id: RequestId): void | Awaitable<void>
   /**
+   * @note it is **IMPORTANT** that this method prevents concurrent retrieval of
+   * the same code. If two requests are made with the same code, only one of
+   * them should succeed and return the request data.
+   *
    * @throws {InvalidGrantError} - When the request is not found or has expired
    * (allows to provide an error message instead of returning `null`).
    */
-  findRequestByCode(code: Code): Awaitable<FoundRequestResult | null>
+  consumeRequestCode(code: Code): Awaitable<FoundRequestResult | null>
 }
 
 export const isRequestStore = buildInterfaceChecker<RequestStore>([
@@ -43,7 +47,7 @@ export const isRequestStore = buildInterfaceChecker<RequestStore>([
   'readRequest',
   'updateRequest',
   'deleteRequest',
-  'findRequestByCode',
+  'consumeRequestCode',
 ])
 
 export function ifRequestStore<V extends Partial<RequestStore>>(

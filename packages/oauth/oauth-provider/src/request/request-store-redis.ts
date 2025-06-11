@@ -41,30 +41,37 @@ export class RequestStoreRedis implements RequestStore {
   }
 
   async deleteRequest(id: RequestId): Promise<void> {
-    const data = await this.readRequest(id)
-    if (!data) return
-    if (data.code) await this.redis.del(data.code)
-    await this.redis.del(id)
+    // Using GETDEL to avoid un-necessary round trips
+    const value = await this.redis.getdel(id)
+    if (!value) return
+
+    const code = JSON.parse(value)?.code
+    if (typeof code === 'string') await this.redis.del(code)
   }
 
-  private async findRequestIdByCode(code: Code): Promise<RequestId | null> {
-    const value = await this.redis.get(code)
+  async consumeRequestCode(
+    code: Code,
+  ): Promise<{ id: RequestId; data: RequestData } | null> {
+    // In order to prevent using the same code twice concurrently,
+    // we use getdel to atomically retrieve and delete the code.
+
+    const value = await this.redis.getdel(code)
     if (!value) return null
 
     const parsed = requestIdSchema.safeParse(value)
     if (!parsed.success) return null
 
-    return parsed.data
-  }
-
-  async findRequestByCode(
-    code: Code,
-  ): Promise<{ id: RequestId; data: RequestData } | null> {
-    const id = await this.findRequestIdByCode(code)
+    const id = parsed.data
     if (!id) return null
 
     const data = await this.readRequest(id)
     if (!data) return null
+
+    // Also delete the request entry itself
+    await this.redis.del(id)
+
+    // Protect against concurrent updates
+    if (data.code !== code) return null
 
     return { id, data }
   }

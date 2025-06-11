@@ -428,7 +428,7 @@ export class OAuthStore
     await this.db.executeWithRetry(authRequestHelper.removeByIdQB(this.db, id))
   }
 
-  async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
+  async consumeRequestCode(code: Code): Promise<FoundRequestResult | null> {
     const row = await authRequestHelper
       .findByCodeQB(this.db, code)
       .executeTakeFirst()
