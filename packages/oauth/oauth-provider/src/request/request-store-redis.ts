@@ -19,14 +19,18 @@ export class RequestStoreRedis implements RequestStore {
   }
 
   async readRequest(id: RequestId): Promise<RequestData | null> {
-    const data = await this.redis.get(id)
-    return data ? JSON.parse(data) : null
+    const value = await this.redis.get(id)
+    if (!value) return null
+
+    const data = decode(value)
+    if (!data) await this.redis.del(id)
+
+    return data
   }
 
   async createRequest(id: RequestId, data: RequestData): Promise<void> {
-    const timeFrame = data.expiresAt.getTime() - Date.now()
-    await this.redis.set(id, JSON.stringify(data), 'PX', timeFrame)
-    if (data.code) await this.redis.set(data.code, id, 'PX', timeFrame)
+    await this.redis.set(id, encode(data), 'PX', px(data.expiresAt))
+    if (data.code) await this.redis.set(data.code, id, 'PX', px(data.expiresAt))
   }
 
   async updateRequest(
@@ -45,7 +49,7 @@ export class RequestStoreRedis implements RequestStore {
     const value = await this.redis.getdel(id)
     if (!value) return
 
-    const code = JSON.parse(value)?.code
+    const code = decode(value)?.code
     if (typeof code === 'string') await this.redis.del(code)
   }
 
@@ -74,5 +78,21 @@ export class RequestStoreRedis implements RequestStore {
     if (data.code !== code) return null
 
     return { id, data }
+  }
+}
+
+function px(date: Date): number {
+  return date.getTime() - Date.now()
+}
+
+function encode(value: RequestData): string {
+  return JSON.stringify(value)
+}
+
+function decode(value: string): RequestData | null {
+  try {
+    return JSON.parse(value) as RequestData
+  } catch {
+    return null
   }
 }

@@ -461,21 +461,21 @@ export class RequestManager {
     if (!result) throw new InvalidGrantError('Invalid code')
 
     const { id, data } = result
-    try {
-      if (!isRequestDataAuthorized(data)) {
-        // Should never happen: maybe the store implementation is faulty ?
-        throw new Error('Unexpected request state')
-      }
 
-      if (data.expiresAt < new Date()) {
-        throw new InvalidGrantError('This code has expired')
-      }
+    // A "code" can only be used once. This should already have been ensured
+    // by the store implementation, but let's be extra safe.
+    await this.store.deleteRequest(id)
 
-      return data
-    } finally {
-      // A "code" can only be used once
-      await this.store.deleteRequest(id)
+    if (!isRequestDataAuthorized(data)) {
+      // Should never happen: maybe the store implementation is faulty ?
+      throw new Error('Unexpected request state')
     }
+
+    if (data.expiresAt < new Date()) {
+      throw new InvalidGrantError('This code has expired')
+    }
+
+    return data
   }
 
   async delete(uri: RequestUri): Promise<void> {
