@@ -12,7 +12,7 @@ import {
   errors,
   jwtVerify,
 } from 'jose'
-import { Jwks } from '@atproto/jwk'
+import { Jwks, jwtPayloadSchema } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
@@ -114,6 +114,7 @@ export class Client {
     input: OAuthClientCredentials,
     checks: {
       audience: string
+      cnf: null | { jkt: string }
     },
   ): Promise<{
     clientAuth: ClientAuth
@@ -139,9 +140,7 @@ export class Client {
       }
 
       if (input.client_assertion_type === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-        const result = await this.jwtVerify<{
-          jti: string
-        }>(input.client_assertion, {
+        const result = await this.jwtVerify(input.client_assertion, {
           audience: checks.audience,
           subject: this.id,
           maxTokenAge: CLIENT_ASSERTION_MAX_AGE / 1000,
@@ -159,14 +158,44 @@ export class Client {
           throw new InvalidClientError(`"kid" required in client_assertion`)
         }
 
+        const payloadParsed = jwtPayloadSchema.safeParse(result.payload)
+        if (!payloadParsed.success) {
+          const { error } = payloadParsed
+          throw new InvalidClientError(
+            error instanceof Error
+              ? error.message
+              : 'client_assertion payload is not a valid JWT payload',
+            error,
+          )
+        }
+
+        const { cnf, jti } = payloadParsed.data
+
+        // If the assertion is bound to a key, it must be bound to the same
+        // key as the one provided by the client (DPoP)
+        if (cnf) {
+          if (!cnf.jkt || Object.keys(cnf).length !== 1) {
+            throw new InvalidClientError(
+              `client_assertion "cnf" should contain a single "jkt"`,
+            )
+          }
+
+          if (!checks.cnf || checks.cnf.jkt !== cnf.jkt) {
+            throw new InvalidClientError(
+              `client_assertion "cnf" does not match the expected "jkt"`,
+            )
+          }
+        }
+
         const clientAuth: ClientAuth = {
           method: CLIENT_ASSERTION_TYPE_JWT_BEARER,
           jkt: await authJwkThumbprint(result.key),
           alg: result.protectedHeader.alg,
           kid: result.protectedHeader.kid,
+          cnf: cnf as { jkt: string } | undefined,
         }
 
-        return { clientAuth, nonce: result.payload.jti }
+        return { clientAuth, nonce: jti }
       }
 
       throw new InvalidClientError(
