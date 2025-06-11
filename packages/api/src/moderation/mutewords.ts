@@ -22,7 +22,14 @@ const LANGUAGE_EXCEPTIONS = [
 ]
 
 export type MuteWordMatch = {
+  /**
+   * The `AppBskyActorDefs.MutedWord` that matched.
+   */
   word: AppBskyActorDefs.MutedWord
+  /**
+   * The string that matched the muted word.
+   */
+  predicate: string
 }
 
 export function matchMuteWords({
@@ -68,26 +75,26 @@ export function matchMuteWords({
 
     // `content` applies to tags as well
     if (tags.includes(mutedWord)) {
-      matches.push({ word: muteWord })
+      matches.push({ word: muteWord, predicate: muteWord.value })
       continue
     }
     // rest of the checks are for `content` only
     if (!muteWord.targets.includes('content')) continue
     // single character or other exception, has to use includes
     if ((mutedWord.length === 1 || exception) && postText.includes(mutedWord)) {
-      matches.push({ word: muteWord })
+      matches.push({ word: muteWord, predicate: muteWord.value })
       continue
     }
     // too long
     if (mutedWord.length > postText.length) continue
     // exact match
     if (mutedWord === postText) {
-      matches.push({ word: muteWord })
+      matches.push({ word: muteWord, predicate: muteWord.value })
       continue
     }
     // any muted phrase with space or punctuation
     if (/(?:\s|\p{P})+?/u.test(mutedWord) && postText.includes(mutedWord)) {
-      matches.push({ word: muteWord })
+      matches.push({ word: muteWord, predicate: muteWord.value })
       continue
     }
 
@@ -95,7 +102,7 @@ export function matchMuteWords({
     const words = postText.split(REGEX.WORD_BOUNDARY)
     for (const word of words) {
       if (word === mutedWord) {
-        matches.push({ word: muteWord })
+        matches.push({ word: muteWord, predicate: word })
         continue outer
       }
 
@@ -107,7 +114,7 @@ export function matchMuteWords({
       )
 
       if (mutedWord === wordTrimmedPunctuation) {
-        matches.push({ word: muteWord })
+        matches.push({ word: muteWord, predicate: word })
         continue outer
       }
       if (mutedWord.length > wordTrimmedPunctuation.length) continue
@@ -115,20 +122,20 @@ export function matchMuteWords({
       if (/\p{P}+/u.test(wordTrimmedPunctuation)) {
         const spacedWord = wordTrimmedPunctuation.replace(/\p{P}+/gu, ' ')
         if (spacedWord === mutedWord) {
-          matches.push({ word: muteWord })
+          matches.push({ word: muteWord, predicate: word })
           continue outer
         }
 
         const contiguousWord = spacedWord.replace(/\s/gu, '')
         if (contiguousWord === mutedWord) {
-          matches.push({ word: muteWord })
+          matches.push({ word: muteWord, predicate: word })
           continue outer
         }
 
         const wordParts = wordTrimmedPunctuation.split(/\p{P}+/u)
         for (const wordPart of wordParts) {
           if (wordPart === mutedWord) {
-            matches.push({ word: muteWord })
+            matches.push({ word: muteWord, predicate: word })
             continue outer
           }
         }

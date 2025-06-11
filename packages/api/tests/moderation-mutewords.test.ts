@@ -21,7 +21,7 @@ describe(`matchMuteWords`, () => {
         outlineTags: ['outlineTag'],
       })
 
-      expect(match).toEqual([{ word: muteWord }])
+      expect(match).toEqual([{ word: muteWord, predicate: muteWord.value }])
     })
 
     it(`match: inline tag`, () => {
@@ -42,7 +42,7 @@ describe(`matchMuteWords`, () => {
         outlineTags: ['outlineTag'],
       })
 
-      expect(match).toEqual([{ word: muteWord }])
+      expect(match).toEqual([{ word: muteWord, predicate: muteWord.value }])
     })
 
     it(`match: content target matches inline tag`, () => {
@@ -100,7 +100,7 @@ describe(`matchMuteWords`, () => {
         outlineTags: [],
       })
 
-      expect(match).toEqual([{ word: muteWord }])
+      expect(match).toEqual([{ word: muteWord, predicate: muteWord.value }])
     })
 
     it(`match: single char with length > 1 ☠︎`, () => {
@@ -177,7 +177,7 @@ describe(`matchMuteWords`, () => {
         outlineTags: [],
       })
 
-      expect(match).toEqual([{ word: muteWord }])
+      expect(match).toEqual([{ word: muteWord, predicate: muteWord.value }])
     })
 
     it(`no match: partial word`, () => {
@@ -1090,7 +1090,7 @@ describe(`matchMuteWords`, () => {
   })
 
   describe(`returning MuteWordMatch`, () => {
-    it(`matches first`, () => {
+    it(`matches all`, () => {
       const rt = new RichText({
         text: `This is a post about javascript`,
       })
@@ -1113,7 +1113,31 @@ describe(`matchMuteWords`, () => {
         outlineTags: [],
       })
 
-      expect(match).toEqual([{ word: muteWord1 }, { word: muteWord2 }])
+      expect(match).toEqual([
+        { word: muteWord1, predicate: muteWord1.value },
+        { word: muteWord2, predicate: muteWord2.value },
+      ])
+    })
+
+    it(`match with separator`, () => {
+      const rt = new RichText({
+        text: `When talking about a certain TV show, do you post spoilers and/or discuss the plot?`,
+      })
+      rt.detectFacetsWithoutResolution()
+
+      const muteWord1 = {
+        value: 'andor',
+        targets: ['content'],
+        actorTarget: 'all',
+      }
+      const match = matchMuteWords({
+        mutedWords: [muteWord1],
+        text: rt.text,
+        facets: rt.facets,
+        outlineTags: [],
+      })
+
+      expect(match).toEqual([{ word: muteWord1, predicate: 'and/or' }])
     })
   })
 })
