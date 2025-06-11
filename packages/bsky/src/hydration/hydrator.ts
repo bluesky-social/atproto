@@ -175,12 +175,12 @@ export class Hydrator {
       viewer,
     )
     const listUris: string[] = []
-    profileViewers?.forEach((item) => {
+    profileViewers.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
     })
     const listState = await this.hydrateListsBasic(listUris, ctx)
     // if a list no longer exists or is not a mod list, then remove from viewer state
-    profileViewers?.forEach((item) => {
+    profileViewers.forEach((item) => {
       removeNonModListsFromProfileViewer(item, listState)
     })
 

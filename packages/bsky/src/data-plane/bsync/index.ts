@@ -225,7 +225,7 @@ const handleSubjectActivitySubscriptionOperation = async (
   req: PutOperationRequest,
   now: string,
 ) => {
-  const { actorDid, namespace, key, method, payload } = req
+  const { actorDid, key, method, payload } = req
 
   const parsed: SubjectActivitySubscription = JSON.parse(
     Buffer.from(payload).toString('utf8'),
@@ -234,22 +234,48 @@ const handleSubjectActivitySubscriptionOperation = async (
     activitySubscription: { post, reply },
   } = parsed
 
+  // Only keep a record if at some subscription is enabled.
   const subscriptionEnabled = post || reply
 
-  if (method === Method.CREATE && !subscriptionEnabled) {
-    return
+  if (method === Method.CREATE) {
+    if (subscriptionEnabled) {
+      return db.db
+        .insertInto('activity_subscription')
+        .values({
+          creator: actorDid,
+          subjectDid: parsed.subject,
+          key,
+          createdAt: now,
+          indexedAt: now,
+          post,
+          reply,
+        })
+        .execute()
+    } else {
+      return
+    }
   }
 
-  if (method === Method.UPDATE && !subscriptionEnabled) {
+  if (method === Method.UPDATE && subscriptionEnabled) {
     return db.db
-      .deleteFrom('private_data')
-      .where('actorDid', '=', actorDid)
-      .where('namespace', '=', namespace)
+      .updateTable('activity_subscription')
+      .where('creator', '=', actorDid)
+      .where('subjectDid', '=', parsed.subject)
       .where('key', '=', key)
+      .set({
+        post,
+        reply,
+      })
       .execute()
   }
 
-  return handleGenericOperation(db, req, now)
+  // DELETE, or UPDATE with subscription disabled
+  return db.db
+    .deleteFrom('activity_subscription')
+    .where('creator', '=', actorDid)
+    .where('subjectDid', '=', parsed.subject)
+    .where('key', '=', key)
+    .execute()
 }
 
 const handleGenericOperation = async (

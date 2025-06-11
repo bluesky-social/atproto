@@ -4732,9 +4732,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
           },
-          activitySubscriptions: {
+          activitySubscription: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscriptions',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
           },
         },
       },
@@ -4748,7 +4748,7 @@ export const schemaDict = {
           },
         },
       },
-      profileAssociatedActivitySubscriptions: {
+      profileAssociatedActivitySubscription: {
         type: 'object',
         required: ['allowSubscriptions'],
         properties: {

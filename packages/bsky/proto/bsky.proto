@@ -504,6 +504,11 @@ message GetRelationshipsRequest {
   repeated string target_dids = 2;
 }
 
+message ActivitySubscription {
+  bool post = 1;
+  bool reply = 2;
+}
+
 message Relationships {
   bool muted = 1;
   string muted_by_list = 2;
@@ -513,6 +518,7 @@ message Relationships {
   string blocking_by_list = 6;
   string following = 7;
   string followed_by = 8;
+  ActivitySubscription activity_subscription = 9;
 }
 
 message GetRelationshipsResponse {

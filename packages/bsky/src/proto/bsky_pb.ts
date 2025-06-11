@@ -5836,6 +5836,61 @@ export class GetRelationshipsRequest extends Message<GetRelationshipsRequest> {
 }
 
 /**
+ * @generated from message bsky.ActivitySubscription
+ */
+export class ActivitySubscription extends Message<ActivitySubscription> {
+  /**
+   * @generated from field: bool post = 1;
+   */
+  post = false
+
+  /**
+   * @generated from field: bool reply = 2;
+   */
+  reply = false
+
+  constructor(data?: PartialMessage<ActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'post', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: 'reply', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
+    b: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
+  ): boolean {
+    return proto3.util.equals(ActivitySubscription, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.Relationships
  */
 export class Relationships extends Message<Relationships> {
@@ -5879,6 +5934,11 @@ export class Relationships extends Message<Relationships> {
    */
   followedBy = ''
 
+  /**
+   * @generated from field: bsky.ActivitySubscription activity_subscription = 9;
+   */
+  activitySubscription?: ActivitySubscription
+
   constructor(data?: PartialMessage<Relationships>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5914,6 +5974,12 @@ export class Relationships extends Message<Relationships> {
       name: 'followed_by',
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 9,
+      name: 'activity_subscription',
+      kind: 'message',
+      T: ActivitySubscription,
     },
   ])
 

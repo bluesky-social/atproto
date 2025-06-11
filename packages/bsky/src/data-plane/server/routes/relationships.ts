@@ -68,6 +68,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .whereRef('follow.creator', '=', ref('actor.did'))
           .select('uri')
           .as('followedBy'),
+        db.db
+          .selectFrom('activity_subscription')
+          .where('activity_subscription.creator', '=', actorDid)
+          .whereRef('activity_subscription.subjectDid', '=', ref('actor.did'))
+          .select(
+            sql<{
+              post: boolean
+              reply: boolean
+            }>`json_build_object('post', post, 'reply', reply)`.as('val'),
+          )
+          .as('activitySubscription'),
       ])
       .execute()
     const byDid = keyBy(res, 'did')
@@ -82,6 +93,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         blockingByList: row?.blockingByList ?? '',
         following: row?.following ?? '',
         followedBy: row?.followedBy ?? '',
+        activitySubscription: row?.activitySubscription ?? {
+          post: false,
+          reply: false,
+        },
       }
     })
     return { relationships }
