@@ -186,7 +186,7 @@ function matchAllMuteWords(
       return matches
     }
 
-    if (subject.record.embed && AppBskyEmbedImages.isMain(post.embed)) {
+    if (post.embed && AppBskyEmbedImages.isMain(post.embed)) {
       // post images
       for (const image of post.embed.images) {
         const matches = matchMuteWords({
@@ -291,8 +291,8 @@ function matchAllMuteWords(
       }
     }
     // link card
-    else if (AppBskyEmbedExternal.isView(subject.embed)) {
-      const { external } = subject.embed
+    else if (AppBskyEmbedExternal.isView(embed)) {
+      const { external } = embed
       const matches = matchMuteWords({
         mutedWords,
         text: external.title + ' ' + external.description,
