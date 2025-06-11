@@ -4,10 +4,11 @@ import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { VerificationMeta } from '../proto/bsky_pb'
+import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
+  isActivitySubscriptionEnabled,
   parseRecord,
   parseString,
   safeTakedownRef,
@@ -257,6 +258,13 @@ export class ActorHydrator {
       actorDid: viewer,
       targetDids: dids,
     })
+
+    const activitySubscription = (val: ActivitySubscription | undefined) => {
+      if (!val) return undefined
+      if (!isActivitySubscriptionEnabled(val)) return undefined
+      return val
+    }
+
     return dids.reduce((acc, did, i) => {
       const rels = res.relationships[i]
       if (viewer === did) {
@@ -272,7 +280,7 @@ export class ActorHydrator {
         blockingByList: parseString(rels.blockingByList),
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
-        activitySubscription: rels.activitySubscription,
+        activitySubscription: activitySubscription(rels.activitySubscription),
       })
     }, new HydrationMap<ProfileViewerState>())
   }

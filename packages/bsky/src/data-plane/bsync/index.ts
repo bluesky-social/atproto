@@ -6,6 +6,7 @@ import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { TID } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
+import { isActivitySubscriptionEnabled } from '../../hydration/util'
 import { ids } from '../../lexicon/lexicons'
 import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
 import { Service } from '../../proto/bsync_connect'
@@ -230,15 +231,13 @@ const handleSubjectActivitySubscriptionOperation = async (
   const parsed: SubjectActivitySubscription = JSON.parse(
     Buffer.from(payload).toString('utf8'),
   )
-  const {
-    activitySubscription: { post, reply },
-  } = parsed
-
-  // Only keep a record if at some subscription is enabled.
-  const subscriptionEnabled = post || reply
+  const { activitySubscription } = parsed
+  const { post, reply } = activitySubscription
+  // We only keep a record if enabled.
+  const enabled = isActivitySubscriptionEnabled(activitySubscription)
 
   if (method === Method.CREATE) {
-    if (subscriptionEnabled) {
+    if (enabled) {
       return db.db
         .insertInto('activity_subscription')
         .values({
@@ -251,12 +250,11 @@ const handleSubjectActivitySubscriptionOperation = async (
           reply,
         })
         .execute()
-    } else {
-      return
     }
+    return
   }
 
-  if (method === Method.UPDATE && subscriptionEnabled) {
+  if (method === Method.UPDATE && enabled) {
     return db.db
       .updateTable('activity_subscription')
       .where('creator', '=', actorDid)
@@ -269,7 +267,7 @@ const handleSubjectActivitySubscriptionOperation = async (
       .execute()
   }
 
-  // DELETE, or UPDATE with subscription disabled
+  // A DELETE, or an UPDATE with subscription disabled.
   return db.db
     .deleteFrom('activity_subscription')
     .where('creator', '=', actorDid)

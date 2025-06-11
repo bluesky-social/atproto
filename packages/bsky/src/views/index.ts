@@ -435,11 +435,13 @@ export class Views {
     const actor = state.actors?.get(did)
     if (!actor) return undefined
 
+    if (!profileViewer.activitySubscription) return undefined
+
     const actorFollowsViewer = !!profileViewer.followedBy
+    const allowFrom = actor.allowActivitySubscriptionsFrom
     if (
-      actor.allowActivitySubscriptionsFrom === 'all' ||
-      (actor.allowActivitySubscriptionsFrom === 'following' &&
-        actorFollowsViewer)
+      allowFrom === 'all' ||
+      (allowFrom === 'following' && actorFollowsViewer)
     ) {
       return profileViewer.activitySubscription
     }
