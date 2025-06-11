@@ -78,7 +78,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBeNull()
+      expect(match).toBeUndefined()
     })
   })
 
@@ -136,7 +136,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBeNull()
+      expect(match).toBeUndefined()
     })
 
     it(`match: exact text`, () => {
@@ -193,7 +193,7 @@ describe(`matchMuteWord`, () => {
         outlineTags: [],
       })
 
-      expect(match).toBeNull()
+      expect(match).toBeUndefined()
     })
 
     it(`match: multiline`, () => {
@@ -463,7 +463,7 @@ describe(`matchMuteWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBeNull()
+        expect(match).toBeUndefined()
       })
     })
 
@@ -610,7 +610,7 @@ describe(`matchMuteWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBeNull()
+        expect(match).toBeUndefined()
       })
 
       it(`match: idk`, () => {

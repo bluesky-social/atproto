@@ -21,11 +21,9 @@ const LANGUAGE_EXCEPTIONS = [
   'vi', // Vietnamese
 ]
 
-export type MuteWordMatch =
-  | {
-      word: AppBskyActorDefs.MutedWord
-    }[]
-  | null
+export type MuteWordMatch = {
+  word: AppBskyActorDefs.MutedWord
+}
 
 export function matchMuteWord({
   mutedWords,
@@ -41,7 +39,7 @@ export function matchMuteWord({
   outlineTags?: string[]
   languages?: string[]
   actor?: AppBskyActorDefs.ProfileView | AppBskyActorDefs.ProfileViewBasic
-}): MuteWordMatch {
+}): MuteWordMatch[] | undefined {
   const exception = LANGUAGE_EXCEPTIONS.includes(languages?.[0] || '')
   const tags = ([] as string[])
     .concat(outlineTags || [])
@@ -52,7 +50,7 @@ export function matchMuteWord({
     )
     .map((t) => t.toLowerCase())
 
-  const matches: Exclude<MuteWordMatch, null> = []
+  const matches: MuteWordMatch[] = []
 
   outer: for (const mute of mutedWords) {
     const mutedWord = mute.value.toLowerCase()
@@ -137,5 +135,5 @@ export function matchMuteWord({
     }
   }
 
-  return matches.length ? matches : null
+  return matches.length ? matches : undefined
 }

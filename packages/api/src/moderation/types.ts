@@ -159,7 +159,7 @@ export type ModerationCause =
       source: ModerationCauseSource
       priority: 6
       downgraded?: boolean
-      match: Exclude<MuteWordMatch, null>
+      matches: MuteWordMatch[]
     }
   | {
       type: 'hidden'

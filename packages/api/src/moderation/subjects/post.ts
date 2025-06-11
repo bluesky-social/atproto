@@ -163,9 +163,9 @@ function checkHiddenPost(
 function findFirstMuteWordMatch(
   subject: ModerationSubjectPost,
   mutedWords: AppBskyActorDefs.MutedWord[] | undefined,
-): MuteWordMatch {
+): MuteWordMatch[] | undefined {
   if (!mutedWords?.length) {
-    return null
+    return
   }
 
   const postAuthor = subject.author
@@ -357,5 +357,4 @@ function findFirstMuteWordMatch(
       }
     }
   }
-  return null
 }

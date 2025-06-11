@@ -196,13 +196,13 @@ export class ModerationDecision {
     }
   }
 
-  addMutedWord(match: MuteWordMatch) {
-    if (match !== null) {
+  addMutedWord(matches: MuteWordMatch[] | undefined) {
+    if (matches) {
       this.causes.push({
         type: 'mute-word',
         source: { type: 'user' },
         priority: 6,
-        match,
+        matches,
       })
     }
   }
