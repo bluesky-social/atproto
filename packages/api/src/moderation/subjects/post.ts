@@ -8,7 +8,7 @@ import {
 } from '../../client'
 import { $Typed } from '../../client/util'
 import { ModerationDecision } from '../decision'
-import { MuteWordMatch, matchMuteWord } from '../mutewords'
+import { MuteWordMatch, matchMuteWords } from '../mutewords'
 import { ModerationOpts, ModerationSubjectPost } from '../types'
 import { decideAccount } from './account'
 import { decideProfile } from './profile'
@@ -40,7 +40,7 @@ function decideSubject(
   }
   acc.addHidden(checkHiddenPost(subject, opts.prefs.hiddenPosts))
   if (!acc.isMe) {
-    acc.addMutedWord(findFirstMuteWordMatch(subject, opts.prefs.mutedWords))
+    acc.addMutedWord(matchAllMuteWords(subject, opts.prefs.mutedWords))
   }
 
   return acc
@@ -160,7 +160,7 @@ function checkHiddenPost(
   return false
 }
 
-function findFirstMuteWordMatch(
+function matchAllMuteWords(
   subject: ModerationSubjectPost,
   mutedWords: AppBskyActorDefs.MutedWord[] | undefined,
 ): MuteWordMatch[] | undefined {
@@ -173,7 +173,7 @@ function findFirstMuteWordMatch(
   if (AppBskyFeedPost.isRecord(subject.record)) {
     const post = subject.record as AppBskyFeedPost.Record
 
-    const match = matchMuteWord({
+    const matches = matchMuteWords({
       mutedWords,
       text: post.text,
       facets: post.facets,
@@ -182,21 +182,21 @@ function findFirstMuteWordMatch(
       actor: postAuthor,
     })
     // post text
-    if (match) {
-      return match
+    if (matches) {
+      return matches
     }
 
     if (subject.record.embed && AppBskyEmbedImages.isMain(post.embed)) {
       // post images
       for (const image of post.embed.images) {
-        const match = matchMuteWord({
+        const matches = matchMuteWords({
           mutedWords,
           text: image.alt,
           languages: post.langs,
           actor: postAuthor,
         })
-        if (match) {
-          return match
+        if (matches) {
+          return matches
         }
       }
     }
@@ -213,7 +213,7 @@ function findFirstMuteWordMatch(
       if (AppBskyFeedPost.isRecord(embed.record.value)) {
         const embeddedPost = embed.record.value as AppBskyFeedPost.Record
         const embedAuthor = embed.record.author
-        const match = matchMuteWord({
+        const matches = matchMuteWords({
           mutedWords,
           text: embeddedPost.text,
           facets: embeddedPost.facets,
@@ -223,21 +223,21 @@ function findFirstMuteWordMatch(
         })
 
         // quoted post text
-        if (match) {
-          return match
+        if (matches) {
+          return matches
         }
 
         // quoted post's images
         if (AppBskyEmbedImages.isMain(embeddedPost.embed)) {
           for (const image of embeddedPost.embed.images) {
-            const match = matchMuteWord({
+            const matches = matchMuteWords({
               mutedWords,
               text: image.alt,
               languages: embeddedPost.langs,
               actor: embedAuthor,
             })
-            if (match) {
-              return match
+            if (matches) {
+              return matches
             }
           }
         }
@@ -245,14 +245,14 @@ function findFirstMuteWordMatch(
         // quoted post's link card
         if (AppBskyEmbedExternal.isMain(embeddedPost.embed)) {
           const { external } = embeddedPost.embed
-          const match = matchMuteWord({
+          const matches = matchMuteWords({
             mutedWords,
             text: external.title + ' ' + external.description,
             languages: [],
             actor: embedAuthor,
           })
-          if (match) {
-            return match
+          if (matches) {
+            return matches
           }
         }
 
@@ -260,21 +260,21 @@ function findFirstMuteWordMatch(
           // quoted post's link card when it did a quote + media
           if (AppBskyEmbedExternal.isMain(embeddedPost.embed.media)) {
             const { external } = embeddedPost.embed.media
-            const match = matchMuteWord({
+            const matches = matchMuteWords({
               mutedWords,
               text: external.title + ' ' + external.description,
               languages: [],
               actor: embedAuthor,
             })
-            if (match) {
-              return match
+            if (matches) {
+              return matches
             }
           }
 
           // quoted post's images when it did a quote + media
           if (AppBskyEmbedImages.isMain(embeddedPost.embed.media)) {
             for (const image of embeddedPost.embed.media.images) {
-              const match = matchMuteWord({
+              const matches = matchMuteWords({
                 mutedWords,
                 text: image.alt,
                 languages: AppBskyFeedPost.isRecord(embeddedPost.record)
@@ -282,8 +282,8 @@ function findFirstMuteWordMatch(
                   : [],
                 actor: embedAuthor,
               })
-              if (match) {
-                return match
+              if (matches) {
+                return matches
               }
             }
           }
@@ -293,14 +293,14 @@ function findFirstMuteWordMatch(
     // link card
     else if (AppBskyEmbedExternal.isView(subject.embed)) {
       const { external } = subject.embed
-      const match = matchMuteWord({
+      const matches = matchMuteWords({
         mutedWords,
         text: external.title + ' ' + external.description,
         languages: [],
         actor: postAuthor,
       })
-      if (match) {
-        return match
+      if (matches) {
+        return matches
       }
     }
     // quote post with media
@@ -313,7 +313,7 @@ function findFirstMuteWordMatch(
       // quoted post text
       if (AppBskyFeedPost.isRecord(embed.record.record.value)) {
         const post = embed.record.record.value as AppBskyFeedPost.Record
-        const match = matchMuteWord({
+        const matches = matchMuteWords({
           mutedWords,
           text: post.text,
           facets: post.facets,
@@ -321,15 +321,15 @@ function findFirstMuteWordMatch(
           languages: post.langs,
           actor: embedAuthor,
         })
-        if (match) {
-          return match
+        if (matches) {
+          return matches
         }
       }
 
       // quoted post images
       if (AppBskyEmbedImages.isView(embed.media)) {
         for (const image of embed.media.images) {
-          const match = matchMuteWord({
+          const matches = matchMuteWords({
             mutedWords,
             text: image.alt,
             languages: AppBskyFeedPost.isRecord(subject.record)
@@ -337,22 +337,22 @@ function findFirstMuteWordMatch(
               : [],
             actor: embedAuthor,
           })
-          if (match) {
-            return match
+          if (matches) {
+            return matches
           }
         }
       }
 
       if (AppBskyEmbedExternal.isView(embed.media)) {
         const { external } = embed.media
-        const match = matchMuteWord({
+        const matches = matchMuteWords({
           mutedWords,
           text: external.title + ' ' + external.description,
           languages: [],
           actor: embedAuthor,
         })
-        if (match) {
-          return match
+        if (matches) {
+          return matches
         }
       }
     }

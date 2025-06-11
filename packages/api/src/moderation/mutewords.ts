@@ -25,7 +25,7 @@ export type MuteWordMatch = {
   word: AppBskyActorDefs.MutedWord
 }
 
-export function matchMuteWord({
+export function matchMuteWords({
   mutedWords,
   text,
   facets,
