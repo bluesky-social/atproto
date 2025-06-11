@@ -453,6 +453,13 @@ message GetActorsRequest {
   repeated string skip_cache_for_dids = 2;
 }
 
+enum ActivitySubscriptionsFrom {
+  ACTIVITY_SUBSCRIPTIONS_FROM_UNSPECIFIED = 0;
+  ACTIVITY_SUBSCRIPTIONS_FROM_ALL = 1;
+  ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWING = 2;
+  ACTIVITY_SUBSCRIPTIONS_FROM_NONE = 3;
+}
+
 message ActorInfo {
   bool exists = 1;
   string handle = 2;
@@ -473,7 +480,7 @@ message ActorInfo {
   // Tags being applied to the profile record
   repeated string profile_tags = 16;
   Record status_record = 17;
-  string allow_activity_subscriptions_from = 18;
+  ActivitySubscriptionsFrom allow_activity_subscriptions_from = 18;
 }
 
 message GetActorsResponse {
@@ -504,9 +511,12 @@ message GetRelationshipsRequest {
   repeated string target_dids = 2;
 }
 
+message PostActivitySubscription {}
+message ReplyActivitySubscription {}
+
 message ActivitySubscription {
-  bool post = 1;
-  bool reply = 2;
+  optional PostActivitySubscription post = 1;
+  optional ReplyActivitySubscription reply = 2;
 }
 
 message Relationships {

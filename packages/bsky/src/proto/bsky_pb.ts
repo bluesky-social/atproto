@@ -14,6 +14,42 @@ import type {
 import { Message, proto3, protoInt64, Timestamp } from '@bufbuild/protobuf'
 
 /**
+ * @generated from enum bsky.ActivitySubscriptionsFrom
+ */
+export enum ActivitySubscriptionsFrom {
+  /**
+   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_ALL = 1;
+   */
+  ALL = 1,
+
+  /**
+   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWING = 2;
+   */
+  FOLLOWING = 2,
+
+  /**
+   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_NONE = 3;
+   */
+  NONE = 3,
+}
+// Retrieve enum metadata with: proto3.getEnumType(ActivitySubscriptionsFrom)
+proto3.util.setEnumType(
+  ActivitySubscriptionsFrom,
+  'bsky.ActivitySubscriptionsFrom',
+  [
+    { no: 0, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_UNSPECIFIED' },
+    { no: 1, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_ALL' },
+    { no: 2, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWING' },
+    { no: 3, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_NONE' },
+  ],
+)
+
+/**
  * @generated from enum bsky.NotificationInclude
  */
 export enum NotificationInclude {
@@ -5469,9 +5505,9 @@ export class ActorInfo extends Message<ActorInfo> {
   statusRecord?: Record
 
   /**
-   * @generated from field: string allow_activity_subscriptions_from = 18;
+   * @generated from field: bsky.ActivitySubscriptionsFrom allow_activity_subscriptions_from = 18;
    */
-  allowActivitySubscriptionsFrom = ''
+  allowActivitySubscriptionsFrom = ActivitySubscriptionsFrom.UNSPECIFIED
 
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
@@ -5544,8 +5580,8 @@ export class ActorInfo extends Message<ActorInfo> {
     {
       no: 18,
       name: 'allow_activity_subscriptions_from',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
+      kind: 'enum',
+      T: proto3.getEnumType(ActivitySubscriptionsFrom),
     },
   ])
 
@@ -5836,18 +5872,114 @@ export class GetRelationshipsRequest extends Message<GetRelationshipsRequest> {
 }
 
 /**
+ * @generated from message bsky.PostActivitySubscription
+ */
+export class PostActivitySubscription extends Message<PostActivitySubscription> {
+  constructor(data?: PartialMessage<PostActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.PostActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | PostActivitySubscription
+      | PlainMessage<PostActivitySubscription>
+      | undefined,
+    b:
+      | PostActivitySubscription
+      | PlainMessage<PostActivitySubscription>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(PostActivitySubscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ReplyActivitySubscription
+ */
+export class ReplyActivitySubscription extends Message<ReplyActivitySubscription> {
+  constructor(data?: PartialMessage<ReplyActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ReplyActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ReplyActivitySubscription
+      | PlainMessage<ReplyActivitySubscription>
+      | undefined,
+    b:
+      | ReplyActivitySubscription
+      | PlainMessage<ReplyActivitySubscription>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ReplyActivitySubscription, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.ActivitySubscription
  */
 export class ActivitySubscription extends Message<ActivitySubscription> {
   /**
-   * @generated from field: bool post = 1;
+   * @generated from field: optional bsky.PostActivitySubscription post = 1;
    */
-  post = false
+  post?: PostActivitySubscription
 
   /**
-   * @generated from field: bool reply = 2;
+   * @generated from field: optional bsky.ReplyActivitySubscription reply = 2;
    */
-  reply = false
+  reply?: ReplyActivitySubscription
 
   constructor(data?: PartialMessage<ActivitySubscription>) {
     super()
@@ -5857,8 +5989,20 @@ export class ActivitySubscription extends Message<ActivitySubscription> {
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsky.ActivitySubscription'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'post', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
-    { no: 2, name: 'reply', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    {
+      no: 1,
+      name: 'post',
+      kind: 'message',
+      T: PostActivitySubscription,
+      opt: true,
+    },
+    {
+      no: 2,
+      name: 'reply',
+      kind: 'message',
+      T: ReplyActivitySubscription,
+      opt: true,
+    },
   ])
 
   static fromBinary(
