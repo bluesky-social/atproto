@@ -35,6 +35,7 @@ describe('notification views', () => {
   let dan: string
   let eve: string
   let fred: string
+  let han: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -60,6 +61,11 @@ describe('notification views', () => {
       handle: 'fred.test',
       password: 'fred-pass',
     })
+    await sc.createAccount('han', {
+      email: 'han@test.com',
+      handle: 'han.test',
+      password: 'han-pass',
+    })
     await network.processAll()
 
     alice = sc.dids.alice
@@ -68,6 +74,7 @@ describe('notification views', () => {
     dan = sc.dids.dan
     eve = sc.dids.eve
     fred = sc.dids.fred
+    han = sc.dids.han
   })
 
   afterAll(async () => {
@@ -1222,6 +1229,7 @@ describe('notification views', () => {
       await declare(carol, 'none')
       await declare(dan, 'following')
       await declare(eve, 'following')
+      await declare(han, 'all')
       await sc.follow(dan, alice)
       await network.processAll()
     })
@@ -1333,9 +1341,11 @@ describe('notification views', () => {
       it('lists inserted subscriptions', async () => {
         const actorDid = alice
 
+        // bob.
         await put(actorDid, bob, { post: true, reply: false })
-        // Does not appear in the list because all items are false.
+        // carol: does not appear in the list because all items are false.
         await put(actorDid, carol, { post: false, reply: false })
+        // dan: following, so appears in the list.
         const { data: creation } = await put(actorDid, dan, {
           post: false,
           reply: true,
@@ -1345,8 +1355,12 @@ describe('notification views', () => {
 
         const { data: listing } = await list(actorDid)
         expect(listing.subscriptions).toHaveLength(2)
-        expect(listing.subscriptions[0].did).toBe(dan)
-        expect(listing.subscriptions[1].did).toBe(bob)
+        expect(listing.subscriptions[0]).toMatchObject({
+          did: dan,
+        })
+        expect(listing.subscriptions[1]).toMatchObject({
+          did: bob,
+        })
       })
 
       it('paginates', async () => {
@@ -1397,12 +1411,14 @@ describe('notification views', () => {
         await put(viewer, dan, val) // declaration 'following', follows alice.
         await put(viewer, eve, val) // declaration 'following', doesn't follow alice.
         await put(viewer, fred, val) // no declaration.
+        await put(viewer, han, { post: false, reply: false }) // declaration 'all', but subscription disabled.
 
         await expect(viewerActivitySub(viewer, bob)).resolves.toStrictEqual(val)
         await expect(viewerActivitySub(viewer, carol)).resolves.toBeUndefined()
         await expect(viewerActivitySub(viewer, dan)).resolves.toStrictEqual(val)
         await expect(viewerActivitySub(viewer, eve)).resolves.toBeUndefined()
         await expect(viewerActivitySub(viewer, fred)).resolves.toBeUndefined()
+        await expect(viewerActivitySub(viewer, han)).resolves.toBeUndefined()
       })
     })
   })

@@ -156,3 +156,11 @@ export const safeTakedownRef = (obj?: {
   if (obj.takedownRef) return obj.takedownRef
   if (obj.takenDown) return 'BSKY-TAKEDOWN-UNKNOWN'
 }
+
+export const isActivitySubscriptionEnabled = ({
+  post,
+  reply,
+}: {
+  post: boolean
+  reply: boolean
+}): boolean => post || reply

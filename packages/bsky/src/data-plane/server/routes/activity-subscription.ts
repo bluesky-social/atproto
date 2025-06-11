@@ -20,9 +20,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
     })
     const res = await builder.execute()
-
     const dids = res.map(({ subjectDid }) => subjectDid)
-
     return {
       dids,
     }
