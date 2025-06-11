@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { IncomingMessage } from 'node:http'
+import { IncomingMessage, OutgoingMessage } from 'node:http'
 import { Duplex, Readable, pipeline } from 'node:stream'
 import express from 'express'
 import mime from 'mime-types'
@@ -23,6 +23,20 @@ import {
   XRPCError,
   handlerSuccess,
 } from './types'
+
+export const asArray = <T>(arr: T | T[]): T[] =>
+  Array.isArray(arr) ? arr : [arr]
+
+export function setHeaders(
+  res: OutgoingMessage,
+  headers?: Record<string, string | number>,
+) {
+  if (headers) {
+    for (const [name, val] of Object.entries(headers)) {
+      if (val != null) res.setHeader(name, val)
+    }
+  }
+}
 
 export function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
