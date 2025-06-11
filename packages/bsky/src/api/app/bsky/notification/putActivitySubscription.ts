@@ -1,4 +1,5 @@
 import { TID } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { SubjectActivitySubscription } from '../../../../lexicon/types/app/bsky/notification/defs'
@@ -14,6 +15,10 @@ export default function (server: Server, ctx: AppContext) {
         key: existingKey,
         activitySubscription: { post, reply },
       } = input.body
+
+      if (actorDid === subject) {
+        throw new InvalidRequestError('Cannot subscribe to own activity')
+      }
 
       const payload: SubjectActivitySubscription = {
         subject,

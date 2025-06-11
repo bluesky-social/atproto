@@ -110,7 +110,7 @@ export interface ProfileAssociated {
   starterPacks?: number
   labeler?: boolean
   chat?: ProfileAssociatedChat
-  activitySubscriptions?: ProfileAssociatedActivitySubscriptions
+  activitySubscription?: ProfileAssociatedActivitySubscription
 }
 
 const hashProfileAssociated = 'profileAssociated'
@@ -138,23 +138,23 @@ export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
 }
 
-export interface ProfileAssociatedActivitySubscriptions {
-  $type?: 'app.bsky.actor.defs#profileAssociatedActivitySubscriptions'
+export interface ProfileAssociatedActivitySubscription {
+  $type?: 'app.bsky.actor.defs#profileAssociatedActivitySubscription'
   allowSubscriptions: 'all' | 'none' | 'following' | (string & {})
 }
 
-const hashProfileAssociatedActivitySubscriptions =
-  'profileAssociatedActivitySubscriptions'
+const hashProfileAssociatedActivitySubscription =
+  'profileAssociatedActivitySubscription'
 
-export function isProfileAssociatedActivitySubscriptions<V>(v: V) {
-  return is$typed(v, id, hashProfileAssociatedActivitySubscriptions)
+export function isProfileAssociatedActivitySubscription<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedActivitySubscription)
 }
 
-export function validateProfileAssociatedActivitySubscriptions<V>(v: V) {
-  return validate<ProfileAssociatedActivitySubscriptions & V>(
+export function validateProfileAssociatedActivitySubscription<V>(v: V) {
+  return validate<ProfileAssociatedActivitySubscription & V>(
     v,
     id,
-    hashProfileAssociatedActivitySubscriptions,
+    hashProfileAssociatedActivitySubscription,
   )
 }
 

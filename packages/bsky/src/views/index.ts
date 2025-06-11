@@ -1,6 +1,6 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { ProfileViewerState } from '../hydration/actor'
+import { Actor, ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
@@ -10,6 +10,7 @@ import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
   KnownFollowers,
+  ProfileAssociatedActivitySubscription,
   ProfileView,
   ProfileViewBasic,
   ProfileViewDetailed,
@@ -58,7 +59,10 @@ import {
   Record as LabelerRecord,
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
-import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
+import {
+  ActivitySubscription,
+  RecordDeleted as NotificationRecordDeleted,
+} from '../lexicon/types/app/bsky/notification/defs'
 import { ThreadItem as ThreadOtherItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
 import {
   QueryParams as GetPostThreadV2QueryParams,
@@ -284,9 +288,7 @@ export class Views {
         chat: actor.allowIncomingChatsFrom
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
-        activitySubscriptions: actor.allowActivitySubscriptionsFrom
-          ? { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
-          : undefined,
+        activitySubscription: this.profileAssociatedActivitySubscription(actor),
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
@@ -358,9 +360,8 @@ export class Views {
               chat: actor.allowIncomingChatsFrom
                 ? { allowIncoming: actor.allowIncomingChatsFrom }
                 : undefined,
-              activitySubscriptions: actor.allowActivitySubscriptionsFrom
-                ? { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
-                : undefined,
+              activitySubscription:
+                this.profileAssociatedActivitySubscription(actor),
             }
           : undefined,
       viewer: this.profileViewer(did, state),
@@ -369,6 +370,14 @@ export class Views {
       verification: this.verification(did, state),
       status: this.status(did, state),
     }
+  }
+
+  profileAssociatedActivitySubscription(
+    actor: Actor,
+  ): ProfileAssociatedActivitySubscription | undefined {
+    return actor.allowActivitySubscriptionsFrom
+      ? { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
+      : undefined
   }
 
   profileKnownFollowers(
@@ -410,7 +419,31 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
+      activitySubscription: this.profileViewerActivitySubscription(
+        viewer,
+        did,
+        state,
+      ),
     }
+  }
+
+  profileViewerActivitySubscription(
+    profileViewer: ProfileViewerState,
+    did: string,
+    state: HydrationState,
+  ): ActivitySubscription | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor) return undefined
+
+    const actorFollowsViewer = !!profileViewer.followedBy
+    if (
+      actor.allowActivitySubscriptionsFrom === 'all' ||
+      (actor.allowActivitySubscriptionsFrom === 'following' &&
+        actorFollowsViewer)
+    ) {
+      return profileViewer.activitySubscription
+    }
+    return undefined
   }
 
   knownFollowers(

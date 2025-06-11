@@ -1,3 +1,4 @@
+import { AppBskyNotificationActivitySubscriptionDeclaration } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
@@ -11,6 +12,11 @@ import {
   parseString,
   safeTakedownRef,
 } from './util'
+
+type AllowActivitySubscriptions = Extract<
+  AppBskyNotificationActivitySubscriptionDeclaration.Record['allowSubscriptions'],
+  'all' | 'none' | 'following'
+>
 
 export type Actor = {
   did: string
@@ -29,7 +35,7 @@ export type Actor = {
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
-  allowActivitySubscriptionsFrom?: string
+  allowActivitySubscriptionsFrom?: AllowActivitySubscriptions
 }
 
 export type VerificationHydrationState = {
@@ -63,6 +69,10 @@ export type ProfileViewerState = {
   knownFollowers?: {
     count: number
     followers: string[]
+  }
+  activitySubscription?: {
+    post: boolean
+    reply: boolean
   }
 }
 
@@ -178,6 +188,15 @@ export class ActorHydrator {
         },
       )
 
+      const allowActivitySubscriptionsFrom = (
+        val: string,
+      ): AllowActivitySubscriptions | undefined => {
+        if (val === 'all' || val === 'none' || val === 'following') {
+          return val
+        }
+        return undefined
+      }
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -195,8 +214,9 @@ export class ActorHydrator {
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
-        allowActivitySubscriptionsFrom:
-          actor.allowActivitySubscriptionsFrom || undefined,
+        allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
+          actor.allowActivitySubscriptionsFrom,
+        ),
       })
     }, new HydrationMap<Actor>())
   }
@@ -240,7 +260,7 @@ export class ActorHydrator {
     return dids.reduce((acc, did, i) => {
       const rels = res.relationships[i]
       if (viewer === did) {
-        // ignore self-follows, self-mutes, self-blocks
+        // ignore self-follows, self-mutes, self-blocks, self-activity-subscriptions
         return acc.set(did, {})
       }
       return acc.set(did, {
@@ -252,6 +272,7 @@ export class ActorHydrator {
         blockingByList: parseString(rels.blockingByList),
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
+        activitySubscription: rels.activitySubscription,
       })
     }, new HydrationMap<ProfileViewerState>())
   }

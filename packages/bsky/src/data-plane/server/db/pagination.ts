@@ -160,16 +160,6 @@ export class IndexedAtDidKeyset extends TimeCidKeyset<{
   }
 }
 
-// Used to paginate private_data, which has a `key` column.
-export class IndexedAtKeyKeyset extends TimeCidKeyset<{
-  indexedAt: string
-  key: string
-}> {
-  labelResult(result: { indexedAt: string; key: string }) {
-    return { primary: result.indexedAt, secondary: result.key }
-  }
-}
-
 /**
  * This is being deprecated. Use {@link GenericKeyset#paginate} instead.
  */

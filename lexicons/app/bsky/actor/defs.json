@@ -130,9 +130,9 @@
         "starterPacks": { "type": "integer" },
         "labeler": { "type": "boolean" },
         "chat": { "type": "ref", "ref": "#profileAssociatedChat" },
-        "activitySubscriptions": {
+        "activitySubscription": {
           "type": "ref",
-          "ref": "#profileAssociatedActivitySubscriptions"
+          "ref": "#profileAssociatedActivitySubscription"
         }
       }
     },
@@ -146,7 +146,7 @@
         }
       }
     },
-    "profileAssociatedActivitySubscriptions": {
+    "profileAssociatedActivitySubscription": {
       "type": "object",
       "required": ["allowSubscriptions"],
       "properties": {
