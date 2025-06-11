@@ -1,30 +1,16 @@
-import { createHash } from 'node:crypto'
 import { SignedJwt, isSignedJwt } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   OAuthAccessToken,
-  OAuthAuthorizationCodeGrantTokenRequest,
   OAuthAuthorizationRequestParameters,
-  OAuthClientCredentialsGrantTokenRequest,
-  OAuthPasswordGrantTokenRequest,
-  OAuthRefreshTokenGrantTokenRequest,
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { AccessTokenMode } from '../access-token/access-token-mode.js'
-import { validateClientAuth } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
-import {
-  AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
-  AUTHENTICATED_REFRESH_LIFETIME,
-  TOKEN_MAX_AGE,
-  UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
-  UNAUTHENTICATED_REFRESH_LIFETIME,
-} from '../constants.js'
+import { TOKEN_MAX_AGE } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
-import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
-import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
@@ -41,7 +27,6 @@ import {
   RefreshToken,
   generateRefreshToken,
   isRefreshToken,
-  refreshTokenSchema,
 } from './refresh-token.js'
 import { TokenData } from './token-data.js'
 import { TokenId, generateTokenId, isTokenId } from './token-id.js'
@@ -94,124 +79,30 @@ export class TokenManager {
     })
   }
 
-  async create(
+  async checkCodeReplay(code: Code): Promise<void> {
+    // @NOTE not using `this.findByCode` because we want to delete the token
+    // if it still exists (rather than throwing if the code is invalid).
+    const tokenInfo = await this.store.findTokenByCode(code)
+    if (tokenInfo) {
+      await this.deleteToken(tokenInfo.id)
+      throw new InvalidGrantError(`Code replayed`)
+    }
+  }
+
+  async createToken(
     client: Client,
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     account: Account,
     deviceId: null | DeviceId,
     parameters: OAuthAuthorizationRequestParameters,
-    input:
-      | OAuthAuthorizationCodeGrantTokenRequest
-      | OAuthClientCredentialsGrantTokenRequest
-      | OAuthPasswordGrantTokenRequest,
-    dpopProof: null | DpopProof,
+    code: Code,
   ): Promise<OAuthTokenResponse> {
-    // @NOTE the atproto specific DPoP requirement is enforced though the
-    // "dpop_bound_access_tokens" metadata, which is enforced by the
-    // ClientManager class.
-    if (client.metadata.dpop_bound_access_tokens && !dpopProof) {
-      throw new InvalidDpopProofError('DPoP proof required')
-    }
-
-    if (!parameters.dpop_jkt) {
-      // Allow clients to bind their access tokens to a DPoP key during
-      // token request if they didn't provide a "dpop_jkt" during the
-      // authorization request.
-      if (dpopProof) parameters = { ...parameters, dpop_jkt: dpopProof.jkt }
-    } else if (!dpopProof) {
-      throw new InvalidDpopProofError('DPoP proof required')
-    } else if (parameters.dpop_jkt !== dpopProof.jkt) {
-      throw new InvalidDpopKeyBindingError()
-    }
-
-    if (clientAuth.method === 'private_key_jwt') {
-      // Clients **must not** use their private key to sign DPoP proofs.
-      if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
-        throw new InvalidRequestError(
-          'The DPoP proof must be signed with a different key than the client assertion',
-        )
-      }
-    }
-
-    if (!client.metadata.grant_types.includes(input.grant_type)) {
+    if (!parameters.dpop_jkt && client.metadata.dpop_bound_access_tokens) {
+      // Fool proofing
       throw new InvalidGrantError(
-        `This client is not allowed to use the "${input.grant_type}" grant type`,
+        `DPoP JKT is required for DPoP bound access tokens`,
       )
-    }
-
-    let code: Code | null = null
-
-    switch (input.grant_type) {
-      case 'authorization_code': {
-        if (!isCode(input.code)) {
-          throw new InvalidGrantError('Invalid code')
-        }
-
-        // @NOTE not using `this.findByCode` because we want to delete the token
-        // if it still exists (rather than throwing if the code is invalid).
-        const tokenInfo = await this.store.findTokenByCode(input.code)
-        if (tokenInfo) {
-          await this.deleteToken(tokenInfo.id)
-          throw new InvalidGrantError(`Code replayed`)
-        }
-
-        code = input.code
-
-        if (parameters.redirect_uri !== input.redirect_uri) {
-          throw new InvalidGrantError(
-            'The redirect_uri parameter must match the one used in the authorization request',
-          )
-        }
-
-        if (parameters.code_challenge) {
-          if (!input.code_verifier) {
-            throw new InvalidGrantError('code_verifier is required')
-          }
-          if (input.code_verifier.length < 43) {
-            throw new InvalidGrantError('code_verifier too short')
-          }
-          switch (parameters.code_challenge_method ?? 'plain') {
-            case 'plain': {
-              if (parameters.code_challenge !== input.code_verifier) {
-                throw new InvalidGrantError('Invalid code_verifier')
-              }
-              break
-            }
-            case 'S256': {
-              const inputChallenge = Buffer.from(
-                parameters.code_challenge,
-                'base64',
-              )
-              const computedChallenge = createHash('sha256')
-                .update(input.code_verifier)
-                .digest()
-              if (inputChallenge.compare(computedChallenge) !== 0) {
-                throw new InvalidGrantError('Invalid code_verifier')
-              }
-              break
-            }
-            default: {
-              // Should never happen (because request validation should catch this)
-              throw new Error(`Unsupported code_challenge_method`)
-            }
-          }
-        } else if (input.code_verifier !== undefined) {
-          throw new InvalidRequestError(
-            "code_challenge parameter wasn't provided",
-          )
-        }
-
-        break
-      }
-
-      default: {
-        // Other grants (e.g "password", "client_credentials") could be added
-        // here in the future...
-        throw new InvalidRequestError(
-          `Unsupported grant type "${input.grant_type}"`,
-        )
-      }
     }
 
     const tokenId = await generateTokenId()
@@ -235,26 +126,26 @@ export class TokenManager {
       code,
     }
 
+    const accessToken = await this.buildAccessToken(
+      tokenId,
+      account,
+      client,
+      parameters,
+      { now, expiresAt },
+    )
+
+    const response = await this.buildTokenResponse(
+      client,
+      accessToken,
+      refreshToken,
+      expiresAt,
+      parameters,
+      account.sub,
+    )
+
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
     try {
-      const accessToken = await this.buildAccessToken(
-        tokenId,
-        account,
-        client,
-        parameters,
-        { now, expiresAt },
-      )
-
-      const response = await this.buildTokenResponse(
-        client,
-        accessToken,
-        refreshToken,
-        expiresAt,
-        parameters,
-        account.sub,
-      )
-
       await callAsync(this.hooks.onTokenCreated, {
         client,
         clientAuth,
@@ -265,9 +156,9 @@ export class TokenManager {
 
       return response
     } catch (err) {
-      // Just in case the token could not be issued, we delete it from the store
+      // If the hook fails, we delete the token to avoid leaving a dangling
+      // token in the store.
       await this.deleteToken(tokenId)
-
       throw err
     }
   }
@@ -299,151 +190,66 @@ export class TokenManager {
     }
   }
 
-  public async validateClientAuth(
-    client: Client,
-    clientAuth: ClientAuth,
-    tokenInfo: TokenInfo,
-  ): Promise<void> {
-    await validateClientAuth(client, clientAuth, tokenInfo.data)
-  }
-
-  public async validateRefresh(
-    client: Client,
-    clientAuth: ClientAuth,
-    tokenInfo: TokenInfo,
-  ): Promise<void> {
-    await this.validateClientAuth(client, clientAuth, tokenInfo)
-
-    // @TODO This value should be computable even if we don't have the "client"
-    // (because fetching client info could be flaky). Instead, all the info
-    // needed should be stored in the token info.
-    const allowLongerLifespan =
-      client.info.isFirstParty || tokenInfo.data.clientAuth.method !== 'none'
-
-    const lifetime = allowLongerLifespan
-      ? AUTHENTICATED_REFRESH_LIFETIME
-      : UNAUTHENTICATED_REFRESH_LIFETIME
-
-    if (tokenInfo.data.createdAt.getTime() + lifetime < Date.now()) {
-      throw new InvalidGrantError(`Refresh token expired`)
-    }
-
-    const inactivityTimeout = allowLongerLifespan
-      ? AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-      : UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
-
-    if (tokenInfo.data.updatedAt.getTime() + inactivityTimeout < Date.now()) {
-      throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
-    }
-  }
-
-  async refresh(
+  async rotateToken(
     client: Client,
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
-    input: OAuthRefreshTokenGrantTokenRequest,
-    dpopProof: null | DpopProof,
+    tokenInfo: TokenInfo,
   ): Promise<OAuthTokenResponse> {
-    const refreshTokenParsed = refreshTokenSchema.safeParse(input.refresh_token)
-    if (!refreshTokenParsed.success) {
-      throw new InvalidRequestError('Invalid refresh token')
-    }
-    const refreshToken = refreshTokenParsed.data
-
-    const tokenInfo = await this.findByRefreshToken(refreshToken).catch(
-      (err) => {
-        throw InvalidGrantError.from(
-          err,
-          err instanceof InvalidRequestError
-            ? err.error_description
-            : 'Invalid refresh token',
-        )
-      },
-    )
-
     const { account, data } = tokenInfo
     const { parameters } = data
 
-    try {
-      await this.validateRefresh(client, clientAuth, tokenInfo)
+    const nextTokenId = await generateTokenId()
+    const nextRefreshToken = await generateRefreshToken()
 
-      if (!client.metadata.grant_types.includes(input.grant_type)) {
-        // In case the client metadata was updated after the token was issued
-        throw new InvalidGrantError(
-          `This client is not allowed to use the "${input.grant_type}" grant type`,
-        )
-      }
+    const now = new Date()
+    const expiresAt = this.createTokenExpiry(now)
 
-      if (parameters.dpop_jkt) {
-        if (!dpopProof) {
-          throw new InvalidDpopProofError('DPoP proof required')
-        } else if (parameters.dpop_jkt !== dpopProof.jkt) {
-          throw new InvalidDpopKeyBindingError()
-        }
-      }
+    await this.store.rotateToken(tokenInfo.id, nextTokenId, nextRefreshToken, {
+      updatedAt: now,
+      expiresAt,
+      // @NOTE Normally, the clientAuth not change over time. There are two
+      // exceptions:
+      // - Upgrade from a legacy representation of client authentication to
+      //   a modern one.
+      // - Allow clients to become "confidential" if they were previously
+      //   "public
+      clientAuth,
+    })
 
-      const nextTokenId = await generateTokenId()
-      const nextRefreshToken = await generateRefreshToken()
+    const accessToken = await this.buildAccessToken(
+      nextTokenId,
+      account,
+      client,
+      parameters,
+      { now, expiresAt },
+    )
 
-      const now = new Date()
-      const expiresAt = this.createTokenExpiry(now)
+    const response = await this.buildTokenResponse(
+      client,
+      accessToken,
+      nextRefreshToken,
+      expiresAt,
+      parameters,
+      account.sub,
+    )
 
-      await this.store.rotateToken(
-        tokenInfo.id,
-        nextTokenId,
-        nextRefreshToken,
-        {
-          updatedAt: now,
-          expiresAt,
-          // @NOTE Normally, the clientAuth not change over time. There are two
-          // exceptions:
-          // - Upgrade from a legacy representation of client authentication to
-          //   a modern one.
-          // - Allow clients to become "confidential" if they were previously
-          //   "public
-          clientAuth,
-        },
-      )
+    await callAsync(this.hooks.onTokenRefreshed, {
+      client,
+      clientAuth,
+      clientMetadata,
+      account,
+      parameters,
+    })
 
-      const accessToken = await this.buildAccessToken(
-        nextTokenId,
-        account,
-        client,
-        parameters,
-        { now, expiresAt },
-      )
-
-      const response = await this.buildTokenResponse(
-        client,
-        accessToken,
-        nextRefreshToken,
-        expiresAt,
-        parameters,
-        account.sub,
-      )
-
-      await callAsync(this.hooks.onTokenRefreshed, {
-        client,
-        clientAuth,
-        clientMetadata,
-        account,
-        parameters,
-      })
-
-      return response
-    } catch (err) {
-      // Just in case the token could not be refreshed, we delete it from the store
-      await this.deleteToken(tokenInfo.id)
-
-      throw err
-    }
+    return response
   }
 
   /**
    * @note The token validity is not guaranteed. The caller must ensure that the
    * token is valid before using the returned token info.
    */
-  public async findToken(token: string): Promise<TokenInfo> {
+  public async findToken(token: string): Promise<null | TokenInfo> {
     if (isTokenId(token)) {
       return this.getTokenInfo(token)
     } else if (isCode(token)) {
@@ -451,13 +257,13 @@ export class TokenManager {
     } else if (isRefreshToken(token)) {
       return this.findByRefreshToken(token)
     } else if (isSignedJwt(token)) {
-      return this.findBySignedJwt(token)
+      return this.findByAccessToken(token)
     } else {
       throw new InvalidRequestError(`Invalid token`)
     }
   }
 
-  public async findBySignedJwt(token: SignedJwt): Promise<TokenInfo> {
+  public async findByAccessToken(token: SignedJwt): Promise<TokenInfo> {
     const { payload } = await this.signer.verifyAccessToken(token, {
       clockTolerance: Infinity,
     })
@@ -475,30 +281,14 @@ export class TokenManager {
     return tokenInfo
   }
 
-  public async findByRefreshToken(token: RefreshToken): Promise<TokenInfo> {
-    const tokenInfo = await this.store.findTokenByRefreshToken(token)
-
-    if (!tokenInfo) {
-      throw new InvalidRequestError(`Invalid refresh token`)
-    }
-
-    if (tokenInfo.currentRefreshToken !== token) {
-      await this.deleteToken(tokenInfo.id)
-
-      throw new InvalidRequestError(`Refresh token replayed`)
-    }
-
-    return tokenInfo
+  public async findByRefreshToken(
+    token: RefreshToken,
+  ): Promise<null | TokenInfo> {
+    return this.store.findTokenByRefreshToken(token)
   }
 
-  public async findByCode(code: Code): Promise<TokenInfo> {
-    const tokenInfo = await this.store.findTokenByCode(code)
-
-    if (!tokenInfo) {
-      throw new InvalidRequestError(`Invalid code`)
-    }
-
-    return tokenInfo
+  public async findByCode(code: Code): Promise<null | TokenInfo> {
+    return this.store.findTokenByCode(code)
   }
 
   public async deleteToken(tokenId: TokenId): Promise<void> {

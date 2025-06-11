@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
 import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
@@ -33,6 +34,7 @@ import {
   DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
+import { validateClientAuth } from './client/client-auth-check.js'
 import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import {
@@ -41,7 +43,14 @@ import {
 } from './client/client-manager.js'
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
-import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
+import {
+  AUTHENTICATION_MAX_AGE,
+  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
+  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
+  PUBLIC_CLIENT_REFRESH_LIFETIME,
+  PUBLIC_CLIENT_SESSION_LIFETIME,
+  TOKEN_MAX_AGE,
+} from './constants.js'
 import { Branding, BrandingInput } from './customization/branding.js'
 import {
   Customization,
@@ -58,6 +67,7 @@ import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
+import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
@@ -85,7 +95,11 @@ import { AuthorizationResultAuthorizePage } from './result/authorization-result-
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
 import { TokenManager } from './token/token-manager.js'
-import { TokenStore, asTokenStore } from './token/token-store.js'
+import {
+  TokenStore,
+  asTokenStore,
+  refreshTokenSchema,
+} from './token/token-store.js'
 import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
@@ -361,40 +375,53 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   protected async authenticateClient(
-    credentials: OAuthClientCredentials,
-  ): Promise<[Client, ClientAuth]> {
-    const client = await this.clientManager.getClient(credentials.client_id)
-    const { clientAuth, nonce } = await client.verifyCredentials(credentials, {
+    clientCredentials: OAuthClientCredentials,
+    dpopProof: null | DpopProof,
+    options?: {
+      allowMissingDpopProof?: boolean
+    },
+  ): Promise<{
+    client: Client
+    clientAuth: ClientAuth
+  }> {
+    const client = await this.clientManager.getClient(
+      clientCredentials.client_id,
+    )
+
+    if (
+      client.metadata.dpop_bound_access_tokens &&
+      !dpopProof &&
+      !options?.allowMissingDpopProof
+    ) {
+      throw new InvalidDpopProofError('DPoP proof required')
+    }
+
+    if (dpopProof && !client.metadata.dpop_bound_access_tokens) {
+      throw new InvalidDpopProofError('DPoP proof not allowed for this client')
+    }
+
+    const clientAuth = await client.authenticate(clientCredentials, {
       audience: this.issuer,
     })
 
-    if (
-      client.metadata.application_type === 'native' &&
-      clientAuth.method !== 'none'
-    ) {
-      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
-      //
-      // > Except when using a mechanism like Dynamic Client Registration
-      // > [RFC7591] to provision per-instance secrets, native apps are
-      // > classified as public clients, as defined by Section 2.1 of OAuth 2.0
-      // > [RFC6749]; they MUST be registered with the authorization server as
-      // > such. Authorization servers MUST record the client type in the client
-      // > registration details in order to identify and process requests
-      // > accordingly.
+    if (clientAuth.method === 'private_key_jwt') {
+      // Clients MUST NOT use their client assertion key to sign DPoP proofs
+      if (dpopProof && clientAuth.jkt === dpopProof.jkt) {
+        throw new InvalidRequestError(
+          'The DPoP proof must be signed with a different key than the client assertion',
+        )
+      }
 
-      throw new InvalidGrantError(
-        'Native clients must authenticate using "none" method',
+      const unique = await this.replayManager.uniqueAuth(
+        clientAuth.jti,
+        client.id,
       )
-    }
-
-    if (nonce != null) {
-      const unique = await this.replayManager.uniqueAuth(nonce, client.id)
       if (!unique) {
         throw new InvalidGrantError(`${clientAuth.method} jti reused`)
       }
     }
 
-    return [client, clientAuth]
+    return { client, clientAuth }
   }
 
   protected async decodeJAR(
@@ -438,7 +465,11 @@ export class OAuthProvider extends OAuthVerifier {
     dpopProof: null | DpopProof,
   ): Promise<OAuthParResponse> {
     try {
-      const [client, clientAuth] = await this.authenticateClient(credentials)
+      const { client, clientAuth } = await this.authenticateClient(
+        credentials,
+        dpopProof,
+        { allowMissingDpopProof: true },
+      )
 
       const parameters =
         'request' in authorizationRequest // Handle JAR
@@ -691,8 +722,10 @@ export class OAuthProvider extends OAuthVerifier {
     request: OAuthTokenRequest,
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
-    const [client, clientAuth] =
-      await this.authenticateClient(clientCredentials)
+    const { client, clientAuth } = await this.authenticateClient(
+      clientCredentials,
+      dpopProof,
+    )
 
     if (!this.metadata.grant_types_supported?.includes(request.grant_type)) {
       throw new InvalidGrantError(
@@ -738,114 +771,219 @@ export class OAuthProvider extends OAuthVerifier {
     input: OAuthAuthorizationCodeGrantTokenRequest,
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
-    const code = codeSchema.parse(input.code)
-    try {
-      const { sub, deviceId, parameters } = await this.requestManager.findCode(
-        client,
-        clientAuth,
-        code,
-      )
-
-      // the following check prevents re-use of PKCE challenges, enforcing the
-      // clients to generate a new challenge for each authorization request. The
-      // replay manager typically prevents replay over a certain time frame,
-      // which might not cover the entire lifetime of the token (depending on
-      // the implementation of the replay store). For this reason, we should
-      // ideally ensure that the code_challenge was not already used by any
-      // existing token or any other pending request.
-      //
-      // The current implementation will cause client devs not issuing a new
-      // code challenge for each authorization request to fail, which should be
-      // a good enough incentive to follow the best practices, until we have a
-      // better implementation.
-      //
-      // @TODO Use tokenManager to ensure uniqueness of code_challenge
-      if (parameters.code_challenge) {
-        const unique = await this.replayManager.uniqueCodeChallenge(
-          parameters.code_challenge,
+    const code = await codeSchema
+      .parseAsync(input.code, { path: ['code'] })
+      .catch((err) => {
+        throw InvalidGrantError.from(
+          err,
+          err instanceof ZodError
+            ? `Invalid code: ${err.message}`
+            : `Invalid code`,
         )
-        if (!unique) {
-          throw new InvalidGrantError('Code challenge already used')
-        }
-      }
+      })
 
-      const { account } = await this.accountManager.getAccount(sub)
-
-      return await this.tokenManager.create(
-        client,
-        clientAuth,
-        clientMetadata,
-        account,
-        deviceId,
-        parameters,
-        input,
-        dpopProof,
-      )
-    } catch (err) {
-      // If a token is replayed, requestManager.findCode will throw. In that
-      // case, we need to revoke any token that was issued for this code.
-
+    const data = await this.requestManager.findCode(code).catch(async (err) => {
+      // Code not found in request manager: check for replays
       const tokenInfo = await this.tokenManager.findByCode(code)
       if (tokenInfo) {
+        // "code" was replayed, delete the token
         await this.tokenManager.deleteToken(tokenInfo.id)
 
-        //  As an additional security measure, we also sign the device out, so
-        // that the device cannot be used to access the account anymore without
-        // a new authentication.
+        // As an additional security measure, we also sign the device out, so that
+        // the device cannot be used to access the account anymore without a new
+        // authentication.
         const { deviceId, sub } = tokenInfo.data
         if (deviceId) {
           await this.accountManager.removeDeviceAccount(deviceId, sub)
         }
       }
 
-      throw err
+      throw InvalidGrantError.from(err, `Invalid code`)
+    })
+
+    // @NOTE at this point, the request data was removed from the store and only
+    // exists in memory here ("data" variable). Because of this, any error
+    // thrown after this point will permanently cause the request data to be
+    // lost.
+
+    await validateClientAuth(client, clientAuth, dpopProof, data)
+    await this.checkRedirectUri(data.parameters, input)
+    await this.checkCodeVerifier(data.parameters, input)
+
+    // If the DPoP proof was not provided earlier (PAR / authorize), let's add
+    // it now.
+    const parameters =
+      client.metadata.dpop_bound_access_tokens && !data.parameters.dpop_jkt
+        ? { ...data.parameters, dpop_jkt: dpopProof!.jkt }
+        : data.parameters
+
+    const { account } = await this.accountManager.getAccount(data.sub)
+
+    return this.tokenManager.createToken(
+      client,
+      clientAuth,
+      clientMetadata,
+      account,
+      data.deviceId,
+      parameters,
+      code,
+    )
+  }
+
+  protected async checkRedirectUri(
+    parameters: OAuthAuthorizationRequestParameters,
+    input: OAuthAuthorizationCodeGrantTokenRequest,
+  ): Promise<void> {
+    if (parameters.redirect_uri !== input.redirect_uri) {
+      throw new InvalidGrantError(
+        'The redirect_uri parameter must match the one used in the authorization request',
+      )
     }
   }
 
-  async refreshTokenGrant(
+  protected async checkCodeVerifier(
+    parameters: OAuthAuthorizationRequestParameters,
+    input: OAuthAuthorizationCodeGrantTokenRequest,
+  ): Promise<void> {
+    if (parameters.code_challenge) {
+      if (!input.code_verifier) {
+        throw new InvalidGrantError('code_verifier is required')
+      }
+      if (input.code_verifier.length < 43) {
+        throw new InvalidGrantError('code_verifier too short')
+      }
+      switch (parameters.code_challenge_method) {
+        case undefined: // default is "plain"
+        case 'plain':
+          if (parameters.code_challenge !== input.code_verifier) {
+            throw new InvalidGrantError('Invalid code_verifier')
+          }
+          break
+
+        case 'S256': {
+          const inputChallenge = Buffer.from(
+            parameters.code_challenge,
+            'base64',
+          )
+          const computedChallenge = createHash('sha256')
+            .update(input.code_verifier)
+            .digest()
+          if (inputChallenge.compare(computedChallenge) !== 0) {
+            throw new InvalidGrantError('Invalid code_verifier')
+          }
+          break
+        }
+
+        default:
+          // Should never happen (because request validation should catch this)
+          throw new Error(`Unsupported code_challenge_method`)
+      }
+      const unique = await this.replayManager.uniqueCodeChallenge(
+        parameters.code_challenge,
+      )
+      if (!unique) {
+        throw new InvalidGrantError('Code challenge already used')
+      }
+    } else if (input.code_verifier !== undefined) {
+      throw new InvalidRequestError("code_challenge parameter wasn't provided")
+    }
+  }
+
+  protected async refreshTokenGrant(
     client: Client,
     clientAuth: ClientAuth,
     clientMetadata: RequestMetadata,
     input: OAuthRefreshTokenGrantTokenRequest,
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
-    return this.tokenManager.refresh(
-      client,
-      clientAuth,
-      clientMetadata,
-      input,
-      dpopProof,
-    )
+    const refreshToken = await refreshTokenSchema
+      .parseAsync(input.refresh_token)
+      .catch((err) => {
+        throw InvalidGrantError.from(err, `Invalid refresh token`)
+      })
+
+    const tokenInfo = await this.tokenManager
+      .findByRefreshToken(refreshToken)
+      .catch((err) => {
+        throw InvalidGrantError.from(err, `Invalid refresh token`)
+      })
+
+    if (!tokenInfo) {
+      throw new InvalidGrantError(`Invalid refresh token`)
+    }
+
+    // Check before try/catch to allow the client to retry with a DPoP proof
+    const { parameters } = tokenInfo.data
+    if (parameters.dpop_jkt && !dpopProof) {
+      throw new InvalidDpopProofError('DPoP proof required')
+    }
+
+    try {
+      await validateClientAuth(client, clientAuth, dpopProof, tokenInfo.data)
+
+      if (tokenInfo.currentRefreshToken !== refreshToken) {
+        throw new InvalidGrantError(`Refresh token replayed`)
+      }
+
+      const allowLongerLifespan =
+        client.info.isFirstParty || tokenInfo.data.clientAuth.method !== 'none'
+
+      const [sessionLifetime, refreshLifetime] = allowLongerLifespan
+        ? [
+            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
+            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
+          ]
+        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
+
+      const sessionAge = Date.now() - tokenInfo.data.createdAt.getTime()
+      const refreshAge = Date.now() - tokenInfo.data.updatedAt.getTime()
+
+      if (sessionAge > sessionLifetime) {
+        throw new InvalidGrantError(`Session expired`)
+      } else if (refreshAge > refreshLifetime) {
+        throw new InvalidGrantError(`Refresh token expired`)
+      } else if (refreshAge > sessionAge) {
+        throw new InvalidGrantError(`Refresh token is older than session`)
+      }
+
+      return await this.tokenManager.rotateToken(
+        client,
+        clientAuth,
+        clientMetadata,
+        tokenInfo,
+      )
+    } catch (err) {
+      await this.tokenManager.deleteToken(tokenInfo.id)
+      throw err
+    }
   }
 
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
   public async revoke(
-    credentials: OAuthClientCredentials,
+    clientCredentials: OAuthClientCredentials,
     { token }: OAuthTokenIdentification,
+    dpopProof: null | DpopProof,
   ) {
     // > The authorization server first validates the client credentials (in
     // > case of a confidential client)
-    const [client, clientAuth] = await this.authenticateClient(credentials)
+    const { client, clientAuth } = await this.authenticateClient(
+      clientCredentials,
+      dpopProof,
+    )
 
     const tokenInfo = await this.tokenManager.findToken(token)
+    if (tokenInfo) {
+      // > [...] and then verifies whether the token was issued to the client
+      // > making the revocation request.
+      await validateClientAuth(client, clientAuth, dpopProof, tokenInfo.data)
 
-    // > [...] and then verifies whether the token was issued to the client
-    // > making the revocation request.
-    await this.tokenManager
-      .validateClientAuth(client, clientAuth, tokenInfo)
-      .catch((err) => {
-        // > If this validation fails, the request is refused and the client is
-        // > informed of the error by the authorization server as described
-        // > below.
-        throw new InvalidGrantError(`Token was not issued to this client`, err)
-      })
-
-    // > In the next step, the authorization server invalidates the token. The
-    // > invalidation takes place immediately, and the token cannot be used
-    // > again after the revocation.
-    await this.tokenManager.deleteToken(tokenInfo.id)
+      // > In the next step, the authorization server invalidates the token. The
+      // > invalidation takes place immediately, and the token cannot be used
+      // > again after the revocation.
+      await this.tokenManager.deleteToken(tokenInfo.id)
+    }
   }
 
   protected override async verifyToken(

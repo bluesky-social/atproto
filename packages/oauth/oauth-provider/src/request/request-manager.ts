@@ -5,7 +5,6 @@ import {
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 import { isValidHandle } from '@atproto/syntax'
-import { validateClientAuth } from '../client/client-auth-check.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
@@ -457,11 +456,7 @@ export class RequestManager {
    * @note If this method throws an error, any token previously generated from
    * the same `code` **must** me revoked.
    */
-  public async findCode(
-    client: Client,
-    clientAuth: ClientAuth,
-    code: Code,
-  ): Promise<RequestDataAuthorized> {
+  public async findCode(code: Code): Promise<RequestDataAuthorized> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
@@ -472,31 +467,8 @@ export class RequestManager {
         throw new Error('Unexpected request state')
       }
 
-      if (data.clientId !== client.id) {
-        // Note: do not reveal the original client ID to the client using an invalid id
-        throw new InvalidGrantError(
-          `The code was not issued to client "${client.id}"`,
-        )
-      }
-
       if (data.expiresAt < new Date()) {
         throw new InvalidGrantError('This code has expired')
-      }
-
-      if (data.clientAuth === null) {
-        // If the client did not use PAR, it was not authenticated when the
-        // request was created (see authorize() method in OAuthProvider). Since
-        // PAR is not mandatory, and since the token exchange currently taking
-        // place *is* authenticated (`clientAuth`), we allow "upgrading" the
-        // authentication method (the token created will be bound to the current
-        // clientAuth).
-      } else {
-        // Otherwise, the authentication method currently used must match the
-        // one that was used to initiate the session.
-        await validateClientAuth(client, clientAuth, {
-          clientId: data.clientId,
-          clientAuth: data.clientAuth,
-        })
       }
 
       return data

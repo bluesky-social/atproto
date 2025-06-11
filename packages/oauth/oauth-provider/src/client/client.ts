@@ -15,7 +15,7 @@ import {
   exportJWK,
   jwtVerify,
 } from 'jose'
-import { Jwks, SignedJwt, UnsignedJwt, isSignedJwt } from '@atproto/jwk'
+import { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
@@ -68,30 +68,22 @@ export class Client {
     jar: SignedJwt | UnsignedJwt,
     audience: string,
   ) {
-    // https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2
-    // > If signed, the Authorization Request Object SHOULD contain the Claims
-    // > iss (issuer) and aud (audience) as members with their semantics being
-    // > the same as defined in the JWT [RFC7519] specification. The value of
-    // > aud should be the value of the authorization server (AS) issuer, as
-    // > defined in RFC 8414 [RFC8414].
     try {
       // We need to special case the "none" algorithm, as the validation method
       // is different for signed and unsigned JWTs.
       if (this.metadata.request_object_signing_alg === 'none') {
-        if (isSignedJwt(jar)) {
-          throw new InvalidRequestError(
-            'Request object is signed, but "request_object_signing_alg" is set to "none"',
-          )
-        }
         return await this.jwtVerifyUnsecured(jar, {
           audience,
           maxTokenAge: JAR_MAX_AGE / 1e3,
         })
       }
 
-      if (!isSignedJwt(jar)) {
-        throw new InvalidRequestError('A signed request object is required')
-      }
+      // https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2
+      // > If signed, the Authorization Request Object SHOULD contain the Claims
+      // > iss (issuer) and aud (audience) as members with their semantics being
+      // > the same as defined in the JWT [RFC7519] specification. The value of
+      // > aud should be the value of the authorization server (AS) issuer, as
+      // > defined in RFC 8414 [RFC8414].
       return await this.jwtVerify(jar, {
         audience,
         maxTokenAge: JAR_MAX_AGE / 1e3,
@@ -109,7 +101,7 @@ export class Client {
           ? `Invalid "request" object: ${err.message}`
           : `Invalid "request" object`
 
-      throw InvalidRequestError.from(err, message)
+      throw new InvalidRequestError(message, err)
     }
   }
 
@@ -138,7 +130,7 @@ export class Client {
 
   protected async jwtVerify<PayloadType = JWTPayload>(
     token: string,
-    options?: Omit<JWTVerifyOptions, 'issuer'>,
+    options?: Omit<JWTVerifyOptions, 'issuer'> & { audience: string },
   ): Promise<JWTVerifyResult<PayloadType> & ResolvedKey<KeyLike>> {
     return jwtVerify<PayloadType>(token, this.keyGetter, {
       ...options,
@@ -151,27 +143,22 @@ export class Client {
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7523#section-3}
    * @see {@link https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-endpoint-auth-method}
    */
-  public async verifyCredentials(
+  public async authenticate(
     input: OAuthClientCredentials,
     checks: {
       audience: string
     },
-  ): Promise<{
-    clientAuth: ClientAuth
-    // for replay protection
-    nonce?: string
-  }> {
+  ): Promise<ClientAuth> {
     const method = this.metadata.token_endpoint_auth_method
 
     if (method === 'none') {
-      const clientAuth: ClientAuth = { method: 'none' }
-      return { clientAuth }
+      return { method: 'none' }
     }
 
     if (method === 'private_key_jwt') {
-      if (!('client_assertion_type' in input)) {
+      if (!('client_assertion' in input)) {
         throw new InvalidRequestError(
-          `client_assertion_type required for "${method}"`,
+          `client authentication method "${method} required an "client_assertion"`,
         )
       }
 
@@ -196,14 +183,13 @@ export class Client {
           throw new InvalidClientError(`"kid" required in client_assertion`)
         }
 
-        const clientAuth: ClientAuth = {
+        return {
           method: 'private_key_jwt',
+          jti: result.payload.jti,
           jkt: await authJwkThumbprint(result.key),
           alg: result.protectedHeader.alg,
           kid: result.protectedHeader.kid,
         }
-
-        return { clientAuth, nonce: result.payload.jti }
       }
 
       throw new InvalidClientError(
