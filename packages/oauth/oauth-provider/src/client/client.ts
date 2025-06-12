@@ -158,7 +158,7 @@ export class Client {
     if (method === 'private_key_jwt') {
       if (!('client_assertion' in input)) {
         throw new InvalidRequestError(
-          `client authentication method "${method} required an "client_assertion"`,
+          `client authentication method "${method}" required a "client_assertion"`,
         )
       }
 
