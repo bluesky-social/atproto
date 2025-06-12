@@ -2,6 +2,7 @@ import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
+import { jsonStringToLex } from '@atproto/lexicon'
 import {
   ChatPreference,
   FilterablePreference,
@@ -188,7 +189,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       if (!row) {
         return {}
       }
-      const p: Preferences = JSON.parse(row.payload)
+      const p = jsonStringToLex(row.payload) as Preferences
       return notificationPreferencesLexToProtobuf(p, row.payload)
     })
 
