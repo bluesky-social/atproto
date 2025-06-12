@@ -467,7 +467,9 @@ export class RequestManager {
     // case consumeRequestCode() does not delete the request).
     if (NODE_ENV !== 'production') {
       const result = await this.store.readRequest(id)
-      if (result) throw new Error('Code should not be used twice')
+      if (result) {
+        throw new Error('Invalid store implementation: request not deleted')
+      }
     }
 
     if (!isRequestDataAuthorized(data)) {
