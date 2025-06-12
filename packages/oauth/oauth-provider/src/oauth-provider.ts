@@ -469,8 +469,9 @@ export class OAuthProvider extends OAuthVerifier {
       const { client, clientAuth } = await this.authenticateClient(
         credentials,
         dpopProof,
-        // Allow missing DPoP proof for PAR requests. DPoP proof presence will
-        // be enforced at token creation time.
+        // Allow missing DPoP header for PAR requests as rfc9449 allows it
+        // (though the dpop_jkt parameter must be present in that case, see
+        // check bellow).
         { allowMissingDpopProof: true },
       )
 
@@ -478,6 +479,17 @@ export class OAuthProvider extends OAuthVerifier {
         'request' in authorizationRequest // Handle JAR
           ? await this.decodeJAR(client, authorizationRequest)
           : authorizationRequest
+
+      if (
+        client.metadata.dpop_bound_access_tokens &&
+        !dpopProof &&
+        !parameters.dpop_jkt
+      ) {
+        // https://datatracker.ietf.org/doc/html/rfc9449#section-10.1
+        // @NOTE When both PAR and DPoP are used, either the DPoP header, or the
+        // dpop_jkt parameter must be present. We do not enforce this for legacy
+        // reasons.
+      }
 
       const { uri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
