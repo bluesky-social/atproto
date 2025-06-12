@@ -857,35 +857,39 @@ export class OAuthProvider extends OAuthVerifier {
         )
       })
 
-    const data = await this.requestManager.findCode(code).catch(async (err) => {
-      // Code not found in request manager: check for replays
-      const tokenInfo = await this.tokenManager.findByCode(code)
-      if (tokenInfo) {
-        // "code" was replayed, delete the token
-        await this.tokenManager.deleteToken(tokenInfo.id)
-
-        // As an additional security measure, we also sign the device out, so that
-        // the device cannot be used to access the account anymore without a new
-        // authentication.
-        const { deviceId, sub } = tokenInfo.data
-        if (deviceId) {
-          await this.accountManager.removeDeviceAccount(deviceId, sub)
+    const data = await this.requestManager
+      .consumeCode(code)
+      .catch(async (err) => {
+        // Code not found in request manager: check for replays
+        const tokenInfo = await this.tokenManager.findByCode(code)
+        if (tokenInfo) {
+          // try/finally to ensure that both code path get executed (sequentially)
+          try {
+            // "code" was replayed, delete existing session
+            await this.tokenManager.deleteToken(tokenInfo.id)
+          } finally {
+            // As an additional security measure, we also sign the device out,
+            // so that the device cannot be used to access the account anymore
+            // without a new authentication.
+            const { deviceId, sub } = tokenInfo.data
+            if (deviceId) {
+              await this.accountManager.removeDeviceAccount(deviceId, sub)
+            }
+          }
         }
-      }
 
-      throw InvalidGrantError.from(err, `Invalid code`)
-    })
+        throw InvalidGrantError.from(err, `Invalid code`)
+      })
 
     // @NOTE at this point, the request data was removed from the store and only
-    // exists in memory here ("data" variable). Because of this, any error
-    // thrown after this point will permanently cause the request data to be
-    // lost.
+    // exists in memory here (in the "data" variable). Because of this, any
+    // error thrown after this point will permanently cause the request data to
+    // be lost.
 
     await this.validateClientAuth(client, clientAuth, dpopProof, data)
 
     // If the DPoP proof was not provided earlier (PAR / authorize), let's add
     // it now.
-
     const parameters =
       dpopProof &&
       client.metadata.dpop_bound_access_tokens &&

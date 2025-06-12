@@ -457,7 +457,7 @@ export class RequestManager {
    * @note If this method throws an error, any token previously generated from
    * the same `code` **must** me revoked.
    */
-  public async findCode(code: Code): Promise<RequestDataAuthorized> {
+  public async consumeCode(code: Code): Promise<RequestDataAuthorized> {
     const result = await this.store.consumeRequestCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
