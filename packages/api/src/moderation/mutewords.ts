@@ -131,7 +131,7 @@ export function matchMuteWords({
          * Exit case for any punctuation within the predicate that we _do_
          * allow e.g. `and/or` should not match `Andor`.
          */
-        if (/[\/]+/.test(wordTrimmedPunctuation)) {
+        if (/[/]+/.test(wordTrimmedPunctuation)) {
           continue outer
         }
 
