@@ -110,6 +110,11 @@ import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+import * as AppBskyAssuranceDefs from './types/app/bsky/assurance/defs.js'
+import * as AppBskyAssuranceGetAgeAssuranceState from './types/app/bsky/assurance/getAgeAssuranceState.js'
+import * as AppBskyAssuranceHandleAgeAssuranceComplete from './types/app/bsky/assurance/handleAgeAssuranceComplete.js'
+import * as AppBskyAssuranceHandleAgeAssuranceEvent from './types/app/bsky/assurance/handleAgeAssuranceEvent.js'
+import * as AppBskyAssuranceInitAgeAssurance from './types/app/bsky/assurance/initAgeAssurance.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -378,6 +383,11 @@ export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+export * as AppBskyAssuranceDefs from './types/app/bsky/assurance/defs.js'
+export * as AppBskyAssuranceGetAgeAssuranceState from './types/app/bsky/assurance/getAgeAssuranceState.js'
+export * as AppBskyAssuranceHandleAgeAssuranceComplete from './types/app/bsky/assurance/handleAgeAssuranceComplete.js'
+export * as AppBskyAssuranceHandleAgeAssuranceEvent from './types/app/bsky/assurance/handleAgeAssuranceEvent.js'
+export * as AppBskyAssuranceInitAgeAssurance from './types/app/bsky/assurance/initAgeAssurance.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -1747,6 +1757,7 @@ export class AppNS {
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
+  assurance: AppBskyAssuranceNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -1759,6 +1770,7 @@ export class AppBskyNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
+    this.assurance = new AppBskyAssuranceNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -2030,6 +2042,62 @@ export class AppBskyActorStatusRecord {
       undefined,
       { collection: 'app.bsky.actor.status', ...params },
       { headers },
+    )
+  }
+}
+
+export class AppBskyAssuranceNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getAgeAssuranceState(
+    params?: AppBskyAssuranceGetAgeAssuranceState.QueryParams,
+    opts?: AppBskyAssuranceGetAgeAssuranceState.CallOptions,
+  ): Promise<AppBskyAssuranceGetAgeAssuranceState.Response> {
+    return this._client.call(
+      'app.bsky.assurance.getAgeAssuranceState',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  handleAgeAssuranceComplete(
+    params?: AppBskyAssuranceHandleAgeAssuranceComplete.QueryParams,
+    opts?: AppBskyAssuranceHandleAgeAssuranceComplete.CallOptions,
+  ): Promise<AppBskyAssuranceHandleAgeAssuranceComplete.Response> {
+    return this._client.call(
+      'app.bsky.assurance.handleAgeAssuranceComplete',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  handleAgeAssuranceEvent(
+    data?: AppBskyAssuranceHandleAgeAssuranceEvent.InputSchema,
+    opts?: AppBskyAssuranceHandleAgeAssuranceEvent.CallOptions,
+  ): Promise<AppBskyAssuranceHandleAgeAssuranceEvent.Response> {
+    return this._client.call(
+      'app.bsky.assurance.handleAgeAssuranceEvent',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  initAgeAssurance(
+    data?: AppBskyAssuranceInitAgeAssurance.InputSchema,
+    opts?: AppBskyAssuranceInitAgeAssurance.CallOptions,
+  ): Promise<AppBskyAssuranceInitAgeAssurance.Response> {
+    return this._client.call(
+      'app.bsky.assurance.initAgeAssurance',
+      opts?.qp,
+      data,
+      opts,
     )
   }
 }

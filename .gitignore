@@ -15,3 +15,5 @@ test.sqlite
 \#*\#
 *~
 *.swp
+
+packages/bsky/src/api/app/bsky/assurance/env.ts
