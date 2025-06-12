@@ -1,7 +1,7 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
-import { IsoSortAtKey } from '../db/pagination'
+import { StashKeyKey } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActivitySubscriptions(req) {
@@ -13,7 +13,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('creator', '=', actorDid)
 
     const { ref } = db.db.dynamic
-    const key = new IsoSortAtKey(ref('activity_subscription.sortAt'))
+    const key = new StashKeyKey(ref('activity_subscription.key'))
     builder = key.paginate(builder, {
       cursor,
       limit,
