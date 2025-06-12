@@ -31,30 +31,33 @@ export class RequestStoreRedis implements RequestStore {
     await this.redis.mset(values)
 
     // MSET does not support expiration, so we set it manually
-    const expiresAt = data.expiresAt.getTime()
-    await Promise.all(
-      values.map(([key]) => this.redis.pexpireat(key, expiresAt)),
-    )
+    for (const [key] of values) {
+      await this.redis.pexpireat(key, data.expiresAt.getTime())
+    }
   }
 
   async updateRequest(
     id: RequestId,
-    data: Partial<RequestData>,
+    updates: Partial<RequestData>,
   ): Promise<void> {
-    const current = await this.readRequest(id)
-    if (!current) throw new Error('Request not found')
-    if (current.code) await this.redis.del(current.code)
-    const newData = { ...current, ...data }
-    await this.createRequest(id, newData)
+    const prevData = await this.redis.getdel(id).then(decode)
+    if (!prevData) throw new Error('Request not found')
+
+    const nextData = { ...prevData, ...updates }
+    await this.createRequest(id, nextData)
+
+    // Remove the old code index if it has changed
+    if (prevData.code && prevData.code !== nextData.code) {
+      await this.redis.del(prevData.code)
+    }
   }
 
   async deleteRequest(id: RequestId): Promise<void> {
     // Using GETDEL to avoid un-necessary round trips
-    const value = await this.redis.getdel(id)
-    if (!value) return
+    const data = await this.redis.getdel(id).then(decode)
 
-    const code = decode(value)?.code
-    if (typeof code === 'string') await this.redis.del(code)
+    // Also delete the "code" index
+    if (data?.code) await this.redis.del(data.code)
   }
 
   async consumeRequestCode(
@@ -69,17 +72,13 @@ export class RequestStoreRedis implements RequestStore {
     const parsed = requestIdSchema.safeParse(value)
     if (!parsed.success) return null
 
-    const id = parsed.data
-    if (!id) return null
+    const id: RequestId = parsed.data
 
-    const data = await this.readRequest(id)
-    if (!data) return null
-
-    // Also delete the request entry itself
-    await this.redis.del(id)
+    // Also delete the request entry itself (see consumeRequestCode's interface)
+    const data = await this.redis.getdel(id).then(decode)
 
     // Protect against concurrent updates
-    if (data.code !== code) return null
+    if (data?.code !== code) return null
 
     return { id, data }
   }
@@ -89,10 +88,10 @@ function encode(value: RequestData): string {
   return JSON.stringify(value)
 }
 
-function decode(value: string): RequestData | null {
-  try {
-    return JSON.parse(value) as RequestData
-  } catch {
-    return null
-  }
+function decode(value: string): RequestData
+function decode(value?: null): null
+function decode(value?: string | null): RequestData | null
+function decode(value?: string | null): RequestData | null {
+  if (value == null) return null
+  return JSON.parse(value) as RequestData
 }
