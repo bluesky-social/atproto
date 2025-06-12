@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.verification.initiateAgeVerification",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Initiate age verification for an account. This is a one-time action that will start the process of verifying the user's age.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["language"],
+          "properties": {
+            "language": {
+              "type": "string",
+              "description": "The user's preferred language for communication during the verification process."
+            }
+          }
+        }
+      }
+    }
+  }
+}

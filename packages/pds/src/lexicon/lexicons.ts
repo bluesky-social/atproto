@@ -11509,6 +11509,169 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyVerificationGetAgeVerificationStatus: {
+    lexicon: 1,
+    id: 'app.bsky.verification.getAgeVerificationStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the current status of the age verification process for an account. This is used to check if the user has completed age verification or if further action is required.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['required', 'status'],
+            properties: {
+              required: {
+                type: 'boolean',
+                description:
+                  'Whether the age verification process is required for the account. If true, the user must complete age verification to access certain features.',
+              },
+              status: {
+                type: 'string',
+                description: 'The status of the age verification process.',
+                knownValues: [
+                  'unverified',
+                  'pending',
+                  'verified-adult',
+                  'verified-minor',
+                  'failed',
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVerificationHandleAgeVerificationComplete: {
+    lexicon: 1,
+    id: 'app.bsky.verification.handleAgeVerificationComplete',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Called via redirect from the age verification service. This endpoint will attempt to verify the result, and then redirect to user back to the Bluesky app.',
+        parameters: {
+          type: 'params',
+          required: [],
+          properties: {
+            status: {
+              type: 'string',
+              description: 'The status of the age verification process.',
+            },
+            externalPayload: {
+              type: 'string',
+              description:
+                'Additional metadata provided when initiating age verification.',
+            },
+            signature: {
+              type: 'string',
+              description:
+                "SHA256 HMAC signature of the status and externalPayload, separated by a colon (:), and signed with the facilitating service's private key.",
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['status'],
+            properties: {
+              status: {
+                type: 'string',
+                description:
+                  'The computed status of the age verification process.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVerificationHandleAgeVerificationEvent: {
+    lexicon: 1,
+    id: 'app.bsky.verification.handleAgeVerificationEvent',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Webhook endpoint to receive age verification events from a facilitating service. This endpoint is called by the service to report the status of the age verification process.',
+        parameters: {
+          type: 'params',
+          required: [],
+          properties: {
+            name: {
+              type: 'string',
+              description:
+                "The name of the event being reported, e.g., 'adult-verified'.",
+            },
+            time: {
+              type: 'string',
+              description:
+                'The timestamp of the event. Currently in ISO 8601 format, but left open for future flexibility.',
+            },
+            orgId: {
+              type: 'string',
+              description:
+                'The account identifier of our organization, in UUID format.',
+            },
+            productId: {
+              type: 'string',
+              description: 'The product identifier, in UUID format.',
+            },
+            environmentId: {
+              type: 'string',
+              description: 'The environment identifier, in UUID format.',
+            },
+            payload: {
+              type: 'string',
+              description: 'The payload of the event.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['ack'],
+            properties: {
+              ack: {
+                type: 'string',
+                description: 'Whether the event was handled or not.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVerificationInitiateAgeVerification: {
+    lexicon: 1,
+    id: 'app.bsky.verification.initiateAgeVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate age verification for an account. This is a one-time action that will start the process of verifying the user's age.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['language'],
+            properties: {
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the verification process.",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyVideoDefs: {
     lexicon: 1,
     id: 'app.bsky.video.defs',
@@ -16820,6 +16983,14 @@ export const ids = {
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
   AppBskyUnspeccedSearchStarterPacksSkeleton:
     'app.bsky.unspecced.searchStarterPacksSkeleton',
+  AppBskyVerificationGetAgeVerificationStatus:
+    'app.bsky.verification.getAgeVerificationStatus',
+  AppBskyVerificationHandleAgeVerificationComplete:
+    'app.bsky.verification.handleAgeVerificationComplete',
+  AppBskyVerificationHandleAgeVerificationEvent:
+    'app.bsky.verification.handleAgeVerificationEvent',
+  AppBskyVerificationInitiateAgeVerification:
+    'app.bsky.verification.initiateAgeVerification',
   AppBskyVideoDefs: 'app.bsky.video.defs',
   AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
   AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
