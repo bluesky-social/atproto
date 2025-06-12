@@ -11,7 +11,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('activity_subscription')
       .select('subjectDid')
       .where('creator', '=', actorDid)
-      .orderBy('indexedAt', 'desc')
 
     const { ref } = db.db.dynamic
     const key = new IsoSortAtKey(ref('activity_subscription.sortAt'))

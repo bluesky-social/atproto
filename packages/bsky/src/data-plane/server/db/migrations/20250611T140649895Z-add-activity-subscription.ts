@@ -20,7 +20,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       'creator',
       'subjectDid',
     ])
-    .addUniqueConstraint('activity_subscription_unique_key', ['key'])
+    .execute()
+  await db.schema
+    .createIndex('activity_subscription_creator_sortat_idx')
+    .on('activity_subscription')
+    .columns(['creator', 'sortAt'])
     .execute()
 }
 

@@ -5,6 +5,7 @@ import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { TID } from '@atproto/common'
+import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { isActivitySubscriptionEnabled } from '../../hydration/util'
 import { ids } from '../../lexicon/lexicons'
@@ -228,9 +229,9 @@ const handleSubjectActivitySubscriptionOperation = async (
 ) => {
   const { actorDid, key, method, payload } = req
 
-  const parsed: SubjectActivitySubscription = JSON.parse(
+  const parsed = jsonStringToLex(
     Buffer.from(payload).toString('utf8'),
-  )
+  ) as SubjectActivitySubscription
   const { activitySubscription } = parsed
   const { post, reply } = activitySubscription
   // We only keep a record if enabled.
