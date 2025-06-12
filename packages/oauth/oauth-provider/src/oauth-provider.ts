@@ -395,7 +395,7 @@ export class OAuthProvider extends OAuthVerifier {
     }
 
     const clientAuth = await client.authenticate(clientCredentials, {
-      audience: this.issuer,
+      authorizationServerIdentifier: this.issuer,
     })
 
     if (clientAuth.method === 'private_key_jwt') {
@@ -406,9 +406,16 @@ export class OAuthProvider extends OAuthVerifier {
         )
       }
 
+      // https://www.rfc-editor.org/rfc/rfc7523.html#section-3
+      // > 7.  [...] The authorization server MAY ensure that JWTs are not
+      // >     replayed by maintaining the set of used "jti" values for the
+      // >     length of time for which the JWT would be considered valid based
+      // >     on the applicable "exp" instant.
+
       const unique = await this.replayManager.uniqueAuth(
         clientAuth.jti,
         client.id,
+        clientAuth.exp,
       )
       if (!unique) {
         throw new InvalidGrantError(`${clientAuth.method} jti reused`)

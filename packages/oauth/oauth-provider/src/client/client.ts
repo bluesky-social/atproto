@@ -146,7 +146,7 @@ export class Client {
 
   protected async jwtVerify<PayloadType = JWTPayload>(
     token: string,
-    options?: Omit<JWTVerifyOptions, 'issuer'> & { audience: string },
+    options?: Omit<JWTVerifyOptions, 'issuer'>,
   ): Promise<JWTVerifyResult<PayloadType> & ResolvedKey<KeyLike>> {
     return jwtVerify<PayloadType>(token, this.keyGetter, {
       ...options,
@@ -162,7 +162,7 @@ export class Client {
   public async authenticate(
     input: OAuthClientCredentials,
     checks: {
-      audience: string
+      authorizationServerIdentifier: string
     },
   ): Promise<ClientAuth> {
     const method = this.metadata.token_endpoint_auth_method
@@ -179,13 +179,62 @@ export class Client {
       }
 
       if (input.client_assertion_type === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
+        // https://www.rfc-editor.org/rfc/rfc7523.html#section-3
+
         const result = await this.jwtVerify<{
           jti: string
+          exp?: number
         }>(input.client_assertion, {
-          audience: checks.audience,
+          // > 1. The JWT MUST contain an "iss" (issuer) claim that contains a
+          // >    unique identifier for the entity that issued the JWT.
+          //
+          // The "issuer" is already checked by jwtVerify()
+
+          // > 2. The JWT MUST contain a "sub" (subject) claim identifying the
+          // >    principal that is the subject of the JWT. Two cases need to be
+          // >    differentiated: [...] For client authentication, the subject
+          // >    MUST be the "client_id" of the OAuth client.
           subject: this.id,
+
+          // > 3. The JWT MUST contain an "aud" (audience) claim containing a
+          // >    value that identifies the authorization server as an intended
+          // >    audience. The token endpoint URL of the authorization server
+          // >    MAY be used as a value for an "aud" element to identify the
+          // >    authorization server as an intended audience of the JWT.
+          audience: checks.authorizationServerIdentifier,
+
+          requiredClaims: [
+            // > 4. The JWT MUST contain an "exp" (expiration time) claim that
+            // >    limits the time window during which the JWT can be used.
+            //
+            // @TODO The presence of "exp" didn't use to be enforced by this
+            // implementation (or provided by the oauth-client). This is mostly
+            // fine because "iat" *is* required, but this makes this
+            // implementation non compliant with RFC7523. We can't just make it
+            // required as it might break existing clients.
+
+            // 'exp',
+
+            // > 7. The JWT MAY contain a "jti" (JWT ID) claim that provides a
+            // >    unique identifier for the token. The authorization server
+            // >    MAY ensure that JWTs are not replayed by maintaining the set
+            // >    of used "jti" values for the length of time for which the
+            // >    JWT would be considered valid based on the applicable "exp"
+            // >    instant.
+            'jti',
+          ],
+
+          // > 5. The JWT MAY contain an "nbf" (not before) claim that
+          // >    identifies the time before which the token MUST NOT be
+          // >    accepted for processing.
+          //
+          // This is already enforced by jose
+
+          // > 6. The JWT MAY contain an "iat" (issued at) claim that identifies
+          // >    the time at which the JWT was issued.  Note that the
+          // >    authorization server may reject JWTs with an "iat" claim value
+          // >    that is unreasonably far in the past.
           maxTokenAge: CLIENT_ASSERTION_MAX_AGE / 1000,
-          requiredClaims: ['jti'],
         }).catch((err) => {
           const msg =
             err instanceof JOSEError
@@ -202,6 +251,7 @@ export class Client {
         return {
           method: 'private_key_jwt',
           jti: result.payload.jti,
+          exp: result.payload.exp,
           jkt: await authJwkThumbprint(result.key),
           alg: result.protectedHeader.alg,
           kid: result.protectedHeader.kid,
