@@ -4,6 +4,7 @@ import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
+  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
   OAuthAuthorizationCodeGrantTokenRequest,
   OAuthAuthorizationRequestJar,
@@ -34,8 +35,7 @@ import {
   DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
-import { validateClientAuth } from './client/client-auth-check.js'
-import { ClientAuth } from './client/client-auth.js'
+import { ClientAuth, ClientAuthLegacy } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import {
   ClientManager,
@@ -43,7 +43,14 @@ import {
 } from './client/client-manager.js'
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
-import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
+import {
+  AUTHENTICATION_MAX_AGE,
+  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
+  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
+  PUBLIC_CLIENT_REFRESH_LIFETIME,
+  PUBLIC_CLIENT_SESSION_LIFETIME,
+  TOKEN_MAX_AGE,
+} from './constants.js'
 import { Branding, BrandingInput } from './customization/branding.js'
 import {
   Customization,
@@ -85,13 +92,13 @@ import { AuthorizationRedirectParameters } from './result/authorization-redirect
 import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
+import { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
 import {
   TokenStore,
   asTokenStore,
   refreshTokenSchema,
 } from './token/token-store.js'
-import { validateRefreshToken } from './token/validate-refresh-token.js'
 import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
@@ -760,6 +767,78 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
+  protected async validateClientAuth(
+    client: Client,
+    clientAuth: ClientAuth,
+    dpopProof: null | DpopProof,
+    initial: {
+      parameters: OAuthAuthorizationRequestParameters
+      clientId: ClientId
+      clientAuth: null | ClientAuth | ClientAuthLegacy
+    },
+  ): Promise<void> {
+    // Fool proofing, ensure that the client is authenticating using the right method
+    if (clientAuth.method !== client.metadata.token_endpoint_auth_method) {
+      throw new InvalidGrantError(
+        `Client authentication method mismatch (expected ${client.metadata.token_endpoint_auth_method}, got ${clientAuth.method})`,
+      )
+    }
+
+    if (initial.clientId !== client.id) {
+      throw new InvalidGrantError(`Token was not issued to this client`)
+    }
+
+    const { parameters } = initial
+    if (parameters.dpop_jkt) {
+      if (!dpopProof) {
+        throw new InvalidGrantError(`DPoP proof is required for this request`)
+      } else if (parameters.dpop_jkt !== dpopProof.jkt) {
+        throw new InvalidGrantError(
+          `DPoP proof does not match the expected JKT`,
+        )
+      }
+    }
+
+    if (!initial.clientAuth) {
+      // If the client did not use PAR, it was not authenticated when the request
+      // was initially created (see authorize() method in OAuthProvider). Since
+      // PAR is not mandatory, and since the token exchange currently taking place
+      // *is* authenticated (`clientAuth`), we allow "upgrading" the
+      // authentication method (the token created will be bound to the current
+      // clientAuth).
+      return
+    }
+
+    switch (initial.clientAuth.method) {
+      case CLIENT_ASSERTION_TYPE_JWT_BEARER: // LEGACY
+      case 'private_key_jwt':
+        if (clientAuth.method !== 'private_key_jwt') {
+          throw new InvalidGrantError(
+            `Client authentication method mismatch (expected ${initial.clientAuth.method})`,
+          )
+        }
+        if (
+          clientAuth.kid !== initial.clientAuth.kid ||
+          clientAuth.alg !== initial.clientAuth.alg ||
+          clientAuth.jkt !== initial.clientAuth.jkt
+        ) {
+          throw new InvalidGrantError(
+            `The session was initiated with a different key than the client assertion currently used`,
+          )
+        }
+        break
+      case 'none':
+        // @NOTE We allow the client to "upgrade" to a confidential client if
+        // the session was initially created without client authentication.
+        break
+      default:
+        throw new InvalidGrantError(
+          // @ts-expect-error (future proof, backwards compatibility)
+          `Invalid method "${initial.clientAuth.method}"`,
+        )
+    }
+  }
+
   protected async authorizationCodeGrant(
     client: Client,
     clientAuth: ClientAuth,
@@ -802,16 +881,19 @@ export class OAuthProvider extends OAuthVerifier {
     // thrown after this point will permanently cause the request data to be
     // lost.
 
-    await validateClientAuth(client, clientAuth, dpopProof, data)
-    await this.checkRedirectUri(data.parameters, input)
-    await this.checkCodeVerifier(data.parameters, input)
+    await this.validateClientAuth(client, clientAuth, dpopProof, data)
 
     // If the DPoP proof was not provided earlier (PAR / authorize), let's add
     // it now.
+
     const parameters =
-      client.metadata.dpop_bound_access_tokens && !data.parameters.dpop_jkt
-        ? { ...data.parameters, dpop_jkt: dpopProof!.jkt }
+      dpopProof &&
+      client.metadata.dpop_bound_access_tokens &&
+      !data.parameters.dpop_jkt
+        ? { ...data.parameters, dpop_jkt: dpopProof.jkt }
         : data.parameters
+
+    await this.validateCodeGrant(parameters, input)
 
     const { account } = await this.accountManager.getAccount(data.sub)
 
@@ -826,7 +908,7 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  protected async checkRedirectUri(
+  protected async validateCodeGrant(
     parameters: OAuthAuthorizationRequestParameters,
     input: OAuthAuthorizationCodeGrantTokenRequest,
   ): Promise<void> {
@@ -835,12 +917,7 @@ export class OAuthProvider extends OAuthVerifier {
         'The redirect_uri parameter must match the one used in the authorization request',
       )
     }
-  }
 
-  protected async checkCodeVerifier(
-    parameters: OAuthAuthorizationRequestParameters,
-    input: OAuthAuthorizationCodeGrantTokenRequest,
-  ): Promise<void> {
     if (parameters.code_challenge) {
       if (!input.code_verifier) {
         throw new InvalidGrantError('code_verifier is required')
@@ -901,8 +978,9 @@ export class OAuthProvider extends OAuthVerifier {
     const tokenInfo = await this.tokenManager.consumeRefreshToken(refreshToken)
 
     try {
-      await validateClientAuth(client, clientAuth, dpopProof, tokenInfo.data)
-      await validateRefreshToken(client, clientAuth, refreshToken, tokenInfo)
+      const { data } = tokenInfo
+      await this.validateClientAuth(client, clientAuth, dpopProof, data)
+      await this.validateRefreshGrant(client, clientAuth, data)
 
       return await this.tokenManager.rotateToken(
         client,
@@ -911,11 +989,33 @@ export class OAuthProvider extends OAuthVerifier {
         tokenInfo,
       )
     } catch (err) {
-      // If any error occurs while validating or rotating the token,
-      // we delete the session to prevent replay attacks.
       await this.tokenManager.deleteToken(tokenInfo.id)
 
       throw err
+    }
+  }
+
+  protected async validateRefreshGrant(
+    client: Client,
+    clientAuth: ClientAuth,
+    data: TokenData,
+  ): Promise<void> {
+    const [sessionLifetime, refreshLifetime] =
+      clientAuth.method !== 'none' || client.info.isFirstParty
+        ? [
+            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
+            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
+          ]
+        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
+
+    const sessionAge = Date.now() - data.createdAt.getTime()
+    if (sessionAge > sessionLifetime) {
+      throw new InvalidGrantError(`Session expired`)
+    }
+
+    const refreshAge = Date.now() - data.updatedAt.getTime()
+    if (refreshAge > refreshLifetime) {
+      throw new InvalidGrantError(`Refresh token expired`)
     }
   }
 
@@ -938,7 +1038,8 @@ export class OAuthProvider extends OAuthVerifier {
     if (tokenInfo) {
       // > [...] and then verifies whether the token was issued to the client
       // > making the revocation request.
-      await validateClientAuth(client, clientAuth, dpopProof, tokenInfo.data)
+      const { data } = tokenInfo
+      await this.validateClientAuth(client, clientAuth, dpopProof, data)
 
       // > In the next step, the authorization server invalidates the token. The
       // > invalidation takes place immediately, and the token cannot be used
