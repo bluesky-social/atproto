@@ -156,6 +156,10 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       const now = new Date().toISOString()
       if (namespace === 'app.bsky.notification.defs#preferences') {
         await handleNotificationPreferencesOperation(db, req, now)
+      } else if (
+        namespace === 'app.bsky.verification.defs#ageVerificationState'
+      ) {
+        await handleGenericOperationWithUpsert(db, req, now)
       } else {
         await handleGenericOperation(db, req, now)
       }
@@ -181,7 +185,37 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
     },
   })
 
+// could dedupe this
 const handleNotificationPreferencesOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, namespace, key, method, payload } = req
+  if (method === Method.CREATE || method === Method.UPDATE) {
+    return db.db
+      .insertInto('private_data')
+      .values({
+        actorDid,
+        namespace,
+        key,
+        payload: Buffer.from(payload).toString('utf8'),
+        indexedAt: now,
+        updatedAt: now,
+      })
+      .onConflict((oc) =>
+        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
+          payload: Buffer.from(payload).toString('utf8'),
+          updatedAt: now,
+        }),
+      )
+      .execute()
+  }
+
+  return handleGenericOperation(db, req, now)
+}
+
+const handleGenericOperationWithUpsert = async (
   db: Database,
   req: PutOperationRequest,
   now: string,

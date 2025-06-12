@@ -98,6 +98,10 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyAssuranceGetAgeAssuranceState from './types/app/bsky/assurance/getAgeAssuranceState.js'
+import * as AppBskyAssuranceHandleAgeAssuranceComplete from './types/app/bsky/assurance/handleAgeAssuranceComplete.js'
+import * as AppBskyAssuranceHandleAgeAssuranceEvent from './types/app/bsky/assurance/handleAgeAssuranceEvent.js'
+import * as AppBskyAssuranceInitAgeAssurance from './types/app/bsky/assurance/initAgeAssurance.js'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
@@ -1268,6 +1272,7 @@ export class AppNS {
 export class AppBskyNS {
   _server: Server
   actor: AppBskyActorNS
+  assurance: AppBskyAssuranceNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -1280,6 +1285,7 @@ export class AppBskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new AppBskyActorNS(server)
+    this.assurance = new AppBskyAssuranceNS(server)
     this.embed = new AppBskyEmbedNS(server)
     this.feed = new AppBskyFeedNS(server)
     this.graph = new AppBskyGraphNS(server)
@@ -1372,6 +1378,58 @@ export class AppBskyActorNS {
     >,
   ) {
     const nsid = 'app.bsky.actor.searchActorsTypeahead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyAssuranceNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAgeAssuranceState<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyAssuranceGetAgeAssuranceState.Handler<ExtractAuth<AV>>,
+      AppBskyAssuranceGetAgeAssuranceState.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.assurance.getAgeAssuranceState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  handleAgeAssuranceComplete<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyAssuranceHandleAgeAssuranceComplete.Handler<ExtractAuth<AV>>,
+      AppBskyAssuranceHandleAgeAssuranceComplete.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.assurance.handleAgeAssuranceComplete' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  handleAgeAssuranceEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyAssuranceHandleAgeAssuranceEvent.Handler<ExtractAuth<AV>>,
+      AppBskyAssuranceHandleAgeAssuranceEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.assurance.handleAgeAssuranceEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  initAgeAssurance<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyAssuranceInitAgeAssurance.Handler<ExtractAuth<AV>>,
+      AppBskyAssuranceInitAgeAssurance.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.assurance.initAgeAssurance' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
