@@ -30,6 +30,7 @@ import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-er
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
+import { asArray } from '../lib/util/cast.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { Awaitable } from '../lib/util/type.js'
 import { ClientAuth } from './client-auth.js'
@@ -68,6 +69,12 @@ export class Client {
     jar: SignedJwt | UnsignedJwt,
     audience: string,
   ) {
+    // https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2
+    // > If signed, the Authorization Request Object SHOULD contain the Claims
+    // > iss (issuer) and aud (audience) as members with their semantics being
+    // > the same as defined in the JWT [RFC7519] specification. The value of
+    // > aud should be the value of the authorization server (AS) issuer, as
+    // > defined in RFC 8414 [RFC8414].
     try {
       // We need to special case the "none" algorithm, as the validation method
       // is different for signed and unsigned JWTs.
@@ -75,15 +82,11 @@ export class Client {
         return await this.jwtVerifyUnsecured(jar, {
           audience,
           maxTokenAge: JAR_MAX_AGE / 1e3,
+          allowMissingAudience: true,
+          allowMissingIssuer: true,
         })
       }
 
-      // https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2
-      // > If signed, the Authorization Request Object SHOULD contain the Claims
-      // > iss (issuer) and aud (audience) as members with their semantics being
-      // > the same as defined in the JWT [RFC7519] specification. The value of
-      // > aud should be the value of the authorization server (AS) issuer, as
-      // > defined in RFC 8414 [RFC8414].
       return await this.jwtVerify(jar, {
         audience,
         maxTokenAge: JAR_MAX_AGE / 1e3,
@@ -109,20 +112,33 @@ export class Client {
     token: string,
     {
       audience,
+      allowMissingAudience = false,
+      allowMissingIssuer = false,
       ...options
-    }: Omit<JWTClaimVerificationOptions, 'issuer'> & { audience: string },
+    }: Omit<JWTClaimVerificationOptions, 'issuer'> & {
+      allowMissingIssuer?: boolean
+      allowMissingAudience?: boolean
+    } = {},
   ): Promise<UnsecuredResult<PayloadType>> {
+    // jose does not support `allowMissingAudience` and `allowMissingIssuer`
+    // options, so we need to handle audience and issuer checks manually (see
+    // bellow).
+
     const result = UnsecuredJWT.decode<PayloadType>(token, options)
 
-    // Ensure that the issuer, if present, matches the client id. There is no
-    // point in forcing its presence in an unsigned token as they can be easily
-    // forged.
-    if (result.payload.iss && result.payload.iss !== this.id) {
-      throw new JOSEError(`Invalid "iss" claim "${result.payload.iss}"`)
+    if (!allowMissingIssuer || result.payload.iss != null) {
+      if (result.payload.iss !== this.id) {
+        throw new JOSEError(`Invalid "iss" claim "${result.payload.iss}"`)
+      }
     }
 
-    if (result.payload.aud && result.payload.aud !== audience) {
-      throw new JOSEError(`Invalid "aud" claim "${result.payload.aud}"`)
+    if (!allowMissingAudience || result.payload.aud != null) {
+      if (audience != null) {
+        const payloadAud = asArray(result.payload.aud)
+        if (!asArray(audience).some((aud) => payloadAud.includes(aud))) {
+          throw new JOSEError(`Invalid "aud" claim "${result.payload.aud}"`)
+        }
+      }
     }
 
     return result
