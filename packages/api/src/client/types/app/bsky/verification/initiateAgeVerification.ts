@@ -18,8 +18,14 @@ const id = 'app.bsky.verification.initiateAgeVerification'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** The user's email address to receive verification instructions. */
+  email: string
   /** The user's preferred language for communication during the verification process. */
   language: string
+}
+
+export interface OutputSchema {
+  success: boolean
 }
 
 export interface CallOptions {
@@ -32,6 +38,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

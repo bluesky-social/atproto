@@ -11669,12 +11669,29 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['language'],
+            required: ['email', 'language'],
             properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive verification instructions.",
+              },
               language: {
                 type: 'string',
                 description:
                   "The user's preferred language for communication during the verification process.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success'],
+            properties: {
+              success: {
+                type: 'boolean',
               },
             },
           },

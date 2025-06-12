@@ -19,8 +19,14 @@ const id = 'app.bsky.verification.initiateAgeVerification'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** The user's email address to receive verification instructions. */
+  email: string
   /** The user's preferred language for communication during the verification process. */
   language: string
+}
+
+export interface OutputSchema {
+  success: boolean
 }
 
 export interface HandlerInput {
@@ -28,12 +34,18 @@ export interface HandlerInput {
   body: InputSchema
 }
 
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
 export interface HandlerError {
   status: number
   message?: string
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams
