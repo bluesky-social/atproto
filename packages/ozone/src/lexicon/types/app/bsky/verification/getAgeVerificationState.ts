@@ -11,28 +11,16 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import type * as AppBskyVerificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.verification.getAgeVerificationStatus'
+const id = 'app.bsky.verification.getAgeVerificationState'
 
 export interface QueryParams {}
 
 export type InputSchema = undefined
-
-export interface OutputSchema {
-  /** Whether the age verification process is required for the account. If true, the user must complete age verification to access certain features. */
-  required: boolean
-  /** The status of the age verification process. */
-  status:
-    | 'unverified'
-    | 'pending'
-    | 'verified-adult'
-    | 'verified-minor'
-    | 'failed'
-    | (string & {})
-}
-
+export type OutputSchema = AppBskyVerificationDefs.AgeVerificationState
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

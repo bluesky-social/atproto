@@ -11509,37 +11509,47 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyVerificationGetAgeVerificationStatus: {
+  AppBskyVerificationDefs: {
     lexicon: 1,
-    id: 'app.bsky.verification.getAgeVerificationStatus',
+    id: 'app.bsky.verification.defs',
+    defs: {
+      ageVerificationState: {
+        type: 'object',
+        required: ['required', 'status'],
+        properties: {
+          required: {
+            type: 'boolean',
+            description:
+              'Whether the age verification process is required for the account. If true, the user must complete age verification to access certain features.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age verification process.',
+            knownValues: [
+              'unverified',
+              'pending',
+              'verified-adult',
+              'verified-minor',
+              'failed',
+            ],
+          },
+        },
+      },
+    },
+  },
+  AppBskyVerificationGetAgeVerificationState: {
+    lexicon: 1,
+    id: 'app.bsky.verification.getAgeVerificationState',
     defs: {
       main: {
         type: 'query',
         description:
-          'Returns the current status of the age verification process for an account. This is used to check if the user has completed age verification or if further action is required.',
+          'Returns the current state of the age verification process for an account. This is used to check if the user has completed age verification or if further action is required.',
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'object',
-            required: ['required', 'status'],
-            properties: {
-              required: {
-                type: 'boolean',
-                description:
-                  'Whether the age verification process is required for the account. If true, the user must complete age verification to access certain features.',
-              },
-              status: {
-                type: 'string',
-                description: 'The status of the age verification process.',
-                knownValues: [
-                  'unverified',
-                  'pending',
-                  'verified-adult',
-                  'verified-minor',
-                  'failed',
-                ],
-              },
-            },
+            type: 'ref',
+            ref: 'lex:app.bsky.verification.defs#ageVerificationState',
           },
         },
       },
@@ -13365,8 +13375,9 @@ export const ids = {
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
   AppBskyUnspeccedSearchStarterPacksSkeleton:
     'app.bsky.unspecced.searchStarterPacksSkeleton',
-  AppBskyVerificationGetAgeVerificationStatus:
-    'app.bsky.verification.getAgeVerificationStatus',
+  AppBskyVerificationDefs: 'app.bsky.verification.defs',
+  AppBskyVerificationGetAgeVerificationState:
+    'app.bsky.verification.getAgeVerificationState',
   AppBskyVerificationHandleAgeVerificationComplete:
     'app.bsky.verification.handleAgeVerificationComplete',
   AppBskyVerificationHandleAgeVerificationEvent:

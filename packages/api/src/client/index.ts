@@ -201,7 +201,8 @@ import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/g
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
-import * as AppBskyVerificationGetAgeVerificationStatus from './types/app/bsky/verification/getAgeVerificationStatus.js'
+import * as AppBskyVerificationDefs from './types/app/bsky/verification/defs.js'
+import * as AppBskyVerificationGetAgeVerificationState from './types/app/bsky/verification/getAgeVerificationState.js'
 import * as AppBskyVerificationHandleAgeVerificationComplete from './types/app/bsky/verification/handleAgeVerificationComplete.js'
 import * as AppBskyVerificationHandleAgeVerificationEvent from './types/app/bsky/verification/handleAgeVerificationEvent.js'
 import * as AppBskyVerificationInitiateAgeVerification from './types/app/bsky/verification/initiateAgeVerification.js'
@@ -470,7 +471,8 @@ export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/g
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
-export * as AppBskyVerificationGetAgeVerificationStatus from './types/app/bsky/verification/getAgeVerificationStatus.js'
+export * as AppBskyVerificationDefs from './types/app/bsky/verification/defs.js'
+export * as AppBskyVerificationGetAgeVerificationState from './types/app/bsky/verification/getAgeVerificationState.js'
 export * as AppBskyVerificationHandleAgeVerificationComplete from './types/app/bsky/verification/handleAgeVerificationComplete.js'
 export * as AppBskyVerificationHandleAgeVerificationEvent from './types/app/bsky/verification/handleAgeVerificationEvent.js'
 export * as AppBskyVerificationInitiateAgeVerification from './types/app/bsky/verification/initiateAgeVerification.js'
@@ -3683,12 +3685,12 @@ export class AppBskyVerificationNS {
     this._client = client
   }
 
-  getAgeVerificationStatus(
-    params?: AppBskyVerificationGetAgeVerificationStatus.QueryParams,
-    opts?: AppBskyVerificationGetAgeVerificationStatus.CallOptions,
-  ): Promise<AppBskyVerificationGetAgeVerificationStatus.Response> {
+  getAgeVerificationState(
+    params?: AppBskyVerificationGetAgeVerificationState.QueryParams,
+    opts?: AppBskyVerificationGetAgeVerificationState.CallOptions,
+  ): Promise<AppBskyVerificationGetAgeVerificationState.Response> {
     return this._client.call(
-      'app.bsky.verification.getAgeVerificationStatus',
+      'app.bsky.verification.getAgeVerificationState',
       params,
       undefined,
       opts,
