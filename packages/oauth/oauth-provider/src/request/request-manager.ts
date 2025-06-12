@@ -209,7 +209,7 @@ export class RequestManager {
     ) {
       throw new InvalidParametersError(
         parameters,
-        `Client authentication method "${clientAuth.method}" is not supported by this client`,
+        `Invalid token_endpoint_auth_method "${clientAuth.method}" for this client`,
       )
     }
 
@@ -472,7 +472,7 @@ export class RequestManager {
       }
     }
 
-    if (!isRequestDataAuthorized(data)) {
+    if (!isRequestDataAuthorized(data) || data.code !== code) {
       // Should never happen: maybe the store implementation is faulty ?
       throw new Error('Unexpected request state')
     }

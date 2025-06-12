@@ -79,16 +79,6 @@ export class TokenManager {
     })
   }
 
-  async checkCodeReplay(code: Code): Promise<void> {
-    // @NOTE not using `this.findByCode` because we want to delete the token
-    // if it still exists (rather than throwing if the code is invalid).
-    const tokenInfo = await this.store.findTokenByCode(code)
-    if (tokenInfo) {
-      await this.deleteToken(tokenInfo.id)
-      throw new InvalidGrantError(`Code replayed`)
-    }
-  }
-
   async createToken(
     client: Client,
     clientAuth: ClientAuth,
@@ -98,12 +88,7 @@ export class TokenManager {
     parameters: OAuthAuthorizationRequestParameters,
     code: Code,
   ): Promise<OAuthTokenResponse> {
-    if (!parameters.dpop_jkt && client.metadata.dpop_bound_access_tokens) {
-      // Fool proofing
-      throw new InvalidGrantError(
-        `DPoP JKT is required for DPoP bound access tokens`,
-      )
-    }
+    await this.validateTokenParams(client, clientAuth, parameters)
 
     const tokenId = await generateTokenId()
     const refreshToken = client.metadata.grant_types.includes('refresh_token')
@@ -163,6 +148,18 @@ export class TokenManager {
     }
   }
 
+  protected async validateTokenParams(
+    client: Client,
+    clientAuth: ClientAuth,
+    parameters: OAuthAuthorizationRequestParameters,
+  ): Promise<void> {
+    if (client.metadata.dpop_bound_access_tokens && !parameters.dpop_jkt) {
+      throw new InvalidGrantError(
+        `DPoP JKT is required for DPoP bound access tokens`,
+      )
+    }
+  }
+
   protected buildTokenResponse(
     client: Client,
     accessToken: OAuthAccessToken,
@@ -198,6 +195,8 @@ export class TokenManager {
   ): Promise<OAuthTokenResponse> {
     const { account, data } = tokenInfo
     const { parameters } = data
+
+    await this.validateTokenParams(client, clientAuth, parameters)
 
     const nextTokenId = await generateTokenId()
     const nextRefreshToken = await generateRefreshToken()
