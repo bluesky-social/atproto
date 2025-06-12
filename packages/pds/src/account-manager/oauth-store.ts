@@ -430,7 +430,7 @@ export class OAuthStore
 
   async consumeRequestCode(code: Code): Promise<FoundRequestResult | null> {
     const row = await authRequestHelper
-      .findByCodeQB(this.db, code)
+      .consumeByCodeQB(this.db, code)
       .executeTakeFirst()
     return row ? authRequestHelper.rowToFoundRequestResult(row) : null
   }
