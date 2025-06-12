@@ -262,12 +262,13 @@ export class TokenManager {
     }
   }
 
-  public async findByAccessToken(token: SignedJwt): Promise<TokenInfo> {
+  public async findByAccessToken(token: SignedJwt): Promise<null | TokenInfo> {
     const { payload } = await this.signer.verifyAccessToken(token, {
       clockTolerance: Infinity,
     })
 
     const tokenInfo = await this.getTokenInfo(payload.jti)
+    if (!tokenInfo) return null
 
     // Fool-proof: Invalid store implementation ?
     if (payload.sub !== tokenInfo.account.sub) {
@@ -301,7 +302,9 @@ export class TokenManager {
       throw InvalidTokenError.from(err, `Invalid refresh token`)
     })
 
-    if (!tokenInfo) throw new InvalidGrantError(`Invalid refresh token`)
+    if (!tokenInfo) {
+      throw new InvalidGrantError(`Invalid refresh token`)
+    }
 
     if (tokenInfo.currentRefreshToken !== token) {
       await this.deleteToken(tokenInfo.id)
@@ -319,14 +322,8 @@ export class TokenManager {
     return this.store.deleteToken(tokenId)
   }
 
-  async getTokenInfo(tokenId: TokenId): Promise<TokenInfo> {
-    const tokenInfo = await this.store.readToken(tokenId)
-
-    if (!tokenInfo) {
-      throw new InvalidRequestError(`Invalid token`)
-    }
-
-    return tokenInfo
+  async getTokenInfo(tokenId: TokenId): Promise<null | TokenInfo> {
+    return this.store.readToken(tokenId)
   }
 
   async verifyToken(
@@ -339,6 +336,10 @@ export class TokenManager {
     const tokenInfo = await this.getTokenInfo(tokenId).catch((err) => {
       throw InvalidTokenError.from(err, tokenType)
     })
+
+    if (!tokenInfo) {
+      throw new InvalidTokenError(tokenType, `Invalid token`)
+    }
 
     if (isCurrentTokenExpired(tokenInfo)) {
       await this.deleteToken(tokenId)
