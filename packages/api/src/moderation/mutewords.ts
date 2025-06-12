@@ -123,9 +123,18 @@ export function matchMuteWords({
         matches.push({ word: muteWord, predicate: word })
         continue outer
       }
+
       if (mutedWord.length > wordTrimmedPunctuation.length) continue
 
       if (/\p{P}+/u.test(wordTrimmedPunctuation)) {
+        /**
+         * Exit case for any punctuation within the predicate that we _do_
+         * allow e.g. `and/or` should not match `Andor`.
+         */
+        if (/[\/]+/.test(wordTrimmedPunctuation)) {
+          continue outer
+        }
+
         const spacedWord = wordTrimmedPunctuation.replace(/\p{P}+/gu, ' ')
         if (spacedWord === mutedWord) {
           matches.push({ word: muteWord, predicate: word })
