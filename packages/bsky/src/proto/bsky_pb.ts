@@ -66,6 +66,44 @@ proto3.util.setEnumType(ChatNotificationFilter, 'bsky.ChatNotificationFilter', [
 ])
 
 /**
+ * @generated from enum bsky.AgeVerificationStatus
+ */
+export enum AgeVerificationStatus {
+  /**
+   * @generated from enum value: AGE_VERIFICATION_STATUS_UNVERIFIED = 0;
+   */
+  UNVERIFIED = 0,
+
+  /**
+   * @generated from enum value: AGE_VERIFICATION_STATUS_PENDING = 1;
+   */
+  PENDING = 1,
+
+  /**
+   * @generated from enum value: AGE_VERIFICATION_STATUS_VERIFIED_ADULT = 2;
+   */
+  VERIFIED_ADULT = 2,
+
+  /**
+   * @generated from enum value: AGE_VERIFICATION_STATUS_VERIFIED_MINOR = 3;
+   */
+  VERIFIED_MINOR = 3,
+
+  /**
+   * @generated from enum value: AGE_VERIFICATION_STATUS_FAILED = 4;
+   */
+  FAILED = 4,
+}
+// Retrieve enum metadata with: proto3.getEnumType(AgeVerificationStatus)
+proto3.util.setEnumType(AgeVerificationStatus, 'bsky.AgeVerificationStatus', [
+  { no: 0, name: 'AGE_VERIFICATION_STATUS_UNVERIFIED' },
+  { no: 1, name: 'AGE_VERIFICATION_STATUS_PENDING' },
+  { no: 2, name: 'AGE_VERIFICATION_STATUS_VERIFIED_ADULT' },
+  { no: 3, name: 'AGE_VERIFICATION_STATUS_VERIFIED_MINOR' },
+  { no: 4, name: 'AGE_VERIFICATION_STATUS_FAILED' },
+])
+
+/**
  * @generated from enum bsky.FeedType
  */
 export enum FeedType {
@@ -8852,6 +8890,136 @@ export class GetNotificationPreferencesResponse extends Message<GetNotificationP
       | undefined,
   ): boolean {
     return proto3.util.equals(GetNotificationPreferencesResponse, a, b)
+  }
+}
+
+/**
+ * age verification
+ *
+ *
+ * @generated from message bsky.GetAgeVerificationStateRequest
+ */
+export class GetAgeVerificationStateRequest extends Message<GetAgeVerificationStateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  constructor(data?: PartialMessage<GetAgeVerificationStateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetAgeVerificationStateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetAgeVerificationStateRequest {
+    return new GetAgeVerificationStateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeVerificationStateRequest {
+    return new GetAgeVerificationStateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeVerificationStateRequest {
+    return new GetAgeVerificationStateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetAgeVerificationStateRequest
+      | PlainMessage<GetAgeVerificationStateRequest>
+      | undefined,
+    b:
+      | GetAgeVerificationStateRequest
+      | PlainMessage<GetAgeVerificationStateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetAgeVerificationStateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetAgeVerificationStateResponse
+ */
+export class GetAgeVerificationStateResponse extends Message<GetAgeVerificationStateResponse> {
+  /**
+   * @generated from field: bool required = 1;
+   */
+  required = false
+
+  /**
+   * @generated from field: bsky.AgeVerificationStatus status = 2;
+   */
+  status = AgeVerificationStatus.UNVERIFIED
+
+  constructor(data?: PartialMessage<GetAgeVerificationStateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetAgeVerificationStateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'required', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    {
+      no: 2,
+      name: 'status',
+      kind: 'enum',
+      T: proto3.getEnumType(AgeVerificationStatus),
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetAgeVerificationStateResponse {
+    return new GetAgeVerificationStateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeVerificationStateResponse {
+    return new GetAgeVerificationStateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeVerificationStateResponse {
+    return new GetAgeVerificationStateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetAgeVerificationStateResponse
+      | PlainMessage<GetAgeVerificationStateResponse>
+      | undefined,
+    b:
+      | GetAgeVerificationStateResponse
+      | PlainMessage<GetAgeVerificationStateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetAgeVerificationStateResponse, a, b)
   }
 }
 

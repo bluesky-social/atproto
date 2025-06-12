@@ -44,6 +44,8 @@ import {
   GetActorStarterPacksResponse,
   GetActorTakedownRequest,
   GetActorTakedownResponse,
+  GetAgeVerificationStateRequest,
+  GetAgeVerificationStateResponse,
   GetAllLabelersRequest,
   GetAllLabelersResponse,
   GetAuthorFeedRequest,
@@ -776,6 +778,17 @@ export const Service = {
       name: 'UpdateNotificationSeen',
       I: UpdateNotificationSeenRequest,
       O: UpdateNotificationSeenResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Age Verification
+     *
+     * @generated from rpc bsky.Service.GetAgeVerificationState
+     */
+    getAgeVerificationState: {
+      name: 'GetAgeVerificationState',
+      I: GetAgeVerificationStateRequest,
+      O: GetAgeVerificationStateResponse,
       kind: MethodKind.Unary,
     },
     /**
