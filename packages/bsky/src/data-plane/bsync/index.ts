@@ -261,6 +261,7 @@ const handleSubjectActivitySubscriptionOperation = async (
       .where('subjectDid', '=', parsed.subject)
       .where('key', '=', key)
       .set({
+        indexedAt: now,
         post,
         reply,
       })
