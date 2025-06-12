@@ -245,7 +245,6 @@ const handleSubjectActivitySubscriptionOperation = async (
           creator: actorDid,
           subjectDid: parsed.subject,
           key,
-          createdAt: now,
           indexedAt: now,
           post,
           reply,

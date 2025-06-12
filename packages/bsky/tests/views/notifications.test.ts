@@ -1258,9 +1258,7 @@ describe('notification views', () => {
           creator: actorDid,
           subjectDid,
           key: data.key,
-          createdAt: expect.any(String),
           indexedAt: expect.any(String),
-          sortAt: expect.any(String),
           post: true,
           reply: false,
         })
@@ -1302,9 +1300,7 @@ describe('notification views', () => {
           creator: actorDid,
           subjectDid,
           key: update.key,
-          createdAt: expect.any(String),
           indexedAt: expect.any(String),
-          sortAt: expect.any(String),
           post: false,
           reply: true,
         })
