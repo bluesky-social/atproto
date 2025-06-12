@@ -26,12 +26,14 @@ import {
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { FALLBACK_ALG } from './constants.js'
+import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
   AuthorizationServerMetadataCache,
   OAuthAuthorizationServerMetadataResolver,
 } from './oauth-authorization-server-metadata-resolver.js'
 import { OAuthCallbackError } from './oauth-callback-error.js'
+import { negotiateClientAuthMethod } from './oauth-client-auth.js'
 import {
   OAuthProtectedResourceMetadataResolver,
   ProtectedResourceMetadataCache,
@@ -290,11 +292,17 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       metadata.dpop_signing_alg_values_supported || [FALLBACK_ALG],
     )
 
+    const authMethod = negotiateClientAuthMethod(
+      metadata,
+      this.clientMetadata,
+      this.keyset,
+    )
     const state = await this.runtime.generateNonce()
 
     await this.stateStore.set(state, {
       iss: metadata.issuer,
       dpopKey,
+      authMethod,
       verifier: pkce.verifier,
       appState: options?.state,
     })
@@ -327,7 +335,11 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     }
 
     if (metadata.pushed_authorization_request_endpoint) {
-      const server = await this.serverFactory.fromMetadata(metadata, dpopKey)
+      const server = await this.serverFactory.fromMetadata(
+        metadata,
+        authMethod,
+        dpopKey,
+      )
       const parResponse = await server.request(
         'pushed_authorization_request',
         parameters,
@@ -423,6 +435,8 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const server = await this.serverFactory.fromIssuer(
         stateData.iss,
+        // Using the literal 'legacy' if the authMethod is not defined (because stateData was created through an old version of this lib)
+        stateData.authMethod ?? 'legacy',
         stateData.dpopKey,
       )
 
@@ -455,6 +469,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       try {
         await this.sessionGetter.setStored(tokenSet.sub, {
           dpopKey: stateData.dpopKey,
+          authMethod: server.authMethod,
           tokenSet,
         })
 
@@ -486,24 +501,45 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     // sub arg is lightly typed for convenience of library user
     assertAtprotoDid(sub)
 
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+    const {
+      dpopKey,
+      authMethod = 'legacy',
+      tokenSet,
+    } = await this.sessionGetter.get(sub, {
       noCache: refresh === true,
       allowStale: refresh === false,
     })
 
-    const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey, {
-      noCache: refresh === true,
-      allowStale: refresh === false,
-    })
+    try {
+      const server = await this.serverFactory.fromIssuer(
+        tokenSet.iss,
+        authMethod,
+        dpopKey,
+        {
+          noCache: refresh === true,
+          allowStale: refresh === false,
+        },
+      )
 
-    return this.createSession(server, sub)
+      return this.createSession(server, sub)
+    } catch (err) {
+      if (err instanceof AuthMethodUnsatisfiableError) {
+        await this.sessionGetter.delStored(sub, err)
+      }
+
+      throw err
+    }
   }
 
   async revoke(sub: string) {
     // sub arg is lightly typed for convenience of library user
     assertAtprotoDid(sub)
 
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
+    const {
+      dpopKey,
+      authMethod = 'legacy',
+      tokenSet,
+    } = await this.sessionGetter.get(sub, {
       allowStale: true,
     })
 
@@ -511,7 +547,11 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     // the tokens to be deleted even if it was not possible to fetch the issuer
     // data.
     try {
-      const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
+      const server = await this.serverFactory.fromIssuer(
+        tokenSet.iss,
+        authMethod,
+        dpopKey,
+      )
       await server.revoke(tokenSet.access_token)
     } finally {
       await this.sessionGetter.delStored(sub, new TokenRevokedError(sub))

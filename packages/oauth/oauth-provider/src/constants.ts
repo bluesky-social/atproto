@@ -38,17 +38,17 @@ export const TOKEN_MAX_AGE = 60 * MINUTE
 /** 5 minutes */
 export const AUTHORIZATION_INACTIVITY_TIMEOUT = 5 * MINUTE
 
-/** 1 months */
-export const AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT = 1 * MONTH
+/** 1 week */
+export const PUBLIC_CLIENT_SESSION_LIFETIME = 1 * WEEK
 
 /** 2 days */
-export const UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT = 2 * DAY
-
-/** 1 week */
-export const UNAUTHENTICATED_REFRESH_LIFETIME = 1 * WEEK
+export const PUBLIC_CLIENT_REFRESH_LIFETIME = 2 * DAY
 
 /** 1 year */
-export const AUTHENTICATED_REFRESH_LIFETIME = 1 * YEAR
+export const CONFIDENTIAL_CLIENT_SESSION_LIFETIME = 1 * YEAR
+
+/** 1 months */
+export const CONFIDENTIAL_CLIENT_REFRESH_LIFETIME = 1 * MONTH
 
 /** 5 minutes */
 export const PAR_EXPIRES_IN = 5 * MINUTE
@@ -73,3 +73,5 @@ export const SESSION_FIXATION_MAX_AGE = 5 * SECOND
 
 /** 1 day */
 export const CODE_CHALLENGE_REPLAY_TIMEFRAME = 1 * DAY
+
+export const NODE_ENV = process.env.NODE_ENV || 'production'

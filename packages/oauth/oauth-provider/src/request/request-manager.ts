@@ -1,7 +1,6 @@
 import { isAtprotoDid } from '@atproto/did'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
@@ -11,6 +10,7 @@ import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
 import {
   AUTHORIZATION_INACTIVITY_TIMEOUT,
+  NODE_ENV,
   PAR_EXPIRES_IN,
   TOKEN_MAX_AGE,
 } from '../constants.js'
@@ -18,8 +18,6 @@ import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
-import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
-import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
@@ -27,7 +25,6 @@ import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { DpopProof } from '../oauth-verifier.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
 import {
@@ -35,7 +32,6 @@ import {
   isRequestDataAuthorized,
 } from './request-data.js'
 import { generateRequestId } from './request-id.js'
-import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
 import {
   RequestUri,
@@ -58,21 +54,12 @@ export class RequestManager {
 
   async createAuthorizationRequest(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
-    dpopProof: null | DpopProof,
-  ): Promise<RequestInfo> {
-    const parameters = await this.validate(client, clientAuth, input, dpopProof)
-    return this.create(client, clientAuth, parameters, deviceId)
-  }
+  ) {
+    const parameters = await this.validate(client, clientAuth, input)
 
-  protected async create(
-    client: Client,
-    clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    deviceId: null | DeviceId = null,
-  ): Promise<RequestInfo> {
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
     const id = await generateRequestId()
 
@@ -87,14 +74,13 @@ export class RequestManager {
     })
 
     const uri = encodeRequestUri(id)
-    return { id, uri, expiresAt, parameters, clientId: client.id, clientAuth }
+    return { uri, expiresAt, parameters }
   }
 
   protected async validate(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    dpopProof: null | DpopProof,
   ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
     // -------------------------------
     // Validate unsupported parameters
@@ -199,24 +185,6 @@ export class RequestManager {
 
     parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
 
-    // https://datatracker.ietf.org/doc/html/rfc9449#section-10
-    if (!parameters.dpop_jkt) {
-      if (dpopProof) parameters = { ...parameters, dpop_jkt: dpopProof.jkt }
-    } else if (!dpopProof) {
-      throw new InvalidDpopProofError('DPoP proof required')
-    } else if (parameters.dpop_jkt !== dpopProof.jkt) {
-      throw new InvalidDpopKeyBindingError()
-    }
-
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-      if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
-        throw new InvalidParametersError(
-          parameters,
-          'The DPoP proof must be signed with a different key than the client assertion',
-        )
-      }
-    }
-
     if (parameters.code_challenge) {
       switch (parameters.code_challenge_method) {
         case undefined:
@@ -294,7 +262,7 @@ export class RequestManager {
     if (
       !client.info.isTrusted &&
       !client.info.isFirstParty &&
-      clientAuth.method === 'none'
+      client.metadata.token_endpoint_auth_method === 'none'
     ) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
@@ -328,11 +296,7 @@ export class RequestManager {
     return parameters
   }
 
-  async get(
-    uri: RequestUri,
-    deviceId: DeviceId,
-    clientId?: ClientId,
-  ): Promise<RequestInfo> {
+  async get(uri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
@@ -383,12 +347,10 @@ export class RequestManager {
     }
 
     return {
-      id,
       uri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
       clientId: data.clientId,
-      clientAuth: data.clientAuth,
     }
   }
 
@@ -458,53 +420,31 @@ export class RequestManager {
    * @note If this method throws an error, any token previously generated from
    * the same `code` **must** me revoked.
    */
-  public async findCode(
-    client: Client,
-    clientAuth: ClientAuth,
-    code: Code,
-  ): Promise<RequestDataAuthorized & { requestUri: RequestUri }> {
-    const result = await this.store.findRequestByCode(code)
+  public async consumeCode(code: Code): Promise<RequestDataAuthorized> {
+    const result = await this.store.consumeRequestCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
     const { id, data } = result
-    try {
-      if (!isRequestDataAuthorized(data)) {
-        // Should never happen: maybe the store implementation is faulty ?
-        throw new Error('Unexpected request state')
+
+    // Fool-proofing the store implementation against code replay attacks (in
+    // case consumeRequestCode() does not delete the request).
+    if (NODE_ENV !== 'production') {
+      const result = await this.store.readRequest(id)
+      if (result) {
+        throw new Error('Invalid store implementation: request not deleted')
       }
-
-      if (data.clientId !== client.id) {
-        // Note: do not reveal the original client ID to the client using an invalid id
-        throw new InvalidGrantError(
-          `The code was not issued to client "${client.id}"`,
-        )
-      }
-
-      if (data.expiresAt < new Date()) {
-        throw new InvalidGrantError('This code has expired')
-      }
-
-      if (data.clientAuth.method === 'none') {
-        // If the client did not use PAR, it was not authenticated when the
-        // request was created (see authorize() method above). Since PAR is not
-        // mandatory, and since the token exchange currently taking place *is*
-        // authenticated (`clientAuth`), we allow "upgrading" the authentication
-        // method (the token created will be bound to the current clientAuth).
-      } else {
-        if (clientAuth.method !== data.clientAuth.method) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
-
-        if (!(await client.validateClientAuth(data.clientAuth))) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
-      }
-
-      return { ...data, requestUri: encodeRequestUri(id) }
-    } finally {
-      // A "code" can only be used once
-      await this.store.deleteRequest(id)
     }
+
+    if (!isRequestDataAuthorized(data) || data.code !== code) {
+      // Should never happen: maybe the store implementation is faulty ?
+      throw new Error('Unexpected request state')
+    }
+
+    if (data.expiresAt < new Date()) {
+      throw new InvalidGrantError('This code has expired')
+    }
+
+    return data
   }
 
   async delete(uri: RequestUri): Promise<void> {

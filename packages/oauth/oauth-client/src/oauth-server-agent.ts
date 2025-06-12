@@ -1,10 +1,8 @@
 import { AtprotoDid } from '@atproto/did'
 import { Key, Keyset } from '@atproto/jwk'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestPar,
   OAuthAuthorizationServerMetadata,
-  OAuthClientCredentials,
   OAuthEndpointName,
   OAuthParResponse,
   OAuthTokenRequest,
@@ -17,9 +15,13 @@ import {
   AtprotoTokenResponse,
   atprotoTokenResponseSchema,
 } from './atproto-token-response.js'
-import { FALLBACK_ALG } from './constants.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
+import {
+  ClientAuthMethod,
+  ClientCredentialsFactory,
+  createClientCredentialsFactory,
+} from './oauth-client-auth.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { Runtime } from './runtime.js'
@@ -43,8 +45,13 @@ export type DpopNonceCache = SimpleStore<string, string>
 
 export class OAuthServerAgent {
   protected dpopFetch: Fetch<unknown>
+  protected clientCredentialsFactory: ClientCredentialsFactory
 
+  /**
+   * @throws see {@link createClientCredentialsFactory}
+   */
   constructor(
+    readonly authMethod: ClientAuthMethod,
     readonly dpopKey: Key,
     readonly serverMetadata: OAuthAuthorizationServerMetadata,
     readonly clientMetadata: ClientMetadata,
@@ -54,6 +61,14 @@ export class OAuthServerAgent {
     readonly keyset?: Keyset,
     fetch?: Fetch,
   ) {
+    this.clientCredentialsFactory = createClientCredentialsFactory(
+      authMethod,
+      serverMetadata,
+      clientMetadata,
+      runtime,
+      keyset,
+    )
+
     this.dpopFetch = dpopFetchWrapper<void>({
       fetch: bindFetch(fetch),
       key: dpopKey,
@@ -204,7 +219,7 @@ export class OAuthServerAgent {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
 
-    const auth = await this.buildClientAuth(endpoint)
+    const auth = await this.clientCredentialsFactory()
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13#section-3.2.2
     // https://datatracker.ietf.org/doc/html/rfc7009#section-2.1
@@ -231,73 +246,6 @@ export class OAuthServerAgent {
     } else {
       throw new OAuthResponseError(response, json)
     }
-  }
-
-  async buildClientAuth(endpoint: OAuthEndpointName): Promise<{
-    headers?: Record<string, string>
-    payload: OAuthClientCredentials
-  }> {
-    const methodSupported =
-      this.serverMetadata[`token_endpoint_auth_methods_supported`]
-
-    const method = this.clientMetadata[`token_endpoint_auth_method`]
-
-    if (
-      method === 'private_key_jwt' ||
-      (this.keyset &&
-        !method &&
-        (methodSupported?.includes('private_key_jwt') ?? false))
-    ) {
-      if (!this.keyset) throw new Error('No keyset available')
-
-      try {
-        const alg =
-          this.serverMetadata[
-            `token_endpoint_auth_signing_alg_values_supported`
-          ] ?? FALLBACK_ALG
-
-        // If jwks is defined, make sure to only sign using a key that exists in
-        // the jwks. If jwks_uri is defined, we can't be sure that the key we're
-        // looking for is in there so we will just assume it is.
-        const kid = this.clientMetadata.jwks?.keys
-          .map(({ kid }) => kid)
-          .filter((v): v is string => typeof v === 'string')
-
-        return {
-          payload: {
-            client_id: this.clientMetadata.client_id,
-            client_assertion_type: CLIENT_ASSERTION_TYPE_JWT_BEARER,
-            client_assertion: await this.keyset.createJwt(
-              { alg, kid },
-              {
-                iss: this.clientMetadata.client_id,
-                sub: this.clientMetadata.client_id,
-                aud: this.serverMetadata.issuer,
-                jti: await this.runtime.generateNonce(),
-                iat: Math.floor(Date.now() / 1000),
-              },
-            ),
-          },
-        }
-      } catch (err) {
-        if (method === 'private_key_jwt') throw err
-
-        // Else try next method
-      }
-    }
-
-    if (
-      method === 'none' ||
-      (!method && (methodSupported?.includes('none') ?? true))
-    ) {
-      return {
-        payload: {
-          client_id: this.clientMetadata.client_id,
-        },
-      }
-    }
-
-    throw new Error(`Unsupported ${endpoint} authentication method`)
   }
 }
 
