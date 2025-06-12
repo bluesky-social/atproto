@@ -416,6 +416,29 @@ export class ClientManager {
     }
 
     if (
+      metadata.application_type === 'native' &&
+      metadata.token_endpoint_auth_method !== 'none'
+    ) {
+      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
+      //
+      // > Except when using a mechanism like Dynamic Client Registration
+      // > [RFC7591] to provision per-instance secrets, native apps are
+      // > classified as public clients, as defined by Section 2.1 of OAuth 2.0
+      // > [RFC6749]; they MUST be registered with the authorization server as
+      // > such. Authorization servers MUST record the client type in the client
+      // > registration details in order to identify and process requests
+      // > accordingly.
+
+      // @NOTE We may want to remove this restriction in the future, for example
+      // if https://github.com/bluesky-social/proposals/tree/main/0010-client-assertion-backend
+      // gets adopted
+
+      throw new InvalidClientMetadataError(
+        'Native clients must authenticate using "none" method',
+      )
+    }
+
+    if (
       metadata.application_type === 'web' &&
       metadata.grant_types.includes('implicit')
     ) {
