@@ -77,31 +77,25 @@ const hydration = async (
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
-  const { skeleton, params, hydration, ctx } = input
-  const viewer = params.hydrateCtx.viewer
-  skeleton.dids = skeleton.dids.filter((followUri) => {
-    const followerDid = didFromUri(followUri)
-    return (
-      !hydration.followBlocks?.get(followUri) &&
-      (!viewer || !ctx.views.viewerBlockExists(followerDid, hydration))
-    )
-  })
+  const { skeleton, hydration, ctx } = input
+  skeleton.dids = skeleton.dids.filter(
+    (did) => !ctx.views.viewerBlockExists(did, hydration),
+  )
   return skeleton
 }
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, hydration, skeleton, params } = input
+  const { ctx, hydration, skeleton } = input
   const { dids, cursor } = skeleton
   const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
-  const subscriptions = mapDefined(dids, (followUri) => {
-    const followerDid = didFromUri(followUri)
-    if (!params.hydrateCtx.includeTakedowns && isNoHosted(followerDid)) {
+  const subscriptions = mapDefined(dids, (did) => {
+    if (isNoHosted(did)) {
       return
     }
-    return ctx.views.profile(didFromUri(followUri), hydration)
+    return ctx.views.profile(did, hydration)
   })
 
   return { subscriptions, cursor }

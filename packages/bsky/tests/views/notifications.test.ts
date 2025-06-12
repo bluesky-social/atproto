@@ -36,6 +36,7 @@ describe('notification views', () => {
   let eve: string
   let fred: string
   let han: string
+  let blocked: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -66,6 +67,11 @@ describe('notification views', () => {
       handle: 'han.test',
       password: 'han-pass',
     })
+    await sc.createAccount('blocked', {
+      email: 'blocked@test.com',
+      handle: 'blocked.test',
+      password: 'blocked-pass',
+    })
     await network.processAll()
 
     alice = sc.dids.alice
@@ -75,6 +81,7 @@ describe('notification views', () => {
     eve = sc.dids.eve
     fred = sc.dids.fred
     han = sc.dids.han
+    blocked = sc.dids.blocked
   })
 
   afterAll(async () => {
@@ -1230,7 +1237,9 @@ describe('notification views', () => {
       await declare(dan, 'following')
       await declare(eve, 'following')
       await declare(han, 'all')
+      await declare(blocked, 'all')
       await sc.follow(dan, alice)
+      await sc.block(alice, blocked)
       await network.processAll()
     })
 
@@ -1346,8 +1355,10 @@ describe('notification views', () => {
           post: false,
           reply: true,
         })
-        // This is an update
+        // dan: this is an update on the same entry.
         await put(actorDid, dan, { post: true, reply: true }, creation.key)
+        // blocked: does not appear.
+        await put(actorDid, blocked, { post: true, reply: true })
 
         const { data: listing } = await list(actorDid)
         expect(listing.subscriptions).toHaveLength(2)
