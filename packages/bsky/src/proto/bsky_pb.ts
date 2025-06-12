@@ -70,6 +70,38 @@ proto3.util.setEnumType(
 )
 
 /**
+ * @generated from enum bsky.AgeAssuranceStatus
+ */
+export enum AgeAssuranceStatus {
+  /**
+   * @generated from enum value: AGE_ASSURANCE_STATUS_UNKNOWN = 0;
+   */
+  UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: AGE_ASSURANCE_STATUS_PENDING = 1;
+   */
+  PENDING = 1,
+
+  /**
+   * @generated from enum value: AGE_ASSURANCE_STATUS_ASSURED = 2;
+   */
+  ASSURED = 2,
+
+  /**
+   * @generated from enum value: AGE_ASSURANCE_STATUS_FAILED = 3;
+   */
+  FAILED = 3,
+}
+// Retrieve enum metadata with: proto3.getEnumType(AgeAssuranceStatus)
+proto3.util.setEnumType(AgeAssuranceStatus, 'bsky.AgeAssuranceStatus', [
+  { no: 0, name: 'AGE_ASSURANCE_STATUS_UNKNOWN' },
+  { no: 1, name: 'AGE_ASSURANCE_STATUS_PENDING' },
+  { no: 2, name: 'AGE_ASSURANCE_STATUS_ASSURED' },
+  { no: 3, name: 'AGE_ASSURANCE_STATUS_FAILED' },
+])
+
+/**
  * @generated from enum bsky.FeedType
  */
 export enum FeedType {
@@ -9003,6 +9035,133 @@ export class GetNotificationPreferencesResponse extends Message<GetNotificationP
       | undefined,
   ): boolean {
     return proto3.util.equals(GetNotificationPreferencesResponse, a, b)
+  }
+}
+
+/**
+ * Age Assurance
+ *
+ *
+ * @generated from message bsky.GetAgeAssuranceStateRequest
+ */
+export class GetAgeAssuranceStateRequest extends Message<GetAgeAssuranceStateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  constructor(data?: PartialMessage<GetAgeAssuranceStateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetAgeAssuranceStateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetAgeAssuranceStateRequest {
+    return new GetAgeAssuranceStateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeAssuranceStateRequest {
+    return new GetAgeAssuranceStateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeAssuranceStateRequest {
+    return new GetAgeAssuranceStateRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetAgeAssuranceStateRequest
+      | PlainMessage<GetAgeAssuranceStateRequest>
+      | undefined,
+    b:
+      | GetAgeAssuranceStateRequest
+      | PlainMessage<GetAgeAssuranceStateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetAgeAssuranceStateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetAgeAssuranceStateResponse
+ */
+export class GetAgeAssuranceStateResponse extends Message<GetAgeAssuranceStateResponse> {
+  /**
+   * @generated from field: bool required = 1;
+   */
+  required = false
+
+  /**
+   * @generated from field: bsky.AgeAssuranceStatus status = 2;
+   */
+  status = AgeAssuranceStatus.UNKNOWN
+
+  constructor(data?: PartialMessage<GetAgeAssuranceStateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetAgeAssuranceStateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'required', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    {
+      no: 2,
+      name: 'status',
+      kind: 'enum',
+      T: proto3.getEnumType(AgeAssuranceStatus),
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetAgeAssuranceStateResponse {
+    return new GetAgeAssuranceStateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeAssuranceStateResponse {
+    return new GetAgeAssuranceStateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetAgeAssuranceStateResponse {
+    return new GetAgeAssuranceStateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetAgeAssuranceStateResponse
+      | PlainMessage<GetAgeAssuranceStateResponse>
+      | undefined,
+    b:
+      | GetAgeAssuranceStateResponse
+      | PlainMessage<GetAgeAssuranceStateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetAgeAssuranceStateResponse, a, b)
   }
 }
 

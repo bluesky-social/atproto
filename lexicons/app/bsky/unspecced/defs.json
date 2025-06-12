@@ -135,6 +135,48 @@
       "properties": {
         "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
       }
+    },
+    "ageAssuranceState": {
+      "type": "object",
+      "description": "The computed state of the age assurance process, returned to the user in question on certain authenticated requests.",
+      "required": ["updatedAt", "status"],
+      "properties": {
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The timestamp when this state was last updated."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the age assurance process.",
+          "knownValues": ["unknown", "pending", "assured"]
+        }
+      }
+    },
+    "ageAssuranceStatePayload": {
+      "type": "object",
+      "description": "The raw payload written to secure storage.",
+      "required": ["timestamp", "source", "status"],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The date and time of this write operation."
+        },
+        "source": {
+          "type": "string",
+          "knownValues": ["user", "admin"]
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the age assurance process.",
+          "knownValues": ["unknown", "pending", "assured", "bypass", "failed"]
+        },
+        "attemptId": {
+          "type": "string",
+          "description": "The unique identifier for this instance of the age assurance flow, in UUID format."
+        }
+      }
     }
   }
 }

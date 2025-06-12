@@ -823,6 +823,22 @@ message GetNotificationPreferencesResponse {
   repeated NotificationPreferences preferences = 1;
 }
 
+// Age Assurance
+//
+message GetAgeAssuranceStateRequest {
+  string did = 1;
+}
+enum AgeAssuranceStatus {
+  AGE_ASSURANCE_STATUS_UNKNOWN = 0;
+  AGE_ASSURANCE_STATUS_PENDING = 1;
+  AGE_ASSURANCE_STATUS_ASSURED = 2;
+  AGE_ASSURANCE_STATUS_FAILED = 3;
+}
+message GetAgeAssuranceStateResponse {
+  bool required = 1;
+  AgeAssuranceStatus status = 2;
+}
+
 // - list recent notifications for a user
 //     - notifications should include a uri for the record that caused the notif & a “reason” for the notification (reply, like, quotepost, etc)
 //     - this should include both read & unread notifs
@@ -1367,6 +1383,9 @@ service Service {
   rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
   rpc GetActivitySubscriptionsByActorAndSubjects(GetActivitySubscriptionsByActorAndSubjectsRequest) returns (GetActivitySubscriptionsByActorAndSubjectsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
+
+  // Age Assurance
+  rpc GetAgeAssuranceState(GetAgeAssuranceStateRequest) returns (GetAgeAssuranceStateResponse);
 
   // FeedGenerators
   rpc GetActorFeeds(GetActorFeedsRequest) returns (GetActorFeedsResponse);

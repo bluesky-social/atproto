@@ -1,0 +1,88 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.handleAgeAssuranceEvent",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Webhook endpoint to receive age assurance events from a facilitating service. This endpoint is called by the service to report the status of the age assurance process.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The name of the event being reported, e.g., 'adult-verified'."
+            },
+            "time": {
+              "type": "string",
+              "description": "The timestamp of the event. Currently in ISO 8601 format, but left open for future flexibility."
+            },
+            "orgId": {
+              "type": "string",
+              "description": "The account identifier of our organization, in UUID format."
+            },
+            "productId": {
+              "type": "string",
+              "description": "The product identifier, in UUID format."
+            },
+            "environmentId": {
+              "type": "string",
+              "description": "The environment identifier, in UUID format."
+            },
+            "payload": {
+              "type": "ref",
+              "ref": "#payload"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["ack"],
+          "properties": {
+            "ack": {
+              "type": "string",
+              "description": "Whether the event was handled or not."
+            }
+          }
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "The payload of the event.",
+      "properties": {
+        "parentEmail": {
+          "type": "string",
+          "description": "Misnomer: the email address of the user that was processed."
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#payloadStatus"
+        },
+        "externalPayload": {
+          "type": "string",
+          "description": "JSON string containing the external payload passed in when initiating the age assurance process."
+        }
+      }
+    },
+    "payloadStatus": {
+      "type": "object",
+      "description": "The status property returned on the payload.",
+      "properties": {
+        "verified": {
+          "type": "boolean",
+          "description": "Whether the user was verified as an adult or not."
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "The transaction ID of the age assurance process."
+        }
+      }
+    }
+  }
+}

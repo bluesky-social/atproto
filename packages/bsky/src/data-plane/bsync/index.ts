@@ -197,6 +197,43 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
     },
   })
 
+// upsert into or remove from private_data
+const handleGenericOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, namespace, key, method, payload } = req
+  if (method === Method.CREATE || method === Method.UPDATE) {
+    await db.db
+      .insertInto('private_data')
+      .values({
+        actorDid,
+        namespace,
+        key,
+        payload: Buffer.from(payload).toString('utf8'),
+        indexedAt: now,
+        updatedAt: now,
+      })
+      .onConflict((oc) =>
+        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
+          payload: excluded(db.db, 'payload'),
+          updatedAt: excluded(db.db, 'updatedAt'),
+        }),
+      )
+      .execute()
+  } else if (method === Method.DELETE) {
+    await db.db
+      .deleteFrom('private_data')
+      .where('actorDid', '=', actorDid)
+      .where('namespace', '=', namespace)
+      .where('key', '=', key)
+      .execute()
+  } else {
+    assert.fail(`unexpected method ${method}`)
+  }
+}
+
 const handleSubjectActivitySubscriptionOperation = async (
   db: Database,
   req: PutOperationRequest,
@@ -244,41 +281,4 @@ const handleSubjectActivitySubscriptionOperation = async (
       reply,
     })
     .execute()
-}
-
-// upsert into or remove from private_data
-const handleGenericOperation = async (
-  db: Database,
-  req: PutOperationRequest,
-  now: string,
-) => {
-  const { actorDid, namespace, key, method, payload } = req
-  if (method === Method.CREATE || method === Method.UPDATE) {
-    await db.db
-      .insertInto('private_data')
-      .values({
-        actorDid,
-        namespace,
-        key,
-        payload: Buffer.from(payload).toString('utf8'),
-        indexedAt: now,
-        updatedAt: now,
-      })
-      .onConflict((oc) =>
-        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
-          payload: excluded(db.db, 'payload'),
-          updatedAt: excluded(db.db, 'updatedAt'),
-        }),
-      )
-      .execute()
-  } else if (method === Method.DELETE) {
-    await db.db
-      .deleteFrom('private_data')
-      .where('actorDid', '=', actorDid)
-      .where('namespace', '=', namespace)
-      .where('key', '=', key)
-      .execute()
-  } else {
-    assert.fail(`unexpected method ${method}`)
-  }
 }
