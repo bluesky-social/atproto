@@ -116,6 +116,7 @@ export function createClientCredentialsFactory(
         alg: supportedAlgs(serverMetadata),
       })
 
+      // https://www.rfc-editor.org/rfc/rfc7523.html#section-3
       return async () => ({
         payload: {
           client_id: clientMetadata.client_id,
@@ -123,11 +124,27 @@ export function createClientCredentialsFactory(
           client_assertion: await key.createJwt(
             { alg },
             {
+              // > The JWT MUST contain an "iss" (issuer) claim that contains a
+              // > unique identifier for the entity that issued the JWT.
               iss: clientMetadata.client_id,
+              // > For client authentication, the subject MUST be the
+              // > "client_id" of the OAuth client.
               sub: clientMetadata.client_id,
+              // > The JWT MUST contain an "aud" (audience) claim containing a value
+              // > that identifies the authorization server as an intended audience.
+              // > The token endpoint URL of the authorization server MAY be used as a
+              // > value for an "aud" element to identify the authorization server as an
+              // > intended audience of the JWT.
               aud: serverMetadata.issuer,
+              // > The JWT MAY contain a "jti" (JWT ID) claim that provides a
+              // > unique identifier for the token.
               jti: await runtime.generateNonce(),
+              // > The JWT MAY contain an "iat" (issued at) claim that
+              // > identifies the time at which the JWT was issued.
               iat: Math.floor(Date.now() / 1000),
+              // > The JWT MUST contain an "exp" (expiration time) claim that
+              // > limits the time window during which the JWT can be used.
+              exp: Math.floor(Date.now() / 1000) + 60, // 1 minute
             },
           ),
         },
