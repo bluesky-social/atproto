@@ -1,4 +1,4 @@
-import type { Redis } from 'ioredis'
+import type { Redis, RedisKey } from 'ioredis'
 import { CreateRedisOptions, createRedis } from '../lib/redis.js'
 import { Code } from './code.js'
 import { RequestData } from './request-data.js'
@@ -20,17 +20,21 @@ export class RequestStoreRedis implements RequestStore {
 
   async readRequest(id: RequestId): Promise<RequestData | null> {
     const value = await this.redis.get(id)
-    if (!value) return null
-
-    const data = decode(value)
-    if (!data) await this.redis.del(id)
-
-    return data
+    return value ? decode(value) : null
   }
 
   async createRequest(id: RequestId, data: RequestData): Promise<void> {
-    await this.redis.set(id, encode(data), 'PX', px(data.expiresAt))
-    if (data.code) await this.redis.set(data.code, id, 'PX', px(data.expiresAt))
+    const values: [RedisKey, string][] = [[id, encode(data)]]
+    if (data.code) values.push([data.code, id])
+
+    // Using MSET to atomically set all values at once
+    await this.redis.mset(values)
+
+    // MSET does not support expiration, so we set it manually
+    const expiresAt = data.expiresAt.getTime()
+    await Promise.all(
+      values.map(([key]) => this.redis.pexpireat(key, expiresAt)),
+    )
   }
 
   async updateRequest(
@@ -79,10 +83,6 @@ export class RequestStoreRedis implements RequestStore {
 
     return { id, data }
   }
-}
-
-function px(date: Date): number {
-  return date.getTime() - Date.now()
 }
 
 function encode(value: RequestData): string {

@@ -10,6 +10,7 @@ import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
 import {
   AUTHORIZATION_INACTIVITY_TIMEOUT,
+  NODE_ENV,
   PAR_EXPIRES_IN,
   TOKEN_MAX_AGE,
 } from '../constants.js'
@@ -462,9 +463,12 @@ export class RequestManager {
 
     const { id, data } = result
 
-    // A "code" can only be used once. This should already have been ensured
-    // by the store implementation, but let's be extra safe.
-    await this.store.deleteRequest(id)
+    // Fool-proofing the store implementation against code replay attacks (in
+    // case consumeRequestCode() does not delete the request).
+    if (NODE_ENV !== 'production') {
+      const result = await this.store.readRequest(id)
+      if (result) throw new Error('Code should not be used twice')
+    }
 
     if (!isRequestDataAuthorized(data)) {
       // Should never happen: maybe the store implementation is faulty ?

@@ -213,7 +213,7 @@ export class TokenManager {
       // - Upgrade from a legacy representation of client authentication to
       //   a modern one.
       // - Allow clients to become "confidential" if they were previously
-      //   "public
+      //   "public"
       clientAuth,
     })
 
@@ -288,7 +288,7 @@ export class TokenManager {
   }
 
   public async consumeRefreshToken(token: RefreshToken): Promise<TokenInfo> {
-    // @NOTE concurrent refreshes of the same refresh token could theoricaly
+    // @NOTE concurrent refreshes of the same refresh token could theoretically
     // lead to two new tokens (access & refresh) being created. This is deemed
     // acceptable for now (as the mechanism can only be used once since only one
     // of the two refresh token created will be valid, and any future refresh

@@ -30,14 +30,17 @@ export function validateRefreshToken(
         ]
       : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
 
-  const sessionAge = Date.now() - tokenInfo.data.createdAt.getTime()
-  const refreshAge = Date.now() - tokenInfo.data.updatedAt.getTime()
+  const now = Date.now()
+
+  const sessionAge = now - tokenInfo.data.createdAt.getTime()
+  const refreshAge = now - tokenInfo.data.updatedAt.getTime()
 
   if (sessionAge > sessionLifetime) {
     throw new InvalidGrantError(`Session expired`)
   } else if (refreshAge > refreshLifetime) {
     throw new InvalidGrantError(`Refresh token expired`)
   } else if (refreshAge > sessionAge) {
+    // Should never happen unless data was tampered with.
     throw new InvalidGrantError(`Refresh token is older than session`)
   }
 }
