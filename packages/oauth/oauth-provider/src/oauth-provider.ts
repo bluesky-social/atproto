@@ -67,6 +67,7 @@ import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
+import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
@@ -480,15 +481,28 @@ export class OAuthProvider extends OAuthVerifier {
           ? await this.decodeJAR(client, authorizationRequest)
           : authorizationRequest
 
-      if (
-        client.metadata.dpop_bound_access_tokens &&
-        !dpopProof &&
-        !parameters.dpop_jkt
-      ) {
-        // https://datatracker.ietf.org/doc/html/rfc9449#section-10.1
-        // @NOTE When both PAR and DPoP are used, either the DPoP header, or the
-        // dpop_jkt parameter must be present. We do not enforce this for legacy
-        // reasons.
+      if (!parameters.dpop_jkt) {
+        if (client.metadata.dpop_bound_access_tokens) {
+          if (dpopProof) parameters.dpop_jkt = dpopProof.jkt
+          else {
+            // @NOTE When both PAR and DPoP are used, either the DPoP header, or
+            // the dpop_jkt parameter must be present. We do not enforce this
+            // for legacy reasons.
+            // https://datatracker.ietf.org/doc/html/rfc9449#section-10.1
+          }
+        }
+      } else {
+        if (!client.metadata.dpop_bound_access_tokens) {
+          throw new InvalidRequestError(
+            'DPoP bound access tokens are not enabled for this client',
+          )
+        }
+
+        // Proof is optional if the dpop_jkt is provided, but if it is provided,
+        // it must match the DPoP proof JKT.
+        if (dpopProof && dpopProof.jkt !== parameters.dpop_jkt) {
+          throw new InvalidDpopKeyBindingError()
+        }
       }
 
       const { uri, expiresAt } =
@@ -497,7 +511,6 @@ export class OAuthProvider extends OAuthVerifier {
           clientAuth,
           parameters,
           null,
-          dpopProof,
         )
 
       return {
@@ -554,7 +567,6 @@ export class OAuthProvider extends OAuthVerifier {
         null,
         parameters,
         deviceId,
-        null,
       )
     }
 
@@ -565,7 +577,6 @@ export class OAuthProvider extends OAuthVerifier {
       null,
       query,
       deviceId,
-      null,
     )
   }
 
@@ -779,7 +790,7 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  protected async validateClientAuth(
+  protected async compareClientAuth(
     client: Client,
     clientAuth: ClientAuth,
     dpopProof: null | DpopProof,
@@ -898,7 +909,7 @@ export class OAuthProvider extends OAuthVerifier {
     // error thrown after this point will permanently cause the request data to
     // be lost.
 
-    await this.validateClientAuth(client, clientAuth, dpopProof, data)
+    await this.compareClientAuth(client, clientAuth, dpopProof, data)
 
     // If the DPoP proof was not provided earlier (PAR / authorize), let's add
     // it now.
@@ -995,7 +1006,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     try {
       const { data } = tokenInfo
-      await this.validateClientAuth(client, clientAuth, dpopProof, data)
+      await this.compareClientAuth(client, clientAuth, dpopProof, data)
       await this.validateRefreshGrant(client, clientAuth, data)
 
       return await this.tokenManager.rotateToken(
@@ -1055,7 +1066,7 @@ export class OAuthProvider extends OAuthVerifier {
       // > [...] and then verifies whether the token was issued to the client
       // > making the revocation request.
       const { data } = tokenInfo
-      await this.validateClientAuth(client, clientAuth, dpopProof, data)
+      await this.compareClientAuth(client, clientAuth, dpopProof, data)
 
       // > In the next step, the authorization server invalidates the token. The
       // > invalidation takes place immediately, and the token cannot be used

@@ -18,8 +18,6 @@ import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
-import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
-import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
@@ -27,7 +25,6 @@ import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { DpopProof } from '../oauth-verifier.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
 import {
@@ -60,9 +57,8 @@ export class RequestManager {
     clientAuth: null | ClientAuth,
     input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
-    dpopProof: null | DpopProof,
   ) {
-    const parameters = await this.validate(client, clientAuth, input, dpopProof)
+    const parameters = await this.validate(client, clientAuth, input)
 
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
     const id = await generateRequestId()
@@ -85,7 +81,6 @@ export class RequestManager {
     client: Client,
     clientAuth: null | ClientAuth,
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    dpopProof: null | DpopProof,
   ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
     // -------------------------------
     // Validate unsupported parameters
@@ -189,38 +184,6 @@ export class RequestManager {
     const scopes = new Set(parameters.scope?.split(' '))
 
     parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
-
-    // https://datatracker.ietf.org/doc/html/rfc9449#section-10
-    if (!parameters.dpop_jkt) {
-      if (dpopProof) parameters = { ...parameters, dpop_jkt: dpopProof.jkt }
-    } else if (!dpopProof) {
-      throw new InvalidDpopProofError('DPoP proof required')
-    } else if (parameters.dpop_jkt !== dpopProof.jkt) {
-      throw new InvalidDpopKeyBindingError()
-    }
-
-    if (clientAuth === null) {
-      // @NOTE we allow the client to be unauthenticated when creating the request
-      // as it might not always be possible to authenticate the client at this
-      // stage (e.g. when the client directed the user to the authorization
-      // endpoint).
-    } else if (
-      clientAuth.method !== client.metadata.token_endpoint_auth_method
-    ) {
-      throw new InvalidParametersError(
-        parameters,
-        `Invalid token_endpoint_auth_method "${clientAuth.method}" for this client`,
-      )
-    }
-
-    if (clientAuth?.method === 'private_key_jwt') {
-      if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
-        throw new InvalidParametersError(
-          parameters,
-          'The DPoP proof must be signed with a different key than the client assertion',
-        )
-      }
-    }
 
     if (parameters.code_challenge) {
       switch (parameters.code_challenge_method) {
