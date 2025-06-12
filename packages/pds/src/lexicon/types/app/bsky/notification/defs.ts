@@ -120,7 +120,7 @@ export function validateActivitySubscription<V>(v: V) {
   return validate<ActivitySubscription & V>(v, id, hashActivitySubscription)
 }
 
-/** Object used to store activity subscription data in stash (bsync). */
+/** Object used to store activity subscription data in stash. */
 export interface SubjectActivitySubscription {
   $type?: 'app.bsky.notification.defs#subjectActivitySubscription'
   subject: string

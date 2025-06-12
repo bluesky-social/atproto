@@ -9899,7 +9899,7 @@ export const schemaDict = {
       },
       subjectActivitySubscription: {
         description:
-          'Object used to store activity subscription data in stash (bsync).',
+          'Object used to store activity subscription data in stash.',
         type: 'object',
         required: ['subject', 'activitySubscription'],
         properties: {
