@@ -462,6 +462,8 @@ export class OAuthProvider extends OAuthVerifier {
       const { client, clientAuth } = await this.authenticateClient(
         credentials,
         dpopProof,
+        // Allow missing DPoP proof for PAR requests. DPoP proof presence will
+        // be enforced at token creation time.
         { allowMissingDpopProof: true },
       )
 
