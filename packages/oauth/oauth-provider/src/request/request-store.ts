@@ -50,12 +50,11 @@ export const isRequestStore = buildInterfaceChecker<RequestStore>([
   'consumeRequestCode',
 ])
 
-export function ifRequestStore<V extends Partial<RequestStore>>(
+export function asRequestStore<V extends Partial<RequestStore>>(
   implementation?: V,
-): (V & RequestStore) | undefined {
-  if (implementation && isRequestStore(implementation)) {
-    return implementation
+): V & RequestStore {
+  if (!implementation || !isRequestStore(implementation)) {
+    throw new Error('Invalid RequestStore implementation')
   }
-
-  return undefined
+  return implementation
 }

@@ -79,9 +79,7 @@ import {
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
-import { RequestStoreMemory } from './request/request-store-memory.js'
-import { RequestStoreRedis } from './request/request-store-redis.js'
-import { RequestStore, ifRequestStore } from './request/request-store.js'
+import { RequestStore, asRequestStore } from './request/request-store.js'
 import { requestUriSchema } from './request/request-uri.js'
 import { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
 import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
@@ -248,18 +246,17 @@ export class OAuthProvider extends OAuthVerifier {
     metadata,
 
     safeFetch = safeFetchWrap(),
-    redis,
     store, // compound store implementation
 
     // Requires stores
     accountStore = asAccountStore(store),
     deviceStore = asDeviceStore(store),
     tokenStore = asTokenStore(store),
+    requestStore = asRequestStore(store),
 
     // These are optional
     clientStore = ifClientStore(store),
     replayStore = ifReplayStore(store),
-    requestStore = ifRequestStore(store),
 
     clientJwksCache = new SimpleStoreMemory({
       maxSize: 50_000_000,
@@ -294,11 +291,7 @@ export class OAuthProvider extends OAuthVerifier {
     // be the responsibility of the super class.
     const superOptions: OAuthVerifierOptions = rest
 
-    super({ replayStore, redis, ...superOptions })
-
-    requestStore ??= redis
-      ? new RequestStoreRedis({ redis })
-      : new RequestStoreMemory()
+    super({ replayStore, ...superOptions })
 
     this.accessTokenMode = accessTokenMode
     this.authenticationMaxAge = authenticationMaxAge
