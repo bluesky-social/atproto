@@ -1,28 +1,25 @@
 import { FormEvent, JSX, useState } from 'react'
-import { AuthorizeOptions } from '@atproto/oauth-client-browser'
+import { Button } from '../components/button.tsx'
+import { OAuthSignIn } from './use-oauth.ts'
 
-export type OAuthSignIn = (input: string, options?: AuthorizeOptions) => unknown
-
-export type OAuthSignInFormProps = Omit<
+export type OAuthLoginHandleProps = Omit<
   JSX.IntrinsicElements['form'],
   'onSubmit'
 > & {
   signIn: OAuthSignIn
-  signUpUrl?: string
 }
 
 /**
  * @returns Nice tailwind css form asking to enter either a handle or the host
  *   to use to login.
  */
-export function OAuthSignInForm({
+export function OAuthLoginHandle({
   signIn,
-  signUpUrl,
 
   // form
   className,
   ...props
-}: OAuthSignInFormProps) {
+}: OAuthLoginHandleProps) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -61,43 +58,28 @@ export function OAuthSignInForm({
   return (
     <form
       {...props}
-      className={`${className || ''} w-full max-w-lg`}
+      className={`${className || ''} w-full`}
       onSubmit={onSubmit}
     >
       <fieldset className="rounded-md border border-solid border-slate-200 text-neutral-700 dark:border-slate-700 dark:text-neutral-100">
-        <div className="relative flex flex-wrap items-center justify-stretch p-1">
+        <div className="relative flex flex-wrap items-center justify-stretch space-x-2 p-2">
           <input
             name="value"
             type="text"
-            className="relative m-0 block w-[1px] min-w-0 flex-auto bg-transparent bg-clip-padding px-3 py-[0.25rem] text-base leading-[1.6] text-inherit outline-none dark:placeholder:text-neutral-100"
-            placeholder="@handle, DID or PDS url"
-            aria-label="@handle, DID or PDS url"
+            className="relative m-0 block w-[1px] min-w-0 flex-auto bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
+            placeholder="Continue with @handle or custom PDS"
+            aria-label="Continue with @handle or custom PDS"
             required
             value={value}
             disabled={loading}
             onChange={(e) => setValue(e.target.value)}
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-md bg-transparent px-3 py-1 text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:ring-offset-2"
-          >
+          <Button type="submit" disabled={loading} transparent size="small">
             Login
-          </button>
+          </Button>
           {loading && <span>Loading...</span>}
         </div>
       </fieldset>
-
-      {signUpUrl && (
-        <button
-          type="button"
-          onClick={() => signIn(signUpUrl)}
-          disabled={loading}
-          className="mt-2 rounded-md bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:ring-offset-2"
-        >
-          Sign up
-        </button>
-      )}
 
       {error ? <div className="alert alert-error">{error}</div> : null}
     </form>
