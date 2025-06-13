@@ -21,6 +21,11 @@ import queryStatuses from './moderation/queryStatuses'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
 import createReport from './report/createReport'
+import addSafelinkRule from './safelink/addRule'
+import querySafelinkEvents from './safelink/queryEvents'
+import querySafelinkRules from './safelink/queryRules'
+import removeSafelinkRule from './safelink/removeRule'
+import updateSafelinkRule from './safelink/updateRule'
 import getConfig from './server/getConfig'
 import setAddValues from './set/addValues'
 import deleteSet from './set/deleteSet'
@@ -82,5 +87,10 @@ export default function (server: Server, ctx: AppContext) {
   grantVerifications(server, ctx)
   revokeVerifications(server, ctx)
   listVerifications(server, ctx)
+  addSafelinkRule(server, ctx)
+  updateSafelinkRule(server, ctx)
+  removeSafelinkRule(server, ctx)
+  querySafelinkEvents(server, ctx)
+  querySafelinkRules(server, ctx)
   return server
 }
