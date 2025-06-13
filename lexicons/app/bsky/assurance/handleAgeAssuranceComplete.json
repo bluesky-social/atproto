@@ -1,21 +1,21 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.verification.handleAgeVerificationComplete",
+  "id": "app.bsky.assurance.handleAgeAssuranceComplete",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Called via redirect from the age verification service. This endpoint will attempt to verify the result, and then redirect to user back to the Bluesky app.",
+      "description": "Called via redirect from the age assurance service. This endpoint will attempt to verify the result, and then redirect to user back to the Bluesky app.",
       "parameters": {
         "type": "params",
         "required": [],
         "properties": {
           "status": {
             "type": "string",
-            "description": "The status of the age verification process."
+            "description": "The status of the age assurance process."
           },
           "externalPayload": {
             "type": "string",
-            "description": "Additional metadata provided when initiating age verification."
+            "description": "Additional metadata provided when initiating age assurance."
           },
           "signature": {
             "type": "string",
@@ -31,7 +31,7 @@
           "properties": {
             "status": {
               "type": "string",
-              "description": "The computed status of the age verification process."
+              "description": "The computed status of the age assurance process."
             }
           }
         }

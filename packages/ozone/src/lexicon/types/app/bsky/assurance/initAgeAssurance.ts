@@ -14,25 +14,25 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.verification.handleAgeVerificationComplete'
+const id = 'app.bsky.assurance.initAgeAssurance'
 
-export interface QueryParams {
-  /** The status of the age verification process. */
-  status?: string
-  /** Additional metadata provided when initiating age verification. */
-  externalPayload?: string
-  /** SHA256 HMAC signature of the status and externalPayload, separated by a colon (:), and signed with the facilitating service's private key. */
-  signature?: string
+export interface QueryParams {}
+
+export interface InputSchema {
+  /** The user's email address to receive assurance instructions. */
+  email: string
+  /** The user's preferred language for communication during the assurance process. */
+  language: string
 }
-
-export type InputSchema = undefined
 
 export interface OutputSchema {
-  /** The computed status of the age verification process. */
-  status: string
+  success: boolean
 }
 
-export type HandlerInput = undefined
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'

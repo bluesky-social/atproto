@@ -13,12 +13,12 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.verification.handleAgeVerificationComplete'
+const id = 'app.bsky.assurance.handleAgeAssuranceComplete'
 
 export interface QueryParams {
-  /** The status of the age verification process. */
+  /** The status of the age assurance process. */
   status?: string
-  /** Additional metadata provided when initiating age verification. */
+  /** Additional metadata provided when initiating age assurance. */
   externalPayload?: string
   /** SHA256 HMAC signature of the status and externalPayload, separated by a colon (:), and signed with the facilitating service's private key. */
   signature?: string
@@ -27,7 +27,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  /** The computed status of the age verification process. */
+  /** The computed status of the age assurance process. */
   status: string
 }
 

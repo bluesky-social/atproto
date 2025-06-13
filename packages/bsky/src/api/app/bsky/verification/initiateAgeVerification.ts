@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 import { OAUTH_URL, SEND_EMAIL_URL, CLIENT_ID, API_KEY } from './env'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.verification.initiateAgeVerification({
+  server.app.bsky.assurance.initAgeAssurance({
     auth: ctx.authVerifier.standard,
     handler: async ({ input }) => {
       let success = true

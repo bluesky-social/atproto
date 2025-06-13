@@ -2,14 +2,14 @@ import { Un$Typed } from '@atproto/api'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeVerificationState } from '../../../../lexicon/types/app/bsky/verification/defs'
+import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
 import {
   GetAgeVerificationStateResponse,
   AgeVerificationStatus,
 } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.verification.getAgeVerificationState({
+  server.app.bsky.assurance.getAgeAssuranceState({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth }) => {
       const viewer = auth.credentials.iss
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!state) {
         state = {
           required: true, // compute this, fail closed?
-          status: 'unverified',
+          status: 'unknown',
         }
       }
 
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
 const getAgeVerificationState = async (
   ctx: AppContext,
   actorDid: string,
-): Promise<Un$Typed<AgeVerificationState>> => {
+): Promise<Un$Typed<AgeAssuranceState>> => {
   let res: GetAgeVerificationStateResponse
   try {
     res = await ctx.dataplane.getAgeVerificationState({
@@ -57,8 +57,8 @@ const getAgeVerificationState = async (
 
 function protobufToLex(
   proto: GetAgeVerificationStateResponse,
-): Un$Typed<AgeVerificationState> {
-  let status: AgeVerificationState['status'] = 'unverified'
+): Un$Typed<AgeAssuranceState> {
+  let status: AgeAssuranceState['status'] = 'unverified'
 
   switch (proto.status) {
     case AgeVerificationStatus.UNVERIFIED:

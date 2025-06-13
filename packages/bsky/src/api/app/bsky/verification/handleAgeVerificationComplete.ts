@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import qs from 'node:querystring'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeVerificationState } from '../../../../lexicon/types/app/bsky/verification/defs'
+import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
 
 import { VERIFICATION_SECRET } from './env'
 
@@ -13,11 +13,11 @@ type StatusPayload = {
 }
 
 export default function (server: Server, _ctx: AppContext) {
-  server.app.bsky.verification.handleAgeVerificationComplete({
+  server.app.bsky.assurance.handleAgeAssuranceComplete({
     handler: async ({ params }) => {
       const { status: rawStatusPayload, externalPayload, signature } = params
 
-      console.log('handleAgeVerificationComplete', params)
+      console.log('handleAgeAssuranceComplete', params)
 
       try {
         if (rawStatusPayload && externalPayload && signature) {
@@ -46,7 +46,7 @@ export default function (server: Server, _ctx: AppContext) {
             encoding: 'application/json',
             statusCode: 302,
             headers: {
-              Location: `https://bsky.app/intent/age-verification?${qs.stringify({ status })}`,
+              Location: `https://bsky.app/intent/age-assurance?${qs.stringify({ status })}`,
             },
             body: {
               status,
@@ -61,7 +61,7 @@ export default function (server: Server, _ctx: AppContext) {
           encoding: 'application/json',
           statusCode: 302,
           headers: {
-            Location: `https://bsky.app/intent/age-verification?${qs.stringify({ status: 'failed' })}`,
+            Location: `https://bsky.app/intent/age-assurance?${qs.stringify({ status: 'failed' })}`,
           },
           body: {
             status: 'failed',
@@ -74,7 +74,7 @@ export default function (server: Server, _ctx: AppContext) {
 
 function getResponseStatus(
   statusPayload: StatusPayload,
-): AgeVerificationState['status'] {
+): AgeAssuranceState['status'] {
   if (statusPayload.verified) {
     return 'verified-adult'
   } else if (statusPayload.errorCode) {

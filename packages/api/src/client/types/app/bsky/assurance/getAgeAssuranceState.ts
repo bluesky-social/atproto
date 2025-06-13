@@ -10,16 +10,16 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyVerificationDefs from './defs.js'
+import type * as AppBskyAssuranceDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.verification.getAgeVerificationState'
+const id = 'app.bsky.assurance.getAgeAssuranceState'
 
 export interface QueryParams {}
 
 export type InputSchema = undefined
-export type OutputSchema = AppBskyVerificationDefs.AgeVerificationState
+export type OutputSchema = AppBskyAssuranceDefs.AgeAssuranceState
 
 export interface CallOptions {
   signal?: AbortSignal

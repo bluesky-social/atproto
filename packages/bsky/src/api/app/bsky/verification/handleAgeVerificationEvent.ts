@@ -6,7 +6,7 @@ import { Server } from '../../../../lexicon'
 import { WEBHOOK_SECRET } from './env'
 
 export default function (server: Server, _ctx: AppContext) {
-  server.app.bsky.verification.handleAgeVerificationEvent({
+  server.app.bsky.assurance.handleAgeAssuranceEvent({
     handler: async ({ req, input }) => {
       try {
         const rawSignatureHeader = req.headers['x-kws-signature']
@@ -19,7 +19,7 @@ export default function (server: Server, _ctx: AppContext) {
           ? rawSignatureHeader.join(',')
           : rawSignatureHeader
 
-        console.log('handleAgeVerificationEvent', {
+        console.log('handleAgeAssuranceEvent', {
           rawSignatureHeader,
           input: JSON.stringify(input),
         })
@@ -48,7 +48,7 @@ export default function (server: Server, _ctx: AppContext) {
           throw new Error(`Signature mismatch`)
         }
 
-        console.log('handleAgeVerificationEvent SUCCESS')
+        console.log('handleAgeAssuranceEvent SUCCESS')
 
         // TODO save
       } catch (e) {

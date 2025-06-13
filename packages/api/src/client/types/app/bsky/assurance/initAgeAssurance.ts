@@ -13,14 +13,14 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.verification.initiateAgeVerification'
+const id = 'app.bsky.assurance.initAgeAssurance'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The user's email address to receive verification instructions. */
+  /** The user's email address to receive assurance instructions. */
   email: string
-  /** The user's preferred language for communication during the verification process. */
+  /** The user's preferred language for communication during the assurance process. */
   language: string
 }
 

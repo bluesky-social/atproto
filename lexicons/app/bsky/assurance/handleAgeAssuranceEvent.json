@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.verification.handleAgeVerificationEvent",
+  "id": "app.bsky.assurance.handleAgeAssuranceEvent",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Webhook endpoint to receive age verification events from a facilitating service. This endpoint is called by the service to report the status of the age verification process.",
+      "description": "Webhook endpoint to receive age assurance events from a facilitating service. This endpoint is called by the service to report the status of the age assurance process.",
       "input": {
         "encoding": "application/json",
         "schema": {

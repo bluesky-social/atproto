@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.verification.initiateAgeVerification",
+  "id": "app.bsky.assurance.initAgeAssurance",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Initiate age verification for an account. This is a one-time action that will start the process of verifying the user's age.",
+      "description": "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,11 +13,11 @@
           "properties": {
             "email": {
               "type": "string",
-              "description": "The user's email address to receive verification instructions."
+              "description": "The user's email address to receive assurance instructions."
             },
             "language": {
               "type": "string",
-              "description": "The user's preferred language for communication during the verification process."
+              "description": "The user's preferred language for communication during the assurance process."
             }
           }
         }

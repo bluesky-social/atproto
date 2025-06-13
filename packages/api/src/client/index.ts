@@ -110,6 +110,11 @@ import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+import * as AppBskyAssuranceDefs from './types/app/bsky/assurance/defs.js'
+import * as AppBskyAssuranceGetAgeAssuranceState from './types/app/bsky/assurance/getAgeAssuranceState.js'
+import * as AppBskyAssuranceHandleAgeAssuranceComplete from './types/app/bsky/assurance/handleAgeAssuranceComplete.js'
+import * as AppBskyAssuranceHandleAgeAssuranceEvent from './types/app/bsky/assurance/handleAgeAssuranceEvent.js'
+import * as AppBskyAssuranceInitAgeAssurance from './types/app/bsky/assurance/initAgeAssurance.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -201,11 +206,6 @@ import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/g
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
-import * as AppBskyVerificationDefs from './types/app/bsky/verification/defs.js'
-import * as AppBskyVerificationGetAgeVerificationState from './types/app/bsky/verification/getAgeVerificationState.js'
-import * as AppBskyVerificationHandleAgeVerificationComplete from './types/app/bsky/verification/handleAgeVerificationComplete.js'
-import * as AppBskyVerificationHandleAgeVerificationEvent from './types/app/bsky/verification/handleAgeVerificationEvent.js'
-import * as AppBskyVerificationInitiateAgeVerification from './types/app/bsky/verification/initiateAgeVerification.js'
 import * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
@@ -380,6 +380,11 @@ export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+export * as AppBskyAssuranceDefs from './types/app/bsky/assurance/defs.js'
+export * as AppBskyAssuranceGetAgeAssuranceState from './types/app/bsky/assurance/getAgeAssuranceState.js'
+export * as AppBskyAssuranceHandleAgeAssuranceComplete from './types/app/bsky/assurance/handleAgeAssuranceComplete.js'
+export * as AppBskyAssuranceHandleAgeAssuranceEvent from './types/app/bsky/assurance/handleAgeAssuranceEvent.js'
+export * as AppBskyAssuranceInitAgeAssurance from './types/app/bsky/assurance/initAgeAssurance.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -471,11 +476,6 @@ export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/g
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
-export * as AppBskyVerificationDefs from './types/app/bsky/verification/defs.js'
-export * as AppBskyVerificationGetAgeVerificationState from './types/app/bsky/verification/getAgeVerificationState.js'
-export * as AppBskyVerificationHandleAgeVerificationComplete from './types/app/bsky/verification/handleAgeVerificationComplete.js'
-export * as AppBskyVerificationHandleAgeVerificationEvent from './types/app/bsky/verification/handleAgeVerificationEvent.js'
-export * as AppBskyVerificationInitiateAgeVerification from './types/app/bsky/verification/initiateAgeVerification.js'
 export * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
@@ -1733,6 +1733,7 @@ export class AppNS {
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
+  assurance: AppBskyAssuranceNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -1740,12 +1741,12 @@ export class AppBskyNS {
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
-  verification: AppBskyVerificationNS
   video: AppBskyVideoNS
 
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
+    this.assurance = new AppBskyAssuranceNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -1753,7 +1754,6 @@ export class AppBskyNS {
     this.notification = new AppBskyNotificationNS(client)
     this.richtext = new AppBskyRichtextNS(client)
     this.unspecced = new AppBskyUnspeccedNS(client)
-    this.verification = new AppBskyVerificationNS(client)
     this.video = new AppBskyVideoNS(client)
   }
 }
@@ -1982,6 +1982,62 @@ export class AppBskyActorStatusRecord {
       undefined,
       { collection: 'app.bsky.actor.status', ...params },
       { headers },
+    )
+  }
+}
+
+export class AppBskyAssuranceNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getAgeAssuranceState(
+    params?: AppBskyAssuranceGetAgeAssuranceState.QueryParams,
+    opts?: AppBskyAssuranceGetAgeAssuranceState.CallOptions,
+  ): Promise<AppBskyAssuranceGetAgeAssuranceState.Response> {
+    return this._client.call(
+      'app.bsky.assurance.getAgeAssuranceState',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  handleAgeAssuranceComplete(
+    params?: AppBskyAssuranceHandleAgeAssuranceComplete.QueryParams,
+    opts?: AppBskyAssuranceHandleAgeAssuranceComplete.CallOptions,
+  ): Promise<AppBskyAssuranceHandleAgeAssuranceComplete.Response> {
+    return this._client.call(
+      'app.bsky.assurance.handleAgeAssuranceComplete',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  handleAgeAssuranceEvent(
+    data?: AppBskyAssuranceHandleAgeAssuranceEvent.InputSchema,
+    opts?: AppBskyAssuranceHandleAgeAssuranceEvent.CallOptions,
+  ): Promise<AppBskyAssuranceHandleAgeAssuranceEvent.Response> {
+    return this._client.call(
+      'app.bsky.assurance.handleAgeAssuranceEvent',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  initAgeAssurance(
+    data?: AppBskyAssuranceInitAgeAssurance.InputSchema,
+    opts?: AppBskyAssuranceInitAgeAssurance.CallOptions,
+  ): Promise<AppBskyAssuranceInitAgeAssurance.Response> {
+    return this._client.call(
+      'app.bsky.assurance.initAgeAssurance',
+      opts?.qp,
+      data,
+      opts,
     )
   }
 }
@@ -3675,62 +3731,6 @@ export class AppBskyUnspeccedNS {
       .catch((e) => {
         throw AppBskyUnspeccedSearchStarterPacksSkeleton.toKnownErr(e)
       })
-  }
-}
-
-export class AppBskyVerificationNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  getAgeVerificationState(
-    params?: AppBskyVerificationGetAgeVerificationState.QueryParams,
-    opts?: AppBskyVerificationGetAgeVerificationState.CallOptions,
-  ): Promise<AppBskyVerificationGetAgeVerificationState.Response> {
-    return this._client.call(
-      'app.bsky.verification.getAgeVerificationState',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  handleAgeVerificationComplete(
-    params?: AppBskyVerificationHandleAgeVerificationComplete.QueryParams,
-    opts?: AppBskyVerificationHandleAgeVerificationComplete.CallOptions,
-  ): Promise<AppBskyVerificationHandleAgeVerificationComplete.Response> {
-    return this._client.call(
-      'app.bsky.verification.handleAgeVerificationComplete',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  handleAgeVerificationEvent(
-    data?: AppBskyVerificationHandleAgeVerificationEvent.InputSchema,
-    opts?: AppBskyVerificationHandleAgeVerificationEvent.CallOptions,
-  ): Promise<AppBskyVerificationHandleAgeVerificationEvent.Response> {
-    return this._client.call(
-      'app.bsky.verification.handleAgeVerificationEvent',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  initiateAgeVerification(
-    data?: AppBskyVerificationInitiateAgeVerification.InputSchema,
-    opts?: AppBskyVerificationInitiateAgeVerification.CallOptions,
-  ): Promise<AppBskyVerificationInitiateAgeVerification.Response> {
-    return this._client.call(
-      'app.bsky.verification.initiateAgeVerification',
-      opts?.qp,
-      data,
-      opts,
-    )
   }
 }
 
