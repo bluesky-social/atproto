@@ -13,7 +13,7 @@ export function extractZodErrorMessage(err: unknown): string | undefined {
     }
 
     const message = extractMessage(err)
-    return `Validation failed${message ? `: ${message}` : ''}`
+    if (message) return `Validation failed: ${message}`
   }
 
   return undefined
