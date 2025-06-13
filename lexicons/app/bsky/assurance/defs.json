@@ -13,12 +13,7 @@
         "status": {
           "type": "string",
           "description": "The status of the age assurance process.",
-          "knownValues": [
-            "unknown",
-            "pending",
-            "assured",
-            "failed"
-          ]
+          "knownValues": ["unknown", "pending", "assured", "failed"]
         }
       }
     }

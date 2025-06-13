@@ -46,11 +46,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('private_data')
       .selectAll()
       .where('actorDid', '=', did)
-      .where(
-        'namespace',
-        '=',
-        'app.bsky.assurance.defs#ageAssuranceState',
-      )
+      .where('namespace', '=', 'app.bsky.assurance.defs#ageAssuranceState')
       .where('key', '=', 'self')
       .executeTakeFirst()
 
