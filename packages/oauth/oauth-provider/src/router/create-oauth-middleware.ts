@@ -20,6 +20,7 @@ import {
   staticJsonMiddleware,
 } from '../lib/http/index.js'
 import { extractZodErrorMessage } from '../lib/util/zod-error.js'
+import { OAuthError } from '../oauth-errors.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import type { MiddlewareOptions } from './middleware-options.js'
 
@@ -214,7 +215,14 @@ export function createOAuthMiddleware<
         const payload = await buildOAuthResponse.call(this, req, res)
         return { payload, status }
       } catch (err) {
-        onError?.(req, res, err, 'OAuth request error')
+        onError?.(
+          req,
+          res,
+          err,
+          err instanceof OAuthError
+            ? `OAuth "${err.error}" error`
+            : 'Unexpected error',
+        )
 
         if (!res.headersSent && err instanceof WWWAuthenticateError) {
           const name = 'WWW-Authenticate'
