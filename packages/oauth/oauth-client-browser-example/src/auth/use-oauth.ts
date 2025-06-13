@@ -15,7 +15,10 @@ export type OnRestored = (session: OAuthSession | null) => void
 export type OnSignedIn = (session: OAuthSession, state: null | string) => void
 export type OnSignedOut = () => void
 
-export type OAuthSignIn = (input: string, options?: AuthorizeOptions) => unknown
+export type OAuthSignIn = (
+  input: string,
+  options?: AuthorizeOptions,
+) => Promise<void>
 
 function useValueRef<T>(value: T) {
   const valueRef = useRef(value)

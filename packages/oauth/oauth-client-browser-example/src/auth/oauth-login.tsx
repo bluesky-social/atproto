@@ -1,6 +1,6 @@
 import { Button } from '../components/button.tsx'
 import { useAuthContext } from './auth-provider.tsx'
-import { OAuthLoginHandle } from './oauth-login-handle.tsx'
+import { OAuthLoginForm } from './oauth-login-form.tsx'
 
 export type OAuthLoginProps = {
   titleText?: string | null | false
@@ -20,21 +20,20 @@ export function OAuthLogin({
 
   return (
     <div
-      className="flex max-w-full flex-col items-stretch space-y-4 rounded-md bg-white p-4 shadow-md"
-      style={{ width: '450px' }}
+      className="flex w-[450px] max-w-full flex-col items-stretch space-y-4 rounded-md bg-white p-4 shadow-md"
       role="dialog"
     >
       {titleText && (
-        <h2 className="text-center text-2xl font-semibold">{titleText}</h2>
+        <h2 className="text-center text-2xl font-medium">{titleText}</h2>
       )}
 
       {signUpUrl && (
-        <Button type="button" size="large" onClick={() => signIn(signUpUrl)}>
+        <Button type="button" size="large" action={() => signIn(signUpUrl)}>
           {signUpText.replace('{host}', new URL(signUpUrl).host)}
         </Button>
       )}
 
-      <OAuthLoginHandle signIn={signIn} />
+      <OAuthLoginForm signIn={signIn} />
     </div>
   )
 }

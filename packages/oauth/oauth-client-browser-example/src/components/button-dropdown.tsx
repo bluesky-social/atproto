@@ -26,28 +26,29 @@ export function ButtonDropdown({
     <div className="relative inline-block" ref={rootRef}>
       <Button
         {...buttonProps}
+        key="button"
         className={['relative z-10', className].join(' ')}
         onClick={() => setOpen((prev) => !prev)}
       >
         {children}
       </Button>
+
       {open && (
         <div
-          className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+          key="menu"
+          className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           onClick={(event) => {
             if (!event.defaultPrevented) setOpen(false)
           }}
         >
           {menu.map((item, index) => (
-            <>
-              {index !== 0 && (
-                <hr
-                  key={`divider-${index}`}
-                  className="my-1 border-t border-gray-200"
-                />
-              )}
-              <Item key={index} item={item} />
-            </>
+            <Item
+              key={`item-${index}`}
+              item={item}
+              className={
+                index > 0 ? 'mt-1 border-t border-gray-200 pt-1' : undefined
+              }
+            />
           ))}
         </div>
       )}
