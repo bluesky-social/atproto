@@ -180,6 +180,7 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
@@ -445,6 +446,7 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+export * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
@@ -3413,6 +3415,18 @@ export class AppBskyNotificationNS {
   ): Promise<AppBskyNotificationRegisterPush.Response> {
     return this._client.call(
       'app.bsky.notification.registerPush',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  unregisterPush(
+    data?: AppBskyNotificationUnregisterPush.InputSchema,
+    opts?: AppBskyNotificationUnregisterPush.CallOptions,
+  ): Promise<AppBskyNotificationUnregisterPush.Response> {
+    return this._client.call(
+      'app.bsky.notification.unregisterPush',
       opts?.qp,
       data,
       opts,
