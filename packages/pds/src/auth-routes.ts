@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import {
+  InvalidGrantError,
+  UseDpopNonceError,
   oauthMiddleware,
   oauthProtectedResourceMetadataSchema,
 } from '@atproto/oauth-provider'
@@ -36,11 +38,30 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
     router.use(
       oauthMiddleware(oauthProvider, {
         onError: (req, res, err, message) => {
-          oauthLogger.error({ err, req }, message)
+          if (!ignoreError(err)) oauthLogger.error({ err, req }, message)
         },
       }),
     )
   }
 
   return router
+}
+
+function ignoreError(
+  err: unknown,
+): err is UseDpopNonceError | InvalidGrantError {
+  if (err instanceof UseDpopNonceError) {
+    return true
+  }
+
+  if (err instanceof InvalidGrantError) {
+    switch (err.error_description) {
+      case 'Refresh token expired':
+        return true
+      case 'Invalid refresh token':
+        return err.cause == null // Ignore unless caused by something else
+    }
+  }
+
+  return false
 }

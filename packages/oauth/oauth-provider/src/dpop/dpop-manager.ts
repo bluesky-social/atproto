@@ -68,7 +68,7 @@ export class DpopManager {
       maxTokenAge: 10, // Will ensure presence & validity of "iat" claim
       clockTolerance: DPOP_NONCE_MAX_AGE / 1e3,
     }).catch((err) => {
-      throw newInvalidDpopProofError('Failed to verify DPoP proof', err)
+      throw wrapInvalidDpopProofError(err, 'Failed to verify DPoP proof')
     })
 
     // @NOTE For legacy & backwards compatibility reason, we cannot use
@@ -86,20 +86,20 @@ export class DpopManager {
     const { ath, htm, htu, jti, nonce } = payload
 
     if (nonce !== undefined && typeof nonce !== 'string') {
-      throw newInvalidDpopProofError('Invalid DPoP "nonce" type')
+      throw new InvalidDpopProofError('Invalid DPoP "nonce" type')
     }
 
     if (!jti || typeof jti !== 'string') {
-      throw newInvalidDpopProofError('DPoP "jti" missing')
+      throw new InvalidDpopProofError('DPoP "jti" missing')
     }
 
     // Note rfc9110#section-9.1 states that the method name is case-sensitive
     if (!htm || htm !== httpMethod) {
-      throw newInvalidDpopProofError('DPoP "htm" mismatch')
+      throw new InvalidDpopProofError('DPoP "htm" mismatch')
     }
 
     if (!htu || typeof htu !== 'string') {
-      throw newInvalidDpopProofError('Invalid DPoP "htu" type')
+      throw new InvalidDpopProofError('Invalid DPoP "htu" type')
     }
 
     // > To reduce the likelihood of false negatives, servers SHOULD employ
@@ -109,7 +109,7 @@ export class DpopManager {
     //
     // RFC9449 section 4.3. Checking DPoP Proofs - https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
     if (!htu || parseHtu(htu) !== normalizeHtuUrl(httpUrl)) {
-      throw newInvalidDpopProofError('DPoP "htu" mismatch')
+      throw new InvalidDpopProofError('DPoP "htu" mismatch')
     }
 
     if (!nonce && this.dpopNonce) {
@@ -123,17 +123,17 @@ export class DpopManager {
     if (accessToken) {
       const accessTokenHash = createHash('sha256').update(accessToken).digest()
       if (ath !== accessTokenHash.toString('base64url')) {
-        throw newInvalidDpopProofError('DPoP "ath" mismatch')
+        throw new InvalidDpopProofError('DPoP "ath" mismatch')
       }
     } else if (ath !== undefined) {
-      throw newInvalidDpopProofError('DPoP "ath" claim not allowed')
+      throw new InvalidDpopProofError('DPoP "ath" claim not allowed')
     }
 
     // @NOTE we can assert there is a jwk because the jwtVerify used the
     // EmbeddedJWK key getter mechanism.
     const jwk = protectedHeader.jwk!
     const jkt = await calculateJwkThumbprint(jwk, 'sha256').catch((err) => {
-      throw newInvalidDpopProofError('Failed to calculate jkt', err)
+      throw wrapInvalidDpopProofError(err, 'Failed to calculate jkt')
     })
 
     return { jti, jkt, htm, htu }
@@ -147,12 +147,12 @@ function extractProof(
   switch (typeof dpopHeader) {
     case 'string':
       if (dpopHeader) return dpopHeader
-      throw newInvalidDpopProofError('DPoP header cannot be empty')
+      throw new InvalidDpopProofError('DPoP header cannot be empty')
     case 'object':
       // @NOTE the "0" case should never happen a node.js HTTP server will only
       // return an array if the header is set multiple times.
       if (dpopHeader.length === 1 && dpopHeader[0]) return dpopHeader[0]!
-      throw newInvalidDpopProofError('DPoP header must contain a single proof')
+      throw new InvalidDpopProofError('DPoP header must contain a single proof')
     default:
       return null
   }
@@ -177,7 +177,7 @@ function normalizeHtuUrl(url: Readonly<URL>): string {
 function parseHtu(htu: string): string {
   const url = ifURL(htu)
   if (!url) {
-    throw newInvalidDpopProofError('DPoP "htu" is not a valid URL')
+    throw new InvalidDpopProofError('DPoP "htu" is not a valid URL')
   }
 
   // @NOTE the checks bellow can be removed once once jwtPayloadSchema is used
@@ -185,11 +185,11 @@ function parseHtu(htu: string): string {
   // (though the htuSchema).
 
   if (url.password || url.username) {
-    throw newInvalidDpopProofError('DPoP "htu" must not contain credentials')
+    throw new InvalidDpopProofError('DPoP "htu" must not contain credentials')
   }
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw newInvalidDpopProofError('DPoP "htu" must be http or https')
+    throw new InvalidDpopProofError('DPoP "htu" must be http or https')
   }
 
   // @NOTE For legacy & backwards compatibility reason, we allow a query and
@@ -200,9 +200,9 @@ function parseHtu(htu: string): string {
   return normalizeHtuUrl(url)
 }
 
-function newInvalidDpopProofError(
+function wrapInvalidDpopProofError(
+  err: unknown,
   title: string,
-  err?: unknown,
 ): InvalidDpopProofError {
   const msg =
     err instanceof JOSEError || err instanceof ValidationError
