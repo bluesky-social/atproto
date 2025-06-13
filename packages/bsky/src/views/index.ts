@@ -350,21 +350,14 @@ export class Views {
         : undefined,
       // associated.feedgens and associated.lists info not necessarily included
       // on profile and profile-basic views, but should be on profile-detailed.
-      associated:
-        actor.isLabeler ||
-        actor.allowIncomingChatsFrom ||
-        // @TODO apply default behavior?
-        actor.allowActivitySubscriptionsFrom
-          ? {
-              labeler: actor.isLabeler ? true : undefined,
-              // @TODO apply default chat policy?
-              chat: actor.allowIncomingChatsFrom
-                ? { allowIncoming: actor.allowIncomingChatsFrom }
-                : undefined,
-              activitySubscription:
-                this.profileAssociatedActivitySubscription(actor),
-            }
+      associated: {
+        labeler: actor.isLabeler ? true : undefined,
+        // @TODO apply default chat policy?
+        chat: actor.allowIncomingChatsFrom
+          ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
+        activitySubscription: this.profileAssociatedActivitySubscription(actor),
+      },
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
@@ -375,11 +368,8 @@ export class Views {
 
   profileAssociatedActivitySubscription(
     actor: Actor,
-  ): ProfileAssociatedActivitySubscription | undefined {
-    // @TODO apply default behavior?
-    return actor.allowActivitySubscriptionsFrom
-      ? { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
-      : undefined
+  ): ProfileAssociatedActivitySubscription {
+    return { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
   }
 
   profileKnownFollowers(
@@ -440,7 +430,6 @@ export class Views {
     if (!profileViewer.activitySubscription) return undefined
 
     const actorFollowsViewer = !!profileViewer.followedBy
-    // @TODO apply default behavior?
     const allowFrom = actor.allowActivitySubscriptionsFrom
     if (
       allowFrom === 'all' ||
