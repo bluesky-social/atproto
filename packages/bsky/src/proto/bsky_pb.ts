@@ -9682,6 +9682,144 @@ export class GetUnreadNotificationCountResponse extends Message<GetUnreadNotific
 }
 
 /**
+ * @generated from message bsky.GetActivitySubscriptionRequest
+ */
+export class GetActivitySubscriptionRequest extends Message<GetActivitySubscriptionRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string subject_did = 2;
+   */
+  subjectDid = ''
+
+  constructor(data?: PartialMessage<GetActivitySubscriptionRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActivitySubscriptionRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'subject_did',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionRequest {
+    return new GetActivitySubscriptionRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionRequest {
+    return new GetActivitySubscriptionRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionRequest {
+    return new GetActivitySubscriptionRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionRequest
+      | PlainMessage<GetActivitySubscriptionRequest>
+      | undefined,
+    b:
+      | GetActivitySubscriptionRequest
+      | PlainMessage<GetActivitySubscriptionRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActivitySubscriptionRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionResponse
+ */
+export class GetActivitySubscriptionResponse extends Message<GetActivitySubscriptionResponse> {
+  /**
+   * @generated from field: string key = 1;
+   */
+  key = ''
+
+  /**
+   * @generated from field: bsky.ActivitySubscription activity_subscription = 2;
+   */
+  activitySubscription?: ActivitySubscription
+
+  constructor(data?: PartialMessage<GetActivitySubscriptionResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActivitySubscriptionResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'activity_subscription',
+      kind: 'message',
+      T: ActivitySubscription,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionResponse {
+    return new GetActivitySubscriptionResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionResponse {
+    return new GetActivitySubscriptionResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionResponse {
+    return new GetActivitySubscriptionResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionResponse
+      | PlainMessage<GetActivitySubscriptionResponse>
+      | undefined,
+    b:
+      | GetActivitySubscriptionResponse
+      | PlainMessage<GetActivitySubscriptionResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActivitySubscriptionResponse, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.GetActivitySubscriptionsRequest
  */
 export class GetActivitySubscriptionsRequest extends Message<GetActivitySubscriptionsRequest> {

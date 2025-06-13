@@ -887,6 +887,16 @@ message GetUnreadNotificationCountResponse {
   int32 count = 1;
 }
 
+message GetActivitySubscriptionRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message GetActivitySubscriptionResponse {
+  string key = 1;
+  ActivitySubscription activity_subscription = 2;
+}
+
 message GetActivitySubscriptionsRequest {
   string actor_did = 1;
   int32 limit = 2;
@@ -1349,6 +1359,7 @@ service Service {
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
+  rpc GetActivitySubscription(GetActivitySubscriptionRequest) returns (GetActivitySubscriptionResponse);
   rpc GetActivitySubscriptions(GetActivitySubscriptionsRequest) returns (GetActivitySubscriptionsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 

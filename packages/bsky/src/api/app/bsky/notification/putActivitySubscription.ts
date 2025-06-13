@@ -1,6 +1,7 @@
 import { TID } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
+import { isActivitySubscriptionEnabled } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
 import { SubjectActivitySubscription } from '../../../../lexicon/types/app/bsky/notification/defs'
 import { NamespaceAppBskyNotificationDefsSubjectActivitySubscription } from '../../../../stash'
@@ -10,39 +11,60 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
-      const {
-        subject,
-        key: existingKey,
-        activitySubscription: { post, reply },
-      } = input.body
-
+      const { subject, activitySubscription } = input.body
       if (actorDid === subject) {
         throw new InvalidRequestError('Cannot subscribe to own activity')
       }
 
-      const payload: SubjectActivitySubscription = {
-        subject,
-        activitySubscription: { post, reply },
-      }
-      const key = existingKey ?? TID.nextStr()
+      const existingKey = await getExistingKey(ctx, actorDid, subject)
+      const enabled = isActivitySubscriptionEnabled(activitySubscription)
+
       const stashInput = {
         actorDid,
         namespace: NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
-        payload,
-        key,
+        payload: <SubjectActivitySubscription>{
+          subject,
+          activitySubscription,
+        },
+        key: existingKey ?? TID.nextStr(),
       }
 
       if (existingKey) {
-        await ctx.stashClient.update(stashInput)
+        if (enabled) {
+          await ctx.stashClient.update(stashInput)
+        } else {
+          await ctx.stashClient.delete(stashInput)
+        }
       } else {
-        await ctx.stashClient.create(stashInput)
+        if (enabled) {
+          await ctx.stashClient.create(stashInput)
+        } else {
+          throw new InvalidRequestError(
+            'Cannot create a disabled activity subscription',
+          )
+        }
       }
+
       return {
         encoding: 'application/json',
         body: {
-          key,
+          subject,
+          activitySubscription: enabled ? activitySubscription : undefined,
         },
       }
     },
   })
+}
+
+const getExistingKey = async (
+  ctx: AppContext,
+  actorDid: string,
+  subject: string,
+): Promise<string | null> => {
+  const existing = await ctx.dataplane.getActivitySubscription({
+    actorDid,
+    subjectDid: subject,
+  })
+  const key = existing.key
+  return key || null
 }

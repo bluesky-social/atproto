@@ -19,13 +19,13 @@ const id = 'app.bsky.notification.putActivitySubscription'
 export interface QueryParams {}
 
 export interface InputSchema {
-  key?: string
   subject: string
   activitySubscription: AppBskyNotificationDefs.ActivitySubscription
 }
 
 export interface OutputSchema {
-  key: string
+  subject: string
+  activitySubscription?: AppBskyNotificationDefs.ActivitySubscription
 }
 
 export interface CallOptions {
