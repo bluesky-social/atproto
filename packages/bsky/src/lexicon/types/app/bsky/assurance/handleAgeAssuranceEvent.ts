@@ -69,6 +69,11 @@ export type Handler<HA extends HandlerAuth = never> = (
 /** The payload of the event. */
 export interface Payload {
   $type?: 'app.bsky.assurance.handleAgeAssuranceEvent#payload'
+  /** Misnomer: the email address of the user that was processed. */
+  parentEmail?: string
+  status?: PayloadStatus
+  /** JSON string containing the external payload passed in when initiating the age assurance process. */
+  externalPayload?: string
 }
 
 const hashPayload = 'payload'
@@ -79,4 +84,23 @@ export function isPayload<V>(v: V) {
 
 export function validatePayload<V>(v: V) {
   return validate<Payload & V>(v, id, hashPayload)
+}
+
+/** The status property returned on the payload. */
+export interface PayloadStatus {
+  $type?: 'app.bsky.assurance.handleAgeAssuranceEvent#payloadStatus'
+  /** Whether the user was verified as an adult or not. */
+  verified?: boolean
+  /** The transaction ID of the age assurance process. */
+  transactionId?: string
+}
+
+const hashPayloadStatus = 'payloadStatus'
+
+export function isPayloadStatus<V>(v: V) {
+  return is$typed(v, id, hashPayloadStatus)
+}
+
+export function validatePayloadStatus<V>(v: V) {
+  return validate<PayloadStatus & V>(v, id, hashPayloadStatus)
 }

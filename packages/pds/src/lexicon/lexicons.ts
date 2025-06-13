@@ -5799,7 +5799,36 @@ export const schemaDict = {
       payload: {
         type: 'object',
         description: 'The payload of the event.',
-        properties: {},
+        properties: {
+          parentEmail: {
+            type: 'string',
+            description:
+              'Misnomer: the email address of the user that was processed.',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.assurance.handleAgeAssuranceEvent#payloadStatus',
+          },
+          externalPayload: {
+            type: 'string',
+            description:
+              'JSON string containing the external payload passed in when initiating the age assurance process.',
+          },
+        },
+      },
+      payloadStatus: {
+        type: 'object',
+        description: 'The status property returned on the payload.',
+        properties: {
+          verified: {
+            type: 'boolean',
+            description: 'Whether the user was verified as an adult or not.',
+          },
+          transactionId: {
+            type: 'string',
+            description: 'The transaction ID of the age assurance process.',
+          },
+        },
       },
     },
   },
