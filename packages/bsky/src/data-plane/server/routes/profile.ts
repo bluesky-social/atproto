@@ -1,10 +1,17 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
+import {
+  AppBskyNotificationActivitySubscriptionDeclaration,
+  ChatBskyActorDeclaration,
+} from '@atproto/api'
 import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'
 import { Service } from '../../../proto/bsky_connect'
-import { VerificationMeta } from '../../../proto/bsky_pb'
+import {
+  ActivitySubscriptionsFrom,
+  VerificationMeta,
+} from '../../../proto/bsky_pb'
 import { Database } from '../db'
 import { Verification } from '../db/tables/verification'
 import { getRecords } from './records'
@@ -31,6 +38,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const chatDeclarationUris = dids.map(
       (did) => `at://${did}/chat.bsky.actor.declaration/self`,
     )
+    const activitySubscriptionDeclarationUris = dids.map(
+      (did) =>
+        `at://${did}/app.bsky.notification.activitySubscriptionDeclaration/self`,
+    )
     const { ref } = db.db.dynamic
     const [
       handlesRes,
@@ -38,6 +49,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       profiles,
       statuses,
       chatDeclarations,
+      activitySubscriptionDeclarations,
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
@@ -64,6 +76,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       getRecords(db)({ uris: profileUris }),
       getRecords(db)({ uris: statusUris }),
       getRecords(db)({ uris: chatDeclarationUris }),
+      getRecords(db)({ uris: activitySubscriptionDeclarationUris }),
     ])
 
     const verificationsBySubjectDid = verificationsReceived.reduce(
@@ -82,7 +95,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const status = statuses.records[i]
 
-      const chatDeclaration = parseRecordBytes(
+      const chatDeclaration = parseRecordBytes<ChatBskyActorDeclaration.Record>(
         chatDeclarations.records[i].record,
       )
 
@@ -96,6 +109,31 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         }
         return acc
       }, {} as VerifiedBy)
+
+      const activitySubscription = () => {
+        const record =
+          parseRecordBytes<AppBskyNotificationActivitySubscriptionDeclaration.Record>(
+            activitySubscriptionDeclarations.records[i].record,
+          )
+
+        // The dataplane is responsible for setting the default of "FOLLOWING".
+        const defaultVal = ActivitySubscriptionsFrom.FOLLOWING
+
+        if (typeof record?.allowSubscriptions !== 'string') {
+          return defaultVal
+        }
+
+        switch (record.allowSubscriptions) {
+          case 'all':
+            return ActivitySubscriptionsFrom.ALL
+          case 'following':
+            return ActivitySubscriptionsFrom.FOLLOWING
+          case 'none':
+            return ActivitySubscriptionsFrom.NONE
+          default:
+            return defaultVal
+        }
+      }
 
       return {
         exists: !!row,
@@ -117,6 +155,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         statusRecord: status,
         tags: [],
         profileTags: [],
+        allowActivitySubscriptionsFrom: activitySubscription(),
       }
     })
     return { actors }

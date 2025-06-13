@@ -453,6 +453,13 @@ message GetActorsRequest {
   repeated string skip_cache_for_dids = 2;
 }
 
+enum ActivitySubscriptionsFrom {
+  ACTIVITY_SUBSCRIPTIONS_FROM_UNSPECIFIED = 0;
+  ACTIVITY_SUBSCRIPTIONS_FROM_ALL = 1;
+  ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWING = 2;
+  ACTIVITY_SUBSCRIPTIONS_FROM_NONE = 3;
+}
+
 message ActorInfo {
   bool exists = 1;
   string handle = 2;
@@ -473,6 +480,7 @@ message ActorInfo {
   // Tags being applied to the profile record
   repeated string profile_tags = 16;
   Record status_record = 17;
+  ActivitySubscriptionsFrom allow_activity_subscriptions_from = 18;
 }
 
 message GetActorsResponse {
@@ -503,6 +511,14 @@ message GetRelationshipsRequest {
   repeated string target_dids = 2;
 }
 
+message PostActivitySubscription {}
+message ReplyActivitySubscription {}
+
+message ActivitySubscription {
+  optional PostActivitySubscription post = 1;
+  optional ReplyActivitySubscription reply = 2;
+}
+
 message Relationships {
   bool muted = 1;
   string muted_by_list = 2;
@@ -512,6 +528,7 @@ message Relationships {
   string blocking_by_list = 6;
   string following = 7;
   string followed_by = 8;
+  ActivitySubscription activity_subscription = 9;
 }
 
 message GetRelationshipsResponse {
@@ -868,6 +885,27 @@ message GetUnreadNotificationCountRequest {
 
 message GetUnreadNotificationCountResponse {
   int32 count = 1;
+}
+
+message GetActivitySubscriptionRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message GetActivitySubscriptionResponse {
+  string key = 1;
+  ActivitySubscription activity_subscription = 2;
+}
+
+message GetActivitySubscriptionsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActivitySubscriptionsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
 }
 
 //
@@ -1321,6 +1359,8 @@ service Service {
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
+  rpc GetActivitySubscription(GetActivitySubscriptionRequest) returns (GetActivitySubscriptionResponse);
+  rpc GetActivitySubscriptions(GetActivitySubscriptionsRequest) returns (GetActivitySubscriptionsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
   // FeedGenerators
