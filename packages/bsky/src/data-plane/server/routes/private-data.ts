@@ -40,7 +40,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     return { preferences }
   },
-  async getAgeVerificationState(req) {
+  async getAgeAssuranceState(req) {
     const { did } = req
     const res = await db.db
       .selectFrom('private_data')
@@ -49,7 +49,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where(
         'namespace',
         '=',
-        'app.bsky.verification.defs#ageVerificationState',
+        'app.bsky.assurance.defs#ageAssuranceState',
       )
       .where('key', '=', 'self')
       .executeTakeFirst()

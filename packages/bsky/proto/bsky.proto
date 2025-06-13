@@ -814,21 +814,20 @@ message GetNotificationPreferencesResponse {
   repeated NotificationPreferences preferences = 1;
 }
 
-// age verification
+// Age Assurance
 //
-message GetAgeVerificationStateRequest {
+message GetAgeAssuranceStateRequest {
   string did = 1;
 }
-enum AgeVerificationStatus {
-  AGE_VERIFICATION_STATUS_UNVERIFIED = 0;
-  AGE_VERIFICATION_STATUS_PENDING = 1;
-  AGE_VERIFICATION_STATUS_VERIFIED_ADULT = 2;
-  AGE_VERIFICATION_STATUS_VERIFIED_MINOR = 3;
-  AGE_VERIFICATION_STATUS_FAILED = 4;
+enum AgeAssuranceStatus {
+  AGE_ASSURANCE_STATUS_UNKNOWN = 0;
+  AGE_ASSURANCE_STATUS_PENDING = 1;
+  AGE_ASSURANCE_STATUS_ASSURED = 2;
+  AGE_ASSURANCE_STATUS_FAILED = 3;
 }
-message GetAgeVerificationStateResponse {
+message GetAgeAssuranceStateResponse {
   bool required = 1;
-  AgeVerificationStatus status = 2;
+  AgeAssuranceStatus status = 2;
 }
 
 // - list recent notifications for a user
@@ -1340,8 +1339,8 @@ service Service {
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
-  // Age Verification
-  rpc GetAgeVerificationState(GetAgeVerificationStateRequest) returns (GetAgeVerificationStateResponse);
+  // Age Assurance
+  rpc GetAgeAssuranceState(GetAgeAssuranceStateRequest) returns (GetAgeAssuranceStateResponse);
 
   // FeedGenerators
   rpc GetActorFeeds(GetActorFeedsRequest) returns (GetActorFeedsResponse);

@@ -4,8 +4,8 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
 import {
-  GetAgeVerificationStateResponse,
-  AgeVerificationStatus,
+  GetAgeAssuranceStateResponse,
+  AgeAssuranceStatus,
 } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
@@ -39,9 +39,9 @@ const getAgeVerificationState = async (
   ctx: AppContext,
   actorDid: string,
 ): Promise<Un$Typed<AgeAssuranceState>> => {
-  let res: GetAgeVerificationStateResponse
+  let res: GetAgeAssuranceStateResponse
   try {
-    res = await ctx.dataplane.getAgeVerificationState({
+    res = await ctx.dataplane.getAgeAssuranceState({
       did: actorDid,
     })
   } catch (err) {
@@ -56,24 +56,21 @@ const getAgeVerificationState = async (
 }
 
 function protobufToLex(
-  proto: GetAgeVerificationStateResponse,
+  proto: GetAgeAssuranceStateResponse,
 ): Un$Typed<AgeAssuranceState> {
   let status: AgeAssuranceState['status'] = 'unverified'
 
   switch (proto.status) {
-    case AgeVerificationStatus.UNVERIFIED:
-      status = 'unverified'
+    case AgeAssuranceStatus.UNKNOWN:
+      status = 'unknown'
       break
-    case AgeVerificationStatus.PENDING:
+    case AgeAssuranceStatus.PENDING:
       status = 'pending'
       break
-    case AgeVerificationStatus.VERIFIED_ADULT:
-      status = 'verified-adult'
+    case AgeAssuranceStatus.ASSURED:
+      status = 'assured'
       break
-    case AgeVerificationStatus.VERIFIED_MINOR:
-      status = 'verified-minor'
-      break
-    case AgeVerificationStatus.FAILED:
+    case AgeAssuranceStatus.FAILED:
       status = 'failed'
       break
   }
