@@ -197,7 +197,7 @@ export class ModerationDecision {
   }
 
   addMutedWord(matches: MuteWordMatch[] | undefined) {
-    if (matches) {
+    if (matches?.length) {
       this.causes.push({
         type: 'mute-word',
         source: { type: 'user' },
