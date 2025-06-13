@@ -40,7 +40,7 @@ export type Actor = {
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
-  allowActivitySubscriptionsFrom?: AllowActivitySubscriptions
+  allowActivitySubscriptionsFrom: AllowActivitySubscriptions
 }
 
 export type VerificationHydrationState = {
@@ -195,7 +195,7 @@ export class ActorHydrator {
 
       const allowActivitySubscriptionsFrom = (
         val: ActivitySubscriptionsFrom,
-      ): AllowActivitySubscriptions | undefined => {
+      ): AllowActivitySubscriptions => {
         switch (val) {
           case ActivitySubscriptionsFrom.ALL:
             return 'all'
@@ -204,7 +204,8 @@ export class ActorHydrator {
           case ActivitySubscriptionsFrom.NONE:
             return 'none'
           default:
-            return undefined
+            // The dataplane should set the default of "FOLLOWING". Just in case.
+            return 'following'
         }
       }
 

@@ -1360,9 +1360,12 @@ describe('notification views', () => {
       it('includes the declaration in the profile view', async () => {
         await expect(associatedAllowSub(alice, bob)).resolves.toBe('all')
         await expect(associatedAllowSub(alice, carol)).resolves.toBe('none')
+        // dan: follows alice, and alice sees 'following',
         await expect(associatedAllowSub(alice, dan)).resolves.toBe('following')
+        // eve: does not follow alice, and alice sees 'following',
         await expect(associatedAllowSub(alice, eve)).resolves.toBe('following')
-        await expect(associatedAllowSub(alice, fred)).resolves.toBeUndefined()
+        // fred: no declaration, alice sees 'following' (default).
+        await expect(associatedAllowSub(alice, fred)).resolves.toBe('following')
       })
     })
 
@@ -1372,17 +1375,21 @@ describe('notification views', () => {
         const val = { post: true, reply: true }
 
         await put(viewer, bob, val) // declaration 'all'.
-        await put(viewer, carol, val) // declaration 'none'.
-        await put(viewer, dan, val) // declaration 'following', follows alice.
-        await put(viewer, eve, val) // declaration 'following', doesn't follow alice.
-        await put(viewer, fred, val) // no declaration.
-        // han: no subscription.
-
         await expect(viewerActivitySub(viewer, bob)).resolves.toStrictEqual(val)
+
+        await put(viewer, carol, val) // declaration 'none'.
         await expect(viewerActivitySub(viewer, carol)).resolves.toBeUndefined()
+
+        await put(viewer, dan, val) // declaration 'following', follows alice.
         await expect(viewerActivitySub(viewer, dan)).resolves.toStrictEqual(val)
+
+        await put(viewer, eve, val) // declaration 'following', doesn't follow alice.
         await expect(viewerActivitySub(viewer, eve)).resolves.toBeUndefined()
+
+        await put(viewer, fred, val) // no declaration.
         await expect(viewerActivitySub(viewer, fred)).resolves.toBeUndefined()
+
+        // han: no subscription from viewer.
         await expect(viewerActivitySub(viewer, han)).resolves.toBeUndefined()
       })
     })
