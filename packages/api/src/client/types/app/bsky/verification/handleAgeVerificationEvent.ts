@@ -15,7 +15,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.verification.handleAgeVerificationEvent'
 
-export interface QueryParams {
+export interface QueryParams {}
+
+export interface InputSchema {
   /** The name of the event being reported, e.g., 'adult-verified'. */
   name?: string
   /** The timestamp of the event. Currently in ISO 8601 format, but left open for future flexibility. */
@@ -26,11 +28,8 @@ export interface QueryParams {
   productId?: string
   /** The environment identifier, in UUID format. */
   environmentId?: string
-  /** The payload of the event. */
-  payload?: string
+  payload?: Payload
 }
-
-export type InputSchema = undefined
 
 export interface OutputSchema {
   /** Whether the event was handled or not. */
@@ -41,6 +40,7 @@ export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
   qp?: QueryParams
+  encoding?: 'application/json'
 }
 
 export interface Response {
@@ -51,4 +51,19 @@ export interface Response {
 
 export function toKnownErr(e: any) {
   return e
+}
+
+/** The payload of the event. */
+export interface Payload {
+  $type?: 'app.bsky.verification.handleAgeVerificationEvent#payload'
+}
+
+const hashPayload = 'payload'
+
+export function isPayload<V>(v: V) {
+  return is$typed(v, id, hashPayload)
+}
+
+export function validatePayload<V>(v: V) {
+  return validate<Payload & V>(v, id, hashPayload)
 }

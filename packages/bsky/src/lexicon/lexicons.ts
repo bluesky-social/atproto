@@ -11608,36 +11608,39 @@ export const schemaDict = {
         type: 'procedure',
         description:
           'Webhook endpoint to receive age verification events from a facilitating service. This endpoint is called by the service to report the status of the age verification process.',
-        parameters: {
-          type: 'params',
-          required: [],
-          properties: {
-            name: {
-              type: 'string',
-              description:
-                "The name of the event being reported, e.g., 'adult-verified'.",
-            },
-            time: {
-              type: 'string',
-              description:
-                'The timestamp of the event. Currently in ISO 8601 format, but left open for future flexibility.',
-            },
-            orgId: {
-              type: 'string',
-              description:
-                'The account identifier of our organization, in UUID format.',
-            },
-            productId: {
-              type: 'string',
-              description: 'The product identifier, in UUID format.',
-            },
-            environmentId: {
-              type: 'string',
-              description: 'The environment identifier, in UUID format.',
-            },
-            payload: {
-              type: 'string',
-              description: 'The payload of the event.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              name: {
+                type: 'string',
+                description:
+                  "The name of the event being reported, e.g., 'adult-verified'.",
+              },
+              time: {
+                type: 'string',
+                description:
+                  'The timestamp of the event. Currently in ISO 8601 format, but left open for future flexibility.',
+              },
+              orgId: {
+                type: 'string',
+                description:
+                  'The account identifier of our organization, in UUID format.',
+              },
+              productId: {
+                type: 'string',
+                description: 'The product identifier, in UUID format.',
+              },
+              environmentId: {
+                type: 'string',
+                description: 'The environment identifier, in UUID format.',
+              },
+              payload: {
+                type: 'ref',
+                ref: 'lex:app.bsky.verification.handleAgeVerificationEvent#payload',
+              },
             },
           },
         },
@@ -11654,6 +11657,11 @@ export const schemaDict = {
             },
           },
         },
+      },
+      payload: {
+        type: 'object',
+        description: 'The payload of the event.',
+        properties: {},
       },
     },
   },
