@@ -1181,12 +1181,10 @@ describe('notification views', () => {
       actor: string,
       subject: string,
       val: ActivitySubscription,
-      key?: string,
     ) =>
       agent.app.bsky.notification.putActivitySubscription(
         {
           subject,
-          key, // key is present in updates
           activitySubscription: val,
         },
         {
@@ -1247,155 +1245,115 @@ describe('notification views', () => {
       await clearActivitySubscription(db)
     })
 
-    describe('put', () => {
-      it('inserts a subscription entry when no key is provided', async () => {
-        const actorDid = alice
-        const subjectDid = bob
-        const { data } = await put(actorDid, subjectDid, {
-          post: true,
-          reply: false,
-        })
+    it('lists an empty list of subscriptions', async () => {
+      const actorDid = alice
 
-        const dbResult = await db.db
-          .selectFrom('activity_subscription')
-          .selectAll()
-          .where('creator', '=', actorDid)
-          .where('subjectDid', '=', subjectDid)
-          .where('key', '=', data.key)
-          .executeTakeFirstOrThrow()
-        expect(dbResult).toStrictEqual({
-          creator: actorDid,
-          subjectDid,
-          key: data.key,
-          indexedAt: expect.any(String),
-          post: true,
-          reply: false,
-        })
+      const { data } = await list(actorDid)
+
+      expect(data.cursor).toBeUndefined()
+      expect(data.subscriptions).toHaveLength(0)
+    })
+
+    it('does not allow subscribing to self', async () => {
+      const actorDid = alice
+      const promise = put(actorDid, actorDid, { post: true, reply: false })
+
+      await expect(promise).rejects.toThrow('Cannot subscribe to own activity')
+    })
+
+    it('inserts a subscription entry if it does not exist', async () => {
+      const actorDid = alice
+      const subjectDid = bob
+      const val = { post: true, reply: false }
+
+      const { data: createData } = await put(actorDid, subjectDid, val)
+      expect(createData).toStrictEqual({
+        subject: subjectDid,
+        activitySubscription: val,
       })
 
-      it('does not allow subscribing to self', async () => {
-        const actorDid = alice
-        const promise = put(actorDid, actorDid, { post: true, reply: false })
-
-        await expect(promise).rejects.toThrow(
-          'Cannot subscribe to own activity',
-        )
-      })
-
-      it('updates a subscription entry when key is provided', async () => {
-        const actorDid = alice
-        const subjectDid = bob
-        const { data: creation } = await put(actorDid, subjectDid, {
-          post: true,
-          reply: false,
-        })
-
-        const { data: update } = await put(
-          actorDid,
-          subjectDid,
-          { post: false, reply: true },
-          creation.key,
-        )
-        expect(update.key).toBe(creation.key)
-
-        const dbResult = await db.db
-          .selectFrom('activity_subscription')
-          .selectAll()
-          .where('creator', '=', actorDid)
-          .where('subjectDid', '=', subjectDid)
-          .where('key', '=', update.key)
-          .executeTakeFirstOrThrow()
-        expect(dbResult).toStrictEqual({
-          creator: actorDid,
-          subjectDid,
-          key: update.key,
-          indexedAt: expect.any(String),
-          post: false,
-          reply: true,
-        })
-      })
-
-      it('deletes a subscription entry when all options are turned off', async () => {
-        const actorDid = alice
-        const subjectDid = bob
-
-        const { data: creation } = await put(actorDid, subjectDid, {
-          post: true,
-          reply: false,
-        })
-        const { data: update } = await put(
-          actorDid,
-          subjectDid,
-          { post: false, reply: false },
-          creation.key,
-        )
-        expect(update.key).toBe(creation.key)
-
-        const dbResult = await db.db
-          .selectFrom('activity_subscription')
-          .selectAll()
-          .where('creator', '=', actorDid)
-          .where('subjectDid', '=', subjectDid)
-          .where('key', '=', update.key)
-          .executeTakeFirst()
-        expect(dbResult).toBeUndefined()
+      const { data: listData } = await list(actorDid)
+      expect(listData).toEqual({
+        subscriptions: [
+          expect.objectContaining({
+            did: subjectDid,
+            viewer: expect.objectContaining({ activitySubscription: val }),
+          }),
+        ],
       })
     })
 
-    describe('list', () => {
-      it('lists inserted subscriptions', async () => {
-        const actorDid = alice
+    it('updates a subscription entry if it exists', async () => {
+      const actorDid = alice
+      const subjectDid = bob
+      const valCreate = { post: true, reply: false }
+      const valUpdate = { post: false, reply: true }
 
-        // bob.
-        await put(actorDid, bob, { post: true, reply: false })
-        // carol: does not appear in the list because all items are false.
-        await put(actorDid, carol, { post: false, reply: false })
-        // dan: following, so appears in the list.
-        const { data: creation } = await put(actorDid, dan, {
-          post: false,
-          reply: true,
-        })
-        // dan: this is an update on the same entry.
-        await put(actorDid, dan, { post: true, reply: true }, creation.key)
-        // blocked: does not appear.
-        await put(actorDid, blocked, { post: true, reply: true })
-
-        const { data: listing } = await list(actorDid)
-        expect(listing.subscriptions).toHaveLength(2)
-        expect(listing.subscriptions[0]).toMatchObject({
-          did: dan,
-        })
-        expect(listing.subscriptions[1]).toMatchObject({
-          did: bob,
-        })
+      const { data: createData } = await put(actorDid, subjectDid, valCreate)
+      expect(createData).toStrictEqual({
+        subject: subjectDid,
+        activitySubscription: valCreate,
       })
 
-      it('paginates', async () => {
-        const actorDid = alice
-        const limit = 2
-
-        await put(actorDid, bob, { post: true, reply: false })
-        await put(actorDid, carol, { post: true, reply: false })
-        await put(actorDid, dan, { post: true, reply: false })
-        await put(actorDid, eve, { post: true, reply: false })
-        await put(actorDid, fred, { post: true, reply: false })
-
-        const results = (results) =>
-          sort(results.flatMap((res) => res.notifications))
-        const paginator = async (cursor?: string) => {
-          const { data } = await list(actorDid, { cursor, limit })
-          return data
-        }
-
-        const paginatedAll = await paginateAll(paginator)
-        paginatedAll.forEach((res) =>
-          expect(res.subscriptions.length).toBeLessThanOrEqual(limit),
-        )
-
-        const full = await list(actorDid)
-        expect(full.data.subscriptions.length).toEqual(5)
-        expect(results(paginatedAll)).toEqual(results([full.data]))
+      const { data: updateData } = await put(actorDid, subjectDid, valUpdate)
+      expect(updateData).toStrictEqual({
+        subject: subjectDid,
+        activitySubscription: valUpdate,
       })
+
+      const { data: listData } = await list(actorDid)
+      expect(listData).toEqual({
+        subscriptions: [
+          expect.objectContaining({
+            did: subjectDid,
+            viewer: expect.objectContaining({
+              activitySubscription: valUpdate,
+            }),
+          }),
+        ],
+      })
+    })
+
+    it('deletes a subscription entry when all options are turned off', async () => {
+      const actorDid = alice
+      const subjectDid = bob
+      const valCreate = { post: true, reply: false }
+      const valDelete = { post: false, reply: false }
+
+      await put(actorDid, subjectDid, valCreate)
+      const { data: list0 } = await list(actorDid)
+      expect(list0.subscriptions).toHaveLength(1)
+
+      await put(actorDid, subjectDid, valDelete)
+      const { data: list1 } = await list(actorDid)
+      expect(list1.subscriptions).toHaveLength(0)
+    })
+
+    it('paginates', async () => {
+      const actorDid = alice
+      const limit = 2
+
+      await put(actorDid, bob, { post: true, reply: false })
+      await put(actorDid, carol, { post: true, reply: false })
+      await put(actorDid, dan, { post: true, reply: false })
+      await put(actorDid, eve, { post: true, reply: false })
+      await put(actorDid, fred, { post: true, reply: false })
+
+      const results = (results) =>
+        sort(results.flatMap((res) => res.notifications))
+      const paginator = async (cursor?: string) => {
+        const { data } = await list(actorDid, { cursor, limit })
+        return data
+      }
+
+      const paginatedAll = await paginateAll(paginator)
+      paginatedAll.forEach((res) =>
+        expect(res.subscriptions.length).toBeLessThanOrEqual(limit),
+      )
+
+      const full = await list(actorDid)
+      expect(full.data.subscriptions.length).toEqual(5)
+      expect(results(paginatedAll)).toEqual(results([full.data]))
     })
 
     describe('activity subscription declaration', () => {
@@ -1418,7 +1376,7 @@ describe('notification views', () => {
         await put(viewer, dan, val) // declaration 'following', follows alice.
         await put(viewer, eve, val) // declaration 'following', doesn't follow alice.
         await put(viewer, fred, val) // no declaration.
-        await put(viewer, han, { post: false, reply: false }) // declaration 'all', but subscription disabled.
+        // han: no subscription.
 
         await expect(viewerActivitySub(viewer, bob)).resolves.toStrictEqual(val)
         await expect(viewerActivitySub(viewer, carol)).resolves.toBeUndefined()

@@ -353,6 +353,7 @@ export class Views {
       associated:
         actor.isLabeler ||
         actor.allowIncomingChatsFrom ||
+        // @TODO apply default behavior?
         actor.allowActivitySubscriptionsFrom
           ? {
               labeler: actor.isLabeler ? true : undefined,
@@ -375,6 +376,7 @@ export class Views {
   profileAssociatedActivitySubscription(
     actor: Actor,
   ): ProfileAssociatedActivitySubscription | undefined {
+    // @TODO apply default behavior?
     return actor.allowActivitySubscriptionsFrom
       ? { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
       : undefined
@@ -438,6 +440,7 @@ export class Views {
     if (!profileViewer.activitySubscription) return undefined
 
     const actorFollowsViewer = !!profileViewer.followedBy
+    // @TODO apply default behavior?
     const allowFrom = actor.allowActivitySubscriptionsFrom
     if (
       allowFrom === 'all' ||

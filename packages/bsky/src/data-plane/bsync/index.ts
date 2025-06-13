@@ -7,7 +7,6 @@ import express from 'express'
 import { TID } from '@atproto/common'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
-import { isActivitySubscriptionEnabled } from '../../hydration/util'
 import { ids } from '../../lexicon/lexicons'
 import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
 import { Service } from '../../proto/bsync_connect'
@@ -229,38 +228,29 @@ const handleSubjectActivitySubscriptionOperation = async (
 ) => {
   const { actorDid, key, method, payload } = req
 
+  if (method === Method.DELETE) {
+    return db.db
+      .deleteFrom('activity_subscription')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
+      .execute()
+  }
+
   const parsed = jsonStringToLex(
     Buffer.from(payload).toString('utf8'),
   ) as SubjectActivitySubscription
-  const { activitySubscription } = parsed
-  const { post, reply } = activitySubscription
-  // We only keep a record if enabled.
-  const enabled = isActivitySubscriptionEnabled(activitySubscription)
+  const {
+    subject,
+    activitySubscription: { post, reply },
+  } = parsed
 
   if (method === Method.CREATE) {
-    if (enabled) {
-      return db.db
-        .insertInto('activity_subscription')
-        .values({
-          creator: actorDid,
-          subjectDid: parsed.subject,
-          key,
-          indexedAt: now,
-          post,
-          reply,
-        })
-        .execute()
-    }
-    return
-  }
-
-  if (method === Method.UPDATE && enabled) {
     return db.db
-      .updateTable('activity_subscription')
-      .where('creator', '=', actorDid)
-      .where('subjectDid', '=', parsed.subject)
-      .where('key', '=', key)
-      .set({
+      .insertInto('activity_subscription')
+      .values({
+        creator: actorDid,
+        subjectDid: subject,
+        key,
         indexedAt: now,
         post,
         reply,
@@ -268,12 +258,15 @@ const handleSubjectActivitySubscriptionOperation = async (
       .execute()
   }
 
-  // A DELETE, or an UPDATE with subscription disabled.
   return db.db
-    .deleteFrom('activity_subscription')
+    .updateTable('activity_subscription')
     .where('creator', '=', actorDid)
-    .where('subjectDid', '=', parsed.subject)
     .where('key', '=', key)
+    .set({
+      indexedAt: now,
+      post,
+      reply,
+    })
     .execute()
 }
 

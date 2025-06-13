@@ -9,15 +9,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .addColumn('post', 'boolean', (col) => col.notNull())
     .addColumn('reply', 'boolean', (col) => col.notNull())
-    .addPrimaryKeyConstraint('activity_subscription_pkey', [
+    .addPrimaryKeyConstraint('activity_subscription_pkey', ['creator', 'key'])
+    .addUniqueConstraint('activity_subscription_unique_creator_subject_did', [
       'creator',
       'subjectDid',
     ])
-    .execute()
-  await db.schema
-    .createIndex('activity_subscription_creator_key_idx')
-    .on('activity_subscription')
-    .columns(['creator', 'key'])
     .execute()
 }
 

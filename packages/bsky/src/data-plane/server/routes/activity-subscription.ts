@@ -4,6 +4,28 @@ import { Database } from '../db'
 import { StashKeyKey } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
+  async getActivitySubscription(req) {
+    const { actorDid, subjectDid } = req
+
+    const res = await db.db
+      .selectFrom('activity_subscription')
+      .selectAll()
+      .where('creator', '=', actorDid)
+      .where('subjectDid', '=', subjectDid)
+      .executeTakeFirst()
+    if (!res) {
+      return {}
+    }
+
+    return {
+      key: res.key,
+      activitySubscription: {
+        post: res.post,
+        reply: res.reply,
+      },
+    }
+  },
+
   async getActivitySubscriptions(req) {
     const { actorDid, cursor, limit } = req
 

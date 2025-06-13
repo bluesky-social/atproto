@@ -10,7 +10,6 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { uriToDid as didFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
@@ -89,15 +88,9 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton } = input
   const { dids, cursor } = skeleton
-  const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
-
   const subscriptions = mapDefined(dids, (did) => {
-    if (isNoHosted(did)) {
-      return
-    }
     return ctx.views.profile(did, hydration)
   })
-
   return { subscriptions, cursor }
 }
 

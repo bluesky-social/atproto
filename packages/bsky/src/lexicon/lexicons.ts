@@ -10168,10 +10168,6 @@ export const schemaDict = {
             type: 'object',
             required: ['subject', 'activitySubscription'],
             properties: {
-              key: {
-                type: 'string',
-                format: 'record-key',
-              },
               subject: {
                 type: 'string',
                 format: 'did',
@@ -10187,11 +10183,15 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['key'],
+            required: ['subject'],
             properties: {
-              key: {
+              subject: {
                 type: 'string',
-                format: 'record-key',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
               },
             },
           },

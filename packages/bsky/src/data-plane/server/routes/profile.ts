@@ -116,8 +116,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             activitySubscriptionDeclarations.records[i].record,
           )
 
+        const defaultVal = ActivitySubscriptionsFrom.UNSPECIFIED
         if (typeof record?.allowSubscriptions !== 'string') {
-          return ActivitySubscriptionsFrom.UNSPECIFIED
+          return defaultVal
         }
 
         switch (record.allowSubscriptions) {
@@ -128,7 +129,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           case 'none':
             return ActivitySubscriptionsFrom.NONE
           default:
-            return ActivitySubscriptionsFrom.UNSPECIFIED
+            return defaultVal
         }
       }
 
