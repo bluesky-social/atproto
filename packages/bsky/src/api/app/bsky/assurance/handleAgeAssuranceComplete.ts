@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
           const statusPayload = JSON.parse(rawStatusPayload) as StatusPayload
           const status = getResponseStatus(statusPayload)
           // TODO abstract this
-          const {did} = JSON.parse(externalPayload) as { did: string }
+          const { did } = JSON.parse(externalPayload) as { did: string }
 
           try {
             await ctx.stashClient.update({

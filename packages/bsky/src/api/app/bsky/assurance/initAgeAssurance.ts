@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
               email: input.body.email,
               location: 'US',
               // TODO abstract this
-              externalPayload: JSON.stringify({did: actorDid}),
+              externalPayload: JSON.stringify({ did: actorDid }),
               userContext: 'adult',
               language: 'en',
             }),

@@ -67,7 +67,9 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         // TODO abstract this
-        const {did} = JSON.parse(input.body.payload.externalPayload) as { did: string }
+        const { did } = JSON.parse(input.body.payload.externalPayload) as {
+          did: string
+        }
 
         if (!did) {
           throw new Error('Missing DID in externalPayload')
