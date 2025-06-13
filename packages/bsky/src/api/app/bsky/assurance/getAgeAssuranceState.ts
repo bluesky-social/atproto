@@ -45,9 +45,10 @@ const getAgeVerificationState = async (
       did: actorDid,
     })
   } catch (err) {
+    console.error(err)
     throw new UpstreamFailureError(
-      'cannot get current notification preferences',
-      'NotificationPreferencesFailed',
+      'Cannot get current age assurance state',
+      'GetAgeAssuranceStateFailed',
       { cause: err },
     )
   }

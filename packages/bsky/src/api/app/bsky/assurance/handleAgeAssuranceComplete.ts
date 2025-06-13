@@ -12,9 +12,9 @@ type StatusPayload = {
   errorCode: string | null
 }
 
-export default function (server: Server, _ctx: AppContext) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.assurance.handleAgeAssuranceComplete({
-    handler: async ({ params }) => {
+    handler: async ({ auth, params }) => {
       const { status: rawStatusPayload, externalPayload, signature } = params
 
       console.log('handleAgeAssuranceComplete', params)
@@ -38,9 +38,22 @@ export default function (server: Server, _ctx: AppContext) {
 
           const statusPayload = JSON.parse(rawStatusPayload) as StatusPayload
           const status = getResponseStatus(statusPayload)
+          // TODO abstract this
+          const {did} = JSON.parse(externalPayload) as { did: string }
 
-          // TODO save
-          // TODO handle save failures
+          try {
+            await ctx.stashClient.update({
+              actorDid: did,
+              namespace: 'app.bsky.assurance.defs#ageAssuranceState',
+              key: 'self',
+              payload: {
+                required: true,
+                status,
+              },
+            })
+          } catch (e) {
+            // TODO handle stash update failure
+          }
 
           return {
             encoding: 'application/json',
@@ -80,6 +93,6 @@ function getResponseStatus(
   } else if (statusPayload.errorCode) {
     return 'failed'
   } else {
-    return 'unverified' // TODO unverified-minor?
+    return 'unverified'
   }
 }

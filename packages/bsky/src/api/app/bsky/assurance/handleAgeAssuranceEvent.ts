@@ -2,10 +2,18 @@ import crypto from 'node:crypto'
 
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
+import { Payload } from '../../../../lexicon/types/app/bsky/assurance/handleAgeAssuranceEvent'
 
 import { WEBHOOK_SECRET } from './env'
 
-export default function (server: Server, _ctx: AppContext) {
+type StatusPayload = {
+  verified: true
+  transactionId: string
+  errorCode: string | null
+}
+
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.assurance.handleAgeAssuranceEvent({
     handler: async ({ req, input }) => {
       try {
@@ -48,9 +56,38 @@ export default function (server: Server, _ctx: AppContext) {
           throw new Error(`Signature mismatch`)
         }
 
-        console.log('handleAgeAssuranceEvent SUCCESS')
+        if (!input.body.payload) {
+          throw new Error('Missing payload in input body')
+        }
+        if (!input.body.payload.status) {
+          throw new Error('Missing status in input body payload')
+        }
+        if (!input.body.payload.externalPayload) {
+          throw new Error('Missing externalPayload in input body payload')
+        }
 
-        // TODO save
+        // TODO abstract this
+        const {did} = JSON.parse(input.body.payload.externalPayload) as { did: string }
+
+        if (!did) {
+          throw new Error('Missing DID in externalPayload')
+        }
+
+        const status = getResponseStatus(input.body.payload.status)
+
+        try {
+          await ctx.stashClient.update({
+            actorDid: did,
+            namespace: 'app.bsky.assurance.defs#ageAssuranceState',
+            key: 'self',
+            payload: {
+              required: true,
+              status,
+            },
+          })
+        } catch (e) {
+          // TODO handle stash update failure
+        }
       } catch (e) {
         console.error(e) // TODO
         // TODO save failure
@@ -64,4 +101,14 @@ export default function (server: Server, _ctx: AppContext) {
       }
     },
   })
+}
+
+function getResponseStatus(
+  statusPayload: Exclude<Payload['status'], undefined>,
+): AgeAssuranceState['status'] {
+  if (statusPayload.verified) {
+    return 'verified-adult'
+  } else {
+    return 'unverified'
+  }
 }
