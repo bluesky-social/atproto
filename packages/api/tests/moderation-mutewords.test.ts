@@ -467,16 +467,16 @@ describe(`matchMuteWords`, () => {
       })
     })
 
-    describe(`e/acc`, () => {
+    describe(`and/or`, () => {
       const rt = new RichText({
-        text: `I'm e/acc pilled`,
+        text: `Tomatoes are fruits and/or vegetables`,
       })
       rt.detectFacetsWithoutResolution()
 
-      it(`match: e/acc`, () => {
+      it(`match: and/or`, () => {
         const match = matchMuteWords({
           mutedWords: [
-            { value: `e/acc`, targets: ['content'], actorTarget: 'all' },
+            { value: `and/or`, targets: ['content'], actorTarget: 'all' },
           ],
           text: rt.text,
           facets: rt.facets,
@@ -486,17 +486,17 @@ describe(`matchMuteWords`, () => {
         expect(match).toBeTruthy()
       })
 
-      it(`match: acc`, () => {
+      it(`no match: Andor`, () => {
         const match = matchMuteWords({
           mutedWords: [
-            { value: `acc`, targets: ['content'], actorTarget: 'all' },
+            { value: `Andor`, targets: ['content'], actorTarget: 'all' },
           ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
         })
 
-        expect(match).toBeTruthy()
+        expect(match).toBeUndefined()
       })
     })
 
@@ -1117,27 +1117,6 @@ describe(`matchMuteWords`, () => {
         { word: muteWord1, predicate: muteWord1.value },
         { word: muteWord2, predicate: muteWord2.value },
       ])
-    })
-
-    it(`match with separator`, () => {
-      const rt = new RichText({
-        text: `When talking about a certain TV show, do you post spoilers and/or discuss the plot?`,
-      })
-      rt.detectFacetsWithoutResolution()
-
-      const muteWord1 = {
-        value: 'andor',
-        targets: ['content'],
-        actorTarget: 'all',
-      }
-      const match = matchMuteWords({
-        mutedWords: [muteWord1],
-        text: rt.text,
-        facets: rt.facets,
-        outlineTags: [],
-      })
-
-      expect(match).toEqual([{ word: muteWord1, predicate: 'and/or' }])
     })
   })
 })
