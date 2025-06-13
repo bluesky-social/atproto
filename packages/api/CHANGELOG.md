@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.15.15
+
+### Patch Changes
+
+- [#2934](https://github.com/bluesky-social/atproto/pull/2934) [`7f1316748`](https://github.com/bluesky-social/atproto/commit/7f1316748dedb512ae739ad51b95644baa39fe80) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix bug where fuzzy matching mute words was over-zealous e.g. `Andor` matching `and/or`.
+
+- [#2934](https://github.com/bluesky-social/atproto/pull/2934) [`7f1316748`](https://github.com/bluesky-social/atproto/commit/7f1316748dedb512ae739ad51b95644baa39fe80) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Updates mute word matching to include a `matches: MuteWordMatch[]` property on the `muted-word` `cause` type returned as part of a `ModerationDecision`.
+
 ## 0.15.14
 
 ### Patch Changes
