@@ -736,14 +736,14 @@ export class Operation extends Message<Operation> {
   actorDid = ''
 
   /**
-   * @generated from field: string collection = 3;
+   * @generated from field: string namespace = 3;
    */
-  collection = ''
+  namespace = ''
 
   /**
-   * @generated from field: string rkey = 4;
+   * @generated from field: string key = 4;
    */
-  rkey = ''
+  key = ''
 
   /**
    * @generated from field: bsync.Method method = 5;
@@ -765,8 +765,8 @@ export class Operation extends Message<Operation> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'namespace', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 5, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
     { no: 6, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
   ])
@@ -805,19 +805,19 @@ export class Operation extends Message<Operation> {
  */
 export class PutOperationRequest extends Message<PutOperationRequest> {
   /**
-   * @generated from field: string collection = 1;
-   */
-  collection = ''
-
-  /**
-   * @generated from field: string actor_did = 2;
+   * @generated from field: string actor_did = 1;
    */
   actorDid = ''
 
   /**
-   * @generated from field: string rkey = 3;
+   * @generated from field: string namespace = 2;
    */
-  rkey = ''
+  namespace = ''
+
+  /**
+   * @generated from field: string key = 3;
+   */
+  key = ''
 
   /**
    * @generated from field: bsync.Method method = 4;
@@ -837,9 +837,9 @@ export class PutOperationRequest extends Message<PutOperationRequest> {
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsync.PutOperationRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'collection', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'namespace', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 4, name: 'method', kind: 'enum', T: proto3.getEnumType(Method) },
     { no: 5, name: 'payload', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
   ])

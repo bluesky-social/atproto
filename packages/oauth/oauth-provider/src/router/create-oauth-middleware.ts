@@ -101,16 +101,16 @@ export function createOAuthMiddleware<
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidRequest)
 
-      const dpopJkt = await server.checkDpopProof(
-        req.headers['dpop'],
+      const dpopProof = await server.checkDpopProof(
         req.method!,
         this.url,
+        req.headers,
       )
 
       return server.pushedAuthorizationRequest(
         credentials,
         authorizationRequest,
-        dpopJkt,
+        dpopProof,
       )
     }, 201),
   )
@@ -138,17 +138,17 @@ export function createOAuthMiddleware<
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidGrant)
 
-      const dpopJkt = await server.checkDpopProof(
-        req.headers['dpop'],
+      const dpopProof = await server.checkDpopProof(
         req.method!,
         this.url,
+        req.headers,
       )
 
       return server.token(
         clientCredentials,
         clientMetadata,
         tokenRequest,
-        dpopJkt,
+        dpopProof,
       )
     }),
   )
@@ -168,8 +168,14 @@ export function createOAuthMiddleware<
         .parseAsync(payload, { path: ['body'] })
         .catch(throwInvalidRequest)
 
+      const dpopProof = await server.checkDpopProof(
+        req.method!,
+        this.url,
+        req.headers,
+      )
+
       try {
-        await server.revoke(credentials, tokenIdentification)
+        await server.revoke(credentials, tokenIdentification, dpopProof)
       } catch (err) {
         // > Note: invalid tokens do not cause an error response since the
         // > client cannot handle such an error in a reasonable way.  Moreover,

@@ -132,11 +132,8 @@ describe('Parameters', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
-      creator: (opts: xrpcServer.RateLimiterOpts) =>
-        RateLimiter.memory({
-          bypassSecret: 'bypass',
-          ...opts,
-        }),
+      creator: (opts) => RateLimiter.memory(opts),
+      bypass: ({ req }) => req.headers['x-ratelimit-bypass'] === 'bypass',
       shared: [
         {
           name: 'shared-limit',

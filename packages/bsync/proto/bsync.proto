@@ -77,16 +77,16 @@ enum Method {
 message Operation {
   string id = 1;
   string actor_did = 2;
-  string collection = 3;
-  string rkey = 4;
+  string namespace = 3;
+  string key = 4;
   Method method = 5;
   bytes payload = 6;
 }
 
 message PutOperationRequest {
-  string collection = 1;
-  string actor_did = 2;
-  string rkey = 3;
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
   Method method = 4;
   bytes payload = 5;
 }

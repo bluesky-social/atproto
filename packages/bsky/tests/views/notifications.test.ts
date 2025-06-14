@@ -2,11 +2,22 @@ import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
+import {
+  ChatPreference,
+  FilterablePreference,
+  Preference,
+  Preferences,
+} from '../../src/lexicon/types/app/bsky/notification/defs'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
 import { forSnapshot, paginateAll } from '../_util'
+
+type Database = TestNetwork['bsky']['db']
 
 describe('notification views', () => {
   let network: TestNetwork
+  let db: Database
+
   let agent: AtpAgent
   let sc: SeedClient
 
@@ -19,6 +30,7 @@ describe('notification views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
     })
+    db = network.bsky.db
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -905,4 +917,213 @@ describe('notification views', () => {
       })
     })
   })
+
+  describe('preferences v2', () => {
+    beforeEach(async () => {
+      await clearPrivateData(db)
+    })
+
+    // Defaults
+    const fp: FilterablePreference = {
+      filter: 'all',
+      list: true,
+      push: true,
+    }
+    const p: Preference = {
+      list: true,
+      push: true,
+    }
+    const cp: ChatPreference = {
+      filter: 'all',
+      push: true,
+    }
+
+    it('gets preferences filling up with the defaults', async () => {
+      const actorDid = sc.dids.carol
+
+      const getAndAssert = async (
+        expectedApi: Preferences,
+        expectedDb: Preferences | undefined,
+      ) => {
+        const { data } = await agent.app.bsky.notification.getPreferences(
+          {},
+          {
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationGetPreferences,
+            ),
+          },
+        )
+        expect(data.preferences).toStrictEqual(expectedApi)
+
+        const dbResult = await db.db
+          .selectFrom('private_data')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('key', '=', 'self')
+          .executeTakeFirst()
+        if (dbResult === undefined) {
+          expect(dbResult).toBe(expectedDb)
+        } else {
+          expect(dbResult).toStrictEqual({
+            actorDid: actorDid,
+            namespace: 'app.bsky.notification.defs#preferences',
+            key: 'self',
+            indexedAt: expect.any(String),
+            payload: expect.anything(), // Better to compare payload parsed.
+            updatedAt: expect.any(String),
+          })
+          expect(JSON.parse(dbResult.payload)).toStrictEqual({
+            $type: 'app.bsky.notification.defs#preferences',
+            ...expectedDb,
+          })
+        }
+      }
+
+      const expectedApi0: Preferences = {
+        chat: cp,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
+      }
+      // The user has no preferences set yet, so nothing stored.
+      const expectedDb0 = undefined
+      await getAndAssert(expectedApi0, expectedDb0)
+
+      await agent.app.bsky.notification.putPreferencesV2(
+        { verified: { list: false, push: false } },
+        {
+          encoding: 'application/json',
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationPutPreferencesV2,
+          ),
+        },
+      )
+      await network.processAll()
+
+      const expectedApi1: Preferences = {
+        chat: cp,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: { list: false, push: false },
+      }
+      // Stored all the defaults.
+      const expectedDb1 = expectedApi1
+      await getAndAssert(expectedApi1, expectedDb1)
+    })
+
+    it('stores the preferences setting the defaults', async () => {
+      const actorDid = sc.dids.carol
+
+      const putAndAssert = async (
+        input: InputSchema,
+        expected: Preferences,
+      ) => {
+        const { data } = await agent.app.bsky.notification.putPreferencesV2(
+          input,
+          {
+            encoding: 'application/json',
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutPreferencesV2,
+            ),
+          },
+        )
+        await network.processAll()
+        expect(data.preferences).toStrictEqual(expected)
+
+        const dbResult = await db.db
+          .selectFrom('private_data')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('key', '=', 'self')
+          .executeTakeFirstOrThrow()
+        expect(dbResult).toStrictEqual({
+          actorDid: actorDid,
+          namespace: 'app.bsky.notification.defs#preferences',
+          key: 'self',
+          indexedAt: expect.any(String),
+          payload: expect.anything(), // Better to compare payload parsed.
+          updatedAt: expect.any(String),
+        })
+        expect(JSON.parse(dbResult.payload)).toStrictEqual({
+          $type: 'app.bsky.notification.defs#preferences',
+          ...expected,
+        })
+      }
+
+      const input0 = {
+        chat: {
+          push: false,
+          filter: 'accepted',
+        },
+      }
+      const expected0: Preferences = {
+        chat: input0.chat,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
+      }
+      await putAndAssert(input0, expected0)
+
+      const input1 = {
+        mention: {
+          list: false,
+          push: false,
+          filter: 'follows',
+        },
+      }
+      const expected1: Preferences = {
+        // Kept from the previous call.
+        chat: input0.chat,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: input1.mention,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
+      }
+      await putAndAssert(input1, expected1)
+    })
+  })
 })
+
+const clearPrivateData = async (db: Database) => {
+  await db.db.deleteFrom('private_data').execute()
+}

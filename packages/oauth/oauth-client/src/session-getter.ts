@@ -5,9 +5,11 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
+import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
+import { ClientAuthMethod } from './oauth-client-auth.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
@@ -16,6 +18,10 @@ import { CustomEventTarget, combineSignals, timeoutSignal } from './util.js'
 
 export type Session = {
   dpopKey: Key
+  /**
+   * Previous implementation of this lib did not define an `authMethod`
+   */
+  authMethod?: ClientAuthMethod
   tokenSet: TokenSet
 }
 
@@ -51,7 +57,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
     private readonly runtime: Runtime,
   ) {
     super(
-      async (sub, options, storedSession): Promise<Session> => {
+      async (sub, options, storedSession) => {
         // There needs to be a previous session to be able to refresh. If
         // storedSession is undefined, it means that the store does not contain
         // a session for the given sub.
@@ -73,7 +79,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         // concurrent access (which, normally, should not happen if a proper
         // runtime lock was provided).
 
-        const { dpopKey, tokenSet } = storedSession
+        const { dpopKey, authMethod = 'legacy', tokenSet } = storedSession
 
         if (sub !== tokenSet.sub) {
           // Fool-proofing (e.g. against invalid session storage)
@@ -94,7 +100,11 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         // always possible. If no lock implementation is provided, we will use
         // the store to check if a concurrent refresh occurred.
 
-        const server = await serverFactory.fromIssuer(tokenSet.iss, dpopKey)
+        const server = await serverFactory.fromIssuer(
+          tokenSet.iss,
+          authMethod,
+          dpopKey,
+        )
 
         // Because refresh tokens can only be used once, we must not use the
         // "signal" to abort the refresh, or throw any abort error beyond this
@@ -111,7 +121,11 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
             throw new TokenRefreshError(sub, 'Token set sub mismatch')
           }
 
-          return { dpopKey, tokenSet: newTokenSet }
+          return {
+            dpopKey,
+            tokenSet: newTokenSet,
+            authMethod: server.authMethod,
+          }
         } catch (cause) {
           // If the refresh token is invalid, let's try to recover from
           // concurrency issues, or make sure the session is deleted by throwing
@@ -173,17 +187,36 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
                 30e3 * Math.random()
           )
         },
-        onStoreError: async (err, sub, { tokenSet, dpopKey }) => {
-          // If the token data cannot be stored, let's revoke it
-          const server = await serverFactory.fromIssuer(tokenSet.iss, dpopKey)
-          await server.revoke(tokenSet.refresh_token ?? tokenSet.access_token)
+        onStoreError: async (
+          err,
+          sub,
+          { tokenSet, dpopKey, authMethod = 'legacy' as const },
+        ) => {
+          if (!(err instanceof AuthMethodUnsatisfiableError)) {
+            // If the error was an AuthMethodUnsatisfiableError, there is no
+            // point in trying to call `fromIssuer`.
+            try {
+              // If the token data cannot be stored, let's revoke it
+              const server = await serverFactory.fromIssuer(
+                tokenSet.iss,
+                authMethod,
+                dpopKey,
+              )
+              await server.revoke(
+                tokenSet.refresh_token ?? tokenSet.access_token,
+              )
+            } catch {
+              // Let the original error propagate
+            }
+          }
+
           throw err
         },
         deleteOnError: async (err) =>
-          // Optimization: More likely to happen first
           err instanceof TokenRefreshError ||
           err instanceof TokenRevokedError ||
-          err instanceof TokenInvalidError,
+          err instanceof TokenInvalidError ||
+          err instanceof AuthMethodUnsatisfiableError,
       },
     )
   }

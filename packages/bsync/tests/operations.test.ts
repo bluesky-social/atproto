@@ -16,6 +16,10 @@ describe('operations', () => {
   let bsync: BsyncService
   let client: BsyncClient
 
+  const validPayload0 = Buffer.from(JSON.stringify({ value: 0 }))
+  const validPayload1 = Buffer.from(JSON.stringify({ value: 1 }))
+  const invalidPayload = Buffer.from('{invalid json}')
+
   beforeAll(async () => {
     bsync = await BsyncService.create(
       envToCfg({
@@ -51,11 +55,11 @@ describe('operations', () => {
         baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
       })
       const tryPutOperation1 = unauthedClient.putOperation({
-        collection: 'app.bsky.some.col',
         actorDid: 'did:example:a',
-        rkey: 'rkey1',
+        namespace: 'app.bsky.some.col',
+        key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       await expect(tryPutOperation1).rejects.toEqual(
         new ConnectError('missing auth', Code.Unauthenticated),
@@ -67,11 +71,11 @@ describe('operations', () => {
         interceptors: [authWithApiKey('key-bad')],
       })
       const tryPutOperation2 = badauthedClient.putOperation({
-        collection: 'app.bsky.some.col',
         actorDid: 'did:example:a',
-        rkey: 'rkey1',
+        namespace: 'app.bsky.some.col',
+        key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       await expect(tryPutOperation2).rejects.toEqual(
         new ConnectError('invalid api key', Code.Unauthenticated),
@@ -81,25 +85,25 @@ describe('operations', () => {
     it('fails on bad inputs.', async () => {
       await expect(
         client.putOperation({
-          collection: 'bad-collection',
           actorDid: 'did:example:a',
-          rkey: 'rkey1',
+          namespace: 'bad-namespace',
+          key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError(
-          'operation collection is invalid NSID',
+          'operation namespace is invalid NSID',
           Code.InvalidArgument,
         ),
       )
       await expect(
         client.putOperation({
-          collection: 'app.bsky.some.col',
           actorDid: 'bad-did',
-          rkey: 'rkey1',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError(
@@ -109,33 +113,61 @@ describe('operations', () => {
       )
       await expect(
         client.putOperation({
-          collection: 'app.bsky.some.col',
           actorDid: 'did:example:a',
-          rkey: '',
+          namespace: 'app.bsky.some.col',
+          key: '',
           method: Method.CREATE,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
-        new ConnectError('operation rkey is required', Code.InvalidArgument),
+        new ConnectError('operation key is required', Code.InvalidArgument),
       )
       await expect(
         client.putOperation({
-          collection: 'app.bsky.some.col',
           actorDid: 'did:example:a',
-          rkey: 'rkey1',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
           method: Method.UNSPECIFIED,
-          payload: Buffer.from([]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError('operation method is invalid', Code.InvalidArgument),
       )
       await expect(
         client.putOperation({
-          collection: 'app.bsky.some.col',
           actorDid: 'did:example:a',
-          rkey: 'rkey1',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
+          method: Method.CREATE,
+          payload: invalidPayload,
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'payload must be a valid JSON when method is CREATE or UPDATE',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.putOperation({
+          actorDid: 'did:example:a',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
+          method: Method.UPDATE,
+          payload: invalidPayload,
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'payload must be a valid JSON when method is CREATE or UPDATE',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.putOperation({
+          actorDid: 'did:example:a',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
           method: Method.DELETE,
-          payload: Buffer.from([1, 2, 3]),
+          payload: validPayload0,
         }),
       ).rejects.toEqual(
         new ConnectError(
@@ -147,18 +179,18 @@ describe('operations', () => {
 
     it('puts operations.', async () => {
       const res1 = await client.putOperation({
-        collection: 'app.bsky.some.col',
         actorDid: 'did:example:a',
-        rkey: 'rkey1',
+        namespace: 'app.bsky.some.col',
+        key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       const res2 = await client.putOperation({
-        collection: 'app.bsky.some.col',
         actorDid: 'did:example:a',
-        rkey: 'rkey1',
+        namespace: 'app.bsky.other.col#id',
+        key: 'key1',
         method: Method.UPDATE,
-        payload: Buffer.from([4, 5, 6]),
+        payload: validPayload1,
       })
 
       expect(res1.operation?.id).toBe('1')
@@ -166,20 +198,20 @@ describe('operations', () => {
       expect(await dumpOps(bsync.ctx.db)).toStrictEqual([
         {
           id: 1,
-          collection: 'app.bsky.some.col',
           actorDid: 'did:example:a',
-          rkey: 'rkey1',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([1, 2, 3]),
+          payload: validPayload0,
           createdAt: expect.any(Date),
         },
         {
           id: 2,
-          collection: 'app.bsky.some.col',
           actorDid: 'did:example:a',
-          rkey: 'rkey1',
+          namespace: 'app.bsky.other.col#id',
+          key: 'key1',
           method: Method.UPDATE,
-          payload: Buffer.from([4, 5, 6]),
+          payload: validPayload1,
           createdAt: expect.any(Date),
         },
       ])
@@ -187,22 +219,22 @@ describe('operations', () => {
 
     it('returns the operations on creation.', async () => {
       const res = await client.putOperation({
-        collection: 'app.bsky.some.col',
         actorDid: 'did:example:a',
-        rkey: 'rkey1',
+        namespace: 'app.bsky.some.col',
+        key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
 
       const op = res.operation
       assert(op)
       // Compare each field individually to avoid custom serialization by proto response objects.
       expect(op.id).toBe('3')
-      expect(op.collection).toBe('app.bsky.some.col')
       expect(op.actorDid).toBe('did:example:a')
-      expect(op.rkey).toBe('rkey1')
+      expect(op.namespace).toBe('app.bsky.some.col')
+      expect(op.key).toBe('key1')
       expect(op.method).toBe(Method.CREATE)
-      expect(op.payload).toEqual(Uint8Array.from([1, 2, 3]))
+      expect(op.payload).toEqual(new Uint8Array(validPayload0))
     })
   })
 
@@ -233,11 +265,11 @@ describe('operations', () => {
       // add 100 ops
       for (let i = 0; i < 100; ++i) {
         await client.putOperation({
-          collection: 'app.bsky.some.col',
           actorDid: `did:example:${i}`,
-          rkey: 'rkey1',
+          namespace: 'app.bsky.some.col',
+          key: 'key1',
           method: Method.CREATE,
-          payload: Buffer.from([1, 2, 3]),
+          payload: validPayload0,
         })
       }
 
@@ -262,11 +294,11 @@ describe('operations', () => {
       const scanPromise = client.scanOperations({})
       await wait(100) // would be complete by now if it wasn't long-polling for an item
       const { operation } = await client.putOperation({
-        collection: 'app.bsky.some.col',
         actorDid: 'did:example:a',
-        rkey: 'rkey1',
+        namespace: 'app.bsky.some.col',
+        key: 'key1',
         method: Method.CREATE,
-        payload: Buffer.from([1, 2, 3]),
+        payload: validPayload0,
       })
       const res = await scanPromise
       expect(res.operations.length).toEqual(1)

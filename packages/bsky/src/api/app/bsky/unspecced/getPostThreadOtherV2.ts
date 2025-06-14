@@ -3,7 +3,7 @@ import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -25,13 +25,13 @@ const BELOW = 1
 const BRANCHING_FACTOR = 0
 
 export default function (server: Server, ctx: AppContext) {
-  const getPostThreadHidden = createPipeline(
+  const getPostThreadOther = createPipeline(
     skeleton,
     hydration,
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
-  server.app.bsky.unspecced.getPostThreadHiddenV2({
+  server.app.bsky.unspecced.getPostThreadOtherV2({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, include3pBlocks } =
@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await getPostThreadHidden({ ...params, hydrateCtx }, ctx),
+        body: await getPostThreadOther({ ...params, hydrateCtx }, ctx),
         headers: resHeaders({
           labelers: hydrateCtx.labelers,
         }),
@@ -94,7 +94,7 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const thread = ctx.views.threadHiddenV2(skeleton, hydration, {
+  const thread = ctx.views.threadOtherV2(skeleton, hydration, {
     below: BELOW,
     branchingFactor: BRANCHING_FACTOR,
     prioritizeFollowedUsers: params.prioritizeFollowedUsers,

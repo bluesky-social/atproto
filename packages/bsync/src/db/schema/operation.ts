@@ -5,9 +5,9 @@ export type OperationMethod = Method.CREATE | Method.UPDATE | Method.DELETE
 
 export interface Operation {
   id: GeneratedAlways<number>
-  collection: string
   actorDid: string
-  rkey: string
+  namespace: string
+  key: string
   method: OperationMethod
   payload: Uint8Array
   createdAt: GeneratedAlways<Date>
