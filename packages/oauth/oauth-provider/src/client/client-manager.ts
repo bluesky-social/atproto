@@ -779,25 +779,6 @@ export class ClientManager {
           )
         }
       }
-
-      if (url.protocol === 'https:') {
-        // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
-        //
-        // > In addition to the collision-resistant properties, requiring a
-        // > URI scheme based on a domain name that is under the control of
-        // > the app can help to prove ownership in the event of a dispute
-        // > where two apps claim the same private-use URI scheme (where one
-        // > app is acting maliciously).
-        //
-        // Although this only applies to "native" clients (extract being from
-        // rfc8252), we apply this rule to "web" clients as well.
-
-        if (url.hostname !== clientIdUrl.hostname) {
-          throw new InvalidRedirectUriError(
-            `Redirect URI ${url} must be under the same domain as client_id ${metadata.client_uri}`,
-          )
-        }
-      }
     }
 
     return metadata
