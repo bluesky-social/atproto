@@ -6,7 +6,10 @@ import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
-    auth: ctx.authVerifier.accessFull({ additional: [AuthScope.Takendown] }),
+    auth: ctx.authVerifier.accessFull({
+      additional: [AuthScope.Takendown],
+      additionalOauthScopes: ['transition:identity'],
+    }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(
