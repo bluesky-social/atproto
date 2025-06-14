@@ -1,5 +1,13 @@
 # @atproto/oauth-provider
 
+## 0.9.1
+
+### Patch Changes
+
+- [#3811](https://github.com/bluesky-social/atproto/pull/3811) [`7d9808ca8`](https://github.com/bluesky-social/atproto/commit/7d9808ca81dc13efbb9ced56ee2edd1e03966e10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow HTTPS `redirect_uris` from any origin
+
+- [#3883](https://github.com/bluesky-social/atproto/pull/3883) [`e27d90845`](https://github.com/bluesky-social/atproto/commit/e27d90845496e46e2b0e8b362d43881900d7a9e3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Increase oauth session & refresh token lifetimes
+
 ## 0.9.0
 
 ### Minor Changes
