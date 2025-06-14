@@ -19,7 +19,7 @@ export const verifyAccountPassword = async (
     .selectAll()
     .where('did', '=', did)
     .executeTakeFirst()
-  return found ? await scrypt.verify(password, found.passwordScrypt) : false
+  return found && found.passwordScrypt ? await scrypt.verify(password, found.passwordScrypt) : false
 }
 
 export const verifyAppPassword = async (

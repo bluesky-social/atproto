@@ -1,0 +1,110 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.createIdentityProvider",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create an identity provider. Implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "issuer", "clientId", "scope", "usePkce", "discoverable"],
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "icon": {
+              "type": "string",
+              "format": "uri"
+            },
+            "issuer": {
+              "type": "string",
+              "format": "uri"
+            },
+            "clientId": { "type": "string" },
+            "clientSecret": { "type": "string" },
+            "scope": { "type": "string" },
+            "usePkce": { "type": "boolean" },
+            "discoverable": { "type": "boolean" },
+            "metadata": {
+              "type": "ref",
+              "ref": "#metadata"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["idpId"],
+          "properties": {
+            "idpId": { "type": "string" }
+          }
+        }
+      },
+      "errors": [
+        { "name": "IdentityProviderAlreadyExists" },
+        { "name": "IndiscoverableMetadata" },
+        { "name": "IssuerMismatch" },
+        { "name": "InsecureTransport" },
+        { "name": "PublicWithoutPkce" }
+      ]
+    },
+    "authMethod": {
+    "type": "string",
+      "knownValues": [
+        "client_secret_basic",
+        "client_secret_post"
+      ]
+    },
+    "codeChallengeMethod": {
+      "type": "string",
+      "knownValues": [
+        "plain",
+        "S256"
+      ]
+    },
+    "endpoints": {
+      "type": "object",
+      "required": ["authorization", "token"],
+      "properties": {
+        "authorization": { "type": "string", "format": "uri" },
+        "token": { "type": "string", "format": "uri" },
+        "userinfo": { "type": "string", "format": "uri" }
+      }
+    },
+    "mappings": {
+      "type": "object",
+      "required": ["sub"],
+      "properties": {
+        "sub": { "type": "string" },
+        "username": { "type": "string" },
+        "picture": { "type": "string" },
+        "email": { "type": "string" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["endpoints", "mappings", "authMethods"],
+      "properties": {
+        "endpoints": { "type": "ref", "ref": "#endpoints" },
+        "mappings": { "type": "ref", "ref": "#mappings" },
+        "authMethods": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#authMethod"
+          }
+        },
+        "codeChallengeMethods": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#codeChallengeMethod"
+          }
+        }
+      }
+    }
+  }
+}
