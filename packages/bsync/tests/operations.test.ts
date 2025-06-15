@@ -187,7 +187,7 @@ describe('operations', () => {
       })
       const res2 = await client.putOperation({
         actorDid: 'did:example:a',
-        namespace: 'app.bsky.some.col',
+        namespace: 'app.bsky.other.col#id',
         key: 'key1',
         method: Method.UPDATE,
         payload: validPayload1,
@@ -208,7 +208,7 @@ describe('operations', () => {
         {
           id: 2,
           actorDid: 'did:example:a',
-          namespace: 'app.bsky.some.col',
+          namespace: 'app.bsky.other.col#id',
           key: 'key1',
           method: Method.UPDATE,
           payload: validPayload1,

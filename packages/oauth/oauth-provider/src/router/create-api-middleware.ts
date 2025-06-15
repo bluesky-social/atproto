@@ -367,7 +367,7 @@ export function createApiMiddleware<
           this.input.tokenId,
         )
 
-        if (tokenInfo.account.sub !== account.sub) {
+        if (!tokenInfo || tokenInfo.account.sub !== account.sub) {
           // report this as though the token was not found
           throw new InvalidRequestError(`Invalid token`)
         }

@@ -2,7 +2,7 @@ import { Keyset } from '@atproto/jwk'
 import {
   OAuthAuthorizationServerMetadata,
   OAuthIssuerIdentifier,
-  oauthAuthorizationServerMetadataSchema,
+  oauthAuthorizationServerMetadataValidator,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
@@ -22,7 +22,7 @@ export function buildMetadata(
   keyset: Keyset,
   customMetadata?: CustomMetadata,
 ): OAuthAuthorizationServerMetadata {
-  return oauthAuthorizationServerMetadataSchema.parse({
+  return oauthAuthorizationServerMetadataValidator.parse({
     issuer,
 
     scopes_supported: [

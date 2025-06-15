@@ -53,7 +53,7 @@ const putOp = async (db: Database, op: Operation) => {
 
 const validateOp = (req: PutOperationRequest): Operation => {
   try {
-    ensureValidNsid(req.namespace)
+    validateNamespace(req.namespace)
   } catch (error) {
     throw new ConnectError(
       'operation namespace is invalid NSID',
@@ -101,6 +101,21 @@ const validateOp = (req: PutOperationRequest): Operation => {
   }
 
   return req as Operation
+}
+
+const validateNamespace = (namespace: string): void => {
+  const parts = namespace.split('#')
+
+  if (parts.length !== 1 && parts.length !== 2) {
+    throw new Error('namespace must be in the format "nsid[#fragment]"')
+  }
+
+  const [nsid, fragment] = parts
+
+  ensureValidNsid(nsid)
+  if (fragment && !/^[a-zA-Z][a-zA-Z0-9]*$/.test(fragment)) {
+    throw new Error('namespace fragment must be a valid identifier')
+  }
 }
 
 type Operation = {

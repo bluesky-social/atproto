@@ -21,21 +21,38 @@ const LANGUAGE_EXCEPTIONS = [
   'vi', // Vietnamese
 ]
 
-export function hasMutedWord({
-  mutedWords,
-  text,
-  facets,
-  outlineTags,
-  languages,
-  actor,
-}: {
+export type MuteWordMatch = {
+  /**
+   * The `AppBskyActorDefs.MutedWord` that matched.
+   */
+  word: AppBskyActorDefs.MutedWord
+  /**
+   * The string that matched the muted word.
+   */
+  predicate: string
+}
+
+export type Params = {
   mutedWords: AppBskyActorDefs.MutedWord[]
   text: string
   facets?: AppBskyRichtextFacet.Main[]
   outlineTags?: string[]
   languages?: string[]
   actor?: AppBskyActorDefs.ProfileView | AppBskyActorDefs.ProfileViewBasic
-}) {
+}
+
+/**
+ * Checks if the given text matches any of the muted words, returning an array
+ * of matches. If no matches are found, returns `undefined`.
+ */
+export function matchMuteWords({
+  mutedWords,
+  text,
+  facets,
+  outlineTags,
+  languages,
+  actor,
+}: Params): MuteWordMatch[] | undefined {
   const exception = LANGUAGE_EXCEPTIONS.includes(languages?.[0] || '')
   const tags = ([] as string[])
     .concat(outlineTags || [])
@@ -46,38 +63,54 @@ export function hasMutedWord({
     )
     .map((t) => t.toLowerCase())
 
-  for (const mute of mutedWords) {
-    const mutedWord = mute.value.toLowerCase()
+  const matches: MuteWordMatch[] = []
+
+  outer: for (const muteWord of mutedWords) {
+    const mutedWord = muteWord.value.toLowerCase()
     const postText = text.toLowerCase()
 
     // expired, ignore
-    if (mute.expiresAt && mute.expiresAt < new Date().toISOString()) continue
+    if (muteWord.expiresAt && muteWord.expiresAt < new Date().toISOString())
+      continue
 
     if (
-      mute.actorTarget === 'exclude-following' &&
+      muteWord.actorTarget === 'exclude-following' &&
       Boolean(actor?.viewer?.following)
     )
       continue
 
     // `content` applies to tags as well
-    if (tags.includes(mutedWord)) return true
+    if (tags.includes(mutedWord)) {
+      matches.push({ word: muteWord, predicate: muteWord.value })
+      continue
+    }
     // rest of the checks are for `content` only
-    if (!mute.targets.includes('content')) continue
+    if (!muteWord.targets.includes('content')) continue
     // single character or other exception, has to use includes
-    if ((mutedWord.length === 1 || exception) && postText.includes(mutedWord))
-      return true
+    if ((mutedWord.length === 1 || exception) && postText.includes(mutedWord)) {
+      matches.push({ word: muteWord, predicate: muteWord.value })
+      continue
+    }
     // too long
     if (mutedWord.length > postText.length) continue
     // exact match
-    if (mutedWord === postText) return true
+    if (mutedWord === postText) {
+      matches.push({ word: muteWord, predicate: muteWord.value })
+      continue
+    }
     // any muted phrase with space or punctuation
-    if (/(?:\s|\p{P})+?/u.test(mutedWord) && postText.includes(mutedWord))
-      return true
+    if (/(?:\s|\p{P})+?/u.test(mutedWord) && postText.includes(mutedWord)) {
+      matches.push({ word: muteWord, predicate: muteWord.value })
+      continue
+    }
 
     // check individual character groups
     const words = postText.split(REGEX.WORD_BOUNDARY)
     for (const word of words) {
-      if (word === mutedWord) return true
+      if (word === mutedWord) {
+        matches.push({ word: muteWord, predicate: word })
+        continue outer
+      }
 
       // compare word without leading/trailing punctuation, but allow internal
       // punctuation (such as `s@ssy`)
@@ -86,23 +119,52 @@ export function hasMutedWord({
         '',
       )
 
-      if (mutedWord === wordTrimmedPunctuation) return true
+      if (mutedWord === wordTrimmedPunctuation) {
+        matches.push({ word: muteWord, predicate: word })
+        continue outer
+      }
+
       if (mutedWord.length > wordTrimmedPunctuation.length) continue
 
       if (/\p{P}+/u.test(wordTrimmedPunctuation)) {
+        /**
+         * Exit case for any punctuation within the predicate that we _do_
+         * allow e.g. `and/or` should not match `Andor`.
+         */
+        if (/[/]+/.test(wordTrimmedPunctuation)) {
+          continue outer
+        }
+
         const spacedWord = wordTrimmedPunctuation.replace(/\p{P}+/gu, ' ')
-        if (spacedWord === mutedWord) return true
+        if (spacedWord === mutedWord) {
+          matches.push({ word: muteWord, predicate: word })
+          continue outer
+        }
 
         const contiguousWord = spacedWord.replace(/\s/gu, '')
-        if (contiguousWord === mutedWord) return true
+        if (contiguousWord === mutedWord) {
+          matches.push({ word: muteWord, predicate: word })
+          continue outer
+        }
 
         const wordParts = wordTrimmedPunctuation.split(/\p{P}+/u)
         for (const wordPart of wordParts) {
-          if (wordPart === mutedWord) return true
+          if (wordPart === mutedWord) {
+            matches.push({ word: muteWord, predicate: word })
+            continue outer
+          }
         }
       }
     }
   }
 
-  return false
+  return matches.length ? matches : undefined
+}
+
+/**
+ * Checks if the given text matches any of the muted words, returning a boolean
+ * if any matches are found.
+ */
+export function hasMutedWord(params: Params) {
+  return !!matchMuteWords(params)
 }

@@ -117,7 +117,7 @@ export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
 export const isValidMstKey = (str: string): boolean => {
   const split = str.split('/')
   return (
-    str.length <= 256 &&
+    str.length <= 1024 &&
     split.length === 2 &&
     split[0].length > 0 &&
     split[1].length > 0 &&

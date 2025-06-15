@@ -27,10 +27,9 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
 
   // PKCE
 
+  // https://datatracker.ietf.org/doc/html/rfc7636#section-4.3
   code_challenge: z.string().optional(),
-  code_challenge_method: oauthCodeChallengeMethodSchema
-    .default('S256')
-    .optional(),
+  code_challenge_method: oauthCodeChallengeMethodSchema.optional(),
 
   // DPOP
 
