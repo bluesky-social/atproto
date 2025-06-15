@@ -1,15 +1,21 @@
-import { AtpAgent } from '@atproto/api'
+import {
+  AppBskyNotificationActivitySubscriptionDeclaration,
+  AtpAgent,
+} from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import {
+  ActivitySubscription,
   ChatPreference,
   FilterablePreference,
   Preference,
   Preferences,
 } from '../../src/lexicon/types/app/bsky/notification/defs'
+import { QueryParams } from '../../src/lexicon/types/app/bsky/notification/listActivitySubscriptions'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
+import { NamespaceAppBskyNotificationDefsPreferences } from '../../src/stash'
 import { forSnapshot, paginateAll } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
@@ -19,12 +25,18 @@ describe('notification views', () => {
   let db: Database
 
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
+  let bob: string
   let carol: string
   let dan: string
+  let eve: string
+  let fred: string
+  let han: string
+  let blocked: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -32,6 +44,7 @@ describe('notification views', () => {
     })
     db = network.bsky.db
     agent = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.bsky.db.db
@@ -39,10 +52,36 @@ describe('notification views', () => {
       .set({ trustedVerifier: true })
       .where('did', '=', alice)
       .execute()
+    await sc.createAccount('eve', {
+      email: 'eve@test.com',
+      handle: 'eve.test',
+      password: 'eve-pass',
+    })
+    await sc.createAccount('fred', {
+      email: 'fred@test.com',
+      handle: 'fred.test',
+      password: 'fred-pass',
+    })
+    await sc.createAccount('han', {
+      email: 'han@test.com',
+      handle: 'han.test',
+      password: 'han-pass',
+    })
+    await sc.createAccount('blocked', {
+      email: 'blocked@test.com',
+      handle: 'blocked.test',
+      password: 'blocked-pass',
+    })
     await network.processAll()
+
     alice = sc.dids.alice
+    bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    eve = sc.dids.eve
+    fred = sc.dids.fred
+    han = sc.dids.han
+    blocked = sc.dids.blocked
   })
 
   afterAll(async () => {
@@ -960,7 +999,7 @@ describe('notification views', () => {
           .selectFrom('private_data')
           .selectAll()
           .where('actorDid', '=', actorDid)
-          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('namespace', '=', NamespaceAppBskyNotificationDefsPreferences)
           .where('key', '=', 'self')
           .executeTakeFirst()
         if (dbResult === undefined) {
@@ -968,14 +1007,14 @@ describe('notification views', () => {
         } else {
           expect(dbResult).toStrictEqual({
             actorDid: actorDid,
-            namespace: 'app.bsky.notification.defs#preferences',
+            namespace: NamespaceAppBskyNotificationDefsPreferences,
             key: 'self',
             indexedAt: expect.any(String),
             payload: expect.anything(), // Better to compare payload parsed.
             updatedAt: expect.any(String),
           })
           expect(JSON.parse(dbResult.payload)).toStrictEqual({
-            $type: 'app.bsky.notification.defs#preferences',
+            $type: NamespaceAppBskyNotificationDefsPreferences,
             ...expectedDb,
           })
         }
@@ -1056,19 +1095,19 @@ describe('notification views', () => {
           .selectFrom('private_data')
           .selectAll()
           .where('actorDid', '=', actorDid)
-          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('namespace', '=', NamespaceAppBskyNotificationDefsPreferences)
           .where('key', '=', 'self')
           .executeTakeFirstOrThrow()
         expect(dbResult).toStrictEqual({
           actorDid: actorDid,
-          namespace: 'app.bsky.notification.defs#preferences',
+          namespace: NamespaceAppBskyNotificationDefsPreferences,
           key: 'self',
           indexedAt: expect.any(String),
           payload: expect.anything(), // Better to compare payload parsed.
           updatedAt: expect.any(String),
         })
         expect(JSON.parse(dbResult.payload)).toStrictEqual({
-          $type: 'app.bsky.notification.defs#preferences',
+          $type: NamespaceAppBskyNotificationDefsPreferences,
           ...expected,
         })
       }
@@ -1122,8 +1161,245 @@ describe('notification views', () => {
       await putAndAssert(input1, expected1)
     })
   })
+
+  describe('activity subscriptions', () => {
+    const declare = async (actor: string, value: string) => {
+      await pdsAgent.com.atproto.repo.createRecord(
+        {
+          repo: actor,
+          collection: ids.AppBskyNotificationActivitySubscriptionDeclaration,
+          rkey: 'self',
+          record: {
+            allowSubscriptions: value,
+          } as AppBskyNotificationActivitySubscriptionDeclaration.Record,
+        },
+        { headers: sc.getHeaders(actor), encoding: 'application/json' },
+      )
+    }
+
+    const put = async (
+      actor: string,
+      subject: string,
+      val: ActivitySubscription,
+    ) =>
+      agent.app.bsky.notification.putActivitySubscription(
+        {
+          subject,
+          activitySubscription: val,
+        },
+        {
+          headers: await network.serviceHeaders(
+            actor,
+            ids.AppBskyNotificationPutActivitySubscription,
+          ),
+        },
+      )
+
+    const list = async (actor: string, params?: QueryParams) =>
+      agent.app.bsky.notification.listActivitySubscriptions(params ?? {}, {
+        headers: await network.serviceHeaders(
+          actor,
+          ids.AppBskyNotificationListActivitySubscriptions,
+        ),
+      })
+
+    const associatedAllowSub = async (actor: string, subject: string) => {
+      const { data } = await agent.app.bsky.actor.getProfile(
+        { actor: subject },
+        {
+          headers: await network.serviceHeaders(
+            actor,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      return data.associated?.activitySubscription?.allowSubscriptions
+    }
+
+    const viewerActivitySub = async (actor: string, subject: string) => {
+      const { data } = await agent.app.bsky.actor.getProfile(
+        { actor: subject },
+        {
+          headers: await network.serviceHeaders(
+            actor,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      return data.viewer?.activitySubscription
+    }
+
+    beforeAll(async () => {
+      await declare(bob, 'all')
+      await declare(carol, 'none')
+      await declare(dan, 'following')
+      await declare(eve, 'following')
+      await declare(han, 'all')
+      await declare(blocked, 'all')
+      await sc.follow(dan, alice)
+      await sc.block(alice, blocked)
+      await network.processAll()
+    })
+
+    beforeEach(async () => {
+      await clearActivitySubscription(db)
+    })
+
+    it('lists an empty list of subscriptions', async () => {
+      const actorDid = alice
+
+      const { data } = await list(actorDid)
+
+      expect(data.cursor).toBeUndefined()
+      expect(data.subscriptions).toHaveLength(0)
+    })
+
+    it('does not allow subscribing to self', async () => {
+      const actorDid = alice
+      const promise = put(actorDid, actorDid, { post: true, reply: false })
+
+      await expect(promise).rejects.toThrow('Cannot subscribe to own activity')
+    })
+
+    it('inserts a subscription entry if it does not exist', async () => {
+      const actorDid = alice
+      const subjectDid = bob
+      const val = { post: true, reply: false }
+
+      const { data: createData } = await put(actorDid, subjectDid, val)
+      expect(createData).toStrictEqual({
+        subject: subjectDid,
+        activitySubscription: val,
+      })
+
+      const { data: listData } = await list(actorDid)
+      expect(listData).toEqual({
+        subscriptions: [
+          expect.objectContaining({
+            did: subjectDid,
+            viewer: expect.objectContaining({ activitySubscription: val }),
+          }),
+        ],
+      })
+    })
+
+    it('updates a subscription entry if it exists', async () => {
+      const actorDid = alice
+      const subjectDid = bob
+      const valCreate = { post: true, reply: false }
+      const valUpdate = { post: false, reply: true }
+
+      const { data: createData } = await put(actorDid, subjectDid, valCreate)
+      expect(createData).toStrictEqual({
+        subject: subjectDid,
+        activitySubscription: valCreate,
+      })
+
+      const { data: updateData } = await put(actorDid, subjectDid, valUpdate)
+      expect(updateData).toStrictEqual({
+        subject: subjectDid,
+        activitySubscription: valUpdate,
+      })
+
+      const { data: listData } = await list(actorDid)
+      expect(listData).toEqual({
+        subscriptions: [
+          expect.objectContaining({
+            did: subjectDid,
+            viewer: expect.objectContaining({
+              activitySubscription: valUpdate,
+            }),
+          }),
+        ],
+      })
+    })
+
+    it('deletes a subscription entry when all options are turned off', async () => {
+      const actorDid = alice
+      const subjectDid = bob
+      const valCreate = { post: true, reply: false }
+      const valDelete = { post: false, reply: false }
+
+      await put(actorDid, subjectDid, valCreate)
+      const { data: list0 } = await list(actorDid)
+      expect(list0.subscriptions).toHaveLength(1)
+
+      await put(actorDid, subjectDid, valDelete)
+      const { data: list1 } = await list(actorDid)
+      expect(list1.subscriptions).toHaveLength(0)
+    })
+
+    it('paginates', async () => {
+      const actorDid = alice
+      const limit = 2
+
+      await put(actorDid, bob, { post: true, reply: false })
+      await put(actorDid, carol, { post: true, reply: false })
+      await put(actorDid, dan, { post: true, reply: false })
+      await put(actorDid, eve, { post: true, reply: false })
+      await put(actorDid, fred, { post: true, reply: false })
+
+      const results = (results) =>
+        sort(results.flatMap((res) => res.notifications))
+      const paginator = async (cursor?: string) => {
+        const { data } = await list(actorDid, { cursor, limit })
+        return data
+      }
+
+      const paginatedAll = await paginateAll(paginator)
+      paginatedAll.forEach((res) =>
+        expect(res.subscriptions.length).toBeLessThanOrEqual(limit),
+      )
+
+      const full = await list(actorDid)
+      expect(full.data.subscriptions.length).toEqual(5)
+      expect(results(paginatedAll)).toEqual(results([full.data]))
+    })
+
+    describe('activity subscription declaration', () => {
+      it('includes the declaration in the profile view', async () => {
+        await expect(associatedAllowSub(alice, bob)).resolves.toBe('all')
+        await expect(associatedAllowSub(alice, carol)).resolves.toBe('none')
+        // dan: follows alice, and alice sees 'following',
+        await expect(associatedAllowSub(alice, dan)).resolves.toBe('following')
+        // eve: does not follow alice, and alice sees 'following',
+        await expect(associatedAllowSub(alice, eve)).resolves.toBe('following')
+        // fred: no declaration, alice sees 'following' (default).
+        await expect(associatedAllowSub(alice, fred)).resolves.toBe('following')
+      })
+    })
+
+    describe('activity subscription viewer', () => {
+      it('includes the relationship in the profile view', async () => {
+        const viewer = alice
+        const val = { post: true, reply: true }
+
+        await put(viewer, bob, val) // declaration 'all'.
+        await expect(viewerActivitySub(viewer, bob)).resolves.toStrictEqual(val)
+
+        await put(viewer, carol, val) // declaration 'none'.
+        await expect(viewerActivitySub(viewer, carol)).resolves.toBeUndefined()
+
+        await put(viewer, dan, val) // declaration 'following', follows alice.
+        await expect(viewerActivitySub(viewer, dan)).resolves.toStrictEqual(val)
+
+        await put(viewer, eve, val) // declaration 'following', doesn't follow alice.
+        await expect(viewerActivitySub(viewer, eve)).resolves.toBeUndefined()
+
+        await put(viewer, fred, val) // no declaration.
+        await expect(viewerActivitySub(viewer, fred)).resolves.toBeUndefined()
+
+        // han: no subscription from viewer.
+        await expect(viewerActivitySub(viewer, han)).resolves.toBeUndefined()
+      })
+    })
+  })
 })
 
 const clearPrivateData = async (db: Database) => {
   await db.db.deleteFrom('private_data').execute()
+}
+
+const clearActivitySubscription = async (db: Database) => {
+  await db.db.deleteFrom('activity_subscription').execute()
 }

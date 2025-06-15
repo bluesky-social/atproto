@@ -1,7 +1,25 @@
 import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
+import {
+  Preferences,
+  SubjectActivitySubscription,
+} from './lexicon/types/app/bsky/notification/defs'
 import { Method } from './proto/bsync_pb'
+
+export const NamespaceAppBskyNotificationDefsPreferences: Exclude<
+  Preferences['$type'],
+  undefined
+> = 'app.bsky.notification.defs#preferences'
+
+export const NamespaceAppBskyNotificationDefsSubjectActivitySubscription: Exclude<
+  SubjectActivitySubscription['$type'],
+  undefined
+> = 'app.bsky.notification.defs#subjectActivitySubscription'
+
+export type StashNamespace =
+  | typeof NamespaceAppBskyNotificationDefsPreferences
+  | typeof NamespaceAppBskyNotificationDefsSubjectActivitySubscription
 
 export const createStashClient = (bsyncClient: BsyncClient): StashClient => {
   return new StashClient(bsyncClient)

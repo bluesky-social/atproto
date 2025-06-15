@@ -5,14 +5,20 @@ import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { TID } from '@atproto/common'
+import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
+import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
 import { Service } from '../../proto/bsync_connect'
 import {
   Method,
   MuteOperation_Type,
   PutOperationRequest,
 } from '../../proto/bsync_pb'
+import {
+  NamespaceAppBskyNotificationDefsPreferences,
+  NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
+} from '../../stash'
 import { Database } from '../server/db'
 
 export class MockBsync {
@@ -154,8 +160,13 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       }
 
       const now = new Date().toISOString()
-      if (namespace === 'app.bsky.notification.defs#preferences') {
+      if (namespace === NamespaceAppBskyNotificationDefsPreferences) {
         await handleNotificationPreferencesOperation(db, req, now)
+      } else if (
+        namespace ===
+        NamespaceAppBskyNotificationDefsSubjectActivitySubscription
+      ) {
+        await handleSubjectActivitySubscriptionOperation(db, req, now)
       } else {
         await handleGenericOperation(db, req, now)
       }
@@ -208,6 +219,55 @@ const handleNotificationPreferencesOperation = async (
   }
 
   return handleGenericOperation(db, req, now)
+}
+
+const handleSubjectActivitySubscriptionOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, key, method, payload } = req
+
+  if (method === Method.DELETE) {
+    return db.db
+      .deleteFrom('activity_subscription')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
+      .execute()
+  }
+
+  const parsed = jsonStringToLex(
+    Buffer.from(payload).toString('utf8'),
+  ) as SubjectActivitySubscription
+  const {
+    subject,
+    activitySubscription: { post, reply },
+  } = parsed
+
+  if (method === Method.CREATE) {
+    return db.db
+      .insertInto('activity_subscription')
+      .values({
+        creator: actorDid,
+        subjectDid: subject,
+        key,
+        indexedAt: now,
+        post,
+        reply,
+      })
+      .execute()
+  }
+
+  return db.db
+    .updateTable('activity_subscription')
+    .where('creator', '=', actorDid)
+    .where('key', '=', key)
+    .set({
+      indexedAt: now,
+      post,
+      reply,
+    })
+    .execute()
 }
 
 const handleGenericOperation = async (
