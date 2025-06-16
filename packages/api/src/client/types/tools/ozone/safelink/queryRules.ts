@@ -40,7 +40,7 @@ export interface InputSchema {
 export interface OutputSchema {
   /** Next cursor for pagination. Only present if there are more results. */
   cursor?: string
-  rules: ToolsOzoneSafelinkDefs.ActiveRule[]
+  rules: ToolsOzoneSafelinkDefs.UrlRule[]
 }
 
 export interface CallOptions {

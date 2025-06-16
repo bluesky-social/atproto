@@ -150,42 +150,6 @@
           "description": "Optional DID to credit as the creator. Only respected for admin_token authentication."
         }
       }
-    },
-    "activeRule": {
-      "type": "object",
-      "description": "A currently active URL safety rule",
-      "required": ["url", "pattern", "action", "reason", "createdAt", "createdBy"],
-      "properties": {
-        "url": {
-          "type": "string",
-          "description": "The URL or domain this rule applies to"
-        },
-        "pattern": {
-          "type": "ref",
-          "ref": "#patternType"
-        },
-        "action": {
-          "type": "ref",
-          "ref": "#actionType"
-        },
-        "reason": {
-          "type": "ref",
-          "ref": "#reasonType"
-        },
-        "createdBy": {
-          "type": "string",
-          "format": "did",
-          "description": "DID of the user who created this rule"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "datetime"
-        },
-        "comment": {
-          "type": "string",
-          "description": "Optional comment about the decision"
-        }
-      }
     }
   }
 }

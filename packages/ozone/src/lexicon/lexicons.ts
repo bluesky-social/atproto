@@ -15426,49 +15426,6 @@ export const schemaDict = {
           },
         },
       },
-      activeRule: {
-        type: 'object',
-        description: 'A currently active URL safety rule',
-        required: [
-          'url',
-          'pattern',
-          'action',
-          'reason',
-          'createdAt',
-          'createdBy',
-        ],
-        properties: {
-          url: {
-            type: 'string',
-            description: 'The URL or domain this rule applies to',
-          },
-          pattern: {
-            type: 'ref',
-            ref: 'lex:tools.ozone.safelink.defs#patternType',
-          },
-          action: {
-            type: 'ref',
-            ref: 'lex:tools.ozone.safelink.defs#actionType',
-          },
-          reason: {
-            type: 'ref',
-            ref: 'lex:tools.ozone.safelink.defs#reasonType',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-            description: 'DID of the user who created this rule',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          comment: {
-            type: 'string',
-            description: 'Optional comment about the decision',
-          },
-        },
-      },
     },
   },
   ToolsOzoneSafelinkQueryEvents: {
@@ -15614,7 +15571,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:tools.ozone.safelink.defs#activeRule',
+                  ref: 'lex:tools.ozone.safelink.defs#urlRule',
                 },
               },
             },

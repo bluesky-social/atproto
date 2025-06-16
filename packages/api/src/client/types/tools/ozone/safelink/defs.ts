@@ -117,28 +117,3 @@ export function isUrlRule<V>(v: V) {
 export function validateUrlRule<V>(v: V) {
   return validate<UrlRule & V>(v, id, hashUrlRule)
 }
-
-/** A currently active URL safety rule */
-export interface ActiveRule {
-  $type?: 'tools.ozone.safelink.defs#activeRule'
-  /** The URL or domain this rule applies to */
-  url: string
-  pattern: PatternType
-  action: ActionType
-  reason: ReasonType
-  /** DID of the user who created this rule */
-  createdBy: string
-  createdAt: string
-  /** Optional comment about the decision */
-  comment?: string
-}
-
-const hashActiveRule = 'activeRule'
-
-export function isActiveRule<V>(v: V) {
-  return is$typed(v, id, hashActiveRule)
-}
-
-export function validateActiveRule<V>(v: V) {
-  return validate<ActiveRule & V>(v, id, hashActiveRule)
-}

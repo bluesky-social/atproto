@@ -28,7 +28,7 @@ export class SafelinkService {
       action: event.action,
       reason: event.reason,
       createdBy: event.createdBy,
-      createdAt: event.createdAt.toISOString(),
+      createdAt: new Date(event.createdAt).toISOString(),
       comment: event.comment || undefined,
     }
   }
@@ -56,14 +56,12 @@ export class SafelinkService {
       )
     }
 
-    const now = new Date()
     const rule = {
       url,
       pattern,
       action,
       reason,
       createdBy,
-      createdAt: now,
       comment: comment || null,
     }
 
@@ -106,13 +104,11 @@ export class SafelinkService {
       )
     }
 
-    const now = new Date()
     const rule = {
       pattern,
       action,
       reason,
       createdBy,
-      createdAt: now,
       comment: comment || null,
     }
 
@@ -157,8 +153,6 @@ export class SafelinkService {
       )
     }
 
-    const now = new Date()
-
     return await this.db.transaction(async (txn) => {
       const event = await txn.db
         .insertInto('safelink_event')
@@ -169,7 +163,6 @@ export class SafelinkService {
           action: existingRule.action,
           reason: existingRule.reason,
           createdBy,
-          createdAt: now,
           comment: comment || null,
         })
         .returningAll()

@@ -1,4 +1,4 @@
-import { Generated, GeneratedAlways } from 'kysely'
+import { GeneratedAlways } from 'kysely'
 
 export const safelinkTableName = 'safelink'
 export const safelinkEventTableName = 'safelink_event'
@@ -30,8 +30,8 @@ export interface Safelink {
   action: SafelinkActionType
   reason: SafelinkReasonType
   createdBy: string
-  createdAt: Generated<Date>
-  updatedAt: Generated<Date>
+  createdAt: GeneratedAlways<string>
+  updatedAt: GeneratedAlways<string>
   comment: string | null
 }
 
@@ -43,7 +43,7 @@ export interface SafelinkEvent {
   action: SafelinkActionType
   reason: SafelinkReasonType
   createdBy: string
-  createdAt: Generated<Date>
+  createdAt: GeneratedAlways<string>
   comment: string | null
 }
 

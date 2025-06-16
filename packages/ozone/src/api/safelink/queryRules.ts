@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
             action: rule.action,
             reason: rule.reason,
             createdBy: rule.createdBy,
-            createdAt: rule.createdAt.toISOString(),
+            createdAt: new Date(rule.createdAt).toISOString(),
             comment: rule.comment || undefined,
           })),
         },
