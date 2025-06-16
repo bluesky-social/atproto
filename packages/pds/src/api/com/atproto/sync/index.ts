@@ -1,7 +1,5 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import getCheckout from './deprecated/getCheckout'
-import getHead from './deprecated/getHead'
 import getBlob from './getBlob'
 import getBlocks from './getBlocks'
 import getLatestCommit from './getLatestCommit'
@@ -22,6 +20,4 @@ export default function (server: Server, ctx: AppContext) {
   subscribeRepos(server, ctx)
   listBlobs(server, ctx)
   listRepos(server, ctx)
-  getCheckout(server, ctx)
-  getHead(server, ctx)
 }
