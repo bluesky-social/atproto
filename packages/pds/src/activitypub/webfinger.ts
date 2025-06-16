@@ -1,4 +1,4 @@
-import { RequestHandler, Router, json } from 'express'
+import { RequestHandler, Router } from 'express'
 //import { AuthScope } from '../auth-verifier'
 import { AppContext } from '../context'
 import { genDomainPrefix, inferPubHandle } from './util'
@@ -8,7 +8,6 @@ export const atRoutePrefix = '/atpub'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
-  router.use(json())
 
   type DIDByActorHost = {
     did?: string

@@ -148,8 +148,8 @@ export class PDS {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    app.use(server.xrpc.router)
     app.use(webfinger.createRouter(ctx))
+    app.use(server.xrpc.router)
     app.use(error.handler)
 
     return new PDS({
