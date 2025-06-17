@@ -1,6 +1,9 @@
 import { Router } from 'express'
 import {
+  HandleUnavailableError,
   InvalidGrantError,
+  InvalidRequestError,
+  SecondAuthenticationFactorRequiredError,
   UseDpopNonceError,
   oauthMiddleware,
   oauthProtectedResourceMetadataSchema,
@@ -47,21 +50,22 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
   return router
 }
 
-function ignoreError(
-  err: unknown,
-): err is UseDpopNonceError | InvalidGrantError {
-  if (err instanceof UseDpopNonceError) {
-    return true
-  }
-
+function ignoreError(err: unknown): boolean {
   if (err instanceof InvalidGrantError) {
-    switch (err.error_description) {
-      case 'Refresh token expired':
-        return true
-      case 'Invalid refresh token':
-        return err.cause == null // Ignore unless caused by something else
-    }
+    return (
+      err.error_description === 'Refresh token expired' ||
+      err.error_description === 'Refresh token exceeded inactivity timeout' ||
+      err.error_description === 'Invalid refresh token'
+    )
   }
 
-  return false
+  if (err instanceof InvalidRequestError) {
+    return err.error_description === 'Invalid identifier or password'
+  }
+
+  return (
+    err instanceof UseDpopNonceError ||
+    err instanceof HandleUnavailableError ||
+    err instanceof SecondAuthenticationFactorRequiredError
+  )
 }

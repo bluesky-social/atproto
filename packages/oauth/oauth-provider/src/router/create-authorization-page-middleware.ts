@@ -91,8 +91,7 @@ export function createAuthorizationPageMiddleware<
         // If we have the "redirect_uri" parameter, we can redirect the user
         // to the client with an error.
         if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-          // Prefer logging the cause
-          onError?.(req, res, err.cause ?? err, 'Authorization failed')
+          onError?.(req, res, err, 'Authorization request denied')
 
           return sendAuthorizeRedirect(res, {
             issuer: server.issuer,

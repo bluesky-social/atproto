@@ -452,8 +452,7 @@ export function createApiMiddleware<
           }
 
           if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-            // Prefer logging the cause
-            onError?.(req, res, err.cause ?? err, 'Authorization failed')
+            onError?.(req, res, err, 'Authorization request not acceptable')
 
             const url = buildRedirectUrl(
               server.issuer,
@@ -510,8 +509,7 @@ export function createApiMiddleware<
           return { url }
         } catch (err) {
           if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-            // Prefer logging the cause
-            onError?.(req, res, err.cause ?? err, 'Authorization failed')
+            onError?.(req, res, err, 'Authorization request rejected')
 
             const url = buildRedirectUrl(
               server.issuer,
