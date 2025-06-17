@@ -15,11 +15,10 @@ import {
   MuteOperation_Type,
   PutOperationRequest,
 } from '../../proto/bsync_pb'
-import {
-  NamespaceAppBskyNotificationDefsPreferences,
-  NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
-} from '../../stash'
+import { NamespaceAppBskyNotificationDefsSubjectActivitySubscription } from '../../stash'
 import { Database } from '../server/db'
+import { excluded } from '../server/db/util'
+import { httpLogger } from '../../logger'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -151,24 +150,30 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
 
     async putOperation(req) {
       const { actorDid, namespace, key, method, payload } = req
-      if (
-        method !== Method.CREATE &&
-        method !== Method.UPDATE &&
-        method !== Method.DELETE
-      ) {
-        throw new Error(`Unsupported method: ${method}`)
-      }
+      assert(
+        method === Method.CREATE ||
+          method === Method.UPDATE ||
+          method === Method.DELETE,
+        `Unsupported method: ${method}`,
+      )
 
       const now = new Date().toISOString()
-      if (namespace === NamespaceAppBskyNotificationDefsPreferences) {
-        await handleNotificationPreferencesOperation(db, req, now)
-      } else if (
+
+      // index all items into private_data
+      await handleGenericOperation(db, req, now)
+
+      // maintain bespoke indexes for certain namespaces
+      if (
         namespace ===
         NamespaceAppBskyNotificationDefsSubjectActivitySubscription
       ) {
-        await handleSubjectActivitySubscriptionOperation(db, req, now)
-      } else {
-        await handleGenericOperation(db, req, now)
+        await handleSubjectActivitySubscriptionOperation(db, req, now).catch(
+          (err: unknown) =>
+            httpLogger.warn(
+              { err, namespace },
+              'mock bsync put operation failed',
+            ),
+        )
       }
 
       return {
@@ -191,35 +196,6 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       return {}
     },
   })
-
-const handleNotificationPreferencesOperation = async (
-  db: Database,
-  req: PutOperationRequest,
-  now: string,
-) => {
-  const { actorDid, namespace, key, method, payload } = req
-  if (method === Method.CREATE || method === Method.UPDATE) {
-    return db.db
-      .insertInto('private_data')
-      .values({
-        actorDid,
-        namespace,
-        key,
-        payload: Buffer.from(payload).toString('utf8'),
-        indexedAt: now,
-        updatedAt: now,
-      })
-      .onConflict((oc) =>
-        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
-          payload: Buffer.from(payload).toString('utf8'),
-          updatedAt: now,
-        }),
-      )
-      .execute()
-  }
-
-  return handleGenericOperation(db, req, now)
-}
 
 const handleSubjectActivitySubscriptionOperation = async (
   db: Database,
@@ -270,14 +246,15 @@ const handleSubjectActivitySubscriptionOperation = async (
     .execute()
 }
 
+// upsert into or remove from private_data
 const handleGenericOperation = async (
   db: Database,
   req: PutOperationRequest,
   now: string,
 ) => {
   const { actorDid, namespace, key, method, payload } = req
-  if (method === Method.CREATE) {
-    return db.db
+  if (method === Method.CREATE || method === Method.UPDATE) {
+    await db.db
       .insertInto('private_data')
       .values({
         actorDid,
@@ -287,26 +264,21 @@ const handleGenericOperation = async (
         indexedAt: now,
         updatedAt: now,
       })
+      .onConflict((oc) =>
+        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
+          payload: excluded(db.db, 'payload'),
+          updatedAt: excluded(db.db, 'updatedAt'),
+        }),
+      )
       .execute()
-  }
-
-  if (method === Method.UPDATE) {
-    return db.db
-      .updateTable('private_data')
+  } else if (method === Method.DELETE) {
+    await db.db
+      .deleteFrom('private_data')
       .where('actorDid', '=', actorDid)
       .where('namespace', '=', namespace)
       .where('key', '=', key)
-      .set({
-        payload: Buffer.from(payload).toString('utf8'),
-        updatedAt: now,
-      })
       .execute()
+  } else {
+    assert.fail(`unexpected method ${method}`)
   }
-
-  return db.db
-    .deleteFrom('private_data')
-    .where('actorDid', '=', actorDid)
-    .where('namespace', '=', namespace)
-    .where('key', '=', key)
-    .execute()
 }
