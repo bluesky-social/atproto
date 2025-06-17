@@ -8,8 +8,8 @@ import {
   oauthMiddleware,
   oauthProtectedResourceMetadataSchema,
 } from '@atproto/oauth-provider'
-import { AppContext } from './context'
-import { oauthLogger } from './logger'
+import { AppContext } from './context.js'
+import { oauthLogger, reqSerializer } from './logger.js'
 
 export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
   const router = Router()
@@ -40,8 +40,10 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
   if (oauthProvider) {
     router.use(
       oauthMiddleware(oauthProvider, {
-        onError: (req, res, err, message) => {
-          if (!ignoreError(err)) oauthLogger.error({ err, req }, message)
+        onError: (req, res, err, msg) => {
+          if (!ignoreError(err)) {
+            oauthLogger.error({ err, req: reqSerializer(req) }, msg)
+          }
         },
       }),
     )
