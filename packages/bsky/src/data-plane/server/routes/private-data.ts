@@ -69,7 +69,7 @@ const lexChatPreferenceToProtobuf = (
 ): ChatNotificationPreference =>
   new ChatNotificationPreference({
     filter:
-      p.filter === 'accepted'
+      p.include === 'accepted'
         ? ChatNotificationFilter.ACCEPTED
         : ChatNotificationFilter.ALL,
     push: { enabled: p.push ?? true },
@@ -80,7 +80,7 @@ const lexFilterablePreferenceToProtobuf = (
 ): FilterableNotificationPreference =>
   new FilterableNotificationPreference({
     filter:
-      p.filter === 'follows'
+      p.include === 'follows'
         ? NotificationFilter.FOLLOWS
         : NotificationFilter.ALL,
     list: { enabled: p.list ?? true },
