@@ -1,16 +1,27 @@
+import { AppBskyNotificationActivitySubscriptionDeclaration } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { VerificationMeta } from '../proto/bsky_pb'
+import {
+  ActivitySubscription,
+  ActivitySubscriptionsFrom,
+  VerificationMeta,
+} from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
+  isActivitySubscriptionEnabled,
   parseRecord,
   parseString,
   safeTakedownRef,
 } from './util'
+
+type AllowActivitySubscriptions = Extract<
+  AppBskyNotificationActivitySubscriptionDeclaration.Record['allowSubscriptions'],
+  'all' | 'none' | 'following'
+>
 
 export type Actor = {
   did: string
@@ -29,6 +40,7 @@ export type Actor = {
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
+  allowActivitySubscriptionsFrom: AllowActivitySubscriptions
 }
 
 export type VerificationHydrationState = {
@@ -62,6 +74,10 @@ export type ProfileViewerState = {
   knownFollowers?: {
     count: number
     followers: string[]
+  }
+  activitySubscription?: {
+    post: boolean
+    reply: boolean
   }
 }
 
@@ -177,6 +193,22 @@ export class ActorHydrator {
         },
       )
 
+      const allowActivitySubscriptionsFrom = (
+        val: ActivitySubscriptionsFrom,
+      ): AllowActivitySubscriptions => {
+        switch (val) {
+          case ActivitySubscriptionsFrom.ALL:
+            return 'all'
+          case ActivitySubscriptionsFrom.FOLLOWING:
+            return 'following'
+          case ActivitySubscriptionsFrom.NONE:
+            return 'none'
+          default:
+            // The dataplane should set the default of "FOLLOWING". Just in case.
+            return 'following'
+        }
+      }
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -194,6 +226,9 @@ export class ActorHydrator {
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
+        allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
+          actor.allowActivitySubscriptionsFrom,
+        ),
       })
     }, new HydrationMap<Actor>())
   }
@@ -234,10 +269,23 @@ export class ActorHydrator {
       actorDid: viewer,
       targetDids: dids,
     })
+
+    const activitySubscription = (val: ActivitySubscription | undefined) => {
+      if (!val) return undefined
+
+      const result = {
+        post: !!val.post,
+        reply: !!val.reply,
+      }
+      if (!isActivitySubscriptionEnabled(result)) return undefined
+
+      return result
+    }
+
     return dids.reduce((acc, did, i) => {
       const rels = res.relationships[i]
       if (viewer === did) {
-        // ignore self-follows, self-mutes, self-blocks
+        // ignore self-follows, self-mutes, self-blocks, self-activity-subscriptions
         return acc.set(did, {})
       }
       return acc.set(did, {
@@ -249,6 +297,7 @@ export class ActorHydrator {
         blockingByList: parseString(rels.blockingByList),
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
+        activitySubscription: activitySubscription(rels.activitySubscription),
       })
     }, new HydrationMap<ProfileViewerState>())
   }
