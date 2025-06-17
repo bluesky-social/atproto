@@ -27,12 +27,14 @@ import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
+import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { asArray } from '../lib/util/cast.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { Awaitable } from '../lib/util/type.js'
+import { DpopProof } from '../oauth-verifier.js'
 import { ClientAuth } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'
@@ -161,6 +163,7 @@ export class Client {
    */
   public async authenticate(
     input: OAuthClientCredentials,
+    dpopProof: null | DpopProof,
     checks: {
       authorizationServerIdentifier: string
     },
@@ -248,6 +251,22 @@ export class Client {
           throw new InvalidClientError(`"kid" required in client_assertion`)
         }
 
+        // If the assertion is bound to a key, it must be bound to the same
+        // key as the one provided by the client (DPoP)
+        if (result.payload.cnf !== undefined) {
+          if (!isJktCnf(result.payload.cnf)) {
+            throw new InvalidClientError(
+              `Invalid "cnf" claim in client_assertion: expected { jkt: string }`,
+            )
+          } else if (!dpopProof) {
+            throw new InvalidDpopProofError('DPoP proof required')
+          } else if (dpopProof.jkt !== result.payload.cnf.jkt) {
+            throw new InvalidDpopProofError(
+              `client_assertion "cnf" does not match the provided DPoP proof`,
+            )
+          }
+        }
+
         return {
           method: 'private_key_jwt',
           jti: result.payload.jti,
@@ -255,6 +274,7 @@ export class Client {
           jkt: await authJwkThumbprint(result.key),
           alg: result.protectedHeader.alg,
           kid: result.protectedHeader.kid,
+          cnf: result.payload.cnf,
         }
       }
 
@@ -383,12 +403,20 @@ export class Client {
   }
 }
 
-export async function authJwkThumbprint(
-  key: Uint8Array | KeyLike,
-): Promise<string> {
+async function authJwkThumbprint(key: Uint8Array | KeyLike): Promise<string> {
   try {
     return await calculateJwkThumbprint(await exportJWK(key), 'sha512')
   } catch (err) {
     throw new InvalidClientError('Unable to compute JWK thumbprint', err)
   }
+}
+
+function isJktCnf(value: unknown): value is { jkt: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'jkt' in value &&
+    typeof value.jkt === 'string' &&
+    Object.keys(value).length === 1
+  )
 }
