@@ -6,14 +6,16 @@ export function extractZodErrorMessage(err: unknown): string | undefined {
       if (issue.path.length) {
         // "part" will typically be "body" or "query"
         const [part, ...path] = issue.path
-        const location = path.length ? `"${path.join('.')}" ${part}` : part
+        const title = path.length
+          ? `Validation of  "${path.join('.')}" ${part} parameter failed`
+          : `Invalid request ${part}`
         const message = extractMessage(issue)
-        return `Validation of ${location} parameter failed${message ? `: ${message}` : ''}`
+        return message ? `${title}: ${message}` : title
       }
     }
 
     const message = extractMessage(err)
-    if (message) return `Validation failed: ${message}`
+    if (message) return `Invalid request: ${message}`
   }
 
   return undefined
