@@ -1,6 +1,6 @@
 {
   "name": "@atproto/sync",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "license": "MIT",
   "description": "atproto sync library",
   "keywords": [
