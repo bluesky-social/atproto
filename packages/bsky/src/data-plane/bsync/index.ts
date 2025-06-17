@@ -9,6 +9,7 @@ import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
 import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
+import { httpLogger } from '../../logger'
 import { Service } from '../../proto/bsync_connect'
 import {
   Method,
@@ -18,7 +19,6 @@ import {
 import { NamespaceAppBskyNotificationDefsSubjectActivitySubscription } from '../../stash'
 import { Database } from '../server/db'
 import { excluded } from '../server/db/util'
-import { httpLogger } from '../../logger'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
