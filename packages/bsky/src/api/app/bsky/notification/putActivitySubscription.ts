@@ -39,9 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         if (enabled) {
           await ctx.stashClient.create(stashInput)
         } else {
-          throw new InvalidRequestError(
-            'Cannot create a disabled activity subscription',
-          )
+          // no-op: subscription already doesn't exist
         }
       }
 
