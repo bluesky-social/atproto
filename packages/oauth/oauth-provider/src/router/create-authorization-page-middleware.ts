@@ -15,8 +15,8 @@ import {
   validateOrigin,
   validateReferrer,
 } from '../lib/http/index.js'
+import { formatError } from '../lib/util/error.js'
 import type { Awaitable } from '../lib/util/type.js'
-import { extractZodErrorMessage } from '../lib/util/zod-error.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { requestUriSchema } from '../request/request-uri.js'
 import { AuthorizationResultRedirect } from '../result/authorization-result-redirect.js'
@@ -61,16 +61,16 @@ export function createAuthorizationPageMiddleware<
       const query = Object.fromEntries(this.url.searchParams)
 
       const clientCredentials = await oauthClientCredentialsSchema
-        .parseAsync(query, { path: ['query'] })
-        .catch(throwInvalidRequest)
+        .parseAsync(query)
+        .catch((err) => throwInvalidRequest(err, 'Invalid client credentials'))
 
       if ('client_secret' in clientCredentials) {
         throw new InvalidRequestError('Client secret must not be provided')
       }
 
       const authorizationRequest = await oauthAuthorizationRequestQuerySchema
-        .parseAsync(query, { path: ['query'] })
-        .catch(throwInvalidRequest)
+        .parseAsync(query)
+        .catch((err) => throwInvalidRequest(err, 'Invalid request parameters'))
 
       const deviceInfo = await server.deviceManager.load(req, res)
 
@@ -154,11 +154,8 @@ export function createAuthorizationPageMiddleware<
   }
 }
 
-function throwInvalidRequest(err: unknown): never {
-  throw new InvalidRequestError(
-    extractZodErrorMessage(err) ?? 'Input validation error',
-    err,
-  )
+function throwInvalidRequest(err: unknown, prefix: string): never {
+  throw new InvalidRequestError(formatError(err, prefix), err)
 }
 
 function sendAuthorizeRedirect(

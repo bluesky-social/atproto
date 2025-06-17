@@ -1,33 +1,26 @@
-import { ZodError } from 'zod'
+import { ZodError, ZodIssue, ZodIssueCode } from 'zod'
 
-export function extractZodErrorMessage(err: unknown): string | undefined {
-  if (err instanceof ZodError) {
-    for (const issue of err.issues) {
-      if (issue.path.length) {
-        // "part" will typically be "body" or "query"
-        const [part, ...path] = issue.path
-        const title = path.length
-          ? `Validation of  "${path.join('.')}" ${part} parameter failed`
-          : `Invalid request ${part}`
-        const message = extractMessage(issue)
-        return message ? `${title}: ${message}` : title
-      }
-    }
-
-    const message = extractMessage(err)
-    if (message) return `Invalid request: ${message}`
-  }
-
-  return undefined
+export function formatZodError(err: ZodError, prefix?: string): string {
+  const message = err.issues.length
+    ? err.issues.map(formatZodIssue).join('; ')
+    : err.message // Should never happen (issues should never be empty)
+  return prefix ? `${prefix}: ${message}` : message
 }
 
-function extractMessage({ message }: { message: string }): string | undefined {
-  // message serialization defaults to JSON.stringify(err.issues)
-  if (!message.startsWith('[') && !message.endsWith(']')) {
-    // If the error message does not end with ']', it means it is not a
-    // serialization of the issues, so we can return it directly.
-    return message
+export function formatZodIssue(issue: ZodIssue): string {
+  if (issue.code === ZodIssueCode.invalid_union) {
+    return issue.unionErrors
+      .map((err) => err.issues.map(formatZodIssue).join('; '))
+      .join(', or ')
   }
 
-  return undefined
+  if (issue.path.length === 1 && typeof issue.path[0] === 'number') {
+    return `${issue.message} at index ${issue.path[0]}`
+  }
+
+  if (issue.path.length) {
+    return `${issue.message} at ${issue.path.join('.')}`
+  }
+
+  return issue.message
 }
