@@ -1,5 +1,11 @@
 # @atproto/repo
 
+## 0.8.2
+
+### Patch Changes
+
+- [#3956](https://github.com/bluesky-social/atproto/pull/3956) [`8bd45e2f8`](https://github.com/bluesky-social/atproto/commit/8bd45e2f898a87b3550c7f4a0c8312fad9cb4736) Thanks [@bnewbold](https://github.com/bnewbold)! - increase max MST key from 256 to 1024 chars
+
 ## 0.8.1
 
 ### Patch Changes

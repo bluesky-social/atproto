@@ -30,7 +30,7 @@ export function validateRecordDeleted<V>(v: V) {
 
 export interface ChatPreference {
   $type?: 'app.bsky.notification.defs#chatPreference'
-  filter: 'all' | 'accepted' | (string & {})
+  include: 'all' | 'accepted' | (string & {})
   push: boolean
 }
 
@@ -46,7 +46,7 @@ export function validateChatPreference<V>(v: V) {
 
 export interface FilterablePreference {
   $type?: 'app.bsky.notification.defs#filterablePreference'
-  filter: 'all' | 'follows' | (string & {})
+  include: 'all' | 'follows' | (string & {})
   list: boolean
   push: boolean
 }

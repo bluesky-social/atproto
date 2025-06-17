@@ -964,7 +964,7 @@ describe('notification views', () => {
 
     // Defaults
     const fp: FilterablePreference = {
-      filter: 'all',
+      include: 'all',
       list: true,
       push: true,
     }
@@ -973,7 +973,7 @@ describe('notification views', () => {
       push: true,
     }
     const cp: ChatPreference = {
-      filter: 'all',
+      include: 'all',
       push: true,
     }
 
@@ -1115,7 +1115,7 @@ describe('notification views', () => {
       const input0 = {
         chat: {
           push: false,
-          filter: 'accepted',
+          include: 'accepted',
         },
       }
       const expected0: Preferences = {
@@ -1139,7 +1139,7 @@ describe('notification views', () => {
         mention: {
           list: false,
           push: false,
-          filter: 'follows',
+          include: 'follows',
         },
       }
       const expected1: Preferences = {

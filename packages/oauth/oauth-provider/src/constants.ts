@@ -38,17 +38,17 @@ export const TOKEN_MAX_AGE = 60 * MINUTE
 /** 5 minutes */
 export const AUTHORIZATION_INACTIVITY_TIMEOUT = 5 * MINUTE
 
-/** 1 week */
-export const PUBLIC_CLIENT_SESSION_LIFETIME = 1 * WEEK
+/** 2 week */
+export const PUBLIC_CLIENT_SESSION_LIFETIME = 2 * WEEK
 
-/** 2 days */
-export const PUBLIC_CLIENT_REFRESH_LIFETIME = 2 * DAY
+/** @see {@link PUBLIC_CLIENT_SESSION_LIFETIME} */
+export const PUBLIC_CLIENT_REFRESH_LIFETIME = PUBLIC_CLIENT_SESSION_LIFETIME
 
-/** 1 year */
-export const CONFIDENTIAL_CLIENT_SESSION_LIFETIME = 1 * YEAR
+/** 2 years */
+export const CONFIDENTIAL_CLIENT_SESSION_LIFETIME = 2 * YEAR
 
-/** 1 months */
-export const CONFIDENTIAL_CLIENT_REFRESH_LIFETIME = 1 * MONTH
+/** 3 months */
+export const CONFIDENTIAL_CLIENT_REFRESH_LIFETIME = 3 * MONTH
 
 /** 5 minutes */
 export const PAR_EXPIRES_IN = 5 * MINUTE

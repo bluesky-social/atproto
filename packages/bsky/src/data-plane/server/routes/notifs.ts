@@ -206,7 +206,7 @@ export const notificationPreferencesLexToProtobuf = (
   ): ChatNotificationPreference =>
     new ChatNotificationPreference({
       filter:
-        p.filter === 'accepted'
+        p.include === 'accepted'
           ? ChatNotificationFilter.ACCEPTED
           : ChatNotificationFilter.ALL,
       push: { enabled: p.push ?? true },
@@ -217,7 +217,7 @@ export const notificationPreferencesLexToProtobuf = (
   ): FilterableNotificationPreference =>
     new FilterableNotificationPreference({
       filter:
-        p.filter === 'follows'
+        p.include === 'follows'
           ? NotificationFilter.FOLLOWS
           : NotificationFilter.ALL,
       list: { enabled: p.list ?? true },
