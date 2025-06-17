@@ -765,14 +765,14 @@ message NotificationChannelPush {
   bool enabled = 1;
 }
 
-enum NotificationFilter {
-  NOTIFICATION_FILTER_UNSPECIFIED = 0;
-  NOTIFICATION_FILTER_ALL = 1;
-  NOTIFICATION_FILTER_FOLLOWS = 2;
+enum NotificationInclude {
+  NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  NOTIFICATION_INCLUDE_ALL = 1;
+  NOTIFICATION_INCLUDE_FOLLOWS = 2;
 }
 
 message FilterableNotificationPreference {
-  NotificationFilter filter = 1;
+  NotificationInclude include = 1;
   NotificationChannelList list = 2;
   NotificationChannelPush push = 3;
 }
@@ -782,14 +782,14 @@ message NotificationPreference {
   NotificationChannelPush push = 2;
 }
 
-enum ChatNotificationFilter {
-  CHAT_NOTIFICATION_FILTER_UNSPECIFIED = 0;
-  CHAT_NOTIFICATION_FILTER_ALL = 1;
-  CHAT_NOTIFICATION_FILTER_ACCEPTED = 2;
+enum ChatNotificationInclude {
+  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
+  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
 }
 
 message ChatNotificationPreference {
-  ChatNotificationFilter filter = 1;
+  ChatNotificationInclude include = 1;
   NotificationChannelPush push = 2;
 }
 

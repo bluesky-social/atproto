@@ -6,10 +6,10 @@ import {
   Preferences,
 } from '../../../../lexicon/types/app/bsky/notification/defs'
 import {
-  ChatNotificationFilter,
+  ChatNotificationInclude,
   ChatNotificationPreference,
   FilterableNotificationPreference,
-  NotificationFilter,
+  NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
 } from '../../../../proto/bsky_pb'
@@ -78,7 +78,8 @@ const protobufChatPreferenceToLex = (
   p?: DeepPartial<ChatNotificationPreference>,
 ): DeepPartial<ChatPreference> => {
   return {
-    include: p?.filter === ChatNotificationFilter.ACCEPTED ? 'accepted' : 'all',
+    include:
+      p?.include === ChatNotificationInclude.ACCEPTED ? 'accepted' : 'all',
     push: p?.push?.enabled,
   }
 }
@@ -87,7 +88,7 @@ const protobufFilterablePreferenceToLex = (
   p?: DeepPartial<FilterableNotificationPreference>,
 ): DeepPartial<FilterablePreference> => {
   return {
-    include: p?.filter === NotificationFilter.FOLLOWS ? 'follows' : 'all',
+    include: p?.include === NotificationInclude.FOLLOWS ? 'follows' : 'all',
     list: p?.list?.enabled,
     push: p?.push?.enabled,
   }
