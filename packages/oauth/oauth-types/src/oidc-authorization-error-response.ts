@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * @see {@link https://openid.net/specs/openid-connect-core-1_0.html#AuthError}
  */
-export const oidcAuthenticationErrorResponseSchema = z.enum([
+export const oidcAuthorizationResponseErrorSchema = z.enum([
   // The Authorization Server requires End-User interaction of some form to proceed. This error MAY be returned when the prompt parameter value in the Authentication Request is none, but the Authentication Request cannot be completed without displaying a user interface for End-User interaction.
   'interaction_required',
   // The Authorization Server requires End-User authentication. This error MAY be returned when the prompt parameter value in the Authentication Request is none, but the Authentication Request cannot be completed without displaying a user interface for End-User authentication.
@@ -24,6 +24,6 @@ export const oidcAuthenticationErrorResponseSchema = z.enum([
   'registration_not_supported',
 ])
 
-export type OidcAuthenticationErrorResponse = z.infer<
-  typeof oidcAuthenticationErrorResponseSchema
+export type OidcAuthorizationResponseError = z.infer<
+  typeof oidcAuthorizationResponseErrorSchema
 >

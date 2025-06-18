@@ -1,17 +1,17 @@
 import {
-  OAuthAuthenticationErrorResponse,
   OAuthAuthorizationRequestParameters,
-  OidcAuthenticationErrorResponse,
+  OAuthAuthorizationResponseError,
+  OidcAuthorizationResponseError,
 } from '@atproto/oauth-types'
 import { buildErrorPayload } from './error-parser.js'
 import { OAuthError } from './oauth-error.js'
 
-export type AuthenticationErrorResponse =
-  | OAuthAuthenticationErrorResponse
+export type AuthorizationResponseError =
+  | OAuthAuthorizationResponseError
   // OIDC authentication error response are not part of the ATproto flavoured
   // OAuth but we allow them because they provide better feedback to the client
   // (in particular when SSO is used).
-  | OidcAuthenticationErrorResponse
+  | OidcAuthorizationResponseError
   // This error is defined by rfc9396 (not part of the OAuth 2.1 or OIDC). But
   // since, in ATproto flavoured OAuth, client registration is a dynamic part of
   // the authorization process, we allow it.
@@ -21,7 +21,7 @@ export class AccessDeniedError extends OAuthError {
   constructor(
     public readonly parameters: OAuthAuthorizationRequestParameters,
     error_description: string,
-    error: AuthenticationErrorResponse = 'access_denied',
+    error: AuthorizationResponseError = 'access_denied',
     cause?: unknown,
   ) {
     super(error, error_description, 400, cause)
@@ -30,7 +30,7 @@ export class AccessDeniedError extends OAuthError {
   static from(
     parameters: OAuthAuthorizationRequestParameters,
     cause: unknown,
-    error: AuthenticationErrorResponse,
+    error: AuthorizationResponseError,
   ): AccessDeniedError {
     if (cause instanceof AccessDeniedError) return cause
     const { error_description } = buildErrorPayload(cause)
