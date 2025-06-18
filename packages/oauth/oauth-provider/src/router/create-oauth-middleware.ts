@@ -93,9 +93,12 @@ export function createOAuthMiddleware<
     oauthHandler(async function (req) {
       const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
+      // https://datatracker.ietf.org/doc/html/rfc9126#name-error-response
+      // https://datatracker.ietf.org/doc/html/rfc6749#autoid-56
+
       const credentials = await oauthClientCredentialsSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidRequest)
+        .catch(throwInvalidClient)
 
       const authorizationRequest = await oauthAuthorizationRequestParSchema
         .parseAsync(payload, { path: ['body'] })
@@ -132,7 +135,7 @@ export function createOAuthMiddleware<
 
       const clientCredentials = await oauthClientCredentialsSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidClient)
+        .catch(throwInvalidGrant)
 
       const tokenRequest = await oauthTokenRequestSchema
         .parseAsync(payload, { path: ['body'] })
