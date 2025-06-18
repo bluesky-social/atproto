@@ -1,14 +1,12 @@
 import { ForbiddenError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import {
-  REASONAPPEAL,
-  ReasonType,
-} from '../../lexicon/types/com/atproto/moderation/defs'
+import { ReasonType } from '../../lexicon/types/com/atproto/moderation/defs'
 import { ModerationService } from '../../mod-service'
 import { subjectFromInput } from '../../mod-service/subject'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
+import { isAppealReport } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -20,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       const subject = subjectFromInput(input.body.subject)
 
       // If the report is an appeal, the requester must be the author of the subject
-      if (reasonType === REASONAPPEAL && requester !== subject.did) {
+      if (isAppealReport(reasonType) && requester !== subject.did) {
         throw new ForbiddenError('You cannot appeal this report')
       }
 
@@ -74,7 +72,7 @@ const assertValidReporter = async (
   }
 
   // For appeals, we just need to make sure that the account does not have pending appeal
-  if (reasonType === REASONAPPEAL) {
+  if (isAppealReport(reasonType)) {
     if (reporterStatus[0]?.appealed) {
       throw new ForbiddenError(
         'Awaiting decision on previous appeal',

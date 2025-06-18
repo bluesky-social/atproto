@@ -4,17 +4,6 @@ import { Member } from '../db/schema/member'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ids } from '../lexicon/lexicons'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
-import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport'
-import {
-  REASONAPPEAL,
-  REASONMISLEADING,
-  REASONOTHER,
-  REASONRUDE,
-  REASONSEXUAL,
-  REASONSPAM,
-  REASONVIOLATION,
-  ReasonType,
-} from '../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
@@ -29,6 +18,7 @@ import {
   ROLEVERIFIER,
 } from '../lexicon/types/tools/ozone/team/defs'
 import { ModerationSubjectStatusRow } from '../mod-service/types'
+import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 
 export const getPdsAccountInfos = async (
   ctx: AppContext,
@@ -139,16 +129,6 @@ export const getReviewState = (reviewState?: string) => {
 
 const reviewStates = new Set([REVIEWCLOSED, REVIEWESCALATED, REVIEWOPEN])
 
-const reasonTypes = new Set<ReasonType>([
-  REASONOTHER,
-  REASONSPAM,
-  REASONMISLEADING,
-  REASONRUDE,
-  REASONSEXUAL,
-  REASONVIOLATION,
-  REASONAPPEAL,
-])
-
 const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventTakedown',
   'tools.ozone.moderation.defs#modEventAcknowledge',
@@ -184,3 +164,9 @@ const memberRoles = new Set([
   ROLETRIAGE,
   ROLEVERIFIER,
 ])
+
+export const OZONE_APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
+const APPEAL_REASON_TYPES = [REASONAPPEAL, OZONE_APPEAL_REASON_TYPE]
+export const isAppealReport = (reasonType?: string): boolean => {
+  return !!reasonType && APPEAL_REASON_TYPES.includes(reasonType)
+}
