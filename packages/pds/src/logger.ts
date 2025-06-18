@@ -18,14 +18,16 @@ export const oauthLogger = subsystemLogger('pds:oauth')
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
   serializers: {
+    req: reqSerializer,
     err: (err: unknown) => ({
       code: err?.['code'],
       message: err?.['message'],
     }),
-    req: (req: IncomingMessage) => {
-      const serialized = stdSerializers.req(req)
-      const headers = obfuscateHeaders(serialized.headers)
-      return { ...serialized, headers }
-    },
   },
 })
+
+export function reqSerializer(req: IncomingMessage) {
+  const serialized = stdSerializers.req(req)
+  const headers = obfuscateHeaders(serialized.headers)
+  return { ...serialized, headers }
+}

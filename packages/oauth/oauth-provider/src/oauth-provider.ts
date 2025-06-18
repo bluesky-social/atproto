@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -75,8 +74,8 @@ import { LoginRequiredError } from './errors/login-required-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
+import { formatError } from './lib/util/error.js'
 import { LocalizedString, MultiLangString } from './lib/util/locale.js'
-import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import {
@@ -448,11 +447,8 @@ export class OAuthProvider extends OAuthVerifier {
     const parameters = await oauthAuthorizationRequestParametersSchema
       .parseAsync(payload)
       .catch((err) => {
-        const message =
-          err instanceof ZodError
-            ? `Invalid request parameters: ${err.message}`
-            : `Invalid "request" object`
-        throw InvalidRequestError.from(err, message)
+        const msg = formatError(err, 'Invalid parameters in JAR')
+        throw InvalidRequestError.from(err, msg)
       })
 
     return parameters
@@ -537,12 +533,10 @@ export class OAuthProvider extends OAuthVerifier {
     // PAR
     if ('request_uri' in query) {
       const requestUri = await requestUriSchema
-        .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
+        .parseAsync(query.request_uri)
         .catch((err) => {
-          throw new InvalidRequestError(
-            extractZodErrorMessage(err) ?? 'Input validation error',
-            err,
-          )
+          const msg = formatError(err, 'Invalid "request_uri" query parameter')
+          throw new InvalidRequestError(msg, err)
         })
 
       return this.requestManager.get(requestUri, deviceId, client.id)
@@ -869,16 +863,10 @@ export class OAuthProvider extends OAuthVerifier {
     input: OAuthAuthorizationCodeGrantTokenRequest,
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
-    const code = await codeSchema
-      .parseAsync(input.code, { path: ['code'] })
-      .catch((err) => {
-        throw InvalidGrantError.from(
-          err,
-          err instanceof ZodError
-            ? `Invalid code: ${err.message}`
-            : `Invalid code`,
-        )
-      })
+    const code = await codeSchema.parseAsync(input.code).catch((err) => {
+      const msg = formatError(err, 'Invalid code')
+      throw InvalidGrantError.from(err, msg)
+    })
 
     const data = await this.requestManager
       .consumeCode(code)
@@ -997,9 +985,10 @@ export class OAuthProvider extends OAuthVerifier {
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const refreshToken = await refreshTokenSchema
-      .parseAsync(input.refresh_token, { path: ['refresh_token'] })
+      .parseAsync(input.refresh_token)
       .catch((err) => {
-        throw InvalidGrantError.from(err, `Invalid refresh token`)
+        const msg = formatError(err, 'Invalid refresh token')
+        throw new InvalidGrantError(msg, err)
       })
 
     const tokenInfo = await this.tokenManager.consumeRefreshToken(refreshToken)

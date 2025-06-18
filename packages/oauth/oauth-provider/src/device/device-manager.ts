@@ -261,7 +261,7 @@ export class DeviceManager {
     const rawValue = Object.hasOwn(cookies, name) ? cookies[name] : null
     if (!rawValue) return null
 
-    const result = schema.safeParse(rawValue, { path: ['cookie', name] })
+    const result = schema.safeParse(rawValue)
     if (!result.success) return null
 
     const value = result.data

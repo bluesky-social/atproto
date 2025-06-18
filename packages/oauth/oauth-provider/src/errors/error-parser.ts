@@ -1,6 +1,7 @@
 import { errors } from 'jose'
 import { ZodError } from 'zod'
 import { JwtVerifyError } from '@atproto/jwk'
+import { formatZodError } from '../lib/util/zod-error.js'
 import { OAuthError } from './oauth-error.js'
 
 const { JOSEError } = errors
@@ -63,7 +64,7 @@ export function buildErrorPayload(error: unknown): ErrorPayload {
   if (error instanceof ZodError) {
     return {
       error: INVALID_REQUEST,
-      error_description: error.issues[0]?.message || 'Invalid request',
+      error_description: formatZodError(error, 'Validation error'),
     }
   }
 
