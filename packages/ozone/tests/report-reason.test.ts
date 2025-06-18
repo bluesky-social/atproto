@@ -2,6 +2,10 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ModerationServiceProfile } from '../src/mod-service/profile'
 import { forSnapshot } from './_util'
 import AtpAgent from '@atproto/api'
+import {
+  REASONSPAM,
+  REASONRUDE,
+} from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('report reason', () => {
   let network: TestNetwork
@@ -104,6 +108,47 @@ describe('report reason', () => {
           'tools.ozone.report.defs#reasonHarassmentFake',
         ),
       ).resolves.toEqual('tools.ozone.report.defs#reasonHarassmentFake')
+    })
+
+    it('should validate mapped reason types', async () => {
+      const moderationServiceProfile = new ModerationServiceProfile(
+        network.ozone.ctx.cfg,
+        network.ozone.ctx.appviewAgent,
+        500,
+      )
+
+      // Set up labeler profile with old reason types only
+      await pdsAgent.com.atproto.repo.putRecord({
+        repo: network.ozone.ctx.cfg.service.did,
+        collection: 'app.bsky.labeler.service',
+        rkey: 'self',
+        record: {
+          policies: { labelValues: [] },
+          reasonTypes: [REASONSPAM, REASONRUDE],
+          createdAt: new Date().toISOString(),
+        },
+      })
+      await network.processAll()
+
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      await expect(
+        moderationServiceProfile.validateReasonType(
+          'tools.ozone.report.defs#reasonMisleadingSpam',
+        ),
+      ).resolves.toEqual('tools.ozone.report.defs#reasonMisleadingSpam')
+
+      // directly supported old reason types work
+      await expect(
+        moderationServiceProfile.validateReasonType(REASONSPAM),
+      ).resolves.toEqual(REASONSPAM)
+
+      // new reason types that don't map to supported old reason types are rejected
+      await expect(
+        moderationServiceProfile.validateReasonType(
+          'tools.ozone.report.defs#reasonViolenceThreats',
+        ),
+      ).rejects.toThrow('Invalid reason type')
     })
   })
 })

@@ -12,3 +12,16 @@ Object {
   },
 }
 `;
+
+exports[`report reason createReport only passes for allowed reason types 1`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "id": 1,
+  "reasonType": "tools.ozone.report.defs#reasonHarassmentTroll",
+  "reportedBy": "user(0)",
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(1)",
+  },
+}
+`;

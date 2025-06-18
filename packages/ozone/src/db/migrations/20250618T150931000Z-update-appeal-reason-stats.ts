@@ -10,7 +10,10 @@ export async function up(db: Kysely<any>): Promise<void> {
   // to include both REASONAPPEAL and OZONE_APPEAL_REASON_TYPE
 
   // Drop existing materialized views in reverse dependency order
-  await db.schema.dropView('account_record_events_stats').materialized().execute()
+  await db.schema
+    .dropView('account_record_events_stats')
+    .materialized()
+    .execute()
   await db.schema.dropView('record_events_stats').materialized().execute()
   await db.schema.dropView('account_events_stats').materialized().execute()
 
@@ -158,7 +161,10 @@ export async function up(db: Kysely<any>): Promise<void> {
 
 export async function down(db: Kysely<DatabaseSchemaType>): Promise<void> {
   // Drop the updated materialized views
-  await db.schema.dropView('account_record_events_stats').materialized().execute()
+  await db.schema
+    .dropView('account_record_events_stats')
+    .materialized()
+    .execute()
   await db.schema.dropView('record_events_stats').materialized().execute()
   await db.schema.dropView('account_events_stats').materialized().execute()
 
