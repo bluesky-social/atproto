@@ -8,6 +8,7 @@ export const readEnv = (): OzoneEnvironment => {
     port: envInt('OZONE_PORT'),
     publicUrl: envStr('OZONE_PUBLIC_URL'),
     serverDid: envStr('OZONE_SERVER_DID'),
+    serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
     appviewUrl: envStr('OZONE_APPVIEW_URL'),
     appviewDid: envStr('OZONE_APPVIEW_DID'),
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -52,6 +53,7 @@ export type OzoneEnvironment = {
   port?: number
   publicUrl?: string
   serverDid?: string
+  serviceRecordCacheTTL?: number
   appviewUrl?: string
   appviewDid?: string
   appviewPushEvents?: boolean

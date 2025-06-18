@@ -122,13 +122,6 @@ export const addAccountInfoToRepoView = (
   }
 }
 
-export const getReasonType = (reasonType: ReportInput['reasonType']) => {
-  if (reasonTypes.has(reasonType)) {
-    return reasonType
-  }
-  throw new InvalidRequestError('Invalid reason type')
-}
-
 export const getEventType = (type: string) => {
   if (eventTypes.has(type)) {
     return type as ModerationEvent['action']
