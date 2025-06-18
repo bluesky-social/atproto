@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -448,11 +447,8 @@ export class OAuthProvider extends OAuthVerifier {
     const parameters = await oauthAuthorizationRequestParametersSchema
       .parseAsync(payload)
       .catch((err) => {
-        const message =
-          err instanceof ZodError
-            ? `Invalid request parameters: ${err.message}`
-            : `Invalid "request" object`
-        throw InvalidRequestError.from(err, message)
+        const msg = formatError(err, 'Invalid parameters in JAR')
+        throw InvalidRequestError.from(err, msg)
       })
 
     return parameters
@@ -868,7 +864,8 @@ export class OAuthProvider extends OAuthVerifier {
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const code = await codeSchema.parseAsync(input.code).catch((err) => {
-      throw InvalidGrantError.from(err, formatError(err, `Invalid code`))
+      const msg = formatError(err, 'Invalid code')
+      throw InvalidGrantError.from(err, msg)
     })
 
     const data = await this.requestManager
@@ -990,8 +987,8 @@ export class OAuthProvider extends OAuthVerifier {
     const refreshToken = await refreshTokenSchema
       .parseAsync(input.refresh_token)
       .catch((err) => {
-        const message = formatError(err, 'Invalid refresh token')
-        throw new InvalidGrantError(message, err)
+        const msg = formatError(err, 'Invalid refresh token')
+        throw new InvalidGrantError(msg, err)
       })
 
     const tokenInfo = await this.tokenManager.consumeRefreshToken(refreshToken)
