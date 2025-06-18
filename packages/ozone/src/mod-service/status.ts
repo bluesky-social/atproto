@@ -5,7 +5,6 @@ import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
 import { DatabaseSchema } from '../db/schema'
 import { jsonb } from '../db/types'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
@@ -13,6 +12,7 @@ import {
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+import { isAppealReport } from '../api/util'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,
@@ -333,7 +333,7 @@ export const adjustModerationSubjectStatus = async (
 
   const isAppealEvent =
     action === 'tools.ozone.moderation.defs#modEventReport' &&
-    meta?.reportType === REASONAPPEAL
+    isAppealReport(`${meta?.reportType}`)
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     currentStatus,
