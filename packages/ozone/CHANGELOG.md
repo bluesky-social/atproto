@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.121
+
+### Patch Changes
+
+- [#3966](https://github.com/bluesky-social/atproto/pull/3966) [`97ef11657`](https://github.com/bluesky-social/atproto/commit/97ef116571909c95713017bcd7b621c8afbc90ef) Thanks [@mozzius](https://github.com/mozzius)! - Rename notification preference lexicon "filter" key to "include"
+
+- Updated dependencies [[`97ef11657`](https://github.com/bluesky-social/atproto/commit/97ef116571909c95713017bcd7b621c8afbc90ef)]:
+  - @atproto/api@0.15.16
+
 ## 0.1.120
 
 ### Patch Changes
