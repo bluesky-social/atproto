@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import {
   HandleUnavailableError,
-  InvalidGrantError,
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
   UseDpopNonceError,

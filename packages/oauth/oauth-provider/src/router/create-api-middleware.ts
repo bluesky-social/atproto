@@ -394,10 +394,12 @@ export function createApiMiddleware<
         // Any AccessDeniedError caught in this block will result in a redirect
         // to the client's redirect_uri with an error.
         try {
-          const { clientId, parameters } = await server.requestManager.get(
-            this.requestUri,
-            this.deviceId,
-          )
+          const { clientId, parameters } = await server.requestManager
+            .get(this.requestUri, this.deviceId)
+            .catch((err) => {
+              onError?.(req, res, err, 'Authorization request no longer valid')
+              throw err
+            })
 
           // Any error thrown in this block will be transformed into an
           // AccessDeniedError.
@@ -438,6 +440,8 @@ export function createApiMiddleware<
 
             return { url }
           } catch (err) {
+            onError?.(req, res, err, 'Failed to accept authorization request')
+
             // Since we have access to the parameters, we can re-throw an
             // AccessDeniedError with the redirect_uri parameter.
             throw AccessDeniedError.from(parameters, err, 'server_error')
@@ -452,8 +456,6 @@ export function createApiMiddleware<
           }
 
           if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-            onError?.(req, res, err, 'Authorization request not acceptable')
-
             const url = buildRedirectUrl(
               server.issuer,
               err.parameters,
@@ -509,7 +511,7 @@ export function createApiMiddleware<
           return { url }
         } catch (err) {
           if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-            onError?.(req, res, err, 'Authorization request rejected')
+            onError?.(req, res, err, 'Authorization request denied')
 
             const url = buildRedirectUrl(
               server.issuer,
