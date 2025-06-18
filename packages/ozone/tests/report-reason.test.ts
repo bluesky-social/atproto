@@ -3,7 +3,7 @@ import { ModerationServiceProfile } from '../src/mod-service/profile'
 import { forSnapshot } from './_util'
 import AtpAgent from '@atproto/api'
 
-describe('report', () => {
+describe('report reason', () => {
   let network: TestNetwork
   let sc: SeedClient
   let pdsAgent: AtpAgent
