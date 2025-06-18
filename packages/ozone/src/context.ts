@@ -17,7 +17,10 @@ import { BlobDiverter } from './daemon/blob-diverter'
 import { Database } from './db'
 import { ImageInvalidator } from './image-invalidator'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
-import { ModerationServiceProfile, ModerationServiceProfileCreator } from './mod-service/profile'
+import {
+  ModerationServiceProfile,
+  ModerationServiceProfileCreator,
+} from './mod-service/profile'
 import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
@@ -141,7 +144,10 @@ export class AppContext {
     const settingService = SettingService.creator()
     const verificationService = VerificationService.creator()
     const verificationIssuer = VerificationIssuer.creator()
-    const moderationServiceProfile = ModerationServiceProfile.creator(cfg, appviewAgent)
+    const moderationServiceProfile = ModerationServiceProfile.creator(
+      cfg,
+      appviewAgent,
+    )
 
     const sequencer = new Sequencer(modService(db))
 
