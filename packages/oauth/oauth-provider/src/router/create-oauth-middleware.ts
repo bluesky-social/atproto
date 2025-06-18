@@ -214,8 +214,8 @@ export function createOAuthMiddleware<
           res.appendHeader('Access-Control-Expose-Headers', name)
         }
 
-        const payload = await buildOAuthResponse.call(this, req, res)
-        return { payload, status }
+        const json = await buildOAuthResponse.call(this, req, res)
+        return { json, status }
       } catch (err) {
         onError?.(
           req,
@@ -233,9 +233,9 @@ export function createOAuthMiddleware<
         }
 
         const status = buildErrorStatus(err)
-        const payload = buildErrorPayload(err)
+        const json = buildErrorPayload(err)
 
-        return { payload, status }
+        return { json, status }
       }
     })
   }

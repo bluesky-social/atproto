@@ -88,19 +88,21 @@ export function createAuthorizationPageMiddleware<
           return sendAuthorizePage(req, res, result)
         }
       } catch (err) {
-        // If we have the "redirect_uri" parameter, we can redirect the user
-        // to the client with an error.
-        if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
-          onError?.(req, res, err, 'Authorization request denied')
+        onError?.(req, res, err, 'Authorization request denied')
 
-          return sendAuthorizeRedirect(res, {
-            issuer: server.issuer,
-            parameters: err.parameters,
-            redirect: err.toJSON(),
-          })
+        if (err instanceof AccessDeniedError) {
+          try {
+            return sendAuthorizeRedirect(res, {
+              issuer: server.issuer,
+              parameters: err.parameters,
+              redirect: err.toJSON(),
+            })
+          } catch {
+            // If we fail to send the redirect, we fall back to sending an error
+          }
         }
 
-        throw err
+        sendErrorPage(req, res, err)
       }
     }),
   )
