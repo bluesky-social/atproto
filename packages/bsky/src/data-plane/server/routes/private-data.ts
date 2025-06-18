@@ -8,10 +8,10 @@ import {
 } from '../../../lexicon/types/app/bsky/notification/defs'
 import { Service } from '../../../proto/bsky_connect'
 import {
-  ChatNotificationFilter,
+  ChatNotificationInclude,
   ChatNotificationPreference,
   FilterableNotificationPreference,
-  NotificationFilter,
+  NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
 } from '../../../proto/bsky_pb'
@@ -68,10 +68,10 @@ const lexChatPreferenceToProtobuf = (
   p: ChatPreference,
 ): ChatNotificationPreference =>
   new ChatNotificationPreference({
-    filter:
+    include:
       p.include === 'accepted'
-        ? ChatNotificationFilter.ACCEPTED
-        : ChatNotificationFilter.ALL,
+        ? ChatNotificationInclude.ACCEPTED
+        : ChatNotificationInclude.ALL,
     push: { enabled: p.push ?? true },
   })
 
@@ -79,10 +79,10 @@ const lexFilterablePreferenceToProtobuf = (
   p: FilterablePreference,
 ): FilterableNotificationPreference =>
   new FilterableNotificationPreference({
-    filter:
+    include:
       p.include === 'follows'
-        ? NotificationFilter.FOLLOWS
-        : NotificationFilter.ALL,
+        ? NotificationInclude.FOLLOWS
+        : NotificationInclude.ALL,
     list: { enabled: p.list ?? true },
     push: { enabled: p.push ?? true },
   })
