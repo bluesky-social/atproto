@@ -53,14 +53,6 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
 }
 
 function ignoreError(err: unknown): boolean {
-  if (err instanceof InvalidGrantError) {
-    return (
-      err.error_description === 'Refresh token expired' ||
-      err.error_description === 'Refresh token exceeded inactivity timeout' ||
-      err.error_description === 'Invalid refresh token'
-    )
-  }
-
   if (err instanceof InvalidRequestError) {
     return err.error_description === 'Invalid identifier or password'
   }
