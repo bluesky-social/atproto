@@ -110,7 +110,7 @@ export function createClientCredentialsFactory(
       if (!keyset) throw new Error('A keyset is required for private_key_jwt')
 
       // @NOTE throws if no matching key can be found
-      const [key, alg] = keyset.findPrivateKey({
+      const { key, alg } = keyset.findPrivateKey({
         use: 'sig',
         kid: authMethod.kid,
         alg: supportedAlgs(serverMetadata),
