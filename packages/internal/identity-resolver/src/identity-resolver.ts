@@ -105,7 +105,7 @@ export class IdentityResolver {
     const document = await this.didResolver.resolve(did, options)
 
     // Ensure that the handle is included in the document
-    if (!document.alsoKnownAs?.includes(`at://${handle}`)) {
+    if (handle !== getHandle(document)) {
       throw new IdentityResolverError(
         `Did document for "${did}" does not include the handle "${handle}"`,
       )
