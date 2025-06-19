@@ -11,7 +11,7 @@ export const xrpcErrorSchema = z.object({
   message: z.string().optional(),
 })
 
-export type AppViewHandleResolverOptions = {
+export type XrpcHandleResolverOptions = {
   /**
    * Fetch function to use for HTTP requests. Allows customizing the request
    * behavior, e.g. adding headers, setting a timeout, mocking, etc.
@@ -21,17 +21,7 @@ export type AppViewHandleResolverOptions = {
   fetch?: typeof globalThis.fetch
 }
 
-export class AppViewHandleResolver implements HandleResolver {
-  static from(
-    service: URL | string | HandleResolver,
-    options?: AppViewHandleResolverOptions,
-  ): HandleResolver {
-    if (typeof service === 'string' || service instanceof URL) {
-      return new AppViewHandleResolver(service, options)
-    }
-    return service
-  }
-
+export class XrpcHandleResolver implements HandleResolver {
   /**
    * URL of the atproto lexicon server. This is the base URL where the
    * `com.atproto.identity.resolveHandle` XRPC method is located.
@@ -39,7 +29,7 @@ export class AppViewHandleResolver implements HandleResolver {
   protected readonly serviceUrl: URL
   protected readonly fetch: typeof globalThis.fetch
 
-  constructor(service: URL | string, options?: AppViewHandleResolverOptions) {
+  constructor(service: URL | string, options?: XrpcHandleResolverOptions) {
     this.serviceUrl = new URL(service)
     this.fetch = options?.fetch ?? globalThis.fetch
   }

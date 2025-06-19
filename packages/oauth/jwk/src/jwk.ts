@@ -139,3 +139,8 @@ export const jwkValidator = jwkSchema
 export const jwkPubSchema = jwkValidator
   .refine((k) => k.kid != null, 'kid is required')
   .refine((k) => !('k' in k) && !('d' in k), 'private key not allowed')
+
+export const jwkPrivateSchema = jwkValidator.refine(
+  (k) => ('k' in k && k.k != null) || ('d' in k && k.d != null),
+  'private key required',
+)
