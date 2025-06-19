@@ -10,6 +10,7 @@ import {
 import {
   AtprotoDid,
   DidCache,
+  DidResolver,
   DidResolverCached,
   DidResolverCommon,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -105,7 +106,12 @@ export type OAuthClientOptions = {
   dpopNonceCache?: DpopNonceCache
 
   // Services
+  didResolver?: DidResolver<'plc' | 'web'>
   handleResolver: HandleResolver | URL | string
+  /**
+   * Used to instantiate the {@link OAuthClientOptions.didResolver} if none
+   * is provided.
+   */
   plcDirectoryUrl?: URL | string
   runtimeImplementation: RuntimeImplementation
   fetch?: Fetch
@@ -188,6 +194,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
     responseMode,
     clientMetadata,
+    didResolver,
     handleResolver,
     plcDirectoryUrl,
     runtimeImplementation,
@@ -207,16 +214,23 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     this.fetch = fetch
     this.oauthResolver = new OAuthResolver(
       new IdentityResolver(
-        new DidResolverCached(
-          new DidResolverCommon({ fetch, plcDirectoryUrl, allowHttp }),
-          didCache,
-        ),
-        new CachedHandleResolver(
-          typeof handleResolver === 'string' || handleResolver instanceof URL
-            ? new XrpcHandleResolver(handleResolver, { fetch })
-            : handleResolver,
-          handleCache,
-        ),
+        didResolver instanceof DidResolverCached && !didCache
+          ? didResolver
+          : new DidResolverCached(
+              didResolver != null
+                ? didResolver
+                : new DidResolverCommon({ fetch, plcDirectoryUrl, allowHttp }),
+              didCache,
+            ),
+        handleResolver instanceof CachedHandleResolver && !handleCache
+          ? handleResolver
+          : new CachedHandleResolver(
+              typeof handleResolver === 'string' ||
+              handleResolver instanceof URL
+                ? new XrpcHandleResolver(handleResolver, { fetch })
+                : handleResolver,
+              handleCache,
+            ),
       ),
       new OAuthProtectedResourceMetadataResolver(
         protectedResourceMetadataCache,
