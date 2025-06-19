@@ -18,10 +18,10 @@ import {
 } from '@atproto-labs/did-resolver'
 import { Fetch } from '@atproto-labs/fetch'
 import {
-  AppViewHandleResolver,
   CachedHandleResolver,
   HandleCache,
   HandleResolver,
+  XrpcHandleResolver,
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
@@ -212,7 +212,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
           didCache,
         ),
         new CachedHandleResolver(
-          AppViewHandleResolver.from(handleResolver, { fetch }),
+          typeof handleResolver === 'string' || handleResolver instanceof URL
+            ? new XrpcHandleResolver(handleResolver, { fetch })
+            : handleResolver,
           handleCache,
         ),
       ),
