@@ -1,5 +1,11 @@
 # @atproto/repo
 
+## 0.8.3
+
+### Patch Changes
+
+- [#3971](https://github.com/bluesky-social/atproto/pull/3971) [`5fccbd2a1`](https://github.com/bluesky-social/atproto/commit/5fccbd2a14420e4a7c6f56ad9af4ecfe15a971e3) Thanks [@pfrazee](https://github.com/pfrazee)! - improve performance of reading repos from car files
+
 ## 0.8.2
 
 ### Patch Changes

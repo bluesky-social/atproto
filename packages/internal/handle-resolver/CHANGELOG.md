@@ -1,5 +1,13 @@
 # @atproto-labs/handle-resolver
 
+## 0.2.0
+
+### Minor Changes
+
+- [#3976](https://github.com/bluesky-social/atproto/pull/3976) [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `AppViewHandleResolver` to `XrpcHandleResolver`
+
+- [#3976](https://github.com/bluesky-social/atproto/pull/3976) [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `XrpcHandleResolver.from` static method
+
 ## 0.1.8
 
 ### Patch Changes
