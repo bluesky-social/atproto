@@ -48,7 +48,7 @@ export class IdentityResolver {
     return {
       did: document.id,
       pds: new URL(service.serviceEndpoint),
-      handle: extractHandle(document),
+      handle: getValidHandle(document),
     }
   }
 
@@ -67,7 +67,8 @@ export class IdentityResolver {
   ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
     const document = await this.didResolver.resolve(did, options)
 
-    for (const handle of extractHandles(document)) {
+    const handle = getValidHandle(document)
+    if (handle) {
       options?.signal?.throwIfAborted()
 
       const did = await this.handleResolver.resolve(handle, options)
@@ -111,26 +112,31 @@ export class IdentityResolver {
   }
 }
 
-function extractHandle(
+// Same as getHandle from @atproto/common-web
+function getHandle(
   document: DidDocument<AtprotoIdentityDidMethods>,
 ): string | undefined {
-  const [handle] = extractHandles(document)
-  return handle
-}
-
-function* extractHandles(
-  document: DidDocument<AtprotoIdentityDidMethods>,
-): Generator<string, void, undefined> {
-  // @TODO Should this code be less permissive and 1) reject if there is more
-  // than one at:// uri, or 2) throw an error if the handle is not valid?
   if (document.alsoKnownAs) {
     for (const h of document.alsoKnownAs) {
       if (h.startsWith('at://')) {
-        const handle = h.slice(5)
-        if (isValidHandle(handle)) yield handle
+        // strip off "at://" prefix
+        return h.slice(5)
       }
     }
   }
+  return undefined
+}
+
+function getValidHandle(
+  document: DidDocument<AtprotoIdentityDidMethods>,
+): string | undefined {
+  const handle = getHandle(document)
+  if (handle != null && !isValidHandle(handle)) {
+    throw new TypeError(
+      `Invalid handle "${handle}" in DID document "${document.id}"`,
+    )
+  }
+  return undefined
 }
 
 function isAtprotoPersonalDataServerService<M extends string>(
