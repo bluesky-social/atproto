@@ -137,8 +137,8 @@ async function* readCarBlocksIterGenerator(
         break
       }
       const blockBytes = await reader.read(blockSize)
-      const cid = parseCidFromBytes(blockBytes.slice(0, 36))
-      const bytes = blockBytes.slice(36)
+      const cid = parseCidFromBytes(blockBytes.subarray(0, 36))
+      const bytes = blockBytes.subarray(36)
       yield { cid, bytes }
     }
   } finally {
@@ -169,8 +169,8 @@ class BufferedReader {
 
   async read(bytesToRead: number): Promise<Uint8Array> {
     await this.readUntilBuffered(bytesToRead)
-    const value = this.buffer.slice(0, bytesToRead)
-    this.buffer = this.buffer.slice(bytesToRead)
+    const value = this.buffer.subarray(0, bytesToRead)
+    this.buffer = this.buffer.subarray(bytesToRead)
     return value
   }
 
