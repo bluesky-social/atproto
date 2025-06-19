@@ -1,5 +1,21 @@
 # @atproto/oauth-provider
 
+## 0.9.2
+
+### Patch Changes
+
+- [#3967](https://github.com/bluesky-social/atproto/pull/3967) [`68c43a94b`](https://github.com/bluesky-social/atproto/commit/68c43a94bd76dc8040cdff9406cabaf1a484d999) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return `invalid_grant` instead of `invalid_client` when incorrectly authenticated with token endpoint
+
+- [#3967](https://github.com/bluesky-social/atproto/pull/3967) [`68c43a94b`](https://github.com/bluesky-social/atproto/commit/68c43a94bd76dc8040cdff9406cabaf1a484d999) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return `invalid_client` instead of `invalid_grant` when incorrectly authenticated with PAR endpoint
+
+- Updated dependencies [[`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee)]:
+  - @atproto/jwk@0.4.0
+  - @atproto/jwk-jose@0.1.9
+  - @atproto/oauth-provider-api@0.1.5
+  - @atproto/oauth-types@0.3.1
+  - @atproto/oauth-provider-frontend@0.1.9
+  - @atproto/oauth-provider-ui@0.1.10
+
 ## 0.9.1
 
 ### Patch Changes
