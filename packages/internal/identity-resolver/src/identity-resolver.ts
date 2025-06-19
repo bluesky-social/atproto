@@ -13,6 +13,7 @@ import {
   ResolvedHandle,
   isResolvedHandle,
 } from '@atproto-labs/handle-resolver'
+import { IdentityResolverError } from './identity-resolver-error'
 
 export type ResolvedIdentity = {
   did: NonNullable<ResolvedHandle>
@@ -40,7 +41,7 @@ export class IdentityResolver {
     )
 
     if (!service) {
-      throw new TypeError(
+      throw new IdentityResolverError(
         `No valid "AtprotoPersonalDataServer" service found in "${document.id}" DID document`,
       )
     }
@@ -73,7 +74,7 @@ export class IdentityResolver {
 
       const did = await this.handleResolver.resolve(handle, options)
       if (did !== document.id) {
-        throw new TypeError(
+        throw new IdentityResolverError(
           `Did document for "${did}" does not match the handle "${handle}"`,
         )
       }
@@ -91,7 +92,9 @@ export class IdentityResolver {
     const did = await this.handleResolver.resolve(handle, options)
 
     if (!did) {
-      throw new TypeError(`Handle "${handle}" does not resolve to a DID`)
+      throw new IdentityResolverError(
+        `Handle "${handle}" does not resolve to a DID`,
+      )
     }
 
     options?.signal?.throwIfAborted()
@@ -103,7 +106,7 @@ export class IdentityResolver {
 
     // Ensure that the handle is included in the document
     if (!document.alsoKnownAs?.includes(`at://${handle}`)) {
-      throw new TypeError(
+      throw new IdentityResolverError(
         `Did document for "${did}" does not include the handle "${handle}"`,
       )
     }
@@ -132,7 +135,7 @@ function getValidHandle(
 ): string | undefined {
   const handle = getHandle(document)
   if (handle != null && !isValidHandle(handle)) {
-    throw new TypeError(
+    throw new IdentityResolverError(
       `Invalid handle "${handle}" in DID document "${document.id}"`,
     )
   }

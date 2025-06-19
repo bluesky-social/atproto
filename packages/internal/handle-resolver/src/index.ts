@@ -1,3 +1,4 @@
+export * from './handle-resolver-error.js'
 export * from './types.js'
 
 // Main Handle Resolvers strategies
