@@ -62,6 +62,7 @@ export class XrpcHandleResolver implements HandleResolver {
       if (error) {
         throw new HandleResolverError(
           `Invalid response from resolveHandle method: ${error.message}`,
+          { cause: error },
         )
       }
       if (
@@ -74,7 +75,7 @@ export class XrpcHandleResolver implements HandleResolver {
 
     if (!response.ok) {
       throw new HandleResolverError(
-        'Invalid response from resolveHandle method',
+        'Invalid status code from resolveHandle method',
       )
     }
 
