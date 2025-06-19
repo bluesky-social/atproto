@@ -33,6 +33,14 @@ export type OmitKey<T, K extends keyof T> = {
   [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
 }
 
+export type RequiredKey<T, K extends keyof T = never> = Simplify<
+  T & {
+    [L in K]-?: unknown extends T[L]
+      ? NonNullable<unknown> | null
+      : Exclude<T[L], undefined>
+  }
+>
+
 /**
  * Converts a tuple to the equivalent type of combining every item into a single
  * one. If any of the item in the tuple is non nullish, the result will be non

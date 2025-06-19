@@ -7,6 +7,7 @@ export {
 export * from '@atproto-labs/handle-resolver'
 
 export * from '@atproto/did'
+export * from '@atproto/jwk'
 export * from '@atproto/oauth-types'
 
 export * from './oauth-authorization-server-metadata-resolver.js'

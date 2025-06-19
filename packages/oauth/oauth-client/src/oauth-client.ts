@@ -55,23 +55,23 @@ import { CustomEventTarget } from './util.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
 
 // Export all types needed to construct OAuthClientOptions
-export type {
-  AuthorizationServerMetadataCache,
-  DidCache,
-  DpopNonceCache,
-  Fetch,
-  HandleCache,
-  HandleResolver,
-  InternalStateData,
+export {
+  type AuthorizationServerMetadataCache,
+  type DidCache,
+  type DpopNonceCache,
+  type Fetch,
+  type HandleCache,
+  type HandleResolver,
+  type InternalStateData,
   Key,
   Keyset,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
-  ProtectedResourceMetadataCache,
-  RuntimeImplementation,
-  SessionStore,
-  StateStore,
+  type OAuthClientMetadata,
+  type OAuthClientMetadataInput,
+  type OAuthResponseMode,
+  type ProtectedResourceMetadataCache,
+  type RuntimeImplementation,
+  type SessionStore,
+  type StateStore,
 }
 
 export type OAuthClientOptions = {
