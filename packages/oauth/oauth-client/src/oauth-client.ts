@@ -10,6 +10,7 @@ import {
 import {
   AtprotoDid,
   DidCache,
+  DidResolver,
   DidResolverCached,
   DidResolverCommon,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,10 +19,10 @@ import {
 } from '@atproto-labs/did-resolver'
 import { Fetch } from '@atproto-labs/fetch'
 import {
-  AppViewHandleResolver,
   CachedHandleResolver,
   HandleCache,
   HandleResolver,
+  XrpcHandleResolver,
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
@@ -55,23 +56,23 @@ import { CustomEventTarget } from './util.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
 
 // Export all types needed to construct OAuthClientOptions
-export type {
-  AuthorizationServerMetadataCache,
-  DidCache,
-  DpopNonceCache,
-  Fetch,
-  HandleCache,
-  HandleResolver,
-  InternalStateData,
+export {
+  type AuthorizationServerMetadataCache,
+  type DidCache,
+  type DpopNonceCache,
+  type Fetch,
+  type HandleCache,
+  type HandleResolver,
+  type InternalStateData,
   Key,
   Keyset,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
-  ProtectedResourceMetadataCache,
-  RuntimeImplementation,
-  SessionStore,
-  StateStore,
+  type OAuthClientMetadata,
+  type OAuthClientMetadataInput,
+  type OAuthResponseMode,
+  type ProtectedResourceMetadataCache,
+  type RuntimeImplementation,
+  type SessionStore,
+  type StateStore,
 }
 
 export type OAuthClientOptions = {
@@ -105,7 +106,12 @@ export type OAuthClientOptions = {
   dpopNonceCache?: DpopNonceCache
 
   // Services
+  didResolver?: DidResolver<'plc' | 'web'>
   handleResolver: HandleResolver | URL | string
+  /**
+   * Used to instantiate the {@link OAuthClientOptions.didResolver} if none
+   * is provided.
+   */
   plcDirectoryUrl?: URL | string
   runtimeImplementation: RuntimeImplementation
   fetch?: Fetch
@@ -188,6 +194,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
     responseMode,
     clientMetadata,
+    didResolver,
     handleResolver,
     plcDirectoryUrl,
     runtimeImplementation,
@@ -207,14 +214,23 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     this.fetch = fetch
     this.oauthResolver = new OAuthResolver(
       new IdentityResolver(
-        new DidResolverCached(
-          new DidResolverCommon({ fetch, plcDirectoryUrl, allowHttp }),
-          didCache,
-        ),
-        new CachedHandleResolver(
-          AppViewHandleResolver.from(handleResolver, { fetch }),
-          handleCache,
-        ),
+        didResolver instanceof DidResolverCached && !didCache
+          ? didResolver
+          : new DidResolverCached(
+              didResolver != null
+                ? didResolver
+                : new DidResolverCommon({ fetch, plcDirectoryUrl, allowHttp }),
+              didCache,
+            ),
+        handleResolver instanceof CachedHandleResolver && !handleCache
+          ? handleResolver
+          : new CachedHandleResolver(
+              typeof handleResolver === 'string' ||
+              handleResolver instanceof URL
+                ? new XrpcHandleResolver(handleResolver, { fetch })
+                : handleResolver,
+              handleCache,
+            ),
       ),
       new OAuthProtectedResourceMetadataResolver(
         protectedResourceMetadataCache,
