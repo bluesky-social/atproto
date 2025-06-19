@@ -32,9 +32,7 @@ export class IdentityResolver {
     input: string,
     options?: ResolveIdentityOptions,
   ): Promise<ResolvedIdentity> {
-    const document = isResolvedHandle(input)
-      ? await this.getDocumentFromDid(input, options)
-      : await this.getDocumentFromHandle(input, options)
+    const document = await this.getDocument(input, options)
 
     const service = document.service?.find(
       isAtprotoPersonalDataServerService<AtprotoIdentityDidMethods>,
@@ -54,11 +52,34 @@ export class IdentityResolver {
     }
   }
 
+  public async getDocument(
+    input: string,
+    options?: ResolveIdentityOptions,
+  ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
+    return isResolvedHandle(input)
+      ? this.getDocumentFromDid(input, options)
+      : this.getDocumentFromHandle(input, options)
+  }
+
   public async getDocumentFromDid(
     did: NonNullable<ResolvedHandle>,
     options?: ResolveDidOptions,
   ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
-    return this.didResolver.resolve(did, options)
+    const document = await this.didResolver.resolve(did, options)
+
+    const handle = extractHandle(document)
+    if (handle != null) {
+      options?.signal?.throwIfAborted()
+
+      const did = await this.handleResolver.resolve(handle, options)
+      if (did !== document.id) {
+        throw new TypeError(
+          `Did document for "${did}" does not match the handle "${handle}"`,
+        )
+      }
+    }
+
+    return document
   }
 
   public async getDocumentFromHandle(
