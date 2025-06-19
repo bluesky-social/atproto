@@ -67,8 +67,7 @@ export class IdentityResolver {
   ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
     const document = await this.didResolver.resolve(did, options)
 
-    const handle = extractHandle(document)
-    if (handle != null) {
+    for (const handle of extractHandles(document)) {
       options?.signal?.throwIfAborted()
 
       const did = await this.handleResolver.resolve(handle, options)
@@ -115,16 +114,23 @@ export class IdentityResolver {
 function extractHandle(
   document: DidDocument<AtprotoIdentityDidMethods>,
 ): string | undefined {
+  const [handle] = extractHandles(document)
+  return handle
+}
+
+function* extractHandles(
+  document: DidDocument<AtprotoIdentityDidMethods>,
+): Generator<string, void, undefined> {
+  // @TODO Should this code be less permissive and 1) reject if there is more
+  // than one at:// uri, or 2) throw an error if the handle is not valid?
   if (document.alsoKnownAs) {
     for (const h of document.alsoKnownAs) {
       if (h.startsWith('at://')) {
         const handle = h.slice(5)
-        if (isValidHandle(handle)) return handle
+        if (isValidHandle(handle)) yield handle
       }
     }
   }
-
-  return undefined
 }
 
 function isAtprotoPersonalDataServerService<M extends string>(
