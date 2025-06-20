@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { HandleResolverError } from './handle-resolver-error.js'
 import {
   HandleResolver,
   ResolveHandleOptions,
@@ -57,7 +58,13 @@ export class XrpcHandleResolver implements HandleResolver {
     // Any other response is considered unexpected behavior an should throw an error.
 
     if (response.status === 400) {
-      const data = xrpcErrorSchema.parse(payload)
+      const { error, data } = xrpcErrorSchema.safeParse(payload)
+      if (error) {
+        throw new HandleResolverError(
+          `Invalid response from resolveHandle method: ${error.message}`,
+          { cause: error },
+        )
+      }
       if (
         data.error === 'InvalidRequest' &&
         data.message === 'Unable to resolve handle'
@@ -67,13 +74,17 @@ export class XrpcHandleResolver implements HandleResolver {
     }
 
     if (!response.ok) {
-      throw new TypeError('Invalid response from resolveHandle method')
+      throw new HandleResolverError(
+        'Invalid status code from resolveHandle method',
+      )
     }
 
     const value: unknown = payload?.did
 
     if (!isResolvedHandle(value)) {
-      throw new TypeError('Invalid DID returned from resolveHandle method')
+      throw new HandleResolverError(
+        'Invalid DID returned from resolveHandle method',
+      )
     }
 
     return value

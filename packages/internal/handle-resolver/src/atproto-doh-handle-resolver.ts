@@ -2,6 +2,7 @@ import {
   AtprotoHandleResolver,
   AtprotoHandleResolverOptions,
 } from './atproto-handle-resolver.js'
+import { HandleResolverError } from './handle-resolver-error.js'
 import { ResolveTxt } from './internal-resolvers/dns-handle-resolver.js'
 import { HandleResolver } from './types.js'
 
@@ -53,9 +54,9 @@ function dohResolveTxtFactory({
         const message = contentType?.startsWith('text/plain')
           ? await response.text()
           : `Failed to resolve ${hostname}`
-        throw new TypeError(message)
+        throw new HandleResolverError(message)
       } else if (contentType?.match(/application\/(dns-)?json/i) == null) {
-        throw new TypeError('Unexpected response from DoH server')
+        throw new HandleResolverError('Unexpected response from DoH server')
       }
 
       const result = asResult(await response.json())
@@ -87,7 +88,7 @@ function isResult(result: unknown): result is Result {
 }
 function asResult(result: unknown): Result {
   if (isResult(result)) return result
-  throw new TypeError('Invalid DoH response')
+  throw new HandleResolverError('Invalid DoH response')
 }
 
 function isArrayOf<T>(

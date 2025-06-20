@@ -98,7 +98,7 @@ export class OAuthSession {
     // This will try and refresh the token if it is known to be expired
     const tokenSet = await this.getTokenSet('auto')
 
-    const initialUrl = new URL(pathname, tokenSet.aud)
+    const initialUrl = new URL(pathname, tokenSet.aud satisfies string)
     const initialAuth = `${tokenSet.token_type} ${tokenSet.access_token}`
 
     const headers = new Headers(init?.headers)
