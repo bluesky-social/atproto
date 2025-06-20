@@ -6,5 +6,5 @@ export default {
   },
   plugins: [],
   // See rollup.config.js for classes used in the HTML template
-  safelist: ['bg-white', 'dark:bg-slate-800'],
+  safelist: ['bg-slate-100', 'dark:bg-slate-800', 'min-h-screen'],
 }
