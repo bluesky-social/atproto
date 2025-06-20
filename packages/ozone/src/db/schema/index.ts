@@ -13,6 +13,7 @@ import * as set from './ozone_set'
 import * as recordEventsStats from './record_events_stats'
 import * as recordPushEvent from './record_push_event'
 import * as repoPushEvent from './repo_push_event'
+import * as safelink from './safelink'
 import * as setting from './setting'
 import * as signingKey from './signing_key'
 import * as verification from './verification'
@@ -33,7 +34,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   accountRecordEventsStats.PartialDB &
   accountRecordStatusStats.PartialDB &
   verification.PartialDB &
-  firehoseCursor.PartialDB
+  firehoseCursor.PartialDB &
+  safelink.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

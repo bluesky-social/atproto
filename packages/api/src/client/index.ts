@@ -128,8 +128,8 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -248,6 +248,12 @@ import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
+import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
+import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
+import * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
+import * as ToolsOzoneSafelinkRemoveRule from './types/tools/ozone/safelink/removeRule.js'
+import * as ToolsOzoneSafelinkUpdateRule from './types/tools/ozone/safelink/updateRule.js'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
 import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
 import * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs.js'
@@ -393,8 +399,8 @@ export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -513,6 +519,12 @@ export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
+export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
+export * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
+export * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
+export * as ToolsOzoneSafelinkRemoveRule from './types/tools/ozone/safelink/removeRule.js'
+export * as ToolsOzoneSafelinkUpdateRule from './types/tools/ozone/safelink/updateRule.js'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
 export * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
 export * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs.js'
@@ -577,6 +589,20 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+}
+export const TOOLS_OZONE_SAFELINK = {
+  DefsAddRule: 'tools.ozone.safelink.defs#addRule',
+  DefsUpdateRule: 'tools.ozone.safelink.defs#updateRule',
+  DefsRemoveRule: 'tools.ozone.safelink.defs#removeRule',
+  DefsDomain: 'tools.ozone.safelink.defs#domain',
+  DefsUrl: 'tools.ozone.safelink.defs#url',
+  DefsBlock: 'tools.ozone.safelink.defs#block',
+  DefsWarn: 'tools.ozone.safelink.defs#warn',
+  DefsWhitelist: 'tools.ozone.safelink.defs#whitelist',
+  DefsCsam: 'tools.ozone.safelink.defs#csam',
+  DefsSpam: 'tools.ozone.safelink.defs#spam',
+  DefsPhishing: 'tools.ozone.safelink.defs#phishing',
+  DefsNone: 'tools.ozone.safelink.defs#none',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -2111,13 +2137,6 @@ export class AppBskyFeedNS {
       })
   }
 
-  getPosts(
-    params?: AppBskyFeedGetPosts.QueryParams,
-    opts?: AppBskyFeedGetPosts.CallOptions,
-  ): Promise<AppBskyFeedGetPosts.Response> {
-    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
-  }
-
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
     opts?: AppBskyFeedGetPostThread.CallOptions,
@@ -2127,6 +2146,13 @@ export class AppBskyFeedNS {
       .catch((e) => {
         throw AppBskyFeedGetPostThread.toKnownErr(e)
       })
+  }
+
+  getPosts(
+    params?: AppBskyFeedGetPosts.QueryParams,
+    opts?: AppBskyFeedGetPosts.CallOptions,
+  ): Promise<AppBskyFeedGetPosts.Response> {
+    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
   }
 
   getQuotes(
@@ -4082,6 +4108,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
   setting: ToolsOzoneSettingNS
@@ -4094,6 +4121,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.hosting = new ToolsOzoneHostingNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
+    this.safelink = new ToolsOzoneSafelinkNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
     this.setting = new ToolsOzoneSettingNS(client)
@@ -4311,6 +4339,71 @@ export class ToolsOzoneModerationNS {
       undefined,
       opts,
     )
+  }
+}
+
+export class ToolsOzoneSafelinkNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  addRule(
+    data?: ToolsOzoneSafelinkAddRule.InputSchema,
+    opts?: ToolsOzoneSafelinkAddRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkAddRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.addRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkAddRule.toKnownErr(e)
+      })
+  }
+
+  queryEvents(
+    data?: ToolsOzoneSafelinkQueryEvents.InputSchema,
+    opts?: ToolsOzoneSafelinkQueryEvents.CallOptions,
+  ): Promise<ToolsOzoneSafelinkQueryEvents.Response> {
+    return this._client.call(
+      'tools.ozone.safelink.queryEvents',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  queryRules(
+    data?: ToolsOzoneSafelinkQueryRules.InputSchema,
+    opts?: ToolsOzoneSafelinkQueryRules.CallOptions,
+  ): Promise<ToolsOzoneSafelinkQueryRules.Response> {
+    return this._client.call(
+      'tools.ozone.safelink.queryRules',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  removeRule(
+    data?: ToolsOzoneSafelinkRemoveRule.InputSchema,
+    opts?: ToolsOzoneSafelinkRemoveRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkRemoveRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.removeRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkRemoveRule.toKnownErr(e)
+      })
+  }
+
+  updateRule(
+    data?: ToolsOzoneSafelinkUpdateRule.InputSchema,
+    opts?: ToolsOzoneSafelinkUpdateRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkUpdateRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.updateRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkUpdateRule.toKnownErr(e)
+      })
   }
 }
 
