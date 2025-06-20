@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.writeNudges",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Store compressed nudges string for an account. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["nudges"],
+          "properties": {
+            "nudges": {
+              "type": "string",
+              "description": "The compressed nudges string."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["nudges"],
+          "properties": {
+            "nudges": {
+              "type": "string",
+              "description": "The compressed nudges string that was stored."
+            }
+          }
+        }
+      }
+    }
+  }
+}
