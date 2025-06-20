@@ -1,5 +1,24 @@
 # @atproto-labs/identity-resolver
 
+## 0.2.0
+
+### Minor Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return the whole did document when resolving an identity
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Reject did documents containing invalid `alsoKnownAs` ATProto handles
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `IdentityResolverError` instances instead of `TypeError`
+
+### Patch Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Perform a bi-directional check when resolving identity from did
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow non-normalized handles in did documents
+
+- Updated dependencies [[`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47), [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47)]:
+  - @atproto-labs/handle-resolver@0.3.0
+
 ## 0.1.19
 
 ### Patch Changes
