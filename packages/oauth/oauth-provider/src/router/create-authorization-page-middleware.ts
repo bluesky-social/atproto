@@ -3,7 +3,7 @@ import {
   oauthAuthorizationRequestQuerySchema,
   oauthClientCredentialsSchema,
 } from '@atproto/oauth-types'
-import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { AuthorizationError } from '../errors/authorization-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import {
   Middleware,
@@ -90,7 +90,7 @@ export function createAuthorizationPageMiddleware<
       } catch (err) {
         // If we have the "redirect_uri" parameter, we can redirect the user
         // to the client with an error.
-        if (err instanceof AccessDeniedError && err.parameters.redirect_uri) {
+        if (err instanceof AuthorizationError && err.parameters.redirect_uri) {
           // Prefer logging the cause
           onError?.(req, res, err.cause ?? err, 'Authorization failed')
 

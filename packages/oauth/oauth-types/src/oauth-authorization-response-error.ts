@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-12#name-error-response-2}
  */
-export const oauthAuthenticationErrorResponseSchema = z.enum([
+export const oauthAuthorizationResponseErrorSchema = z.enum([
   // The request is missing a required parameter, includes an invalid parameter value, includes a parameter more than once, or is otherwise malformed.
   'invalid_request',
   // The client is not authorized to request an authorization code using this method.
@@ -20,6 +20,6 @@ export const oauthAuthenticationErrorResponseSchema = z.enum([
   'temporarily_unavailable',
 ])
 
-export type OAuthAuthenticationErrorResponse = z.infer<
-  typeof oauthAuthenticationErrorResponseSchema
+export type OAuthAuthorizationResponseError = z.infer<
+  typeof oauthAuthorizationResponseErrorSchema
 >

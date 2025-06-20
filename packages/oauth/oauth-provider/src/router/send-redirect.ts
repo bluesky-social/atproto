@@ -3,7 +3,7 @@ import {
   OAuthAuthorizationRequestParameters,
   OAuthResponseMode,
 } from '@atproto/oauth-types'
-import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { AuthorizationError } from '../errors/authorization-error.js'
 import { html, js } from '../lib/html/index.js'
 import { sendWebPage } from '../lib/send-web-page.js'
 import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
@@ -37,7 +37,7 @@ export function buildRedirectUri(
   const uri = parameters.redirect_uri
   if (uri) return uri
 
-  throw new AccessDeniedError(parameters, 'No redirect_uri', 'invalid_request')
+  throw new AuthorizationError(parameters, 'No redirect_uri', 'invalid_request')
 }
 
 export function buildRedirectMode(

@@ -12,7 +12,9 @@ import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
+import { AccessDeniedError } from './errors/access-denied-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
+import { OAuthError } from './errors/oauth-error.js'
 import {
   HcaptchaClientTokens,
   HcaptchaConfig,
@@ -20,7 +22,6 @@ import {
 } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
-import { AccessDeniedError, OAuthError } from './oauth-errors.js'
 import { DeviceId, SignUpData } from './oauth-store.js'
 import { RequestId } from './request/request-id.js'
 
@@ -118,7 +119,7 @@ export type OAuthHooks = {
   /**
    * This hook is called when a client is authorized.
    *
-   * @throws {AccessDeniedError} to deny the authorization request and redirect
+   * @throws {AuthorizationError} to deny the authorization request and redirect
    * the user to the client with an OAuth error (other errors will result in an
    * internal server error being displayed to the user)
    *
