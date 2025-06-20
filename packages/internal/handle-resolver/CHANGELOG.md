@@ -1,5 +1,15 @@
 # @atproto-labs/handle-resolver
 
+## 0.3.0
+
+### Minor Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `HandleResolverError` instances instead of `TypeError`
+
+### Patch Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `asResolvedHandle` utility
+
 ## 0.2.0
 
 ### Minor Changes
