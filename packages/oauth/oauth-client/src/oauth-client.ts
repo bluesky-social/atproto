@@ -331,7 +331,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       code_challenge: pkce.challenge,
       code_challenge_method: pkce.method,
       state,
-      login_hint: identity?.handle ?? identity?.did,
+      login_hint: identity?.handle ?? identity?.document.id,
       response_mode: this.responseMode,
       response_type: 'code' as const,
       scope: options?.scope ?? this.clientMetadata.scope,

@@ -1,22 +1,25 @@
-import { isValidHandle, normalizeAndEnsureValidHandle } from '@atproto/syntax'
 import {
-  Did,
+  AtprotoDid,
+  AtprotoIdentityDidMethods,
   DidDocument,
   DidResolver,
-  DidService,
   ResolveDidOptions,
+  isAtprotoDid,
 } from '@atproto-labs/did-resolver'
 import {
-  AtprotoIdentityDidMethods,
   HandleResolver,
   ResolveHandleOptions,
-  ResolvedHandle,
-  isResolvedHandle,
 } from '@atproto-labs/handle-resolver'
+import { IdentityResolverError } from './identity-resolver-error'
+import { asNormalizedHandle, extractNormalizedHandle } from './util'
 
 export type ResolvedIdentity = {
-  did: NonNullable<ResolvedHandle>
-  pds: URL
+  document: DidDocument<AtprotoIdentityDidMethods>
+
+  /**
+   * Will be defined if the document contains a handle alias that resolves
+   * to the document's DID.
+   */
   handle?: string
 }
 
@@ -32,30 +35,50 @@ export class IdentityResolver {
     input: string,
     options?: ResolveIdentityOptions,
   ): Promise<ResolvedIdentity> {
-    const document = isResolvedHandle(input)
-      ? await this.getDocumentFromDid(input, options)
-      : await this.getDocumentFromHandle(input, options)
+    return isAtprotoDid(input)
+      ? this.resolveFromDid(input, options)
+      : this.resolveFromHandle(input, options)
+  }
 
-    const service = document.service?.find(
-      isAtprotoPersonalDataServerService<AtprotoIdentityDidMethods>,
-      document,
-    )
+  public async resolveFromDid(
+    did: AtprotoDid,
+    options?: ResolveDidOptions,
+  ): Promise<ResolvedIdentity> {
+    const document = await this.getDocumentFromDid(did, options)
 
-    if (!service) {
-      throw new TypeError(
-        `No valid "AtprotoPersonalDataServer" service found in "${document.id}" DID document`,
-      )
-    }
+    options?.signal?.throwIfAborted()
+
+    // We will only return the document's handle alias if it resolves to the
+    // same DID as the input.
+    const handle = extractNormalizedHandle(document)
+    const resolvedDid = handle
+      ? await this.handleResolver
+          .resolve(handle, options)
+          .catch(() => undefined) // Ignore errors (temporarily unavailable)
+      : undefined
 
     return {
-      did: document.id,
-      pds: new URL(service.serviceEndpoint),
-      handle: extractHandle(document),
+      document,
+      handle: resolvedDid === did ? handle : undefined,
+    }
+  }
+
+  public async resolveFromHandle(
+    handle: string,
+    options?: ResolveHandleOptions,
+  ): Promise<ResolvedIdentity> {
+    const document = await this.getDocumentFromHandle(handle, options)
+
+    // @NOTE bi-directional resolution enforced in getDocumentFromHandle()
+
+    return {
+      document,
+      handle: extractNormalizedHandle(document),
     }
   }
 
   public async getDocumentFromDid(
-    did: NonNullable<ResolvedHandle>,
+    did: AtprotoDid,
     options?: ResolveDidOptions,
   ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
     return this.didResolver.resolve(did, options)
@@ -65,12 +88,17 @@ export class IdentityResolver {
     input: string,
     options?: ResolveHandleOptions,
   ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
-    const handle = normalizeAndEnsureValidHandle(input)
+    const handle = asNormalizedHandle(input)
+    if (!handle) {
+      throw new IdentityResolverError(`Invalid handle "${input}" provided.`)
+    }
 
     const did = await this.handleResolver.resolve(handle, options)
 
     if (!did) {
-      throw new TypeError(`Handle "${handle}" does not resolve to a DID`)
+      throw new IdentityResolverError(
+        `Handle "${handle}" does not resolve to a DID`,
+      )
     }
 
     options?.signal?.throwIfAborted()
@@ -80,45 +108,13 @@ export class IdentityResolver {
 
     const document = await this.didResolver.resolve(did, options)
 
-    // Ensure that the handle is included in the document
-    if (!document.alsoKnownAs?.includes(`at://${handle}`)) {
-      throw new TypeError(
+    // Enforce bi-directional resolution
+    if (handle !== extractNormalizedHandle(document)) {
+      throw new IdentityResolverError(
         `Did document for "${did}" does not include the handle "${handle}"`,
       )
     }
 
     return document
   }
-}
-
-function extractHandle(
-  document: DidDocument<AtprotoIdentityDidMethods>,
-): string | undefined {
-  if (document.alsoKnownAs) {
-    for (const h of document.alsoKnownAs) {
-      if (h.startsWith('at://')) {
-        const handle = h.slice(5)
-        if (isValidHandle(handle)) return handle
-      }
-    }
-  }
-
-  return undefined
-}
-
-function isAtprotoPersonalDataServerService<M extends string>(
-  this: DidDocument<M>,
-  s: DidService,
-): s is {
-  id: '#atproto_pds' | `${Did<M>}#atproto_pds`
-  type: 'AtprotoPersonalDataServer'
-  serviceEndpoint: string
-} {
-  return (
-    typeof s.serviceEndpoint === 'string' &&
-    s.type === 'AtprotoPersonalDataServer' &&
-    (s.id.startsWith('#')
-      ? s.id === '#atproto_pds'
-      : s.id === `${this.id}#atproto_pds`)
-  )
 }
