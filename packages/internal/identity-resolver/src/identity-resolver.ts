@@ -1,17 +1,17 @@
-import { isValidHandle, normalizeAndEnsureValidHandle } from '@atproto/syntax'
 import {
+  AtprotoDid,
   AtprotoIdentityDidMethods,
   DidDocument,
   DidResolver,
   ResolveDidOptions,
+  isAtprotoDid,
 } from '@atproto-labs/did-resolver'
 import {
   HandleResolver,
   ResolveHandleOptions,
-  ResolvedHandle,
-  isResolvedHandle,
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolverError } from './identity-resolver-error'
+import { asNormalizedHandle, extractNormalizedHandle } from './util'
 
 export type ResolvedIdentity = {
   document: DidDocument<AtprotoIdentityDidMethods>
@@ -35,41 +35,50 @@ export class IdentityResolver {
     input: string,
     options?: ResolveIdentityOptions,
   ): Promise<ResolvedIdentity> {
-    if (isResolvedHandle(input)) {
-      const document = await this.getDocumentFromDid(input, options)
+    return isAtprotoDid(input)
+      ? this.resolveFromDid(input, options)
+      : this.resolveFromHandle(input, options)
+  }
 
-      options?.signal?.throwIfAborted()
+  public async resolveFromDid(
+    did: AtprotoDid,
+    options?: ResolveDidOptions,
+  ): Promise<ResolvedIdentity> {
+    const document = await this.getDocumentFromDid(did, options)
 
-      // If the input was a DID, we will only return the document's handle alias
-      // if it resolves to the same DID as the input.
-      const documentHandle = getHandle(document)
-      const resolvedDid =
-        documentHandle && isValidHandle(documentHandle)
-          ? await this.handleResolver
-              .resolve(documentHandle, options)
-              .catch(() => undefined)
-          : undefined
+    options?.signal?.throwIfAborted()
 
-      return {
-        document,
-        handle: resolvedDid === document.id ? documentHandle : undefined,
-      }
-    } else {
-      const document = await this.getDocumentFromHandle(input, options)
+    // We will only return the document's handle alias if it resolves to the
+    // same DID as the input.
+    const handle = extractNormalizedHandle(document)
+    const resolvedDid = handle
+      ? await this.handleResolver
+          .resolve(handle, options)
+          .catch(() => undefined) // Ignore errors (temporarily unavailable)
+      : undefined
 
-      // @NOTE bi-directional resolution is enforced in
-      // getDocumentFromHandle, so we can safely assume that the document's
-      // handle resolves to the same DID as the input.
+    return {
+      document,
+      handle: resolvedDid === did ? handle : undefined,
+    }
+  }
 
-      return {
-        document,
-        handle: getHandle(document),
-      }
+  public async resolveFromHandle(
+    handle: string,
+    options?: ResolveHandleOptions,
+  ): Promise<ResolvedIdentity> {
+    const document = await this.getDocumentFromHandle(handle, options)
+
+    // @NOTE bi-directional resolution enforced in getDocumentFromHandle()
+
+    return {
+      document,
+      handle: extractNormalizedHandle(document),
     }
   }
 
   public async getDocumentFromDid(
-    did: NonNullable<ResolvedHandle>,
+    did: AtprotoDid,
     options?: ResolveDidOptions,
   ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
     return this.didResolver.resolve(did, options)
@@ -79,7 +88,10 @@ export class IdentityResolver {
     input: string,
     options?: ResolveHandleOptions,
   ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
-    const handle = normalizeAndEnsureValidHandle(input)
+    const handle = asNormalizedHandle(input)
+    if (!handle) {
+      throw new IdentityResolverError(`Invalid handle "${input}" provided.`)
+    }
 
     const did = await this.handleResolver.resolve(handle, options)
 
@@ -97,7 +109,7 @@ export class IdentityResolver {
     const document = await this.didResolver.resolve(did, options)
 
     // Enforce bi-directional resolution
-    if (handle !== getHandle(document)) {
+    if (handle !== extractNormalizedHandle(document)) {
       throw new IdentityResolverError(
         `Did document for "${did}" does not include the handle "${handle}"`,
       )
@@ -105,19 +117,4 @@ export class IdentityResolver {
 
     return document
   }
-}
-
-// Same as getHandle from @atproto/common-web
-function getHandle(
-  document: DidDocument<AtprotoIdentityDidMethods>,
-): string | undefined {
-  if (document.alsoKnownAs) {
-    for (const h of document.alsoKnownAs) {
-      if (h.startsWith('at://')) {
-        // strip off "at://" prefix
-        return h.slice(5)
-      }
-    }
-  }
-  return undefined
 }
