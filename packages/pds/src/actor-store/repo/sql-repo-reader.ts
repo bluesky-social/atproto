@@ -6,6 +6,7 @@ import {
   CarBlock,
   CidSet,
   ReadableBlockstore,
+  getPartialRepo,
   writeCarStream,
 } from '@atproto/repo'
 import { countAll } from '../../db'
@@ -78,11 +79,8 @@ export class SqlRepoReader extends ReadableBlockstore {
     return { blocks, missing: missing.toList() }
   }
 
-  async getCarStream(since?: string) {
+  async getCarStream(since?: string): Promise<AsyncIterable<Uint8Array>> {
     const root = await this.getRoot()
-    if (!root) {
-      throw new RepoRootNotFoundError()
-    }
     return writeCarStream(root, this.iterateCarBlocks(since))
   }
 
@@ -129,6 +127,13 @@ export class SqlRepoReader extends ReadableBlockstore {
       builder = builder.where('repoRev', '>', since)
     }
     return builder.execute()
+  }
+
+  async getCarStreamByPrefix(
+    prefix: string,
+  ): Promise<AsyncIterable<Uint8Array>> {
+    const root = await this.getRoot()
+    return getPartialRepo(this, root, prefix)
   }
 
   async countBlocks(): Promise<number> {

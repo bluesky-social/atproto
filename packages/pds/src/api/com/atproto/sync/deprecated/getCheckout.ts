@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.authVerifier.isUserOrAdmin(auth, did),
       )
 
-      const carStream = await getCarStream(ctx, did)
+      const carStream = await getCarStream(ctx, did, {})
 
       return {
         encoding: 'application/vnd.ipld.car',
