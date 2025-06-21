@@ -1,11 +1,14 @@
 import { isValidEncoding, normalizeMime } from '../src/util'
 
 describe('isValidEncoding', () => {
-  const validTests: [string, string][] = [
+  const validTests: [string | string[], string][] = [
     ['application/json', 'json'], // MK : this should not be valid...
     ['application/json', 'application/json'],
     ['application/json', 'application/json; charset=utf-8'],
     ['application/json; charset=utf-8', 'application/json; charset=utf-8'],
+    [['application/json', 'application/ld+json'], 'json'], // MK: this should not be valid...
+    [['application/json', 'application/ld+json'], 'application/json'],
+    [['application/json', 'application/ld+json'], 'application/ld+json'],
   ]
 
   for (const [possible, value] of validTests) {
@@ -14,7 +17,7 @@ describe('isValidEncoding', () => {
     })
   }
 
-  const invalidTests: [string, string][] = [
+  const invalidTests: [string | string[], string][] = [
     ['json', 'application/json'],
     ['application', 'application/json'],
     ['application/json', 'application'],
@@ -27,6 +30,11 @@ describe('isValidEncoding', () => {
     ['application/ld+json', 'json'], // MK: ...because THESE are not valid...
     ['application/ld+json', '+json'],
     ['application/ld+json', 'ld+json'],
+    [[], 'application/json'],
+    [[], ''],
+    [['application/json', 'application/ld+json'], ''],
+    [['application/activity+json', 'application/ld+json'], 'application/json'],
+    [['application/json', 'application/ld+json'], 'ld+json'], // MK: ...and this
   ]
 
   for (const [possible, value] of invalidTests) {

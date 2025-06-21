@@ -498,8 +498,14 @@ function genClientXrpcCommon(
   }
   if (def.type === 'procedure' && def.input) {
     let encodingType = 'string'
-    if (def.input.encoding !== '*/*') {
-      encodingType = def.input.encoding
+
+    // MK: Transform an array of encodings into a comma separated string
+    const encoding = Array.isArray(def.input.encoding)
+      ? def.input.encoding.join(',')
+      : def.input.encoding
+
+    if (encoding !== '*/*') {
+      encodingType = encoding
         .split(',')
         .map((v) => `'${v.trim()}'`)
         .join(' | ')
@@ -518,7 +524,10 @@ function genClientXrpcCommon(
   res.addProperty({ name: 'success', type: 'boolean' })
   res.addProperty({ name: 'headers', type: 'HeadersMap' })
   if (def.output?.schema) {
-    if (def.output.encoding?.includes(',')) {
+    if (
+      !Array.isArray(def.output.encoding) && // MK: For compatibility, we confirm that the encoding isn't an array
+      def.output.encoding.includes(',') // def.output.encoding?.includes(',')
+    ) {
       res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
     } else {
       res.addProperty({ name: 'data', type: 'OutputSchema' })

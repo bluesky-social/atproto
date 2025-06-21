@@ -389,15 +389,24 @@ function genServerXrpcMethod(
       isExported: true,
     })
 
+    // MK: Since the "stream.Readable" code uses the same transform to as an array of encodings,
+    // to maintain compatibility, we transform the array into a comma separated string
+    const encoding = Array.isArray(def.input.encoding)
+      ? def.input.encoding.join(',')
+      : def.input.encoding
+
     handlerInput.addProperty({
       name: 'encoding',
-      type: def.input.encoding
+      type: encoding
         .split(',')
         .map((v) => `'${v.trim()}'`)
         .join(' | '),
     })
     if (def.input.schema) {
-      if (def.input.encoding.includes(',')) {
+      if (
+        typeof def.input.encoding === 'string' && // MK: For compatibility, we confirm that the encoding is a string
+        def.input.encoding.includes(',')
+      ) {
         handlerInput.addProperty({
           name: 'body',
           type: 'InputSchema | stream.Readable',
@@ -405,7 +414,10 @@ function genServerXrpcMethod(
       } else {
         handlerInput.addProperty({ name: 'body', type: 'InputSchema' })
       }
-    } else if (def.input.encoding) {
+    } else if (
+      def.input.encoding &&
+      typeof def.input.encoding === 'string' // MK: For compatibility, we confirm that the encoding is a string
+    ) {
       handlerInput.addProperty({ name: 'body', type: 'stream.Readable' })
     }
   } else {
@@ -425,17 +437,26 @@ function genServerXrpcMethod(
       isExported: true,
     })
 
+    // MK: Since the "stream.Readable" code uses the same transform to as an array of encodings,
+    // to maintain compatibility, we transform the array into a comma separated string
+    const encoding = Array.isArray(def.output.encoding)
+      ? def.output.encoding.join(',')
+      : def.output.encoding
+
     if (def.output.encoding) {
       handlerSuccess.addProperty({
         name: 'encoding',
-        type: def.output.encoding
+        type: encoding
           .split(',')
           .map((v) => `'${v.trim()}'`)
           .join(' | '),
       })
     }
     if (def.output?.schema) {
-      if (def.output.encoding.includes(',')) {
+      if (
+        typeof def.output.encoding === 'string' && // MK: For compatibility, we confirm that the encoding is a string
+        def.output.encoding.includes(',')
+      ) {
         handlerSuccess.addProperty({
           name: 'body',
           type: 'OutputSchema | Uint8Array | stream.Readable',
@@ -443,7 +464,10 @@ function genServerXrpcMethod(
       } else {
         handlerSuccess.addProperty({ name: 'body', type: 'OutputSchema' })
       }
-    } else if (def.output?.encoding) {
+    } else if (
+      def.output?.encoding &&
+      typeof def.output.encoding === 'string' // MK: For compatibility, we confirm that the encoding is a string
+    ) {
       handlerSuccess.addProperty({
         name: 'body',
         type: 'Uint8Array | stream.Readable',
