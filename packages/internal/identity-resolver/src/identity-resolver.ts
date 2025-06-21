@@ -13,14 +13,19 @@ import {
 import { IdentityResolverError } from './identity-resolver-error'
 import { asNormalizedHandle, extractNormalizedHandle } from './util'
 
-export type ResolvedIdentity = {
-  document: DidDocument<AtprotoIdentityDidMethods>
+// Consistent with `com.atproto.identity.defs#identityInfo` returned by
+// `com.atproto.identity.resolveIdentity` endpoint.
+export type IdentityInfo = {
+  did: AtprotoDid
+
+  didDoc: DidDocument<AtprotoIdentityDidMethods>
 
   /**
-   * Will be defined if the document contains a handle alias that resolves
-   * to the document's DID.
+   * Will be 'handle.invalid' if the handle does not resolve to the
+   * same DID as the input, or if the handle is not present in the DID
+   * document.
    */
-  handle?: string
+  handle: 'handle.invalid' | string
 }
 
 export type ResolveIdentityOptions = ResolveDidOptions & ResolveHandleOptions
@@ -34,7 +39,7 @@ export class IdentityResolver {
   public async resolve(
     input: string,
     options?: ResolveIdentityOptions,
-  ): Promise<ResolvedIdentity> {
+  ): Promise<IdentityInfo> {
     return isAtprotoDid(input)
       ? this.resolveFromDid(input, options)
       : this.resolveFromHandle(input, options)
@@ -43,7 +48,7 @@ export class IdentityResolver {
   public async resolveFromDid(
     did: AtprotoDid,
     options?: ResolveDidOptions,
-  ): Promise<ResolvedIdentity> {
+  ): Promise<IdentityInfo> {
     const document = await this.getDocumentFromDid(did, options)
 
     options?.signal?.throwIfAborted()
@@ -58,22 +63,24 @@ export class IdentityResolver {
       : undefined
 
     return {
-      document,
-      handle: resolvedDid === did ? handle : undefined,
+      did: document.id,
+      didDoc: document,
+      handle: handle && resolvedDid === did ? handle : 'handle.invalid',
     }
   }
 
   public async resolveFromHandle(
     handle: string,
     options?: ResolveHandleOptions,
-  ): Promise<ResolvedIdentity> {
+  ): Promise<IdentityInfo> {
     const document = await this.getDocumentFromHandle(handle, options)
 
     // @NOTE bi-directional resolution enforced in getDocumentFromHandle()
 
     return {
-      document,
-      handle: extractNormalizedHandle(document),
+      did: document.id,
+      didDoc: document,
+      handle: extractNormalizedHandle(document) || 'handle.invalid',
     }
   }
 

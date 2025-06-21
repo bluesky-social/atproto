@@ -299,7 +299,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError('Invalid redirect_uri')
     }
 
-    const { identity, metadata } = await this.oauthResolver.resolve(input, {
+    const { identityInfo, metadata } = await this.oauthResolver.resolve(input, {
       signal,
     })
 
@@ -331,7 +331,11 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       code_challenge: pkce.challenge,
       code_challenge_method: pkce.method,
       state,
-      login_hint: identity?.handle ?? identity?.document.id,
+      login_hint: identityInfo
+        ? identityInfo.handle !== 'handle.invalid'
+          ? identityInfo.handle
+          : identityInfo.did
+        : undefined,
       response_mode: this.responseMode,
       response_type: 'code' as const,
       scope: options?.scope ?? this.clientMetadata.scope,
