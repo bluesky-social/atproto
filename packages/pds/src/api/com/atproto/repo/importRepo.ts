@@ -17,9 +17,7 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
-    auth: ctx.authVerifier.accessFull({
-      checkTakedown: true,
-    }),
+    auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
       if (!ctx.cfg.service.acceptingImports) {
