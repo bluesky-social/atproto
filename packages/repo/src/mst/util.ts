@@ -126,7 +126,7 @@ export const isValidMstKey = (str: string): boolean => {
   )
 }
 
-export const validCharsRegex = /^[a-zA-Z0-9_\-:.]*$/
+export const validCharsRegex = /^[a-zA-Z0-9_~\-:.]*$/
 
 export const isValidChars = (str: string): boolean => {
   return str.match(validCharsRegex) !== null
