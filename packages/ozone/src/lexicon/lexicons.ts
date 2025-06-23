@@ -7239,48 +7239,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7342,6 +7300,48 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -13377,6 +13377,10 @@ export const schemaDict = {
           subjectHandle: {
             type: 'string',
           },
+          userAgent: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#userAgent',
+          },
         },
       },
       modEventViewDetail: {
@@ -13440,6 +13444,10 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          userAgent: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#userAgent',
           },
         },
       },
@@ -14457,6 +14465,23 @@ export const schemaDict = {
           },
         },
       },
+      userAgent: {
+        type: 'object',
+        description:
+          'User agent information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')",
+          },
+          extra: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -14513,6 +14538,10 @@ export const schemaDict = {
               createdBy: {
                 type: 'string',
                 format: 'did',
+              },
+              userAgent: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#userAgent',
               },
             },
           },
@@ -14917,6 +14946,14 @@ export const schemaDict = {
                 description:
                   'If specified, only events where the action policies match any of the given policies are returned',
               },
+            },
+            userAgent: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where the userAgent name matches any of the given values are returned',
             },
             cursor: {
               type: 'string',
@@ -16735,8 +16772,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',

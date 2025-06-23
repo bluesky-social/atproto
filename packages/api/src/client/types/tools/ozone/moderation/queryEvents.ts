@@ -48,6 +48,8 @@ export interface QueryParams {
   removedTags?: string[]
   reportTypes?: string[]
   policies?: string[]
+  /** If specified, only events where the userAgent name matches any of the given values are returned */
+  userAgent?: string[]
   cursor?: string
 }
 

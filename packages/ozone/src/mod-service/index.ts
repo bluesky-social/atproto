@@ -167,6 +167,7 @@ export class ModerationService {
     collections: string[]
     subjectType?: string
     policies?: string[]
+    userAgent?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -188,6 +189,7 @@ export class ModerationService {
       collections,
       subjectType,
       policies,
+      userAgent,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -287,6 +289,9 @@ export class ModerationService {
         })
         return qb
       })
+    }
+    if (userAgent?.length) {
+      builder = builder.where(sql`("userAgent" ->> 'name')`, 'in', userAgent)
     }
 
     const keyset = new TimeIdKeyset(
@@ -397,12 +402,19 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
+    userAgent?: { name: string; extra?: unknown } | null
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
   }> {
     this.db.assertTransaction()
-    const { event, subject, createdBy, createdAt = new Date() } = info
+    const {
+      event,
+      subject,
+      createdBy,
+      createdAt = new Date(),
+      userAgent,
+    } = info
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0
@@ -508,6 +520,7 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
+        userAgent: userAgent ? jsonb(userAgent) : null,
       })
       .returningAll()
       .executeTakeFirstOrThrow()

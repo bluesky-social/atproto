@@ -46,7 +46,8 @@
               "type": "array",
               "items": { "type": "string", "format": "cid" }
             },
-            "createdBy": { "type": "string", "format": "did" }
+            "createdBy": { "type": "string", "format": "did" },
+            "userAgent": { "type": "ref", "ref": "tools.ozone.moderation.defs#userAgent" }
           }
         }
       },

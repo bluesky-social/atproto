@@ -141,6 +141,10 @@ export class ModerationViews {
       createdAt: row.createdAt,
       subjectHandle: row.subjectHandle ?? undefined,
       creatorHandle: row.creatorHandle ?? undefined,
+      userAgent: row.userAgent ? {
+        name: row.userAgent.name,
+        extra: row.userAgent.extra as { [x: string]: unknown } | undefined,
+      } : undefined,
     }
 
     const { event } = eventView

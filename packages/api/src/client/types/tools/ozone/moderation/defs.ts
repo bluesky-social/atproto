@@ -54,6 +54,7 @@ export interface ModEventView {
   createdAt: string
   creatorHandle?: string
   subjectHandle?: string
+  userAgent?: UserAgent
 }
 
 const hashModEventView = 'modEventView'
@@ -99,6 +100,7 @@ export interface ModEventViewDetail {
   subjectBlobs: BlobView[]
   createdBy: string
   createdAt: string
+  userAgent?: UserAgent
 }
 
 const hashModEventViewDetail = 'modEventViewDetail'
@@ -892,4 +894,23 @@ export function isReporterStats<V>(v: V) {
 
 export function validateReporterStats<V>(v: V) {
   return validate<ReporterStats & V>(v, id, hashReporterStats)
+}
+
+/** User agent information for tracing the source of the action */
+export interface UserAgent {
+  $type?: 'tools.ozone.moderation.defs#userAgent'
+  /** Name/identifier of the source (e.g., 'automod', 'ozone/workspace') */
+  name: string
+  /** Additional arbitrary metadata about the source */
+  extra?: { [_ in string]: unknown }
+}
+
+const hashUserAgent = 'userAgent'
+
+export function isUserAgent<V>(v: V) {
+  return is$typed(v, id, hashUserAgent)
+}
+
+export function validateUserAgent<V>(v: V) {
+  return validate<UserAgent & V>(v, id, hashUserAgent)
 }
