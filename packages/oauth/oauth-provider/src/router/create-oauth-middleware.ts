@@ -19,7 +19,8 @@ import {
   parseHttpRequest,
   staticJsonMiddleware,
 } from '../lib/http/index.js'
-import { extractZodErrorMessage } from '../lib/util/zod-error.js'
+import { formatError } from '../lib/util/error.js'
+import { OAuthError } from '../oauth-errors.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import type { MiddlewareOptions } from './middleware-options.js'
 
@@ -98,11 +99,13 @@ export function createOAuthMiddleware<
 
       const credentials = await oauthClientCredentialsSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidClient)
+        .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
 
       const authorizationRequest = await oauthAuthorizationRequestParSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidRequest)
+        .catch((err) =>
+          throwInvalidRequest(err, 'Invalid authorization request'),
+        )
 
       const dpopProof = await server.checkDpopProof(
         req.method!,
@@ -135,11 +138,11 @@ export function createOAuthMiddleware<
 
       const clientCredentials = await oauthClientCredentialsSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidGrant)
+        .catch((err) => throwInvalidGrant(err, 'Client credentials missing'))
 
       const tokenRequest = await oauthTokenRequestSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidGrant)
+        .catch((err) => throwInvalidGrant(err, 'Invalid request payload'))
 
       const dpopProof = await server.checkDpopProof(
         req.method!,
@@ -165,11 +168,11 @@ export function createOAuthMiddleware<
 
       const credentials = await oauthClientCredentialsSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidRequest)
+        .catch((err) => throwInvalidRequest(err, 'Client credentials missing'))
 
       const tokenIdentification = await oauthTokenIdentificationSchema
         .parseAsync(payload, { path: ['body'] })
-        .catch(throwInvalidRequest)
+        .catch((err) => throwInvalidRequest(err, 'Invalid request payload'))
 
       const dpopProof = await server.checkDpopProof(
         req.method!,
@@ -214,10 +217,17 @@ export function createOAuthMiddleware<
           res.appendHeader('Access-Control-Expose-Headers', name)
         }
 
-        const payload = await buildOAuthResponse.call(this, req, res)
-        return { payload, status }
+        const json = await buildOAuthResponse.call(this, req, res)
+        return { json, status }
       } catch (err) {
-        onError?.(req, res, err, 'OAuth request error')
+        onError?.(
+          req,
+          res,
+          err,
+          err instanceof OAuthError
+            ? `OAuth "${err.error}" error`
+            : 'Unexpected error',
+        )
 
         if (!res.headersSent && err instanceof WWWAuthenticateError) {
           const name = 'WWW-Authenticate'
@@ -226,31 +236,22 @@ export function createOAuthMiddleware<
         }
 
         const status = buildErrorStatus(err)
-        const payload = buildErrorPayload(err)
+        const json = buildErrorPayload(err)
 
-        return { payload, status }
+        return { json, status }
       }
     })
   }
 }
 
-function throwInvalidGrant(err: unknown): never {
-  throw new InvalidGrantError(
-    extractZodErrorMessage(err) ?? 'Invalid grant',
-    err,
-  )
+function throwInvalidGrant(err: unknown, prefix: string): never {
+  throw new InvalidGrantError(formatError(err, prefix), err)
 }
 
-function throwInvalidClient(err: unknown): never {
-  throw new InvalidClientError(
-    extractZodErrorMessage(err) ?? 'Client authentication failed',
-    err,
-  )
+function throwInvalidClient(err: unknown, prefix: string): never {
+  throw new InvalidClientError(formatError(err, prefix), err)
 }
 
-function throwInvalidRequest(err: unknown): never {
-  throw new InvalidRequestError(
-    extractZodErrorMessage(err) ?? 'Input validation error',
-    err,
-  )
+function throwInvalidRequest(err: unknown, prefix: string): never {
+  throw new InvalidRequestError(formatError(err, prefix), err)
 }

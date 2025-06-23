@@ -21,15 +21,21 @@ import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
 import { DeviceId, deviceIdSchema } from '../device/device-id.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
-import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
+import {
+  ErrorPayload,
+  buildErrorPayload,
+  buildErrorStatus,
+} from '../errors/error-parser.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
+  JsonResponse,
   Middleware,
   RequestMetadata,
   Router,
   RouterCtx,
   SubCtx,
+  flushStream,
   jsonHandler,
   parseHttpRequest,
   subCtx,
@@ -84,7 +90,7 @@ export function createApiMiddleware<
       schema: verifyHandleSchema,
       async handler() {
         await server.accountManager.verifyHandleAvailability(this.input.handle)
-        return { available: true }
+        return { json: { available: true } }
       },
     }),
   )
@@ -121,7 +127,8 @@ export function createApiMiddleware<
               requestUri: this.requestUri,
             })
 
-        return { account, ephemeralToken }
+        const json = { account, ephemeralToken }
+        return { json }
       },
     }),
   )
@@ -173,7 +180,7 @@ export function createApiMiddleware<
             account.sub,
           )
 
-          return {
+          const json = {
             account,
             ephemeralToken,
             consentRequired: server.checkConsentRequired(
@@ -181,9 +188,12 @@ export function createApiMiddleware<
               authorizedClients.get(clientId),
             ),
           }
+
+          return { json }
         }
 
-        return { account, ephemeralToken }
+        const json = { account, ephemeralToken }
+        return { json }
       },
     }),
   )
@@ -205,7 +215,7 @@ export function createApiMiddleware<
           await server.accountManager.removeDeviceAccount(this.deviceId, sub)
         }
 
-        return { success: true as const }
+        return { json: { success: true as const } }
       },
     }),
   )
@@ -222,7 +232,7 @@ export function createApiMiddleware<
         .strict(),
       async handler() {
         await server.accountManager.resetPasswordRequest(this.input)
-        return { success: true }
+        return { json: { success: true } }
       },
     }),
   )
@@ -239,7 +249,7 @@ export function createApiMiddleware<
         .strict(),
       async handler() {
         await server.accountManager.resetPasswordConfirm(this.input)
-        return { success: true }
+        return { json: { success: true } }
       },
     }),
   )
@@ -254,12 +264,14 @@ export function createApiMiddleware<
           this.deviceId,
         )
 
-        return deviceAccounts.map(
+        const json = deviceAccounts.map(
           (deviceAccount): ActiveDeviceSession => ({
             account: deviceAccount.account,
             loginRequired: server.checkLoginRequired(deviceAccount),
           }),
         )
+
+        return { json }
       },
     }),
   )
@@ -289,7 +301,7 @@ export function createApiMiddleware<
         // expose the expiration date). This requires a change to the way
         // TokenInfo are stored (see TokenManager#isTokenExpired and
         // TokenManager#isTokenInactive).
-        return tokenInfos.map(({ id, data }): ActiveOAuthSession => {
+        const json = tokenInfos.map(({ id, data }): ActiveOAuthSession => {
           return {
             tokenId: id,
 
@@ -302,6 +314,8 @@ export function createApiMiddleware<
             scope: data.parameters.scope,
           }
         })
+
+        return { json }
       },
     }),
   )
@@ -318,7 +332,7 @@ export function createApiMiddleware<
           account.sub,
         )
 
-        return deviceAccounts.map(
+        const json = deviceAccounts.map(
           (accountSession): ActiveAccountSession => ({
             deviceId: accountSession.deviceId,
             deviceMetadata: {
@@ -331,6 +345,8 @@ export function createApiMiddleware<
             isCurrentDevice: accountSession.deviceId === this.deviceId,
           }),
         )
+
+        return { json }
       },
     }),
   )
@@ -350,7 +366,7 @@ export function createApiMiddleware<
           this.input.sub,
         )
 
-        return { success: true }
+        return { json: { success: true } }
       },
     }),
   )
@@ -374,7 +390,7 @@ export function createApiMiddleware<
 
         await server.tokenManager.deleteToken(tokenInfo.id)
 
-        return { success: true }
+        return { json: { success: true } }
       },
     }),
   )
@@ -436,13 +452,15 @@ export function createApiMiddleware<
 
             const url = buildRedirectUrl(server.issuer, parameters, { code })
 
-            return { url }
+            return { json: { url } }
           } catch (err) {
             // Since we have access to the parameters, we can re-throw an
             // AuthorizationError with the redirect_uri parameter.
             throw AuthorizationError.from(parameters, err)
           }
         } catch (err) {
+          onError?.(req, res, err, 'Failed to accept authorization request')
+
           // If any error happened (unauthenticated, invalid request, etc.),
           // lets make sure the request can no longer be used.
           try {
@@ -451,23 +469,24 @@ export function createApiMiddleware<
             onError?.(req, res, err, 'Failed to delete request')
           }
 
-          if (
-            err instanceof AuthorizationError &&
-            err.parameters.redirect_uri
-          ) {
-            // Prefer logging the cause
-            onError?.(req, res, err.cause ?? err, 'Authorization failed')
+          if (err instanceof AuthorizationError) {
+            try {
+              const url = buildRedirectUrl(
+                server.issuer,
+                err.parameters,
+                err.toJSON(),
+              )
 
-            const url = buildRedirectUrl(
-              server.issuer,
-              err.parameters,
-              err.toJSON(),
-            )
-
-            return { url }
+              return { json: { url } }
+            } catch {
+              // Unable to build redirect URL, ignore
+            }
           }
 
-          throw err
+          // @NOTE Not re-throwing the error here, as the error was already
+          // handled by the `onError` callback, and apiRoute (`apiMiddleware`)
+          // would call `onError` again.
+          return buildErrorJsonResponse(err)
         }
       },
     }),
@@ -510,25 +529,25 @@ export function createApiMiddleware<
             error_description: 'The user rejected the request',
           })
 
-          return { url }
+          return { json: { url } }
         } catch (err) {
-          if (
-            err instanceof AuthorizationError &&
-            err.parameters.redirect_uri
-          ) {
-            // Prefer logging the cause
-            onError?.(req, res, err.cause ?? err, 'Authorization failed')
+          onError?.(req, res, err, 'Failed to reject authorization request')
 
-            const url = buildRedirectUrl(
-              server.issuer,
-              err.parameters,
-              err.toJSON(),
-            )
+          if (err instanceof AuthorizationError) {
+            try {
+              const url = buildRedirectUrl(
+                server.issuer,
+                err.parameters,
+                err.toJSON(),
+              )
 
-            return { url }
+              return { json: { url } }
+            } catch {
+              // Unable to build redirect URL, ignore
+            }
           }
 
-          throw err
+          return buildErrorJsonResponse(err)
         } finally {
           await server.requestManager.delete(requestUri).catch((err) => {
             onError?.(req, res, err, 'Failed to delete request')
@@ -643,7 +662,7 @@ export function createApiMiddleware<
       this: ApiContext<RouteCtx<C>, InferValidation<S>>,
       req: Req,
       res: Res,
-    ) => Awaitable<ApiEndpoints[E]['output']>
+    ) => Awaitable<JsonResponse<ErrorPayload | ApiEndpoints[E]['output']>>
   }): Middleware<C, Req, Res> {
     return createRoute(
       options.method,
@@ -665,12 +684,12 @@ export function createApiMiddleware<
       this: ApiContext<C, InferValidation<S>>,
       req: Req,
       res: Res,
-    ) => unknown
+    ) => Awaitable<JsonResponse>
   }): Middleware<C, Req, Res> {
     const parseInput: (this: C, req: Req) => Promise<InferValidation<S>> =
       schema == null // No schema means endpoint doesn't accept any input
         ? async function (req) {
-            req.resume() // Flush body
+            await flushStream(req)
             return undefined
           }
         : method === 'POST'
@@ -679,12 +698,7 @@ export function createApiMiddleware<
               return schema.parseAsync(body, { path: ['body'] })
             }
           : async function (req) {
-              // @NOTE This should not be necessary with GET requests
-              req.resume().once('error', (_err) => {
-                // Ignore errors when flushing the request body
-                // (e.g. client closed connection)
-              })
-
+              await flushStream(req)
               const query = Object.fromEntries(this.url.searchParams)
               return schema.parseAsync(query, { path: ['query'] })
             }
@@ -732,28 +746,30 @@ export function createApiMiddleware<
           rotateDeviceCookies,
         )
 
-        const context = subCtx(this, {
+        const context: ApiContext<C, InferValidation<S>> = subCtx(this, {
           input,
           requestUri,
           deviceId,
           deviceMetadata,
         })
 
-        // Generate the API response
-        const payload = await handler.call(context, req, res)
-
-        return { payload, status: 200 }
+        return await handler.call(context, req, res)
       } catch (err) {
-        onError?.(req, res, err, 'Failed to handle API request')
+        onError?.(req, res, err, `Failed to handle API request`)
 
-        // @TODO Rework the API error responses (relying on codes)
-        const payload = buildErrorPayload(err)
-        const status = buildErrorStatus(err)
-
-        return { payload, status }
+        // Make sore to always return a JSON response
+        return buildErrorJsonResponse(err)
       }
     })
   }
+}
+
+function buildErrorJsonResponse(err: unknown) {
+  // @TODO Rework the API error responses (relying on codes)
+  const json = buildErrorPayload(err)
+  const status = buildErrorStatus(err)
+
+  return { json, status }
 }
 
 function buildRedirectUrl(

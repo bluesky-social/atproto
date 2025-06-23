@@ -15,8 +15,8 @@ import {
   validateOrigin,
   validateReferrer,
 } from '../lib/http/index.js'
+import { formatError } from '../lib/util/error.js'
 import type { Awaitable } from '../lib/util/type.js'
-import { extractZodErrorMessage } from '../lib/util/zod-error.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { requestUriSchema } from '../request/request-uri.js'
 import { AuthorizationResultRedirect } from '../result/authorization-result-redirect.js'
@@ -62,7 +62,7 @@ export function createAuthorizationPageMiddleware<
 
       const clientCredentials = await oauthClientCredentialsSchema
         .parseAsync(query, { path: ['query'] })
-        .catch(throwInvalidRequest)
+        .catch((err) => throwInvalidRequest(err, 'Invalid client credentials'))
 
       if ('client_secret' in clientCredentials) {
         throw new InvalidRequestError('Client secret must not be provided')
@@ -70,7 +70,7 @@ export function createAuthorizationPageMiddleware<
 
       const authorizationRequest = await oauthAuthorizationRequestQuerySchema
         .parseAsync(query, { path: ['query'] })
-        .catch(throwInvalidRequest)
+        .catch((err) => throwInvalidRequest(err, 'Invalid request parameters'))
 
       const deviceInfo = await server.deviceManager.load(req, res)
 
@@ -88,20 +88,21 @@ export function createAuthorizationPageMiddleware<
           return sendAuthorizePage(req, res, result)
         }
       } catch (err) {
-        // If we have the "redirect_uri" parameter, we can redirect the user
-        // to the client with an error.
-        if (err instanceof AuthorizationError && err.parameters.redirect_uri) {
-          // Prefer logging the cause
-          onError?.(req, res, err.cause ?? err, 'Authorization failed')
+        onError?.(req, res, err, 'Authorization request denied')
 
-          return sendAuthorizeRedirect(res, {
-            issuer: server.issuer,
-            parameters: err.parameters,
-            redirect: err.toJSON(),
-          })
+        if (err instanceof AuthorizationError) {
+          try {
+            return sendAuthorizeRedirect(res, {
+              issuer: server.issuer,
+              parameters: err.parameters,
+              redirect: err.toJSON(),
+            })
+          } catch {
+            // If we fail to send the redirect, we fall back to sending an error
+          }
         }
 
-        throw err
+        return sendErrorPage(req, res, err)
       }
     }),
   )
@@ -155,11 +156,8 @@ export function createAuthorizationPageMiddleware<
   }
 }
 
-function throwInvalidRequest(err: unknown): never {
-  throw new InvalidRequestError(
-    extractZodErrorMessage(err) ?? 'Input validation error',
-    err,
-  )
+function throwInvalidRequest(err: unknown, prefix: string): never {
+  throw new InvalidRequestError(formatError(err, prefix), err)
 }
 
 function sendAuthorizeRedirect(
