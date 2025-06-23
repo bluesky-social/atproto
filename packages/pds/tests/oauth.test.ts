@@ -189,10 +189,7 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      const input = await page.typeIn(
-        'input[placeholder="Login with a @handle or PDS url"]',
-        'alice.test',
-      )
+      const input = await page.typeIn('input[name="identifier"]', 'alice.test')
 
       await input.press('Enter')
     })
@@ -248,10 +245,7 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      const input = await page.typeIn(
-        'input[placeholder="Login with a @handle or PDS url"]',
-        'alice.test',
-      )
+      const input = await page.typeIn('input[name="identifier"]', 'alice.test')
 
       await input.press('Enter')
     })
@@ -297,10 +291,7 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      const input = await page.typeIn(
-        'input[placeholder="Login with a @handle or PDS url"]',
-        'alice.test',
-      )
+      const input = await page.typeIn('input[name="identifier"]', 'alice.test')
 
       await input.press('Enter')
     })

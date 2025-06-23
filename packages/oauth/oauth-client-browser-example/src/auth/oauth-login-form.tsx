@@ -16,7 +16,7 @@ export type OAuthLoginHandleProps = JSX.IntrinsicElements['form'] & {
 export function OAuthLoginForm({
   signIn,
   autoFocus = true,
-  placeholder = 'Login with a @handle or PDS url',
+  placeholder = 'Login with a @handle or custom PDS',
 
   // form
   className,
