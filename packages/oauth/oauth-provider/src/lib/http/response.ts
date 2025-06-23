@@ -101,9 +101,8 @@ export function cacheControlMiddleware(maxAge: number): Middleware<void> {
   }
 }
 
-export type JsonResponse<P = unknown> = {
+export type JsonResponse<P = unknown> = WriteResponseOptions & {
   json: P
-  status?: number
 }
 
 export function jsonHandler<
@@ -121,8 +120,9 @@ export function jsonHandler<
       // promise and return it.
       void (async () => {
         try {
-          const { json, status = 200 } = await buildJson.call(this, req, res)
-          writeJson(res, json, { status })
+          const jsonResponse = await buildJson.call(this, req, res)
+          const { json, status = 200, ...options } = jsonResponse
+          writeJson(res, json, { ...options, status })
         } catch (err) {
           next(asError(err, 'Failed to build JSON response'))
         }
