@@ -184,7 +184,7 @@ export async function generateMockSetup(env: TestNetwork) {
   const filteredPost = await bob.app.bsky.feed.post.create(
     { repo: bob.accountDid },
     {
-      text: 'reallly bad post should be deleted',
+      text: 'really bad post should be deleted',
       createdAt: date.next().value,
     },
   )

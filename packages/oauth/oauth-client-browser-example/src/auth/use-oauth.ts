@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Agent } from '@atproto/api'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  AuthorizeOptions,
   BrowserOAuthClient,
   BrowserOAuthClientLoadOptions,
   LoginContinuedInParentWindowError,
@@ -15,7 +15,10 @@ export type OnRestored = (session: OAuthSession | null) => void
 export type OnSignedIn = (session: OAuthSession, state: null | string) => void
 export type OnSignedOut = () => void
 
-type OAuthSignIn = (input: string) => Promise<void>
+export type OAuthSignIn = (
+  input: string,
+  options?: AuthorizeOptions,
+) => Promise<void>
 
 function useValueRef<T>(value: T) {
   const valueRef = useRef(value)
@@ -113,7 +116,7 @@ function useOAuthClient(
 
       return () => ac.abort()
     } else {
-      setClient(null)
+      throw new TypeError('Invalid ClientOptions passed to useOAuthClient.')
     }
   }, [
     clientInput,
@@ -239,31 +242,25 @@ export function useOAuth(options: UseOAuthOptions) {
   }, [client, session, onSignedOut])
 
   const signIn = useCallback<OAuthSignIn>(
-    async (input) => {
+    async (input, options) => {
       if (!client) throw new Error('Client not initialized')
       const state = stateRef.current
       const scope = scopeRef.current
-      const session = await client.signIn(input, { scope, state })
+      const session = await client.signIn(input, { scope, state, ...options })
       setSession(session)
       await onSignedIn(session, state ?? null)
     },
     [client, onSignedIn],
   )
 
-  // Memoize the return value to avoid re-renders in consumers
-  return useMemo(
-    () => ({
-      isInitializing,
-      isInitialized: client != null,
-      isLoginPopup,
+  return {
+    isInitializing,
+    isInitialized: client != null,
+    isLoginPopup,
 
-      signIn,
-      signOut: () => session?.signOut(),
-      refresh: () => session?.getTokenInfo(true),
+    signIn,
 
-      client,
-      agent: session ? new Agent(session) : null,
-    }),
-    [isInitializing, isLoginPopup, session, client, signIn],
-  )
+    client,
+    session,
+  }
 }

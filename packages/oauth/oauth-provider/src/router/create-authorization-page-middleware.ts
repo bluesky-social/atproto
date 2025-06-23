@@ -3,7 +3,7 @@ import {
   oauthAuthorizationRequestQuerySchema,
   oauthClientCredentialsSchema,
 } from '@atproto/oauth-types'
-import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { AuthorizationError } from '../errors/authorization-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import {
   Middleware,
@@ -90,7 +90,7 @@ export function createAuthorizationPageMiddleware<
       } catch (err) {
         onError?.(req, res, err, 'Authorization request denied')
 
-        if (err instanceof AccessDeniedError) {
+        if (err instanceof AuthorizationError) {
           try {
             return sendAuthorizeRedirect(res, {
               issuer: server.issuer,

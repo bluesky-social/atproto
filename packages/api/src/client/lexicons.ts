@@ -9734,9 +9734,9 @@ export const schemaDict = {
       },
       chatPreference: {
         type: 'object',
-        required: ['filter', 'push'],
+        required: ['include', 'push'],
         properties: {
-          filter: {
+          include: {
             type: 'string',
             knownValues: ['all', 'accepted'],
           },
@@ -9747,9 +9747,9 @@ export const schemaDict = {
       },
       filterablePreference: {
         type: 'object',
-        required: ['filter', 'list', 'push'],
+        required: ['include', 'list', 'push'],
         properties: {
-          filter: {
+          include: {
             type: 'string',
             knownValues: ['all', 'follows'],
           },

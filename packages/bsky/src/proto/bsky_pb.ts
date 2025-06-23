@@ -14,56 +14,60 @@ import type {
 import { Message, proto3, protoInt64, Timestamp } from '@bufbuild/protobuf'
 
 /**
- * @generated from enum bsky.NotificationFilter
+ * @generated from enum bsky.NotificationInclude
  */
-export enum NotificationFilter {
+export enum NotificationInclude {
   /**
-   * @generated from enum value: NOTIFICATION_FILTER_UNSPECIFIED = 0;
+   * @generated from enum value: NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * @generated from enum value: NOTIFICATION_FILTER_ALL = 1;
+   * @generated from enum value: NOTIFICATION_INCLUDE_ALL = 1;
    */
   ALL = 1,
 
   /**
-   * @generated from enum value: NOTIFICATION_FILTER_FOLLOWS = 2;
+   * @generated from enum value: NOTIFICATION_INCLUDE_FOLLOWS = 2;
    */
   FOLLOWS = 2,
 }
-// Retrieve enum metadata with: proto3.getEnumType(NotificationFilter)
-proto3.util.setEnumType(NotificationFilter, 'bsky.NotificationFilter', [
-  { no: 0, name: 'NOTIFICATION_FILTER_UNSPECIFIED' },
-  { no: 1, name: 'NOTIFICATION_FILTER_ALL' },
-  { no: 2, name: 'NOTIFICATION_FILTER_FOLLOWS' },
+// Retrieve enum metadata with: proto3.getEnumType(NotificationInclude)
+proto3.util.setEnumType(NotificationInclude, 'bsky.NotificationInclude', [
+  { no: 0, name: 'NOTIFICATION_INCLUDE_UNSPECIFIED' },
+  { no: 1, name: 'NOTIFICATION_INCLUDE_ALL' },
+  { no: 2, name: 'NOTIFICATION_INCLUDE_FOLLOWS' },
 ])
 
 /**
- * @generated from enum bsky.ChatNotificationFilter
+ * @generated from enum bsky.ChatNotificationInclude
  */
-export enum ChatNotificationFilter {
+export enum ChatNotificationInclude {
   /**
-   * @generated from enum value: CHAT_NOTIFICATION_FILTER_UNSPECIFIED = 0;
+   * @generated from enum value: CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * @generated from enum value: CHAT_NOTIFICATION_FILTER_ALL = 1;
+   * @generated from enum value: CHAT_NOTIFICATION_INCLUDE_ALL = 1;
    */
   ALL = 1,
 
   /**
-   * @generated from enum value: CHAT_NOTIFICATION_FILTER_ACCEPTED = 2;
+   * @generated from enum value: CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
    */
   ACCEPTED = 2,
 }
-// Retrieve enum metadata with: proto3.getEnumType(ChatNotificationFilter)
-proto3.util.setEnumType(ChatNotificationFilter, 'bsky.ChatNotificationFilter', [
-  { no: 0, name: 'CHAT_NOTIFICATION_FILTER_UNSPECIFIED' },
-  { no: 1, name: 'CHAT_NOTIFICATION_FILTER_ALL' },
-  { no: 2, name: 'CHAT_NOTIFICATION_FILTER_ACCEPTED' },
-])
+// Retrieve enum metadata with: proto3.getEnumType(ChatNotificationInclude)
+proto3.util.setEnumType(
+  ChatNotificationInclude,
+  'bsky.ChatNotificationInclude',
+  [
+    { no: 0, name: 'CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED' },
+    { no: 1, name: 'CHAT_NOTIFICATION_INCLUDE_ALL' },
+    { no: 2, name: 'CHAT_NOTIFICATION_INCLUDE_ACCEPTED' },
+  ],
+)
 
 /**
  * @generated from enum bsky.FeedType
@@ -8411,9 +8415,9 @@ export class NotificationChannelPush extends Message<NotificationChannelPush> {
  */
 export class FilterableNotificationPreference extends Message<FilterableNotificationPreference> {
   /**
-   * @generated from field: bsky.NotificationFilter filter = 1;
+   * @generated from field: bsky.NotificationInclude include = 1;
    */
-  filter = NotificationFilter.UNSPECIFIED
+  include = NotificationInclude.UNSPECIFIED
 
   /**
    * @generated from field: bsky.NotificationChannelList list = 2;
@@ -8435,9 +8439,9 @@ export class FilterableNotificationPreference extends Message<FilterableNotifica
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
-      name: 'filter',
+      name: 'include',
       kind: 'enum',
-      T: proto3.getEnumType(NotificationFilter),
+      T: proto3.getEnumType(NotificationInclude),
     },
     { no: 2, name: 'list', kind: 'message', T: NotificationChannelList },
     { no: 3, name: 'push', kind: 'message', T: NotificationChannelPush },
@@ -8547,9 +8551,9 @@ export class NotificationPreference extends Message<NotificationPreference> {
  */
 export class ChatNotificationPreference extends Message<ChatNotificationPreference> {
   /**
-   * @generated from field: bsky.ChatNotificationFilter filter = 1;
+   * @generated from field: bsky.ChatNotificationInclude include = 1;
    */
-  filter = ChatNotificationFilter.UNSPECIFIED
+  include = ChatNotificationInclude.UNSPECIFIED
 
   /**
    * @generated from field: bsky.NotificationChannelPush push = 2;
@@ -8566,9 +8570,9 @@ export class ChatNotificationPreference extends Message<ChatNotificationPreferen
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
-      name: 'filter',
+      name: 'include',
       kind: 'enum',
-      T: proto3.getEnumType(ChatNotificationFilter),
+      T: proto3.getEnumType(ChatNotificationInclude),
     },
     { no: 2, name: 'push', kind: 'message', T: NotificationChannelPush },
   ])

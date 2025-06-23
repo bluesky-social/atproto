@@ -94,9 +94,12 @@ export function createOAuthMiddleware<
     oauthHandler(async function (req) {
       const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
+      // https://datatracker.ietf.org/doc/html/rfc9126#name-error-response
+      // https://datatracker.ietf.org/doc/html/rfc6749#autoid-56
+
       const credentials = await oauthClientCredentialsSchema
         .parseAsync(payload)
-        .catch((err) => throwInvalidRequest(err, 'Client credentials missing'))
+        .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
 
       const authorizationRequest = await oauthAuthorizationRequestParSchema
         .parseAsync(payload)
@@ -135,7 +138,7 @@ export function createOAuthMiddleware<
 
       const clientCredentials = await oauthClientCredentialsSchema
         .parseAsync(payload)
-        .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
+        .catch((err) => throwInvalidGrant(err, 'Client credentials missing'))
 
       const tokenRequest = await oauthTokenRequestSchema
         .parseAsync(payload)

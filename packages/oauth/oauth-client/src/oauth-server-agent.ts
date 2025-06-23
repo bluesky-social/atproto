@@ -179,7 +179,7 @@ export class OAuthServerAgent {
    *
    * @returns The user's PDS URL (the resource server for the user)
    */
-  protected async verifyIssuer(sub: AtprotoDid) {
+  protected async verifyIssuer(sub: AtprotoDid): Promise<string> {
     using signal = timeoutSignal(10e3)
 
     const resolved = await this.oauthResolver.resolveFromIdentity(sub, {
@@ -195,7 +195,7 @@ export class OAuthServerAgent {
       throw new TypeError('Issuer mismatch')
     }
 
-    return resolved.identity.pds.href
+    return resolved.pds.href
   }
 
   async request<Endpoint extends OAuthEndpointName>(

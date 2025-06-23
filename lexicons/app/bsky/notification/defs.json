@@ -8,17 +8,17 @@
     },
     "chatPreference": {
       "type": "object",
-      "required": ["filter", "push"],
+      "required": ["include", "push"],
       "properties": {
-        "filter": { "type": "string", "knownValues": ["all", "accepted"] },
+        "include": { "type": "string", "knownValues": ["all", "accepted"] },
         "push": { "type": "boolean" }
       }
     },
     "filterablePreference": {
       "type": "object",
-      "required": ["filter", "list", "push"],
+      "required": ["include", "list", "push"],
       "properties": {
-        "filter": { "type": "string", "knownValues": ["all", "follows"] },
+        "include": { "type": "string", "knownValues": ["all", "follows"] },
         "list": { "type": "boolean" },
         "push": { "type": "boolean" }
       }
