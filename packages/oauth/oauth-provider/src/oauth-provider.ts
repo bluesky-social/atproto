@@ -449,7 +449,7 @@ export class OAuthProvider extends OAuthVerifier {
       .parseAsync(payload)
       .catch((err) => {
         const msg = formatError(err, 'Invalid parameters in JAR')
-        throw InvalidRequestError.from(err, msg)
+        throw new InvalidRequestError(msg, err)
       })
 
     return parameters

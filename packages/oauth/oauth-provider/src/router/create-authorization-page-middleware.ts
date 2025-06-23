@@ -102,7 +102,7 @@ export function createAuthorizationPageMiddleware<
           }
         }
 
-        sendErrorPage(req, res, err)
+        return sendErrorPage(req, res, err)
       }
     }),
   )
