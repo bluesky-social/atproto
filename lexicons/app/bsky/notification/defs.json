@@ -63,6 +63,26 @@
         "unverified": { "type": "ref", "ref": "#preference" },
         "verified": { "type": "ref", "ref": "#preference" }
       }
+    },
+    "activitySubscription": {
+      "type": "object",
+      "required": ["post", "reply"],
+      "properties": {
+        "post": { "type": "boolean" },
+        "reply": { "type": "boolean" }
+      }
+    },
+    "subjectActivitySubscription": {
+      "description": "Object used to store activity subscription data in stash.",
+      "type": "object",
+      "required": ["subject", "activitySubscription"],
+      "properties": {
+        "subject": { "type": "string", "format": "did" },
+        "activitySubscription": {
+          "type": "ref",
+          "ref": "#activitySubscription"
+        }
+      }
     }
   }
 }
