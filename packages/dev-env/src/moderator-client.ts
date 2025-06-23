@@ -1,11 +1,11 @@
 import {
   AtpAgent,
+  ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
-  ToolsOzoneModerationDefs,
 } from '@atproto/api'
 import { TestOzone } from './ozone'
 
@@ -117,7 +117,12 @@ export class ModeratorClient {
     },
     role?: ModLevel,
   ) {
-    const { subject, reason = 'X', createdBy = 'did:example:admin', userAgent } = opts
+    const {
+      subject,
+      reason = 'X',
+      createdBy = 'did:example:admin',
+      userAgent,
+    } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
         subject,

@@ -6,7 +6,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('userAgent', 'jsonb')
     .execute()
 
-  // Add index on userAgent->>'name' for efficient querying by userAgent name
   await db.schema
     .createIndex('moderation_event_user_agent_name_idx')
     .on('moderation_event')

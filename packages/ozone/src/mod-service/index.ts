@@ -291,7 +291,9 @@ export class ModerationService {
       })
     }
     if (userAgent?.length) {
-      builder = builder.where(sql`("userAgent" ->> 'name')`, 'in', userAgent)
+      builder = builder
+        .where('userAgent', 'is not', null)
+        .where(sql`("userAgent" ->> 'name')`, 'in', userAgent)
     }
 
     const keyset = new TimeIdKeyset(
