@@ -864,7 +864,7 @@ export class OAuthProvider extends OAuthVerifier {
   ): Promise<OAuthTokenResponse> {
     const code = await codeSchema.parseAsync(input.code).catch((err) => {
       const msg = formatError(err, 'Invalid code')
-      throw InvalidGrantError.from(err, msg)
+      throw new InvalidGrantError(msg, err)
     })
 
     const data = await this.requestManager
