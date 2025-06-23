@@ -9,9 +9,9 @@ import {
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
 import {
+  IdentityInfo,
   IdentityResolver,
   ResolveIdentityOptions,
-  ResolvedIdentity,
 } from '@atproto-labs/identity-resolver'
 import {
   GetCachedOptions,
@@ -37,7 +37,7 @@ export class OAuthResolver {
     input: string,
     options?: ResolveOAuthOptions,
   ): Promise<{
-    identity?: ResolvedIdentity
+    identityInfo?: IdentityInfo
     metadata: OAuthAuthorizationServerMetadata
   }> {
     // Allow using an entryway, or PDS url, directly as login input (e.g.
@@ -87,25 +87,25 @@ export class OAuthResolver {
     input: string,
     options?: ResolveOAuthOptions,
   ): Promise<{
-    identity: ResolvedIdentity
+    identityInfo: IdentityInfo
     metadata: OAuthAuthorizationServerMetadata
     pds: URL
   }> {
-    const identity = await this.resolveIdentity(input, options)
+    const identityInfo = await this.resolveIdentity(input, options)
 
     options?.signal?.throwIfAborted()
 
-    const pds = extractPdsUrl(identity.document)
+    const pds = extractPdsUrl(identityInfo.didDoc)
 
     const metadata = await this.getResourceServerMetadata(pds, options)
 
-    return { identity, metadata, pds }
+    return { identityInfo, metadata, pds }
   }
 
   public async resolveIdentity(
     input: string,
     options?: ResolveIdentityOptions,
-  ): Promise<ResolvedIdentity> {
+  ): Promise<IdentityInfo> {
     try {
       return await this.identityResolver.resolve(input, options)
     } catch (cause) {
