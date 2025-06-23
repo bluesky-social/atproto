@@ -1,5 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
+import { NamespaceAppBskyNotificationDefsSubjectActivitySubscription } from '../../../stash'
 import { Database } from '../db'
 import { StashKeyKey } from '../db/pagination'
 
@@ -18,6 +19,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
 
     return {
+      creator: actorDid,
+      namespace: NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
       key: res.key,
       activitySubscription: {
         post: res.post,

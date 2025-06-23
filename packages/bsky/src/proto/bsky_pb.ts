@@ -9755,12 +9755,22 @@ export class GetActivitySubscriptionRequest extends Message<GetActivitySubscript
  */
 export class GetActivitySubscriptionResponse extends Message<GetActivitySubscriptionResponse> {
   /**
-   * @generated from field: string key = 1;
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string namespace = 2;
+   */
+  namespace = ''
+
+  /**
+   * @generated from field: string key = 3;
    */
   key = ''
 
   /**
-   * @generated from field: bsky.ActivitySubscription activity_subscription = 2;
+   * @generated from field: bsky.ActivitySubscription activity_subscription = 4;
    */
   activitySubscription?: ActivitySubscription
 
@@ -9772,9 +9782,11 @@ export class GetActivitySubscriptionResponse extends Message<GetActivitySubscrip
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsky.GetActivitySubscriptionResponse'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'namespace', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     {
-      no: 2,
+      no: 4,
       name: 'activity_subscription',
       kind: 'message',
       T: ActivitySubscription,

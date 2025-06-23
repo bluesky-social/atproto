@@ -893,8 +893,10 @@ message GetActivitySubscriptionRequest {
 }
 
 message GetActivitySubscriptionResponse {
-  string key = 1;
-  ActivitySubscription activity_subscription = 2;
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  ActivitySubscription activity_subscription = 4;
 }
 
 message GetActivitySubscriptionsRequest {
