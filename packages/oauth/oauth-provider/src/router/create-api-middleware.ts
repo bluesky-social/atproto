@@ -454,8 +454,6 @@ export function createApiMiddleware<
 
             return { json: { url } }
           } catch (err) {
-            onError?.(req, res, err, 'Failed to accept authorization request')
-
             // Since we have access to the parameters, we can re-throw an
             // AuthorizationError with the redirect_uri parameter.
             throw AuthorizationError.from(parameters, err)
@@ -485,6 +483,9 @@ export function createApiMiddleware<
             }
           }
 
+          // @NOTE Not re-throwing the error here, as the error was already
+          // handled by the `onError` callback, and apiRoute (`apiMiddleware`)
+          // would call `onError` again.
           return buildErrorJsonResponse(err)
         }
       },
