@@ -1,5 +1,13 @@
-import { JSX, MouseEventHandler, ReactNode, useRef, useState } from 'react'
+import {
+  JSX,
+  MouseEventHandler,
+  ReactNode,
+  useCallback,
+  useRef,
+  useState,
+} from 'react'
 import { useClickOutside } from '../lib/use-click-outside.ts'
+import { useEscapeKey } from '../lib/use-escape-key.ts'
 import { useRandomString } from '../lib/use-random-string.ts'
 import { Button, ButtonProps } from './button.tsx'
 
@@ -18,22 +26,28 @@ export function ButtonDropdown({
   className = '',
   ...buttonProps
 }: DropdownProps) {
-  const id = useRandomString({ prefix: 'dropdown-' })
+  const buttonId = useRandomString({ prefix: 'dropdown-button-' })
+  const dropdownId = useRandomString({ prefix: 'dropdown-menu-' })
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
 
-  useClickOutside(rootRef, () => setOpen(false))
+  useEscapeKey(close)
+  useClickOutside(rootRef, close)
+
+  const id = buttonProps.id || buttonId
 
   return (
     <div ref={rootRef} className="relative inline-block">
       <Button
         {...buttonProps}
+        id={id}
         key="button"
         className={['relative z-10', className].join(' ')}
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="true"
         aria-expanded={open}
-        aria-controls={id}
+        aria-controls={dropdownId}
       >
         {children}
       </Button>
@@ -41,11 +55,13 @@ export function ButtonDropdown({
       {open && (
         <div
           key="menu"
-          id={id}
+          id={dropdownId}
           className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           onClick={(event) => {
             if (!event.defaultPrevented) setOpen(false)
           }}
+          role="menu"
+          aria-labelledby={id}
         >
           {menu.map((item, index) => (
             <Item
@@ -72,6 +88,8 @@ function Item({ item: { label, onClick, items }, ...props }: ItemProps) {
       {label && (
         <button
           key="label"
+          type="button"
+          role="menuitem"
           className={[
             'block w-full px-4 py-2 text-left text-sm text-gray-700 focus:outline-none',
             onClick ? 'hover:bg-gray-100 focus:bg-gray-100' : 'cursor-default',
