@@ -1,7 +1,4 @@
-import {
-  AppBskyNotificationActivitySubscriptionDeclaration,
-  AtpAgent,
-} from '@atproto/api'
+import { AppBskyNotificationDeclaration, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
@@ -1167,11 +1164,11 @@ describe('notification views', () => {
       await pdsAgent.com.atproto.repo.createRecord(
         {
           repo: actor,
-          collection: ids.AppBskyNotificationActivitySubscriptionDeclaration,
+          collection: ids.AppBskyNotificationDeclaration,
           rkey: 'self',
           record: {
             allowSubscriptions: value,
-          } as AppBskyNotificationActivitySubscriptionDeclaration.Record,
+          } as AppBskyNotificationDeclaration.Record,
         },
         { headers: sc.getHeaders(actor), encoding: 'application/json' },
       )

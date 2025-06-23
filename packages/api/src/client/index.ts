@@ -173,7 +173,7 @@ import * as AppBskyGraphVerification from './types/app/bsky/graph/verification.j
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
-import * as AppBskyNotificationActivitySubscriptionDeclaration from './types/app/bsky/notification/activitySubscriptionDeclaration.js'
+import * as AppBskyNotificationDeclaration from './types/app/bsky/notification/declaration.js'
 import * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
 import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
@@ -441,7 +441,7 @@ export * as AppBskyGraphVerification from './types/app/bsky/graph/verification.j
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
-export * as AppBskyNotificationActivitySubscriptionDeclaration from './types/app/bsky/notification/activitySubscriptionDeclaration.js'
+export * as AppBskyNotificationDeclaration from './types/app/bsky/notification/declaration.js'
 export * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
 export * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
@@ -3348,12 +3348,11 @@ export class AppBskyLabelerServiceRecord {
 
 export class AppBskyNotificationNS {
   _client: XrpcClient
-  activitySubscriptionDeclaration: AppBskyNotificationActivitySubscriptionDeclarationRecord
+  declaration: AppBskyNotificationDeclarationRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.activitySubscriptionDeclaration =
-      new AppBskyNotificationActivitySubscriptionDeclarationRecord(client)
+    this.declaration = new AppBskyNotificationDeclarationRecord(client)
   }
 
   getPreferences(
@@ -3465,7 +3464,7 @@ export class AppBskyNotificationNS {
   }
 }
 
-export class AppBskyNotificationActivitySubscriptionDeclarationRecord {
+export class AppBskyNotificationDeclarationRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -3476,13 +3475,10 @@ export class AppBskyNotificationActivitySubscriptionDeclarationRecord {
     params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: {
-      uri: string
-      value: AppBskyNotificationActivitySubscriptionDeclaration.Record
-    }[]
+    records: { uri: string; value: AppBskyNotificationDeclaration.Record }[]
   }> {
     const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.notification.activitySubscriptionDeclaration',
+      collection: 'app.bsky.notification.declaration',
       ...params,
     })
     return res.data
@@ -3493,10 +3489,10 @@ export class AppBskyNotificationActivitySubscriptionDeclarationRecord {
   ): Promise<{
     uri: string
     cid: string
-    value: AppBskyNotificationActivitySubscriptionDeclaration.Record
+    value: AppBskyNotificationDeclaration.Record
   }> {
     const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.notification.activitySubscriptionDeclaration',
+      collection: 'app.bsky.notification.declaration',
       ...params,
     })
     return res.data
@@ -3507,10 +3503,10 @@ export class AppBskyNotificationActivitySubscriptionDeclarationRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: Un$Typed<AppBskyNotificationActivitySubscriptionDeclaration.Record>,
+    record: Un$Typed<AppBskyNotificationDeclaration.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.notification.activitySubscriptionDeclaration'
+    const collection = 'app.bsky.notification.declaration'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
       undefined,
@@ -3532,10 +3528,7 @@ export class AppBskyNotificationActivitySubscriptionDeclarationRecord {
     await this._client.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      {
-        collection: 'app.bsky.notification.activitySubscriptionDeclaration',
-        ...params,
-      },
+      { collection: 'app.bsky.notification.declaration', ...params },
       { headers },
     )
   }

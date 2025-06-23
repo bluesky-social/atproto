@@ -7,7 +7,7 @@ import { DatabaseSchema } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
-const lexId = lex.ids.AppBskyNotificationActivitySubscriptionDeclaration
+const lexId = lex.ids.AppBskyNotificationDeclaration
 
 const insertFn = async (
   _db: DatabaseSchema,

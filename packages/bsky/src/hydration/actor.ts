@@ -1,4 +1,4 @@
-import { AppBskyNotificationActivitySubscriptionDeclaration } from '@atproto/api'
+import { AppBskyNotificationDeclaration } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
@@ -19,7 +19,7 @@ import {
 } from './util'
 
 type AllowActivitySubscriptions = Extract<
-  AppBskyNotificationActivitySubscriptionDeclaration.Record['allowSubscriptions'],
+  AppBskyNotificationDeclaration.Record['allowSubscriptions'],
   'followers' | 'mutuals' | 'none'
 >
 

@@ -2,7 +2,7 @@ import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
 import {
-  AppBskyNotificationActivitySubscriptionDeclaration,
+  AppBskyNotificationDeclaration,
   ChatBskyActorDeclaration,
 } from '@atproto/api'
 import { keyBy } from '@atproto/common'
@@ -38,9 +38,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const chatDeclarationUris = dids.map(
       (did) => `at://${did}/chat.bsky.actor.declaration/self`,
     )
-    const activitySubscriptionDeclarationUris = dids.map(
-      (did) =>
-        `at://${did}/app.bsky.notification.activitySubscriptionDeclaration/self`,
+    const notifDeclarationUris = dids.map(
+      (did) => `at://${did}/app.bsky.notification.declaration/self`,
     )
     const { ref } = db.db.dynamic
     const [
@@ -49,7 +48,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       profiles,
       statuses,
       chatDeclarations,
-      activitySubscriptionDeclarations,
+      notifDeclarations,
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
@@ -76,7 +75,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       getRecords(db)({ uris: profileUris }),
       getRecords(db)({ uris: statusUris }),
       getRecords(db)({ uris: chatDeclarationUris }),
-      getRecords(db)({ uris: activitySubscriptionDeclarationUris }),
+      getRecords(db)({ uris: notifDeclarationUris }),
     ])
 
     const verificationsBySubjectDid = verificationsReceived.reduce(
@@ -111,10 +110,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       }, {} as VerifiedBy)
 
       const activitySubscription = () => {
-        const record =
-          parseRecordBytes<AppBskyNotificationActivitySubscriptionDeclaration.Record>(
-            activitySubscriptionDeclarations.records[i].record,
-          )
+        const record = parseRecordBytes<AppBskyNotificationDeclaration.Record>(
+          notifDeclarations.records[i].record,
+        )
 
         // The dataplane is responsible for setting the default of "FOLLOWERS".
         const defaultVal = ActivitySubscriptionsFrom.FOLLOWERS

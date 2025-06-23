@@ -9742,14 +9742,14 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyNotificationActivitySubscriptionDeclaration: {
+  AppBskyNotificationDeclaration: {
     lexicon: 1,
-    id: 'app.bsky.notification.activitySubscriptionDeclaration',
+    id: 'app.bsky.notification.declaration',
     defs: {
       main: {
         type: 'record',
         description:
-          "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of this declaration implies 'followers'.",
+          'A declaration of the users choices related to notifications that can be produced by them.',
         key: 'literal:self',
         record: {
           type: 'object',
@@ -9757,6 +9757,8 @@ export const schemaDict = {
           properties: {
             allowSubscriptions: {
               type: 'string',
+              description:
+                "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'.",
               knownValues: ['followers', 'mutuals', 'none'],
             },
           },
@@ -16938,8 +16940,7 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
-  AppBskyNotificationActivitySubscriptionDeclaration:
-    'app.bsky.notification.activitySubscriptionDeclaration',
+  AppBskyNotificationDeclaration: 'app.bsky.notification.declaration',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
   AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
