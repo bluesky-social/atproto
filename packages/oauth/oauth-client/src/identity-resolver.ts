@@ -14,25 +14,25 @@ import {
   XrpcHandleResolverOptions,
 } from '@atproto-labs/handle-resolver'
 import {
+  AtprotoIdentityResolver,
   IdentityResolver,
-  IdentityResolverProto,
 } from '@atproto-labs/identity-resolver'
 
 // @TODO Currently, the `OAuthClient`'s `IdentityResolver` is an instance of
-// `IdentityResolverProto`, which implemented the ATProto Identity resolution
+// `AtprotoIdentityResolver`, which implements the ATProto Identity resolution
 // protocol (did resolution + dns resolution). In the future, we may want to
 // allow using a different `IdentityResolver` implementation, such as one based
 // on XRPC's "com.atproto.identity.resolveIdentity" method. This would be
-// particularly useful for browser based clients clients, since the ATProto
-// Identity resolution protocol requires DNS lookups, which are not available in
-// browser environments (and need to be "polyfilled"). Once we decide to support
-// such a behavior, the `identityResolver` option below should be made
-// mandatory, and the code bellow should be removed from the
-// @atproto/oauth-client package (and moved to the environment specific package,
-// such as @atproto/oauth-client-browser and @atproto/oauth-client-node),
-// allowing the dependency graph to be optimized for the specific environment.
-// When that is done, the `IdentityResolverProto` should also be moved to its
-// own package.
+// particularly useful for browser based clients, since DNS lookups are not
+// available in browser environments (and require an alternative implementation,
+// such as one based on the "com.atproto.identity.resolveHandle" XRPC method, or
+// using DNS-over-HTTPS). Once we decide to support such a behavior, the
+// `identityResolver` option below should be made mandatory, and the code bellow
+// should be removed from the @atproto/oauth-client package (and moved to the
+// environment specific package, such as @atproto/oauth-client-browser and
+// @atproto/oauth-client-node), allowing the dependency graph to be optimized
+// for the specific environment. When that is done, the
+// `AtprotoIdentityResolver` class should also be moved to its own package.
 
 // @TODO Once we move to a distinct implementation, we should also introduce a
 // caching layer for the `IdentityResolver` to avoid redundant resolution
@@ -49,10 +49,9 @@ export function createIdentityResolver(
   const { identityResolver } = options
   if (identityResolver != null) return identityResolver
 
-  return new IdentityResolverProto(
-    createDidResolver(options),
-    createHandleResolver(options),
-  )
+  const didResolver = createDidResolver(options)
+  const handleResolver = createHandleResolver(options)
+  return new AtprotoIdentityResolver(didResolver, handleResolver)
 }
 
 export type DidResolverOptions = {

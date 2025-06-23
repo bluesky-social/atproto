@@ -23,7 +23,13 @@ import { asNormalizedHandle, extractNormalizedHandle } from './util.js'
 // implementation based on XRPC calls to the
 // "com.atproto.identity.resolveIdentity" method.
 
-export class IdentityResolverProto implements IdentityResolver {
+/**
+ * Implementation of the official ATPROTO identity resolution strategy.
+ * This implementation relies on two primitives:
+ * - DID resolution (using the `DidResolver` interface)
+ * - Handle resolution (using the `HandleResolver` interface)
+ */
+export class AtprotoIdentityResolver implements IdentityResolver {
   constructor(
     protected readonly didResolver: DidResolver<AtprotoIdentityDidMethods>,
     protected readonly handleResolver: HandleResolver,
