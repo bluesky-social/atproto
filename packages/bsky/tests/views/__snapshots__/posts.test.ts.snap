@@ -5,7 +5,7 @@ Object {
   "author": Object {
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
     },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -50,7 +50,7 @@ Object {
         "author": Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -137,7 +137,7 @@ Object {
   "author": Object {
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
     },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -211,7 +211,7 @@ Array [
     "author": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
       },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -278,7 +278,7 @@ Array [
     "author": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
       },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -329,7 +329,7 @@ Array [
     "author": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
       },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -371,7 +371,7 @@ Array [
     "author": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
       },
       "did": "user(4)",
@@ -408,7 +408,7 @@ Array [
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -503,7 +503,7 @@ Array [
     "author": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "chat": Object {
           "allowIncoming": "none",
@@ -526,7 +526,7 @@ Array [
         "author": Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "did": "user(4)",
@@ -564,7 +564,7 @@ Array [
                 "author": Object {
                   "associated": Object {
                     "activitySubscription": Object {
-                      "allowSubscriptions": "following",
+                      "allowSubscriptions": "followers",
                     },
                   },
                   "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -693,7 +693,7 @@ Array [
     "author": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
       },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",

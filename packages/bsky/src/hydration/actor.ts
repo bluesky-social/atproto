@@ -20,7 +20,7 @@ import {
 
 type AllowActivitySubscriptions = Extract<
   AppBskyNotificationActivitySubscriptionDeclaration.Record['allowSubscriptions'],
-  'all' | 'none' | 'following'
+  'followers' | 'mutuals' | 'none'
 >
 
 export type Actor = {
@@ -197,15 +197,15 @@ export class ActorHydrator {
         val: ActivitySubscriptionsFrom,
       ): AllowActivitySubscriptions => {
         switch (val) {
-          case ActivitySubscriptionsFrom.ALL:
-            return 'all'
-          case ActivitySubscriptionsFrom.FOLLOWING:
-            return 'following'
+          case ActivitySubscriptionsFrom.FOLLOWERS:
+            return 'followers'
+          case ActivitySubscriptionsFrom.MUTUALS:
+            return 'mutuals'
           case ActivitySubscriptionsFrom.NONE:
             return 'none'
           default:
-            // The dataplane should set the default of "FOLLOWING". Just in case.
-            return 'following'
+            // The dataplane should set the default of "FOLLOWERS". Just in case.
+            return 'followers'
         }
       }
 

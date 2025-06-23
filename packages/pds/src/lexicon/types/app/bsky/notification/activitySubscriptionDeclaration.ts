@@ -16,7 +16,7 @@ const id = 'app.bsky.notification.activitySubscriptionDeclaration'
 
 export interface Record {
   $type: 'app.bsky.notification.activitySubscriptionDeclaration'
-  allowSubscriptions: 'all' | 'none' | 'following' | (string & {})
+  allowSubscriptions: 'followers' | 'mutuals' | 'none' | (string & {})
   [k: string]: unknown
 }
 

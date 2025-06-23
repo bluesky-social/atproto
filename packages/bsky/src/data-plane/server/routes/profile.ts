@@ -116,18 +116,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             activitySubscriptionDeclarations.records[i].record,
           )
 
-        // The dataplane is responsible for setting the default of "FOLLOWING".
-        const defaultVal = ActivitySubscriptionsFrom.FOLLOWING
+        // The dataplane is responsible for setting the default of "FOLLOWERS".
+        const defaultVal = ActivitySubscriptionsFrom.FOLLOWERS
 
         if (typeof record?.allowSubscriptions !== 'string') {
           return defaultVal
         }
 
         switch (record.allowSubscriptions) {
-          case 'all':
-            return ActivitySubscriptionsFrom.ALL
-          case 'following':
-            return ActivitySubscriptionsFrom.FOLLOWING
+          case 'followers':
+            return ActivitySubscriptionsFrom.FOLLOWERS
+          case 'mutuals':
+            return ActivitySubscriptionsFrom.MUTUALS
           case 'none':
             return ActivitySubscriptionsFrom.NONE
           default:

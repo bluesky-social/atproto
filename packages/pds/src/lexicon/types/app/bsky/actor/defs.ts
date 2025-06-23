@@ -140,7 +140,7 @@ export function validateProfileAssociatedChat<V>(v: V) {
 
 export interface ProfileAssociatedActivitySubscription {
   $type?: 'app.bsky.actor.defs#profileAssociatedActivitySubscription'
-  allowSubscriptions: 'all' | 'none' | 'following' | (string & {})
+  allowSubscriptions: 'followers' | 'mutuals' | 'none' | (string & {})
 }
 
 const hashProfileAssociatedActivitySubscription =

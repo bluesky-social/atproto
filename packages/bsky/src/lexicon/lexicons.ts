@@ -4754,7 +4754,7 @@ export const schemaDict = {
         properties: {
           allowSubscriptions: {
             type: 'string',
-            knownValues: ['all', 'none', 'following'],
+            knownValues: ['followers', 'mutuals', 'none'],
           },
         },
       },
@@ -9749,7 +9749,7 @@ export const schemaDict = {
       main: {
         type: 'record',
         description:
-          "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of this declaration implies 'following'.",
+          "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of this declaration implies 'followers'.",
         key: 'literal:self',
         record: {
           type: 'object',
@@ -9757,7 +9757,7 @@ export const schemaDict = {
           properties: {
             allowSubscriptions: {
               type: 'string',
-              knownValues: ['all', 'none', 'following'],
+              knownValues: ['followers', 'mutuals', 'none'],
             },
           },
         },

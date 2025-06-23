@@ -430,10 +430,11 @@ export class Views {
     if (!profileViewer.activitySubscription) return undefined
 
     const actorFollowsViewer = !!profileViewer.followedBy
+    const viewerFollowsActor = !!profileViewer.following
     const allowFrom = actor.allowActivitySubscriptionsFrom
     if (
-      allowFrom === 'all' ||
-      (allowFrom === 'following' && actorFollowsViewer)
+      (allowFrom === 'followers' && viewerFollowsActor) ||
+      (allowFrom === 'mutuals' && actorFollowsViewer && viewerFollowsActor)
     ) {
       return profileViewer.activitySubscription
     }

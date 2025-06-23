@@ -11,7 +11,7 @@ Object {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,
@@ -97,7 +97,7 @@ Object {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,
@@ -175,7 +175,7 @@ Object {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,
@@ -264,7 +264,7 @@ Object {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,

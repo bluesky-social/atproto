@@ -5,7 +5,7 @@ Array [
   Object {
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,
@@ -48,7 +48,7 @@ Array [
           Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(2)",
@@ -68,7 +68,7 @@ Array [
   Object {
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,
@@ -94,7 +94,7 @@ Array [
           Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -133,7 +133,7 @@ Array [
   Object {
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,
@@ -155,7 +155,7 @@ Array [
           Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -194,7 +194,7 @@ Array [
   Object {
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "chat": Object {
         "allowIncoming": "none",
@@ -219,7 +219,7 @@ Array [
           Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -262,7 +262,7 @@ exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "associated": Object {
     "activitySubscription": Object {
-      "allowSubscriptions": "following",
+      "allowSubscriptions": "followers",
     },
     "feedgens": 0,
     "labeler": false,
@@ -305,7 +305,7 @@ Object {
         Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "did": "user(2)",
@@ -328,7 +328,7 @@ exports[`pds profile views fetches other's profile, without a follow 1`] = `
 Object {
   "associated": Object {
     "activitySubscription": Object {
-      "allowSubscriptions": "following",
+      "allowSubscriptions": "followers",
     },
     "chat": Object {
       "allowIncoming": "none",
@@ -353,7 +353,7 @@ Object {
         Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
@@ -395,7 +395,7 @@ exports[`pds profile views fetches own profile 1`] = `
 Object {
   "associated": Object {
     "activitySubscription": Object {
-      "allowSubscriptions": "following",
+      "allowSubscriptions": "followers",
     },
     "feedgens": 0,
     "labeler": false,
@@ -436,7 +436,7 @@ Object {
         Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
@@ -455,7 +455,7 @@ Object {
         Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "did": "user(4)",
@@ -479,7 +479,7 @@ exports[`pds profile views presents avatars & banners 1`] = `
 Object {
   "associated": Object {
     "activitySubscription": Object {
-      "allowSubscriptions": "following",
+      "allowSubscriptions": "followers",
     },
     "feedgens": 0,
     "labeler": false,
@@ -505,7 +505,7 @@ Object {
         Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
@@ -524,7 +524,7 @@ Object {
         Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "did": "user(4)",

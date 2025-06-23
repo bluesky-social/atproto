@@ -53,7 +53,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": true,
@@ -85,7 +85,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,
@@ -134,7 +134,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,
@@ -168,7 +168,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,
@@ -234,7 +234,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": true,
@@ -266,7 +266,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,
@@ -315,7 +315,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,
@@ -349,7 +349,7 @@ Array [
     "profile": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,

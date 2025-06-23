@@ -9,7 +9,7 @@ Object {
       "creator": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
           "labeler": true,
         },
@@ -57,7 +57,7 @@ Object {
       "creator": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
           "labeler": true,
         },
@@ -93,7 +93,7 @@ Object {
       "creator": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
           "labeler": true,
         },
@@ -149,7 +149,7 @@ Object {
       "creator": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
           "labeler": true,
         },
@@ -192,7 +192,7 @@ Object {
       "creator": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
           "labeler": true,
         },

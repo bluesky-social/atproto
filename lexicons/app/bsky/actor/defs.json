@@ -152,7 +152,7 @@
       "properties": {
         "allowSubscriptions": {
           "type": "string",
-          "knownValues": ["all", "none", "following"]
+          "knownValues": ["followers", "mutuals", "none"]
         }
       }
     },

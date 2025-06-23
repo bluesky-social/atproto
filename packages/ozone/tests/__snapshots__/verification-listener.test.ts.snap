@@ -12,7 +12,7 @@ Array [
       "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,
@@ -69,7 +69,7 @@ Array [
       "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
         "feedgens": 0,
         "labeler": false,

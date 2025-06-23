@@ -18,7 +18,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -63,7 +63,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
@@ -126,7 +126,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -171,7 +171,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
@@ -226,7 +226,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(2)",
@@ -289,7 +289,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -334,7 +334,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
@@ -389,7 +389,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(2)",
@@ -452,7 +452,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -497,7 +497,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
@@ -560,7 +560,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -605,7 +605,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -660,7 +660,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -723,7 +723,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -768,7 +768,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -823,7 +823,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -886,7 +886,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -931,7 +931,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -986,7 +986,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -1041,7 +1041,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
@@ -1096,7 +1096,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(2)",
@@ -1151,7 +1151,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
@@ -1206,7 +1206,7 @@ Object {
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(3)",

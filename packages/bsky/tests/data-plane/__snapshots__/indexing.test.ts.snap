@@ -5,7 +5,7 @@ Array [
   Object {
     "associated": Object {
       "activitySubscription": Object {
-        "allowSubscriptions": "following",
+        "allowSubscriptions": "followers",
       },
       "feedgens": 0,
       "labeler": false,
@@ -28,7 +28,7 @@ Array [
           Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
@@ -57,7 +57,7 @@ Array [
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -92,7 +92,7 @@ Array [
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -135,7 +135,7 @@ Array [
           "grandparentAuthor": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -151,7 +151,7 @@ Array [
             "author": Object {
               "associated": Object {
                 "activitySubscription": Object {
-                  "allowSubscriptions": "following",
+                  "allowSubscriptions": "followers",
                 },
               },
               "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
@@ -241,7 +241,7 @@ Array [
             "author": Object {
               "associated": Object {
                 "activitySubscription": Object {
-                  "allowSubscriptions": "following",
+                  "allowSubscriptions": "followers",
                 },
               },
               "did": "user(0)",
@@ -277,7 +277,7 @@ Array [
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -296,7 +296,7 @@ Array [
               "author": Object {
                 "associated": Object {
                   "activitySubscription": Object {
-                    "allowSubscriptions": "following",
+                    "allowSubscriptions": "followers",
                   },
                   "chat": Object {
                     "allowIncoming": "none",
@@ -320,7 +320,7 @@ Array [
                     "author": Object {
                       "associated": Object {
                         "activitySubscription": Object {
-                          "allowSubscriptions": "following",
+                          "allowSubscriptions": "followers",
                         },
                       },
                       "did": "user(4)",
@@ -457,7 +457,7 @@ Array [
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -492,7 +492,7 @@ Array [
           "author": Object {
             "associated": Object {
               "activitySubscription": Object {
-                "allowSubscriptions": "following",
+                "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
@@ -546,7 +546,7 @@ Array [
       Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
           "chat": Object {
             "allowIncoming": "none",
@@ -564,7 +564,7 @@ Array [
       Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
@@ -586,7 +586,7 @@ Array [
     "subject": Object {
       "associated": Object {
         "activitySubscription": Object {
-          "allowSubscriptions": "following",
+          "allowSubscriptions": "followers",
         },
       },
       "description": "freshening things up",
@@ -611,7 +611,7 @@ Object {
       "author": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -686,7 +686,7 @@ Object {
       "author": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -787,7 +787,7 @@ exports[`indexing indexes profiles. 1`] = `
 Object {
   "associated": Object {
     "activitySubscription": Object {
-      "allowSubscriptions": "following",
+      "allowSubscriptions": "followers",
     },
     "chat": Object {
       "allowIncoming": "none",
@@ -816,7 +816,7 @@ exports[`indexing indexes profiles. 2`] = `
 Object {
   "associated": Object {
     "activitySubscription": Object {
-      "allowSubscriptions": "following",
+      "allowSubscriptions": "followers",
     },
     "chat": Object {
       "allowIncoming": "none",
@@ -845,7 +845,7 @@ exports[`indexing indexes profiles. 3`] = `
 Object {
   "associated": Object {
     "activitySubscription": Object {
-      "allowSubscriptions": "following",
+      "allowSubscriptions": "followers",
     },
     "chat": Object {
       "allowIncoming": "none",

@@ -23,14 +23,14 @@ export enum ActivitySubscriptionsFrom {
   UNSPECIFIED = 0,
 
   /**
-   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_ALL = 1;
+   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWERS = 1;
    */
-  ALL = 1,
+  FOLLOWERS = 1,
 
   /**
-   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWING = 2;
+   * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_MUTUALS = 2;
    */
-  FOLLOWING = 2,
+  MUTUALS = 2,
 
   /**
    * @generated from enum value: ACTIVITY_SUBSCRIPTIONS_FROM_NONE = 3;
@@ -43,8 +43,8 @@ proto3.util.setEnumType(
   'bsky.ActivitySubscriptionsFrom',
   [
     { no: 0, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_UNSPECIFIED' },
-    { no: 1, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_ALL' },
-    { no: 2, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWING' },
+    { no: 1, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_FOLLOWERS' },
+    { no: 2, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_MUTUALS' },
     { no: 3, name: 'ACTIVITY_SUBSCRIPTIONS_FROM_NONE' },
   ],
 )

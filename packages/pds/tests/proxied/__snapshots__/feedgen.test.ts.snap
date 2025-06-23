@@ -8,7 +8,7 @@ Object {
         "author": Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -77,7 +77,7 @@ Object {
         "author": Object {
           "associated": Object {
             "activitySubscription": Object {
-              "allowSubscriptions": "following",
+              "allowSubscriptions": "followers",
             },
           },
           "did": "user(2)",
@@ -114,7 +114,7 @@ Object {
               "author": Object {
                 "associated": Object {
                   "activitySubscription": Object {
-                    "allowSubscriptions": "following",
+                    "allowSubscriptions": "followers",
                   },
                 },
                 "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",

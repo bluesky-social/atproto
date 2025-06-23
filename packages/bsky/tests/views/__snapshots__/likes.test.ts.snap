@@ -8,7 +8,7 @@ Object {
       "actor": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
         },
         "did": "user(0)",
@@ -26,7 +26,7 @@ Object {
       "actor": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
           "chat": Object {
             "allowIncoming": "none",
@@ -48,7 +48,7 @@ Object {
       "actor": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
         },
         "did": "user(2)",
@@ -68,7 +68,7 @@ Object {
       "actor": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
@@ -102,7 +102,7 @@ Object {
       "actor": Object {
         "associated": Object {
           "activitySubscription": Object {
-            "allowSubscriptions": "following",
+            "allowSubscriptions": "followers",
           },
         },
         "did": "user(0)",

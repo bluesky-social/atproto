@@ -1230,12 +1230,12 @@ describe('notification views', () => {
     }
 
     beforeAll(async () => {
-      await declare(bob, 'all')
+      await declare(bob, 'followers')
       await declare(carol, 'none')
-      await declare(dan, 'following')
-      await declare(eve, 'following')
-      await declare(han, 'all')
-      await declare(blocked, 'all')
+      await declare(dan, 'mutuals')
+      await declare(eve, 'mutuals')
+      await declare(han, 'followers')
+      await declare(blocked, 'followers')
       await sc.follow(dan, alice)
       await sc.block(alice, blocked)
       await network.processAll()
@@ -1358,14 +1358,14 @@ describe('notification views', () => {
 
     describe('activity subscription declaration', () => {
       it('includes the declaration in the profile view', async () => {
-        await expect(associatedAllowSub(alice, bob)).resolves.toBe('all')
+        await expect(associatedAllowSub(alice, bob)).resolves.toBe('followers')
         await expect(associatedAllowSub(alice, carol)).resolves.toBe('none')
-        // dan: follows alice, and alice sees 'following',
-        await expect(associatedAllowSub(alice, dan)).resolves.toBe('following')
-        // eve: does not follow alice, and alice sees 'following',
-        await expect(associatedAllowSub(alice, eve)).resolves.toBe('following')
-        // fred: no declaration, alice sees 'following' (default).
-        await expect(associatedAllowSub(alice, fred)).resolves.toBe('following')
+        // dan: follows alice, and alice sees 'mutuals',
+        await expect(associatedAllowSub(alice, dan)).resolves.toBe('mutuals')
+        // eve: does not follow alice, and alice sees 'mutuals',
+        await expect(associatedAllowSub(alice, eve)).resolves.toBe('mutuals')
+        // fred: no declaration, alice sees 'mutuals' (default).
+        await expect(associatedAllowSub(alice, fred)).resolves.toBe('followers')
       })
     })
 
