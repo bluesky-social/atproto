@@ -3,7 +3,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { isActivitySubscriptionEnabled } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
-import { SubjectActivitySubscription } from '../../../../lexicon/types/app/bsky/notification/defs'
 import { NamespaceAppBskyNotificationDefsSubjectActivitySubscription } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
@@ -22,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       const stashInput = {
         actorDid,
         namespace: NamespaceAppBskyNotificationDefsSubjectActivitySubscription,
-        payload: <SubjectActivitySubscription>{
+        payload: {
           subject,
           activitySubscription,
         },
