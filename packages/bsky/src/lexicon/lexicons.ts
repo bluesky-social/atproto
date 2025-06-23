@@ -9915,6 +9915,17 @@ export const schemaDict = {
           },
         },
       },
+      seen: {
+        description: "Object used to store 'seen' information in stash.",
+        type: 'object',
+        required: ['seenAt'],
+        properties: {
+          seenAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   AppBskyNotificationGetPreferences: {

@@ -2,6 +2,8 @@ import { Struct, Timestamp } from '@bufbuild/protobuf'
 import { v3 as murmurV3 } from 'murmurhash'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { Seen } from '../../../../lexicon/types/app/bsky/notification/defs'
+import { NamespaceAppBskyNotificationDefsSeen } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
@@ -9,6 +11,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const viewer = auth.credentials.iss
       const seenAt = new Date(input.body.seenAt)
+      const stashPayload: Seen = { seenAt: seenAt.toISOString() }
+
       // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
       await Promise.all([
         ctx.dataplane.updateNotificationSeen({
@@ -35,6 +39,12 @@ export default function (server: Server, ctx: AppContext) {
               }),
             },
           ],
+        }),
+        ctx.stashClient.update({
+          actorDid: viewer,
+          namespace: NamespaceAppBskyNotificationDefsSeen,
+          key: 'self',
+          payload: stashPayload,
         }),
       ])
     },

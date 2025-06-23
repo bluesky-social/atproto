@@ -3,22 +3,25 @@ import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
 import {
   Preferences,
+  Seen,
   SubjectActivitySubscription,
 } from './lexicon/types/app/bsky/notification/defs'
 import { Method } from './proto/bsync_pb'
 
-export const NamespaceAppBskyNotificationDefsPreferences: Exclude<
-  Preferences['$type'],
-  undefined
-> = 'app.bsky.notification.defs#preferences'
+type Namespace<T extends { $type?: string }> = Exclude<T['$type'], undefined>
 
-export const NamespaceAppBskyNotificationDefsSubjectActivitySubscription: Exclude<
-  SubjectActivitySubscription['$type'],
-  undefined
-> = 'app.bsky.notification.defs#subjectActivitySubscription'
+export const NamespaceAppBskyNotificationDefsPreferences: Namespace<Preferences> =
+  'app.bsky.notification.defs#preferences'
+
+export const NamespaceAppBskyNotificationDefsSeen: Namespace<Seen> =
+  'app.bsky.notification.defs#seen'
+
+export const NamespaceAppBskyNotificationDefsSubjectActivitySubscription: Namespace<SubjectActivitySubscription> =
+  'app.bsky.notification.defs#subjectActivitySubscription'
 
 export type StashNamespace =
   | typeof NamespaceAppBskyNotificationDefsPreferences
+  | typeof NamespaceAppBskyNotificationDefsSeen
   | typeof NamespaceAppBskyNotificationDefsSubjectActivitySubscription
 
 export const createStashClient = (bsyncClient: BsyncClient): StashClient => {

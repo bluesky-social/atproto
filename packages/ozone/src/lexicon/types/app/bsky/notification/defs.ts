@@ -140,3 +140,19 @@ export function validateSubjectActivitySubscription<V>(v: V) {
     hashSubjectActivitySubscription,
   )
 }
+
+/** Object used to store 'seen' information in stash. */
+export interface Seen {
+  $type?: 'app.bsky.notification.defs#seen'
+  seenAt: string
+}
+
+const hashSeen = 'seen'
+
+export function isSeen<V>(v: V) {
+  return is$typed(v, id, hashSeen)
+}
+
+export function validateSeen<V>(v: V) {
+  return validate<Seen & V>(v, id, hashSeen)
+}
