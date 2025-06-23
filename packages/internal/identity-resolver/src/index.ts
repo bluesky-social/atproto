@@ -1,3 +1,5 @@
+export * from './atproto-identity-resolver.js'
+export * from './constants.js'
 export * from './identity-resolver-error.js'
 export * from './identity-resolver.js'
 export * from './util.js'
