@@ -1,5 +1,6 @@
 import { JSX, MouseEventHandler, ReactNode, useRef, useState } from 'react'
 import { useClickOutside } from '../lib/use-click-outside.ts'
+import { useRandomString } from '../lib/use-random-string.ts'
 import { Button, ButtonProps } from './button.tsx'
 
 export type Item = {
@@ -17,18 +18,22 @@ export function ButtonDropdown({
   className = '',
   ...buttonProps
 }: DropdownProps) {
+  const id = useRandomString({ prefix: 'dropdown-' })
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
 
   useClickOutside(rootRef, () => setOpen(false))
 
   return (
-    <div className="relative inline-block" ref={rootRef}>
+    <div ref={rootRef} className="relative inline-block">
       <Button
         {...buttonProps}
         key="button"
         className={['relative z-10', className].join(' ')}
         onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-controls={id}
       >
         {children}
       </Button>
@@ -36,6 +41,7 @@ export function ButtonDropdown({
       {open && (
         <div
           key="menu"
+          id={id}
           className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           onClick={(event) => {
             if (!event.defaultPrevented) setOpen(false)

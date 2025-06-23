@@ -16,6 +16,7 @@ export function UserMenu() {
   return (
     <ButtonDropdown
       transparent
+      aria-label="User menu"
       menu={[
         {
           label: handle && <b>{handle}</b>,

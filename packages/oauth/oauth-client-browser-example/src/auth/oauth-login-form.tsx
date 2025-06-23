@@ -50,7 +50,7 @@ export function OAuthLoginForm({
       <fieldset className="rounded-md border border-solid border-slate-200 text-neutral-700 dark:border-slate-700 dark:text-neutral-100">
         <div className="relative flex flex-wrap items-center justify-stretch space-x-2 p-1">
           <input
-            name="value"
+            name="identifier"
             type="text"
             className="relative mx-1 block w-[1px] min-w-0 flex-auto bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder={placeholder}
