@@ -299,7 +299,7 @@ export class TokenManager {
     // @TODO Add another store method that atomically consumes the refresh token
     // with a lock.
     const tokenInfo = await this.findByRefreshToken(token).catch((err) => {
-      throw InvalidTokenError.from(err, `Invalid refresh token`)
+      throw InvalidGrantError.from(err, `Invalid refresh token`)
     })
 
     if (!tokenInfo) {

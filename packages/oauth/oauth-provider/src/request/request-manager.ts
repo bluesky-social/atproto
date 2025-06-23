@@ -16,10 +16,10 @@ import {
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { AuthorizationError } from '../errors/authorization-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
-import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
@@ -93,10 +93,7 @@ export class RequestManager {
       'nonce', // note that OIDC "nonce" is redundant with PKCE
     ] as const) {
       if (parameters[k] !== undefined) {
-        throw new InvalidParametersError(
-          parameters,
-          `Unsupported "${k}" parameter`,
-        )
+        throw new AuthorizationError(parameters, `Unsupported "${k}" parameter`)
       }
     }
 
@@ -109,7 +106,7 @@ export class RequestManager {
         parameters.response_type,
       )
     ) {
-      throw new AccessDeniedError(
+      throw new AuthorizationError(
         parameters,
         `Unsupported response_type "${parameters.response_type}"`,
         'unsupported_response_type',
@@ -120,7 +117,7 @@ export class RequestManager {
       parameters.response_type === 'code' &&
       !this.metadata.grant_types_supported?.includes('authorization_code')
     ) {
-      throw new AccessDeniedError(
+      throw new AuthorizationError(
         parameters,
         `Unsupported grant_type "authorization_code"`,
         'invalid_request',
@@ -133,7 +130,7 @@ export class RequestManager {
         // defined in the server metadata. In the future, we might add support
         // for dynamic scopes.
         if (!this.metadata.scopes_supported?.includes(scope)) {
-          throw new InvalidParametersError(
+          throw new AuthorizationError(
             parameters,
             `Scope "${scope}" is not supported by this server`,
           )
@@ -169,7 +166,7 @@ export class RequestManager {
     if (!parameters.redirect_uri) {
       // Should already be ensured by client.validateRequest(). Adding here for
       // clarity & extra safety.
-      throw new InvalidParametersError(parameters, 'Missing "redirect_uri"')
+      throw new AuthorizationError(parameters, 'Missing "redirect_uri"')
     }
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-1.4.1
@@ -195,7 +192,7 @@ export class RequestManager {
         case 'S256':
           break
         default: {
-          throw new InvalidParametersError(
+          throw new AuthorizationError(
             parameters,
             `Unsupported code_challenge_method "${parameters.code_challenge_method}"`,
           )
@@ -204,7 +201,7 @@ export class RequestManager {
     } else {
       if (parameters.code_challenge_method) {
         // https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1
-        throw new InvalidParametersError(
+        throw new AuthorizationError(
           parameters,
           'code_challenge is required when code_challenge_method is provided',
         )
@@ -225,7 +222,7 @@ export class RequestManager {
       // atproto does not implement the OpenID Connect nonce mechanism, so we
       // require the use of PKCE for all clients.
 
-      throw new InvalidParametersError(parameters, 'Use of PKCE is required')
+      throw new AuthorizationError(parameters, 'Use of PKCE is required')
     }
 
     // -----------------
@@ -233,7 +230,7 @@ export class RequestManager {
     // -----------------
 
     if (parameters.response_type !== 'code') {
-      throw new InvalidParametersError(
+      throw new AuthorizationError(
         parameters,
         'atproto only supports the "code" response_type',
       )
@@ -249,7 +246,7 @@ export class RequestManager {
     }
 
     if (parameters.code_challenge_method !== 'S256') {
-      throw new InvalidParametersError(
+      throw new AuthorizationError(
         parameters,
         'atproto requires use of "S256" code_challenge_method',
       )
@@ -280,10 +277,7 @@ export class RequestManager {
     const hint = parameters.login_hint?.toLowerCase()
     if (hint) {
       if (!isAtprotoDid(hint) && !isValidHandle(hint)) {
-        throw new InvalidParametersError(
-          parameters,
-          `Invalid login_hint "${hint}"`,
-        )
+        throw new AuthorizationError(parameters, `Invalid login_hint "${hint}"`)
       }
 
       // @TODO: ensure that the account actually exists on this server (there is

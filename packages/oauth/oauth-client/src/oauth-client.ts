@@ -10,24 +10,21 @@ import {
 import {
   AtprotoDid,
   DidCache,
-  DidResolverCached,
-  DidResolverCommon,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type DidResolverCommonOptions,
   assertAtprotoDid,
 } from '@atproto-labs/did-resolver'
 import { Fetch } from '@atproto-labs/fetch'
-import {
-  AppViewHandleResolver,
-  CachedHandleResolver,
-  HandleCache,
-  HandleResolver,
-} from '@atproto-labs/handle-resolver'
-import { IdentityResolver } from '@atproto-labs/identity-resolver'
+import { HandleCache, HandleResolver } from '@atproto-labs/handle-resolver'
+import { HANDLE_INVALID } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { FALLBACK_ALG } from './constants.js'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
+import {
+  IdentityResolverOptions,
+  createIdentityResolver,
+} from './identity-resolver.js'
 import {
   AuthorizationServerMetadataCache,
   OAuthAuthorizationServerMetadataResolver,
@@ -55,26 +52,26 @@ import { CustomEventTarget } from './util.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
 
 // Export all types needed to construct OAuthClientOptions
-export type {
-  AuthorizationServerMetadataCache,
-  DidCache,
-  DpopNonceCache,
-  Fetch,
-  HandleCache,
-  HandleResolver,
-  InternalStateData,
+export {
+  type AuthorizationServerMetadataCache,
+  type DidCache,
+  type DpopNonceCache,
+  type Fetch,
+  type HandleCache,
+  type HandleResolver,
+  type InternalStateData,
   Key,
   Keyset,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
-  ProtectedResourceMetadataCache,
-  RuntimeImplementation,
-  SessionStore,
-  StateStore,
+  type OAuthClientMetadata,
+  type OAuthClientMetadataInput,
+  type OAuthResponseMode,
+  type ProtectedResourceMetadataCache,
+  type RuntimeImplementation,
+  type SessionStore,
+  type StateStore,
 }
 
-export type OAuthClientOptions = {
+export type OAuthClientOptions = IdentityResolverOptions & {
   // Config
   responseMode: OAuthResponseMode
   clientMetadata: Readonly<OAuthClientMetadataInput>
@@ -98,15 +95,11 @@ export type OAuthClientOptions = {
   // Stores
   stateStore: StateStore
   sessionStore: SessionStore
-  didCache?: DidCache
-  handleCache?: HandleCache
   authorizationServerMetadataCache?: AuthorizationServerMetadataCache
   protectedResourceMetadataCache?: ProtectedResourceMetadataCache
   dpopNonceCache?: DpopNonceCache
 
   // Services
-  handleResolver: HandleResolver | URL | string
-  plcDirectoryUrl?: URL | string
   runtimeImplementation: RuntimeImplementation
   fetch?: Fetch
 }
@@ -167,32 +160,27 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   protected readonly sessionGetter: SessionGetter
   protected readonly stateStore: StateStore
 
-  constructor({
-    fetch = globalThis.fetch,
-    allowHttp = false,
+  constructor(options: OAuthClientOptions) {
+    const {
+      stateStore,
+      sessionStore,
 
-    stateStore,
-    sessionStore,
+      dpopNonceCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
+      authorizationServerMetadataCache = new SimpleStoreMemory({
+        ttl: 60e3,
+        max: 100,
+      }),
+      protectedResourceMetadataCache = new SimpleStoreMemory({
+        ttl: 60e3,
+        max: 100,
+      }),
 
-    didCache = undefined,
-    dpopNonceCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
-    handleCache = undefined,
-    authorizationServerMetadataCache = new SimpleStoreMemory({
-      ttl: 60e3,
-      max: 100,
-    }),
-    protectedResourceMetadataCache = new SimpleStoreMemory({
-      ttl: 60e3,
-      max: 100,
-    }),
+      responseMode,
+      clientMetadata,
+      runtimeImplementation,
+      keyset,
+    } = options
 
-    responseMode,
-    clientMetadata,
-    handleResolver,
-    plcDirectoryUrl,
-    runtimeImplementation,
-    keyset,
-  }: OAuthClientOptions) {
     super()
 
     this.keyset = keyset
@@ -204,27 +192,18 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     this.responseMode = responseMode
 
     this.runtime = new Runtime(runtimeImplementation)
-    this.fetch = fetch
+    this.fetch = options.fetch ?? globalThis.fetch
     this.oauthResolver = new OAuthResolver(
-      new IdentityResolver(
-        new DidResolverCached(
-          new DidResolverCommon({ fetch, plcDirectoryUrl, allowHttp }),
-          didCache,
-        ),
-        new CachedHandleResolver(
-          AppViewHandleResolver.from(handleResolver, { fetch }),
-          handleCache,
-        ),
-      ),
+      createIdentityResolver(options),
       new OAuthProtectedResourceMetadataResolver(
         protectedResourceMetadataCache,
-        fetch,
-        { allowHttpResource: allowHttp },
+        this.fetch,
+        { allowHttpResource: options.allowHttp },
       ),
       new OAuthAuthorizationServerMetadataResolver(
         authorizationServerMetadataCache,
-        fetch,
-        { allowHttpIssuer: allowHttp },
+        this.fetch,
+        { allowHttpIssuer: options.allowHttp },
       ),
     )
     this.serverFactory = new OAuthServerFactory(
@@ -258,16 +237,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     return this.oauthResolver.identityResolver
   }
 
-  // Exposed as public API for convenience
-  get didResolver() {
-    return this.identityResolver.didResolver
-  }
-
-  // Exposed as public API for convenience
-  get handleResolver() {
-    return this.identityResolver.handleResolver
-  }
-
   get jwks() {
     return this.keyset?.publicJwks ?? ({ keys: [] as const } as const)
   }
@@ -283,7 +252,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError('Invalid redirect_uri')
     }
 
-    const { identity, metadata } = await this.oauthResolver.resolve(input, {
+    const { identityInfo, metadata } = await this.oauthResolver.resolve(input, {
       signal,
     })
 
@@ -315,7 +284,11 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       code_challenge: pkce.challenge,
       code_challenge_method: pkce.method,
       state,
-      login_hint: identity?.handle ?? identity?.did,
+      login_hint: identityInfo
+        ? identityInfo.handle !== HANDLE_INVALID
+          ? identityInfo.handle
+          : identityInfo.did
+        : undefined,
       response_mode: this.responseMode,
       response_type: 'code' as const,
       scope: options?.scope ?? this.clientMetadata.scope,

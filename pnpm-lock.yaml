@@ -674,9 +674,6 @@ importers:
       '@atproto-labs/handle-resolver':
         specifier: workspace:*
         version: link:../handle-resolver
-      '@atproto/syntax':
-        specifier: workspace:*
-        version: link:../../syntax
     devDependencies:
       typescript:
         specifier: ^5.6.3

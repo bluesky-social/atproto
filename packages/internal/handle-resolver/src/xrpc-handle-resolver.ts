@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { HandleResolverError } from './handle-resolver-error.js'
 import {
   HandleResolver,
   ResolveHandleOptions,
@@ -11,7 +12,7 @@ export const xrpcErrorSchema = z.object({
   message: z.string().optional(),
 })
 
-export type AppViewHandleResolverOptions = {
+export type XrpcHandleResolverOptions = {
   /**
    * Fetch function to use for HTTP requests. Allows customizing the request
    * behavior, e.g. adding headers, setting a timeout, mocking, etc.
@@ -21,17 +22,7 @@ export type AppViewHandleResolverOptions = {
   fetch?: typeof globalThis.fetch
 }
 
-export class AppViewHandleResolver implements HandleResolver {
-  static from(
-    service: URL | string | HandleResolver,
-    options?: AppViewHandleResolverOptions,
-  ): HandleResolver {
-    if (typeof service === 'string' || service instanceof URL) {
-      return new AppViewHandleResolver(service, options)
-    }
-    return service
-  }
-
+export class XrpcHandleResolver implements HandleResolver {
   /**
    * URL of the atproto lexicon server. This is the base URL where the
    * `com.atproto.identity.resolveHandle` XRPC method is located.
@@ -39,7 +30,7 @@ export class AppViewHandleResolver implements HandleResolver {
   protected readonly serviceUrl: URL
   protected readonly fetch: typeof globalThis.fetch
 
-  constructor(service: URL | string, options?: AppViewHandleResolverOptions) {
+  constructor(service: URL | string, options?: XrpcHandleResolverOptions) {
     this.serviceUrl = new URL(service)
     this.fetch = options?.fetch ?? globalThis.fetch
   }
@@ -67,7 +58,13 @@ export class AppViewHandleResolver implements HandleResolver {
     // Any other response is considered unexpected behavior an should throw an error.
 
     if (response.status === 400) {
-      const data = xrpcErrorSchema.parse(payload)
+      const { error, data } = xrpcErrorSchema.safeParse(payload)
+      if (error) {
+        throw new HandleResolverError(
+          `Invalid response from resolveHandle method: ${error.message}`,
+          { cause: error },
+        )
+      }
       if (
         data.error === 'InvalidRequest' &&
         data.message === 'Unable to resolve handle'
@@ -77,13 +74,17 @@ export class AppViewHandleResolver implements HandleResolver {
     }
 
     if (!response.ok) {
-      throw new TypeError('Invalid response from resolveHandle method')
+      throw new HandleResolverError(
+        'Invalid status code from resolveHandle method',
+      )
     }
 
     const value: unknown = payload?.did
 
     if (!isResolvedHandle(value)) {
-      throw new TypeError('Invalid DID returned from resolveHandle method')
+      throw new HandleResolverError(
+        'Invalid DID returned from resolveHandle method',
+      )
     }
 
     return value

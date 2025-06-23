@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -64,8 +63,8 @@ import {
   deviceManagerOptionsSchema,
 } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
-import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
+import { AuthorizationError } from './errors/authorization-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
 import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
@@ -75,8 +74,8 @@ import { LoginRequiredError } from './errors/login-required-error.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
+import { formatError } from './lib/util/error.js'
 import { LocalizedString, MultiLangString } from './lib/util/locale.js'
-import { extractZodErrorMessage } from './lib/util/zod-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import {
@@ -104,6 +103,7 @@ import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
 } from './token/verify-token-claims.js'
+import { isPARResponseError } from './types/par-response-error.js'
 
 export { AccessTokenMode, Keyset }
 export type {
@@ -448,11 +448,8 @@ export class OAuthProvider extends OAuthVerifier {
     const parameters = await oauthAuthorizationRequestParametersSchema
       .parseAsync(payload)
       .catch((err) => {
-        const message =
-          err instanceof ZodError
-            ? `Invalid request parameters: ${err.message}`
-            : `Invalid "request" object`
-        throw InvalidRequestError.from(err, message)
+        const msg = formatError(err, 'Invalid parameters in JAR')
+        throw new InvalidRequestError(msg, err)
       })
 
     return parameters
@@ -522,7 +519,7 @@ export class OAuthProvider extends OAuthVerifier {
       // > Since initial processing of the pushed authorization request does not
       // > involve resource owner interaction, error codes related to user
       // > interaction, such as "access_denied", are never returned.
-      if (err instanceof AccessDeniedError) {
+      if (err instanceof AuthorizationError && !isPARResponseError(err.error)) {
         throw new InvalidRequestError(err.error_description, err)
       }
       throw err
@@ -539,10 +536,8 @@ export class OAuthProvider extends OAuthVerifier {
       const requestUri = await requestUriSchema
         .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
         .catch((err) => {
-          throw new InvalidRequestError(
-            extractZodErrorMessage(err) ?? 'Input validation error',
-            err,
-          )
+          const msg = formatError(err, 'Invalid "request_uri" query parameter')
+          throw new InvalidRequestError(msg, err)
         })
 
       return this.requestManager.get(requestUri, deviceId, client.id)
@@ -592,24 +587,24 @@ export class OAuthProvider extends OAuthVerifier {
     const { issuer } = this
 
     // If there is a chance to redirect the user to the client, let's do
-    // it by wrapping the error in an AccessDeniedError.
-    const accessDeniedCatcher =
+    // it by wrapping the error in an AuthorizationError.
+    const throwAuthorizationError =
       'redirect_uri' in query
         ? (err: unknown): never => {
             // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
-            throw AccessDeniedError.from(query, err, 'invalid_request')
+            throw AuthorizationError.from(query, err)
           }
         : null
 
     const client = await this.clientManager
       .getClient(clientCredentials.client_id)
-      .catch(accessDeniedCatcher)
+      .catch(throwAuthorizationError)
 
     const { parameters, uri } = await this.processAuthorizationRequest(
       client,
       deviceId,
       query,
-    ).catch(accessDeniedCatcher)
+    ).catch(throwAuthorizationError)
 
     try {
       const sessions = await this.getSessions(client.id, deviceId, parameters)
@@ -694,9 +689,7 @@ export class OAuthProvider extends OAuthVerifier {
         // (allowing to log this error)
       }
 
-      // Not using accessDeniedCatcher here because "parameters" will most
-      // likely contain the redirect_uri (using the client default).
-      throw AccessDeniedError.from(parameters, err, 'server_error')
+      throw AuthorizationError.from(parameters, err)
     }
   }
 
@@ -872,12 +865,8 @@ export class OAuthProvider extends OAuthVerifier {
     const code = await codeSchema
       .parseAsync(input.code, { path: ['code'] })
       .catch((err) => {
-        throw InvalidGrantError.from(
-          err,
-          err instanceof ZodError
-            ? `Invalid code: ${err.message}`
-            : `Invalid code`,
-        )
+        const msg = formatError(err, 'Invalid code')
+        throw new InvalidGrantError(msg, err)
       })
 
     const data = await this.requestManager
@@ -999,7 +988,8 @@ export class OAuthProvider extends OAuthVerifier {
     const refreshToken = await refreshTokenSchema
       .parseAsync(input.refresh_token, { path: ['refresh_token'] })
       .catch((err) => {
-        throw InvalidGrantError.from(err, `Invalid refresh token`)
+        const msg = formatError(err, 'Invalid refresh token')
+        throw new InvalidGrantError(msg, err)
       })
 
     const tokenInfo = await this.tokenManager.consumeRefreshToken(refreshToken)
