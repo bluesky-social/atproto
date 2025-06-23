@@ -61,7 +61,7 @@ export function createAuthorizationPageMiddleware<
       const query = Object.fromEntries(this.url.searchParams)
 
       const clientCredentials = await oauthClientCredentialsSchema
-        .parseAsync(query)
+        .parseAsync(query, { path: ['query'] })
         .catch((err) => throwInvalidRequest(err, 'Invalid client credentials'))
 
       if ('client_secret' in clientCredentials) {
@@ -69,7 +69,7 @@ export function createAuthorizationPageMiddleware<
       }
 
       const authorizationRequest = await oauthAuthorizationRequestQuerySchema
-        .parseAsync(query)
+        .parseAsync(query, { path: ['query'] })
         .catch((err) => throwInvalidRequest(err, 'Invalid request parameters'))
 
       const deviceInfo = await server.deviceManager.load(req, res)
