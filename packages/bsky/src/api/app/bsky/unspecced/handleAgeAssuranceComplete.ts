@@ -4,7 +4,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 
-import { VERIFICATION_SECRET } from './env'
+import { KWS_SIGNING_KEY } from './env'
 
 type StatusPayload = {
   verified: true
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         if (rawStatusPayload && externalPayload && signature) {
           const expectedSignature = crypto
-            .createHmac('sha256', VERIFICATION_SECRET)
+            .createHmac('sha256', KWS_SIGNING_KEY)
             .update(`${rawStatusPayload}:${externalPayload}`)
             .digest('hex')
           const expectedBuffer = Buffer.from(expectedSignature, 'hex')

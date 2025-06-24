@@ -5,7 +5,7 @@ import { Server } from '../../../../lexicon'
 import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 import { Payload } from '../../../../lexicon/types/app/bsky/unspecced/handleAgeAssuranceEvent'
 
-import { WEBHOOK_SECRET } from './env'
+import { KWS_WEBHOOK_SIGNING_KEY } from './env'
 
 type StatusPayload = {
   verified: true
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         const expectedSignature = crypto
-          .createHmac('sha256', WEBHOOK_SECRET)
+          .createHmac('sha256', KWS_WEBHOOK_SIGNING_KEY)
           // TODO should use the raw body
           .update(`${timestamp}.${JSON.stringify(req.body)}`)
           .digest('hex')

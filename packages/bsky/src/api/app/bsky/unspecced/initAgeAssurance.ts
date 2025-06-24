@@ -2,7 +2,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 
-import { OAUTH_URL, SEND_EMAIL_URL, CLIENT_ID, API_KEY } from './env'
+import { KWS_OAUTH_URL, KWS_CLIENT_ID, KWS_API_KEY } from './env'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.initAgeAssurance({
@@ -12,12 +12,12 @@ export default function (server: Server, ctx: AppContext) {
       let success = true
 
       try {
-        const auth = await fetch(OAUTH_URL, {
+        const auth = await fetch(KWS_OAUTH_URL, {
           method: 'POST',
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Basic ${Buffer.from(`${CLIENT_ID}:${API_KEY}`).toString('base64')}`,
+            Authorization: `Basic ${Buffer.from(`${KWS_CLIENT_ID}:${KWS_API_KEY}`).toString('base64')}`,
           },
           body: new URLSearchParams({
             grant_type: 'client_credentials',
@@ -31,25 +31,29 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         if (access_token) {
-          await fetch(SEND_EMAIL_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'User-Agent': 'bluesky-pbc-test-agent',
-              Authorization: `Bearer ${access_token}`,
+          await fetch(
+            `https://api.kidswebservices.com/v1/verifications/send-email`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'bluesky-pbc-test-agent',
+                Authorization: `Bearer ${access_token}`,
+              },
+              body: JSON.stringify({
+                email: input.body.email,
+                location: 'US',
+                // TODO abstract this
+                externalPayload: JSON.stringify({ did: actorDid }),
+                userContext: 'adult',
+                language: 'en',
+              }),
             },
-            body: JSON.stringify({
-              email: input.body.email,
-              location: 'US',
-              // TODO abstract this
-              externalPayload: JSON.stringify({ did: actorDid }),
-              userContext: 'adult',
-              language: 'en',
-            }),
-          })
+          )
 
           const state: AgeAssuranceState = {
-            required: true,
+            // TODO
+            updatedAt: new Date().toISOString(),
             status: 'pending',
           }
 

@@ -22,7 +22,8 @@ export default function (server: Server, ctx: AppContext) {
 
       if (!state) {
         state = {
-          required: true, // compute this, fail closed?
+          // TODO
+          updatedAt: new Date().toISOString(),
           status: 'unknown',
         }
       }
@@ -77,7 +78,8 @@ function protobufToLex(
   }
 
   return {
-    required: proto.required,
+    // TODO
+    updatedAt: new Date().toISOString(),
     status,
   }
 }

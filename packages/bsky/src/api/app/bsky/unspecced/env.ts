@@ -1,0 +1,5 @@
+export const KWS_OAUTH_URL = ''
+export const KWS_CLIENT_ID = ''
+export const KWS_API_KEY = ''
+export const KWS_SIGNING_KEY = ''
+export const KWS_WEBHOOK_SIGNING_KEY = ''
