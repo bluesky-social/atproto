@@ -47,7 +47,7 @@ import { ImageUrlBuilder } from './image/image-url-builder'
 import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { validateScope } from './oauth/oauth-scopes'
+import { isValidPermission } from './oauth/oauth-scopes'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
@@ -348,8 +348,12 @@ export class AppContext {
           accessTokenMode: AccessTokenMode.light,
 
           getClientInfo(clientId, { metadata }) {
-            if (!validateScope(metadata.scope)) {
-              throw new InvalidClientMetadataError(`Unsupported scope`)
+            for (const scope of metadata.scope?.split(' ') ?? []) {
+              if (!isValidPermission(scope)) {
+                throw new InvalidClientMetadataError(
+                  `Unsupported scope: ${scope}`,
+                )
+              }
             }
 
             return {

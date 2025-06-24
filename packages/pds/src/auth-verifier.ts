@@ -495,7 +495,7 @@ export class AuthVerifier {
           req.method || 'GET',
           url,
           req.headers,
-          { audience: [this.dids.pds] },
+          { audience: [this.dids.pds], scope: ['atproto'] },
         )
 
       // @TODO drop this once oauth provider no longer accepts DPoP proof with
