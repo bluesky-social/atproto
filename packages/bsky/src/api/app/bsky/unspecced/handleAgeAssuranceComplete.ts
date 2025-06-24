@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import qs from 'node:querystring'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
+import { AgeAssuranceStatePayload } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 
 import { KWS_SIGNING_KEY } from './env'
 
@@ -39,21 +39,31 @@ export default function (server: Server, ctx: AppContext) {
           const statusPayload = JSON.parse(rawStatusPayload) as StatusPayload
           const status = getResponseStatus(statusPayload)
           // TODO abstract this
-          const { did } = JSON.parse(externalPayload) as { did: string }
-
-          try {
-            await ctx.stashClient.update({
-              actorDid: did,
-              namespace: 'app.bsky.unspecced.defs#ageAssuranceState',
-              key: 'self',
-              payload: {
-                required: true,
-                status,
-              },
-            })
-          } catch (e) {
-            // TODO handle stash update failure
+          const { actorDid, attemptId } = JSON.parse(externalPayload) as {
+            actorDid: string
+            attemptId: string
           }
+
+          if (!actorDid) {
+            throw new Error('Missing DID in externalPayload')
+          }
+          if (!attemptId) {
+            throw new Error('Missing DID in externalPayload')
+          }
+
+          const NSID = 'app.bsky.unspecced.defs#ageAssuranceState'
+          const payload: AgeAssuranceStatePayload = {
+            timestamp: new Date().toISOString(),
+            source: 'user',
+            status,
+            attemptId,
+          }
+
+          // TODO store this
+          console.log('write', {
+            NSID,
+            payload,
+          })
 
           return {
             encoding: 'application/json',
@@ -85,14 +95,15 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+// TODO abstract this
 function getResponseStatus(
   statusPayload: StatusPayload,
-): AgeAssuranceState['status'] {
+): AgeAssuranceStatePayload['status'] {
   if (statusPayload.verified) {
-    return 'verified-adult'
+    return 'assured'
   } else if (statusPayload.errorCode) {
     return 'failed'
   } else {
-    return 'unverified'
+    return 'unknown'
   }
 }
