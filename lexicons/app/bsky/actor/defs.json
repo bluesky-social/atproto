@@ -129,7 +129,11 @@
         "feedgens": { "type": "integer" },
         "starterPacks": { "type": "integer" },
         "labeler": { "type": "boolean" },
-        "chat": { "type": "ref", "ref": "#profileAssociatedChat" }
+        "chat": { "type": "ref", "ref": "#profileAssociatedChat" },
+        "activitySubscription": {
+          "type": "ref",
+          "ref": "#profileAssociatedActivitySubscription"
+        }
       }
     },
     "profileAssociatedChat": {
@@ -139,6 +143,16 @@
         "allowIncoming": {
           "type": "string",
           "knownValues": ["all", "none", "following"]
+        }
+      }
+    },
+    "profileAssociatedActivitySubscription": {
+      "type": "object",
+      "required": ["allowSubscriptions"],
+      "properties": {
+        "allowSubscriptions": {
+          "type": "string",
+          "knownValues": ["followers", "mutuals", "none"]
         }
       }
     },
@@ -162,6 +176,10 @@
         "knownFollowers": {
           "type": "ref",
           "ref": "#knownFollowers"
+        },
+        "activitySubscription": {
+          "type": "ref",
+          "ref": "app.bsky.notification.defs#activitySubscription"
         }
       }
     },
