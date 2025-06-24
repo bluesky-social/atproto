@@ -1,5 +1,17 @@
 # @atproto-labs/identity-resolver
 
+## 0.3.0
+
+### Minor Changes
+
+- [#3982](https://github.com/bluesky-social/atproto/pull/3982) [`4c2d49917`](https://github.com/bluesky-social/atproto/commit/4c2d499178c61eb8a9d7f658e89fe68fa07f81e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Identity resolver's `resolve()` method returns value consistent with `com.atproto.identity.resolveIdentity`
+
+- [#3982](https://github.com/bluesky-social/atproto/pull/3982) [`4c2d49917`](https://github.com/bluesky-social/atproto/commit/4c2d499178c61eb8a9d7f658e89fe68fa07f81e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `IdentityResolver` is now an interface. The `IdentityResolverProto` class is the default implementation for the `IdentityResolver` interface.
+
+### Patch Changes
+
+- [#3982](https://github.com/bluesky-social/atproto/pull/3982) [`4c2d49917`](https://github.com/bluesky-social/atproto/commit/4c2d499178c61eb8a9d7f658e89fe68fa07f81e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `HANDLE_INVALID` constant
+
 ## 0.2.0
 
 ### Minor Changes

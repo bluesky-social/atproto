@@ -1,5 +1,19 @@
 # @atproto/pds
 
+## 0.4.152
+
+### Patch Changes
+
+- [#3953](https://github.com/bluesky-social/atproto/pull/3953) [`f792b9193`](https://github.com/bluesky-social/atproto/commit/f792b919386341d0dc4dcf873506f088af61ae16) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable logging of expected errors
+
+- [#3990](https://github.com/bluesky-social/atproto/pull/3990) [`6cd120206`](https://github.com/bluesky-social/atproto/commit/6cd12020657bfb5f87e97cd16e4abb379b64f60b) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add activity subscription lexicons
+
+- Updated dependencies [[`a8dee6af3`](https://github.com/bluesky-social/atproto/commit/a8dee6af33618d3072ebae7f23843242a32c926c), [`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a), [`6cd120206`](https://github.com/bluesky-social/atproto/commit/6cd12020657bfb5f87e97cd16e4abb379b64f60b), [`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a), [`f792b9193`](https://github.com/bluesky-social/atproto/commit/f792b919386341d0dc4dcf873506f088af61ae16)]:
+  - @atproto/repo@0.8.4
+  - @atproto/oauth-provider@0.9.3
+  - @atproto/api@0.15.17
+  - @atproto/aws@0.2.24
+
 ## 0.4.151
 
 ### Patch Changes
