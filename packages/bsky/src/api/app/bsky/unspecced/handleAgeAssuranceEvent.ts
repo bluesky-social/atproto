@@ -2,8 +2,8 @@ import crypto from 'node:crypto'
 
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
-import { Payload } from '../../../../lexicon/types/app/bsky/assurance/handleAgeAssuranceEvent'
+import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
+import { Payload } from '../../../../lexicon/types/app/bsky/unspecced/handleAgeAssuranceEvent'
 
 import { WEBHOOK_SECRET } from './env'
 
@@ -14,7 +14,7 @@ type StatusPayload = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.assurance.handleAgeAssuranceEvent({
+  server.app.bsky.unspecced.handleAgeAssuranceEvent({
     handler: async ({ req, input }) => {
       try {
         const rawSignatureHeader = req.headers['x-kws-signature']
@@ -80,7 +80,7 @@ export default function (server: Server, ctx: AppContext) {
         try {
           await ctx.stashClient.update({
             actorDid: did,
-            namespace: 'app.bsky.assurance.defs#ageAssuranceState',
+            namespace: 'app.bsky.unspecced.defs#ageAssuranceState',
             key: 'self',
             payload: {
               required: true,

@@ -11,28 +11,17 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import type * as AppBskyUnspeccedDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.assurance.initAgeAssurance'
+const id = 'app.bsky.unspecced.getAgeAssuranceState'
 
 export interface QueryParams {}
 
-export interface InputSchema {
-  /** The user's email address to receive assurance instructions. */
-  email: string
-  /** The user's preferred language for communication during the assurance process. */
-  language: string
-}
-
-export interface OutputSchema {
-  success: boolean
-}
-
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type InputSchema = undefined
+export type OutputSchema = AppBskyUnspeccedDefs.AgeAssuranceState
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json'

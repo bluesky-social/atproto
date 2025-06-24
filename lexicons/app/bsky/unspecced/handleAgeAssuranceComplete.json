@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.assurance.handleAgeAssuranceComplete",
+  "id": "app.bsky.unspecced.handleAgeAssuranceComplete",
   "defs": {
     "main": {
       "type": "query",
@@ -31,7 +31,8 @@
           "properties": {
             "status": {
               "type": "string",
-              "description": "The computed status of the age assurance process."
+              "description": "The computed status of the age assurance process.",
+              "knownValues": ["unknown", "pending", "assured"]
             }
           }
         }

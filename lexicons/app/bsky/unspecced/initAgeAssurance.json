@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.assurance.initAgeAssurance",
+  "id": "app.bsky.unspecced.initAgeAssurance",
   "defs": {
     "main": {
       "type": "procedure",

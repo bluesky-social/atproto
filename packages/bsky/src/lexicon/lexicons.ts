@@ -5671,227 +5671,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyAssuranceDefs: {
-    lexicon: 1,
-    id: 'app.bsky.assurance.defs',
-    defs: {
-      ageAssuranceState: {
-        type: 'object',
-        required: ['required', 'status'],
-        properties: {
-          required: {
-            type: 'boolean',
-            description:
-              'Whether the age assurance process is required for the account. If true, the user must complete age assurance process to access certain features.',
-          },
-          status: {
-            type: 'string',
-            description: 'The status of the age assurance process.',
-            knownValues: ['unknown', 'pending', 'assured', 'failed'],
-          },
-        },
-      },
-    },
-  },
-  AppBskyAssuranceGetAgeAssuranceState: {
-    lexicon: 1,
-    id: 'app.bsky.assurance.getAgeAssuranceState',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.assurance.defs#ageAssuranceState',
-          },
-        },
-      },
-    },
-  },
-  AppBskyAssuranceHandleAgeAssuranceComplete: {
-    lexicon: 1,
-    id: 'app.bsky.assurance.handleAgeAssuranceComplete',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Called via redirect from the age assurance service. This endpoint will attempt to verify the result, and then redirect to user back to the Bluesky app.',
-        parameters: {
-          type: 'params',
-          required: [],
-          properties: {
-            status: {
-              type: 'string',
-              description: 'The status of the age assurance process.',
-            },
-            externalPayload: {
-              type: 'string',
-              description:
-                'Additional metadata provided when initiating age assurance.',
-            },
-            signature: {
-              type: 'string',
-              description:
-                "SHA256 HMAC signature of the status and externalPayload, separated by a colon (:), and signed with the facilitating service's private key.",
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['status'],
-            properties: {
-              status: {
-                type: 'string',
-                description:
-                  'The computed status of the age assurance process.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyAssuranceHandleAgeAssuranceEvent: {
-    lexicon: 1,
-    id: 'app.bsky.assurance.handleAgeAssuranceEvent',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Webhook endpoint to receive age assurance events from a facilitating service. This endpoint is called by the service to report the status of the age assurance process.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: [],
-            properties: {
-              name: {
-                type: 'string',
-                description:
-                  "The name of the event being reported, e.g., 'adult-verified'.",
-              },
-              time: {
-                type: 'string',
-                description:
-                  'The timestamp of the event. Currently in ISO 8601 format, but left open for future flexibility.',
-              },
-              orgId: {
-                type: 'string',
-                description:
-                  'The account identifier of our organization, in UUID format.',
-              },
-              productId: {
-                type: 'string',
-                description: 'The product identifier, in UUID format.',
-              },
-              environmentId: {
-                type: 'string',
-                description: 'The environment identifier, in UUID format.',
-              },
-              payload: {
-                type: 'ref',
-                ref: 'lex:app.bsky.assurance.handleAgeAssuranceEvent#payload',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['ack'],
-            properties: {
-              ack: {
-                type: 'string',
-                description: 'Whether the event was handled or not.',
-              },
-            },
-          },
-        },
-      },
-      payload: {
-        type: 'object',
-        description: 'The payload of the event.',
-        properties: {
-          parentEmail: {
-            type: 'string',
-            description:
-              'Misnomer: the email address of the user that was processed.',
-          },
-          status: {
-            type: 'ref',
-            ref: 'lex:app.bsky.assurance.handleAgeAssuranceEvent#payloadStatus',
-          },
-          externalPayload: {
-            type: 'string',
-            description:
-              'JSON string containing the external payload passed in when initiating the age assurance process.',
-          },
-        },
-      },
-      payloadStatus: {
-        type: 'object',
-        description: 'The status property returned on the payload.',
-        properties: {
-          verified: {
-            type: 'boolean',
-            description: 'Whether the user was verified as an adult or not.',
-          },
-          transactionId: {
-            type: 'string',
-            description: 'The transaction ID of the age assurance process.',
-          },
-        },
-      },
-    },
-  },
-  AppBskyAssuranceInitAgeAssurance: {
-    lexicon: 1,
-    id: 'app.bsky.assurance.initAgeAssurance',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['email', 'language'],
-            properties: {
-              email: {
-                type: 'string',
-                description:
-                  "The user's email address to receive assurance instructions.",
-              },
-              language: {
-                type: 'string',
-                description:
-                  "The user's preferred language for communication during the assurance process.",
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['success'],
-            properties: {
-              success: {
-                type: 'boolean',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyEmbedDefs: {
     lexicon: 1,
     id: 'app.bsky.embed.defs',
@@ -10866,6 +10645,68 @@ export const schemaDict = {
           },
         },
       },
+      ageAssuranceState: {
+        type: 'object',
+        description:
+          'The computed state of the age assurance process, returned to the user in question on certain authenticated requests.',
+        required: ['updatedAt', 'status'],
+        properties: {
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+        },
+      },
+      ageAssuranceStatePayload: {
+        type: 'object',
+        description: 'The raw payload written to secure storage.',
+        required: ['timestamp', 'source', 'status'],
+        properties: {
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          source: {
+            type: 'string',
+            knownValues: ['user', 'admin'],
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'bypass', 'failed'],
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetAgeAssuranceState: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getAgeAssuranceState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -11622,6 +11463,188 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.unspecced.defs#skeletonTrend',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedHandleAgeAssuranceComplete: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.handleAgeAssuranceComplete',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Called via redirect from the age assurance service. This endpoint will attempt to verify the result, and then redirect to user back to the Bluesky app.',
+        parameters: {
+          type: 'params',
+          required: [],
+          properties: {
+            status: {
+              type: 'string',
+              description: 'The status of the age assurance process.',
+            },
+            externalPayload: {
+              type: 'string',
+              description:
+                'Additional metadata provided when initiating age assurance.',
+            },
+            signature: {
+              type: 'string',
+              description:
+                "SHA256 HMAC signature of the status and externalPayload, separated by a colon (:), and signed with the facilitating service's private key.",
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['status'],
+            properties: {
+              status: {
+                type: 'string',
+                description:
+                  'The computed status of the age assurance process.',
+                knownValues: ['unknown', 'pending', 'assured'],
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedHandleAgeAssuranceEvent: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.handleAgeAssuranceEvent',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Webhook endpoint to receive age assurance events from a facilitating service. This endpoint is called by the service to report the status of the age assurance process.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              name: {
+                type: 'string',
+                description:
+                  "The name of the event being reported, e.g., 'adult-verified'.",
+              },
+              time: {
+                type: 'string',
+                description:
+                  'The timestamp of the event. Currently in ISO 8601 format, but left open for future flexibility.',
+              },
+              orgId: {
+                type: 'string',
+                description:
+                  'The account identifier of our organization, in UUID format.',
+              },
+              productId: {
+                type: 'string',
+                description: 'The product identifier, in UUID format.',
+              },
+              environmentId: {
+                type: 'string',
+                description: 'The environment identifier, in UUID format.',
+              },
+              payload: {
+                type: 'ref',
+                ref: 'lex:app.bsky.unspecced.handleAgeAssuranceEvent#payload',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['ack'],
+            properties: {
+              ack: {
+                type: 'string',
+                description: 'Whether the event was handled or not.',
+              },
+            },
+          },
+        },
+      },
+      payload: {
+        type: 'object',
+        description: 'The payload of the event.',
+        properties: {
+          parentEmail: {
+            type: 'string',
+            description:
+              'Misnomer: the email address of the user that was processed.',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.handleAgeAssuranceEvent#payloadStatus',
+          },
+          externalPayload: {
+            type: 'string',
+            description:
+              'JSON string containing the external payload passed in when initiating the age assurance process.',
+          },
+        },
+      },
+      payloadStatus: {
+        type: 'object',
+        description: 'The status property returned on the payload.',
+        properties: {
+          verified: {
+            type: 'boolean',
+            description: 'Whether the user was verified as an adult or not.',
+          },
+          transactionId: {
+            type: 'string',
+            description: 'The transaction ID of the age assurance process.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedInitAgeAssurance: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.initAgeAssurance',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the assurance process.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success'],
+            properties: {
+              success: {
+                type: 'boolean',
               },
             },
           },
@@ -13479,14 +13502,6 @@ export const ids = {
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
   AppBskyActorStatus: 'app.bsky.actor.status',
-  AppBskyAssuranceDefs: 'app.bsky.assurance.defs',
-  AppBskyAssuranceGetAgeAssuranceState:
-    'app.bsky.assurance.getAgeAssuranceState',
-  AppBskyAssuranceHandleAgeAssuranceComplete:
-    'app.bsky.assurance.handleAgeAssuranceComplete',
-  AppBskyAssuranceHandleAgeAssuranceEvent:
-    'app.bsky.assurance.handleAgeAssuranceEvent',
-  AppBskyAssuranceInitAgeAssurance: 'app.bsky.assurance.initAgeAssurance',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
@@ -13567,6 +13582,8 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetAgeAssuranceState:
+    'app.bsky.unspecced.getAgeAssuranceState',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
@@ -13590,6 +13607,11 @@ export const ids = {
   AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
   AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
+  AppBskyUnspeccedHandleAgeAssuranceComplete:
+    'app.bsky.unspecced.handleAgeAssuranceComplete',
+  AppBskyUnspeccedHandleAgeAssuranceEvent:
+    'app.bsky.unspecced.handleAgeAssuranceEvent',
+  AppBskyUnspeccedInitAgeAssurance: 'app.bsky.unspecced.initAgeAssurance',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

@@ -2,14 +2,14 @@ import { Un$Typed } from '@atproto/api'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
+import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 import {
   GetAgeAssuranceStateResponse,
   AgeAssuranceStatus,
 } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.assurance.getAgeAssuranceState({
+  server.app.bsky.unspecced.getAgeAssuranceState({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth }) => {
       const viewer = auth.credentials.iss

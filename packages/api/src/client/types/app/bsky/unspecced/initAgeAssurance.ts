@@ -13,7 +13,7 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.assurance.initAgeAssurance'
+const id = 'app.bsky.unspecced.initAgeAssurance'
 
 export interface QueryParams {}
 

@@ -1,11 +1,11 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
+import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 
 import { OAUTH_URL, SEND_EMAIL_URL, CLIENT_ID, API_KEY } from './env'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.assurance.initAgeAssurance({
+  server.app.bsky.unspecced.initAgeAssurance({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
@@ -55,7 +55,7 @@ export default function (server: Server, ctx: AppContext) {
 
           await ctx.stashClient.create({
             actorDid,
-            namespace: 'app.bsky.assurance.defs#ageAssuranceState',
+            namespace: 'app.bsky.unspecced.defs#ageAssuranceState',
             key: 'self',
             payload: state,
           })

@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import qs from 'node:querystring'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/assurance/defs'
+import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 
 import { VERIFICATION_SECRET } from './env'
 
@@ -13,7 +13,7 @@ type StatusPayload = {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.assurance.handleAgeAssuranceComplete({
+  server.app.bsky.unspecced.handleAgeAssuranceComplete({
     handler: async ({ auth, params }) => {
       const { status: rawStatusPayload, externalPayload, signature } = params
 
@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
           try {
             await ctx.stashClient.update({
               actorDid: did,
-              namespace: 'app.bsky.assurance.defs#ageAssuranceState',
+              namespace: 'app.bsky.unspecced.defs#ageAssuranceState',
               key: 'self',
               payload: {
                 required: true,

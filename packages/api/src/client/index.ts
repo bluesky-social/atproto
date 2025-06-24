@@ -110,11 +110,6 @@ import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
-import * as AppBskyAssuranceDefs from './types/app/bsky/assurance/defs.js'
-import * as AppBskyAssuranceGetAgeAssuranceState from './types/app/bsky/assurance/getAgeAssuranceState.js'
-import * as AppBskyAssuranceHandleAgeAssuranceComplete from './types/app/bsky/assurance/handleAgeAssuranceComplete.js'
-import * as AppBskyAssuranceHandleAgeAssuranceEvent from './types/app/bsky/assurance/handleAgeAssuranceEvent.js'
-import * as AppBskyAssuranceInitAgeAssurance from './types/app/bsky/assurance/initAgeAssurance.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -191,6 +186,7 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
+import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
@@ -206,6 +202,9 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+import * as AppBskyUnspeccedHandleAgeAssuranceComplete from './types/app/bsky/unspecced/handleAgeAssuranceComplete.js'
+import * as AppBskyUnspeccedHandleAgeAssuranceEvent from './types/app/bsky/unspecced/handleAgeAssuranceEvent.js'
+import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -383,11 +382,6 @@ export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
-export * as AppBskyAssuranceDefs from './types/app/bsky/assurance/defs.js'
-export * as AppBskyAssuranceGetAgeAssuranceState from './types/app/bsky/assurance/getAgeAssuranceState.js'
-export * as AppBskyAssuranceHandleAgeAssuranceComplete from './types/app/bsky/assurance/handleAgeAssuranceComplete.js'
-export * as AppBskyAssuranceHandleAgeAssuranceEvent from './types/app/bsky/assurance/handleAgeAssuranceEvent.js'
-export * as AppBskyAssuranceInitAgeAssurance from './types/app/bsky/assurance/initAgeAssurance.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -464,6 +458,7 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
+export * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 export * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
@@ -479,6 +474,9 @@ export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+export * as AppBskyUnspeccedHandleAgeAssuranceComplete from './types/app/bsky/unspecced/handleAgeAssuranceComplete.js'
+export * as AppBskyUnspeccedHandleAgeAssuranceEvent from './types/app/bsky/unspecced/handleAgeAssuranceEvent.js'
+export * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -1757,7 +1755,6 @@ export class AppNS {
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
-  assurance: AppBskyAssuranceNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -1770,7 +1767,6 @@ export class AppBskyNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
-    this.assurance = new AppBskyAssuranceNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -2042,62 +2038,6 @@ export class AppBskyActorStatusRecord {
       undefined,
       { collection: 'app.bsky.actor.status', ...params },
       { headers },
-    )
-  }
-}
-
-export class AppBskyAssuranceNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  getAgeAssuranceState(
-    params?: AppBskyAssuranceGetAgeAssuranceState.QueryParams,
-    opts?: AppBskyAssuranceGetAgeAssuranceState.CallOptions,
-  ): Promise<AppBskyAssuranceGetAgeAssuranceState.Response> {
-    return this._client.call(
-      'app.bsky.assurance.getAgeAssuranceState',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  handleAgeAssuranceComplete(
-    params?: AppBskyAssuranceHandleAgeAssuranceComplete.QueryParams,
-    opts?: AppBskyAssuranceHandleAgeAssuranceComplete.CallOptions,
-  ): Promise<AppBskyAssuranceHandleAgeAssuranceComplete.Response> {
-    return this._client.call(
-      'app.bsky.assurance.handleAgeAssuranceComplete',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  handleAgeAssuranceEvent(
-    data?: AppBskyAssuranceHandleAgeAssuranceEvent.InputSchema,
-    opts?: AppBskyAssuranceHandleAgeAssuranceEvent.CallOptions,
-  ): Promise<AppBskyAssuranceHandleAgeAssuranceEvent.Response> {
-    return this._client.call(
-      'app.bsky.assurance.handleAgeAssuranceEvent',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  initAgeAssurance(
-    data?: AppBskyAssuranceInitAgeAssurance.InputSchema,
-    opts?: AppBskyAssuranceInitAgeAssurance.CallOptions,
-  ): Promise<AppBskyAssuranceInitAgeAssurance.Response> {
-    return this._client.call(
-      'app.bsky.assurance.initAgeAssurance',
-      opts?.qp,
-      data,
-      opts,
     )
   }
 }
@@ -3923,6 +3863,18 @@ export class AppBskyUnspeccedNS {
     this._client = client
   }
 
+  getAgeAssuranceState(
+    params?: AppBskyUnspeccedGetAgeAssuranceState.QueryParams,
+    opts?: AppBskyUnspeccedGetAgeAssuranceState.CallOptions,
+  ): Promise<AppBskyUnspeccedGetAgeAssuranceState.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getAgeAssuranceState',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getConfig(
     params?: AppBskyUnspeccedGetConfig.QueryParams,
     opts?: AppBskyUnspeccedGetConfig.CallOptions,
@@ -4099,6 +4051,42 @@ export class AppBskyUnspeccedNS {
       'app.bsky.unspecced.getTrendsSkeleton',
       params,
       undefined,
+      opts,
+    )
+  }
+
+  handleAgeAssuranceComplete(
+    params?: AppBskyUnspeccedHandleAgeAssuranceComplete.QueryParams,
+    opts?: AppBskyUnspeccedHandleAgeAssuranceComplete.CallOptions,
+  ): Promise<AppBskyUnspeccedHandleAgeAssuranceComplete.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.handleAgeAssuranceComplete',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  handleAgeAssuranceEvent(
+    data?: AppBskyUnspeccedHandleAgeAssuranceEvent.InputSchema,
+    opts?: AppBskyUnspeccedHandleAgeAssuranceEvent.CallOptions,
+  ): Promise<AppBskyUnspeccedHandleAgeAssuranceEvent.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.handleAgeAssuranceEvent',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  initAgeAssurance(
+    data?: AppBskyUnspeccedInitAgeAssurance.InputSchema,
+    opts?: AppBskyUnspeccedInitAgeAssurance.CallOptions,
+  ): Promise<AppBskyUnspeccedInitAgeAssurance.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.initAgeAssurance',
+      opts?.qp,
+      data,
       opts,
     )
   }

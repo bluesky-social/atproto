@@ -14,7 +14,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.assurance.handleAgeAssuranceEvent'
+const id = 'app.bsky.unspecced.handleAgeAssuranceEvent'
 
 export interface QueryParams {}
 
@@ -68,7 +68,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 
 /** The payload of the event. */
 export interface Payload {
-  $type?: 'app.bsky.assurance.handleAgeAssuranceEvent#payload'
+  $type?: 'app.bsky.unspecced.handleAgeAssuranceEvent#payload'
   /** Misnomer: the email address of the user that was processed. */
   parentEmail?: string
   status?: PayloadStatus
@@ -88,7 +88,7 @@ export function validatePayload<V>(v: V) {
 
 /** The status property returned on the payload. */
 export interface PayloadStatus {
-  $type?: 'app.bsky.assurance.handleAgeAssuranceEvent#payloadStatus'
+  $type?: 'app.bsky.unspecced.handleAgeAssuranceEvent#payloadStatus'
   /** Whether the user was verified as an adult or not. */
   verified?: boolean
   /** The transaction ID of the age assurance process. */

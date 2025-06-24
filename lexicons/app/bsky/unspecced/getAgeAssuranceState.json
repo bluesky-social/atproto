@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.assurance.getAgeAssuranceState",
+  "id": "app.bsky.unspecced.getAgeAssuranceState",
   "defs": {
     "main": {
       "type": "query",
@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "app.bsky.assurance.defs#ageAssuranceState"
+          "ref": "app.bsky.unspecced.defs#ageAssuranceState"
         }
       }
     }

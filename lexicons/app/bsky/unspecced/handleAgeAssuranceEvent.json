@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.assurance.handleAgeAssuranceEvent",
+  "id": "app.bsky.unspecced.handleAgeAssuranceEvent",
   "defs": {
     "main": {
       "type": "procedure",

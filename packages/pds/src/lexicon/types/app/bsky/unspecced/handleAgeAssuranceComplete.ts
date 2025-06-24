@@ -14,7 +14,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.assurance.handleAgeAssuranceComplete'
+const id = 'app.bsky.unspecced.handleAgeAssuranceComplete'
 
 export interface QueryParams {
   /** The status of the age assurance process. */
@@ -29,7 +29,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   /** The computed status of the age assurance process. */
-  status: string
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
 }
 
 export type HandlerInput = undefined
