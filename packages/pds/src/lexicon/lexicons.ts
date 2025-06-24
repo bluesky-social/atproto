@@ -9749,7 +9749,7 @@ export const schemaDict = {
       main: {
         type: 'record',
         description:
-          'A declaration of the users choices related to notifications that can be produced by them.',
+          "A declaration of the user's choices related to notifications that can be produced by them.",
         key: 'literal:self',
         record: {
           type: 'object',
