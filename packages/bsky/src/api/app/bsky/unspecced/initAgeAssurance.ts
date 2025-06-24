@@ -2,7 +2,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 
-import { KWS_OAUTH_URL, KWS_CLIENT_ID, KWS_API_KEY } from './env'
+import { KWS_CLIENT_ID, KWS_API_KEY } from './env'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.initAgeAssurance({
@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       let success = true
 
       try {
-        const auth = await fetch(KWS_OAUTH_URL, {
+        const auth = await fetch(`https://auth.kidswebservices.com/auth/realms/kws/protocol/openid-connect/token`, {
           method: 'POST',
           headers: {
             Accept: 'application/json',
