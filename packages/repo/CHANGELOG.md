@@ -1,5 +1,11 @@
 # @atproto/repo
 
+## 0.8.4
+
+### Patch Changes
+
+- [#3981](https://github.com/bluesky-social/atproto/pull/3981) [`a8dee6af3`](https://github.com/bluesky-social/atproto/commit/a8dee6af33618d3072ebae7f23843242a32c926c) Thanks [@bnewbold](https://github.com/bnewbold)! - allow tilde character in MST keys (as allowed by record key syntax)
+
 ## 0.8.3
 
 ### Patch Changes

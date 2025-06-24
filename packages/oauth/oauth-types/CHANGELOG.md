@@ -1,5 +1,13 @@
 # @atproto/oauth-types
 
+## 0.4.0
+
+### Minor Changes
+
+- [#3973](https://github.com/bluesky-social/atproto/pull/3973) [`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `OidcAuthenticationErrorResponse` to `OidcAuthorizationResponseError`
+
+- [#3973](https://github.com/bluesky-social/atproto/pull/3973) [`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `OAuthAuthenticationErrorResponse` to `OAuthAuthorizationResponseError`
+
 ## 0.3.1
 
 ### Patch Changes
