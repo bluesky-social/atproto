@@ -15,5 +15,3 @@ test.sqlite
 \#*\#
 *~
 *.swp
-
-packages/bsky/src/api/app/bsky/unspecced/env.ts
