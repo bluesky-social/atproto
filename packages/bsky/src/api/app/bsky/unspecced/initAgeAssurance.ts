@@ -1,6 +1,8 @@
+import crypto from 'node:crypto'
+
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
+import { AgeAssuranceStatePayload } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 
 import { KWS_CLIENT_ID, KWS_API_KEY } from './env'
 
@@ -9,21 +11,24 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const actorDid = auth.credentials.iss
-      let success = true
 
+      let success = true
       try {
-        const auth = await fetch(`https://auth.kidswebservices.com/auth/realms/kws/protocol/openid-connect/token`, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Basic ${Buffer.from(`${KWS_CLIENT_ID}:${KWS_API_KEY}`).toString('base64')}`,
+        const auth = await fetch(
+          `https://auth.kidswebservices.com/auth/realms/kws/protocol/openid-connect/token`,
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
+              Authorization: `Basic ${Buffer.from(`${KWS_CLIENT_ID}:${KWS_API_KEY}`).toString('base64')}`,
+            },
+            body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              scope: 'verification',
+            }),
           },
-          body: new URLSearchParams({
-            grant_type: 'client_credentials',
-            scope: 'verification',
-          }),
-        })
+        )
 
         const { access_token } = (await auth.json()) as {
           access_token: string
@@ -31,6 +36,8 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         if (access_token) {
+          const attemptId = crypto.randomUUID()
+
           await fetch(
             `https://api.kidswebservices.com/v1/verifications/send-email`,
             {
@@ -44,27 +51,29 @@ export default function (server: Server, ctx: AppContext) {
                 email: input.body.email,
                 location: 'US',
                 // TODO abstract this
-                externalPayload: JSON.stringify({ did: actorDid }),
+                externalPayload: JSON.stringify({ actorDid, attemptId }),
                 userContext: 'adult',
                 language: 'en',
               }),
             },
           )
 
-          const state: AgeAssuranceState = {
-            // TODO
-            updatedAt: new Date().toISOString(),
+          const NSID = 'app.bsky.unspecced.defs#ageAssuranceState'
+          const payload: AgeAssuranceStatePayload = {
+            timestamp: new Date().toISOString(),
+            source: 'user',
             status: 'pending',
+            attemptId,
           }
 
-          await ctx.stashClient.create({
-            actorDid,
-            namespace: 'app.bsky.unspecced.defs#ageAssuranceState',
-            key: 'self',
-            payload: state,
+          // TODO store this
+          console.log('stash', {
+            NSID,
+            payload,
           })
         }
-      } catch {
+      } catch (e) {
+        console.error(e)
         success = false
       }
 

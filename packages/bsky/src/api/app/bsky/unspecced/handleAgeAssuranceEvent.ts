@@ -2,16 +2,13 @@ import crypto from 'node:crypto'
 
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
+import {
+  AgeAssuranceState,
+  AgeAssuranceStatePayload,
+} from '../../../../lexicon/types/app/bsky/unspecced/defs'
 import { Payload } from '../../../../lexicon/types/app/bsky/unspecced/handleAgeAssuranceEvent'
 
 import { KWS_WEBHOOK_SIGNING_KEY } from './env'
-
-type StatusPayload = {
-  verified: true
-  transactionId: string
-  errorCode: string | null
-}
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.handleAgeAssuranceEvent({
@@ -67,29 +64,35 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         // TODO abstract this
-        const { did } = JSON.parse(input.body.payload.externalPayload) as {
-          did: string
+        const { actorDid, attemptId } = JSON.parse(
+          input.body.payload.externalPayload,
+        ) as {
+          actorDid: string
+          attemptId: string
         }
 
-        if (!did) {
+        if (!actorDid) {
+          throw new Error('Missing DID in externalPayload')
+        }
+        if (!attemptId) {
           throw new Error('Missing DID in externalPayload')
         }
 
         const status = getResponseStatus(input.body.payload.status)
 
-        try {
-          await ctx.stashClient.update({
-            actorDid: did,
-            namespace: 'app.bsky.unspecced.defs#ageAssuranceState',
-            key: 'self',
-            payload: {
-              required: true,
-              status,
-            },
-          })
-        } catch (e) {
-          // TODO handle stash update failure
+        const NSID = 'app.bsky.unspecced.defs#ageAssuranceState'
+        const payload: AgeAssuranceStatePayload = {
+          timestamp: new Date().toISOString(),
+          source: 'user',
+          status,
+          attemptId,
         }
+
+        // TODO store this
+        console.log('write', {
+          NSID,
+          payload,
+        })
       } catch (e) {
         console.error(e) // TODO
         // TODO save failure
@@ -109,8 +112,8 @@ function getResponseStatus(
   statusPayload: Exclude<Payload['status'], undefined>,
 ): AgeAssuranceState['status'] {
   if (statusPayload.verified) {
-    return 'verified-adult'
+    return 'assured'
   } else {
-    return 'unverified'
+    return 'unknown'
   }
 }
