@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.15.18
+
+### Patch Changes
+
+- [#3995](https://github.com/bluesky-social/atproto/pull/3995) [`e3e31b2b9`](https://github.com/bluesky-social/atproto/commit/e3e31b2b9bf8c4de6b2d7fa992c3b3795686ea72) Thanks [@mozzius](https://github.com/mozzius)! - Add put method to record utility classes
+
 ## 0.15.17
 
 ### Patch Changes
