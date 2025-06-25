@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.resource.authentication",
+  "defs": {
+    "main": {
+      "type": "auth-resource",
+      "description": "Grants access to authentication for third party servcies (service auth)",
+      "parameters": {
+        "type": "params",
+        "required": ["aud", "lxm"],
+        "properties": {
+          "aud": {
+            "type": "string",
+            "description": "The audience to be authenticated with. The value '*' allows the creation of an authentication for any audience."
+          },
+          "lxm": {
+            "type": "string",
+            "description": "The lexicon method that authentication tokens will be bound to. The value '*' allows authentication for any method."
+          }
+        }
+      }
+    }
+  }
+}
