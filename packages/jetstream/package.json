@@ -2,9 +2,11 @@
   "name": "@atproto/jetstream",
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Atproto jetstream client",
+  "description": "ATProto jetstream client for node.js",
   "keywords": [
+    "bluesky",
     "atproto",
+    "NodeJS",
     "jetstream",
     "client"
   ],
