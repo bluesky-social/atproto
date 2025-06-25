@@ -1,6 +1,5 @@
-import { jwksPubSchema } from '@atproto/jwk'
 import { z } from 'zod'
-
+import { jwksPubSchema } from '@atproto/jwk'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthEndpointAuthMethod } from './oauth-endpoint-auth-method.js'
 import { oauthGrantTypeSchema } from './oauth-grant-type.js'
@@ -20,6 +19,7 @@ export const oauthClientMetadataSchema = z.object({
   /**
    * @note redirect_uris require additional validation
    */
+  // https://www.rfc-editor.org/rfc/rfc7591.html#section-2
   redirect_uris: z.array(oauthRedirectUriSchema).nonempty(),
   response_types: z
     .array(oauthResponseTypeSchema)
@@ -34,19 +34,20 @@ export const oauthClientMetadataSchema = z.object({
     // > "authorization_code" Grant Type.
     .default(['authorization_code']),
   scope: oauthScopeSchema.optional(),
+  // https://www.rfc-editor.org/rfc/rfc7591.html#section-2
   token_endpoint_auth_method: oauthEndpointAuthMethod
-    .default('none')
-    .optional(),
+    // > If unspecified or omitted, the default is "client_secret_basic" [...].
+    .default('client_secret_basic'),
   token_endpoint_auth_signing_alg: z.string().optional(),
   userinfo_signed_response_alg: z.string().optional(),
   userinfo_encrypted_response_alg: z.string().optional(),
   jwks_uri: webUriSchema.optional(),
   jwks: jwksPubSchema.optional(),
-  application_type: z.enum(['web', 'native']).default('web').optional(), // default, per spec, is "web"
-  subject_type: z.enum(['public', 'pairwise']).default('public').optional(),
+  application_type: z.enum(['web', 'native']).default('web'), // default, per spec, is "web"
+  subject_type: z.enum(['public', 'pairwise']).default('public'),
   request_object_signing_alg: z.string().optional(),
   id_token_signed_response_alg: z.string().optional(),
-  authorization_signed_response_alg: z.string().default('RS256').optional(),
+  authorization_signed_response_alg: z.string().default('RS256'),
   authorization_encrypted_response_enc: z.enum(['A128CBC-HS256']).optional(),
   authorization_encrypted_response_alg: z.string().optional(),
   client_id: oauthClientIdSchema.optional(),
@@ -54,7 +55,7 @@ export const oauthClientMetadataSchema = z.object({
   client_uri: webUriSchema.optional(),
   policy_uri: webUriSchema.optional(),
   tos_uri: webUriSchema.optional(),
-  logo_uri: webUriSchema.optional(), // TODO: allow data: uri ?
+  logo_uri: webUriSchema.optional(), // @TODO: allow data: uri ?
 
   /**
    * Default Maximum Authentication Age. Specifies that the End-User MUST be

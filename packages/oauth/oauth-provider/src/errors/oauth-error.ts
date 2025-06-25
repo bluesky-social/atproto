@@ -23,6 +23,6 @@ export class OAuthError extends Error {
     return {
       error: this.error,
       error_description: this.error_description,
-    } as const
+    }
   }
 }

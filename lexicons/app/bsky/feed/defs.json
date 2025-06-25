@@ -48,6 +48,13 @@
         "pinned": { "type": "boolean" }
       }
     },
+    "threadContext": {
+      "type": "object",
+      "description": "Metadata about this post within the context of the thread it is in.",
+      "properties": {
+        "rootAuthorLike": { "type": "string", "format": "at-uri" }
+      }
+    },
     "feedViewPost": {
       "type": "object",
       "required": ["post"],
@@ -59,6 +66,11 @@
           "type": "string",
           "description": "Context provided by feed generator that may be passed back alongside interactions.",
           "maxLength": 2000
+        },
+        "reqId": {
+          "type": "string",
+          "description": "Unique identifier per request that may be passed back alongside interactions.",
+          "maxLength": 100
         }
       }
     },
@@ -86,6 +98,8 @@
       "required": ["by", "indexedAt"],
       "properties": {
         "by": { "type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic" },
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
@@ -108,7 +122,8 @@
             "type": "union",
             "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]
           }
-        }
+        },
+        "threadContext": { "type": "ref", "ref": "#threadContext" }
       }
     },
     "notFoundPost": {
@@ -162,6 +177,13 @@
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
         "viewer": { "type": "ref", "ref": "#generatorViewerState" },
+        "contentMode": {
+          "type": "string",
+          "knownValues": [
+            "app.bsky.feed.defs#contentModeUnspecified",
+            "app.bsky.feed.defs#contentModeVideo"
+          ]
+        },
         "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
@@ -235,6 +257,11 @@
           "type": "string",
           "description": "Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.",
           "maxLength": 2000
+        },
+        "reqId": {
+          "type": "string",
+          "description": "Unique identifier per request that may be passed back alongside interactions.",
+          "maxLength": 100
         }
       }
     },
@@ -261,6 +288,14 @@
     "clickthroughEmbed": {
       "type": "token",
       "description": "User clicked through to the embedded content of the feed item"
+    },
+    "contentModeUnspecified": {
+      "type": "token",
+      "description": "Declares the feed generator returns any types of posts."
+    },
+    "contentModeVideo": {
+      "type": "token",
+      "description": "Declares the feed generator returns posts containing app.bsky.embed.video embeds."
     },
     "interactionSeen": {
       "type": "token",

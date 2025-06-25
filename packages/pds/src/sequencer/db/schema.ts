@@ -1,13 +1,6 @@
 import { Generated, GeneratedAlways, Insertable, Selectable } from 'kysely'
 
-export type RepoSeqEventType =
-  | 'append'
-  | 'rebase'
-  | 'handle'
-  | 'migrate'
-  | 'identity'
-  | 'account'
-  | 'tombstone'
+export type RepoSeqEventType = 'append' | 'sync' | 'identity' | 'account'
 
 export interface RepoSeq {
   seq: GeneratedAlways<number>

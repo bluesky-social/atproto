@@ -2,12 +2,20 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyActorDefs from '../actor/defs'
+import type * as AppBskyActorDefs from '../actor/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.getLikes'
 
 export interface QueryParams {
   /** AT-URI of the subject (eg, a post record). */
@@ -25,7 +33,6 @@ export interface OutputSchema {
   cid?: string
   cursor?: string
   likes: Like[]
-  [k: string]: unknown
 }
 
 export type HandlerInput = undefined
@@ -48,24 +55,25 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   input: HandlerInput
   req: express.Request
   res: express.Response
+  resetRouteRateLimits: () => Promise<void>
 }
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Like {
+  $type?: 'app.bsky.feed.getLikes#like'
   indexedAt: string
   createdAt: string
   actor: AppBskyActorDefs.ProfileView
-  [k: string]: unknown
 }
 
-export function isLike(v: unknown): v is Like {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.getLikes#like'
-  )
+const hashLike = 'like'
+
+export function isLike<V>(v: V) {
+  return is$typed(v, id, hashLike)
 }
 
-export function validateLike(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.getLikes#like', v)
+export function validateLike<V>(v: V) {
+  return validate<Like & V>(v, id, hashLike)
 }

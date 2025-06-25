@@ -1,6 +1,6 @@
 import PQueue from 'p-queue'
-import { Database } from './db'
 import { dbLogger } from '../../logger'
+import { Database } from './db'
 
 // A simple queue for in-process, out-of-band/backgrounded work
 
@@ -16,7 +16,7 @@ export class BackgroundQueue {
     this.queue
       .add(() => task(this.db))
       .catch((err) => {
-        dbLogger.error(err, 'background queue task failed')
+        dbLogger.error({ err }, 'background queue task failed')
       })
   }
 

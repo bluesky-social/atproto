@@ -1,13 +1,13 @@
 import { Selectable } from 'kysely'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as ListItem from '../../../../lexicon/types/app/bsky/graph/listitem'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as lex from '../../../../lexicon/lexicons'
-import RecordProcessor from '../processor'
+import * as ListItem from '../../../../lexicon/types/app/bsky/graph/listitem'
+import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { BackgroundQueue } from '../../background'
+import { RecordProcessor } from '../processor'
 
 const lexId = lex.ids.AppBskyGraphListitem
 type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>

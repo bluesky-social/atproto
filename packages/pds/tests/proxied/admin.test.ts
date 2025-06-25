@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
+import basicSeed from '../seeds/basic'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork
@@ -62,6 +62,9 @@ describe('proxies admin requests', () => {
       password: 'password',
       inviteCode: invite.code,
     })
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 
@@ -113,6 +116,7 @@ describe('proxies admin requests', () => {
           cid: post.ref.cidStr,
         },
         createdBy: 'did:example:admin',
+        // @ts-expect-error
         reason: 'Y',
       },
       {
@@ -129,6 +133,7 @@ describe('proxies admin requests', () => {
           did: sc.dids.bob,
         },
         createdBy: 'did:example:admin',
+        // @ts-expect-error
         reason: 'Y',
       },
       {
@@ -200,7 +205,7 @@ describe('proxies admin requests', () => {
       { uri: 'at://did:does:not:exist/bad.collection.name/badrkey' },
       { headers: sc.getHeaders(moderator) },
     )
-    await expect(tryGetRecord).rejects.toThrow('Record not found')
+    await expect(tryGetRecord).rejects.toThrow('Could not locate record')
   })
 
   it('takesdown and labels repos, and reverts.', async () => {
@@ -213,6 +218,7 @@ describe('proxies admin requests', () => {
           did: sc.dids.alice,
         },
         createdBy: 'did:example:admin',
+        // @ts-expect-error
         reason: 'Y',
         createLabelVals: ['dogs'],
         negateLabelVals: ['cats'],
@@ -244,6 +250,7 @@ describe('proxies admin requests', () => {
           $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
         createdBy: 'did:example:admin',
+        // @ts-expect-error
         reason: 'X',
       },
       {
@@ -276,6 +283,7 @@ describe('proxies admin requests', () => {
           cid: post.ref.cidStr,
         },
         createdBy: 'did:example:admin',
+        // @ts-expect-error
         reason: 'Y',
         createLabelVals: ['dogs'],
         negateLabelVals: ['cats'],
@@ -308,6 +316,7 @@ describe('proxies admin requests', () => {
         },
         event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
         createdBy: 'did:example:admin',
+        // @ts-expect-error
         reason: 'X',
       },
       {

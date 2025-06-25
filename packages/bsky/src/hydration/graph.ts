@@ -1,11 +1,12 @@
-import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
+import { DataPlaneClient } from '../data-plane/client'
 import { Record as BlockRecord } from '../lexicon/types/app/bsky/graph/block'
-import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
+import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
-import { DataPlaneClient } from '../data-plane/client'
-import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
+import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
+import { Record as VerificationRecord } from '../lexicon/types/app/bsky/graph/verification'
 import { FollowInfo } from '../proto/bsky_pb'
+import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
@@ -29,6 +30,9 @@ export type Block = RecordInfo<BlockRecord>
 export type StarterPack = RecordInfo<StarterPackRecord>
 export type StarterPacks = HydrationMap<StarterPack>
 
+export type Verification = RecordInfo<VerificationRecord>
+export type Verifications = HydrationMap<Verification>
+
 export type StarterPackAgg = {
   joinedWeek: number
   joinedAllTime: number
@@ -46,48 +50,44 @@ export type ListAggs = HydrationMap<ListAgg>
 export type RelationshipPair = [didA: string, didB: string]
 
 const dedupePairs = (pairs: RelationshipPair[]): RelationshipPair[] => {
-  const mapped = pairs.reduce(
-    (acc, cur) => {
-      const sorted = ([...cur] as RelationshipPair).sort()
-      acc[sorted.join('-')] = sorted
-      return acc
-    },
-    {} as Record<string, RelationshipPair>,
-  )
-  return Object.values(mapped)
+  const deduped = pairs.reduce((acc, pair) => {
+    return acc.set(Blocks.key(...pair), pair)
+  }, new Map<string, RelationshipPair>())
+  return [...deduped.values()]
 }
 
 export class Blocks {
-  _blocks: Map<string, boolean> = new Map()
+  _blocks: Map<string, BlockEntry> = new Map() // did:a,did:b -> block
   constructor() {}
 
   static key(didA: string, didB: string): string {
     return [didA, didB].sort().join(',')
   }
 
-  set(didA: string, didB: string, exists: boolean): Blocks {
+  set(didA: string, didB: string, block: BlockEntry): Blocks {
     const key = Blocks.key(didA, didB)
-    this._blocks.set(key, exists)
+    this._blocks.set(key, block)
     return this
   }
 
-  has(didA: string, didB: string): boolean {
+  get(didA: string, didB: string): BlockEntry | null {
+    if (didA === didB) return null // ignore self-blocks
     const key = Blocks.key(didA, didB)
-    return this._blocks.has(key)
-  }
-
-  isBlocked(didA: string, didB: string): boolean {
-    if (didA === didB) return false // ignore self-blocks
-    const key = Blocks.key(didA, didB)
-    return this._blocks.get(key) ?? false
+    return this._blocks.get(key) ?? null
   }
 
   merge(blocks: Blocks): Blocks {
-    blocks._blocks.forEach((exists, key) => {
-      this._blocks.set(key, exists)
+    blocks._blocks.forEach((block, key) => {
+      this._blocks.set(key, block)
     })
     return this
   }
+}
+
+// No "blocking" vs. "blocked" directionality: only suitable for bidirectional block checks
+export type BlockEntry = {
+  blockUri: string | undefined
+  blockListUri: string | undefined
 }
 
 export class GraphHydrator {
@@ -162,7 +162,11 @@ export class GraphHydrator {
     const blocks = new Blocks()
     for (let i = 0; i < deduped.length; i++) {
       const pair = deduped[i]
-      blocks.set(pair.a, pair.b, res.exists[i] ?? false)
+      const block = res.blocks[i]
+      blocks.set(pair.a, pair.b, {
+        blockUri: block.blockedBy || block.blocking || undefined,
+        blockListUri: block.blockedByList || block.blockingByList || undefined,
+      })
     }
     return blocks
   }
@@ -176,7 +180,25 @@ export class GraphHydrator {
     }, new HydrationMap<Follow>())
   }
 
-  async getBlocks(uris: string[], includeTakedowns = false): Promise<Follows> {
+  async getVerifications(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<Verifications> {
+    if (!uris.length) return new HydrationMap<Verification>()
+    const res = await this.dataplane.getVerificationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<VerificationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Verification>())
+  }
+
+  async getBlocks(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<HydrationMap<Block>> {
     if (!uris.length) return new HydrationMap<Block>()
     const res = await this.dataplane.getBlockRecords({ uris })
     return uris.reduce((acc, uri, i) => {

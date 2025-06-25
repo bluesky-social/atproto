@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build & Publish
     if: github.repository == 'bluesky-social/atproto'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
       pull-requests: write

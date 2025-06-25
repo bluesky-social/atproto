@@ -2,13 +2,24 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneTeamDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ToolsOzoneTeamDefs from './defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.team.listMembers'
 
 export interface QueryParams {
+  q?: string
+  disabled?: boolean
+  roles?: string[]
   limit?: number
   cursor?: string
 }
@@ -18,7 +29,6 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   members: ToolsOzoneTeamDefs.Member[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

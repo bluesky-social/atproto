@@ -1,5 +1,49 @@
 # @atproto-labs/handle-resolver
 
+## 0.3.0
+
+### Minor Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `HandleResolverError` instances instead of `TypeError`
+
+### Patch Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `asResolvedHandle` utility
+
+## 0.2.0
+
+### Minor Changes
+
+- [#3976](https://github.com/bluesky-social/atproto/pull/3976) [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `AppViewHandleResolver` to `XrpcHandleResolver`
+
+- [#3976](https://github.com/bluesky-social/atproto/pull/3976) [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `XrpcHandleResolver.from` static method
+
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4), [`0d77d1b55`](https://github.com/bluesky-social/atproto/commit/0d77d1b550a58117aee8f7f1e2be24d255ade9e4)]:
+  - @atproto-labs/simple-store@0.2.0
+  - @atproto-labs/simple-store-memory@0.1.3
+
+## 0.1.7
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto-labs/simple-store-memory@0.1.2
+  - @atproto-labs/simple-store@0.1.2
+  - @atproto/did@0.1.5
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`cc2a1222b`](https://github.com/bluesky-social/atproto/commit/cc2a1222bd2b8ddd70d70dad174c1c63246a2d87)]:
+  - @atproto/did@0.1.4
+
 ## 0.1.5
 
 ### Patch Changes

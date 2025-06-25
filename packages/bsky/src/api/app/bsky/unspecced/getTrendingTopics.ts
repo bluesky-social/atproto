@@ -1,19 +1,19 @@
+import AtpAgent from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
-import AppContext from '../../../../context'
+import { InternalServerError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
+import { TrendingTopic } from '../../../../lexicon/types/app/bsky/unspecced/defs'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
 import {
-  createPipeline,
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
+  createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
-import AtpAgent from '@atproto/api'
-import { TrendingTopic } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import { InternalServerError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   const getTrendingTopics = createPipeline(

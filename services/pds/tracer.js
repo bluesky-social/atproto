@@ -1,13 +1,12 @@
 /* eslint-env node */
+/* eslint-disable import/order */
 
 'use strict'
 
 const { registerInstrumentations } = require('@opentelemetry/instrumentation')
-
 const {
   BetterSqlite3Instrumentation,
 } = require('opentelemetry-plugin-better-sqlite3')
-
 const { TracerProvider } = require('dd-trace') // Only works with commonjs
   .init({ logInjection: true })
   .use('express', {
@@ -22,7 +21,7 @@ registerInstrumentations({
   instrumentations: [new BetterSqlite3Instrumentation()],
 })
 
-const path = require('path')
+const path = require('node:path')
 
 function maintainXrpcResource(span, req) {
   // Show actual xrpc method as resource rather than the route pattern

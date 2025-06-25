@@ -1,23 +1,22 @@
+import { Duplex, Transform, Writable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import createError, { isHttpError } from 'http-errors'
+import { CID } from 'multiformats/cid'
+import { Dispatcher } from 'undici'
+import {
+  VerifyCidError,
+  VerifyCidTransform,
+  createDecoders,
+} from '@atproto/common'
+import { AtprotoDid, isAtprotoDid } from '@atproto/did'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-import {
-  createDecoders,
-  VerifyCidError,
-  VerifyCidTransform,
-} from '@atproto/common'
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
-import createError, { isHttpError } from 'http-errors'
-import { CID } from 'multiformats/cid'
-import { Duplex, Transform, Writable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import { Dispatcher } from 'undici'
-
 import { ServerConfig } from '../config'
-import AppContext from '../context'
+import { AppContext } from '../context'
 import {
   Code,
   DataPlaneClient,
@@ -28,6 +27,7 @@ import {
 import { parseCid } from '../hydration/util'
 import { httpLogger as log } from '../logger'
 import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
+import { BSKY_USER_AGENT } from './util'
 
 export function createMiddleware(ctx: AppContext): Middleware {
   return async (req, res, next) => {
@@ -116,7 +116,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
 
           // From this point on, triggering the next middleware (including any
           // error handler) can be problematic because content-type,
-          // content-enconding, etc. headers have already been set. Because of
+          // content-encoding, etc. headers have already been set. Because of
           // this, we make sure that res.headersSent is set to true, preventing
           // another error handler middleware from being called (from the catch
           // block bellow). Not flushing the headers here would require to
@@ -193,6 +193,7 @@ export async function streamBlob(
         path: url.pathname + url.search,
         headers,
         signal: options.signal,
+        maxRedirections: 10,
       },
       (upstream) => {
         headersReceived = true
@@ -296,6 +297,8 @@ function getBlobHeaders(
   url: URL,
 ): Map<string, string> {
   const headers = new Map<string, string>()
+
+  headers.set('user-agent', BSKY_USER_AGENT)
 
   if (bypassKey && bypassHostname) {
     const matchesUrl = bypassHostname.startsWith('.')

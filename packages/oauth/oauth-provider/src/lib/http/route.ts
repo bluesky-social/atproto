@@ -1,12 +1,16 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput, createMethodMatcher } from './method.js'
 import { combineMiddlewares } from './middleware.js'
 import { Params, Path, createPathMatcher } from './path.js'
-import { IncomingMessage, Middleware, ServerResponse } from './types.js'
+import { Middleware } from './types.js'
 
-export type RouteCtx<T, P extends Params> = SubCtx<T, { params: Readonly<P> }>
+export type RouteCtx<
+  T extends object | void,
+  P extends Params = Params,
+> = SubCtx<T, { params: Readonly<P> }>
 export type RouteMiddleware<
-  T,
+  T extends object | void,
   P extends Params,
   Req = IncomingMessage,
   Res = ServerResponse,
@@ -27,8 +31,8 @@ export type RouteMiddleware<
  * ```
  */
 export function createRoute<
-  P extends Params,
-  T = void,
+  P extends Params = Params,
+  T extends object | void = void,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
 >(
@@ -46,7 +50,7 @@ export function createRoute<
       const pathname = req.url?.split('?')[0] ?? '/'
       const params = paramsMatcher(pathname)
       if (params) {
-        const context = subCtx(this, 'params', params)
+        const context = subCtx(this, { params })
         return middleware.call(context, req, res, next)
       }
     }

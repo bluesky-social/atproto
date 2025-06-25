@@ -1,8 +1,6 @@
 import Statsig, { StatsigUser } from 'statsig-node'
 import { sha256Hex } from '@atproto/crypto'
-
 import { featureGatesLogger } from './logger'
-import type { ServerConfig } from './config'
 
 export type Config = {
   apiKey?: string

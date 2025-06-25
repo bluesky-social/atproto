@@ -1,5 +1,5 @@
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -10,6 +10,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           checkEmailConfirmed: ctx.cfg.clientCheckEmailConfirmed,
           topicsEnabled: ctx.cfg.topicsEnabled,
+          liveNow: ctx.cfg.liveNowConfig,
         },
       }
     },

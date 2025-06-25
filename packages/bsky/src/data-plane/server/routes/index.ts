@@ -1,6 +1,7 @@
 import { ConnectRouter } from '@connectrpc/connect'
 import { IdResolver } from '@atproto/identity'
 import { Service } from '../../../proto/bsky_connect'
+import { Database } from '../db'
 import blocks from './blocks'
 import feedGens from './feed-gens'
 import feeds from './feeds'
@@ -13,18 +14,17 @@ import lists from './lists'
 import moderation from './moderation'
 import mutes from './mutes'
 import notifs from './notifs'
-import posts from './posts'
+import privateData from './private-data'
 import profile from './profile'
 import quotes from './quotes'
 import records from './records'
 import relationships from './relationships'
 import reposts from './reposts'
 import search from './search'
+import starterPacks from './starter-packs'
 import suggestions from './suggestions'
 import sync from './sync'
 import threads from './threads'
-import starterPacks from './starter-packs'
-import { Database } from '../db'
 
 export default (db: Database, idResolver: IdResolver) =>
   (router: ConnectRouter) =>
@@ -41,7 +41,7 @@ export default (db: Database, idResolver: IdResolver) =>
       ...moderation(db),
       ...mutes(db),
       ...notifs(db),
-      ...posts(db),
+      ...privateData(db),
       ...profile(db),
       ...quotes(db),
       ...records(db),

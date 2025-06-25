@@ -1,13 +1,13 @@
+import assert from 'node:assert'
 import { AddressInfo } from 'node:net'
-import assert from 'assert'
+import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   AtpAgent,
-  AtpSessionEvent,
   AtpSessionData,
+  AtpSessionEvent,
   BSKY_LABELER_DID,
 } from '../src'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
 import { createHeaderEchoServer } from './util/echo-server'
 
 const getPdsEndpointUrl = (...args: Parameters<typeof getPdsEndpoint>) => {

@@ -1,8 +1,8 @@
-import express from 'express'
-import AppContext from '../context'
+import { Router } from 'express'
+import { AppContext } from '../context'
 
-export const createRouter = (ctx: AppContext): express.Router => {
-  const router = express.Router()
+export const createRouter = (ctx: AppContext): Router => {
+  const router = Router()
 
   const did = ctx.cfg.serverDid
   if (did.startsWith('did:web:')) {
@@ -11,7 +11,10 @@ export const createRouter = (ctx: AppContext): express.Router => {
 
     router.get('/.well-known/did.json', (_req, res) => {
       res.json({
-        '@context': ['https://www.w3.org/ns/did/v1'],
+        '@context': [
+          'https://www.w3.org/ns/did/v1',
+          'https://w3id.org/security/multikey/v1',
+        ],
         id: did,
         verificationMethod: [
           {

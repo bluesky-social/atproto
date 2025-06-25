@@ -1,18 +1,19 @@
+import { AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import AppContext from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
-import { createPipeline } from '../../../../pipeline'
+import { HeadersMap } from '@atproto/xrpc'
+import { AppContext } from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
+import { createPipeline } from '../../../../pipeline'
+import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
-import { AtpAgent } from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(
@@ -144,12 +145,12 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx
-  headers: Record<string, string>
+  headers: HeadersMap
 }
 
 type Skeleton = {
   dids: string[]
   cursor?: string
   recId?: number
-  resHeaders?: Record<string, string>
+  resHeaders?: HeadersMap
 }

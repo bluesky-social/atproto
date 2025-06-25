@@ -4,26 +4,26 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { Lexicons, LexiconDoc, LexRecord } from '@atproto/lexicon'
+import { type LexRecord, type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { gen, utilTs, lexiconsTs } from './common'
-import { GeneratedAPI } from '../types'
+import { type GeneratedAPI } from '../types'
+import { gen, lexiconsTs, utilTs } from './common'
 import {
+  genCommonImports,
   genImports,
+  genRecord,
   genUserType,
-  genObject,
-  genXrpcParams,
   genXrpcInput,
   genXrpcOutput,
-  genObjHelpers,
+  genXrpcParams,
 } from './lex-gen'
 import {
+  type DefTreeNode,
   lexiconsToDefTree,
-  DefTreeNode,
   schemasToNsidTokens,
   toCamelCase,
-  toTitleCase,
   toScreamingSnakeCase,
+  toTitleCase,
 } from './util'
 
 const ATP_METHODS = {
@@ -61,18 +61,18 @@ const indexTs = (
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
-    //= import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
+    //= import { XrpcClient, type FetchHandler, type FetchHandlerOptions } from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc',
     })
     xrpcImport.addNamedImports([
       { name: 'XrpcClient' },
-      { name: 'FetchHandler' },
-      { name: 'FetchHandlerOptions' },
+      { name: 'FetchHandler', isTypeOnly: true },
+      { name: 'FetchHandlerOptions', isTypeOnly: true },
     ])
-    //= import {schemas} from './lexicons'
+    //= import {schemas} from './lexicons.js'
     file
-      .addImportDeclaration({ moduleSpecifier: './lexicons' })
+      .addImportDeclaration({ moduleSpecifier: './lexicons.js' })
       .addNamedImports([{ name: 'schemas' }])
     //= import {CID} from 'multiformats/cid'
     file
@@ -81,9 +81,17 @@ const indexTs = (
       })
       .addNamedImports([{ name: 'CID' }])
 
+    //= import { type OmitKey, type Un$Typed } from './util.js'
+    file
+      .addImportDeclaration({ moduleSpecifier: `./util.js` })
+      .addNamedImports([
+        { name: 'OmitKey', isTypeOnly: true },
+        { name: 'Un$Typed', isTypeOnly: true },
+      ])
+
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
-      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}`
+      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}.js`
       file
         .addImportDeclaration({ moduleSpecifier })
         .setNamespaceImport(toTitleCase(lexicon.id))
@@ -185,7 +193,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     const name = NSID.parse(userType.nsid).name || ''
     cls.addProperty({
       name: toCamelCase(name),
-      type: `${toTitleCase(name)}Record`,
+      type: `${toTitleCase(userType.nsid)}Record`,
     })
   }
 
@@ -222,7 +230,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
         .map((ut) => {
           const name = NSID.parse(ut.nsid).name || ''
           return `this.${toCamelCase(name)} = new ${toTitleCase(
-            name,
+            ut.nsid,
           )}Record(client)`
         }),
     ],
@@ -280,9 +288,8 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
 
 function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   //= export class {type}Record {...}
-  const name = NSID.parse(nsid).name || ''
   const cls = file.addClass({
-    name: `${toTitleCase(name)}Record`,
+    name: `${toTitleCase(nsid)}Record`,
     isExported: true,
   })
   //= _client: XrpcClient
@@ -312,7 +319,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
+      type: `OmitKey<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
@@ -330,7 +337,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
+      type: `OmitKey<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
@@ -348,13 +355,13 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(
+      type: `OmitKey<${toTitleCase(
         ATP_METHODS.create,
       )}.InputSchema, "collection" | "record">`,
     })
     method.addParameter({
       name: 'record',
-      type: `${typeModule}.Record`,
+      type: `Un$Typed<${typeModule}.Record>`,
     })
     method.addParameter({
       name: 'headers?',
@@ -365,8 +372,8 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
       : ''
     method.setBodyText(
       [
-        `record.$type = '${nsid}'`,
-        `const res = await this._client.call('${ATP_METHODS.create}', undefined, { collection: '${nsid}', ${maybeRkeyPart}...params, record }, {encoding: 'application/json', headers })`,
+        `const collection = '${nsid}'`,
+        `const res = await this._client.call('${ATP_METHODS.create}', undefined, { collection, ${maybeRkeyPart}...params, record: { ...record, $type: collection} }, {encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -380,7 +387,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   //   })
   //   method.addParameter({
   //     name: 'params',
-  //     type: `Omit<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
+  //     type: `OmitKey<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
   //   })
   //   method.addParameter({
   //     name: 'record',
@@ -407,7 +414,7 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(
+      type: `OmitKey<${toTitleCase(
         ATP_METHODS.delete,
       )}.InputSchema, "collection">`,
     })
@@ -429,8 +436,6 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
     async (file) => {
-      const imports: Set<string> = new Set()
-
       const main = lexiconDoc.defs.main
       if (
         main?.type === 'query' ||
@@ -446,37 +451,10 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           { name: 'XRPCError' },
         ])
       }
-      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: '@atproto/lexicon',
-        })
-        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
-      //= import {isObj, hasProp} from '../../util.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/util`,
-        })
-        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
-      //= import {lexicons} from '../../lexicons.ts'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: `${lexiconDoc.id
-            .split('.')
-            .map((_str) => '..')
-            .join('/')}/lexicons`,
-        })
-        .addNamedImports([{ name: 'lexicons' }])
-      //= import {CID} from 'multiformats/cid'
-      file
-        .addImportDeclaration({
-          moduleSpecifier: 'multiformats/cid',
-        })
-        .addNamedImports([{ name: 'CID' }])
 
+      genCommonImports(file, lexiconDoc.id)
+
+      const imports: Set<string> = new Set()
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
@@ -489,7 +467,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           } else if (def.type === 'subscription') {
             continue
           } else if (def.type === 'record') {
-            genClientRecord(file, imports, lexicons, lexUri)
+            genRecord(file, imports, lexicons, lexUri)
           } else {
             genUserType(file, imports, lexicons, lexUri)
           }
@@ -585,18 +563,4 @@ function genClientXrpcCommon(
         ]
       : ['return e'],
   })
-}
-
-function genClientRecord(
-  file: SourceFile,
-  imports: Set<string>,
-  lexicons: Lexicons,
-  lexUri: string,
-) {
-  const def = lexicons.getDefOrThrow(lexUri, ['record'])
-
-  //= export interface Record {...}
-  genObject(file, imports, lexUri, def.record, 'Record')
-  //= export function isRecord(v: unknown): v is Record {...}
-  genObjHelpers(file, lexUri, 'Record')
 }

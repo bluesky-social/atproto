@@ -18,6 +18,10 @@ export function isResolvedHandle<T>(value: T): value is T & ResolvedHandle {
   return value === null || isAtprotoDid(value)
 }
 
+export function asResolvedHandle(value: string): ResolvedHandle {
+  return isResolvedHandle(value) ? value : null
+}
+
 export interface HandleResolver {
   /**
    * @returns the DID that corresponds to the given handle, or `null` if no DID

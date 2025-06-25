@@ -1,6 +1,6 @@
-import { check, ipldToJson, schema } from '@atproto/common-web'
 import { CID } from 'multiformats/cid'
 import { z } from 'zod'
+import { check, ipldToJson, schema } from '@atproto/common-web'
 
 export const typedJsonBlobRef = z
   .object({
@@ -65,6 +65,11 @@ export class BlobRef {
   }
 
   toJSON() {
-    return ipldToJson(this.ipld())
+    return ipldToJson(this.ipld()) as {
+      $type: 'blob'
+      ref: { $link: string }
+      mimeType: string
+      size: number
+    }
   }
 }

@@ -2,8 +2,8 @@ import { TypeOf, ZodIssueCode } from 'zod'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
   OAuthLoopbackRedirectURI,
-  oauthLoopbackRedirectURISchema,
   OAuthRedirectUri,
+  oauthLoopbackRedirectURISchema,
 } from './oauth-redirect-uri.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 
@@ -46,7 +46,7 @@ export function assertOAuthLoopbackClientId(
   void parseOAuthLoopbackClientId(clientId)
 }
 
-// @TODO: should we turn this into a zod schema? (more coherent error with other
+// @TODO should we turn this into a zod schema? (more coherent error with other
 // validation functions)
 export function parseOAuthLoopbackClientId(clientId: string): {
   scope?: OAuthScope

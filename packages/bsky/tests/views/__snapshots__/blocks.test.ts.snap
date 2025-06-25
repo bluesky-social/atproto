@@ -137,6 +137,7 @@ Object {
         "threadMuted": false,
       },
     },
+    "threadContext": Object {},
   },
 }
 `;
@@ -255,8 +256,10 @@ Object {
             "threadMuted": false,
           },
         },
+        "threadContext": Object {},
       },
     ],
+    "threadContext": Object {},
   },
 }
 `;
@@ -412,8 +415,10 @@ Object {
             "threadMuted": false,
           },
         },
+        "threadContext": Object {},
       },
     ],
+    "threadContext": Object {},
   },
 }
 `;

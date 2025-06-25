@@ -1,11 +1,11 @@
+import { Client as PlcClient } from '@did-plc/lib'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
-import * as bsky from '@atproto/bsky'
 import { AtpAgent } from '@atproto/api'
+import * as bsky from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { Client as PlcClient } from '@did-plc/lib'
-import { BskyConfig } from './types'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
+import { BskyConfig } from './types'
 
 export * from '@atproto/bsky'
 
@@ -79,9 +79,13 @@ export class TestBsky {
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
       bigThreadUris: new Set(),
+      maxThreadParents: cfg.maxThreadParents ?? 50,
       disableSsrfProtection: true,
+      threadTagsBumpDown: new Set(),
+      threadTagsHide: new Set(),
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
+      etcdHosts: [],
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."

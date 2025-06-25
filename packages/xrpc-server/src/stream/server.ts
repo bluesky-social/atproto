@@ -1,7 +1,7 @@
-import { IncomingMessage } from 'http'
-import { WebSocketServer, ServerOptions, WebSocket } from 'ws'
+import { IncomingMessage } from 'node:http'
+import { ServerOptions, WebSocket, WebSocketServer } from 'ws'
 import { ErrorFrame, Frame } from './frames'
-import logger from './logger'
+import { logger } from './logger'
 import { CloseCode, DisconnectError } from './types'
 
 export class XrpcStreamServer {
@@ -36,7 +36,7 @@ export class XrpcStreamServer {
         if (err instanceof DisconnectError) {
           return socket.close(err.wsCode, err.xrpcCode)
         } else {
-          logger.error(err, 'websocket server error')
+          logger.error({ err }, 'websocket server error')
           return socket.terminate()
         }
       }

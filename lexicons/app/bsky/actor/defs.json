@@ -23,7 +23,15 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "createdAt": { "type": "string", "format": "datetime" },
+        "verification": {
+          "type": "ref",
+          "ref": "#verificationState"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#statusView"
+        }
       }
     },
     "profileView": {
@@ -53,6 +61,14 @@
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "verification": {
+          "type": "ref",
+          "ref": "#verificationState"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#statusView"
         }
       }
     },
@@ -95,6 +111,14 @@
         "pinnedPost": {
           "type": "ref",
           "ref": "com.atproto.repo.strongRef"
+        },
+        "verification": {
+          "type": "ref",
+          "ref": "#verificationState"
+        },
+        "status": {
+          "type": "ref",
+          "ref": "#statusView"
         }
       }
     },
@@ -158,6 +182,54 @@
         }
       }
     },
+    "verificationState": {
+      "type": "object",
+      "description": "Represents the verification information about the user this object is attached to.",
+      "required": ["verifications", "verifiedStatus", "trustedVerifierStatus"],
+      "properties": {
+        "verifications": {
+          "type": "array",
+          "description": "All verifications issued by trusted verifiers on behalf of this user. Verifications by untrusted verifiers are not included.",
+          "items": { "type": "ref", "ref": "#verificationView" }
+        },
+        "verifiedStatus": {
+          "type": "string",
+          "description": "The user's status as a verified account.",
+          "knownValues": ["valid", "invalid", "none"]
+        },
+        "trustedVerifierStatus": {
+          "type": "string",
+          "description": "The user's status as a trusted verifier.",
+          "knownValues": ["valid", "invalid", "none"]
+        }
+      }
+    },
+    "verificationView": {
+      "type": "object",
+      "description": "An individual verification for an associated subject.",
+      "required": ["issuer", "uri", "isValid", "createdAt"],
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "description": "The user who issued this verification.",
+          "format": "did"
+        },
+        "uri": {
+          "type": "string",
+          "description": "The AT-URI of the verification record.",
+          "format": "at-uri"
+        },
+        "isValid": {
+          "type": "boolean",
+          "description": "True if the verification passes validation, otherwise false."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the verification was created.",
+          "format": "datetime"
+        }
+      }
+    },
     "preferences": {
       "type": "array",
       "items": {
@@ -174,7 +246,9 @@
           "#mutedWordsPref",
           "#hiddenPostsPref",
           "#bskyAppStatePref",
-          "#labelersPref"
+          "#labelersPref",
+          "#postInteractionSettingsPref",
+          "#verificationPrefs"
         ]
       }
     },
@@ -466,6 +540,74 @@
           "type": "string",
           "format": "datetime",
           "description": "The date and time at which the NUX will expire and should be considered completed."
+        }
+      }
+    },
+    "verificationPrefs": {
+      "type": "object",
+      "description": "Preferences for how verified accounts appear in the app.",
+      "required": [],
+      "properties": {
+        "hideBadges": {
+          "description": "Hide the blue check badges for verified accounts and trusted verifiers.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "postInteractionSettingsPref": {
+      "type": "object",
+      "description": "Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly.",
+      "required": [],
+      "properties": {
+        "threadgateAllowRules": {
+          "description": "Matches threadgate record. List of rules defining who can reply to this users posts. If value is an empty array, no one can reply. If value is undefined, anyone can reply.",
+          "type": "array",
+          "maxLength": 5,
+          "items": {
+            "type": "union",
+            "refs": [
+              "app.bsky.feed.threadgate#mentionRule",
+              "app.bsky.feed.threadgate#followerRule",
+              "app.bsky.feed.threadgate#followingRule",
+              "app.bsky.feed.threadgate#listRule"
+            ]
+          }
+        },
+        "postgateEmbeddingRules": {
+          "description": "Matches postgate record. List of rules defining who can embed this users posts. If value is an empty array or is undefined, no particular rules apply and anyone can embed.",
+          "type": "array",
+          "maxLength": 5,
+          "items": {
+            "type": "union",
+            "refs": ["app.bsky.feed.postgate#disableRule"]
+          }
+        }
+      }
+    },
+    "statusView": {
+      "type": "object",
+      "required": ["status", "record"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status for the account.",
+          "knownValues": ["app.bsky.actor.status#live"]
+        },
+        "record": { "type": "unknown" },
+        "embed": {
+          "type": "union",
+          "description": "An optional embed associated with the status.",
+          "refs": ["app.bsky.embed.external#view"]
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "The date when this status will expire. The application might choose to no longer return the status after expiration.",
+          "format": "datetime"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "True if the status is not expired, false if it is expired. Only present if expiration was set."
         }
       }
     }

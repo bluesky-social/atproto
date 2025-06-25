@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { ValidationError } from '@atproto/lexicon'
 
 export type QueryParams = Record<string, any>
-export type HeadersMap = Record<string, string>
+export type HeadersMap = Record<string, string | undefined>
 
 export type {
   /** @deprecated not to be confused with the WHATWG Headers constructor */
@@ -24,11 +24,17 @@ export const errorResponseBody = z.object({
 export type ErrorResponseBody = z.infer<typeof errorResponseBody>
 
 export enum ResponseType {
+  /**
+   * Network issue, unable to get response from the server.
+   */
   Unknown = 1,
+  /**
+   * Response failed lexicon validation.
+   */
   InvalidResponse = 2,
   Success = 200,
   InvalidRequest = 400,
-  AuthRequired = 401,
+  AuthenticationRequired = 401,
   Forbidden = 403,
   XRPCNotSupported = 404,
   NotAcceptable = 406,
@@ -58,26 +64,8 @@ export function httpResponseCodeToEnum(status: number): ResponseType {
   }
 }
 
-export const ResponseTypeNames = {
-  [ResponseType.Unknown]: 'Unknown',
-  [ResponseType.InvalidResponse]: 'InvalidResponse',
-  [ResponseType.Success]: 'Success',
-  [ResponseType.InvalidRequest]: 'InvalidRequest',
-  [ResponseType.AuthRequired]: 'AuthenticationRequired',
-  [ResponseType.Forbidden]: 'Forbidden',
-  [ResponseType.XRPCNotSupported]: 'XRPCNotSupported',
-  [ResponseType.PayloadTooLarge]: 'PayloadTooLarge',
-  [ResponseType.UnsupportedMediaType]: 'UnsupportedMediaType',
-  [ResponseType.RateLimitExceeded]: 'RateLimitExceeded',
-  [ResponseType.InternalServerError]: 'InternalServerError',
-  [ResponseType.MethodNotImplemented]: 'MethodNotImplemented',
-  [ResponseType.UpstreamFailure]: 'UpstreamFailure',
-  [ResponseType.NotEnoughResources]: 'NotEnoughResources',
-  [ResponseType.UpstreamTimeout]: 'UpstreamTimeout',
-}
-
 export function httpResponseCodeToName(status: number): string {
-  return ResponseTypeNames[httpResponseCodeToEnum(status)]
+  return ResponseType[httpResponseCodeToEnum(status)]
 }
 
 export const ResponseTypeStrings = {
@@ -85,9 +73,10 @@ export const ResponseTypeStrings = {
   [ResponseType.InvalidResponse]: 'Invalid Response',
   [ResponseType.Success]: 'Success',
   [ResponseType.InvalidRequest]: 'Invalid Request',
-  [ResponseType.AuthRequired]: 'Authentication Required',
+  [ResponseType.AuthenticationRequired]: 'Authentication Required',
   [ResponseType.Forbidden]: 'Forbidden',
   [ResponseType.XRPCNotSupported]: 'XRPC Not Supported',
+  [ResponseType.NotAcceptable]: 'Not Acceptable',
   [ResponseType.PayloadTooLarge]: 'Payload Too Large',
   [ResponseType.UnsupportedMediaType]: 'Unsupported Media Type',
   [ResponseType.RateLimitExceeded]: 'Rate Limit Exceeded',
@@ -96,7 +85,7 @@ export const ResponseTypeStrings = {
   [ResponseType.UpstreamFailure]: 'Upstream Failure',
   [ResponseType.NotEnoughResources]: 'Not Enough Resources',
   [ResponseType.UpstreamTimeout]: 'Upstream Timeout',
-}
+} as const satisfies Record<ResponseType, string>
 
 export function httpResponseCodeToString(status: number): string {
   return ResponseTypeStrings[httpResponseCodeToEnum(status)]
@@ -181,6 +170,8 @@ export class XRPCInvalidResponseError extends XRPCError {
   ) {
     super(
       ResponseType.InvalidResponse,
+      // @NOTE: This is probably wrong and should use ResponseTypeNames instead.
+      // But it would mean a breaking change.
       ResponseTypeStrings[ResponseType.InvalidResponse],
       `The server gave an invalid response and may be out of date.`,
       undefined,

@@ -1,6 +1,6 @@
-import { TestPds } from './pds'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { TestPds } from './pds'
 
 export class OzoneServiceProfile {
   did?: string
@@ -23,6 +23,18 @@ export class OzoneServiceProfile {
     this.did = this.thirdPartyPdsClient.accountDid
     this.key = await Secp256k1Keypair.create({ exportable: true })
     return { did: this.did, key: this.key }
+  }
+
+  async createAppPasswordForVerification(pds: TestPds) {
+    const pdsClient = pds.getClient()
+    await pdsClient.login({
+      identifier: this.modUserDetails.handle,
+      password: this.modUserDetails.password,
+    })
+    const { data } = await pdsClient.com.atproto.server.createAppPassword({
+      name: 'ozone-verifier',
+    })
+    return data.password
   }
 
   async createServiceDetails(

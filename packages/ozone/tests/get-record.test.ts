@@ -1,18 +1,18 @@
+import { AtpAgent } from '@atproto/api'
 import {
+  ModeratorClient,
   SeedClient,
   TestNetwork,
-  basicSeed,
   TestOzone,
-  ModeratorClient,
+  basicSeed,
 } from '@atproto/dev-env'
-import { AtpAgent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
+import { ids } from '../src/lexicon/lexicons'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('admin get record view', () => {
   let network: TestNetwork
@@ -30,6 +30,10 @@ describe('admin get record view', () => {
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)
+    await network.processAll()
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 
@@ -71,7 +75,7 @@ describe('admin get record view', () => {
   })
 
   it('gets a record by uri, even when taken down.', async () => {
-    const result = await agent.api.tools.ozone.moderation.getRecord(
+    const result = await agent.tools.ozone.moderation.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
@@ -79,7 +83,7 @@ describe('admin get record view', () => {
   })
 
   it('gets a record by uri and cid.', async () => {
-    const result = await agent.api.tools.ozone.moderation.getRecord(
+    const result = await agent.tools.ozone.moderation.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
@@ -90,7 +94,7 @@ describe('admin get record view', () => {
   })
 
   it('fails when record does not exist.', async () => {
-    const promise = agent.api.tools.ozone.moderation.getRecord(
+    const promise = agent.tools.ozone.moderation.getRecord(
       {
         uri: AtUri.make(
           sc.dids.alice,
@@ -100,17 +104,27 @@ describe('admin get record view', () => {
       },
       { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
-    await expect(promise).rejects.toThrow('Record not found')
+    await expect(promise).rejects.toThrow('Could not locate record')
   })
 
   it('fails when record cid does not exist.', async () => {
-    const promise = agent.api.tools.ozone.moderation.getRecord(
+    const promise = agent.tools.ozone.moderation.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][1].ref.cidStr, // Mismatching cid
       },
       { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
-    await expect(promise).rejects.toThrow('Record not found')
+    await expect(promise).rejects.toThrow('Could not locate record')
+  })
+
+  it('gets record from pds if appview does not have it.', async () => {
+    const post = await sc.post(sc.dids.carol, 'this is test')
+    const { data: postFromOzone } =
+      await agent.tools.ozone.moderation.getRecord(
+        { uri: post.ref.uriStr },
+        { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
+      )
+    expect(forSnapshot(postFromOzone)).toMatchSnapshot()
   })
 })

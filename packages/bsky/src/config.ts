@@ -1,4 +1,10 @@
 import assert from 'node:assert'
+import { subLogger as log } from './logger'
+
+type LiveNowConfig = {
+  did: string
+  domains: string[]
+}[]
 
 export interface ServerConfigValues {
   // service
@@ -9,8 +15,11 @@ export interface ServerConfigValues {
   serverDid: string
   alternateAudienceDids: string[]
   entrywayJwtPublicKeyHex?: string
+  liveNowConfig?: LiveNowConfig
   // external services
+  etcdHosts: string[]
   dataplaneUrls: string[]
+  dataplaneUrlsEtcdKeyPrefix?: string
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
   bsyncUrl: string
@@ -47,6 +56,11 @@ export interface ServerConfigValues {
   bigThreadUris: Set<string>
   bigThreadDepth?: number
   maxThreadDepth?: number
+  maxThreadParents: number
+  threadTagsHide: Set<string>
+  threadTagsBumpDown: Set<string>
+  // notifications
+  notificationsDelayMs?: number
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
@@ -74,15 +88,28 @@ export class ServerConfig {
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
-    const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
-      ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
-      : []
+    const alternateAudienceDids = envList(process.env.BSKY_ALT_AUDIENCE_DIDS)
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
-    const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
-      ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
-      : []
+    let liveNowConfig: LiveNowConfig | undefined
+    if (process.env.BSKY_LIVE_NOW_CONFIG) {
+      try {
+        const parsed = JSON.parse(process.env.BSKY_LIVE_NOW_CONFIG)
+        if (isLiveNowConfig(parsed)) {
+          liveNowConfig = parsed
+        } else {
+          throw new Error('Live Now config failed format validation')
+        }
+      } catch (err) {
+        log.error({ err }, 'Invalid BSKY_LIVE_NOW_CONFIG')
+      }
+    }
+    const handleResolveNameservers = envList(
+      process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
+    )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    const etcdHosts =
+      overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
     const videoPlaylistUrlPattern = process.env.BSKY_VIDEO_PLAYLIST_URL_PATTERN
     // e.g. https://video.invalid/watch/%s/%s/thumbnail.jpg
@@ -97,16 +124,25 @@ export class ServerConfig {
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
-    let dataplaneUrls = overrides?.dataplaneUrls
-    dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
-      ? process.env.BSKY_DATAPLANE_URLS.split(',')
-      : []
+    const dataplaneUrls =
+      overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
+    const dataplaneUrlsEtcdKeyPrefix =
+      process.env.BSKY_DATAPLANE_URLS_ETCD_KEY_PREFIX || undefined
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
-    const labelsFromIssuerDids = process.env.BSKY_LABELS_FROM_ISSUER_DIDS
-      ? process.env.BSKY_LABELS_FROM_ISSUER_DIDS.split(',')
-      : []
+    assert(
+      !dataplaneUrlsEtcdKeyPrefix || etcdHosts.length,
+      'etcd prefix for dataplane urls may only be configured when there are etcd hosts',
+    )
+    assert(
+      dataplaneUrls.length || dataplaneUrlsEtcdKeyPrefix,
+      'dataplane urls are not configured directly nor with etcd',
+    )
+    assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
+    const labelsFromIssuerDids = envList(
+      process.env.BSKY_LABELS_FROM_ISSUER_DIDS,
+    )
     const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
     assert(bsyncUrl)
     const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
@@ -133,8 +169,6 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
-    assert(dataplaneUrls.length)
-    assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
     const statsigKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'
@@ -160,6 +194,17 @@ export class ServerConfig {
     const maxThreadDepth = process.env.BSKY_MAX_THREAD_DEPTH
       ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
       : undefined
+    const maxThreadParents = process.env.BSKY_MAX_THREAD_PARENTS
+      ? parseInt(process.env.BSKY_MAX_THREAD_PARENTS || '', 10)
+      : 50
+    const threadTagsHide = new Set(envList(process.env.BSKY_THREAD_TAGS_HIDE))
+    const threadTagsBumpDown = new Set(
+      envList(process.env.BSKY_THREAD_TAGS_BUMP_DOWN),
+    )
+
+    const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
+      : 0
 
     const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
       ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
@@ -185,7 +230,10 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      liveNowConfig,
+      etcdHosts,
       dataplaneUrls,
+      dataplaneUrlsEtcdKeyPrefix,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
@@ -220,6 +268,10 @@ export class ServerConfig {
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
+      maxThreadParents,
+      threadTagsHide,
+      threadTagsBumpDown,
+      notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
       proxyHeadersTimeout,
@@ -265,6 +317,18 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get liveNowConfig() {
+    return this.cfg.liveNowConfig
+  }
+
+  get etcdHosts() {
+    return this.cfg.etcdHosts
+  }
+
+  get dataplaneUrlsEtcdKeyPrefix() {
+    return this.cfg.dataplaneUrlsEtcdKeyPrefix
   }
 
   get dataplaneUrls() {
@@ -407,6 +471,21 @@ export class ServerConfig {
     return this.cfg.maxThreadDepth
   }
 
+  get maxThreadParents() {
+    return this.cfg.maxThreadParents
+  }
+
+  get threadTagsHide() {
+    return this.cfg.threadTagsHide
+  }
+  get threadTagsBumpDown() {
+    return this.cfg.threadTagsBumpDown
+  }
+
+  get notificationsDelayMs() {
+    return this.cfg.notificationsDelayMs ?? 0
+  }
+
   get disableSsrfProtection(): boolean {
     return this.cfg.disableSsrfProtection ?? false
   }
@@ -451,4 +530,18 @@ function stripUndefineds(
 function envList(str: string | undefined): string[] {
   if (str === undefined || str.length === 0) return []
   return str.split(',')
+}
+
+function isLiveNowConfig(data: any): data is LiveNowConfig {
+  return (
+    Array.isArray(data) &&
+    data.every(
+      (item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof item.did === 'string' &&
+        Array.isArray(item.domains) &&
+        item.domains.every((domain: any) => typeof domain === 'string'),
+    )
+  )
 }

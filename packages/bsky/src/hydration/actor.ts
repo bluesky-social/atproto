@@ -1,6 +1,9 @@
+import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
+import { VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
@@ -23,13 +26,29 @@ export type Actor = {
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
+  trustedVerifier?: boolean
+  verifications: VerificationHydrationState[]
+  status?: RecordInfo<StatusRecord>
 }
+
+export type VerificationHydrationState = {
+  issuer: string
+  uri: string
+  handle: string
+  displayName: string
+  createdAt: string
+}
+
+export type VerificationMetaRequired = Required<VerificationMeta>
 
 export type Actors = HydrationMap<Actor>
 
 export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
 
 export type ChatDeclarations = HydrationMap<ChatDeclaration>
+
+export type Status = RecordInfo<StatusRecord>
+export type Statuses = HydrationMap<Status>
 
 export type ProfileViewerState = {
   muted?: boolean
@@ -74,10 +93,16 @@ export class ActorHydrator {
     }
   }
 
-  async getDids(handleOrDids: string[]): Promise<(string | undefined)[]> {
+  async getDids(
+    handleOrDids: string[],
+    opts?: { lookupUnidirectional?: boolean },
+  ): Promise<(string | undefined)[]> {
     const handles = handleOrDids.filter((actor) => !actor.startsWith('did:'))
     const res = handles.length
-      ? await this.dataplane.getDidsByHandles({ handles })
+      ? await this.dataplane.getDidsByHandles({
+          handles,
+          lookupUnidirectional: opts?.lookupUnidirectional,
+        })
       : { dids: [] }
     const didByHandle = handles.reduce(
       (acc, cur, i) => {
@@ -100,9 +125,16 @@ export class ActorHydrator {
     return res.filter((did) => did !== undefined)
   }
 
-  async getActors(dids: string[], includeTakedowns = false): Promise<Actors> {
+  async getActors(
+    dids: string[],
+    opts: {
+      includeTakedowns?: boolean
+      skipCacheForDids?: string[]
+    } = {},
+  ): Promise<Actors> {
+    const { includeTakedowns = false, skipCacheForDids } = opts
     if (!dids.length) return new HydrationMap<Actor>()
-    const res = await this.dataplane.getActors({ dids })
+    const res = await this.dataplane.getActors({ dids, skipCacheForDids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
       const isNoHosted =
@@ -120,6 +152,31 @@ export class ActorHydrator {
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
+      const status = actor.statusRecord
+        ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedowns)
+        : undefined
+
+      const verifications = mapDefined(
+        Object.entries(actor.verifiedBy),
+        ([actorDid, verificationMeta]) => {
+          if (
+            verificationMeta.handle &&
+            verificationMeta.rkey &&
+            verificationMeta.sortedAt
+          ) {
+            return {
+              issuer: actorDid,
+              uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
+              handle: verificationMeta.handle,
+              displayName: verificationMeta.displayName,
+              createdAt: verificationMeta.sortedAt.toDate().toISOString(),
+            }
+          }
+          // Filter out the verification meta that doesn't contain all info.
+          return undefined
+        },
+      )
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -134,6 +191,9 @@ export class ActorHydrator {
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: actor.createdAt?.toDate(),
         priorityNotifications: actor.priorityNotifications,
+        trustedVerifier: actor.trustedVerifier,
+        verifications,
+        status: status,
       })
     }, new HydrationMap<Actor>())
   }
@@ -151,6 +211,15 @@ export class ActorHydrator {
       )
       return acc.set(uri, record ?? null)
     }, new HydrationMap<ChatDeclaration>())
+  }
+
+  async getStatus(uris: string[], includeTakedowns = false): Promise<Statuses> {
+    if (!uris.length) return new HydrationMap<Status>()
+    const res = await this.dataplane.getStatusRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<StatusRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Status>())
   }
 
   // "naive" because this method does not verify the existence of the list itself

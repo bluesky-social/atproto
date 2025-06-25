@@ -1,10 +1,10 @@
-import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
-import { DatabaseSchema } from '../../db/database-schema'
-import RecordProcessor from '../processor'
-import { Database } from '../../db'
 import { BackgroundQueue } from '../../background'
+import { Database } from '../../db'
+import { DatabaseSchema } from '../../db/database-schema'
+import { RecordProcessor } from '../processor'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
 

@@ -1,26 +1,48 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
-import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
+import {
+  ChatPreference,
+  FilterablePreference,
+  Preference,
+  Preferences,
+} from '../../src/lexicon/types/app/bsky/notification/defs'
+import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
+import { forSnapshot, paginateAll } from '../_util'
+
+type Database = TestNetwork['bsky']['db']
 
 describe('notification views', () => {
   let network: TestNetwork
+  let db: Database
+
   let agent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
+  let carol: string
+  let dan: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
     })
+    db = network.bsky.db
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+    await network.bsky.db.db
+      .updateTable('actor')
+      .set({ trustedVerifier: true })
+      .where('did', '=', alice)
+      .execute()
     await network.processAll()
     alice = sc.dids.alice
+    carol = sc.dids.carol
+    dan = sc.dids.dan
   })
 
   afterAll(async () => {
@@ -148,6 +170,212 @@ describe('notification views', () => {
       },
     )
     expect(forSnapshot(sort(notifsDan.data.notifications))).toMatchSnapshot()
+  })
+
+  it('generates notifications for likes', async () => {
+    const notifsAlice = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const na = sort(
+      notifsAlice.data.notifications.filter((n) => n.reason === 'like'),
+    )
+    expect(na).toHaveLength(5)
+    expect(forSnapshot(na)).toMatchSnapshot()
+  })
+
+  it('generates notifications for reposts', async () => {
+    const notifsAlice = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const na = sort(
+      notifsAlice.data.notifications.filter((n) => n.reason === 'repost'),
+    )
+    expect(na).toHaveLength(2)
+    expect(forSnapshot(na)).toMatchSnapshot()
+  })
+
+  it('generates notifications for likes via repost', async () => {
+    const op = dan
+    const reposter = carol
+    const liker = alice
+    await sc.like(liker, sc.posts[op][1].ref, {
+      via: sc.reposts[reposter][0].raw,
+    })
+    await network.processAll()
+
+    const notifsOp = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          op,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const no = sort(
+      notifsOp.data.notifications.filter((n) => n.reason === 'like'),
+    )
+    // Like from `alice` in this test.
+    expect(no).toHaveLength(1)
+    expect(forSnapshot(no)).toMatchSnapshot()
+
+    const notifsReposter = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          reposter,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const nr = sort(
+      notifsReposter.data.notifications.filter(
+        (n) => n.reason === 'like-via-repost',
+      ),
+    )
+    // Like from `alice` in this test.
+    expect(nr).toHaveLength(1)
+    expect(forSnapshot(nr)).toMatchSnapshot()
+  })
+
+  it('does not generate self notifications for likes via own repost', async () => {
+    const op = dan
+    const reposter = carol
+    await sc.like(reposter, sc.posts[op][1].ref, {
+      via: sc.reposts[reposter][0].raw,
+    })
+    await network.processAll()
+
+    const notifsOp = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          op,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const no = sort(
+      notifsOp.data.notifications.filter((n) => n.reason === 'like'),
+    )
+    // Like from `alice` in previous test + `carol` on this test.
+    expect(no).toHaveLength(2)
+    expect(forSnapshot(no)).toMatchSnapshot()
+
+    const notifsReposter = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          reposter,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const nr = sort(
+      notifsReposter.data.notifications.filter(
+        (n) => n.reason === 'like-via-repost',
+      ),
+    )
+    // Like from `alice` in previous test.
+    expect(nr).toHaveLength(1)
+    expect(forSnapshot(nr)).toMatchSnapshot()
+  })
+
+  it('generates notifications for reposts via repost', async () => {
+    const op = dan
+    const reposter = carol
+    const reReposter = alice
+    await sc.repost(reReposter, sc.posts[op][1].ref, {
+      via: sc.reposts[reposter][0].raw,
+    })
+    await network.processAll()
+
+    const notifsOp = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          op,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const no = sort(
+      notifsOp.data.notifications.filter((n) => n.reason === 'repost'),
+    )
+    // Repost from `carol` in seeds + `alice` on this test.
+    expect(no).toHaveLength(2)
+    expect(forSnapshot(no)).toMatchSnapshot()
+
+    const notifsReposter = await agent.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          reposter,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const nr = sort(
+      notifsReposter.data.notifications.filter(
+        (n) => n.reason === 'repost-via-repost',
+      ),
+    )
+    // Repost from `alice` in this test.
+    expect(nr).toHaveLength(1)
+    expect(forSnapshot(nr)).toMatchSnapshot()
+  })
+
+  it('generates notifications for verification created and removed', async () => {
+    await sc.verify(
+      sc.dids.alice,
+      sc.dids.bob,
+      sc.accounts[sc.dids.bob].handle,
+      sc.profiles[sc.dids.bob].displayName,
+    )
+    await network.processAll()
+    const notifsBob1 = await agent.app.bsky.notification.listNotifications(
+      { reasons: ['verified', 'unverified'] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(forSnapshot(sort(notifsBob1.data.notifications))).toMatchSnapshot()
+
+    await sc.unverify(sc.dids.alice, sc.dids.bob)
+    await network.processAll()
+    const notifsBob2 = await agent.app.bsky.notification.listNotifications(
+      { reasons: ['verified', 'unverified'] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(forSnapshot(sort(notifsBob2.data.notifications))).toMatchSnapshot()
   })
 
   it('fetches notifications without a last-seen', async () => {
@@ -497,17 +725,405 @@ describe('notification views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
-  it('fails open on clearly bad cursor.', async () => {
-    const { data: notifs } =
-      await agent.api.app.bsky.notification.listNotifications(
-        { cursor: '90210::bafycid' },
+  describe('notifications delay', () => {
+    const notificationsDelayMs = 5_000
+
+    let delayNetwork: TestNetwork
+    let delayAgent: AtpAgent
+    let delaySc: SeedClient
+    let delayAlice: string
+
+    beforeAll(async () => {
+      delayNetwork = await TestNetwork.create({
+        bsky: {
+          notificationsDelayMs,
+        },
+        dbPostgresSchema: 'bsky_views_notifications_delay',
+      })
+      delayAgent = delayNetwork.bsky.getClient()
+      delaySc = delayNetwork.getSeedClient()
+      await basicSeed(delaySc)
+      await delayNetwork.processAll()
+      delayAlice = delaySc.dids.alice
+
+      // Add to reply chain, post ancestors: alice -> bob -> alice -> carol.
+      // Should have added one notification for each of alice and bob.
+      await delaySc.reply(
+        delaySc.dids.carol,
+        delaySc.posts[delayAlice][1].ref,
+        delaySc.replies[delayAlice][0].ref,
+        'indeed',
+      )
+      await delayNetwork.processAll()
+
+      // @NOTE: Use fake timers after inserting seed data,
+      // to avoid inserting all notifications with the same timestamp.
+      jest.useFakeTimers({
+        doNotFake: [
+          'nextTick',
+          'performance',
+          'setImmediate',
+          'setInterval',
+          'setTimeout',
+        ],
+      })
+    })
+
+    afterAll(async () => {
+      jest.useRealTimers()
+      await delayNetwork.close()
+    })
+
+    it('paginates', async () => {
+      const firstNotification = await delayNetwork.bsky.db.db
+        .selectFrom('notification')
+        .selectAll()
+        .limit(1)
+        .orderBy('sortAt', 'asc')
+        .executeTakeFirstOrThrow()
+      // Sets the system time to when the first notification happened.
+      // At this point we won't have any notifications that already crossed the delay threshold.
+      jest.setSystemTime(new Date(firstNotification.sortAt))
+
+      const results = (results) =>
+        sort(results.flatMap((res) => res.notifications))
+      const paginator = async (cursor?: string) => {
+        const res =
+          await delayAgent.api.app.bsky.notification.listNotifications(
+            { cursor, limit: 6 },
+            {
+              headers: await delayNetwork.serviceHeaders(
+                delayAlice,
+                ids.AppBskyNotificationListNotifications,
+              ),
+            },
+          )
+        return res.data
+      }
+
+      const paginatedAllBeforeDelay = await paginateAll(paginator)
+      paginatedAllBeforeDelay.forEach((res) =>
+        expect(res.notifications.length).toBe(0),
+      )
+      const fullBeforeDelay =
+        await delayAgent.api.app.bsky.notification.listNotifications(
+          {},
+          {
+            headers: await delayNetwork.serviceHeaders(
+              delayAlice,
+              ids.AppBskyNotificationListNotifications,
+            ),
+          },
+        )
+
+      expect(fullBeforeDelay.data.notifications.length).toEqual(0)
+      expect(results(paginatedAllBeforeDelay)).toEqual(
+        results([fullBeforeDelay.data]),
+      )
+
+      const lastNotification = await delayNetwork.bsky.db.db
+        .selectFrom('notification')
+        .selectAll()
+        .limit(1)
+        .orderBy('sortAt', 'desc')
+        .executeTakeFirstOrThrow()
+      // Sets the system time to when the last notification happened and the delay has elapsed.
+      // At this point we all notifications already crossed the delay threshold.
+      jest.setSystemTime(
+        new Date(
+          new Date(lastNotification.sortAt).getTime() +
+            notificationsDelayMs +
+            1,
+        ),
+      )
+
+      const paginatedAllAfterDelay = await paginateAll(paginator)
+      paginatedAllAfterDelay.forEach((res) =>
+        expect(res.notifications.length).toBeLessThanOrEqual(6),
+      )
+      const fullAfterDelay =
+        await delayAgent.api.app.bsky.notification.listNotifications(
+          {},
+          {
+            headers: await delayNetwork.serviceHeaders(
+              delayAlice,
+              ids.AppBskyNotificationListNotifications,
+            ),
+          },
+        )
+
+      expect(fullAfterDelay.data.notifications.length).toEqual(13)
+      expect(results(paginatedAllAfterDelay)).toEqual(
+        results([fullAfterDelay.data]),
+      )
+    })
+
+    describe('cursor delay', () => {
+      const delay0s = 0
+      const delay5s = 5_000
+
+      const now = '2021-01-01T01:00:00.000Z'
+      const nowMinus2s = '2021-01-01T00:59:58.000Z'
+      const nowMinus5s = '2021-01-01T00:59:55.000Z'
+      const nowMinus8s = '2021-01-01T00:59:52.000Z'
+
+      beforeAll(async () => {
+        jest.useFakeTimers({ doNotFake: ['performance'] })
+        jest.setSystemTime(new Date(now))
+      })
+
+      afterAll(async () => {
+        jest.useRealTimers()
+      })
+
+      describe('for undefined cursor', () => {
+        it('returns now minus delay', async () => {
+          const delayedCursor = delayCursor(undefined, delay5s)
+          expect(delayedCursor).toBe(nowMinus5s)
+        })
+
+        it('returns now if delay is 0', async () => {
+          const delayedCursor = delayCursor(undefined, delay0s)
+          expect(delayedCursor).toBe(now)
+        })
+      })
+
+      describe('for defined cursor', () => {
+        it('returns original cursor if delay is 0', async () => {
+          const originalCursor = nowMinus2s
+          const delayedCursor = delayCursor(originalCursor, delay0s)
+          expect(delayedCursor).toBe(originalCursor)
+        })
+
+        it('returns "now minus delay" for cursor that is after that', async () => {
+          // Cursor is "now - 2s", should become "now - 5s"
+          const originalCursor = nowMinus2s
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(nowMinus5s)
+        })
+
+        it('returns original cursor for cursor that is before "now minus delay"', async () => {
+          // Cursor is "now - 8s", should stay like that.
+          const originalCursor = nowMinus8s
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(originalCursor)
+        })
+
+        it('passes through a non-date cursor', async () => {
+          const originalCursor = '123_abc'
+          const cursor = delayCursor(originalCursor, delay5s)
+          expect(cursor).toBe(originalCursor)
+        })
+      })
+    })
+  })
+
+  describe('preferences v2', () => {
+    beforeEach(async () => {
+      await clearPrivateData(db)
+    })
+
+    // Defaults
+    const fp: FilterablePreference = {
+      include: 'all',
+      list: true,
+      push: true,
+    }
+    const p: Preference = {
+      list: true,
+      push: true,
+    }
+    const cp: ChatPreference = {
+      include: 'all',
+      push: true,
+    }
+
+    it('gets preferences filling up with the defaults', async () => {
+      const actorDid = sc.dids.carol
+
+      const getAndAssert = async (
+        expectedApi: Preferences,
+        expectedDb: Preferences | undefined,
+      ) => {
+        const { data } = await agent.app.bsky.notification.getPreferences(
+          {},
+          {
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationGetPreferences,
+            ),
+          },
+        )
+        expect(data.preferences).toStrictEqual(expectedApi)
+
+        const dbResult = await db.db
+          .selectFrom('private_data')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('key', '=', 'self')
+          .executeTakeFirst()
+        if (dbResult === undefined) {
+          expect(dbResult).toBe(expectedDb)
+        } else {
+          expect(dbResult).toStrictEqual({
+            actorDid: actorDid,
+            namespace: 'app.bsky.notification.defs#preferences',
+            key: 'self',
+            indexedAt: expect.any(String),
+            payload: expect.anything(), // Better to compare payload parsed.
+            updatedAt: expect.any(String),
+          })
+          expect(JSON.parse(dbResult.payload)).toStrictEqual({
+            $type: 'app.bsky.notification.defs#preferences',
+            ...expectedDb,
+          })
+        }
+      }
+
+      const expectedApi0: Preferences = {
+        chat: cp,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
+      }
+      // The user has no preferences set yet, so nothing stored.
+      const expectedDb0 = undefined
+      await getAndAssert(expectedApi0, expectedDb0)
+
+      await agent.app.bsky.notification.putPreferencesV2(
+        { verified: { list: false, push: false } },
         {
+          encoding: 'application/json',
           headers: await network.serviceHeaders(
-            alice,
-            ids.AppBskyNotificationListNotifications,
+            actorDid,
+            ids.AppBskyNotificationPutPreferencesV2,
           ),
         },
       )
-    expect(notifs).toMatchObject({ notifications: [] })
+      await network.processAll()
+
+      const expectedApi1: Preferences = {
+        chat: cp,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: { list: false, push: false },
+      }
+      // Stored all the defaults.
+      const expectedDb1 = expectedApi1
+      await getAndAssert(expectedApi1, expectedDb1)
+    })
+
+    it('stores the preferences setting the defaults', async () => {
+      const actorDid = sc.dids.carol
+
+      const putAndAssert = async (
+        input: InputSchema,
+        expected: Preferences,
+      ) => {
+        const { data } = await agent.app.bsky.notification.putPreferencesV2(
+          input,
+          {
+            encoding: 'application/json',
+            headers: await network.serviceHeaders(
+              actorDid,
+              ids.AppBskyNotificationPutPreferencesV2,
+            ),
+          },
+        )
+        await network.processAll()
+        expect(data.preferences).toStrictEqual(expected)
+
+        const dbResult = await db.db
+          .selectFrom('private_data')
+          .selectAll()
+          .where('actorDid', '=', actorDid)
+          .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+          .where('key', '=', 'self')
+          .executeTakeFirstOrThrow()
+        expect(dbResult).toStrictEqual({
+          actorDid: actorDid,
+          namespace: 'app.bsky.notification.defs#preferences',
+          key: 'self',
+          indexedAt: expect.any(String),
+          payload: expect.anything(), // Better to compare payload parsed.
+          updatedAt: expect.any(String),
+        })
+        expect(JSON.parse(dbResult.payload)).toStrictEqual({
+          $type: 'app.bsky.notification.defs#preferences',
+          ...expected,
+        })
+      }
+
+      const input0 = {
+        chat: {
+          push: false,
+          include: 'accepted',
+        },
+      }
+      const expected0: Preferences = {
+        chat: input0.chat,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: fp,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
+      }
+      await putAndAssert(input0, expected0)
+
+      const input1 = {
+        mention: {
+          list: false,
+          push: false,
+          include: 'follows',
+        },
+      }
+      const expected1: Preferences = {
+        // Kept from the previous call.
+        chat: input0.chat,
+        follow: fp,
+        like: fp,
+        likeViaRepost: fp,
+        mention: input1.mention,
+        quote: fp,
+        reply: fp,
+        repost: fp,
+        repostViaRepost: fp,
+        starterpackJoined: p,
+        subscribedPost: p,
+        unverified: p,
+        verified: p,
+      }
+      await putAndAssert(input1, expected1)
+    })
   })
 })
+
+const clearPrivateData = async (db: Database) => {
+  await db.db.deleteFrom('private_data').execute()
+}

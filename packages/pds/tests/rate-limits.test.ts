@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import userSeed from './seeds/basic'
 
 describe('rate limits', () => {

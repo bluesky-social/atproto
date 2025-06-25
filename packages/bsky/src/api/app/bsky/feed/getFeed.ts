@@ -1,17 +1,26 @@
-import { mapDefined } from '@atproto/common'
+import { AppBskyFeedGetFeedSkeleton, AtpAgent } from '@atproto/api'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   InvalidRequestError,
-  UpstreamFailureError,
   ServerTimer,
+  UpstreamFailureError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
-import { noUndefinedVals } from '@atproto/common'
+import { AppContext } from '../../../../context'
+import {
+  Code,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../../../../data-plane'
+import { FeedItem } from '../../../../hydration/feed'
+import { HydrateCtx } from '../../../../hydration/hydrator'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
+import { isSkeletonReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -19,17 +28,8 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { HydrateCtx } from '../../../../hydration/hydrator'
-import { FeedItem } from '../../../../hydration/feed'
 import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import {
-  Code,
-  getServiceEndpoint,
-  isDataplaneError,
-  unpackIdentityServices,
-} from '../../../../data-plane'
-import { resHeaders } from '../../../util'
-import { ids } from '../../../../lexicon/lexicons'
+import { BSKY_USER_AGENT, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -42,10 +42,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         return (
-          method !== undefined &&
-          [ids.AppBskyFeedGetFeedSkeleton, ids.AppBskyFeedGetFeed].includes(
-            method,
-          )
+          method === ids.AppBskyFeedGetFeedSkeleton ||
+          method === ids.AppBskyFeedGetFeed
         )
       },
       skipAudCheck: true,
@@ -55,6 +53,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
+        'user-agent': BSKY_USER_AGENT,
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
         'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
@@ -89,6 +88,7 @@ const skeleton = async (
   const timerSkele = new ServerTimer('skele').start()
   const {
     feedItems: algoItems,
+    reqId,
     cursor,
     resHeaders,
     ...passthrough
@@ -97,6 +97,7 @@ const skeleton = async (
   return {
     cursor,
     items: algoItems,
+    reqId,
     timerSkele: timerSkele.stop(),
     timerHydr: new ServerTimer('hydr').start(),
     resHeaders,
@@ -146,7 +147,7 @@ const presentation = (
     }
   })
   return {
-    feed,
+    feed: feed.map((fi) => ({ ...fi, reqId: skeleton.reqId })),
     cursor: skeleton.cursor,
     timerSkele: skeleton.timerSkele,
     timerHydr: skeleton.timerHydr,
@@ -164,6 +165,7 @@ type Params = GetFeedParams & {
 
 type Skeleton = {
   items: AlgoResponseItem[]
+  reqId?: string
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
   resHeaders?: Record<string, string>
   cursor?: string
@@ -254,10 +256,9 @@ const skeletonFromFeedGen = async (
   const { feed: feedSkele, ...skele } = skeleton
   const feedItems = feedSkele.slice(0, params.limit).map((item) => ({
     post: { uri: item.post },
-    repost:
-      typeof item.reason?.repost === 'string'
-        ? { uri: item.reason.repost }
-        : undefined,
+    repost: isSkeletonReasonRepost(item.reason)
+      ? { uri: item.reason.repost }
+      : undefined,
     feedContext: item.feedContext,
   }))
 
@@ -268,6 +269,7 @@ export type AlgoResponse = {
   feedItems: AlgoResponseItem[]
   resHeaders?: Record<string, string>
   cursor?: string
+  reqId?: string
 }
 
 export type AlgoResponseItem = FeedItem & {

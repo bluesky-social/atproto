@@ -2,8 +2,7 @@ import {
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
 } from '@atproto/oauth-types'
-
-import { ClientAuth } from '../client/client-auth.js'
+import { ClientAuth, ClientAuthLegacy } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { Sub } from '../oidc/sub.js'
@@ -24,10 +23,10 @@ export type TokenData = {
   updatedAt: Date
   expiresAt: Date
   clientId: ClientId
-  clientAuth: ClientAuth
+  clientAuth: ClientAuth | ClientAuthLegacy
   deviceId: DeviceId | null
   sub: Sub
   parameters: OAuthAuthorizationRequestParameters
-  details: OAuthAuthorizationDetails | null
+  details?: null // Legacy field, not used
   code: Code | null
 }

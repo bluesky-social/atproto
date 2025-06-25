@@ -3,7 +3,6 @@ import {
   SimpleStoreMemory,
   SimpleStoreMemoryOptions,
 } from '@atproto-labs/simple-store-memory'
-
 import { DidCache } from './did-cache.js'
 
 const DEFAULT_TTL = 3600 * 1000 // 1 hour

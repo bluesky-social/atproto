@@ -126,6 +126,8 @@ import {
   GetMutesResponse,
   GetNewUserCountForRangeRequest,
   GetNewUserCountForRangeResponse,
+  GetNotificationPreferencesRequest,
+  GetNotificationPreferencesResponse,
   GetNotificationSeenRequest,
   GetNotificationSeenResponse,
   GetNotificationsRequest,
@@ -134,8 +136,6 @@ import {
   GetPostgateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
-  GetPostReplyCountsRequest,
-  GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
   GetQuotesBySubjectSortedRequest,
@@ -154,6 +154,8 @@ import {
   GetStarterPackCountsResponse,
   GetStarterPackRecordsRequest,
   GetStarterPackRecordsResponse,
+  GetStatusRecordsRequest,
+  GetStatusRecordsResponse,
   GetSuggestedEntitiesRequest,
   GetSuggestedEntitiesResponse,
   GetSuggestedFeedsRequest,
@@ -168,6 +170,12 @@ import {
   GetTimelineResponse,
   GetUnreadNotificationCountRequest,
   GetUnreadNotificationCountResponse,
+  GetVerificationRecordsRequest,
+  GetVerificationRecordsResponse,
+  GetVerificationsIssuedRequest,
+  GetVerificationsIssuedResponse,
+  GetVerificationsReceivedRequest,
+  GetVerificationsReceivedResponse,
   PingRequest,
   PingResponse,
   SearchActorsRequest,
@@ -300,6 +308,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetStatusRecords
+     */
+    getStatusRecords: {
+      name: 'GetStatusRecords',
+      I: GetStatusRecordsRequest,
+      O: GetStatusRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.GetRepostRecords
      */
     getRepostRecords: {
@@ -371,6 +388,35 @@ export const Service = {
       name: 'GetFollows',
       I: GetFollowsRequest,
       O: GetFollowsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Verifications
+     *
+     * @generated from rpc bsky.Service.GetVerificationRecords
+     */
+    getVerificationRecords: {
+      name: 'GetVerificationRecords',
+      I: GetVerificationRecordsRequest,
+      O: GetVerificationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVerificationsIssued
+     */
+    getVerificationsIssued: {
+      name: 'GetVerificationsIssued',
+      I: GetVerificationsIssuedRequest,
+      O: GetVerificationsIssuedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetVerificationsReceived
+     */
+    getVerificationsReceived: {
+      name: 'GetVerificationsReceived',
+      I: GetVerificationsReceivedRequest,
+      O: GetVerificationsReceivedResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -688,6 +734,15 @@ export const Service = {
     /**
      * Notifications
      *
+     * @generated from rpc bsky.Service.GetNotificationPreferences
+     */
+    getNotificationPreferences: {
+      name: 'GetNotificationPreferences',
+      I: GetNotificationPreferencesRequest,
+      O: GetNotificationPreferencesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.GetNotifications
      */
     getNotifications: {
@@ -848,17 +903,6 @@ export const Service = {
       name: 'GetSuggestedEntities',
       I: GetSuggestedEntitiesRequest,
       O: GetSuggestedEntitiesResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * Posts
-     *
-     * @generated from rpc bsky.Service.GetPostReplyCounts
-     */
-    getPostReplyCounts: {
-      name: 'GetPostReplyCounts',
-      I: GetPostReplyCountsRequest,
-      O: GetPostReplyCountsResponse,
       kind: MethodKind.Unary,
     },
     /**

@@ -1,0 +1,4 @@
+packages/**/src/lexicon/** linguist-generated
+packages/api/src/client/** linguist-generated
+packages/bsky/src/proto/** linguist-generated
+packages/bsync/src/proto/** linguist-generated

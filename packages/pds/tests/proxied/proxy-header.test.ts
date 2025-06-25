@@ -1,12 +1,12 @@
-import { Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { verifyJwt } from '@atproto/xrpc-server'
-import * as plc from '@did-plc/lib'
-import express from 'express'
 import assert from 'node:assert'
 import { once } from 'node:events'
 import http from 'node:http'
 import { AddressInfo } from 'node:net'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+import { Keypair } from '@atproto/crypto'
+import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
+import { verifyJwt } from '@atproto/xrpc-server'
 import { parseProxyHeader } from '../../src/pipethrough'
 
 describe('proxy header', () => {

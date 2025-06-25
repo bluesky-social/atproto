@@ -17,7 +17,12 @@
         "lastUpdatedBy": { "type": "string" },
         "role": {
           "type": "string",
-          "knownValues": ["#roleAdmin", "#roleModerator", "#roleTriage"]
+          "knownValues": [
+            "#roleAdmin",
+            "#roleModerator",
+            "#roleTriage",
+            "#roleVerifier"
+          ]
         }
       }
     },
@@ -32,6 +37,10 @@
     "roleTriage": {
       "type": "token",
       "description": "Triage role. Mostly intended for monitoring and escalating issues."
+    },
+    "roleVerifier": {
+      "type": "token",
+      "description": "Verifier role. Only allowed to issue verifications."
     }
   }
 }
