@@ -10336,6 +10336,10 @@ export const schemaDict = {
               appId: {
                 type: 'string',
               },
+              ageRestricted: {
+                type: 'boolean',
+                description: 'Set to true when the actor is age restricted',
+              },
             },
           },
         },
