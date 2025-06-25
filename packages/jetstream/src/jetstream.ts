@@ -1,104 +1,61 @@
-import { jsonToLex, LexiconDoc, Lexicons } from '@atproto/lexicon'
-import { DuplexOptions } from 'node:stream'
 import { createWebSocketStream, WebSocket } from 'ws'
 
 import { getDecoder } from './decoder.js'
 import { buildUrl, EndpointOptions } from './endpoint.js'
-import {
-  AccountEvent,
-  CommitEvent,
-  CommitOperation,
-  IdentityEvent,
-  isAccountEvent,
-  isCommitEvent,
-  isIdentityEvent,
-  UnknownEvent,
-} from './events.js'
-import { InferRecord, RecordId } from './lexicon-infer.js'
+import { wait } from './lib/util.js'
+import { isKnownEvent, KnownEvent, UnknownEvent } from './types/events.js'
 
-export type JetstreamOptions<
-  Schemas extends readonly LexiconDoc[],
-  Collections extends RecordId<Schemas> | undefined,
-> = DuplexOptions &
-  Omit<EndpointOptions, 'wantedCollections'> & {
-    schemas: Schemas
-    /**
-     * @default all the record collections defined in the schemas
-     */
-    wantedCollections?: Collections[]
-  }
-
-export function jetstream<
-  const Schemas extends readonly LexiconDoc[],
-  const Collections extends
-    | InferRecord<Schemas>['$type']
-    | undefined = undefined,
->(
-  options: JetstreamOptions<Schemas, Collections>,
-): AsyncGenerator<
-  AccountEvent | IdentityEvent | CommitEvent<InferRecord<Schemas>, Collections>
->
+export type JetstreamOptions = EndpointOptions & {
+  retry?: (failedAttempts: number, cause: unknown) => false | number
+}
 
 export async function* jetstream({
-  schemas,
+  // Retry 6 times, with exponential backoff (1s, 2s, 4s, 8s, 16s, 30s ~= 61s total)
+  retry = (attempt) => attempt <= 6 && 1e3 * Math.min(30, 2 ** (attempt - 1)),
+
+  // Endpoint options
   compress = true,
-  wantedCollections,
-  ...options
-}: DuplexOptions &
-  EndpointOptions & {
-    schemas: readonly LexiconDoc[]
-  }): AsyncGenerator<AccountEvent | IdentityEvent | CommitEvent> {
-  const lexicons = new Lexicons(schemas)
-
-  // Make sure we have a way to validate the wanted records
-  if (wantedCollections) {
-    for (const collection of wantedCollections) {
-      lexicons.getDefOrThrow(collection, ['record'])
-    }
-  }
-
+  cursor = undefined,
+  wantedCollections = undefined,
+  endpoint = undefined,
+  wantedDids = undefined,
+}: JetstreamOptions): AsyncGenerator<KnownEvent> {
   const decoder = compress ? await getDecoder() : null
 
-  // @TODO: add error handling & retries
+  let failedAttempts = 0
 
-  const url = buildUrl({ ...options, compress, wantedCollections })
-  const ws = new WebSocket(url)
+  while (true) {
+    try {
+      const url = buildUrl({
+        compress,
+        cursor,
+        wantedCollections,
+        wantedDids,
+        endpoint,
+      })
 
-  for await (const bytes of createWebSocketStream(ws, {
-    ...options,
-    readableObjectMode: true,
-  })) {
-    const decoded = decoder ? await decoder.decode(bytes) : bytes
+      const ws = new WebSocket(url)
 
-    const event = JSON.parse(decoded.toString()) as UnknownEvent
+      const stream = createWebSocketStream(ws, { readableObjectMode: true })
 
-    if (isAccountEvent(event)) {
-      yield event
-    } else if (isIdentityEvent(event)) {
-      yield event
-    } else if (isCommitEvent(event)) {
-      const { commit } = event
+      for await (const bytes of stream) {
+        const decoded = decoder ? await decoder.decode(bytes) : bytes
 
-      switch (commit.operation) {
-        case CommitOperation.Delete:
-          yield event
-          break
-        case CommitOperation.Create:
-        case CommitOperation.Update:
-          try {
-            const parsed = jsonToLex(commit.record)
-            const result = lexicons.validate(commit.collection, parsed)
-            commit.recordError = result.success ? null : result.error
-            yield event
-          } catch (error) {
-            commit.recordError =
-              error instanceof Error ? error : new Error(String(error))
-            yield event
-          }
-          break
+        const event = JSON.parse(decoded.toString()) as UnknownEvent
+
+        if (isKnownEvent(event)) yield event
+        // Ignore unknown or malformed event
+
+        failedAttempts = 0
+
+        cursor = event.time_us + 1
       }
-    } else {
-      throw new Error(`Unknown event type: ${event}`)
+    } catch (cause: unknown) {
+      failedAttempts++
+
+      const shouldRetry = retry(failedAttempts, cause)
+      if (shouldRetry === false) throw cause
+      if (shouldRetry > 0) await wait(shouldRetry)
     }
   }
 }

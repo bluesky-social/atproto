@@ -29,7 +29,6 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@atproto/lexicon": "workspace:*",
     "@toondepauw/node-zstd": "^1.2.0",
     "ws": "^8.18.0"
   },
