@@ -732,9 +732,6 @@ importers:
 
   packages/jetstream:
     dependencies:
-      '@atproto/lexicon':
-        specifier: workspace:*
-        version: link:../lexicon
       '@toondepauw/node-zstd':
         specifier: ^1.2.0
         version: 1.2.0
@@ -750,7 +747,7 @@ importers:
         version: 8.5.4
       typescript:
         specifier: ^5.6.3
-        version: 5.6.3
+        version: 5.8.3
 
   packages/lex-cli:
     dependencies:

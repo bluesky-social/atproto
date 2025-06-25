@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto'
+
 const ENDPOINTS = [
   'wss://jetstream1.us-east.bsky.network/subscribe',
   'wss://jetstream2.us-east.bsky.network/subscribe',
@@ -32,7 +34,7 @@ export type EndpointOptions = {
 }
 
 export function buildUrl({
-  endpoint = ENDPOINTS[(Math.random() * ENDPOINTS.length) | 0],
+  endpoint = ENDPOINTS[randomInt(0, ENDPOINTS.length)],
   wantedDids,
   wantedCollections,
   cursor,

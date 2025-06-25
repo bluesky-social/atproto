@@ -1,38 +1,46 @@
-import { createWebSocketStream, WebSocket } from 'ws'
-
+import { WebSocket, createWebSocketStream } from 'ws'
 import { getDecoder } from './decoder.js'
-import { buildUrl, EndpointOptions } from './endpoint.js'
-import { wait } from './lib/util.js'
-import { isKnownEvent, KnownEvent, UnknownEvent } from './types/events.js'
+import { EndpointOptions, buildUrl } from './endpoint.js'
+import { KnownEvent, UnknownEvent, isKnownEvent } from './types/events.js'
+import { wait } from './util.js'
+
+/**
+ * Return `false` to stop retrying, or a number of milliseconds (>= 0) to wait
+ * before retrying.
+ */
+export type RetryStrategy = (attempt: number, cause: unknown) => false | number
 
 export type JetstreamOptions = EndpointOptions & {
-  retry?: (failedAttempts: number, cause: unknown) => false | number
+  retry?: RetryStrategy
+  allowUnknownEvents?: boolean
 }
 
+export function jetstream(
+  options: JetstreamOptions & { allowUnknownEvents: true },
+): AsyncGenerator<KnownEvent | UnknownEvent>
+
+export function jetstream(
+  options?: JetstreamOptions,
+): AsyncGenerator<KnownEvent>
+
 export async function* jetstream({
-  // Retry 6 times, with exponential backoff (1s, 2s, 4s, 8s, 16s, 30s ~= 61s total)
   retry = (attempt) => attempt <= 6 && 1e3 * Math.min(30, 2 ** (attempt - 1)),
+  allowUnknownEvents = false,
 
   // Endpoint options
-  compress = true,
-  cursor = undefined,
-  wantedCollections = undefined,
-  endpoint = undefined,
-  wantedDids = undefined,
-}: JetstreamOptions): AsyncGenerator<KnownEvent> {
+  ...options
+}: JetstreamOptions = {}) {
+  // Use compression by default
+  const { compress = true } = options
   const decoder = compress ? await getDecoder() : null
 
+  // Retry
+  let { cursor } = options
   let failedAttempts = 0
 
   while (true) {
     try {
-      const url = buildUrl({
-        compress,
-        cursor,
-        wantedCollections,
-        wantedDids,
-        endpoint,
-      })
+      const url = buildUrl({ ...options, compress, cursor })
 
       const ws = new WebSocket(url)
 
@@ -43,8 +51,8 @@ export async function* jetstream({
 
         const event = JSON.parse(decoded.toString()) as UnknownEvent
 
-        if (isKnownEvent(event)) yield event
-        // Ignore unknown or malformed event
+        if (allowUnknownEvents) yield event
+        else if (isKnownEvent(event)) yield event
 
         failedAttempts = 0
 
@@ -53,9 +61,9 @@ export async function* jetstream({
     } catch (cause: unknown) {
       failedAttempts++
 
-      const shouldRetry = retry(failedAttempts, cause)
-      if (shouldRetry === false) throw cause
-      if (shouldRetry > 0) await wait(shouldRetry)
+      const delay = retry(failedAttempts, cause)
+      if (delay === false) throw cause
+      if (delay > 0) await wait(delay)
     }
   }
 }
