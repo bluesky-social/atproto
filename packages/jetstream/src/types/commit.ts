@@ -30,3 +30,14 @@ export type CommitDelete = CommitBase & {
   collection: string
   operation: CommitOperation.Delete
 }
+
+export function isCommit(value: unknown) {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    'operation' in value &&
+    (value.operation === CommitOperation.Update ||
+      value.operation === CommitOperation.Create ||
+      value.operation === CommitOperation.Delete)
+  )
+}

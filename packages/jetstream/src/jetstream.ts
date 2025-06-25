@@ -1,8 +1,8 @@
 import { WebSocket, createWebSocketStream } from 'ws'
-import { getDecoder } from './decoder.js'
-import { EndpointOptions, buildUrl } from './endpoint.js'
-import { KnownEvent, UnknownEvent, isKnownEvent } from './types/events.js'
-import { wait } from './util.js'
+import { getDecoder } from './lib/decoder.js'
+import { EndpointOptions, buildUrl } from './lib/endpoint.js'
+import { wait } from './lib/util.js'
+import { KnownEvent, UnknownEvent, isKnownEvent } from './types/event.js'
 
 /**
  * Return `false` to stop retrying, or a number of milliseconds (>= 0) to wait
@@ -39,13 +39,11 @@ export async function* jetstream({
   let failedAttempts = 0
 
   while (true) {
+    const url = buildUrl({ ...options, compress, cursor })
+    const ws = new WebSocket(url)
+    const stream = createWebSocketStream(ws, { readableObjectMode: true })
+
     try {
-      const url = buildUrl({ ...options, compress, cursor })
-
-      const ws = new WebSocket(url)
-
-      const stream = createWebSocketStream(ws, { readableObjectMode: true })
-
       for await (const bytes of stream) {
         const decoded = decoder ? await decoder.decode(bytes) : bytes
 

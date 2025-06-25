@@ -1,10 +1,5 @@
 import { Account } from './account.js'
-import {
-  CommitCreate,
-  CommitDelete,
-  CommitOperation,
-  CommitUpdate,
-} from './commit.js'
+import { CommitCreate, CommitDelete, CommitUpdate, isCommit } from './commit.js'
 import { Identity } from './identity.js'
 
 export type UnknownEvent = {
@@ -50,12 +45,7 @@ export type CommitEvent = UnknownEvent & {
 }
 
 export function isCommitEvent(event: UnknownEvent): event is CommitEvent {
-  return (
-    event['kind'] === EventKind.Commit &&
-    (event['operation'] === CommitOperation.Update ||
-      event['operation'] === CommitOperation.Create ||
-      event['operation'] === CommitOperation.Delete)
-  )
+  return event['kind'] === EventKind.Commit && isCommit(event['commit'])
 }
 
 export type KnownEvent = AccountEvent | IdentityEvent | CommitEvent
