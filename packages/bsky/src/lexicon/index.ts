@@ -73,8 +73,6 @@ import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
-import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
-import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead.js'
 import * as ComAtprotoSyncGetHostStatus from './types/com/atproto/sync/getHostStatus.js'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit.js'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord.js'
@@ -1047,28 +1045,6 @@ export class ComAtprotoSyncNS {
     >,
   ) {
     const nsid = 'com.atproto.sync.getBlocks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getCheckout<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoSyncGetCheckout.Handler<ExtractAuth<AV>>,
-      ComAtprotoSyncGetCheckout.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.sync.getCheckout' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getHead<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoSyncGetHead.Handler<ExtractAuth<AV>>,
-      ComAtprotoSyncGetHead.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.sync.getHead' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
