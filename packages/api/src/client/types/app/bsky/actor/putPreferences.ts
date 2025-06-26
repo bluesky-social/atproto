@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.actor.putPreferences'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   preferences: AppBskyActorDefs.Preferences

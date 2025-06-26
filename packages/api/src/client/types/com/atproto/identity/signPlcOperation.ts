@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.identity.signPlcOperation'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** A token received through com.atproto.identity.requestPlcOperationSignature */
