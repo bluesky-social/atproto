@@ -4,6 +4,7 @@ import { Member } from '../db/schema/member'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ids } from '../lexicon/lexicons'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
+import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
@@ -18,7 +19,6 @@ import {
   ROLEVERIFIER,
 } from '../lexicon/types/tools/ozone/team/defs'
 import { ModerationSubjectStatusRow } from '../mod-service/types'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 
 export const getPdsAccountInfos = async (
   ctx: AppContext,

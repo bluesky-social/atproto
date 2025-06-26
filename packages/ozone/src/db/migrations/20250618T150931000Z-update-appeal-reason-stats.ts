@@ -1,6 +1,6 @@
 import { Kysely, sql } from 'kysely'
-import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 import { OZONE_APPEAL_REASON_TYPE } from '../../api/util'
+import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 import { DatabaseSchemaType } from '../schema'
 import * as modEvent from '../schema/moderation_event'
 import * as recordEventsStats from '../schema/record_events_stats'

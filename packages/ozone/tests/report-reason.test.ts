@@ -1,11 +1,11 @@
+import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  REASONRUDE,
+  REASONSPAM,
+} from '../src/lexicon/types/com/atproto/moderation/defs'
 import { ModerationServiceProfile } from '../src/mod-service/profile'
 import { forSnapshot } from './_util'
-import AtpAgent from '@atproto/api'
-import {
-  REASONSPAM,
-  REASONRUDE,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('report reason', () => {
   let network: TestNetwork
