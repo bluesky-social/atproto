@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { NamespaceAppBskyNotificationDefsPreferences } from '../../dist/stash'
+import { Namespaces } from '../../dist/stash'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import {
@@ -961,7 +961,11 @@ describe('notification views', () => {
           .selectFrom('private_data')
           .selectAll()
           .where('actorDid', '=', actorDid)
-          .where('namespace', '=', NamespaceAppBskyNotificationDefsPreferences)
+          .where(
+            'namespace',
+            '=',
+            Namespaces.AppBskyNotificationDefsPreferences,
+          )
           .where('key', '=', 'self')
           .executeTakeFirst()
         if (dbResult === undefined) {
@@ -969,14 +973,14 @@ describe('notification views', () => {
         } else {
           expect(dbResult).toStrictEqual({
             actorDid: actorDid,
-            namespace: NamespaceAppBskyNotificationDefsPreferences,
+            namespace: Namespaces.AppBskyNotificationDefsPreferences,
             key: 'self',
             indexedAt: expect.any(String),
             payload: expect.anything(), // Better to compare payload parsed.
             updatedAt: expect.any(String),
           })
           expect(JSON.parse(dbResult.payload)).toStrictEqual({
-            $type: NamespaceAppBskyNotificationDefsPreferences,
+            $type: Namespaces.AppBskyNotificationDefsPreferences,
             ...expectedDb,
           })
         }
@@ -1057,19 +1061,23 @@ describe('notification views', () => {
           .selectFrom('private_data')
           .selectAll()
           .where('actorDid', '=', actorDid)
-          .where('namespace', '=', NamespaceAppBskyNotificationDefsPreferences)
+          .where(
+            'namespace',
+            '=',
+            Namespaces.AppBskyNotificationDefsPreferences,
+          )
           .where('key', '=', 'self')
           .executeTakeFirstOrThrow()
         expect(dbResult).toStrictEqual({
           actorDid: actorDid,
-          namespace: NamespaceAppBskyNotificationDefsPreferences,
+          namespace: Namespaces.AppBskyNotificationDefsPreferences,
           key: 'self',
           indexedAt: expect.any(String),
           payload: expect.anything(), // Better to compare payload parsed.
           updatedAt: expect.any(String),
         })
         expect(JSON.parse(dbResult.payload)).toStrictEqual({
-          $type: NamespaceAppBskyNotificationDefsPreferences,
+          $type: Namespaces.AppBskyNotificationDefsPreferences,
           ...expected,
         })
       }

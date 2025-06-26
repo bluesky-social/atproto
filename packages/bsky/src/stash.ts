@@ -4,13 +4,14 @@ import { lexicons } from './lexicon/lexicons'
 import { Preferences } from './lexicon/types/app/bsky/notification/defs'
 import { Method } from './proto/bsync_pb'
 
-type Namespace<T extends { $type?: string }> = Exclude<T['$type'], undefined>
+type PickNSID<T extends { $type?: string }> = Exclude<T['$type'], undefined>
 
-export const NamespaceAppBskyNotificationDefsPreferences: Namespace<Preferences> =
-  'app.bsky.notification.defs#preferences'
+export const Namespaces = {
+  AppBskyNotificationDefsPreferences:
+    'app.bsky.notification.defs#preferences' satisfies PickNSID<Preferences>,
+}
 
-// Union of all accepted stash namespaces.
-export type StashNamespace = typeof NamespaceAppBskyNotificationDefsPreferences
+export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]
 
 export const createStashClient = (bsyncClient: BsyncClient): StashClient => {
   return new StashClient(bsyncClient)
@@ -35,7 +36,7 @@ export class StashClient {
     return this.putOperation(Method.DELETE, { ...input, payload: undefined })
   }
 
-  private validateLexicon(namespace: StashNamespace, payload: LexValue) {
+  private validateLexicon(namespace: Namespace, payload: LexValue) {
     const result = lexicons.validate(namespace, payload)
     if (!result.success) {
       throw result.error
@@ -63,14 +64,14 @@ export class StashClient {
 
 type PutOperationInput = {
   actorDid: string
-  namespace: StashNamespace
+  namespace: Namespace
   key: string
   payload: LexValue | undefined
 }
 
 type CreateInput = {
   actorDid: string
-  namespace: StashNamespace
+  namespace: Namespace
   key: string
   payload: LexValue
 }
@@ -79,6 +80,6 @@ type UpdateInput = CreateInput
 
 type DeleteInput = {
   actorDid: string
-  namespace: StashNamespace
+  namespace: Namespace
   key: string
 }
