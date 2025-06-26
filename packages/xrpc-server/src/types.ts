@@ -67,21 +67,28 @@ export const handlerSuccess = z.object({
 
 export type HandlerSuccess = z.infer<typeof handlerSuccess>
 
-export type HandlerPipeThroughBuffer = {
-  encoding: string
-  buffer: Buffer
-  headers?: Headers
-}
+export const handlerPipeThroughBuffer = z.object({
+  encoding: z.string(),
+  buffer: z.instanceof(Buffer),
+  headers: headersSchema.optional(),
+})
 
-export type HandlerPipeThroughStream = {
-  encoding: string
-  stream: Readable
-  headers?: Headers
-}
+export type HandlerPipeThroughBuffer = z.infer<typeof handlerPipeThroughBuffer>
 
-export type HandlerPipeThrough =
-  | HandlerPipeThroughBuffer
-  | HandlerPipeThroughStream
+export const handlerPipeThroughStream = z.object({
+  encoding: z.string(),
+  stream: z.instanceof(Readable),
+  headers: headersSchema.optional(),
+})
+
+export type HandlerPipeThroughStream = z.infer<typeof handlerPipeThroughStream>
+
+export const handlerPipeThrough = z.union([
+  handlerPipeThroughBuffer,
+  handlerPipeThroughStream,
+])
+
+export type HandlerPipeThrough = z.infer<typeof handlerPipeThrough>
 
 export type AuthVerifierOutput = AuthResult | ErrorResult
 

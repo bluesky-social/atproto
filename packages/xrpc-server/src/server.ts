@@ -309,7 +309,7 @@ export class Server {
       try {
         // validate request
         const params = paramsVerifier(req)
-        const input = inputVerifier ? inputVerifier(req) : undefined
+        const input = inputVerifier?.(req)
         // authenticate request
         const auth = (
           authVerifier
