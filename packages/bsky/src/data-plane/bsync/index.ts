@@ -13,6 +13,7 @@ import {
   MuteOperation_Type,
   PutOperationRequest,
 } from '../../proto/bsync_pb'
+import { Namespaces } from '../../stash'
 import { Database } from '../server/db'
 
 export class MockBsync {
@@ -154,7 +155,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       }
 
       const now = new Date().toISOString()
-      if (namespace === 'app.bsky.notification.defs#preferences') {
+      if (namespace === Namespaces.AppBskyNotificationDefsPreferences) {
         await handleNotificationPreferencesOperation(db, req, now)
       } else {
         await handleGenericOperation(db, req, now)

@@ -15,6 +15,7 @@ import {
   NotificationPreference,
   NotificationPreferences,
 } from '../../../proto/bsky_pb'
+import { Namespaces } from '../../../stash'
 import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -24,7 +25,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('private_data')
       .selectAll()
       .where('actorDid', 'in', dids)
-      .where('namespace', '=', 'app.bsky.notification.defs#preferences')
+      .where('namespace', '=', Namespaces.AppBskyNotificationDefsPreferences)
       .where('key', '=', 'self')
       .execute()
 
