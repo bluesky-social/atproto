@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
@@ -85,42 +86,29 @@ const LEXICONS: LexiconDoc[] = [
 describe('Procedures', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method('io.example.pingOne', (ctx: { params: xrpcServer.Params }) => {
+  server.method('io.example.pingOne', (ctx) => {
     return { encoding: 'text/plain', body: ctx.params.message }
   })
-  server.method(
-    'io.example.pingTwo',
-    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
-      return { encoding: 'text/plain', body: ctx.input?.body }
-    },
-  )
-  server.method(
-    'io.example.pingThree',
-    async (ctx: {
-      params: xrpcServer.Params
-      input?: xrpcServer.HandlerInput
-    }) => {
-      if (!(ctx.input?.body instanceof Readable))
-        throw new Error('Input not readable')
-      const buffers: Buffer[] = []
-      for await (const data of ctx.input.body) {
-        buffers.push(data)
-      }
-      return {
-        encoding: 'application/octet-stream',
-        body: Buffer.concat(buffers),
-      }
-    },
-  )
-  server.method(
-    'io.example.pingFour',
-    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
-      return {
-        encoding: 'application/json',
-        body: { message: ctx.input?.body?.message },
-      }
-    },
-  )
+  server.method('io.example.pingTwo', (ctx) => {
+    return { encoding: 'text/plain', body: ctx.input?.body }
+  })
+  server.method('io.example.pingThree', async (ctx) => {
+    assert(ctx.input?.body instanceof Readable, 'Input not readable')
+    const buffers: Buffer[] = []
+    for await (const data of ctx.input.body) {
+      buffers.push(data)
+    }
+    return {
+      encoding: 'application/octet-stream',
+      body: Buffer.concat(buffers),
+    }
+  })
+  server.method('io.example.pingFour', (ctx) => {
+    return {
+      encoding: 'application/json',
+      body: { message: ctx.input?.body?.['message'] },
+    }
+  })
 
   let client: XrpcClient
   beforeAll(async () => {
