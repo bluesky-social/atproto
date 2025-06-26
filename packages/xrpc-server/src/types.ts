@@ -85,7 +85,7 @@ export type HandlerPipeThrough =
 
 export type AuthVerifierOutput = AuthResult | ErrorResult
 
-export type Auth = void | AuthVerifierOutput
+export type Auth = void | AuthResult
 export type Input = void | HandlerInput
 export type Output = void | HandlerSuccess | ErrorResult
 
