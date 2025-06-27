@@ -8,6 +8,9 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
           "labeler": true,
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -53,6 +56,9 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
           "labeler": true,
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -86,6 +92,9 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
           "labeler": true,
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -139,6 +148,9 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
           "labeler": true,
         },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -179,6 +191,9 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
           "labeler": true,
         },
         "did": "user(0)",

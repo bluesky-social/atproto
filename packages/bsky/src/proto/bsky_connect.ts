@@ -22,6 +22,10 @@ import {
   DeleteActorMuteResponse,
   DeleteThreadMuteRequest,
   DeleteThreadMuteResponse,
+  GetActivitySubscriptionDidsRequest,
+  GetActivitySubscriptionDidsResponse,
+  GetActivitySubscriptionsByActorAndSubjectsRequest,
+  GetActivitySubscriptionsByActorAndSubjectsResponse,
   GetActorChatDeclarationRecordsRequest,
   GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
@@ -126,6 +130,8 @@ import {
   GetMutesResponse,
   GetNewUserCountForRangeRequest,
   GetNewUserCountForRangeResponse,
+  GetNotificationDeclarationRecordsRequest,
+  GetNotificationDeclarationRecordsResponse,
   GetNotificationPreferencesRequest,
   GetNotificationPreferencesResponse,
   GetNotificationSeenRequest,
@@ -305,6 +311,15 @@ export const Service = {
       name: 'GetActorChatDeclarationRecords',
       I: GetActorChatDeclarationRecordsRequest,
       O: GetActorChatDeclarationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetNotificationDeclarationRecords
+     */
+    getNotificationDeclarationRecords: {
+      name: 'GetNotificationDeclarationRecords',
+      I: GetNotificationDeclarationRecordsRequest,
+      O: GetNotificationDeclarationRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -767,6 +782,24 @@ export const Service = {
       name: 'GetUnreadNotificationCount',
       I: GetUnreadNotificationCountRequest,
       O: GetUnreadNotificationCountResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetActivitySubscriptionDids
+     */
+    getActivitySubscriptionDids: {
+      name: 'GetActivitySubscriptionDids',
+      I: GetActivitySubscriptionDidsRequest,
+      O: GetActivitySubscriptionDidsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetActivitySubscriptionsByActorAndSubjects
+     */
+    getActivitySubscriptionsByActorAndSubjects: {
+      name: 'GetActivitySubscriptionsByActorAndSubjects',
+      I: GetActivitySubscriptionsByActorAndSubjectsRequest,
+      O: GetActivitySubscriptionsByActorAndSubjectsResponse,
       kind: MethodKind.Unary,
     },
     /**

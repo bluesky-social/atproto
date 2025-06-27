@@ -4790,10 +4790,14 @@ export const schemaDict = {
             format: 'at-uri',
           },
           knownFollowers: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
           },
           activitySubscription: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
