@@ -1,31 +1,24 @@
-import { Un$Typed } from '@atproto/api'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceState } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import {
-  GetAgeAssuranceStateResponse,
-  AgeAssuranceStatus,
-} from '../../../../proto/bsky_pb'
+import { ActorInfo } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getAgeAssuranceState({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth }) => {
       const viewer = auth.credentials.iss
-      let state = await getAgeVerificationState(ctx, viewer)
-
-      if (!state) {
-        state = {
-          // TODO
-          updatedAt: new Date().toISOString(),
-          status: 'unknown',
-        }
-      }
+      const actorInfo = await getAgeVerificationState(ctx, viewer)
 
       return {
         encoding: 'application/json',
-        body: state,
+        body: {
+          lastInitiatedAt:
+            actorInfo.ageAssuranceStatus?.lastInitiatedAt
+              ?.toDate()
+              .toISOString() ?? undefined,
+          status: actorInfo.ageAssuranceStatus?.status ?? 'unknown',
+        },
       }
     },
   })
@@ -34,13 +27,15 @@ export default function (server: Server, ctx: AppContext) {
 const getAgeVerificationState = async (
   ctx: AppContext,
   actorDid: string,
-): Promise<Un$Typed<AgeAssuranceState>> => {
-  let res: GetAgeAssuranceStateResponse
+): Promise<ActorInfo> => {
   try {
-    // TODO gonna be a param on getActors
-    res = await ctx.dataplane.getAgeAssuranceState({
-      did: actorDid,
+    const res = await ctx.dataplane.getActors({
+      dids: [actorDid],
+      returnAgeAssuranceForDids: [actorDid],
+      skipCacheForDids: [actorDid],
     })
+
+    return res.actors[0]
   } catch (err) {
     console.error(err)
     throw new UpstreamFailureError(
@@ -48,35 +43,5 @@ const getAgeVerificationState = async (
       'GetAgeAssuranceStateFailed',
       { cause: err },
     )
-  }
-
-  return protobufToLex(res)
-}
-
-function protobufToLex(
-  proto: GetAgeAssuranceStateResponse,
-): Un$Typed<AgeAssuranceState> {
-  let status: AgeAssuranceState['status'] = 'unverified'
-
-  switch (proto.status) {
-    case AgeAssuranceStatus.UNKNOWN:
-      status = 'unknown'
-      break
-    case AgeAssuranceStatus.PENDING:
-      status = 'pending'
-      break
-    case AgeAssuranceStatus.ASSURED:
-      status = 'assured'
-      break
-    case AgeAssuranceStatus.FAILED:
-      // TODO no longer accurate
-      status = 'failed'
-      break
-  }
-
-  return {
-    // TODO
-    updatedAt: new Date().toISOString(),
-    status,
   }
 }

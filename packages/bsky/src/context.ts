@@ -5,6 +5,7 @@ import { Dispatcher } from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { AgeAssuranceClient } from './age-assurance'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'
@@ -41,6 +42,7 @@ export class AppContext {
       authVerifier: AuthVerifier
       featureGates: FeatureGates
       blobDispatcher: Dispatcher
+      ageAssuranceClient: AgeAssuranceClient | undefined
     },
   ) {}
 
@@ -114,6 +116,10 @@ export class AppContext {
 
   get blobDispatcher(): Dispatcher {
     return this.opts.blobDispatcher
+  }
+
+  get ageAssuranceClient(): AgeAssuranceClient | undefined {
+    return this.opts.ageAssuranceClient
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {

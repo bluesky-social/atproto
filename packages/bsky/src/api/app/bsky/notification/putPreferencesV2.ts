@@ -6,6 +6,7 @@ import { Server } from '../../../../lexicon'
 import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
 import { HandlerInput } from '../../../../lexicon/types/app/bsky/notification/putPreferencesV2'
 import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb'
+import { Namespaces } from '../../../../stash'
 import { protobufToLex } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -18,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       // Notification preferences are created automatically on the dataplane on signup, so we just update.
       await ctx.stashClient.update({
         actorDid,
-        namespace: 'app.bsky.notification.defs#preferences',
+        namespace: Namespaces.AppBskyNotificationDefsPreferences,
         key: 'self',
         payload: preferences,
       })

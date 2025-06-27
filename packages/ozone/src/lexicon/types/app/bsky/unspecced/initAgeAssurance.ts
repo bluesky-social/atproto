@@ -11,6 +11,7 @@ import {
   type OmitKey,
 } from '../../../../util'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import type * as AppBskyUnspeccedDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -25,9 +26,7 @@ export interface InputSchema {
   language: string
 }
 
-export interface OutputSchema {
-  success: boolean
-}
+export type OutputSchema = AppBskyUnspeccedDefs.AgeAssuranceState
 
 export interface HandlerInput {
   encoding: 'application/json'

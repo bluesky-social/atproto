@@ -10,6 +10,7 @@ import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { createAgeAssuranceClient } from './age-assurance'
 import API, { blobResolver, health, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
@@ -150,6 +151,10 @@ export class BskyAppView {
         })
       : undefined
 
+    const ageAssuranceClient = config.kws
+      ? createAgeAssuranceClient(config.kws)
+      : undefined
+
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
       : undefined
@@ -186,6 +191,7 @@ export class BskyAppView {
       authVerifier,
       featureGates,
       blobDispatcher,
+      ageAssuranceClient,
     })
 
     let server = createServer({

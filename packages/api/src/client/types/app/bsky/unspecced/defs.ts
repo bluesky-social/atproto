@@ -203,7 +203,7 @@ export function validateThreadItemBlocked<V>(v: V) {
 export interface AgeAssuranceState {
   $type?: 'app.bsky.unspecced.defs#ageAssuranceState'
   /** The timestamp when this state was last updated. */
-  updatedAt: string
+  lastInitiatedAt?: string
   /** The status of the age assurance process. */
   status: 'unknown' | 'pending' | 'assured' | (string & {})
 }
@@ -218,34 +218,24 @@ export function validateAgeAssuranceState<V>(v: V) {
   return validate<AgeAssuranceState & V>(v, id, hashAgeAssuranceState)
 }
 
-/** The raw payload written to secure storage. */
-export interface AgeAssuranceStatePayload {
-  $type?: 'app.bsky.unspecced.defs#ageAssuranceStatePayload'
+/** Object used to store age assurance data in stash. */
+export interface AgeAssuranceEvent {
+  $type?: 'app.bsky.unspecced.defs#ageAssuranceEvent'
   /** The date and time of this write operation. */
   timestamp: string
   source: 'user' | 'admin' | (string & {})
   /** The status of the age assurance process. */
-  status:
-    | 'unknown'
-    | 'pending'
-    | 'assured'
-    | 'bypass'
-    | 'failed'
-    | (string & {})
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
   /** The unique identifier for this instance of the age assurance flow, in UUID format. */
   attemptId?: string
 }
 
-const hashAgeAssuranceStatePayload = 'ageAssuranceStatePayload'
+const hashAgeAssuranceEvent = 'ageAssuranceEvent'
 
-export function isAgeAssuranceStatePayload<V>(v: V) {
-  return is$typed(v, id, hashAgeAssuranceStatePayload)
+export function isAgeAssuranceEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceEvent)
 }
 
-export function validateAgeAssuranceStatePayload<V>(v: V) {
-  return validate<AgeAssuranceStatePayload & V>(
-    v,
-    id,
-    hashAgeAssuranceStatePayload,
-  )
+export function validateAgeAssuranceEvent<V>(v: V) {
+  return validate<AgeAssuranceEvent & V>(v, id, hashAgeAssuranceEvent)
 }

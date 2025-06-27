@@ -10,6 +10,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyUnspeccedDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -24,9 +25,7 @@ export interface InputSchema {
   language: string
 }
 
-export interface OutputSchema {
-  success: boolean
-}
+export type OutputSchema = AppBskyUnspeccedDefs.AgeAssuranceState
 
 export interface CallOptions {
   signal?: AbortSignal

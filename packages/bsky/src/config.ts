@@ -6,6 +6,16 @@ type LiveNowConfig = {
   domains: string[]
 }[]
 
+export interface KwsConfig {
+  clientId: string
+  apiKey: string
+  apiUrl: string
+  authUrl: string
+  signingKey: string
+  userAgent: string
+  webhookSigningKey: string
+}
+
 export interface ServerConfigValues {
   // service
   version?: string
@@ -72,6 +82,7 @@ export interface ServerConfigValues {
   proxyMaxResponseSize?: number
   proxyMaxRetries?: number
   proxyPreferCompressed?: boolean
+  kws?: KwsConfig
 }
 
 export class ServerConfig {
@@ -222,6 +233,44 @@ export class ServerConfig {
     const proxyPreferCompressed =
       process.env.BSKY_PROXY_PREFER_COMPRESSED === 'true'
 
+    let kws: KwsConfig | undefined
+    const kwsApiKey = process.env.BSKY_KWS_API_KEY
+    const kwsApiUrl = process.env.BSKY_KWS_API_URL
+    const kwsAuthUrl = process.env.BSKY_KWS_AUTH_URL
+    const kwsClientId = process.env.BSKY_KWS_CLIENT_ID
+    const kwsSigningKey = process.env.BSKY_KWS_SIGNING_KEY
+    const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
+    const kwsWebhookSigningKey = process.env.BSKY_KWS_WEBHOOK_SIGNING_KEY
+    if (
+      kwsApiKey ||
+      kwsApiUrl ||
+      kwsAuthUrl ||
+      kwsClientId ||
+      kwsSigningKey ||
+      kwsUserAgent ||
+      kwsWebhookSigningKey
+    ) {
+      assert(
+        kwsApiKey &&
+          kwsApiUrl &&
+          kwsAuthUrl &&
+          kwsClientId &&
+          kwsSigningKey &&
+          kwsUserAgent &&
+          kwsWebhookSigningKey,
+        'all KWS environment variables must be set if any are set',
+      )
+      kws = {
+        apiKey: kwsApiKey,
+        apiUrl: kwsApiUrl,
+        authUrl: kwsAuthUrl,
+        clientId: kwsClientId,
+        signingKey: kwsSigningKey,
+        userAgent: kwsUserAgent,
+        webhookSigningKey: kwsWebhookSigningKey,
+      }
+    }
+
     return new ServerConfig({
       version,
       debugMode,
@@ -279,6 +328,7 @@ export class ServerConfig {
       proxyMaxResponseSize,
       proxyMaxRetries,
       proxyPreferCompressed,
+      kws,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -512,6 +562,10 @@ export class ServerConfig {
 
   get proxyPreferCompressed(): boolean {
     return this.cfg.proxyPreferCompressed ?? true
+  }
+
+  get kws() {
+    return this.cfg.kws
   }
 }
 

@@ -10649,9 +10649,9 @@ export const schemaDict = {
         type: 'object',
         description:
           'The computed state of the age assurance process, returned to the user in question on certain authenticated requests.',
-        required: ['updatedAt', 'status'],
+        required: ['status'],
         properties: {
-          updatedAt: {
+          lastInitiatedAt: {
             type: 'string',
             format: 'datetime',
             description: 'The timestamp when this state was last updated.',
@@ -10663,9 +10663,9 @@ export const schemaDict = {
           },
         },
       },
-      ageAssuranceStatePayload: {
+      ageAssuranceEvent: {
         type: 'object',
-        description: 'The raw payload written to secure storage.',
+        description: 'Object used to store age assurance data in stash.',
         required: ['timestamp', 'source', 'status'],
         properties: {
           timestamp: {
@@ -10680,7 +10680,7 @@ export const schemaDict = {
           status: {
             type: 'string',
             description: 'The status of the age assurance process.',
-            knownValues: ['unknown', 'pending', 'assured', 'bypass', 'failed'],
+            knownValues: ['unknown', 'pending', 'assured'],
           },
           attemptId: {
             type: 'string',
@@ -11640,13 +11640,8 @@ export const schemaDict = {
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'object',
-            required: ['success'],
-            properties: {
-              success: {
-                type: 'boolean',
-              },
-            },
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
           },
         },
       },

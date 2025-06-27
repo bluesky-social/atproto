@@ -5,8 +5,11 @@ import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { TID } from '@atproto/common'
+import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
+import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
+import { httpLogger } from '../../logger'
 import { Service } from '../../proto/bsync_connect'
 import {
   Method,
@@ -15,6 +18,7 @@ import {
 } from '../../proto/bsync_pb'
 import { Namespaces } from '../../stash'
 import { Database } from '../server/db'
+import { excluded } from '../server/db/util'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -146,23 +150,27 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
 
     async putOperation(req) {
       const { actorDid, namespace, key, method, payload } = req
-      if (
-        method !== Method.CREATE &&
-        method !== Method.UPDATE &&
-        method !== Method.DELETE
-      ) {
-        throw new Error(`Unsupported method: ${method}`)
-      }
+      assert(
+        method === Method.CREATE ||
+          method === Method.UPDATE ||
+          method === Method.DELETE,
+        `Unsupported method: ${method}`,
+      )
 
       const now = new Date().toISOString()
-      if (namespace === Namespaces.AppBskyNotificationDefsPreferences) {
-        await handleNotificationPreferencesOperation(db, req, now)
-      } else if (
-        namespace === 'app.bsky.verification.defs#ageVerificationState'
-      ) {
-        await handleGenericOperationWithUpsert(db, req, now)
-      } else {
-        await handleGenericOperation(db, req, now)
+
+      // Index all items into private_data.
+      await handleGenericOperation(db, req, now)
+
+      // Maintain bespoke indexes for certain namespaces.
+      if (namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent) {
+        await handleAgeAssuranceEventOperation(db, req, now).catch(
+          (err: unknown) =>
+            httpLogger.warn(
+              { err, namespace },
+              'mock bsync put operation failed',
+            ),
+        )
       }
 
       return {
@@ -186,73 +194,15 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
     },
   })
 
-// could dedupe this
-const handleNotificationPreferencesOperation = async (
-  db: Database,
-  req: PutOperationRequest,
-  now: string,
-) => {
-  const { actorDid, namespace, key, method, payload } = req
-  if (method === Method.CREATE || method === Method.UPDATE) {
-    return db.db
-      .insertInto('private_data')
-      .values({
-        actorDid,
-        namespace,
-        key,
-        payload: Buffer.from(payload).toString('utf8'),
-        indexedAt: now,
-        updatedAt: now,
-      })
-      .onConflict((oc) =>
-        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
-          payload: Buffer.from(payload).toString('utf8'),
-          updatedAt: now,
-        }),
-      )
-      .execute()
-  }
-
-  return handleGenericOperation(db, req, now)
-}
-
-const handleGenericOperationWithUpsert = async (
-  db: Database,
-  req: PutOperationRequest,
-  now: string,
-) => {
-  const { actorDid, namespace, key, method, payload } = req
-  if (method === Method.CREATE || method === Method.UPDATE) {
-    return db.db
-      .insertInto('private_data')
-      .values({
-        actorDid,
-        namespace,
-        key,
-        payload: Buffer.from(payload).toString('utf8'),
-        indexedAt: now,
-        updatedAt: now,
-      })
-      .onConflict((oc) =>
-        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
-          payload: Buffer.from(payload).toString('utf8'),
-          updatedAt: now,
-        }),
-      )
-      .execute()
-  }
-
-  return handleGenericOperation(db, req, now)
-}
-
+// upsert into or remove from private_data
 const handleGenericOperation = async (
   db: Database,
   req: PutOperationRequest,
   now: string,
 ) => {
   const { actorDid, namespace, key, method, payload } = req
-  if (method === Method.CREATE) {
-    return db.db
+  if (method === Method.CREATE || method === Method.UPDATE) {
+    await db.db
       .insertInto('private_data')
       .values({
         actorDid,
@@ -262,26 +212,47 @@ const handleGenericOperation = async (
         indexedAt: now,
         updatedAt: now,
       })
+      .onConflict((oc) =>
+        oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
+          payload: excluded(db.db, 'payload'),
+          updatedAt: excluded(db.db, 'updatedAt'),
+        }),
+      )
       .execute()
-  }
-
-  if (method === Method.UPDATE) {
-    return db.db
-      .updateTable('private_data')
+  } else if (method === Method.DELETE) {
+    await db.db
+      .deleteFrom('private_data')
       .where('actorDid', '=', actorDid)
       .where('namespace', '=', namespace)
       .where('key', '=', key)
-      .set({
-        payload: Buffer.from(payload).toString('utf8'),
-        updatedAt: now,
-      })
       .execute()
+  } else {
+    assert.fail(`unexpected method ${method}`)
+  }
+}
+
+const handleAgeAssuranceEventOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  _now: string,
+) => {
+  const { actorDid, method, payload } = req
+  if (method !== Method.CREATE) return
+
+  const parsed = jsonStringToLex(
+    Buffer.from(payload).toString('utf8'),
+  ) as AgeAssuranceEvent
+  const { status, timestamp } = parsed
+
+  const update = {
+    ageAssuranceStatus: status,
+    ageAssuranceLastInitiatedAt: status === 'pending' ? timestamp : undefined,
   }
 
   return db.db
-    .deleteFrom('private_data')
-    .where('actorDid', '=', actorDid)
-    .where('namespace', '=', namespace)
-    .where('key', '=', key)
+    .updateTable('actor')
+    .set(update)
+    .where('did', '=', actorDid)
     .execute()
+    .then(() => {})
 }

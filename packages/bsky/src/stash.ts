@@ -2,6 +2,7 @@ import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
 import { Preferences } from './lexicon/types/app/bsky/notification/defs'
+import { AgeAssuranceEvent } from './lexicon/types/app/bsky/unspecced/defs'
 import { Method } from './proto/bsync_pb'
 
 type PickNSID<T extends { $type?: string }> = Exclude<T['$type'], undefined>
@@ -9,6 +10,8 @@ type PickNSID<T extends { $type?: string }> = Exclude<T['$type'], undefined>
 export const Namespaces = {
   AppBskyNotificationDefsPreferences:
     'app.bsky.notification.defs#preferences' satisfies PickNSID<Preferences>,
+  AppBskyUnspeccedDefsAgeAssuranceEvent:
+    'app.bsky.unspecced.defs#ageAssuranceEvent' satisfies PickNSID<AgeAssuranceEvent>,
 }
 
 export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]
