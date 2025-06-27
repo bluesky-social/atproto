@@ -25,13 +25,8 @@
       "output": {
         "encoding": "application/json",
         "schema": {
-          "type": "object",
-          "required": ["success"],
-          "properties": {
-            "success": {
-              "type": "boolean"
-            }
-          }
+          "type": "ref",
+          "ref": "app.bsky.unspecced.defs#ageAssuranceState"
         }
       }
     }

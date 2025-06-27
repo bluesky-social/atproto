@@ -2,8 +2,7 @@ import crypto from 'node:crypto'
 import qs from 'node:querystring'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceStatePayload } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-
+import { AgeAssuranceEvent } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 import { KWS_SIGNING_KEY } from './env'
 
 type StatusPayload = {
@@ -52,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
           }
 
           const NSID = 'app.bsky.unspecced.defs#ageAssuranceState'
-          const payload: AgeAssuranceStatePayload = {
+          const payload: AgeAssuranceEvent = {
             timestamp: new Date().toISOString(),
             source: 'user',
             status,
@@ -98,7 +97,7 @@ export default function (server: Server, ctx: AppContext) {
 // TODO abstract this
 function getResponseStatus(
   statusPayload: StatusPayload,
-): AgeAssuranceStatePayload['status'] {
+): AgeAssuranceEvent['status'] {
   if (statusPayload.verified) {
     return 'assured'
   } else if (statusPayload.errorCode) {

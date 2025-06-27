@@ -1,10 +1,8 @@
 import crypto from 'node:crypto'
-
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceStatePayload } from '../../../../lexicon/types/app/bsky/unspecced/defs'
+import { AgeAssuranceEvent } from '../../../../lexicon/types/app/bsky/unspecced/defs'
 import { Payload } from '../../../../lexicon/types/app/bsky/unspecced/handleAgeAssuranceEvent'
-
 import { KWS_WEBHOOK_SIGNING_KEY } from './env'
 
 export default function (server: Server, ctx: AppContext) {
@@ -77,7 +75,7 @@ export default function (server: Server, ctx: AppContext) {
 
         const status = getResponseStatus(input.body.payload.status)
         const NSID = 'app.bsky.unspecced.defs#ageAssuranceState'
-        const payload: AgeAssuranceStatePayload = {
+        const payload: AgeAssuranceEvent = {
           timestamp: new Date().toISOString(),
           source: 'user',
           status,
@@ -107,7 +105,7 @@ export default function (server: Server, ctx: AppContext) {
 // TODO abstract this
 function getResponseStatus(
   statusPayload: Exclude<Payload['status'], undefined>,
-): AgeAssuranceStatePayload['status'] {
+): AgeAssuranceEvent['status'] {
   if (statusPayload.verified) {
     return 'assured'
   } else {

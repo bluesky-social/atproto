@@ -149,6 +149,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         tags: [],
         profileTags: [],
         allowActivitySubscriptionsFrom: activitySubscription(),
+        // @TODO: check `return_age_assurance_for_dids`
+        ageAssuranceStatus: {
+          status: row?.ageAssuranceStatus ?? 'unknown',
+          lastInitiatedAt: row?.ageAssuranceLastInitiatedAt
+            ? Timestamp.fromDate(new Date(row?.ageAssuranceLastInitiatedAt))
+            : undefined,
+        },
       }
     })
     return { actors }

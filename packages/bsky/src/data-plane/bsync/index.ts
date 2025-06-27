@@ -9,6 +9,7 @@ import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
 import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
+import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
 import { httpLogger } from '../../logger'
 import { Service } from '../../proto/bsync_connect'
 import {
@@ -159,15 +160,25 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
 
       const now = new Date().toISOString()
 
-      // index all items into private_data
+      // Index all items into private_data.
       await handleGenericOperation(db, req, now)
 
-      // maintain bespoke indexes for certain namespaces
+      // Maintain bespoke indexes for certain namespaces.
       if (
         namespace ===
         Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
       ) {
         await handleSubjectActivitySubscriptionOperation(db, req, now).catch(
+          (err: unknown) =>
+            httpLogger.warn(
+              { err, namespace },
+              'mock bsync put operation failed',
+            ),
+        )
+      } else if (
+        namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
+      ) {
+        await handleAgeAssuranceEventOperation(db, req, now).catch(
           (err: unknown) =>
             httpLogger.warn(
               { err, namespace },
@@ -281,4 +292,30 @@ const handleSubjectActivitySubscriptionOperation = async (
       reply,
     })
     .execute()
+}
+
+const handleAgeAssuranceEventOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  _now: string,
+) => {
+  const { actorDid, method, payload } = req
+  if (method !== Method.CREATE) return
+
+  const parsed = jsonStringToLex(
+    Buffer.from(payload).toString('utf8'),
+  ) as AgeAssuranceEvent
+  const { status, timestamp } = parsed
+
+  const update = {
+    ageAssuranceStatus: status,
+    ageAssuranceLastInitiatedAt: status === 'pending' ? timestamp : undefined,
+  }
+
+  return db.db
+    .updateTable('actor')
+    .set(update)
+    .where('did', '=', actorDid)
+    .execute()
+    .then(() => {})
 }

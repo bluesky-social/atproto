@@ -459,6 +459,7 @@ message GetActorRepostsResponse {
 message GetActorsRequest {
   repeated string dids = 1;
   repeated string skip_cache_for_dids = 2;
+  repeated string return_age_assurance_for_dids = 3;
 }
 
 message ActorInfo {
@@ -482,6 +483,12 @@ message ActorInfo {
   repeated string profile_tags = 16;
   Record status_record = 17;
   string allow_activity_subscriptions_from = 18;
+  optional AgeAssuranceStatus age_assurance_status = 19;
+}
+
+message AgeAssuranceStatus {
+  string status = 1;
+  google.protobuf.Timestamp last_initiated_at = 3;
 }
 
 message GetActorsResponse {
@@ -821,22 +828,6 @@ message NotificationPreferences {
 
 message GetNotificationPreferencesResponse {
   repeated NotificationPreferences preferences = 1;
-}
-
-// Age Assurance
-//
-message GetAgeAssuranceStateRequest {
-  string did = 1;
-}
-enum AgeAssuranceStatus {
-  AGE_ASSURANCE_STATUS_UNKNOWN = 0;
-  AGE_ASSURANCE_STATUS_PENDING = 1;
-  AGE_ASSURANCE_STATUS_ASSURED = 2;
-  AGE_ASSURANCE_STATUS_FAILED = 3;
-}
-message GetAgeAssuranceStateResponse {
-  bool required = 1;
-  AgeAssuranceStatus status = 2;
 }
 
 // - list recent notifications for a user
@@ -1383,9 +1374,6 @@ service Service {
   rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
   rpc GetActivitySubscriptionsByActorAndSubjects(GetActivitySubscriptionsByActorAndSubjectsRequest) returns (GetActivitySubscriptionsByActorAndSubjectsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
-
-  // Age Assurance
-  rpc GetAgeAssuranceState(GetAgeAssuranceStateRequest) returns (GetAgeAssuranceStateResponse);
 
   // FeedGenerators
   rpc GetActorFeeds(GetActorFeedsRequest) returns (GetActorFeedsResponse);
