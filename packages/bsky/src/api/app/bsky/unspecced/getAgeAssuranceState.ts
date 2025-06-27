@@ -15,11 +15,6 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       let state = await getAgeVerificationState(ctx, viewer)
 
-      /*
-       * TODO
-       *   1. Geo-IP, save to stash under `required` key
-       */
-
       if (!state) {
         state = {
           // TODO
@@ -42,6 +37,7 @@ const getAgeVerificationState = async (
 ): Promise<Un$Typed<AgeAssuranceState>> => {
   let res: GetAgeAssuranceStateResponse
   try {
+    // TODO gonna be a param on getActors
     res = await ctx.dataplane.getAgeAssuranceState({
       did: actorDid,
     })
@@ -73,6 +69,7 @@ function protobufToLex(
       status = 'assured'
       break
     case AgeAssuranceStatus.FAILED:
+      // TODO no longer accurate
       status = 'failed'
       break
   }
