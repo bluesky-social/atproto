@@ -240,7 +240,7 @@ export type LexXrpcParameters = z.infer<typeof lexXrpcParameters>
 export const lexXrpcBody = z
   .object({
     description: z.string().optional(),
-    encoding: z.string(),
+    encoding: z.union([z.string(), z.string().array()]),
     // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
     schema: z.union([lexRefVariant, lexObject]).optional(),
   })

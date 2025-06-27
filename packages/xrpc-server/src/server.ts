@@ -81,7 +81,10 @@ export class Server {
     })
     this.options = opts
     this.middleware = {
-      json: jsonParser({ limit: opts?.payload?.jsonLimit }),
+      json: jsonParser({
+        limit: opts?.payload?.jsonLimit,
+        type: ['application/json', 'application/*+json'],
+      }),
       text: textParser({ limit: opts?.payload?.textLimit }),
     }
 
@@ -297,7 +300,11 @@ export class Server {
 
           if (
             output.encoding === 'application/json' ||
-            output.encoding === 'json'
+            output.encoding === 'json' ||
+            (output.encoding.startsWith('application/') &&
+              output.encoding
+                .split(';')[0]
+                .indexOf('+json', 'application/'.length) !== -1)
           ) {
             const json = lexToJson(output.body)
             res.json(json)
