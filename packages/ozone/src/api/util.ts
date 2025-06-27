@@ -2,6 +2,12 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
 import { Member } from '../db/schema/member'
 import { ModerationEvent } from '../db/schema/moderation_event'
+import {
+  SafelinkActionType,
+  SafelinkEventType,
+  SafelinkPatternType,
+  SafelinkReasonType,
+} from '../db/schema/safelink'
 import { ids } from '../lexicon/lexicons'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport'
@@ -22,6 +28,20 @@ import {
   RepoView,
   RepoViewDetail,
 } from '../lexicon/types/tools/ozone/moderation/defs'
+import {
+  ADDRULE,
+  BLOCK,
+  CSAM,
+  DOMAIN,
+  NONE,
+  PHISHING,
+  REMOVERULE,
+  SPAM,
+  UPDATERULE,
+  URL,
+  WARN,
+  WHITELIST,
+} from '../lexicon/types/tools/ozone/safelink/defs'
 import {
   ROLEADMIN,
   ROLEMODERATOR,
@@ -191,3 +211,39 @@ const memberRoles = new Set([
   ROLETRIAGE,
   ROLEVERIFIER,
 ])
+
+export const getSafelinkPattern = (pattern: string): SafelinkPatternType => {
+  if (safelinkPatterns.has(pattern)) {
+    return pattern as SafelinkPatternType
+  }
+  throw new InvalidRequestError('Invalid safelink pattern type')
+}
+
+export const getSafelinkAction = (action: string): SafelinkActionType => {
+  if (safelinkActions.has(action)) {
+    return action as SafelinkActionType
+  }
+  throw new InvalidRequestError('Invalid safelink action type')
+}
+
+export const getSafelinkReason = (reason: string): SafelinkReasonType => {
+  if (safelinkReasons.has(reason)) {
+    return reason as SafelinkReasonType
+  }
+  throw new InvalidRequestError('Invalid safelink reason type')
+}
+
+export const getSafelinkEventType = (eventType: string): SafelinkEventType => {
+  if (safelinkEventTypes.has(eventType)) {
+    return eventType as SafelinkEventType
+  }
+  throw new InvalidRequestError('Invalid safelink event type')
+}
+
+const safelinkPatterns = new Set([DOMAIN, URL])
+
+const safelinkActions = new Set([BLOCK, WARN, WHITELIST])
+
+const safelinkReasons = new Set([CSAM, SPAM, PHISHING, NONE])
+
+const safelinkEventTypes = new Set([ADDRULE, UPDATERULE, REMOVERULE])
