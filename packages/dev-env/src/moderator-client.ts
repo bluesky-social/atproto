@@ -1,5 +1,6 @@
 import {
   AtpAgent,
+  ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
@@ -76,6 +77,7 @@ export class ModeratorClient {
       reason?: string
       createdBy?: string
       meta?: unknown
+      userAgent?: ToolsOzoneModerationDefs.UserAgent
     },
     role?: ModLevel,
   ) {
@@ -83,8 +85,8 @@ export class ModeratorClient {
       event,
       subject,
       subjectBlobCids,
-      reason = 'X',
       createdBy = 'did:example:admin',
+      userAgent,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
@@ -92,8 +94,7 @@ export class ModeratorClient {
         subject,
         subjectBlobCids,
         createdBy,
-        // @ts-expect-error this a valid input property
-        reason,
+        userAgent,
       },
       {
         encoding: 'application/json',
@@ -112,10 +113,16 @@ export class ModeratorClient {
       subject: TakeActionInput['subject']
       reason?: string
       createdBy?: string
+      userAgent?: ToolsOzoneModerationDefs.UserAgent
     },
     role?: ModLevel,
   ) {
-    const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
+    const {
+      subject,
+      reason = 'X',
+      createdBy = 'did:example:admin',
+      userAgent,
+    } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
         subject,
@@ -124,6 +131,7 @@ export class ModeratorClient {
           comment: reason,
         },
         createdBy,
+        userAgent,
       },
       {
         encoding: 'application/json',

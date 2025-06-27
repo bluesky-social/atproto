@@ -13536,6 +13536,10 @@ export const schemaDict = {
           subjectHandle: {
             type: 'string',
           },
+          userAgent: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#userAgent',
+          },
         },
       },
       modEventViewDetail: {
@@ -13599,6 +13603,10 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          userAgent: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#userAgent',
           },
         },
       },
@@ -14616,6 +14624,23 @@ export const schemaDict = {
           },
         },
       },
+      userAgent: {
+        type: 'object',
+        description:
+          'User agent information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')",
+          },
+          extra: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -14672,6 +14697,10 @@ export const schemaDict = {
               createdBy: {
                 type: 'string',
                 format: 'did',
+              },
+              userAgent: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#userAgent',
               },
             },
           },
@@ -15076,6 +15105,14 @@ export const schemaDict = {
                 description:
                   'If specified, only events where the action policies match any of the given policies are returned',
               },
+            },
+            userAgent: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where the userAgent name matches any of the given values are returned',
             },
             cursor: {
               type: 'string',
