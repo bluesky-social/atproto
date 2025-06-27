@@ -90,31 +90,13 @@ export const handlerPipeThrough = z.union([
 
 export type HandlerPipeThrough = z.infer<typeof handlerPipeThrough>
 
-export type AuthVerifierOutput = AuthResult | ErrorResult
-
 export type Auth = void | AuthResult
 export type Input = void | HandlerInput
 export type Output = void | HandlerSuccess | ErrorResult
 
-export type HandlerContext<
-  A extends Auth = Auth,
-  P extends Params = Params,
-  I extends Input = Input,
-> = {
-  auth: A
-  params: P
-  input: I
-  req: Request
-  res: Response
-  resetRouteRateLimits: () => Promise<void>
-}
-
-export type MethodHandler<
-  A extends Auth = Auth,
-  P extends Params = Params,
-  I extends Input = Input,
-  O extends Output = Output,
-> = (ctx: HandlerContext<A, P, I>) => Awaitable<O | HandlerPipeThrough>
+export type AuthVerifier<C, A extends AuthResult = AuthResult> =
+  | ((ctx: C) => Awaitable<A | ErrorResult>)
+  | ((ctx: C) => Awaitable<A>)
 
 export type MethodAuthContext<
   P extends Params = Params,
@@ -127,33 +109,26 @@ export type MethodAuthContext<
 }
 
 export type MethodAuthVerifier<
-  A extends AuthVerifierOutput = AuthVerifierOutput,
+  A extends AuthResult = AuthResult,
   P extends Params = Params,
   I extends Input = Input,
-> = (ctx: MethodAuthContext<P, I>) => Awaitable<A>
+> = AuthVerifier<MethodAuthContext<P, I>, A>
 
-export type StreamContext<A extends Auth = Auth, P extends Params = Params> = {
-  params: P
-  auth: A
-  req: IncomingMessage
-  signal: AbortSignal
-}
-
-export type StreamHandler<
+export type HandlerContext<
   A extends Auth = Auth,
   P extends Params = Params,
-  O = unknown,
-> = (ctx: StreamContext<A, P>) => AsyncIterable<O>
-
-export type StreamAuthContext<P extends Params = Params> = {
-  params: P
-  req: IncomingMessage
+  I extends Input = Input,
+> = MethodAuthContext<P, I> & {
+  auth: A
+  resetRouteRateLimits: () => Promise<void>
 }
 
-export type StreamAuthVerifier<
-  A extends AuthVerifierOutput = AuthVerifierOutput,
+export type MethodHandler<
+  A extends Auth = Auth,
   P extends Params = Params,
-> = (ctx: StreamAuthContext<P>) => Awaitable<A>
+  I extends Input = Input,
+  O extends Output = Output,
+> = (ctx: HandlerContext<A, P, I>) => Awaitable<O | HandlerPipeThrough>
 
 export type ServerRateLimitDescription<
   C extends HandlerContext = HandlerContext,
@@ -199,7 +174,7 @@ export type MethodConfig<
   O extends Output = Output,
 > = {
   handler: MethodHandler<A, P, I, O>
-  auth?: MethodAuthVerifier<Extract<A, AuthVerifierOutput>, P, I>
+  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P, I>
   opts?: RouteOpts
   rateLimit?:
     | RateLimitOpts<HandlerContext<A, P, I>>
@@ -213,12 +188,36 @@ export type MethodConfigOrHandler<
   O extends Output = Output,
 > = MethodHandler<A, P, I, O> | MethodConfig<A, P, I, O>
 
+export type StreamAuthContext<P extends Params = Params> = {
+  params: P
+  req: IncomingMessage
+}
+
+export type StreamAuthVerifier<
+  A extends AuthResult = AuthResult,
+  P extends Params = Params,
+> = AuthVerifier<StreamAuthContext<P>, A>
+
+export type StreamContext<
+  A extends Auth = Auth,
+  P extends Params = Params,
+> = StreamAuthContext<P> & {
+  auth: A
+  signal: AbortSignal
+}
+
+export type StreamHandler<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  O = unknown,
+> = (ctx: StreamContext<A, P>) => AsyncIterable<O>
+
 export type StreamConfig<
   A extends Auth = Auth,
   P extends Params = Params,
   O = unknown,
 > = {
-  auth?: StreamAuthVerifier<Extract<A, AuthVerifierOutput>, P>
+  auth?: StreamAuthVerifier<Extract<A, AuthResult>, P>
   handler: StreamHandler<A, P, O>
 }
 

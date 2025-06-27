@@ -38,8 +38,7 @@ import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
   Auth,
   AuthResult,
-  AuthVerifierOutput,
-  Awaitable,
+  AuthVerifier,
   CatchallHandler,
   HandlerContext,
   HandlerSuccess,
@@ -272,12 +271,13 @@ export class Server {
     }
   }
 
-  protected createAuthVerifier<C, A extends AuthVerifierOutput>(
-    auth?: (ctx: C) => Awaitable<A>,
-  ) {
+  protected createAuthVerifier<C, A extends Auth>(cfg: {
+    auth?: AuthVerifier<C, A & AuthResult>
+  }): null | ((ctx: C) => Promise<A>) {
+    const { auth } = cfg
     if (!auth) return null
 
-    return async (ctx: C): Promise<AuthResult> => {
+    return async (ctx: C) => {
       const result = await auth(ctx)
       if (isErrorResult(result)) {
         throw XRPCError.fromErrorResult(result)
@@ -289,12 +289,12 @@ export class Server {
   createHandler<A extends Auth = Auth>(
     nsid: string,
     def: LexXrpcQuery | LexXrpcProcedure,
-    routeCfg: MethodConfig<A>,
+    cfg: MethodConfig<A>,
   ): RequestHandler {
-    const authVerifier = this.createAuthVerifier(routeCfg.auth)
+    const authVerifier = this.createAuthVerifier(cfg)
     const paramsVerifier = this.createParamsVerifier(nsid, def)
     const inputVerifier = this.createInputVerifier(nsid, def, {
-      blobLimit: routeCfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
+      blobLimit: cfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
     })
 
     const validateResOutput =
@@ -303,7 +303,7 @@ export class Server {
         : (output: void | HandlerSuccess) =>
             validateOutput(nsid, def, output, this.lex)
 
-    const routeLimiter = this.createRouteRateLimiter(nsid, routeCfg)
+    const routeLimiter = this.createRouteRateLimiter(nsid, cfg)
 
     return async function (req, res, next) {
       try {
@@ -311,11 +311,9 @@ export class Server {
         const params = paramsVerifier(req)
         const input = inputVerifier?.(req)
         // authenticate request
-        const auth = (
-          authVerifier
-            ? await authVerifier({ params, input, req, res })
-            : undefined
-        ) as A
+        const auth = authVerifier
+          ? await authVerifier({ params, input, req, res })
+          : (undefined as A)
 
         const ctx: HandlerContext<A> = {
           params,
@@ -330,7 +328,7 @@ export class Server {
         if (routeLimiter) await routeLimiter.handle(ctx)
 
         // run the handler
-        const output = await routeCfg.handler(ctx)
+        const output = await cfg.handler(ctx)
 
         if (!output) {
           validateResOutput?.(output)
@@ -390,11 +388,12 @@ export class Server {
   protected async addSubscription<A extends Auth = Auth>(
     nsid: string,
     def: LexXrpcSubscription,
-    { auth, handler }: StreamConfig<A>,
+    cfg: StreamConfig<A>,
   ) {
     const paramsVerifier = this.createParamsVerifier(nsid, def)
-    const authVerifier = this.createAuthVerifier(auth)
+    const authVerifier = this.createAuthVerifier(cfg)
 
+    const { handler } = cfg
     this.subscriptions.set(
       nsid,
       new XrpcStreamServer({
@@ -404,9 +403,9 @@ export class Server {
             // validate request
             const params = paramsVerifier(req)
             // authenticate request
-            const auth = (
-              authVerifier ? await authVerifier({ req, params }) : undefined
-            ) as A
+            const auth = authVerifier
+              ? await authVerifier({ req, params })
+              : (undefined as A)
             // stream
             for await (const item of handler({ req, params, auth, signal })) {
               if (item instanceof Frame) {
