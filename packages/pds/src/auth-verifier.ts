@@ -1,5 +1,6 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
+import { Request } from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
@@ -11,10 +12,8 @@ import {
 } from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
-  AuthVerifierContext,
   ForbiddenError,
   InvalidRequestError,
-  StreamAuthVerifierContext,
   XRPCError,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
@@ -23,7 +22,7 @@ import { AccountManager } from './account-manager/account-manager'
 import { softDeleted } from './db'
 import { oauthLogger } from './logger'
 
-type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
+type ReqCtx = { req: IncomingMessage; res?: ServerResponse }
 
 // @TODO sync-up with current method names, consider backwards compat.
 export enum AuthScope {
@@ -489,7 +488,7 @@ export class AuthVerifier {
 
     try {
       const originalUrl =
-        ('originalUrl' in req && req.originalUrl) || req.url || '/'
+        ('originalUrl' in req && (req as Request).originalUrl) || req.url || '/'
       const url = new URL(originalUrl, this._publicUrl)
       const { tokenClaims, dpopProof } =
         await this.oauthVerifier.authenticateRequest(

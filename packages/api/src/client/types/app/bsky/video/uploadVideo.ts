@@ -16,8 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.video.uploadVideo'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = string | Uint8Array | Blob
 
 export interface OutputSchema {

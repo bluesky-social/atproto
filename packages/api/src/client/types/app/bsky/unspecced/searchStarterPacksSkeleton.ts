@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.searchStarterPacksSkeleton'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
   q: string
   /** DID of the account making the request (not included for public/unauthenticated queries). */
@@ -25,7 +25,6 @@ export interface QueryParams {
   /** Optional pagination mechanism; may not necessarily allow scrolling through entire result set. */
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

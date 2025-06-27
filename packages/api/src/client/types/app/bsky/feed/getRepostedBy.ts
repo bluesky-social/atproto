@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getRepostedBy'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Reference (AT-URI) of post record */
   uri: string
   /** If supplied, filters to reposts of specific version (by CID) of the post record. */
@@ -24,7 +24,6 @@ export interface QueryParams {
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

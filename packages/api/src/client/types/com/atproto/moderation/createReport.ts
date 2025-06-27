@@ -18,7 +18,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.moderation.createReport'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   reasonType: ComAtprotoModerationDefs.ReasonType

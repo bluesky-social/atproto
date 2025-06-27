@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.muteThread'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   root: string

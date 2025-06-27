@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.setting.removeOptions'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   keys: string[]

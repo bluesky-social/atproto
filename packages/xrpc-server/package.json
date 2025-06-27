@@ -41,6 +41,7 @@
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/http-errors": "^2.0.4",
+    "@types/mime-types": "^2.1.4",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
     "jest": "^28.1.2",

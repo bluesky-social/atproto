@@ -16,14 +16,13 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.actor.searchActorsTypeahead'
 
-export interface QueryParams {
+export type QueryParams = {
   /** DEPRECATED: use 'q' instead. */
   term?: string
   /** Search query prefix; not a full query string. */
   q?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

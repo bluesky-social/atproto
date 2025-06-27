@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.getServiceAuth'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The DID of the service that the token will be used to authenticate with */
   aud: string
   /** The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope. */
@@ -23,7 +23,6 @@ export interface QueryParams {
   /** Lexicon (XRPC) method to bind the requested token to */
   lxm?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

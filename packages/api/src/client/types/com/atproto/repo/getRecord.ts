@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.repo.getRecord'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The handle or DID of the repo. */
   repo: string
   /** The NSID of the record collection. */
@@ -25,7 +25,6 @@ export interface QueryParams {
   /** The CID of the version of the record. If not specified, then return the most recent version. */
   cid?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

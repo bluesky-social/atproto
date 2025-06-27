@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'chat.bsky.convo.updateAllRead'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   status?: 'request' | 'accepted' | (string & {})

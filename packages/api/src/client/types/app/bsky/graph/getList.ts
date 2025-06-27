@@ -16,13 +16,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.getList'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Reference (AT-URI) of the list record to hydrate. */
   list: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.verification.listVerifications'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Pagination cursor */
   cursor?: string
   /** Maximum number of results to return */
@@ -34,7 +34,6 @@ export interface QueryParams {
   /** Filter to verifications that are revoked or not. By default, includes both. */
   isRevoked?: boolean
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

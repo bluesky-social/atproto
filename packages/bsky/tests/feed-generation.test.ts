@@ -9,13 +9,13 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { XRPCError } from '@atproto/xrpc'
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, MethodHandler } from '@atproto/xrpc-server'
 import { ids } from '../src/lexicon/lexicons'
 import {
   FeedViewPost,
   SkeletonFeedPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import * as AppBskyFeedGetFeedSkeleton from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { forSnapshot, paginateAll } from './_util'
 
 describe('feed generation', () => {
@@ -792,7 +792,12 @@ describe('feed generation', () => {
         | 'bad-pagination-limit'
         | 'bad-pagination-cursor'
         | 'needs-auth',
-    ): SkeletonHandler =>
+    ): MethodHandler<
+      void,
+      AppBskyFeedGetFeedSkeleton.QueryParams,
+      AppBskyFeedGetFeedSkeleton.HandlerInput,
+      AppBskyFeedGetFeedSkeleton.HandlerOutput
+    > =>
     async ({ req, params }) => {
       if (feedName === 'needs-auth' && !req.headers.authorization) {
         throw new AuthRequiredError('This feed requires auth')

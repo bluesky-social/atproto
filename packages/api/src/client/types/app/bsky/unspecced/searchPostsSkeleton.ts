@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.searchPostsSkeleton'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
   q: string
   /** Specifies the ranking order of results. */
@@ -43,7 +43,6 @@ export interface QueryParams {
   /** Optional pagination mechanism; may not necessarily allow scrolling through entire result set. */
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
