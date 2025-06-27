@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.resetPassword'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   token: string

@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.admin.searchAccounts'
 
-export interface QueryParams {
+export type QueryParams = {
   email?: string
   cursor?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

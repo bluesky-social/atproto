@@ -15,11 +15,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.getLatestCommit'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The DID of the repo. */
   did: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

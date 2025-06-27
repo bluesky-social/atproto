@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.getAccountInviteCodes'
 
-export interface QueryParams {
+export type QueryParams = {
   includeUsed?: boolean
   /** Controls whether any new 'earned' but not 'created' invites should be created. */
   createAvailable?: boolean
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

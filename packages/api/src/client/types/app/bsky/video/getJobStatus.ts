@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.video.getJobStatus'
 
-export interface QueryParams {
+export type QueryParams = {
   jobId: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -15,8 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.requestEmailUpdate'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = undefined
 
 export interface OutputSchema {

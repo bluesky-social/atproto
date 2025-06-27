@@ -16,8 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.set.upsertSet'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = ToolsOzoneSetDefs.Set
 export type OutputSchema = ToolsOzoneSetDefs.SetView
 

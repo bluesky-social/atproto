@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.getStarterPacks'
 
-export interface QueryParams {
+export type QueryParams = {
   uris: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

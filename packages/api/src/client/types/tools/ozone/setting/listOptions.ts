@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.setting.listOptions'
 
-export interface QueryParams {
+export type QueryParams = {
   limit?: number
   cursor?: string
   scope?: 'instance' | 'personal' | (string & {})
@@ -25,7 +25,6 @@ export interface QueryParams {
   /** Filter for only the specified keys. Ignored if prefix is provided */
   keys?: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -16,13 +16,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getFeedSkeleton'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Reference to feed generator record describing the specific feed being requested. */
   feed: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

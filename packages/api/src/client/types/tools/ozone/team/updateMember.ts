@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.team.updateMember'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   did: string

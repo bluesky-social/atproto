@@ -3,6 +3,14 @@ import * as bsync from '@atproto/bsync'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
 import * as pds from '@atproto/pds'
+import { MethodHandler } from '@atproto/xrpc-server'
+
+export type SkeletonHandler = MethodHandler<
+  void,
+  pds.AppBskyFeedGetFeedSkeleton.QueryParams,
+  pds.AppBskyFeedGetFeedSkeleton.HandlerInput,
+  pds.AppBskyFeedGetFeedSkeleton.HandlerOutput
+>
 
 export type IntrospectConfig = {
   port?: number

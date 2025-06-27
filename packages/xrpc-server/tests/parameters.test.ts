@@ -34,13 +34,10 @@ const LEXICONS: LexiconDoc[] = [
 describe('Parameters', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method(
-    'io.example.paramTest',
-    (ctx: { params: xrpcServer.Params }) => ({
-      encoding: 'json',
-      body: ctx.params,
-    }),
-  )
+  server.method('io.example.paramTest', (ctx) => ({
+    encoding: 'json',
+    body: ctx.params,
+  }))
 
   let client: XrpcClient
   beforeAll(async () => {

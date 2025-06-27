@@ -16,14 +16,13 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.team.listMembers'
 
-export interface QueryParams {
+export type QueryParams = {
   q?: string
   disabled?: boolean
   roles?: string[]
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

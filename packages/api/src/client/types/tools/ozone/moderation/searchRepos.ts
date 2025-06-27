@@ -16,14 +16,13 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.searchRepos'
 
-export interface QueryParams {
+export type QueryParams = {
   /** DEPRECATED: use 'q' instead */
   term?: string
   q?: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -16,8 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.notification.getPreferences'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = undefined
 
 export interface OutputSchema {

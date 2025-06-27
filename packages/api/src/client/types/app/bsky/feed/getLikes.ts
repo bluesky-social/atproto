@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getLikes'
 
-export interface QueryParams {
+export type QueryParams = {
   /** AT-URI of the subject (eg, a post record). */
   uri: string
   /** CID of the subject record (aka, specific version of record), to filter likes. */
@@ -24,7 +24,6 @@ export interface QueryParams {
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

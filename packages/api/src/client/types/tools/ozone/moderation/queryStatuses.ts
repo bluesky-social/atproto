@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.queryStatuses'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Number of queues being used by moderators. Subjects will be split among all queues. */
   queueCount?: number
   /** Index of the queue to fetch subjects from. Works only when queueCount value is specified. */
@@ -84,7 +84,6 @@ export interface QueryParams {
   /** If specified, only subjects that have priority score value above the given value will be returned. */
   minPriorityScore?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

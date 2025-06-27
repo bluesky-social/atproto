@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.createAppPassword'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** A short name for the App Password, to help distinguish them. */

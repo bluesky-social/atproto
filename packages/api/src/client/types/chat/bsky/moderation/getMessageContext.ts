@@ -16,14 +16,13 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'chat.bsky.moderation.getMessageContext'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Conversation that the message is from. NOTE: this field will eventually be required. */
   convoId?: string
   messageId: string
   before?: number
   after?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
