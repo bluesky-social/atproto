@@ -879,26 +879,6 @@ message GetUnreadNotificationCountResponse {
   int32 count = 1;
 }
 
-message PostActivitySubscription {}
-message ReplyActivitySubscription {}
-
-message ActivitySubscription {
-  string actor_did = 1;
-  string namespace = 2;
-  string key = 3;
-  optional PostActivitySubscription post = 4;
-  optional ReplyActivitySubscription reply = 5;
-}
-
-message GetActivitySubscriptionsRequest {
-  string actor_did = 1;
-  repeated string subject_dids = 2;
-}
-
-message GetActivitySubscriptionsResponse {
-  repeated ActivitySubscription subscriptions = 1;
-}
-
 message GetActivitySubscriptionDidsRequest {
   string actor_did = 1;
   int32 limit = 2;
@@ -908,6 +888,28 @@ message GetActivitySubscriptionDidsRequest {
 message GetActivitySubscriptionDidsResponse {
   repeated string dids = 1;
   string cursor = 2;
+}
+
+message PostActivitySubscription {}
+message ReplyActivitySubscription {}
+
+message ActivitySubscription {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  optional PostActivitySubscription post = 4;
+  optional ReplyActivitySubscription reply = 5;
+  string subject_did = 6;
+  google.protobuf.Timestamp indexed_at = 7;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string subject_dids = 2;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsResponse {
+  repeated ActivitySubscription subscriptions = 1;
 }
 
 //
@@ -1362,8 +1364,8 @@ service Service {
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
-  rpc GetActivitySubscriptions(GetActivitySubscriptionsRequest) returns (GetActivitySubscriptionsResponse);
   rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
+  rpc GetActivitySubscriptionsByActorAndSubjects(GetActivitySubscriptionsByActorAndSubjectsRequest) returns (GetActivitySubscriptionsByActorAndSubjectsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
   // FeedGenerators

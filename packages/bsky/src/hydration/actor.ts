@@ -359,7 +359,7 @@ export class ActorHydrator {
     }
 
     const { subscriptions } = await this.dataplane
-      .getActivitySubscriptions(
+      .getActivitySubscriptionsByActorAndSubjects(
         { actorDid: viewer, subjectDids: dids },
         { signal: AbortSignal.timeout(100) },
       )

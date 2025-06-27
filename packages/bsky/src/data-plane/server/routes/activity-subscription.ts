@@ -4,17 +4,17 @@ import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import {
   ActivitySubscription,
-  GetActivitySubscriptionsResponse,
+  GetActivitySubscriptionsByActorAndSubjectsResponse,
 } from '../../../proto/bsky_pb'
 import { Namespaces } from '../../../stash'
 import { Database } from '../db'
 import { StashKeyKey } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getActivitySubscriptions(req) {
+  async getActivitySubscriptionsByActorAndSubjects(req) {
     const { actorDid, subjectDids } = req
     if (subjectDids.length === 0) {
-      return new GetActivitySubscriptionsResponse({
+      return new GetActivitySubscriptionsByActorAndSubjectsResponse({
         subscriptions: [],
       })
     }
@@ -38,6 +38,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             key: '',
             post: undefined,
             reply: undefined,
+            subjectDid: '',
           }
         }
 
@@ -48,6 +49,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           key: subject.key,
           post: subject.post ? {} : undefined,
           reply: subject.reply ? {} : undefined,
+          subjectDid: subject.subjectDid,
         }
       },
     )

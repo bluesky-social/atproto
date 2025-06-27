@@ -9608,321 +9608,6 @@ export class GetUnreadNotificationCountResponse extends Message<GetUnreadNotific
 }
 
 /**
- * @generated from message bsky.PostActivitySubscription
- */
-export class PostActivitySubscription extends Message<PostActivitySubscription> {
-  constructor(data?: PartialMessage<PostActivitySubscription>) {
-    super()
-    proto3.util.initPartial(data, this)
-  }
-
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.PostActivitySubscription'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
-
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): PostActivitySubscription {
-    return new PostActivitySubscription().fromBinary(bytes, options)
-  }
-
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): PostActivitySubscription {
-    return new PostActivitySubscription().fromJson(jsonValue, options)
-  }
-
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): PostActivitySubscription {
-    return new PostActivitySubscription().fromJsonString(jsonString, options)
-  }
-
-  static equals(
-    a:
-      | PostActivitySubscription
-      | PlainMessage<PostActivitySubscription>
-      | undefined,
-    b:
-      | PostActivitySubscription
-      | PlainMessage<PostActivitySubscription>
-      | undefined,
-  ): boolean {
-    return proto3.util.equals(PostActivitySubscription, a, b)
-  }
-}
-
-/**
- * @generated from message bsky.ReplyActivitySubscription
- */
-export class ReplyActivitySubscription extends Message<ReplyActivitySubscription> {
-  constructor(data?: PartialMessage<ReplyActivitySubscription>) {
-    super()
-    proto3.util.initPartial(data, this)
-  }
-
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.ReplyActivitySubscription'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
-
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): ReplyActivitySubscription {
-    return new ReplyActivitySubscription().fromBinary(bytes, options)
-  }
-
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): ReplyActivitySubscription {
-    return new ReplyActivitySubscription().fromJson(jsonValue, options)
-  }
-
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): ReplyActivitySubscription {
-    return new ReplyActivitySubscription().fromJsonString(jsonString, options)
-  }
-
-  static equals(
-    a:
-      | ReplyActivitySubscription
-      | PlainMessage<ReplyActivitySubscription>
-      | undefined,
-    b:
-      | ReplyActivitySubscription
-      | PlainMessage<ReplyActivitySubscription>
-      | undefined,
-  ): boolean {
-    return proto3.util.equals(ReplyActivitySubscription, a, b)
-  }
-}
-
-/**
- * @generated from message bsky.ActivitySubscription
- */
-export class ActivitySubscription extends Message<ActivitySubscription> {
-  /**
-   * @generated from field: string actor_did = 1;
-   */
-  actorDid = ''
-
-  /**
-   * @generated from field: string namespace = 2;
-   */
-  namespace = ''
-
-  /**
-   * @generated from field: string key = 3;
-   */
-  key = ''
-
-  /**
-   * @generated from field: optional bsky.PostActivitySubscription post = 4;
-   */
-  post?: PostActivitySubscription
-
-  /**
-   * @generated from field: optional bsky.ReplyActivitySubscription reply = 5;
-   */
-  reply?: ReplyActivitySubscription
-
-  constructor(data?: PartialMessage<ActivitySubscription>) {
-    super()
-    proto3.util.initPartial(data, this)
-  }
-
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.ActivitySubscription'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'namespace', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    {
-      no: 4,
-      name: 'post',
-      kind: 'message',
-      T: PostActivitySubscription,
-      opt: true,
-    },
-    {
-      no: 5,
-      name: 'reply',
-      kind: 'message',
-      T: ReplyActivitySubscription,
-      opt: true,
-    },
-  ])
-
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): ActivitySubscription {
-    return new ActivitySubscription().fromBinary(bytes, options)
-  }
-
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): ActivitySubscription {
-    return new ActivitySubscription().fromJson(jsonValue, options)
-  }
-
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): ActivitySubscription {
-    return new ActivitySubscription().fromJsonString(jsonString, options)
-  }
-
-  static equals(
-    a: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
-    b: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
-  ): boolean {
-    return proto3.util.equals(ActivitySubscription, a, b)
-  }
-}
-
-/**
- * @generated from message bsky.GetActivitySubscriptionsRequest
- */
-export class GetActivitySubscriptionsRequest extends Message<GetActivitySubscriptionsRequest> {
-  /**
-   * @generated from field: string actor_did = 1;
-   */
-  actorDid = ''
-
-  /**
-   * @generated from field: repeated string subject_dids = 2;
-   */
-  subjectDids: string[] = []
-
-  constructor(data?: PartialMessage<GetActivitySubscriptionsRequest>) {
-    super()
-    proto3.util.initPartial(data, this)
-  }
-
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.GetActivitySubscriptionsRequest'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    {
-      no: 2,
-      name: 'subject_dids',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
-      repeated: true,
-    },
-  ])
-
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): GetActivitySubscriptionsRequest {
-    return new GetActivitySubscriptionsRequest().fromBinary(bytes, options)
-  }
-
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): GetActivitySubscriptionsRequest {
-    return new GetActivitySubscriptionsRequest().fromJson(jsonValue, options)
-  }
-
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): GetActivitySubscriptionsRequest {
-    return new GetActivitySubscriptionsRequest().fromJsonString(
-      jsonString,
-      options,
-    )
-  }
-
-  static equals(
-    a:
-      | GetActivitySubscriptionsRequest
-      | PlainMessage<GetActivitySubscriptionsRequest>
-      | undefined,
-    b:
-      | GetActivitySubscriptionsRequest
-      | PlainMessage<GetActivitySubscriptionsRequest>
-      | undefined,
-  ): boolean {
-    return proto3.util.equals(GetActivitySubscriptionsRequest, a, b)
-  }
-}
-
-/**
- * @generated from message bsky.GetActivitySubscriptionsResponse
- */
-export class GetActivitySubscriptionsResponse extends Message<GetActivitySubscriptionsResponse> {
-  /**
-   * @generated from field: repeated bsky.ActivitySubscription subscriptions = 1;
-   */
-  subscriptions: ActivitySubscription[] = []
-
-  constructor(data?: PartialMessage<GetActivitySubscriptionsResponse>) {
-    super()
-    proto3.util.initPartial(data, this)
-  }
-
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.GetActivitySubscriptionsResponse'
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    {
-      no: 1,
-      name: 'subscriptions',
-      kind: 'message',
-      T: ActivitySubscription,
-      repeated: true,
-    },
-  ])
-
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): GetActivitySubscriptionsResponse {
-    return new GetActivitySubscriptionsResponse().fromBinary(bytes, options)
-  }
-
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): GetActivitySubscriptionsResponse {
-    return new GetActivitySubscriptionsResponse().fromJson(jsonValue, options)
-  }
-
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): GetActivitySubscriptionsResponse {
-    return new GetActivitySubscriptionsResponse().fromJsonString(
-      jsonString,
-      options,
-    )
-  }
-
-  static equals(
-    a:
-      | GetActivitySubscriptionsResponse
-      | PlainMessage<GetActivitySubscriptionsResponse>
-      | undefined,
-    b:
-      | GetActivitySubscriptionsResponse
-      | PlainMessage<GetActivitySubscriptionsResponse>
-      | undefined,
-  ): boolean {
-    return proto3.util.equals(GetActivitySubscriptionsResponse, a, b)
-  }
-}
-
-/**
  * @generated from message bsky.GetActivitySubscriptionDidsRequest
  */
 export class GetActivitySubscriptionDidsRequest extends Message<GetActivitySubscriptionDidsRequest> {
@@ -10062,6 +9747,364 @@ export class GetActivitySubscriptionDidsResponse extends Message<GetActivitySubs
       | undefined,
   ): boolean {
     return proto3.util.equals(GetActivitySubscriptionDidsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.PostActivitySubscription
+ */
+export class PostActivitySubscription extends Message<PostActivitySubscription> {
+  constructor(data?: PartialMessage<PostActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.PostActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | PostActivitySubscription
+      | PlainMessage<PostActivitySubscription>
+      | undefined,
+    b:
+      | PostActivitySubscription
+      | PlainMessage<PostActivitySubscription>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(PostActivitySubscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ReplyActivitySubscription
+ */
+export class ReplyActivitySubscription extends Message<ReplyActivitySubscription> {
+  constructor(data?: PartialMessage<ReplyActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ReplyActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ReplyActivitySubscription
+      | PlainMessage<ReplyActivitySubscription>
+      | undefined,
+    b:
+      | ReplyActivitySubscription
+      | PlainMessage<ReplyActivitySubscription>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ReplyActivitySubscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ActivitySubscription
+ */
+export class ActivitySubscription extends Message<ActivitySubscription> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string namespace = 2;
+   */
+  namespace = ''
+
+  /**
+   * @generated from field: string key = 3;
+   */
+  key = ''
+
+  /**
+   * @generated from field: optional bsky.PostActivitySubscription post = 4;
+   */
+  post?: PostActivitySubscription
+
+  /**
+   * @generated from field: optional bsky.ReplyActivitySubscription reply = 5;
+   */
+  reply?: ReplyActivitySubscription
+
+  /**
+   * @generated from field: string subject_did = 6;
+   */
+  subjectDid = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 7;
+   */
+  indexedAt?: Timestamp
+
+  constructor(data?: PartialMessage<ActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'namespace', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 4,
+      name: 'post',
+      kind: 'message',
+      T: PostActivitySubscription,
+      opt: true,
+    },
+    {
+      no: 5,
+      name: 'reply',
+      kind: 'message',
+      T: ReplyActivitySubscription,
+      opt: true,
+    },
+    {
+      no: 6,
+      name: 'subject_did',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 7, name: 'indexed_at', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
+    b: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
+  ): boolean {
+    return proto3.util.equals(ActivitySubscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionsByActorAndSubjectsRequest
+ */
+export class GetActivitySubscriptionsByActorAndSubjectsRequest extends Message<GetActivitySubscriptionsByActorAndSubjectsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: repeated string subject_dids = 2;
+   */
+  subjectDids: string[] = []
+
+  constructor(
+    data?: PartialMessage<GetActivitySubscriptionsByActorAndSubjectsRequest>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName =
+    'bsky.GetActivitySubscriptionsByActorAndSubjectsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'subject_dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsRequest {
+    return new GetActivitySubscriptionsByActorAndSubjectsRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsRequest {
+    return new GetActivitySubscriptionsByActorAndSubjectsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsRequest {
+    return new GetActivitySubscriptionsByActorAndSubjectsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionsByActorAndSubjectsRequest
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsRequest>
+      | undefined,
+    b:
+      | GetActivitySubscriptionsByActorAndSubjectsRequest
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(
+      GetActivitySubscriptionsByActorAndSubjectsRequest,
+      a,
+      b,
+    )
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionsByActorAndSubjectsResponse
+ */
+export class GetActivitySubscriptionsByActorAndSubjectsResponse extends Message<GetActivitySubscriptionsByActorAndSubjectsResponse> {
+  /**
+   * @generated from field: repeated bsky.ActivitySubscription subscriptions = 1;
+   */
+  subscriptions: ActivitySubscription[] = []
+
+  constructor(
+    data?: PartialMessage<GetActivitySubscriptionsByActorAndSubjectsResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName =
+    'bsky.GetActivitySubscriptionsByActorAndSubjectsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'subscriptions',
+      kind: 'message',
+      T: ActivitySubscription,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsResponse {
+    return new GetActivitySubscriptionsByActorAndSubjectsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsResponse {
+    return new GetActivitySubscriptionsByActorAndSubjectsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsResponse {
+    return new GetActivitySubscriptionsByActorAndSubjectsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionsByActorAndSubjectsResponse
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsResponse>
+      | undefined,
+    b:
+      | GetActivitySubscriptionsByActorAndSubjectsResponse
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(
+      GetActivitySubscriptionsByActorAndSubjectsResponse,
+      a,
+      b,
+    )
   }
 }
 

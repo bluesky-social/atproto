@@ -59,7 +59,7 @@ const getExistingKey = async (
   actorDid: string,
   subject: string,
 ): Promise<string | null> => {
-  const res = await ctx.dataplane.getActivitySubscriptions({
+  const res = await ctx.dataplane.getActivitySubscriptionsByActorAndSubjects({
     actorDid,
     subjectDids: [subject],
   })
