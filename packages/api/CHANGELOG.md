@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.15.19
+
+### Patch Changes
+
+- [#3997](https://github.com/bluesky-social/atproto/pull/3997) [`376778a92`](https://github.com/bluesky-social/atproto/commit/376778a92f08fb6709c4cde736bfaca7393a72e1) Thanks [@mozzius](https://github.com/mozzius)! - Add put method for AppBskyNotificationDeclarationRecord
+
 ## 0.15.18
 
 ### Patch Changes
