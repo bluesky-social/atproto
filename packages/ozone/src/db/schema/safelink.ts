@@ -30,7 +30,7 @@ export interface Safelink {
   action: SafelinkActionType
   reason: SafelinkReasonType
   createdBy: string
-  createdAt: GeneratedAlways<string>
+  createdAt: string
   updatedAt: GeneratedAlways<string>
   comment: string | null
 }
@@ -43,7 +43,7 @@ export interface SafelinkEvent {
   action: SafelinkActionType
   reason: SafelinkReasonType
   createdBy: string
-  createdAt: GeneratedAlways<string>
+  createdAt: string
   comment: string | null
 }
 

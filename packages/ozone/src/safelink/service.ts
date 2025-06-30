@@ -63,6 +63,7 @@ export class SafelinkService {
       reason,
       createdBy,
       comment: comment || null,
+      createdAt: new Date().toISOString(),
     }
 
     return await this.db.transaction(async (txn) => {
@@ -104,6 +105,7 @@ export class SafelinkService {
       )
     }
 
+    const now = new Date().toISOString()
     const rule = {
       pattern,
       action,
@@ -117,6 +119,7 @@ export class SafelinkService {
         .insertInto('safelink_event')
         .values({
           url,
+          createdAt: now,
           eventType: 'tools.ozone.safelink.defs#updateRule',
           ...rule,
         })
@@ -164,6 +167,7 @@ export class SafelinkService {
           reason: existingRule.reason,
           createdBy,
           comment: comment || null,
+          createdAt: new Date().toISOString(),
         })
         .returningAll()
         .executeTakeFirstOrThrow()

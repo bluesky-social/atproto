@@ -203,7 +203,6 @@ describe('safelink management', () => {
     })
 
     it('rejects non-moderators from removing rules', async () => {
-      // Re-add the rule for this test
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: 'https://remove-test2.com',
@@ -245,7 +244,6 @@ describe('safelink management', () => {
 
   describe('queryRules', () => {
     beforeAll(async () => {
-      // Add test rules for querying
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: 'https://query-test1.com',
@@ -345,21 +343,21 @@ describe('safelink management', () => {
     it('supports pagination', async () => {
       const headers = await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules)
       const { data: page1 } = await adminAgent.tools.ozone.safelink.queryRules(
-        { limit: 2 },
+        { limit: 4 },
         headers,
       )
 
-      expect(page1.rules.length).toBeLessThanOrEqual(2)
+      expect(page1.rules.length).toEqual(4)
 
       const { data: page2 } = await adminAgent.tools.ozone.safelink.queryRules(
         {
-          limit: 2,
+          limit: 5,
           cursor: page1.cursor,
         },
         headers,
       )
 
-      expect(page2.rules.length).toBeGreaterThanOrEqual(0)
+      expect(page2.rules.length).toEqual(1)
     })
 
     it('rejects non-moderators from querying rules', async () => {
@@ -423,27 +421,37 @@ describe('safelink management', () => {
       expect(
         result.events.every((event) => event.url === 'https://events-test.com'),
       ).toBe(true)
-      expect(result.events.length).toBeGreaterThanOrEqual(2) // Add + Update events
+      expect(result.events.length).toBeGreaterThanOrEqual(2)
     })
 
     it('supports pagination', async () => {
       const headers = await getAdminHeaders(ids.ToolsOzoneSafelinkQueryEvents)
       const { data: page1 } = await adminAgent.tools.ozone.safelink.queryEvents(
         {
-          limit: 5,
+          limit: 9,
         },
         headers,
       )
 
-      expect(page1.events.length).toBeLessThanOrEqual(5)
       const { data: page2 } = await adminAgent.tools.ozone.safelink.queryEvents(
         {
-          limit: 5,
+          limit: 10,
           cursor: page1.cursor,
         },
         headers,
       )
-      expect(page2.events.length).toBeGreaterThanOrEqual(0)
+
+      const { data: page3 } = await adminAgent.tools.ozone.safelink.queryEvents(
+        {
+          limit: 10,
+          cursor: page2.cursor,
+        },
+        headers,
+      )
+
+      expect(page1.events.length).toBeLessThanOrEqual(9)
+      expect(page2.events.length).toEqual(1)
+      expect(page3.cursor).toBeUndefined()
     })
 
     it('rejects non-moderators from querying events', async () => {
@@ -497,7 +505,6 @@ describe('safelink management', () => {
         await getAdminHeaders(ids.ToolsOzoneSafelinkRemoveRule),
       )
 
-      // 4. Verify audit trail
       const { data: events } =
         await adminAgent.tools.ozone.safelink.queryEvents(
           {
@@ -516,7 +523,6 @@ describe('safelink management', () => {
         ].sort(),
       )
 
-      // 5. Verify current state (should be no active rule)
       const { data: queryResult } =
         await adminAgent.tools.ozone.safelink.queryRules(
           {
@@ -532,7 +538,6 @@ describe('safelink management', () => {
       const specificUrl = 'https://precedence-test.com/safe-page'
       const headers = await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule)
 
-      // Add domain-level block
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: domain,
@@ -543,7 +548,6 @@ describe('safelink management', () => {
         headers,
       )
 
-      // Add URL-level whitelist for specific page
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: specificUrl,
@@ -554,7 +558,6 @@ describe('safelink management', () => {
         headers,
       )
 
-      // Check that specific URL rule exists
       const { data: specificResult } =
         await adminAgent.tools.ozone.safelink.queryRules(
           {
@@ -567,7 +570,6 @@ describe('safelink management', () => {
         ToolsOzoneSafelinkDefs.WHITELIST,
       )
 
-      // Check that domain rule exists
       const { data: domainResult } =
         await adminAgent.tools.ozone.safelink.queryRules(
           { urls: [domain] },
