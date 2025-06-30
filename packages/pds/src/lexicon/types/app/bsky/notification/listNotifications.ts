@@ -80,6 +80,7 @@ export interface Notification {
     | 'unverified'
     | 'like-via-repost'
     | 'repost-via-repost'
+    | 'subscribed-post'
     | (string & {})
   reasonSubject?: string
   record: { [_ in string]: unknown }
