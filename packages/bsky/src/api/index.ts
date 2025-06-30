@@ -44,7 +44,9 @@ import unmuteThread from './app/bsky/graph/unmuteThread'
 import getLabelerServices from './app/bsky/labeler/getServices'
 import getPreferences from './app/bsky/notification/getPreferences'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
+import listActivitySubscriptions from './app/bsky/notification/listActivitySubscriptions'
 import listNotifications from './app/bsky/notification/listNotifications'
+import putActivitySubscription from './app/bsky/notification/putActivitySubscription'
 import putPreferences from './app/bsky/notification/putPreferences'
 import putPreferencesV2 from './app/bsky/notification/putPreferencesV2'
 import registerPush from './app/bsky/notification/registerPush'
@@ -126,7 +128,9 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestions(server, ctx)
   getPreferences(server, ctx)
   getUnreadCount(server, ctx)
+  listActivitySubscriptions(server, ctx)
   listNotifications(server, ctx)
+  putActivitySubscription(server, ctx)
   updateSeen(server, ctx)
   putPreferences(server, ctx)
   putPreferencesV2(server, ctx)
