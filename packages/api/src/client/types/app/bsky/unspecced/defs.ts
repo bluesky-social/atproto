@@ -223,11 +223,12 @@ export interface AgeAssuranceEvent {
   $type?: 'app.bsky.unspecced.defs#ageAssuranceEvent'
   /** The date and time of this write operation. */
   timestamp: string
-  source: 'user' | 'admin' | (string & {})
   /** The status of the age assurance process. */
   status: 'unknown' | 'pending' | 'assured' | (string & {})
   /** The unique identifier for this instance of the age assurance flow, in UUID format. */
-  attemptId?: string
+  attemptId: string
+  /** The IP address used for this age assurance flow. */
+  attemptIp?: string
 }
 
 const hashAgeAssuranceEvent = 'ageAssuranceEvent'

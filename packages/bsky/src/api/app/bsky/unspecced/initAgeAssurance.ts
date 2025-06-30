@@ -18,23 +18,27 @@ export default function (server: Server, ctx: AppContext) {
 
       const actorDid = auth.credentials.iss
       const attemptId = crypto.randomUUID()
+      // @TODO: Get the IP address from the request context.
+      const attemptIp = 'TODO'
 
       await ctx.ageAssuranceClient.sendEmail({
-        actorDid,
-        attemptId,
         email: input.body.email,
+        externalPayload: {
+          actorDid,
+          attemptId,
+          attemptIp,
+        },
         language: input.body.language,
       })
 
-      const now = new Date().toISOString()
       const status = 'pending'
+      const now = new Date().toISOString()
       const payload: AgeAssuranceEvent = {
         attemptId,
-        source: 'user',
+        attemptIp,
         status,
         timestamp: now,
       }
-
       await ctx.stashClient.create({
         actorDid,
         namespace: Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent,

@@ -1,3 +1,5 @@
+import crypto from 'node:crypto'
+import { z } from 'zod'
 import { KwsConfig } from './config'
 
 export const createAgeAssuranceClient = (
@@ -9,7 +11,43 @@ export const createAgeAssuranceClient = (
 export type AgeAssuranceExternalPayload = {
   actorDid: string
   attemptId: string
+  attemptIp?: string
 }
+
+const externalPayloadSchema = z
+  .object({
+    actorDid: z.string(),
+    attemptId: z.string(),
+    attemptIp: z.string().optional(),
+  })
+  .strict()
+
+type AgeAssuranceWebhookIntermediateBody = {
+  payload: {
+    externalPayload: string
+    status: {
+      verified: boolean
+    }
+  }
+}
+
+export type AgeAssuranceWebhookPayload = {
+  payload: Omit<
+    AgeAssuranceWebhookIntermediateBody['payload'],
+    'externalPayload'
+  > & {
+    externalPayload: AgeAssuranceExternalPayload
+  }
+}
+
+const webhookBodyIntermediateSchema = z.object({
+  payload: z.object({
+    externalPayload: z.string(),
+    status: z.object({
+      verified: z.boolean(),
+    }),
+  }),
+})
 
 export class AgeAssuranceClient {
   constructor(public cfg: KwsConfig) {}
@@ -51,38 +89,44 @@ export class AgeAssuranceClient {
   }
 
   parseExternalPayload(serialized: string): AgeAssuranceExternalPayload {
-    const isAgeAssuranceExternalPayload = (
-      v: unknown,
-    ): v is AgeAssuranceExternalPayload => {
-      return (
-        !!v &&
-        typeof v === 'object' &&
-        'actorDid' in v &&
-        typeof v.actorDid === 'string' &&
-        'attemptId' in v &&
-        typeof v.attemptId === 'string' &&
-        Object.keys(v).length === 2
-      )
-    }
-
     const value: unknown = JSON.parse(serialized)
-    if (isAgeAssuranceExternalPayload(value)) {
-      return value
-    }
 
-    throw new Error(`Invalid external payload: ${serialized}`)
+    try {
+      return externalPayloadSchema.parse(value)
+    } catch (err) {
+      throw new Error(`Invalid external payload: ${serialized}`, { cause: err })
+    }
+  }
+
+  parseWebhookBody(serialized: string): AgeAssuranceWebhookPayload {
+    const value: unknown = JSON.parse(serialized)
+
+    try {
+      const intermediate: AgeAssuranceWebhookIntermediateBody =
+        webhookBodyIntermediateSchema.parse(value)
+
+      return {
+        ...intermediate,
+        payload: {
+          ...intermediate.payload,
+          externalPayload: this.parseExternalPayload(
+            intermediate.payload.externalPayload,
+          ),
+        },
+      }
+    } catch (err) {
+      throw new Error(`Invalid external payload: ${serialized}`, { cause: err })
+    }
   }
 
   async sendEmail({
-    actorDid,
-    attemptId,
     email,
     language,
+    externalPayload,
   }: {
-    actorDid: string
-    attemptId: string
     email: string
     language: string
+    externalPayload: AgeAssuranceExternalPayload
   }) {
     const accessToken = await this.accessToken()
 
@@ -95,11 +139,41 @@ export class AgeAssuranceClient {
       },
       body: JSON.stringify({
         email,
-        externalPayload: this.serializeExternalPayload({ actorDid, attemptId }),
+        externalPayload: this.serializeExternalPayload(externalPayload),
         language,
         location: 'US',
         userContext: 'adult',
       }),
     })
+  }
+
+  validateWebhookSignature(body: Buffer, sig: string | string[] | undefined) {
+    if (!sig) {
+      throw new Error('Missing webhook signature')
+    }
+
+    const signatureHeader = Array.isArray(sig) ? sig.join(',') : sig
+    const [t, v1] = signatureHeader.split(',')
+    const timestamp = t?.split('=')[1]
+    const signature = v1?.split('=')[1]
+
+    if (typeof timestamp !== 'string' || typeof signature !== 'string') {
+      throw new Error('Invalid signature header format')
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', this.cfg.webhookSigningKey)
+      .update(`${timestamp}.${body}`)
+      .digest('hex')
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex')
+    const signedBuffer = Buffer.from(signature, 'hex')
+
+    if (expectedBuffer.length !== signedBuffer.length) {
+      throw new Error(`Signature mismatch`)
+    }
+
+    if (!crypto.timingSafeEqual(expectedBuffer, signedBuffer)) {
+      throw new Error(`Signature mismatch`)
+    }
   }
 }

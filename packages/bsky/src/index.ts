@@ -11,7 +11,7 @@ import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { createAgeAssuranceClient } from './age-assurance'
-import API, { blobResolver, health, wellKnown } from './api'
+import API, { blobResolver, external, health, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
@@ -211,6 +211,7 @@ export class BskyAppView {
     app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
     app.use(server.xrpc.router)
     app.use(error.handler)
+    app.use('/external', external.createRouter(ctx))
 
     return new BskyAppView({ ctx, app })
   }

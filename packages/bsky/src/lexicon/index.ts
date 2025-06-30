@@ -165,7 +165,6 @@ import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/g
 import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 import * as AppBskyUnspeccedHandleAgeAssuranceComplete from './types/app/bsky/unspecced/handleAgeAssuranceComplete.js'
-import * as AppBskyUnspeccedHandleAgeAssuranceEvent from './types/app/bsky/unspecced/handleAgeAssuranceEvent.js'
 import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
@@ -2310,18 +2309,6 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.handleAgeAssuranceComplete' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  handleAgeAssuranceEvent<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedHandleAgeAssuranceEvent.QueryParams,
-      AppBskyUnspeccedHandleAgeAssuranceEvent.HandlerInput,
-      AppBskyUnspeccedHandleAgeAssuranceEvent.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.handleAgeAssuranceEvent' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

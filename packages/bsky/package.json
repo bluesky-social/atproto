@@ -68,7 +68,8 @@
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
-    "undici": "^6.19.8"
+    "undici": "^6.19.8",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",

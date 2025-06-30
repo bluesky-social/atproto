@@ -38,9 +38,12 @@ export default function (server: Server, ctx: AppContext) {
           const statusPayload = JSON.parse(rawStatusPayload) as StatusPayload
           const status = getResponseStatus(statusPayload)
           // TODO abstract this
-          const { actorDid, attemptId } = JSON.parse(externalPayload) as {
+          const { actorDid, attemptId, attemptIp } = JSON.parse(
+            externalPayload,
+          ) as {
             actorDid: string
             attemptId: string
+            attemptIp: string
           }
 
           if (!actorDid) {
@@ -53,9 +56,9 @@ export default function (server: Server, ctx: AppContext) {
           const NSID = 'app.bsky.unspecced.defs#ageAssuranceState'
           const payload: AgeAssuranceEvent = {
             timestamp: new Date().toISOString(),
-            source: 'user',
             status,
             attemptId,
+            attemptIp,
           }
 
           // TODO store this

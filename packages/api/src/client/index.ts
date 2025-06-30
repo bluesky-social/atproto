@@ -203,7 +203,6 @@ import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/g
 import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 import * as AppBskyUnspeccedHandleAgeAssuranceComplete from './types/app/bsky/unspecced/handleAgeAssuranceComplete.js'
-import * as AppBskyUnspeccedHandleAgeAssuranceEvent from './types/app/bsky/unspecced/handleAgeAssuranceEvent.js'
 import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
@@ -481,7 +480,6 @@ export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/g
 export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
 export * as AppBskyUnspeccedHandleAgeAssuranceComplete from './types/app/bsky/unspecced/handleAgeAssuranceComplete.js'
-export * as AppBskyUnspeccedHandleAgeAssuranceEvent from './types/app/bsky/unspecced/handleAgeAssuranceEvent.js'
 export * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
@@ -4093,18 +4091,6 @@ export class AppBskyUnspeccedNS {
       'app.bsky.unspecced.handleAgeAssuranceComplete',
       params,
       undefined,
-      opts,
-    )
-  }
-
-  handleAgeAssuranceEvent(
-    data?: AppBskyUnspeccedHandleAgeAssuranceEvent.InputSchema,
-    opts?: AppBskyUnspeccedHandleAgeAssuranceEvent.CallOptions,
-  ): Promise<AppBskyUnspeccedHandleAgeAssuranceEvent.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.handleAgeAssuranceEvent',
-      opts?.qp,
-      data,
       opts,
     )
   }

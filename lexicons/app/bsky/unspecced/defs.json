@@ -156,16 +156,12 @@
     "ageAssuranceEvent": {
       "type": "object",
       "description": "Object used to store age assurance data in stash.",
-      "required": ["timestamp", "source", "status"],
+      "required": ["timestamp", "status", "attemptId"],
       "properties": {
         "timestamp": {
           "type": "string",
           "format": "datetime",
           "description": "The date and time of this write operation."
-        },
-        "source": {
-          "type": "string",
-          "knownValues": ["user", "admin"]
         },
         "status": {
           "type": "string",
@@ -175,6 +171,10 @@
         "attemptId": {
           "type": "string",
           "description": "The unique identifier for this instance of the age assurance flow, in UUID format."
+        },
+        "attemptIp": {
+          "type": "string",
+          "description": "The IP address used for this age assurance flow."
         }
       }
     }

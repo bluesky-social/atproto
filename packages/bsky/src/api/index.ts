@@ -63,7 +63,6 @@ import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getTrends from './app/bsky/unspecced/getTrends'
 import handleAgeAssuranceComplete from './app/bsky/unspecced/handleAgeAssuranceComplete'
-import handleAgeAssuranceEvent from './app/bsky/unspecced/handleAgeAssuranceEvent'
 import initAgeAssurance from './app/bsky/unspecced/initAgeAssurance'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
@@ -78,6 +77,8 @@ export * as health from './health'
 export * as wellKnown from './well-known'
 
 export * as blobResolver from './blob-resolver'
+
+export * as external from './external'
 
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
@@ -144,7 +145,6 @@ export default function (server: Server, ctx: AppContext) {
   getTaggedSuggestions(server, ctx)
   getAgeAssuranceState(server, ctx)
   handleAgeAssuranceComplete(server, ctx)
-  handleAgeAssuranceEvent(server, ctx)
   initAgeAssurance(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
