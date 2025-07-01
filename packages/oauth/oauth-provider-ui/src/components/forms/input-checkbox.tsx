@@ -47,7 +47,7 @@ export function InputCheckbox({
             children
               ? // Prefer the local "<label>" element (through "htmlFor") over the wrapping "<fieldset>" to describe the checkbox.
                 undefined
-              : ariaLabelledBy ?? ctx.labelId
+              : (ariaLabelledBy ?? ctx.labelId)
           }
           ref={mergeRefs([ref, inputRef])}
           id={inputId}

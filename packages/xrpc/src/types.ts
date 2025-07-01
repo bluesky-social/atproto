@@ -150,7 +150,7 @@ export class XRPCError extends Error {
     const status: ResponseType =
       typeof statusCode === 'number'
         ? httpResponseCodeToEnum(statusCode)
-        : fallbackStatus ?? ResponseType.Unknown
+        : (fallbackStatus ?? ResponseType.Unknown)
 
     const message = causeErr?.message ?? String(cause)
 

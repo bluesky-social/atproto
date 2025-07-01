@@ -283,7 +283,7 @@ export const blobsForWrite = (
     mimeType: ref.mimeType,
     constraints:
       validate && recordType
-        ? CONSTRAINTS[recordType]?.[path.join('/')] ?? {}
+        ? (CONSTRAINTS[recordType]?.[path.join('/')] ?? {})
         : {},
   }))
 }
