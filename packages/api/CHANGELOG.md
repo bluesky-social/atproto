@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.15.21
+
+### Patch Changes
+
+- [#4010](https://github.com/bluesky-social/atproto/pull/4010) [`d344723a1`](https://github.com/bluesky-social/atproto/commit/d344723a1018b2436b5453526397936bd587a2e2) Thanks [@mozzius](https://github.com/mozzius)! - Loosen constraints for saved feed preferences
+
 ## 0.15.20
 
 ### Patch Changes
