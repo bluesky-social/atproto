@@ -811,6 +811,7 @@ export class ModerationService {
     subject: ModSubject
     reportedBy: string
     createdAt?: Date
+    modTool?: ToolsOzoneModerationDefs.ModTool
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -821,6 +822,7 @@ export class ModerationService {
       reportedBy,
       createdAt = new Date(),
       subject,
+      modTool,
     } = info
 
     const result = await this.logEvent({
@@ -832,6 +834,7 @@ export class ModerationService {
       createdBy: reportedBy,
       subject,
       createdAt,
+      modTool,
     })
 
     return result

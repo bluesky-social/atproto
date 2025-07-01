@@ -28,6 +28,10 @@
                 "com.atproto.admin.defs#repoRef",
                 "com.atproto.repo.strongRef"
               ]
+            },
+            "modTool": {
+              "type": "ref",
+              "ref": "tools.ozone.moderation.defs#modTool"
             }
           }
         }

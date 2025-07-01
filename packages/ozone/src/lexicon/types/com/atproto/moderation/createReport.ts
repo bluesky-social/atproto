@@ -14,6 +14,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import type * as ComAtprotoModerationDefs from './defs.js'
 import type * as ComAtprotoAdminDefs from '../admin/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../repo/strongRef.js'
+import type * as ToolsOzoneModerationDefs from '../../../tools/ozone/moderation/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -29,6 +30,7 @@ export interface InputSchema {
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>
     | { $type: string }
+  modTool?: ToolsOzoneModerationDefs.ModTool
 }
 
 export interface OutputSchema {
