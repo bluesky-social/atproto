@@ -2998,16 +2998,28 @@ describe('agent', () => {
         })
 
         describe(`validateSavedFeed`, () => {
-          it(`throws if invalid TID`, () => {
+          it(`throws if missing id`, () => {
             // really only checks length at time of writing
             expect(() =>
               validateSavedFeed({
-                id: 'a',
+                id: '',
                 type: 'feed',
                 value: feedUri(),
                 pinned: false,
               }),
             ).toThrow()
+          })
+
+          it(`does not throw if a UUID is used as id`, () => {
+            // really only checks length at time of writing
+            expect(() =>
+              validateSavedFeed({
+                id: '497dcba3-ecbf-4587-a2dd-5eb0665e6880',
+                type: 'feed',
+                value: feedUri(),
+                pinned: false,
+              }),
+            ).not.toThrow()
           })
 
           it(`throws if mismatched types`, () => {
