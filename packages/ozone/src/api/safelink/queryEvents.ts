@@ -1,4 +1,3 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { getSafelinkPattern } from '../util'

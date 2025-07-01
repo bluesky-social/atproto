@@ -1,4 +1,3 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import {
@@ -10,8 +9,7 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.safelink.queryRules({
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ input, auth }) => {
-      const access = auth.credentials
+    handler: async ({ input }) => {
       const db = ctx.db
       const {
         cursor,
