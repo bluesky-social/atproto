@@ -1391,7 +1391,7 @@ export const schemaDict = {
               },
               modTool: {
                 type: 'ref',
-                ref: 'lex:tools.ozone.moderation.defs#modTool',
+                ref: 'lex:com.atproto.moderation.createReport#modTool',
               },
             },
           },
@@ -1436,6 +1436,23 @@ export const schemaDict = {
                 format: 'datetime',
               },
             },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
           },
         },
       },

@@ -14,7 +14,6 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import type * as ComAtprotoModerationDefs from './defs.js'
 import type * as ComAtprotoAdminDefs from '../admin/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../repo/strongRef.js'
-import type * as ToolsOzoneModerationDefs from '../../../tools/ozone/moderation/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -30,7 +29,7 @@ export interface InputSchema {
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>
     | { $type: string }
-  modTool?: ToolsOzoneModerationDefs.ModTool
+  modTool?: ModTool
 }
 
 export interface OutputSchema {
@@ -73,3 +72,22 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+/** Moderation tool information for tracing the source of the action */
+export interface ModTool {
+  $type?: 'com.atproto.moderation.createReport#modTool'
+  /** Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome') */
+  name: string
+  /** Additional arbitrary metadata about the source */
+  meta?: { [_ in string]: unknown }
+}
+
+const hashModTool = 'modTool'
+
+export function isModTool<V>(v: V) {
+  return is$typed(v, id, hashModTool)
+}
+
+export function validateModTool<V>(v: V) {
+  return validate<ModTool & V>(v, id, hashModTool)
+}

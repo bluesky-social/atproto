@@ -811,7 +811,10 @@ export class ModerationService {
     subject: ModSubject
     reportedBy: string
     createdAt?: Date
-    modTool?: ToolsOzoneModerationDefs.ModTool
+    modTool?: {
+      name: string
+      meta?: { [_ in string]: unknown }
+    }
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
