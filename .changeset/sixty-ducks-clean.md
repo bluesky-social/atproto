@@ -2,4 +2,4 @@
 "@atproto/api": patch
 ---
 
-loosen contraints for saved feed preferences
+Loosen constraints for saved feed preferences
