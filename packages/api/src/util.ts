@@ -61,7 +61,9 @@ export function getSavedFeedType(
 }
 
 export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
-  new TID(savedFeed.id)
+  if (!savedFeed.id) {
+    throw new Error('Saved feed must have an `id` - use a TID')
+  }
 
   if (['feed', 'list'].includes(savedFeed.type)) {
     const uri = new AtUri(savedFeed.value)
