@@ -17,7 +17,10 @@ import { BlobDiverter } from './daemon/blob-diverter'
 import { Database } from './db'
 import { ImageInvalidator } from './image-invalidator'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
-import { SafelinkRuleService, SafelinkRuleServiceCreator } from './safelink/service'
+import {
+  SafelinkRuleService,
+  SafelinkRuleServiceCreator,
+} from './safelink/service'
 import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
