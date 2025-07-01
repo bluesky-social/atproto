@@ -359,20 +359,6 @@ describe('safelink management', () => {
 
       expect(page2.rules.length).toEqual(1)
     })
-
-    it('rejects non-moderators from querying rules', async () => {
-      await expect(
-        triageAgent.tools.ozone.safelink.queryRules(
-          {},
-          {
-            headers: await network.ozone.modHeaders(
-              ids.ToolsOzoneSafelinkQueryRules,
-              'triage',
-            ),
-          },
-        ),
-      ).rejects.toThrow('Must be a moderator to query URL rules')
-    })
   })
 
   describe('queryEvents', () => {
@@ -452,20 +438,6 @@ describe('safelink management', () => {
       expect(page1.events.length).toBeLessThanOrEqual(9)
       expect(page2.events.length).toEqual(1)
       expect(page3.cursor).toBeUndefined()
-    })
-
-    it('rejects non-moderators from querying events', async () => {
-      await expect(
-        triageAgent.tools.ozone.safelink.queryEvents(
-          {},
-          {
-            headers: await network.ozone.modHeaders(
-              ids.ToolsOzoneSafelinkQueryEvents,
-              'triage',
-            ),
-          },
-        ),
-      ).rejects.toThrow('Must be a moderator to query URL safety events')
     })
   })
 

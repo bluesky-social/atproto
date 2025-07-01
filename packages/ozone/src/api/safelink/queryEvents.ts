@@ -5,16 +5,9 @@ import { Server } from '../../lexicon'
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.safelink.queryEvents({
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ input, auth }) => {
-      const access = auth.credentials
+    handler: async ({ input }) => {
       const db = ctx.db
       const { cursor, limit, urls } = input.body
-
-      if (!access.isModerator) {
-        throw new AuthRequiredError(
-          'Must be a moderator to query URL safety events',
-        )
-      }
 
       const safelinkRuleService = ctx.safelinkRuleService(db)
       const result = await safelinkRuleService.queryEvents({

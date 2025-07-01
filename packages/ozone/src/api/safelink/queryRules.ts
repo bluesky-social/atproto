@@ -1,7 +1,11 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import { getSafelinkAction, getSafelinkPattern, getSafelinkReason } from '../util'
+import {
+  getSafelinkAction,
+  getSafelinkPattern,
+  getSafelinkReason,
+} from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.safelink.queryRules({
@@ -19,10 +23,6 @@ export default function (server: Server, ctx: AppContext) {
         createdBy,
         sortDirection,
       } = input.body
-
-      if (!access.isModerator) {
-        throw new AuthRequiredError('Must be a moderator to query URL rules')
-      }
 
       const safelinkRuleService = ctx.safelinkRuleService(db)
       const result = await safelinkRuleService.getActiveRules({
