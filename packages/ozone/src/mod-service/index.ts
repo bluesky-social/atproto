@@ -26,6 +26,7 @@ import {
   REVIEWESCALATED,
   REVIEWOPEN,
   isAccountEvent,
+  isAgeAssuranceEvent,
   isIdentityEvent,
   isModEventAcknowledge,
   isModEventComment,
@@ -454,6 +455,14 @@ export class ModerationService {
       meta.timestamp = event.timestamp
       meta.op = event.op
       if (event.cid) meta.cid = event.cid
+    }
+
+    if (isAgeAssuranceEvent(event)) {
+      meta.status = event.status
+      meta.source = event.source
+      if (event.attemptId) {
+        meta.attemptId = event.attemptId
+      }
     }
 
     if (

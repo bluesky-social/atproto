@@ -5,6 +5,7 @@ import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import {
   ModEventTag,
+  isAgeAssuranceEvent,
   isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
@@ -51,7 +52,9 @@ const handleModerationEvent = async ({
     input.body.subjectBlobCids,
   )
 
-  // apply access rules
+  if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
+    throw new InvalidRequestError('Invalid subject type')
+  }
 
   // if less than moderator access then can only take ack and escalation actions
   if (isTakedownEvent || isReverseTakedownEvent) {

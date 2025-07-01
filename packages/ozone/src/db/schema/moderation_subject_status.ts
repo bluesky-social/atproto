@@ -39,6 +39,7 @@ export interface ModerationSubjectStatus {
   comment: string | null
   tags: string[] | null
   priorityScore?: number
+  ageAssuranceState: string
 }
 
 export type PartialDB = {

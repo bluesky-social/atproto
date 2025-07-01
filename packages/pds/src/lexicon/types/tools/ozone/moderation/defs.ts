@@ -43,6 +43,7 @@ export interface ModEventView {
     | $Typed<IdentityEvent>
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
+    | $Typed<AgeAssuranceEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -89,6 +90,7 @@ export interface ModEventViewDetail {
     | $Typed<IdentityEvent>
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
+    | $Typed<AgeAssuranceEvent>
     | { $type: string }
   subject:
     | $Typed<RepoView>
@@ -145,6 +147,8 @@ export interface SubjectStatusView {
   tags?: string[]
   accountStats?: AccountStats
   recordsStats?: RecordsStats
+  /** Current age assurance state of the subject. */
+  ageAssuranceState?: 'pending' | 'assured' | 'unknown' | (string & {})
 }
 
 const hashSubjectStatusView = 'subjectStatusView'
@@ -382,6 +386,28 @@ export function isModEventPriorityScore<V>(v: V) {
 
 export function validateModEventPriorityScore<V>(v: V) {
   return validate<ModEventPriorityScore & V>(v, id, hashModEventPriorityScore)
+}
+
+/** Set age assurance state of the subject. Only works on DID subjects. */
+export interface AgeAssuranceEvent {
+  $type?: 'tools.ozone.moderation.defs#ageAssuranceEvent'
+  comment?: string
+  /** The source of the age assurance information. */
+  source: 'user' | 'admin' | (string & {})
+  /** The age assurance status. */
+  status: 'pending' | 'assured' | 'unknown' | (string & {})
+  /** An optional identifier for the age assurance attempt, typically coming from the AA provider. */
+  attemptId?: string
+}
+
+const hashAgeAssuranceEvent = 'ageAssuranceEvent'
+
+export function isAgeAssuranceEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceEvent)
+}
+
+export function validateAgeAssuranceEvent<V>(v: V) {
+  return validate<AgeAssuranceEvent & V>(v, id, hashAgeAssuranceEvent)
 }
 
 export interface ModEventAcknowledge {

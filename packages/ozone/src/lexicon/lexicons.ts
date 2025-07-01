@@ -13511,6 +13511,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#identityEvent',
               'lex:tools.ozone.moderation.defs#recordEvent',
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
+              'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
             ],
           },
           subject: {
@@ -13579,6 +13580,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#identityEvent',
               'lex:tools.ozone.moderation.defs#recordEvent',
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
+              'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
             ],
           },
           subject: {
@@ -13720,6 +13722,11 @@ export const schemaDict = {
               "Statistics related to the record subjects authored by the subject's account",
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#recordsStats',
+          },
+          ageAssuranceState: {
+            type: 'string',
+            description: 'Current age assurance state of the subject.',
+            knownValues: ['pending', 'assured', 'unknown'],
           },
         },
       },
@@ -13972,6 +13979,32 @@ export const schemaDict = {
             type: 'integer',
             minimum: 0,
             maximum: 100,
+          },
+        },
+      },
+      ageAssuranceEvent: {
+        type: 'object',
+        description:
+          'Set age assurance state of the subject. Only works on DID subjects.',
+        required: ['source', 'status'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          source: {
+            type: 'string',
+            description: 'The source of the age assurance information.',
+            knownValues: ['user', 'admin'],
+          },
+          status: {
+            type: 'string',
+            knownValues: ['pending', 'assured', 'unknown'],
+            description: 'The age assurance status.',
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'An optional identifier for the age assurance attempt, typically coming from the AA provider.',
           },
         },
       },
@@ -14658,6 +14691,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#identityEvent',
                   'lex:tools.ozone.moderation.defs#recordEvent',
                   'lex:tools.ozone.moderation.defs#modEventPriorityScore',
+                  'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
                 ],
               },
               subject: {

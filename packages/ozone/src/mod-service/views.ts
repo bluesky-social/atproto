@@ -29,6 +29,7 @@ import {
   RepoView,
   SubjectStatusView,
   isAccountEvent,
+  isAgeAssuranceEvent,
   isIdentityEvent,
   isModEventAcknowledge,
   isModEventComment,
@@ -238,6 +239,12 @@ export class ModerationViews {
       event.op = ifString(meta.op)!
       event.cid = ifString(meta.cid)!
       event.timestamp = ifString(meta.timestamp)!
+    }
+
+    if (isAgeAssuranceEvent(event)) {
+      event.source = ifString(meta.source)!
+      event.status = ifString(meta.status)!
+      event.attemptId = ifString(meta.attemptId)
     }
 
     return eventView
@@ -681,6 +688,7 @@ export class ModerationViews {
       subjectBlobCids: status.blobCids || [],
       tags: status.tags || [],
       priorityScore: status.priorityScore,
+      ageAssuranceState: status.ageAssuranceState ?? undefined,
       subject: subjectFromStatusRow(
         status,
       ).lex() as SubjectStatusView['subject'],

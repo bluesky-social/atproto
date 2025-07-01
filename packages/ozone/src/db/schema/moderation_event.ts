@@ -23,6 +23,7 @@ export interface ModerationEvent {
     | 'tools.ozone.moderation.defs#identityEvent'
     | 'tools.ozone.moderation.defs#recordEvent'
     | 'tools.ozone.moderation.defs#modEventPriorityScore'
+    | 'tools.ozone.moderation.defs#ageAssuranceEvent'
   subjectType:
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'

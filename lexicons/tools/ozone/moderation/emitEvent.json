@@ -32,7 +32,8 @@
                 "tools.ozone.moderation.defs#accountEvent",
                 "tools.ozone.moderation.defs#identityEvent",
                 "tools.ozone.moderation.defs#recordEvent",
-                "tools.ozone.moderation.defs#modEventPriorityScore"
+                "tools.ozone.moderation.defs#modEventPriorityScore",
+                "tools.ozone.moderation.defs#ageAssuranceEvent"
               ]
             },
             "subject": {

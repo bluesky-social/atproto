@@ -35,7 +35,8 @@
             "#accountEvent",
             "#identityEvent",
             "#recordEvent",
-            "#modEventPriorityScore"
+            "#modEventPriorityScore",
+            "#ageAssuranceEvent"
           ]
         },
         "subject": {
@@ -86,7 +87,8 @@
             "#accountEvent",
             "#identityEvent",
             "#recordEvent",
-            "#modEventPriorityScore"
+            "#modEventPriorityScore",
+            "#ageAssuranceEvent"
           ]
         },
         "subject": {
@@ -201,6 +203,11 @@
           "description": "Statistics related to the record subjects authored by the subject's account",
           "type": "ref",
           "ref": "#recordsStats"
+        },
+        "ageAssuranceState": {
+          "type": "string",
+          "description": "Current age assurance state of the subject.",
+          "knownValues": ["pending", "assured", "unknown"]
         }
       }
     },
@@ -431,6 +438,30 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 100
+        }
+      }
+    },
+    "ageAssuranceEvent": {
+      "type": "object",
+      "description": "Set age assurance state of the subject. Only works on DID subjects.",
+      "required": ["source", "status"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "description": "The source of the age assurance information.",
+          "knownValues": ["user", "admin"]
+        },
+        "status": {
+          "type": "string",
+          "knownValues": ["pending", "assured", "unknown"],
+          "description": "The age assurance status."
+        },
+        "attemptId": {
+          "type": "string",
+          "description": "An optional identifier for the age assurance attempt, typically coming from the AA provider."
         }
       }
     },
