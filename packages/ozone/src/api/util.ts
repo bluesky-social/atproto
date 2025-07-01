@@ -2,12 +2,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
 import { Member } from '../db/schema/member'
 import { ModerationEvent } from '../db/schema/moderation_event'
-import {
-  SafelinkActionType,
-  SafelinkEventType,
-  SafelinkPatternType,
-  SafelinkReasonType,
-} from '../db/schema/safelink'
 import { ids } from '../lexicon/lexicons'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport'
@@ -28,20 +22,6 @@ import {
   RepoView,
   RepoViewDetail,
 } from '../lexicon/types/tools/ozone/moderation/defs'
-import {
-  ADDRULE,
-  BLOCK,
-  CSAM,
-  DOMAIN,
-  NONE,
-  PHISHING,
-  REMOVERULE,
-  SPAM,
-  UPDATERULE,
-  URL,
-  WARN,
-  WHITELIST,
-} from '../lexicon/types/tools/ozone/safelink/defs'
 import {
   ROLEADMIN,
   ROLEMODERATOR,
@@ -240,10 +220,12 @@ export const getSafelinkEventType = (eventType: string): SafelinkEventType => {
   throw new InvalidRequestError('Invalid safelink event type')
 }
 
-const safelinkPatterns = new Set([DOMAIN, URL])
+export type SafelinkEventType = 'addRule' | 'updateRule' | 'removeRule'
+export type SafelinkPatternType = 'domain' | 'url'
+export type SafelinkActionType = 'block' | 'warn' | 'whitelist'
+export type SafelinkReasonType = 'csam' | 'spam' | 'phishing' | 'none'
 
-const safelinkActions = new Set([BLOCK, WARN, WHITELIST])
-
-const safelinkReasons = new Set([CSAM, SPAM, PHISHING, NONE])
-
-const safelinkEventTypes = new Set([ADDRULE, UPDATERULE, REMOVERULE])
+const safelinkPatterns = new Set(['domain', 'url'])
+const safelinkActions = new Set(['block', 'warn', 'whitelist'])
+const safelinkReasons = new Set(['csam', 'spam', 'phishing', 'none'])
+const safelinkEventTypes = new Set(['addRule', 'updateRule', 'removeRule'])

@@ -42,57 +42,10 @@ export function validateEvent<V>(v: V) {
   return validate<Event & V>(v, id, hashEvent)
 }
 
-export type EventType =
-  | 'lex:tools.ozone.safelink.defs#addRule'
-  | 'lex:tools.ozone.safelink.defs#updateRule'
-  | 'lex:tools.ozone.safelink.defs#removeRule'
-  | (string & {})
-
-/** Add a new URL safety rule */
-export const ADDRULE = `${id}#addRule`
-/** Update an existing URL safety rule */
-export const UPDATERULE = `${id}#updateRule`
-/** Remove an existing URL safety rule */
-export const REMOVERULE = `${id}#removeRule`
-
-export type PatternType =
-  | 'lex:tools.ozone.safelink.defs#domain'
-  | 'lex:tools.ozone.safelink.defs#url'
-  | (string & {})
-
-/** Pattern type: Apply rule to entire domain */
-export const DOMAIN = `${id}#domain`
-/** Pattern type: Apply rule to specific URL */
-export const URL = `${id}#url`
-
-export type ActionType =
-  | 'lex:tools.ozone.safelink.defs#block'
-  | 'lex:tools.ozone.safelink.defs#warn'
-  | 'lex:tools.ozone.safelink.defs#whitelist'
-  | (string & {})
-
-/** Action type: Block access to URL/domain */
-export const BLOCK = `${id}#block`
-/** Action type: Show warning interstitial */
-export const WARN = `${id}#warn`
-/** Action type: Explicitly allow URL/domain */
-export const WHITELIST = `${id}#whitelist`
-
-export type ReasonType =
-  | 'lex:tools.ozone.safelink.defs#csam'
-  | 'lex:tools.ozone.safelink.defs#spam'
-  | 'lex:tools.ozone.safelink.defs#phishing'
-  | 'lex:tools.ozone.safelink.defs#none'
-  | (string & {})
-
-/** Reason type: Child Sexual Abuse Material */
-export const CSAM = `${id}#csam`
-/** Reason type: Spam content */
-export const SPAM = `${id}#spam`
-/** Reason type: Phishing attempt */
-export const PHISHING = `${id}#phishing`
-/** Reason type: No specific reason */
-export const NONE = `${id}#none`
+export type EventType = 'addRule' | 'updateRule' | 'removeRule' | (string & {})
+export type PatternType = 'domain' | 'url' | (string & {})
+export type ActionType = 'block' | 'warn' | 'whitelist' | (string & {})
+export type ReasonType = 'csam' | 'spam' | 'phishing' | 'none' | (string & {})
 
 /** Input for creating a URL safety rule */
 export interface UrlRule {

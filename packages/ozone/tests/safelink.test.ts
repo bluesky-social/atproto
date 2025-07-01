@@ -1,4 +1,4 @@
-import { AtpAgent, ToolsOzoneSafelinkDefs } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
 import { forSnapshot } from './_util'
@@ -35,9 +35,9 @@ describe('safelink management', () => {
   describe('addRule', () => {
     const testRule = {
       url: 'https://malicious-site.com',
-      pattern: ToolsOzoneSafelinkDefs.DOMAIN,
-      action: ToolsOzoneSafelinkDefs.BLOCK,
-      reason: ToolsOzoneSafelinkDefs.PHISHING,
+      pattern: 'domain',
+      action: 'block',
+      reason: 'phishing',
       comment: 'Known phishing domain targeting users',
     }
 
@@ -112,9 +112,9 @@ describe('safelink management', () => {
   describe('updateRule', () => {
     const updateTestRule = {
       url: 'https://update-test.com',
-      pattern: ToolsOzoneSafelinkDefs.DOMAIN,
-      action: ToolsOzoneSafelinkDefs.WARN,
-      reason: ToolsOzoneSafelinkDefs.SPAM,
+      pattern: 'domain',
+      action: 'warn',
+      reason: 'spam',
       comment: 'Initially marked as spam',
     }
 
@@ -129,8 +129,8 @@ describe('safelink management', () => {
       const updatedData = {
         url: updateTestRule.url,
         pattern: updateTestRule.pattern,
-        action: ToolsOzoneSafelinkDefs.BLOCK,
-        reason: ToolsOzoneSafelinkDefs.PHISHING,
+        action: 'block',
+        reason: 'phishing',
         comment: 'Updated: confirmed phishing site',
       }
 
@@ -173,9 +173,9 @@ describe('safelink management', () => {
   describe('removeRule', () => {
     const removeTestRule = {
       url: 'https://remove-test.com',
-      pattern: ToolsOzoneSafelinkDefs.URL,
-      action: ToolsOzoneSafelinkDefs.BLOCK,
-      reason: ToolsOzoneSafelinkDefs.CSAM,
+      pattern: 'url',
+      action: 'block',
+      reason: 'csam',
       comment: 'Rule to be removed',
     }
 
@@ -197,7 +197,7 @@ describe('safelink management', () => {
           await getAdminHeaders(ids.ToolsOzoneSafelinkRemoveRule),
         )
 
-      expect(removed.eventType).toEqual(ToolsOzoneSafelinkDefs.REMOVERULE)
+      expect(removed.eventType).toEqual('removeRule')
       expect(removed.url).toEqual(removeTestRule.url)
       expect(removed.comment).toEqual('Removing rule - false positive')
     })
@@ -206,9 +206,9 @@ describe('safelink management', () => {
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: 'https://remove-test2.com',
-          pattern: ToolsOzoneSafelinkDefs.DOMAIN,
-          action: ToolsOzoneSafelinkDefs.BLOCK,
-          reason: ToolsOzoneSafelinkDefs.SPAM,
+          pattern: 'domain',
+          action: 'block',
+          reason: 'spam',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
       )
@@ -217,7 +217,7 @@ describe('safelink management', () => {
         triageAgent.tools.ozone.safelink.removeRule(
           {
             url: 'https://remove-test2.com',
-            pattern: ToolsOzoneSafelinkDefs.DOMAIN,
+            pattern: 'domain',
           },
           {
             headers: await network.ozone.modHeaders(
@@ -234,7 +234,7 @@ describe('safelink management', () => {
         adminAgent.tools.ozone.safelink.removeRule(
           {
             url: 'https://never-existed.com',
-            pattern: ToolsOzoneSafelinkDefs.DOMAIN,
+            pattern: 'domain',
           },
           await getAdminHeaders(ids.ToolsOzoneSafelinkRemoveRule),
         ),
@@ -247,18 +247,18 @@ describe('safelink management', () => {
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: 'https://query-test1.com',
-          pattern: ToolsOzoneSafelinkDefs.DOMAIN,
-          action: ToolsOzoneSafelinkDefs.BLOCK,
-          reason: ToolsOzoneSafelinkDefs.PHISHING,
+          pattern: 'domain',
+          action: 'block',
+          reason: 'phishing',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
       )
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: 'https://query-test2.com/specific-path',
-          pattern: ToolsOzoneSafelinkDefs.URL,
-          action: ToolsOzoneSafelinkDefs.WARN,
-          reason: ToolsOzoneSafelinkDefs.SPAM,
+          pattern: 'url',
+          action: 'warn',
+          reason: 'spam',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
       )
@@ -278,54 +278,42 @@ describe('safelink management', () => {
       const { data: blocked } =
         await adminAgent.tools.ozone.safelink.queryRules(
           {
-            actions: [ToolsOzoneSafelinkDefs.BLOCK],
+            actions: ['block'],
           },
           await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
         )
 
       const { data: warned } = await adminAgent.tools.ozone.safelink.queryRules(
         {
-          actions: [ToolsOzoneSafelinkDefs.WARN],
+          actions: ['warn'],
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
       )
 
-      expect(
-        blocked.rules.every(
-          (rule) => rule.action === ToolsOzoneSafelinkDefs.BLOCK,
-        ),
-      ).toBe(true)
-      expect(
-        warned.rules.every(
-          (rule) => rule.action === ToolsOzoneSafelinkDefs.WARN,
-        ),
-      ).toBe(true)
+      expect(blocked.rules.every((rule) => rule.action === 'block')).toBe(true)
+      expect(warned.rules.every((rule) => rule.action === 'warn')).toBe(true)
     })
 
     it('allows filtering rules by reason', async () => {
       const { data: phishing } =
         await adminAgent.tools.ozone.safelink.queryRules(
           {
-            reason: ToolsOzoneSafelinkDefs.PHISHING,
+            reason: 'phishing',
           },
           await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
         )
 
       const { data: spam } = await adminAgent.tools.ozone.safelink.queryRules(
         {
-          reason: ToolsOzoneSafelinkDefs.SPAM,
+          reason: 'spam',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
       )
 
-      expect(
-        phishing.rules.every(
-          (rule) => rule.reason === ToolsOzoneSafelinkDefs.PHISHING,
-        ),
-      ).toBe(true)
-      expect(
-        spam.rules.every((rule) => rule.reason === ToolsOzoneSafelinkDefs.SPAM),
-      ).toBe(true)
+      expect(phishing.rules.every((rule) => rule.reason === 'phishing')).toBe(
+        true,
+      )
+      expect(spam.rules.every((rule) => rule.reason === 'spam')).toBe(true)
     })
 
     it('allows searching by URL', async () => {
@@ -366,9 +354,9 @@ describe('safelink management', () => {
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: 'https://events-test.com',
-          pattern: ToolsOzoneSafelinkDefs.DOMAIN,
-          action: ToolsOzoneSafelinkDefs.WARN,
-          reason: ToolsOzoneSafelinkDefs.SPAM,
+          pattern: 'domain',
+          action: 'warn',
+          reason: 'spam',
           comment: 'Initial rule creation',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
@@ -376,9 +364,9 @@ describe('safelink management', () => {
       await adminAgent.tools.ozone.safelink.updateRule(
         {
           url: 'https://events-test.com',
-          pattern: ToolsOzoneSafelinkDefs.DOMAIN,
-          action: ToolsOzoneSafelinkDefs.BLOCK,
-          reason: ToolsOzoneSafelinkDefs.PHISHING,
+          pattern: 'domain',
+          action: 'block',
+          reason: 'phishing',
           comment: 'Escalated to block',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkUpdateRule),
@@ -444,14 +432,14 @@ describe('safelink management', () => {
   describe('event history over time', () => {
     it('maintains audit trail through rule lifecycle', async () => {
       const testUrl = 'https://lifecycle-test.com'
-      const pattern = ToolsOzoneSafelinkDefs.DOMAIN
+      const pattern = 'domain'
 
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: testUrl,
           pattern,
-          action: ToolsOzoneSafelinkDefs.WARN,
-          reason: ToolsOzoneSafelinkDefs.SPAM,
+          action: 'warn',
+          reason: 'spam',
           comment: 'Initial warning',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
@@ -461,8 +449,8 @@ describe('safelink management', () => {
         {
           url: testUrl,
           pattern,
-          action: ToolsOzoneSafelinkDefs.BLOCK,
-          reason: ToolsOzoneSafelinkDefs.PHISHING,
+          action: 'block',
+          reason: 'phishing',
           comment: 'Escalated to block',
         },
         await getAdminHeaders(ids.ToolsOzoneSafelinkUpdateRule),
@@ -487,13 +475,7 @@ describe('safelink management', () => {
 
       expect(events.events.length).toEqual(3)
       const eventTypes = events.events.map((e) => e.eventType).sort()
-      expect(eventTypes).toEqual(
-        [
-          ToolsOzoneSafelinkDefs.ADDRULE,
-          ToolsOzoneSafelinkDefs.UPDATERULE,
-          ToolsOzoneSafelinkDefs.REMOVERULE,
-        ].sort(),
-      )
+      expect(eventTypes).toEqual(['addRule', 'updateRule', 'removeRule'].sort())
 
       const { data: queryResult } =
         await adminAgent.tools.ozone.safelink.queryRules(
@@ -513,9 +495,9 @@ describe('safelink management', () => {
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: domain,
-          pattern: ToolsOzoneSafelinkDefs.DOMAIN,
-          action: ToolsOzoneSafelinkDefs.BLOCK,
-          reason: ToolsOzoneSafelinkDefs.PHISHING,
+          pattern: 'domain',
+          action: 'block',
+          reason: 'phishing',
         },
         headers,
       )
@@ -523,9 +505,9 @@ describe('safelink management', () => {
       await adminAgent.tools.ozone.safelink.addRule(
         {
           url: specificUrl,
-          pattern: ToolsOzoneSafelinkDefs.URL,
-          action: ToolsOzoneSafelinkDefs.WHITELIST,
-          reason: ToolsOzoneSafelinkDefs.NONE,
+          pattern: 'url',
+          action: 'whitelist',
+          reason: 'none',
         },
         headers,
       )
@@ -538,9 +520,7 @@ describe('safelink management', () => {
           await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
         )
       expect(specificResult.rules.length).toEqual(1)
-      expect(specificResult.rules[0]?.action).toEqual(
-        ToolsOzoneSafelinkDefs.WHITELIST,
-      )
+      expect(specificResult.rules[0]?.action).toEqual('whitelist')
 
       const { data: domainResult } =
         await adminAgent.tools.ozone.safelink.queryRules(
@@ -548,9 +528,7 @@ describe('safelink management', () => {
           await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
         )
       expect(domainResult.rules.length).toEqual(1)
-      expect(domainResult.rules[0]?.action).toEqual(
-        ToolsOzoneSafelinkDefs.BLOCK,
-      )
+      expect(domainResult.rules[0]?.action).toEqual('block')
     })
   })
 })

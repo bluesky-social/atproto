@@ -1,14 +1,14 @@
 import { Selectable } from 'kysely'
 import { ToolsOzoneSafelinkDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db'
-import { TimeIdKeyset, paginate } from '../db/pagination'
 import {
   SafelinkActionType,
-  SafelinkEvent,
   SafelinkPatternType,
   SafelinkReasonType,
-} from '../db/schema/safelink'
+} from '../api/util'
+import { Database } from '../db'
+import { TimeIdKeyset, paginate } from '../db/pagination'
+import { SafelinkEvent } from '../db/schema/safelink'
 
 export type SafelinkRuleServiceCreator = (db: Database) => SafelinkRuleService
 
@@ -56,6 +56,7 @@ export class SafelinkRuleService {
       )
     }
 
+    const now = new Date().toISOString()
     const rule = {
       url,
       pattern,
@@ -63,20 +64,23 @@ export class SafelinkRuleService {
       reason,
       createdBy,
       comment: comment || null,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
     }
 
     return await this.db.transaction(async (txn) => {
       const event = await txn.db
         .insertInto('safelink_event')
         .values({
-          eventType: 'tools.ozone.safelink.defs#addRule',
+          eventType: 'addRule',
           ...rule,
         })
         .returningAll()
         .executeTakeFirstOrThrow()
 
-      await txn.db.insertInto('safelink_rule').values(rule).execute()
+      await txn.db
+        .insertInto('safelink_rule')
+        .values({ ...rule, updatedAt: now })
+        .execute()
 
       return event
     })
@@ -120,7 +124,7 @@ export class SafelinkRuleService {
           createdAt: now,
           url: existingRule.url,
           pattern: existingRule.pattern,
-          eventType: 'tools.ozone.safelink.defs#updateRule',
+          eventType: 'updateRule',
           ...rule,
         })
         .returningAll()
@@ -160,7 +164,7 @@ export class SafelinkRuleService {
       const event = await txn.db
         .insertInto('safelink_event')
         .values({
-          eventType: 'tools.ozone.safelink.defs#removeRule',
+          eventType: 'removeRule',
           url,
           pattern,
           action: existingRule.action,

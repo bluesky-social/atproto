@@ -1,27 +1,13 @@
 import { GeneratedAlways } from 'kysely'
+import {
+  SafelinkActionType,
+  SafelinkEventType,
+  SafelinkPatternType,
+  SafelinkReasonType,
+} from '../../api/util'
 
 export const safelinkRuleTableName = 'safelink_rule'
 export const safelinkEventTableName = 'safelink_event'
-
-export type SafelinkEventType =
-  | 'tools.ozone.safelink.defs#addRule'
-  | 'tools.ozone.safelink.defs#updateRule'
-  | 'tools.ozone.safelink.defs#removeRule'
-
-export type SafelinkPatternType =
-  | 'tools.ozone.safelink.defs#domain'
-  | 'tools.ozone.safelink.defs#url'
-
-export type SafelinkActionType =
-  | 'tools.ozone.safelink.defs#block'
-  | 'tools.ozone.safelink.defs#warn'
-  | 'tools.ozone.safelink.defs#whitelist'
-
-export type SafelinkReasonType =
-  | 'tools.ozone.safelink.defs#csam'
-  | 'tools.ozone.safelink.defs#spam'
-  | 'tools.ozone.safelink.defs#phishing'
-  | 'tools.ozone.safelink.defs#none'
 
 export interface SafelinkRule {
   id: GeneratedAlways<number>
@@ -31,7 +17,7 @@ export interface SafelinkRule {
   reason: SafelinkReasonType
   createdBy: string
   createdAt: string
-  updatedAt: GeneratedAlways<string>
+  updatedAt: string
   comment: string | null
 }
 

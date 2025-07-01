@@ -15315,83 +15315,19 @@ export const schemaDict = {
       },
       eventType: {
         type: 'string',
-        knownValues: [
-          'lex:tools.ozone.safelink.defs#addRule',
-          'lex:tools.ozone.safelink.defs#updateRule',
-          'lex:tools.ozone.safelink.defs#removeRule',
-        ],
-      },
-      addRule: {
-        type: 'token',
-        description: 'Add a new URL safety rule',
-      },
-      updateRule: {
-        type: 'token',
-        description: 'Update an existing URL safety rule',
-      },
-      removeRule: {
-        type: 'token',
-        description: 'Remove an existing URL safety rule',
+        knownValues: ['addRule', 'updateRule', 'removeRule'],
       },
       patternType: {
         type: 'string',
-        knownValues: [
-          'lex:tools.ozone.safelink.defs#domain',
-          'lex:tools.ozone.safelink.defs#url',
-        ],
-      },
-      domain: {
-        type: 'token',
-        description: 'Pattern type: Apply rule to entire domain',
-      },
-      url: {
-        type: 'token',
-        description: 'Pattern type: Apply rule to specific URL',
+        knownValues: ['domain', 'url'],
       },
       actionType: {
         type: 'string',
-        knownValues: [
-          'lex:tools.ozone.safelink.defs#block',
-          'lex:tools.ozone.safelink.defs#warn',
-          'lex:tools.ozone.safelink.defs#whitelist',
-        ],
-      },
-      block: {
-        type: 'token',
-        description: 'Action type: Block access to URL/domain',
-      },
-      warn: {
-        type: 'token',
-        description: 'Action type: Show warning interstitial',
-      },
-      whitelist: {
-        type: 'token',
-        description: 'Action type: Explicitly allow URL/domain',
+        knownValues: ['block', 'warn', 'whitelist'],
       },
       reasonType: {
         type: 'string',
-        knownValues: [
-          'lex:tools.ozone.safelink.defs#csam',
-          'lex:tools.ozone.safelink.defs#spam',
-          'lex:tools.ozone.safelink.defs#phishing',
-          'lex:tools.ozone.safelink.defs#none',
-        ],
-      },
-      csam: {
-        type: 'token',
-        description: 'Reason type: Child Sexual Abuse Material',
-      },
-      spam: {
-        type: 'token',
-        description: 'Reason type: Spam content',
-      },
-      phishing: {
-        type: 'token',
-        description: 'Reason type: Phishing attempt',
-      },
-      none: {
-        type: 'token',
-        description: 'Reason type: No specific reason',
+        knownValues: ['csam', 'spam', 'phishing', 'none'],
       },
       urlRule: {
         type: 'object',

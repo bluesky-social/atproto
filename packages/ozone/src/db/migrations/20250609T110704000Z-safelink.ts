@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely'
+import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -10,9 +10,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('action', 'varchar', (col) => col.notNull())
     .addColumn('reason', 'varchar', (col) => col.notNull())
     .addColumn('createdBy', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) =>
-      col.defaultTo(sql`now()`).notNull(),
-    )
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('comment', 'text')
     .execute()
 
@@ -24,44 +22,34 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('action', 'varchar', (col) => col.notNull())
     .addColumn('reason', 'varchar', (col) => col.notNull())
     .addColumn('createdBy', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) =>
-      col.defaultTo(sql`now()`).notNull(),
-    )
-    .addColumn('updatedAt', 'varchar', (col) =>
-      col.defaultTo(sql`now()`).notNull(),
-    )
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('updatedAt', 'varchar', (col) => col.notNull())
     .addColumn('comment', 'text')
-    .addUniqueConstraint('safelink_url_pattern_key', ['url', 'pattern'])
+    .addUniqueConstraint('safelink_rule_url_pattern_key', ['url', 'pattern'])
     .execute()
 
   await db.schema
-    .createIndex('safelink_event_url_idx')
+    .createIndex('safelink_event_created_at_id_idx')
     .on('safelink_event')
-    .column('url')
+    .columns(['createdAt', 'id'])
     .execute()
 
   await db.schema
-    .createIndex('safelink_event_id_created_at_idx')
+    .createIndex('safelink_event_url_pattern_idx')
     .on('safelink_event')
-    .columns(['id', 'createdAt'])
+    .columns(['url', 'pattern'])
     .execute()
 
   await db.schema
-    .createIndex('safelink_action_idx')
+    .createIndex('safelink_rule_action_idx')
     .on('safelink_rule')
     .column('action')
     .execute()
 
   await db.schema
-    .createIndex('safelink_reason_idx')
+    .createIndex('safelink_rule_reason_idx')
     .on('safelink_rule')
     .column('reason')
-    .execute()
-
-  await db.schema
-    .createIndex('safelink_updated_at_idx')
-    .on('safelink_rule')
-    .column('updatedAt')
     .execute()
 }
 

@@ -269,20 +269,6 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
 }
-export const TOOLS_OZONE_SAFELINK = {
-  DefsAddRule: 'tools.ozone.safelink.defs#addRule',
-  DefsUpdateRule: 'tools.ozone.safelink.defs#updateRule',
-  DefsRemoveRule: 'tools.ozone.safelink.defs#removeRule',
-  DefsDomain: 'tools.ozone.safelink.defs#domain',
-  DefsUrl: 'tools.ozone.safelink.defs#url',
-  DefsBlock: 'tools.ozone.safelink.defs#block',
-  DefsWarn: 'tools.ozone.safelink.defs#warn',
-  DefsWhitelist: 'tools.ozone.safelink.defs#whitelist',
-  DefsCsam: 'tools.ozone.safelink.defs#csam',
-  DefsSpam: 'tools.ozone.safelink.defs#spam',
-  DefsPhishing: 'tools.ozone.safelink.defs#phishing',
-  DefsNone: 'tools.ozone.safelink.defs#none',
-}
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
   DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
