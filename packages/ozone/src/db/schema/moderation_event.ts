@@ -43,7 +43,7 @@ export interface ModerationEvent {
   addedTags: string[] | null
   removedTags: string[] | null
   legacyRefId: number | null
-  userAgent: { name: string; extra?: unknown } | null
+  modTool: { name: string; extra?: unknown } | null
 }
 
 export type PartialDB = {

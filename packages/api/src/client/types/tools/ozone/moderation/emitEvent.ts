@@ -48,7 +48,7 @@ export interface InputSchema {
     | { $type: string }
   subjectBlobCids?: string[]
   createdBy: string
-  userAgent?: ToolsOzoneModerationDefs.UserAgent
+  modTool?: ToolsOzoneModerationDefs.ModTool
 }
 
 export type OutputSchema = ToolsOzoneModerationDefs.ModEventView

@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         collections = [],
         subjectType,
         policies,
-        userAgent,
+        modTool,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
         collections,
         subjectType,
         policies,
-        userAgent,
+        modTool,
       })
       return {
         encoding: 'application/json',

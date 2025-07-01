@@ -51,7 +51,7 @@
         "createdAt": { "type": "string", "format": "datetime" },
         "creatorHandle": { "type": "string" },
         "subjectHandle": { "type": "string" },
-        "userAgent": { "type": "ref", "ref": "#userAgent" }
+        "modTool": { "type": "ref", "ref": "#modTool" }
       }
     },
     "modEventViewDetail": {
@@ -105,7 +105,7 @@
         },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
-        "userAgent": { "type": "ref", "ref": "#userAgent" }
+        "modTool": { "type": "ref", "ref": "#modTool" }
       }
     },
     "subjectStatusView": {
@@ -897,9 +897,9 @@
         }
       }
     },
-    "userAgent": {
+    "modTool": {
       "type": "object",
-      "description": "User agent information for tracing the source of the action",
+      "description": "Moderation tool information for tracing the source of the action",
       "required": ["name"],
       "properties": {
         "name": {

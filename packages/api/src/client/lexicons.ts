@@ -13541,9 +13541,9 @@ export const schemaDict = {
           subjectHandle: {
             type: 'string',
           },
-          userAgent: {
+          modTool: {
             type: 'ref',
-            ref: 'lex:tools.ozone.moderation.defs#userAgent',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
           },
         },
       },
@@ -13609,9 +13609,9 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          userAgent: {
+          modTool: {
             type: 'ref',
-            ref: 'lex:tools.ozone.moderation.defs#userAgent',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
           },
         },
       },
@@ -14629,10 +14629,10 @@ export const schemaDict = {
           },
         },
       },
-      userAgent: {
+      modTool: {
         type: 'object',
         description:
-          'User agent information for tracing the source of the action',
+          'Moderation tool information for tracing the source of the action',
         required: ['name'],
         properties: {
           name: {
@@ -14703,9 +14703,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
-              userAgent: {
+              modTool: {
                 type: 'ref',
-                ref: 'lex:tools.ozone.moderation.defs#userAgent',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
               },
             },
           },
@@ -15111,13 +15111,13 @@ export const schemaDict = {
                   'If specified, only events where the action policies match any of the given policies are returned',
               },
             },
-            userAgent: {
+            modTool: {
               type: 'array',
               items: {
                 type: 'string',
               },
               description:
-                'If specified, only events where the userAgent name matches any of the given values are returned',
+                'If specified, only events where the modTool name matches any of the given values are returned',
             },
             cursor: {
               type: 'string',

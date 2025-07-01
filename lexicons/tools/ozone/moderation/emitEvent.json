@@ -53,9 +53,9 @@
               "type": "string",
               "format": "did"
             },
-            "userAgent": {
+            "modTool": {
               "type": "ref",
-              "ref": "tools.ozone.moderation.defs#userAgent"
+              "ref": "tools.ozone.moderation.defs#modTool"
             }
           }
         }

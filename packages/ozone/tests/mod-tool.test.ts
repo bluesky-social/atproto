@@ -5,14 +5,14 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 
-describe('user-agent tracking', () => {
+describe('mod-tool tracking', () => {
   let network: TestNetwork
   let sc: SeedClient
   let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_user_agent_test',
+      dbPostgresSchema: 'ozone_mod_tool_test',
     })
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
@@ -24,14 +24,14 @@ describe('user-agent tracking', () => {
     await network.close()
   })
 
-  it('stores and returns userAgent with name and extra metadata', async () => {
+  it('stores and returns modTool with name and extra metadata', async () => {
     const subject = {
       $type: 'com.atproto.repo.strongRef' as const,
       uri: sc.posts[sc.dids.bob][0].ref.uriStr,
       cid: sc.posts[sc.dids.bob][0].ref.cidStr,
     }
 
-    const userAgent = {
+    const modTool = {
       name: 'automod/1.1.3',
       extra: {
         confidence: 85,
@@ -48,12 +48,12 @@ describe('user-agent tracking', () => {
         negateLabelVals: [],
       },
       subject,
-      userAgent,
+      modTool,
     })
 
-    expect(emittedEvent.userAgent).toEqual(userAgent)
-    expect(emittedEvent.userAgent?.name).toBe('automod/1.1.3')
-    expect(emittedEvent.userAgent?.extra).toEqual({
+    expect(emittedEvent.modTool).toEqual(modTool)
+    expect(emittedEvent.modTool?.name).toBe('automod/1.1.3')
+    expect(emittedEvent.modTool?.extra).toEqual({
       confidence: 85,
       rules: ['high_risk_country', 'spam_detection'],
       version: '1.1.3',
@@ -65,10 +65,10 @@ describe('user-agent tracking', () => {
     })
 
     const foundEvent = queryResult.events.find((e) => e.id === emittedEvent.id)
-    expect(foundEvent?.userAgent).toEqual(userAgent)
+    expect(foundEvent?.modTool).toEqual(modTool)
   })
 
-  it('filters events by userAgent name', async () => {
+  it('filters events by modTool name', async () => {
     const subject = {
       $type: 'com.atproto.repo.strongRef' as const,
       uri: sc.posts[sc.dids.alice][0].ref.uriStr,
@@ -82,7 +82,7 @@ describe('user-agent tracking', () => {
         negateLabelVals: [],
       },
       subject,
-      userAgent: { name: 'automod/1.1.3' },
+      modTool: { name: 'automod/1.1.3' },
     })
 
     const event2 = await modClient.emitEvent({
@@ -92,7 +92,7 @@ describe('user-agent tracking', () => {
         negateLabelVals: [],
       },
       subject,
-      userAgent: { name: 'ozone-web/1.0.0' },
+      modTool: { name: 'ozone-web/1.0.0' },
     })
 
     const event3 = await modClient.emitEvent({
@@ -102,21 +102,21 @@ describe('user-agent tracking', () => {
         negateLabelVals: [],
       },
       subject,
-      userAgent: { name: 'mobile-app/2.1.0' },
+      modTool: { name: 'mobile-app/2.1.0' },
     })
 
     const automodResults = await modClient.queryEvents({
       subject: subject.uri,
-      userAgent: ['automod/1.1.3'],
+      modTool: ['automod/1.1.3'],
     })
 
     expect(automodResults.events).toHaveLength(1)
     expect(automodResults.events[0].id).toBe(event1.id)
-    expect(automodResults.events[0].userAgent?.name).toBe('automod/1.1.3')
+    expect(automodResults.events[0].modTool?.name).toBe('automod/1.1.3')
 
     const multipleResults = await modClient.queryEvents({
       subject: subject.uri,
-      userAgent: ['automod/1.1.3', 'ozone-web/1.0.0'],
+      modTool: ['automod/1.1.3', 'ozone-web/1.0.0'],
     })
 
     expect(multipleResults.events).toHaveLength(2)

@@ -77,7 +77,7 @@ export class ModeratorClient {
       reason?: string
       createdBy?: string
       meta?: unknown
-      userAgent?: ToolsOzoneModerationDefs.UserAgent
+      modTool?: ToolsOzoneModerationDefs.ModTool
     },
     role?: ModLevel,
   ) {
@@ -86,7 +86,7 @@ export class ModeratorClient {
       subject,
       subjectBlobCids,
       createdBy = 'did:example:admin',
-      userAgent,
+      modTool,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
@@ -94,7 +94,7 @@ export class ModeratorClient {
         subject,
         subjectBlobCids,
         createdBy,
-        userAgent,
+        modTool,
       },
       {
         encoding: 'application/json',
@@ -113,7 +113,7 @@ export class ModeratorClient {
       subject: TakeActionInput['subject']
       reason?: string
       createdBy?: string
-      userAgent?: ToolsOzoneModerationDefs.UserAgent
+      modTool?: ToolsOzoneModerationDefs.ModTool
     },
     role?: ModLevel,
   ) {
@@ -121,7 +121,7 @@ export class ModeratorClient {
       subject,
       reason = 'X',
       createdBy = 'did:example:admin',
-      userAgent,
+      modTool,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
@@ -131,7 +131,7 @@ export class ModeratorClient {
           comment: reason,
         },
         createdBy,
-        userAgent,
+        modTool,
       },
       {
         encoding: 'application/json',

@@ -167,7 +167,7 @@ export class ModerationService {
     collections: string[]
     subjectType?: string
     policies?: string[]
-    userAgent?: string[]
+    modTool?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -189,7 +189,7 @@ export class ModerationService {
       collections,
       subjectType,
       policies,
-      userAgent,
+      modTool,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -290,10 +290,10 @@ export class ModerationService {
         return qb
       })
     }
-    if (userAgent?.length) {
+    if (modTool?.length) {
       builder = builder
-        .where('userAgent', 'is not', null)
-        .where(sql`("userAgent" ->> 'name')`, 'in', userAgent)
+        .where('modTool', 'is not', null)
+        .where(sql`("modTool" ->> 'name')`, 'in', modTool)
     }
 
     const keyset = new TimeIdKeyset(
@@ -404,7 +404,7 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
-    userAgent?: { name: string; extra?: unknown } | null
+    modTool?: { name: string; extra?: unknown } | null
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -415,7 +415,7 @@ export class ModerationService {
       subject,
       createdBy,
       createdAt = new Date(),
-      userAgent,
+      modTool,
     } = info
 
     const createLabelVals =
@@ -522,7 +522,7 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
-        userAgent: userAgent ? jsonb(userAgent) : null,
+        modTool: modTool ? jsonb(modTool) : null,
       })
       .returningAll()
       .executeTakeFirstOrThrow()

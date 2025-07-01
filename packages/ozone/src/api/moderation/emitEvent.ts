@@ -154,7 +154,7 @@ const handleModerationEvent = async ({
       event,
       subject,
       createdBy,
-      userAgent: input.body.userAgent,
+      modTool: input.body.modTool,
     })
 
     const tagService = new TagService(
@@ -244,7 +244,7 @@ export default function (server: Server, ctx: AppContext) {
                 comment:
                   '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
               },
-              userAgent: input.body.userAgent,
+              modTool: input.body.modTool,
             },
           },
         })

@@ -141,10 +141,10 @@ export class ModerationViews {
       createdAt: row.createdAt,
       subjectHandle: row.subjectHandle ?? undefined,
       creatorHandle: row.creatorHandle ?? undefined,
-      userAgent: row.userAgent
+      modTool: row.modTool
         ? {
-            name: row.userAgent.name,
-            extra: row.userAgent.extra as { [x: string]: unknown } | undefined,
+            name: row.modTool.name,
+            extra: row.modTool.extra as { [x: string]: unknown } | undefined,
           }
         : undefined,
     }
