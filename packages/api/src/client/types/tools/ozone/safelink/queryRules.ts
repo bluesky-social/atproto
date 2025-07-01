@@ -23,10 +23,10 @@ export interface InputSchema {
   cursor?: string
   /** Maximum number of results to return */
   limit?: number
-  /** Filter by specific URLs or domains */
+  /** Filter by specific URLs */
   urls?: string[]
-  /** Filter by domains */
-  domains?: string[]
+  /** Filter by pattern type */
+  patternType?: string
   /** Filter by action types */
   actions?: string[]
   /** Filter by reason type */

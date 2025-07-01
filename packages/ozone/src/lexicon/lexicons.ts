@@ -15522,14 +15522,11 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
-                description: 'Filter by specific URLs or domains',
+                description: 'Filter by specific URLs',
               },
-              domains: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-                description: 'Filter by domains',
+              patternType: {
+                type: 'string',
+                description: 'Filter by pattern type',
               },
               actions: {
                 type: 'array',

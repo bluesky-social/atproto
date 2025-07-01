@@ -201,7 +201,7 @@ export class SafelinkRuleService {
     cursor,
     limit = 50,
     urls,
-    domains,
+    patternType,
     actions,
     reason,
     createdBy,
@@ -210,7 +210,7 @@ export class SafelinkRuleService {
     cursor?: string
     limit?: number
     urls?: string[]
-    domains?: string[]
+    patternType?: SafelinkPatternType
     actions?: SafelinkActionType[]
     reason?: SafelinkReasonType
     createdBy?: string
@@ -221,18 +221,19 @@ export class SafelinkRuleService {
     if (urls && urls.length > 0) {
       query = query.where('url', 'in', urls)
     }
-    if (domains && domains.length > 0) {
-      query = query.where((eb) => {
-        domains.map((d) => (eb = eb.orWhere('url', 'like', `%${d}%`)))
-        return eb
-      })
+
+    if (patternType) {
+      query = query.where('pattern', '=', patternType)
     }
+
     if (actions && actions.length > 0) {
       query = query.where('action', 'in', actions)
     }
+
     if (reason) {
       query = query.where('reason', '=', reason)
     }
+
     if (createdBy) {
       query = query.where('createdBy', '=', createdBy)
     }

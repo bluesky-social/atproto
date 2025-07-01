@@ -1,7 +1,7 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import { getSafelinkAction, getSafelinkReason } from '../util'
+import { getSafelinkAction, getSafelinkPattern, getSafelinkReason } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.safelink.queryRules({
@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         limit,
         urls,
-        domains,
+        patternType,
         actions,
         reason,
         createdBy,
@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         limit,
         urls,
-        domains,
+        patternType: patternType ? getSafelinkPattern(patternType) : undefined,
         actions:
           actions && actions.length > 0
             ? actions.map(getSafelinkAction)
