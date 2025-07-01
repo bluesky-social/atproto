@@ -17,7 +17,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('safelink')
+    .createTable('safelink_rule')
     .addColumn('id', 'bigserial', (col) => col.primaryKey())
     .addColumn('url', 'varchar', (col) => col.notNull())
     .addColumn('pattern', 'varchar', (col) => col.notNull())
@@ -48,24 +48,24 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createIndex('safelink_action_idx')
-    .on('safelink')
+    .on('safelink_rule')
     .column('action')
     .execute()
 
   await db.schema
     .createIndex('safelink_reason_idx')
-    .on('safelink')
+    .on('safelink_rule')
     .column('reason')
     .execute()
 
   await db.schema
     .createIndex('safelink_updated_at_idx')
-    .on('safelink')
+    .on('safelink_rule')
     .column('updatedAt')
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('safelink').execute()
+  await db.schema.dropTable('safelink_rule').execute()
   await db.schema.dropTable('safelink_event').execute()
 }

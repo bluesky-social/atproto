@@ -16,8 +16,8 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const safelinkService = ctx.safelinkService(db)
-      const result = await safelinkService.queryEvents({
+      const safelinkRuleService = ctx.safelinkRuleService(db)
+      const result = await safelinkRuleService.queryEvents({
         cursor,
         limit,
         urls,
@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           cursor: result.cursor,
           events: result.events.map((event) =>
-            safelinkService.formatEvent(event),
+            safelinkRuleService.formatEvent(event),
           ),
         },
       }

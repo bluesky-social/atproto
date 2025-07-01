@@ -1,6 +1,6 @@
 import { GeneratedAlways } from 'kysely'
 
-export const safelinkTableName = 'safelink'
+export const safelinkRuleTableName = 'safelink_rule'
 export const safelinkEventTableName = 'safelink_event'
 
 export type SafelinkEventType =
@@ -23,7 +23,7 @@ export type SafelinkReasonType =
   | 'tools.ozone.safelink.defs#phishing'
   | 'tools.ozone.safelink.defs#none'
 
-export interface Safelink {
+export interface SafelinkRule {
   id: GeneratedAlways<number>
   url: string
   pattern: SafelinkPatternType
@@ -48,6 +48,6 @@ export interface SafelinkEvent {
 }
 
 export type PartialDB = {
-  [safelinkTableName]: Safelink
+  [safelinkRuleTableName]: SafelinkRule
   [safelinkEventTableName]: SafelinkEvent
 }

@@ -10,13 +10,13 @@ import {
   SafelinkReasonType,
 } from '../db/schema/safelink'
 
-export type SafelinkServiceCreator = (db: Database) => SafelinkService
+export type SafelinkRuleServiceCreator = (db: Database) => SafelinkRuleService
 
-export class SafelinkService {
+export class SafelinkRuleService {
   constructor(public db: Database) {}
 
   static creator() {
-    return (db: Database) => new SafelinkService(db)
+    return (db: Database) => new SafelinkRuleService(db)
   }
 
   formatEvent(event: Selectable<SafelinkEvent>): ToolsOzoneSafelinkDefs.Event {
@@ -76,7 +76,7 @@ export class SafelinkService {
         .returningAll()
         .executeTakeFirstOrThrow()
 
-      await txn.db.insertInto('safelink').values(rule).execute()
+      await txn.db.insertInto('safelink_rule').values(rule).execute()
 
       return event
     })
@@ -127,7 +127,7 @@ export class SafelinkService {
         .executeTakeFirstOrThrow()
 
       await txn.db
-        .updateTable('safelink')
+        .updateTable('safelink_rule')
         .set(rule)
         .where('url', '=', url)
         .where('pattern', '=', pattern)
@@ -173,7 +173,7 @@ export class SafelinkService {
         .executeTakeFirstOrThrow()
 
       await txn.db
-        .deleteFrom('safelink')
+        .deleteFrom('safelink_rule')
         .where('url', '=', url)
         .where('pattern', '=', pattern)
         .execute()
@@ -184,7 +184,7 @@ export class SafelinkService {
 
   async getActiveRule(url: string, pattern: SafelinkPatternType) {
     const rule = await this.db.db
-      .selectFrom('safelink')
+      .selectFrom('safelink_rule')
       .selectAll()
       .where('url', '=', url)
       .where('pattern', '=', pattern)
@@ -216,7 +216,7 @@ export class SafelinkService {
     createdBy?: string
     direction?: 'asc' | 'desc'
   } = {}) {
-    let query = this.db.db.selectFrom('safelink').selectAll()
+    let query = this.db.db.selectFrom('safelink_rule').selectAll()
 
     if (urls && urls.length > 0) {
       query = query.where('url', 'in', urls)

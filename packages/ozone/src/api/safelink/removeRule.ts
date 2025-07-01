@@ -21,9 +21,9 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const safelinkService = ctx.safelinkService(db)
+      const safelinkRuleService = ctx.safelinkRuleService(db)
 
-      const event = await safelinkService.removeRule({
+      const event = await safelinkRuleService.removeRule({
         url,
         pattern: getSafelinkPattern(pattern),
         createdBy:
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: safelinkService.formatEvent(event),
+        body: safelinkRuleService.formatEvent(event),
       }
     },
   })

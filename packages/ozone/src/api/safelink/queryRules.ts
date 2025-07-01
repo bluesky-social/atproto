@@ -24,8 +24,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Must be a moderator to query URL rules')
       }
 
-      const safelinkService = ctx.safelinkService(db)
-      const result = await safelinkService.getActiveRules({
+      const safelinkRuleService = ctx.safelinkRuleService(db)
+      const result = await safelinkRuleService.getActiveRules({
         cursor,
         limit,
         urls,
