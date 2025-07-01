@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         pattern: getSafelinkPattern(pattern),
         createdBy:
           access.type === 'admin_token'
-            ? createdBy || 'admin_token'
+            ? createdBy || ctx.cfg.service.did
             : access.iss,
         comment,
       })
