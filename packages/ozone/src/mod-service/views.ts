@@ -144,7 +144,7 @@ export class ModerationViews {
       modTool: row.modTool
         ? {
             name: row.modTool.name,
-            extra: row.modTool.extra as { [x: string]: unknown } | undefined,
+            meta: row.modTool.meta,
           }
         : undefined,
     }

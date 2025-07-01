@@ -14640,7 +14640,7 @@ export const schemaDict = {
             description:
               "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')",
           },
-          extra: {
+          meta: {
             type: 'unknown',
             description: 'Additional arbitrary metadata about the source',
           },

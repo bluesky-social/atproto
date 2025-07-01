@@ -1,6 +1,6 @@
 import { Insertable, RawBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -404,19 +404,13 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
-    modTool?: { name: string; extra?: unknown } | null
+    modTool?: ToolsOzoneModerationDefs.ModTool
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
   }> {
     this.db.assertTransaction()
-    const {
-      event,
-      subject,
-      createdBy,
-      createdAt = new Date(),
-      modTool,
-    } = info
+    const { event, subject, createdBy, createdAt = new Date(), modTool } = info
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0

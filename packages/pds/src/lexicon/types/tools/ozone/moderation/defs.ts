@@ -902,7 +902,7 @@ export interface ModTool {
   /** Name/identifier of the source (e.g., 'automod', 'ozone/workspace') */
   name: string
   /** Additional arbitrary metadata about the source */
-  extra?: { [_ in string]: unknown }
+  meta?: { [_ in string]: unknown }
 }
 
 const hashModTool = 'modTool'

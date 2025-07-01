@@ -24,7 +24,7 @@ describe('mod-tool tracking', () => {
     await network.close()
   })
 
-  it('stores and returns modTool with name and extra metadata', async () => {
+  it('stores and returns modTool with name and meta metadata', async () => {
     const subject = {
       $type: 'com.atproto.repo.strongRef' as const,
       uri: sc.posts[sc.dids.bob][0].ref.uriStr,
@@ -33,7 +33,7 @@ describe('mod-tool tracking', () => {
 
     const modTool = {
       name: 'automod/1.1.3',
-      extra: {
+      meta: {
         confidence: 85,
         rules: ['high_risk_country', 'spam_detection'],
         version: '1.1.3',
@@ -53,7 +53,7 @@ describe('mod-tool tracking', () => {
 
     expect(emittedEvent.modTool).toEqual(modTool)
     expect(emittedEvent.modTool?.name).toBe('automod/1.1.3')
-    expect(emittedEvent.modTool?.extra).toEqual({
+    expect(emittedEvent.modTool?.meta).toEqual({
       confidence: 85,
       rules: ['high_risk_country', 'spam_detection'],
       version: '1.1.3',
