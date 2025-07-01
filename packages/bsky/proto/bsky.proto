@@ -111,6 +111,14 @@ message GetActorChatDeclarationRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetNotificationDeclarationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetNotificationDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetStatusRecordsRequest {
   repeated string uris = 1;
 }
@@ -473,6 +481,7 @@ message ActorInfo {
   // Tags being applied to the profile record
   repeated string profile_tags = 16;
   Record status_record = 17;
+  string allow_activity_subscriptions_from = 18;
 }
 
 message GetActorsResponse {
@@ -870,6 +879,39 @@ message GetUnreadNotificationCountResponse {
   int32 count = 1;
 }
 
+message GetActivitySubscriptionDidsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActivitySubscriptionDidsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
+message PostActivitySubscription {}
+message ReplyActivitySubscription {}
+
+message ActivitySubscription {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  optional PostActivitySubscription post = 4;
+  optional ReplyActivitySubscription reply = 5;
+  string subject_did = 6;
+  google.protobuf.Timestamp indexed_at = 7;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string subject_dids = 2;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsResponse {
+  repeated ActivitySubscription subscriptions = 1;
+}
+
 //
 // FeedGenerators
 //
@@ -1243,6 +1285,7 @@ service Service {
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
+  rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
   rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
@@ -1321,6 +1364,8 @@ service Service {
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
+  rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
+  rpc GetActivitySubscriptionsByActorAndSubjects(GetActivitySubscriptionsByActorAndSubjectsRequest) returns (GetActivitySubscriptionsByActorAndSubjectsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
   // FeedGenerators

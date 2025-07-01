@@ -4,6 +4,9 @@ exports[`pds profile views fetches multiple profiles 1`] = `
 Array [
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
@@ -43,6 +46,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "carol.test",
             "labels": Array [],
@@ -59,6 +67,9 @@ Array [
   },
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
@@ -81,6 +92,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
@@ -116,6 +132,9 @@ Array [
   },
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
@@ -134,6 +153,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
@@ -169,6 +193,9 @@ Array [
   },
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "chat": Object {
         "allowIncoming": "none",
       },
@@ -190,6 +217,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
@@ -229,6 +261,9 @@ Array [
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -268,6 +303,11 @@ Object {
       "count": 1,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
@@ -287,6 +327,9 @@ Object {
 exports[`pds profile views fetches other's profile, without a follow 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "chat": Object {
       "allowIncoming": "none",
     },
@@ -308,6 +351,11 @@ Object {
       "count": 1,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(1)",
@@ -346,6 +394,9 @@ Object {
 exports[`pds profile views fetches own profile 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -383,6 +434,11 @@ Object {
       "count": 2,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
@@ -397,6 +453,11 @@ Object {
           },
         },
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(4)",
           "handle": "carol.test",
           "labels": Array [],
@@ -417,6 +478,9 @@ Object {
 exports[`pds profile views presents avatars & banners 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -439,6 +503,11 @@ Object {
       "count": 2,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
@@ -453,6 +522,11 @@ Object {
           },
         },
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(4)",
           "handle": "carol.test",
           "labels": Array [],

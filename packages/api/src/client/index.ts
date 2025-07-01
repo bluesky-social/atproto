@@ -173,10 +173,13 @@ import * as AppBskyGraphVerification from './types/app/bsky/graph/verification.j
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
+import * as AppBskyNotificationDeclaration from './types/app/bsky/notification/declaration.js'
 import * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
 import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
+import * as AppBskyNotificationListActivitySubscriptions from './types/app/bsky/notification/listActivitySubscriptions.js'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+import * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/notification/putActivitySubscription.js'
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
@@ -438,10 +441,13 @@ export * as AppBskyGraphVerification from './types/app/bsky/graph/verification.j
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
+export * as AppBskyNotificationDeclaration from './types/app/bsky/notification/declaration.js'
 export * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
 export * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
+export * as AppBskyNotificationListActivitySubscriptions from './types/app/bsky/notification/listActivitySubscriptions.js'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+export * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/notification/putActivitySubscription.js'
 export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
@@ -1016,6 +1022,24 @@ export class ComAtprotoLexiconSchemaRecord {
     const collection = 'com.atproto.lexicon.schema'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComAtprotoLexiconSchema.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.atproto.lexicon.schema'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -1895,6 +1919,24 @@ export class AppBskyActorProfileRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyActorProfile.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.actor.profile'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -1956,6 +1998,24 @@ export class AppBskyActorStatusRecord {
         ...params,
         record: { ...record, $type: collection },
       },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyActorStatus.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.actor.status'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
     )
     return res.data
@@ -2244,6 +2304,24 @@ export class AppBskyFeedGeneratorRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedGenerator.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.generator'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -2298,6 +2376,24 @@ export class AppBskyFeedLikeRecord {
     const collection = 'app.bsky.feed.like'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedLike.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.like'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -2366,6 +2462,24 @@ export class AppBskyFeedPostRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedPost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -2420,6 +2534,24 @@ export class AppBskyFeedPostgateRecord {
     const collection = 'app.bsky.feed.postgate'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedPostgate.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.postgate'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -2488,6 +2620,24 @@ export class AppBskyFeedRepostRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedRepost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.repost'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -2546,6 +2696,24 @@ export class AppBskyFeedThreadgateRecord {
     const collection = 'app.bsky.feed.threadgate'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedThreadgate.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.threadgate'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -2857,6 +3025,24 @@ export class AppBskyGraphBlockRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphBlock.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.block'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -2918,6 +3104,24 @@ export class AppBskyGraphFollowRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphFollow.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.follow'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -2972,6 +3176,24 @@ export class AppBskyGraphListRecord {
     const collection = 'app.bsky.graph.list'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphList.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.list'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -3044,6 +3266,24 @@ export class AppBskyGraphListblockRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphListblock.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.listblock'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -3098,6 +3338,24 @@ export class AppBskyGraphListitemRecord {
     const collection = 'app.bsky.graph.listitem'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphListitem.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.listitem'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -3170,6 +3428,24 @@ export class AppBskyGraphStarterpackRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphStarterpack.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.starterpack'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -3228,6 +3504,24 @@ export class AppBskyGraphVerificationRecord {
     const collection = 'app.bsky.graph.verification'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphVerification.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.verification'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -3327,6 +3621,24 @@ export class AppBskyLabelerServiceRecord {
     return res.data
   }
 
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyLabelerService.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.labeler.service'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
   async delete(
     params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>,
@@ -3342,9 +3654,11 @@ export class AppBskyLabelerServiceRecord {
 
 export class AppBskyNotificationNS {
   _client: XrpcClient
+  declaration: AppBskyNotificationDeclarationRecord
 
   constructor(client: XrpcClient) {
     this._client = client
+    this.declaration = new AppBskyNotificationDeclarationRecord(client)
   }
 
   getPreferences(
@@ -3371,6 +3685,18 @@ export class AppBskyNotificationNS {
     )
   }
 
+  listActivitySubscriptions(
+    params?: AppBskyNotificationListActivitySubscriptions.QueryParams,
+    opts?: AppBskyNotificationListActivitySubscriptions.CallOptions,
+  ): Promise<AppBskyNotificationListActivitySubscriptions.Response> {
+    return this._client.call(
+      'app.bsky.notification.listActivitySubscriptions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   listNotifications(
     params?: AppBskyNotificationListNotifications.QueryParams,
     opts?: AppBskyNotificationListNotifications.CallOptions,
@@ -3379,6 +3705,18 @@ export class AppBskyNotificationNS {
       'app.bsky.notification.listNotifications',
       params,
       undefined,
+      opts,
+    )
+  }
+
+  putActivitySubscription(
+    data?: AppBskyNotificationPutActivitySubscription.InputSchema,
+    opts?: AppBskyNotificationPutActivitySubscription.CallOptions,
+  ): Promise<AppBskyNotificationPutActivitySubscription.Response> {
+    return this._client.call(
+      'app.bsky.notification.putActivitySubscription',
+      opts?.qp,
+      data,
       opts,
     )
   }
@@ -3428,6 +3766,94 @@ export class AppBskyNotificationNS {
       opts?.qp,
       data,
       opts,
+    )
+  }
+}
+
+export class AppBskyNotificationDeclarationRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyNotificationDeclaration.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.notification.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyNotificationDeclaration.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.notification.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyNotificationDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.notification.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyNotificationDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.notification.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.notification.declaration', ...params },
+      { headers },
     )
   }
 }
@@ -3815,6 +4241,24 @@ export class ChatBskyActorDeclarationRecord {
         ...params,
         record: { ...record, $type: collection },
       },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ChatBskyActorDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'chat.bsky.actor.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
     )
     return res.data

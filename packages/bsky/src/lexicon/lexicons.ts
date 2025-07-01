@@ -4732,6 +4732,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
           },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
+          },
         },
       },
       profileAssociatedChat: {
@@ -4741,6 +4745,16 @@ export const schemaDict = {
           allowIncoming: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedActivitySubscription: {
+        type: 'object',
+        required: ['allowSubscriptions'],
+        properties: {
+          allowSubscriptions: {
+            type: 'string',
+            knownValues: ['followers', 'mutuals', 'none'],
           },
         },
       },
@@ -4776,8 +4790,16 @@ export const schemaDict = {
             format: 'at-uri',
           },
           knownFollowers: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
+          },
+          activitySubscription: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
         },
       },
@@ -9724,6 +9746,30 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationDeclaration: {
+    lexicon: 1,
+    id: 'app.bsky.notification.declaration',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "A declaration of the user's choices related to notifications that can be produced by them.",
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['allowSubscriptions'],
+          properties: {
+            allowSubscriptions: {
+              type: 'string',
+              description:
+                "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'.",
+              knownValues: ['followers', 'mutuals', 'none'],
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationDefs: {
     lexicon: 1,
     id: 'app.bsky.notification.defs',
@@ -9845,6 +9891,34 @@ export const schemaDict = {
           },
         },
       },
+      activitySubscription: {
+        type: 'object',
+        required: ['post', 'reply'],
+        properties: {
+          post: {
+            type: 'boolean',
+          },
+          reply: {
+            type: 'boolean',
+          },
+        },
+      },
+      subjectActivitySubscription: {
+        description:
+          'Object used to store activity subscription data in stash.',
+        type: 'object',
+        required: ['subject', 'activitySubscription'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
+          },
+        },
+      },
     },
   },
   AppBskyNotificationGetPreferences: {
@@ -9903,6 +9977,50 @@ export const schemaDict = {
             properties: {
               count: {
                 type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationListActivitySubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.notification.listActivitySubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate all accounts to which the requesting account is subscribed to receive notifications for. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
               },
             },
           },
@@ -10015,6 +10133,7 @@ export const schemaDict = {
               'unverified',
               'like-via-repost',
               'repost-via-repost',
+              'subscribed-post',
             ],
           },
           reasonSubject: {
@@ -10036,6 +10155,51 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutActivitySubscription: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putActivitySubscription',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Puts an activity subscription entry. The key should be omitted for creation and provided for updates. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'activitySubscription'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
             },
           },
         },
@@ -13163,11 +13327,16 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationDeclaration: 'app.bsky.notification.declaration',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
   AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
+  AppBskyNotificationListActivitySubscriptions:
+    'app.bsky.notification.listActivitySubscriptions',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutActivitySubscription:
+    'app.bsky.notification.putActivitySubscription',
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',

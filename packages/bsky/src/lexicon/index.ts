@@ -140,7 +140,9 @@ import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.j
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
 import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
+import * as AppBskyNotificationListActivitySubscriptions from './types/app/bsky/notification/listActivitySubscriptions.js'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+import * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/notification/putActivitySubscription.js'
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
@@ -1877,6 +1879,19 @@ export class AppBskyNotificationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  listActivitySubscriptions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationListActivitySubscriptions.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationListActivitySubscriptions.HandlerReqCtx<
+        ExtractAuth<AV>
+      >
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.listActivitySubscriptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listNotifications<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1885,6 +1900,17 @@ export class AppBskyNotificationNS {
     >,
   ) {
     const nsid = 'app.bsky.notification.listNotifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putActivitySubscription<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationPutActivitySubscription.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationPutActivitySubscription.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putActivitySubscription' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

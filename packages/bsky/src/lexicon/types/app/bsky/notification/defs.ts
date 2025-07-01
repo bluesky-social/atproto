@@ -103,3 +103,40 @@ export function isPreferences<V>(v: V) {
 export function validatePreferences<V>(v: V) {
   return validate<Preferences & V>(v, id, hashPreferences)
 }
+
+export interface ActivitySubscription {
+  $type?: 'app.bsky.notification.defs#activitySubscription'
+  post: boolean
+  reply: boolean
+}
+
+const hashActivitySubscription = 'activitySubscription'
+
+export function isActivitySubscription<V>(v: V) {
+  return is$typed(v, id, hashActivitySubscription)
+}
+
+export function validateActivitySubscription<V>(v: V) {
+  return validate<ActivitySubscription & V>(v, id, hashActivitySubscription)
+}
+
+/** Object used to store activity subscription data in stash. */
+export interface SubjectActivitySubscription {
+  $type?: 'app.bsky.notification.defs#subjectActivitySubscription'
+  subject: string
+  activitySubscription: ActivitySubscription
+}
+
+const hashSubjectActivitySubscription = 'subjectActivitySubscription'
+
+export function isSubjectActivitySubscription<V>(v: V) {
+  return is$typed(v, id, hashSubjectActivitySubscription)
+}
+
+export function validateSubjectActivitySubscription<V>(v: V) {
+  return validate<SubjectActivitySubscription & V>(
+    v,
+    id,
+    hashSubjectActivitySubscription,
+  )
+}
