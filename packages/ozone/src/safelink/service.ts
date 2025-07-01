@@ -107,7 +107,6 @@ export class SafelinkRuleService {
 
     const now = new Date().toISOString()
     const rule = {
-      pattern,
       action,
       reason,
       createdBy,
@@ -118,8 +117,9 @@ export class SafelinkRuleService {
       const event = await txn.db
         .insertInto('safelink_event')
         .values({
-          url,
           createdAt: now,
+          url: existingRule.url,
+          pattern: existingRule.pattern,
           eventType: 'tools.ozone.safelink.defs#updateRule',
           ...rule,
         })
@@ -129,8 +129,8 @@ export class SafelinkRuleService {
       await txn.db
         .updateTable('safelink_rule')
         .set(rule)
-        .where('url', '=', url)
-        .where('pattern', '=', pattern)
+        .where('url', '=', existingRule.url)
+        .where('pattern', '=', existingRule.pattern)
         .execute()
 
       return event
@@ -259,12 +259,12 @@ export class SafelinkRuleService {
     cursor,
     limit = 50,
     urls,
-    domains,
+    patternType,
   }: {
     cursor?: string
     limit?: number
     urls?: string[]
-    domains?: string[]
+    patternType?: SafelinkPatternType
   } = {}): Promise<{
     events: Selectable<SafelinkEvent>[]
     cursor?: string
@@ -275,11 +275,9 @@ export class SafelinkRuleService {
     if (urls && urls.length > 0) {
       query = query.where('url', 'in', urls)
     }
-    if (domains && domains.length > 0) {
-      query = query.where((eb) => {
-        domains.map((d) => (eb = eb.orWhere('url', 'like', `%${d}%`)))
-        return eb
-      })
+
+    if (patternType) {
+      query = query.where('pattern', '=', patternType)
     }
 
     const keyset = new TimeIdKeyset(ref('createdAt'), ref('id'))

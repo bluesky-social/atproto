@@ -1,19 +1,21 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
+import { getSafelinkPattern } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.safelink.queryEvents({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input }) => {
       const db = ctx.db
-      const { cursor, limit, urls } = input.body
+      const { cursor, limit, urls, patternType } = input.body
 
       const safelinkRuleService = ctx.safelinkRuleService(db)
       const result = await safelinkRuleService.queryEvents({
         cursor,
         limit,
         urls,
+        patternType: patternType ? getSafelinkPattern(patternType) : undefined,
       })
 
       return {

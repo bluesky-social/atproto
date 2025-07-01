@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Query URL safety audit events for Ozone UI with filtering and sorting",
+      "description": "Query URL safety audit events",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -26,14 +26,11 @@
               "items": {
                 "type": "string"
               },
-              "description": "Filter by specific URLs"
+              "description": "Filter by specific URLs or domains"
             },
-            "domains": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "Filter by specific domains"
+            "patternType": {
+              "type": "string",
+              "description": "Filter by pattern type"
             }
           }
         }

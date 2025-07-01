@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Query URL safety rules for Ozone UI with filtering and sorting",
+      "description": "Query URL safety rules",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -26,7 +26,7 @@
               "items": {
                 "type": "string"
               },
-              "description": "Filter by specific URLs"
+              "description": "Filter by specific URLs or domains"
             },
             "patternType": {
               "type": "string",

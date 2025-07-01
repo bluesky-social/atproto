@@ -15434,8 +15434,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description:
-          'Query URL safety audit events for Ozone UI with filtering and sorting',
+        description: 'Query URL safety audit events',
         input: {
           encoding: 'application/json',
           schema: {
@@ -15457,14 +15456,11 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
-                description: 'Filter by specific URLs',
+                description: 'Filter by specific URLs or domains',
               },
-              domains: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-                description: 'Filter by specific domains',
+              patternType: {
+                type: 'string',
+                description: 'Filter by pattern type',
               },
             },
           },
@@ -15499,8 +15495,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description:
-          'Query URL safety rules for Ozone UI with filtering and sorting',
+        description: 'Query URL safety rules',
         input: {
           encoding: 'application/json',
           schema: {
@@ -15522,7 +15517,7 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
-                description: 'Filter by specific URLs',
+                description: 'Filter by specific URLs or domains',
               },
               patternType: {
                 type: 'string',
