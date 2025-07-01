@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.setting.upsertOption'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   key: string

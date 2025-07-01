@@ -15,11 +15,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.identity.resolveHandle'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The handle to resolve. */
   handle: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

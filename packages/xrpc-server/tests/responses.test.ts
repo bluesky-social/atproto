@@ -30,23 +30,20 @@ const LEXICONS: LexiconDoc[] = [
 describe('Responses', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method(
-    'io.example.readableStream',
-    async (ctx: { params: xrpcServer.Params }) => {
-      async function* iter(): AsyncIterable<Uint8Array> {
-        for (let i = 0; i < 5; i++) {
-          yield new Uint8Array([i])
-        }
-        if (ctx.params.shouldErr) {
-          throw new Error('error')
-        }
+  server.method('io.example.readableStream', async (ctx) => {
+    async function* iter(): AsyncIterable<Uint8Array> {
+      for (let i = 0; i < 5; i++) {
+        yield new Uint8Array([i])
       }
-      return {
-        encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(iter()),
+      if (ctx.params.shouldErr) {
+        throw new Error('error')
       }
-    },
-  )
+    }
+    return {
+      encoding: 'application/vnd.ipld.car',
+      body: byteIterableToStream(iter()),
+    }
+  })
 
   let client: XrpcClient
   beforeAll(async () => {

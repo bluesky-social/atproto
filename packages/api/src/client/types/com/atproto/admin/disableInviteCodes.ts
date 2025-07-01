@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.admin.disableInviteCodes'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   codes?: string[]

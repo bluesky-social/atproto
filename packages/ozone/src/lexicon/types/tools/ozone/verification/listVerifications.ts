@@ -1,7 +1,6 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
 import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
@@ -10,14 +9,13 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import type * as ToolsOzoneVerificationDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.verification.listVerifications'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Pagination cursor */
   cursor?: string
   /** Maximum number of results to return */
@@ -35,7 +33,6 @@ export interface QueryParams {
   /** Filter to verifications that are revoked or not. By default, includes both. */
   isRevoked?: boolean
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
@@ -43,7 +40,7 @@ export interface OutputSchema {
   verifications: ToolsOzoneVerificationDefs.VerificationView[]
 }
 
-export type HandlerInput = undefined
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -56,15 +53,4 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
-  resetRouteRateLimits: () => Promise<void>
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput
+export type HandlerOutput = HandlerError | HandlerSuccess

@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getPopularFeedGenerators'
 
-export interface QueryParams {
+export type QueryParams = {
   limit?: number
   cursor?: string
   query?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

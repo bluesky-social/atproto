@@ -15,13 +15,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.listReposByCollection'
 
-export interface QueryParams {
+export type QueryParams = {
   collection: string
   /** Maximum size of response set. Recommend setting a large maximum (1000+) when enumerating large DID lists. */
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

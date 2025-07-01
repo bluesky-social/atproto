@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.sendInteractions'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   interactions: AppBskyFeedDefs.Interaction[]
