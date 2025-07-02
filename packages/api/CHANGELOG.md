@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.15.22
+
+### Patch Changes
+
+- [#3945](https://github.com/bluesky-social/atproto/pull/3945) [`02c358d0c`](https://github.com/bluesky-social/atproto/commit/02c358d0ca280922c20da5be1e23b4aa9e90a30b) Thanks [@foysalit](https://github.com/foysalit)! - Add safelink module in ozone
+
 ## 0.15.21
 
 ### Patch Changes
