@@ -7,7 +7,6 @@ import {
   SafelinkReasonType,
 } from '../api/util'
 import { Database } from '../db'
-import { TimeIdKeyset, paginate } from '../db/pagination'
 import { SafelinkEvent, SafelinkRule } from '../db/schema/safelink'
 
 export type SafelinkRuleServiceCreator = (db: Database) => SafelinkRuleService
