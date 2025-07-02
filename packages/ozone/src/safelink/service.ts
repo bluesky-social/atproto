@@ -8,7 +8,7 @@ import {
 } from '../api/util'
 import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
-import { SafelinkEvent } from '../db/schema/safelink'
+import { SafelinkEvent, SafelinkRule } from '../db/schema/safelink'
 
 export type SafelinkRuleServiceCreator = (db: Database) => SafelinkRuleService
 
@@ -219,7 +219,10 @@ export class SafelinkRuleService {
     reason?: SafelinkReasonType
     createdBy?: string
     direction?: 'asc' | 'desc'
-  } = {}) {
+  } = {}): Promise<{
+    rules: Selectable<SafelinkRule>[]
+    cursor?: string
+  }> {
     let query = this.db.db.selectFrom('safelink_rule').selectAll()
 
     if (urls && urls.length > 0) {
@@ -242,20 +245,19 @@ export class SafelinkRuleService {
       query = query.where('createdBy', '=', createdBy)
     }
 
-    const { ref } = this.db.db.dynamic
-    const keyset = new TimeIdKeyset(ref('createdAt'), ref('id'))
+    if (cursor) {
+      query = query.where(
+        'id',
+        direction === 'asc' ? '>' : '<',
+        parseInt(cursor, 10),
+      )
+    }
 
-    const paginatedBuilder = paginate(query, {
-      limit,
-      cursor,
-      keyset,
-      direction,
-    })
+    const rules = await query.orderBy('id', direction).limit(limit).execute()
 
-    const rules = await paginatedBuilder.execute()
     return {
       rules,
-      cursor: keyset.packFromResult(rules),
+      cursor: rules.at(-1)?.id?.toString(),
     }
   }
 
@@ -264,16 +266,17 @@ export class SafelinkRuleService {
     limit = 50,
     urls,
     patternType,
+    direction = 'desc',
   }: {
     cursor?: string
     limit?: number
     urls?: string[]
     patternType?: SafelinkPatternType
+    direction?: 'asc' | 'desc'
   } = {}): Promise<{
     events: Selectable<SafelinkEvent>[]
     cursor?: string
   }> {
-    const { ref } = this.db.db.dynamic
     let query = this.db.db.selectFrom('safelink_event').selectAll()
 
     if (urls && urls.length > 0) {
@@ -284,19 +287,19 @@ export class SafelinkRuleService {
       query = query.where('pattern', '=', patternType)
     }
 
-    const keyset = new TimeIdKeyset(ref('createdAt'), ref('id'))
-    const paginatedBuilder = paginate(query, {
-      limit,
-      cursor,
-      keyset,
-      direction: 'desc',
-    })
+    if (cursor) {
+      query = query.where(
+        'id',
+        direction === 'asc' ? '>' : '<',
+        parseInt(cursor, 10),
+      )
+    }
 
-    const events = await paginatedBuilder.execute()
+    const events = await query.orderBy('id', direction).limit(limit).execute()
 
     return {
       events,
-      cursor: keyset.packFromResult(events),
+      cursor: events.at(-1)?.id?.toString(),
     }
   }
 }

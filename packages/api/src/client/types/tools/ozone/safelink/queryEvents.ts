@@ -27,6 +27,8 @@ export interface InputSchema {
   urls?: string[]
   /** Filter by pattern type */
   patternType?: string
+  /** Sort direction */
+  sortDirection?: 'asc' | 'desc' | (string & {})
 }
 
 export interface OutputSchema {

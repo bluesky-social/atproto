@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input }) => {
       const db = ctx.db
-      const { cursor, limit, urls, patternType } = input.body
+      const { cursor, limit, urls, patternType, sortDirection } = input.body
 
       const safelinkRuleService = ctx.safelinkRuleService(db)
       const result = await safelinkRuleService.queryEvents({
@@ -15,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         urls,
         patternType: patternType ? getSafelinkPattern(patternType) : undefined,
+        direction: sortDirection as 'asc' | 'desc' | undefined,
       })
 
       return {

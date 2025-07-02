@@ -15398,6 +15398,12 @@ export const schemaDict = {
                 type: 'string',
                 description: 'Filter by pattern type',
               },
+              sortDirection: {
+                type: 'string',
+                knownValues: ['asc', 'desc'],
+                default: 'desc',
+                description: 'Sort direction',
+              },
             },
           },
         },

@@ -29,12 +29,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createIndex('safelink_event_created_at_id_idx')
-    .on('safelink_event')
-    .columns(['createdAt', 'id'])
-    .execute()
-
-  await db.schema
     .createIndex('safelink_event_url_pattern_idx')
     .on('safelink_event')
     .columns(['url', 'pattern'])
