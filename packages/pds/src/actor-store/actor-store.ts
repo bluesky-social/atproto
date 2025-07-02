@@ -13,6 +13,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
+import { recursiveWithRetry } from '../util/fs'
 import { ActorStoreReader } from './actor-store-reader'
 import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'
@@ -143,7 +144,7 @@ export class ActorStore {
     }
 
     const { directory } = await this.getLocation(did)
-    await rmIfExists(directory, true)
+    await rmIfExists(directory, recursiveWithRetry)
   }
 
   async reserveKeypair(did?: string): Promise<string> {
