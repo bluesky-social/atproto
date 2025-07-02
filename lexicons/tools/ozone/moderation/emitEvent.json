@@ -44,9 +44,19 @@
             },
             "subjectBlobCids": {
               "type": "array",
-              "items": { "type": "string", "format": "cid" }
+              "items": {
+                "type": "string",
+                "format": "cid"
+              }
             },
-            "createdBy": { "type": "string", "format": "did" }
+            "createdBy": {
+              "type": "string",
+              "format": "did"
+            },
+            "modTool": {
+              "type": "ref",
+              "ref": "tools.ozone.moderation.defs#modTool"
+            }
           }
         }
       },
@@ -57,7 +67,11 @@
           "ref": "tools.ozone.moderation.defs#modEventView"
         }
       },
-      "errors": [{ "name": "SubjectHasAction" }]
+      "errors": [
+        {
+          "name": "SubjectHasAction"
+        }
+      ]
     }
   }
 }

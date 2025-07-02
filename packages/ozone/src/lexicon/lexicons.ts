@@ -1389,6 +1389,10 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.createReport#modTool',
+              },
             },
           },
         },
@@ -1432,6 +1436,23 @@ export const schemaDict = {
                 format: 'datetime',
               },
             },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
           },
         },
       },
@@ -13541,6 +13562,10 @@ export const schemaDict = {
           subjectHandle: {
             type: 'string',
           },
+          modTool: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
+          },
         },
       },
       modEventViewDetail: {
@@ -13604,6 +13629,10 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          modTool: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
           },
         },
       },
@@ -14621,6 +14650,23 @@ export const schemaDict = {
           },
         },
       },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -14677,6 +14723,10 @@ export const schemaDict = {
               createdBy: {
                 type: 'string',
                 format: 'did',
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
               },
             },
           },
@@ -15081,6 +15131,14 @@ export const schemaDict = {
                 description:
                   'If specified, only events where the action policies match any of the given policies are returned',
               },
+            },
+            modTool: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where the modTool name matches any of the given values are returned',
             },
             cursor: {
               type: 'string',

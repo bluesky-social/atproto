@@ -141,6 +141,12 @@ export class ModerationViews {
       createdAt: row.createdAt,
       subjectHandle: row.subjectHandle ?? undefined,
       creatorHandle: row.creatorHandle ?? undefined,
+      modTool: row.modTool
+        ? {
+            name: row.modTool.name,
+            meta: row.modTool.meta,
+          }
+        : undefined,
     }
 
     const { event } = eventView
