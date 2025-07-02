@@ -74,7 +74,15 @@
     "urlRule": {
       "type": "object",
       "description": "Input for creating a URL safety rule",
-      "required": ["url", "pattern", "action", "reason", "createdBy", "createdAt", "updatedAt"],
+      "required": [
+        "url",
+        "pattern",
+        "action",
+        "reason",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ],
       "properties": {
         "url": {
           "type": "string",
