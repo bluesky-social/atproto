@@ -8,8 +8,35 @@
       "input": {
         "encoding": "application/json",
         "schema": {
-          "type": "ref",
-          "ref": "tools.ozone.safelink.defs#urlRule"
+          "type": "object",
+          "required": ["url", "pattern", "action", "reason"],
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL or domain to apply the rule to"
+            },
+            "pattern": {
+              "type": "ref",
+              "ref": "tools.ozone.safelink.defs#patternType"
+            },
+            "action": {
+              "type": "ref",
+              "ref": "tools.ozone.safelink.defs#actionType"
+            },
+            "reason": {
+              "type": "ref",
+              "ref": "tools.ozone.safelink.defs#reasonType"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment about the decision"
+            },
+            "createdBy": {
+              "type": "string",
+              "format": "did",
+              "description": "Author DID. Only respected when using admin auth"
+            }
+          }
         }
       },
       "output": {

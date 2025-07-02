@@ -48,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
             reason: rule.reason,
             createdBy: rule.createdBy,
             createdAt: new Date(rule.createdAt).toISOString(),
+            updatedAt: new Date(rule.updatedAt).toISOString(),
             comment: rule.comment || undefined,
           })),
         },

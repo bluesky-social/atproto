@@ -134,6 +134,7 @@ Array [
     "createdBy": "user(0)",
     "pattern": "url",
     "reason": "spam",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://query-test2.com/specific-path",
   },
   Object {
@@ -142,6 +143,7 @@ Array [
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "phishing",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://query-test1.com",
   },
   Object {
@@ -150,6 +152,7 @@ Array [
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "spam",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://remove-test2.com",
   },
   Object {
@@ -159,6 +162,7 @@ Array [
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "phishing",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://update-test.com",
   },
   Object {
@@ -168,6 +172,7 @@ Array [
     "createdBy": "user(0)",
     "pattern": "domain",
     "reason": "phishing",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://malicious-site.com",
   },
 ]

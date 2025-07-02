@@ -15232,8 +15232,35 @@ export const schemaDict = {
         input: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:tools.ozone.safelink.defs#urlRule',
+            type: 'object',
+            required: ['url', 'pattern', 'action', 'reason'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to apply the rule to',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              action: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#actionType',
+              },
+              reason: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#reasonType',
+              },
+              comment: {
+                type: 'string',
+                description: 'Optional comment about the decision',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description: 'Author DID. Only respected when using admin auth',
+              },
+            },
           },
         },
         output: {
@@ -15332,7 +15359,15 @@ export const schemaDict = {
       urlRule: {
         type: 'object',
         description: 'Input for creating a URL safety rule',
-        required: ['url', 'pattern', 'action', 'reason'],
+        required: [
+          'url',
+          'pattern',
+          'action',
+          'reason',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+        ],
         properties: {
           url: {
             type: 'string',
@@ -15357,8 +15392,17 @@ export const schemaDict = {
           createdBy: {
             type: 'string',
             format: 'did',
-            description:
-              'Optional DID to credit as the creator. Only respected for admin_token authentication.',
+            description: 'DID of the user added the rule.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Timestamp when the rule was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Timestamp when the rule was last updated',
           },
         },
       },

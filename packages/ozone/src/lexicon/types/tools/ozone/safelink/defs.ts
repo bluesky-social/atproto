@@ -57,8 +57,12 @@ export interface UrlRule {
   reason: ReasonType
   /** Optional comment about the decision */
   comment?: string
-  /** Optional DID to credit as the creator. Only respected for admin_token authentication. */
-  createdBy?: string
+  /** DID of the user added the rule. */
+  createdBy: string
+  /** Timestamp when the rule was created */
+  createdAt: string
+  /** Timestamp when the rule was last updated */
+  updatedAt: string
 }
 
 const hashUrlRule = 'urlRule'

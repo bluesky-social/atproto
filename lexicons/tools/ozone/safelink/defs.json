@@ -74,7 +74,7 @@
     "urlRule": {
       "type": "object",
       "description": "Input for creating a URL safety rule",
-      "required": ["url", "pattern", "action", "reason"],
+      "required": ["url", "pattern", "action", "reason", "createdBy", "createdAt", "updatedAt"],
       "properties": {
         "url": {
           "type": "string",
@@ -99,7 +99,17 @@
         "createdBy": {
           "type": "string",
           "format": "did",
-          "description": "Optional DID to credit as the creator. Only respected for admin_token authentication."
+          "description": "DID of the user added the rule."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the rule was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the rule was last updated"
         }
       }
     }

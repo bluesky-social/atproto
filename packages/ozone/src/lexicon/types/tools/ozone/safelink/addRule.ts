@@ -19,7 +19,18 @@ const id = 'tools.ozone.safelink.addRule'
 
 export interface QueryParams {}
 
-export type InputSchema = ToolsOzoneSafelinkDefs.UrlRule
+export interface InputSchema {
+  /** The URL or domain to apply the rule to */
+  url: string
+  pattern: ToolsOzoneSafelinkDefs.PatternType
+  action: ToolsOzoneSafelinkDefs.ActionType
+  reason: ToolsOzoneSafelinkDefs.ReasonType
+  /** Optional comment about the decision */
+  comment?: string
+  /** Author DID. Only respected when using admin auth */
+  createdBy?: string
+}
+
 export type OutputSchema = ToolsOzoneSafelinkDefs.Event
 
 export interface HandlerInput {
