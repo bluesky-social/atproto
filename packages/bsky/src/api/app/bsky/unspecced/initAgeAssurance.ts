@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import express from 'express'
 import { TID } from '@atproto/common'
 import { MethodNotImplementedError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -9,7 +10,7 @@ import { Namespaces } from '../../../../stash'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.initAgeAssurance({
     auth: ctx.authVerifier.standard,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       if (!ctx.ageAssuranceClient) {
         throw new MethodNotImplementedError(
           'This service is not configured to support age assurance.',
@@ -18,9 +19,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const actorDid = auth.credentials.iss
       const attemptId = crypto.randomUUID()
-      // @TODO: Get the IP address from the request context.
-      const attemptIp = 'TODO'
-
+      const attemptIp = getClientIp(req)
       await ctx.ageAssuranceClient.sendEmail({
         email: input.body.email,
         externalPayload: {
@@ -55,4 +54,15 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const getClientIp = (req: express.Request): string | undefined => {
+  const forwardedFor = req.headers['x-forwarded-for']
+  if (typeof forwardedFor === 'string') {
+    return forwardedFor.split(',')[0].trim()
+  }
+  if (Array.isArray(forwardedFor)) {
+    return forwardedFor[0]?.trim()
+  }
+  return undefined
 }

@@ -62,7 +62,6 @@ import getSuggestedUsers from './app/bsky/unspecced/getSuggestedUsers'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getTrends from './app/bsky/unspecced/getTrends'
-import handleAgeAssuranceComplete from './app/bsky/unspecced/handleAgeAssuranceComplete'
 import initAgeAssurance from './app/bsky/unspecced/initAgeAssurance'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
@@ -144,7 +143,6 @@ export default function (server: Server, ctx: AppContext) {
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
   getAgeAssuranceState(server, ctx)
-  handleAgeAssuranceComplete(server, ctx)
   initAgeAssurance(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)

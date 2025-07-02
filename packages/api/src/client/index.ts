@@ -202,7 +202,6 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
-import * as AppBskyUnspeccedHandleAgeAssuranceComplete from './types/app/bsky/unspecced/handleAgeAssuranceComplete.js'
 import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
@@ -479,7 +478,6 @@ export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
-export * as AppBskyUnspeccedHandleAgeAssuranceComplete from './types/app/bsky/unspecced/handleAgeAssuranceComplete.js'
 export * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
@@ -4077,18 +4075,6 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetTrendsSkeleton.Response> {
     return this._client.call(
       'app.bsky.unspecced.getTrendsSkeleton',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  handleAgeAssuranceComplete(
-    params?: AppBskyUnspeccedHandleAgeAssuranceComplete.QueryParams,
-    opts?: AppBskyUnspeccedHandleAgeAssuranceComplete.CallOptions,
-  ): Promise<AppBskyUnspeccedHandleAgeAssuranceComplete.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.handleAgeAssuranceComplete',
       params,
       undefined,
       opts,

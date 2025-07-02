@@ -11,6 +11,7 @@ export interface KwsConfig {
   apiKey: string
   apiUrl: string
   authUrl: string
+  redirectUrl: string
   signingKey: string
   userAgent: string
   webhookSigningKey: string
@@ -238,6 +239,7 @@ export class ServerConfig {
     const kwsApiUrl = process.env.BSKY_KWS_API_URL
     const kwsAuthUrl = process.env.BSKY_KWS_AUTH_URL
     const kwsClientId = process.env.BSKY_KWS_CLIENT_ID
+    const kwsRedirectUrl = process.env.BSKY_KWS_REDIRECT_URL
     const kwsSigningKey = process.env.BSKY_KWS_SIGNING_KEY
     const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
     const kwsWebhookSigningKey = process.env.BSKY_KWS_WEBHOOK_SIGNING_KEY
@@ -246,6 +248,7 @@ export class ServerConfig {
       kwsApiUrl ||
       kwsAuthUrl ||
       kwsClientId ||
+      kwsRedirectUrl ||
       kwsSigningKey ||
       kwsUserAgent ||
       kwsWebhookSigningKey
@@ -255,6 +258,7 @@ export class ServerConfig {
           kwsApiUrl &&
           kwsAuthUrl &&
           kwsClientId &&
+          kwsRedirectUrl &&
           kwsSigningKey &&
           kwsUserAgent &&
           kwsWebhookSigningKey,
@@ -265,6 +269,7 @@ export class ServerConfig {
         apiUrl: kwsApiUrl,
         authUrl: kwsAuthUrl,
         clientId: kwsClientId,
+        redirectUrl: kwsRedirectUrl,
         signingKey: kwsSigningKey,
         userAgent: kwsUserAgent,
         webhookSigningKey: kwsWebhookSigningKey,

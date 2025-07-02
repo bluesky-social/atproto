@@ -6,15 +6,24 @@ import express, { Application } from 'express'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { AgeAssuranceClient } from '../../dist/age-assurance'
-import { AgeAssuranceExternalPayload } from '../../src/age-assurance'
+import {
+  AgeAssuranceExternalPayload,
+  AgeAssuranceWebhookBody,
+} from '../../src/api/kws/types'
+import {
+  parseExternalPayload,
+  serializeExternalPayload,
+} from '../../src/api/kws/util'
 import { ids } from '../../src/lexicon/lexicons'
 
 type Database = TestNetwork['bsky']['db']
 
 describe('age assurance views', () => {
+  const signingKey = 'signingKey'
   const webhookSigningKey = 'webhookSigningKey'
   const attemptId = crypto.randomUUID()
   const attemptIp = '8.42.140.125'
+  const redirectUrl = 'https://bsky.app/intent/age-assurance'
 
   let network: TestNetwork
   let db: Database
@@ -27,19 +36,12 @@ describe('age assurance views', () => {
   let alice: string
 
   let kwsServer: MockKwsServer
-  let authMock: jest.Mock
-  let sendEmailMock: jest.Mock
+  const authMock = jest.fn()
+  const sendEmailMock = jest.fn()
 
   beforeAll(async () => {
-    // Default mocks for KWS endpoints.
-    authMock = jest.fn((_req: express.Request, res: express.Response) =>
-      res.json({ access_token: 'access_token' }),
-    )
-    sendEmailMock = jest.fn((_req: express.Request, res: express.Response) => {
-      res.json({})
-    })
-
     kwsServer = new MockKwsServer({
+      signingKey,
       webhookSigningKey,
       authMock,
       sendEmailMock,
@@ -54,7 +56,8 @@ describe('age assurance views', () => {
           apiUrl: kwsServer.url,
           authUrl: kwsServer.url,
           clientId: 'clientId',
-          signingKey: 'signingKey',
+          redirectUrl,
+          signingKey,
           userAgent: 'userAgent',
           webhookSigningKey,
         },
@@ -71,7 +74,25 @@ describe('age assurance views', () => {
     actorDid = alice
   })
 
+  beforeEach(async () => {
+    // Default mocks for KWS endpoints.
+    authMock.mockImplementation(
+      (_req: express.Request, res: express.Response) =>
+        res.json({
+          access_token:
+            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.INVALID',
+          expires_in: 3600,
+        }),
+    )
+    sendEmailMock.mockImplementation(
+      (_req: express.Request, res: express.Response) => {
+        res.json({})
+      },
+    )
+  })
+
   afterEach(async () => {
+    jest.resetAllMocks()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
@@ -115,7 +136,7 @@ describe('age assurance views', () => {
           attemptIp,
         })
 
-        expect(() => aac.parseExternalPayload(serialized)).toThrow(
+        expect(() => parseExternalPayload(serialized)).toThrow(
           `Invalid external payload: {"attemptId":"${attemptId}","attemptIp":"${attemptIp}"}`,
         )
       })
@@ -126,7 +147,7 @@ describe('age assurance views', () => {
           attemptIp,
         })
 
-        expect(() => aac.parseExternalPayload(serialized)).toThrow(
+        expect(() => parseExternalPayload(serialized)).toThrow(
           `Invalid external payload: {"actorDid":"${actorDid}","attemptIp":"${attemptIp}"}`,
         )
       })
@@ -138,7 +159,7 @@ describe('age assurance views', () => {
           extra: 'field',
         })
 
-        expect(() => aac.parseExternalPayload(serialized)).toThrow(
+        expect(() => parseExternalPayload(serialized)).toThrow(
           `Invalid external payload: {"actorDid":"${actorDid}","attemptId":"${attemptId}","extra":"field"}`,
         )
       })
@@ -150,7 +171,7 @@ describe('age assurance views', () => {
         }
         const serialized = JSON.stringify(payload)
 
-        const parsed = aac.parseExternalPayload(serialized)
+        const parsed = parseExternalPayload(serialized)
         expect(parsed).toStrictEqual(payload)
       })
 
@@ -162,7 +183,7 @@ describe('age assurance views', () => {
         }
         const serialized = JSON.stringify(payload)
 
-        const parsed = aac.parseExternalPayload(serialized)
+        const parsed = parseExternalPayload(serialized)
         expect(parsed).toStrictEqual(payload)
       })
     })
@@ -175,45 +196,123 @@ describe('age assurance views', () => {
     })
   })
 
-  it('performs AA flow with KWS verification response flow', async () => {
-    // @TODO
+  describe('verification response flow', () => {
+    it('performs the AA flow', async () => {
+      const state0 = await getAgeAssurance(actorDid)
+      expect(state0).toStrictEqual({
+        status: 'unknown',
+      })
+
+      const state1 = await initAgeAssurance(actorDid)
+      expect(state1).toStrictEqual({
+        status: 'pending',
+        lastInitiatedAt: expect.any(String),
+      })
+      expect(sendEmailMock).toHaveBeenCalledTimes(1)
+
+      const externalPayload = {
+        actorDid,
+        attemptId,
+      }
+      const status = { verified: true }
+      const verificationRes = await kwsServer.callVerificationResponse(
+        network.bsky.url,
+        externalPayload,
+        status,
+      )
+      expect(verificationRes.status).toBe(302)
+      expect(verificationRes.headers.get('Location')).toBe(
+        `${redirectUrl}?success=true`,
+      )
+
+      const state2 = await getAgeAssurance(actorDid)
+      expect(state2).toStrictEqual({
+        status: 'assured',
+        lastInitiatedAt: expect.any(String),
+      })
+    })
+
+    it('does not assure if the verification response has status not verified', async () => {
+      await initAgeAssurance(actorDid)
+
+      const externalPayload = {
+        actorDid,
+        attemptId,
+      }
+      const status = { verified: false }
+      const verificationRes = await kwsServer.callVerificationResponse(
+        network.bsky.url,
+        externalPayload,
+        status,
+      )
+      expect(verificationRes.status).toBe(302)
+      expect(verificationRes.headers.get('Location')).toBe(
+        `${redirectUrl}?success=false`,
+      )
+
+      const state = await getAgeAssurance(actorDid)
+      expect(state).toStrictEqual({
+        status: 'pending',
+        lastInitiatedAt: expect.any(String),
+      })
+    })
   })
 
-  it('performs AA flow AA with KWS webhook flow', async () => {
-    const state0 = await getAgeAssurance(actorDid)
-    expect(state0).toStrictEqual({
-      status: 'unknown',
-    })
+  describe('webhook flow', () => {
+    it('performs the AA flow', async () => {
+      const state0 = await getAgeAssurance(actorDid)
+      expect(state0).toStrictEqual({
+        status: 'unknown',
+      })
 
-    const state1 = await initAgeAssurance(actorDid)
-    expect(state1).toStrictEqual({
-      status: 'pending',
-      lastInitiatedAt: expect.any(String),
-    })
-    expect(sendEmailMock).toHaveBeenCalledTimes(1)
+      const state1 = await initAgeAssurance(actorDid)
+      expect(state1).toStrictEqual({
+        status: 'pending',
+        lastInitiatedAt: expect.any(String),
+      })
+      expect(sendEmailMock).toHaveBeenCalledTimes(1)
 
-    const webhookRes = await kwsServer.callWebhook(network.bsky.url, {
-      name: 'adult-verified',
-      time: '2025-06-24T17:03:01.738Z',
-      orgId: 'mock-uuid',
-      payload: {
-        parentEmail: 'parent@email.com',
-        externalPayload: serializeExternalPayload({
-          actorDid,
-          attemptId,
-        }),
-        status: {
-          verified: true,
-          transactionId: 'pqr678',
+      const webhookRes = await kwsServer.callWebhook(aac, network.bsky.url, {
+        payload: {
+          externalPayload: {
+            actorDid,
+            attemptId,
+          },
+          status: {
+            verified: true,
+          },
         },
-      },
-    })
-    expect(webhookRes.status).toBe(200)
+      })
+      expect(webhookRes.status).toBe(200)
 
-    const state2 = await getAgeAssurance(actorDid)
-    expect(state2).toStrictEqual({
-      status: 'assured',
-      lastInitiatedAt: expect.any(String),
+      const state2 = await getAgeAssurance(actorDid)
+      expect(state2).toStrictEqual({
+        status: 'assured',
+        lastInitiatedAt: expect.any(String),
+      })
+    })
+
+    it('does not assure if the webhook has status not verified', async () => {
+      await initAgeAssurance(actorDid)
+
+      const webhookRes = await kwsServer.callWebhook(aac, network.bsky.url, {
+        payload: {
+          externalPayload: {
+            actorDid,
+            attemptId,
+          },
+          status: {
+            verified: false,
+          },
+        },
+      })
+      expect(webhookRes.status).toBe(200)
+
+      const state = await getAgeAssurance(actorDid)
+      expect(state).toStrictEqual({
+        status: 'pending',
+        lastInitiatedAt: expect.any(String),
+      })
     })
   })
 })
@@ -232,30 +331,33 @@ const clearActorAgeAssurance = async (db: Database) => {
     .execute()
 }
 
-const serializeExternalPayload = (p: AgeAssuranceExternalPayload): string =>
-  JSON.stringify(p)
-
 class MockKwsServer {
+  private signingKey: string
   private webhookSigningKey: string
   private app: Application
   private server: Server
 
   constructor({
+    signingKey,
     webhookSigningKey,
     authMock,
     sendEmailMock,
   }: {
+    signingKey: string
     webhookSigningKey: string
     authMock: jest.Mock
     sendEmailMock: jest.Mock
   }) {
+    this.signingKey = signingKey
     this.webhookSigningKey = webhookSigningKey
 
     this.app = express()
       .post('/auth/realms/kws/protocol/openid-connect/token', (req, res) =>
         authMock(req, res),
       )
-      .post('/verifications/send-email', (req, res) => sendEmailMock(req, res))
+      .post('/v1/verifications/send-email', (req, res) =>
+        sendEmailMock(req, res),
+      )
 
     this.server = createServer(this.app)
   }
@@ -270,13 +372,51 @@ class MockKwsServer {
     await once(this.server, 'close')
   }
 
-  async callWebhook(
+  callVerificationResponse(
     bskyUrl: string,
-    body: Record<string, unknown>,
-  ): Promise<Response> {
-    const timestamp = new Date().valueOf()
-    const bodyBuffer = Buffer.from(JSON.stringify(body))
+    externalPayload: Record<string, unknown>,
+    status: Record<string, unknown>,
+  ) {
+    const externalPayloadJson = JSON.stringify(externalPayload)
+    const statusJson = JSON.stringify(status)
 
+    const sig = crypto
+      .createHmac('sha256', this.signingKey)
+      .update(`${statusJson}:${externalPayloadJson}`)
+      .digest('hex')
+
+    const queryString = new URLSearchParams({
+      externalPayload: externalPayloadJson,
+      signature: sig,
+      status: statusJson,
+    }).toString()
+
+    return fetch(
+      `${bskyUrl}/external/kws/age-assurance-verification-response?${queryString}`,
+      {
+        method: 'GET',
+        redirect: 'manual',
+      },
+    )
+  }
+
+  callWebhook(
+    aac: AgeAssuranceClient,
+    bskyUrl: string,
+    body: AgeAssuranceWebhookBody,
+  ): Promise<Response> {
+    const withSerializedExternalPayload = {
+      ...body,
+      payload: {
+        ...body.payload,
+        externalPayload: serializeExternalPayload(body.payload.externalPayload),
+      },
+    }
+    const bodyBuffer = Buffer.from(
+      JSON.stringify(withSerializedExternalPayload),
+    )
+
+    const timestamp = new Date().valueOf()
     const sig = crypto
       .createHmac('sha256', this.webhookSigningKey)
       .update(`${timestamp}.${bodyBuffer}`)

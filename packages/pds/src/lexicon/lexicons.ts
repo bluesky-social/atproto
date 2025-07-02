@@ -11500,52 +11500,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedHandleAgeAssuranceComplete: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.handleAgeAssuranceComplete',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Called via redirect from the age assurance service. This endpoint will attempt to verify the result, and then redirect to user back to the Bluesky app.',
-        parameters: {
-          type: 'params',
-          required: [],
-          properties: {
-            status: {
-              type: 'string',
-              description: 'The status of the age assurance process.',
-            },
-            externalPayload: {
-              type: 'string',
-              description:
-                'Additional metadata provided when initiating age assurance.',
-            },
-            signature: {
-              type: 'string',
-              description:
-                "SHA256 HMAC signature of the status and externalPayload, separated by a colon (:), and signed with the facilitating service's private key.",
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['status'],
-            properties: {
-              status: {
-                type: 'string',
-                description:
-                  'The computed status of the age assurance process.',
-                knownValues: ['unknown', 'pending', 'assured'],
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyUnspeccedInitAgeAssurance: {
     lexicon: 1,
     id: 'app.bsky.unspecced.initAgeAssurance',
@@ -17638,8 +17592,6 @@ export const ids = {
   AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
   AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
-  AppBskyUnspeccedHandleAgeAssuranceComplete:
-    'app.bsky.unspecced.handleAgeAssuranceComplete',
   AppBskyUnspeccedInitAgeAssurance: 'app.bsky.unspecced.initAgeAssurance',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',

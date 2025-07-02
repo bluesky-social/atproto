@@ -1,6 +1,10 @@
-import crypto from 'node:crypto'
+import * as jose from 'jose'
 import { z } from 'zod'
+import { SECOND } from '@atproto/common'
+import { AgeAssuranceExternalPayload } from './api/kws/types'
+import { serializeExternalPayload } from './api/kws/util'
 import { KwsConfig } from './config'
+import { httpLogger as log } from './logger'
 
 export const createAgeAssuranceClient = (
   cfg: KwsConfig,
@@ -8,115 +12,91 @@ export const createAgeAssuranceClient = (
   return new AgeAssuranceClient(cfg)
 }
 
-export type AgeAssuranceExternalPayload = {
-  actorDid: string
-  attemptId: string
-  attemptIp?: string
+type Auth = {
+  accessToken: string
+  expMs: number
 }
 
-const externalPayloadSchema = z
-  .object({
-    actorDid: z.string(),
-    attemptId: z.string(),
-    attemptIp: z.string().optional(),
-  })
-  .strict()
-
-type AgeAssuranceWebhookIntermediateBody = {
-  payload: {
-    externalPayload: string
-    status: {
-      verified: boolean
-    }
-  }
-}
-
-export type AgeAssuranceWebhookPayload = {
-  payload: Omit<
-    AgeAssuranceWebhookIntermediateBody['payload'],
-    'externalPayload'
-  > & {
-    externalPayload: AgeAssuranceExternalPayload
-  }
-}
-
-const webhookBodyIntermediateSchema = z.object({
-  payload: z.object({
-    externalPayload: z.string(),
-    status: z.object({
-      verified: z.boolean(),
-    }),
-  }),
+// Not `.strict()` to avoid breaking if KWS adds fields.
+const authResponseSchema = z.object({
+  access_token: z.string(),
+  expires_in: z.number(),
 })
 
 export class AgeAssuranceClient {
+  private authCache: Auth | undefined
+
   constructor(public cfg: KwsConfig) {}
 
-  private async accessToken() {
-    const auth = await fetch(
-      `${this.cfg.authUrl}/auth/realms/kws/protocol/openid-connect/token`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${Buffer.from(`${this.cfg.clientId}:${this.cfg.apiKey}`).toString('base64')}`,
+  private async auth() {
+    try {
+      const auth = await fetch(
+        `${this.cfg.authUrl}/auth/realms/kws/protocol/openid-connect/token`,
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Authorization: `Basic ${Buffer.from(`${this.cfg.clientId}:${this.cfg.apiKey}`).toString('base64')}`,
+          },
+          body: new URLSearchParams({
+            grant_type: 'client_credentials',
+            scope: 'verification',
+          }),
         },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          scope: 'verification',
-        }),
-      },
-    )
+      )
+      if (!auth.ok) {
+        throw new Error(
+          `Failed to fetch access token: ${auth.status} ${auth.statusText}`,
+        )
+      }
 
-    if (!auth.ok) {
+      const res = await auth.json()
+      const authResponse = authResponseSchema.parse(res)
+      const decoded = jose.decodeJwt(authResponse.access_token)
+      const iatMs = decoded.iat ? decoded.iat * SECOND : Date.now()
+      this.authCache = {
+        accessToken: authResponse.access_token,
+        expMs: iatMs * authResponse.expires_in * SECOND,
+      }
+    } catch (err) {
+      log.error({ err }, 'Failed to authenticate with KWS')
+      throw err
+    }
+  }
+
+  private async fetchWithAuth(
+    url: string,
+    init: RequestInit,
+    retry = true,
+  ): Promise<Response> {
+    if (!this.authCache || Date.now() >= this.authCache.expMs) {
+      if (retry) {
+        await this.auth()
+        return this.fetchWithAuth(url, init, false)
+      }
+      log.error('KWS authentication failed: no valid access token available')
       throw new Error(
-        `Failed to fetch access token: ${auth.status} ${auth.statusText}`,
+        'KWS authentication failed: no valid access token available',
       )
     }
 
-    // @TODO: Try oauth lib to handle this.
-    const { access_token } = (await auth.json()) as {
-      access_token: string
-      expires_in: number
+    const res = await fetch(url, {
+      ...init,
+      headers: {
+        ...(init.headers ?? {}),
+        Authorization: `Bearer ${this.authCache.accessToken}`,
+      },
+    })
+
+    if (res.status === 401 && retry) {
+      log.warn('KWS auth was retried due to 401 Unauthorized response')
+      // If the token is expired, try to re-authenticate and retry the request.
+      this.authCache = undefined
+      return this.fetchWithAuth(url, init, false)
     }
 
-    return access_token
-  }
-
-  serializeExternalPayload(value: AgeAssuranceExternalPayload): string {
-    return JSON.stringify(value)
-  }
-
-  parseExternalPayload(serialized: string): AgeAssuranceExternalPayload {
-    const value: unknown = JSON.parse(serialized)
-
-    try {
-      return externalPayloadSchema.parse(value)
-    } catch (err) {
-      throw new Error(`Invalid external payload: ${serialized}`, { cause: err })
-    }
-  }
-
-  parseWebhookBody(serialized: string): AgeAssuranceWebhookPayload {
-    const value: unknown = JSON.parse(serialized)
-
-    try {
-      const intermediate: AgeAssuranceWebhookIntermediateBody =
-        webhookBodyIntermediateSchema.parse(value)
-
-      return {
-        ...intermediate,
-        payload: {
-          ...intermediate.payload,
-          externalPayload: this.parseExternalPayload(
-            intermediate.payload.externalPayload,
-          ),
-        },
-      }
-    } catch (err) {
-      throw new Error(`Invalid external payload: ${serialized}`, { cause: err })
-    }
+    return res
   }
 
   async sendEmail({
@@ -128,52 +108,30 @@ export class AgeAssuranceClient {
     language: string
     externalPayload: AgeAssuranceExternalPayload
   }) {
-    const accessToken = await this.accessToken()
-
-    await fetch(`${this.cfg.apiUrl}/v1/verifications/send-email`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'User-Agent': this.cfg.userAgent,
+    const res = await this.fetchWithAuth(
+      `${this.cfg.apiUrl}/v1/verifications/send-email`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': this.cfg.userAgent,
+        },
+        body: JSON.stringify({
+          email,
+          externalPayload: serializeExternalPayload(externalPayload),
+          language,
+          location: 'US',
+          userContext: 'adult',
+        }),
       },
-      body: JSON.stringify({
-        email,
-        externalPayload: this.serializeExternalPayload(externalPayload),
-        language,
-        location: 'US',
-        userContext: 'adult',
-      }),
-    })
-  }
+    )
 
-  validateWebhookSignature(body: Buffer, sig: string | string[] | undefined) {
-    if (!sig) {
-      throw new Error('Missing webhook signature')
-    }
-
-    const signatureHeader = Array.isArray(sig) ? sig.join(',') : sig
-    const [t, v1] = signatureHeader.split(',')
-    const timestamp = t?.split('=')[1]
-    const signature = v1?.split('=')[1]
-
-    if (typeof timestamp !== 'string' || typeof signature !== 'string') {
-      throw new Error('Invalid signature header format')
-    }
-
-    const expectedSignature = crypto
-      .createHmac('sha256', this.cfg.webhookSigningKey)
-      .update(`${timestamp}.${body}`)
-      .digest('hex')
-    const expectedBuffer = Buffer.from(expectedSignature, 'hex')
-    const signedBuffer = Buffer.from(signature, 'hex')
-
-    if (expectedBuffer.length !== signedBuffer.length) {
-      throw new Error(`Signature mismatch`)
-    }
-
-    if (!crypto.timingSafeEqual(expectedBuffer, signedBuffer)) {
-      throw new Error(`Signature mismatch`)
+    if (!res.ok) {
+      log.error(
+        { status: res.status, statusText: res.statusText },
+        'Failed to send age assurance email',
+      )
+      throw new Error('Failed to send KWS age assurance email')
     }
   }
 }

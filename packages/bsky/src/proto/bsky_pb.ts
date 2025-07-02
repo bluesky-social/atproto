@@ -5748,7 +5748,7 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
   status = ''
 
   /**
-   * @generated from field: google.protobuf.Timestamp last_initiated_at = 3;
+   * @generated from field: google.protobuf.Timestamp last_initiated_at = 2;
    */
   lastInitiatedAt?: Timestamp
 
@@ -5761,7 +5761,7 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
   static readonly typeName = 'bsky.AgeAssuranceStatus'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'status', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: 'last_initiated_at', kind: 'message', T: Timestamp },
+    { no: 2, name: 'last_initiated_at', kind: 'message', T: Timestamp },
   ])
 
   static fromBinary(

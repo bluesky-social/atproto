@@ -37,7 +37,6 @@ const getAgeVerificationState = async (
 
     return res.actors[0]
   } catch (err) {
-    console.error(err)
     throw new UpstreamFailureError(
       'Cannot get current age assurance state',
       'GetAgeAssuranceStateFailed',

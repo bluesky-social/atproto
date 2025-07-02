@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { AppContext } from '../context'
-import * as kwsApi from './kws-api'
+import * as kwsApi from './kws'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
