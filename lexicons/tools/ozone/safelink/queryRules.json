@@ -1,0 +1,82 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.safelink.queryRules",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Query URL safety rules",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "cursor": {
+              "type": "string",
+              "description": "Cursor for pagination"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "description": "Maximum number of results to return"
+            },
+            "urls": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Filter by specific URLs or domains"
+            },
+            "patternType": {
+              "type": "string",
+              "description": "Filter by pattern type"
+            },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Filter by action types"
+            },
+            "reason": {
+              "type": "string",
+              "description": "Filter by reason type"
+            },
+            "createdBy": {
+              "type": "string",
+              "format": "did",
+              "description": "Filter by rule creator"
+            },
+            "sortDirection": {
+              "type": "string",
+              "knownValues": ["asc", "desc"],
+              "default": "desc",
+              "description": "Sort direction"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["rules"],
+          "properties": {
+            "cursor": {
+              "type": "string",
+              "description": "Next cursor for pagination. Only present if there are more results."
+            },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.safelink.defs#urlRule"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
