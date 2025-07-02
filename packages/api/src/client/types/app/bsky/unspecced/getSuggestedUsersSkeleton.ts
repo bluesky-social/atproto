@@ -15,14 +15,13 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getSuggestedUsersSkeleton'
 
-export interface QueryParams {
+export type QueryParams = {
   /** DID of the account making the request (not included for public/unauthenticated queries). */
   viewer?: string
   /** Category of users to get suggestions for. */
   category?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

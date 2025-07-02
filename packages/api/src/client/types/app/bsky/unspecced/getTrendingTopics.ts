@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getTrendingTopics'
 
-export interface QueryParams {
+export type QueryParams = {
   /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
   viewer?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

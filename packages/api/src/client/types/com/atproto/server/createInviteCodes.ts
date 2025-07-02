@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.createInviteCodes'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   codeCount: number

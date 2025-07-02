@@ -144,7 +144,7 @@ describe('Errors', () => {
 
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, { validateResponse: false }) // disable validateResponse to test client validation
-  server.method('io.example.error', (ctx: { params: xrpcServer.Params }) => {
+  server.method('io.example.error', (ctx) => {
     if (ctx.params.which === 'foo') {
       throw new xrpcServer.InvalidRequestError('It was this one!', 'Foo')
     } else if (ctx.params.which === 'bar') {

@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.getEvent'
 
-export interface QueryParams {
+export type QueryParams = {
   id: number
 }
-
 export type InputSchema = undefined
 export type OutputSchema = ToolsOzoneModerationDefs.ModEventViewDetail
 

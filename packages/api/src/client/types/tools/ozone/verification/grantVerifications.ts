@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.verification.grantVerifications'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** Array of verification requests to process */

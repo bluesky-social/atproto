@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.hosting.getAccountHistory'
 
-export interface QueryParams {
+export type QueryParams = {
   did: string
   events?:
     | 'accountCreated'
@@ -27,7 +27,6 @@ export interface QueryParams {
   cursor?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

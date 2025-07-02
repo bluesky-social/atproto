@@ -16,11 +16,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.identity.resolveIdentity'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Handle or DID to resolve. */
   identifier: string
 }
-
 export type InputSchema = undefined
 export type OutputSchema = ComAtprotoIdentityDefs.IdentityInfo
 

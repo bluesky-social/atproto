@@ -16,13 +16,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.getRelationships'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Primary account requesting relationships for. */
   actor: string
   /** List of 'other' accounts to be related back to the primary. */
   others?: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

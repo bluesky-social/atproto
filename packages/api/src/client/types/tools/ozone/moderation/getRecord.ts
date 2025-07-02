@@ -16,11 +16,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.getRecord'
 
-export interface QueryParams {
+export type QueryParams = {
   uri: string
   cid?: string
 }
-
 export type InputSchema = undefined
 export type OutputSchema = ToolsOzoneModerationDefs.RecordViewDetail
 

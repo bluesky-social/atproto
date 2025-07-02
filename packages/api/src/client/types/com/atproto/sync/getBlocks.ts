@@ -15,12 +15,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.getBlocks'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The DID of the repo. */
   did: string
   cids: string[]
 }
-
 export type InputSchema = undefined
 
 export interface CallOptions {

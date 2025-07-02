@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
@@ -121,34 +122,27 @@ describe('Bodies', () => {
       blobLimit: BLOB_LIMIT,
     },
   })
-  server.method(
-    'io.example.validationTest',
-    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
-      if (ctx.input?.body instanceof Readable) {
-        throw new Error('Input is readable')
-      }
+  server.method('io.example.validationTest', (ctx) => {
+    assert(!(ctx.input?.body instanceof Readable), 'Input is readable')
 
-      return {
-        encoding: 'json',
-        body: ctx.input?.body ?? null,
-      }
-    },
-  )
+    return {
+      encoding: 'json',
+      body: ctx.input?.body ?? null,
+    }
+  })
   server.method('io.example.validationTestTwo', () => ({
     encoding: 'json',
     body: { wrong: 'data' },
   }))
-  server.method(
-    'io.example.blobTest',
-    async (ctx: { input?: xrpcServer.HandlerInput }) => {
-      const buffer = await consumeInput(ctx.input?.body)
-      const cid = await cidForCbor(buffer)
-      return {
-        encoding: 'json',
-        body: { cid: cid.toString() },
-      }
-    },
-  )
+  server.method('io.example.blobTest', async (ctx) => {
+    assert(ctx.input?.body != null, 'Input body is required')
+    const buffer = await consumeInput(ctx.input.body)
+    const cid = await cidForCbor(buffer)
+    return {
+      encoding: 'json',
+      body: { cid: cid.toString() },
+    }
+  })
 
   let client: XrpcClient
   let url: string

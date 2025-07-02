@@ -9,18 +9,17 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
+import { ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'node:http'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.subscribeRepos'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The last known event seq number to backfill from. */
   cursor?: number
 }
-
 export type OutputSchema =
   | $Typed<Commit>
   | $Typed<Sync>
@@ -30,15 +29,6 @@ export type OutputSchema =
   | { $type: string }
 export type HandlerError = ErrorFrame<'FutureCursor' | 'ConsumerTooSlow'>
 export type HandlerOutput = HandlerError | OutputSchema
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  req: IncomingMessage
-  signal: AbortSignal
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => AsyncIterable<HandlerOutput>
 
 /** Represents an update of repository state. Note that empty commits are allowed, which include no repo data changes, but an update to rev and signature. */
 export interface Commit {

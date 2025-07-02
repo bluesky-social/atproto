@@ -2,7 +2,7 @@ import * as ui8 from 'uint8arrays'
 import * as common from '@atproto/common'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { AuthRequiredError } from './types'
+import { AuthRequiredError } from './errors'
 
 type ServiceJwtParams = {
   iss: string

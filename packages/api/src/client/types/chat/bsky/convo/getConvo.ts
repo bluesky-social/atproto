@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'chat.bsky.convo.getConvo'
 
-export interface QueryParams {
+export type QueryParams = {
   convoId: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -1,7 +1,7 @@
 import type { IncomingMessage } from 'node:http'
 import type { CID } from 'multiformats/cid'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
-import type { ErrorFrame, HandlerAuth } from '@atproto/xrpc-server'
+import type { Auth, ErrorFrame } from '@atproto/xrpc-server'
 
 // @NOTE: this file is an ugly copy job of codegen output. I'd like to clean this whole thing up
 
@@ -30,13 +30,13 @@ export type RepoEvent =
   | { $type: string; [k: string]: unknown }
 export type HandlerError = ErrorFrame<'FutureCursor' | 'ConsumerTooSlow'>
 export type HandlerOutput = HandlerError | RepoEvent
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
+export type HandlerReqCtx<HA extends Auth = never> = {
   auth: HA
   params: QueryParams
   req: IncomingMessage
   signal: AbortSignal
 }
-export type Handler<HA extends HandlerAuth = never> = (
+export type Handler<HA extends Auth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => AsyncIterable<HandlerOutput>
 
