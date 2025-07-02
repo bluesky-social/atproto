@@ -1,4 +1,4 @@
-import { constants } from 'node:fs'
+import { constants, RmOptions } from 'node:fs'
 import fs from 'node:fs/promises'
 import { isErrnoException } from '@atproto/common-web'
 
@@ -29,10 +29,11 @@ export const readIfExists = async (
 
 export const rmIfExists = async (
   filepath: string,
-  recursive = false,
+  options: RmOptions | boolean = false,
 ): Promise<void> => {
   try {
-    await fs.rm(filepath, { recursive })
+    const opts = typeof options === 'boolean' ? { recursive: options } : options
+    await fs.rm(filepath, opts)
   } catch (err) {
     if (isErrnoException(err) && err.code === 'ENOENT') {
       return
