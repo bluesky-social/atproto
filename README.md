@@ -95,7 +95,7 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
   - Change the tooling or frameworks used without prior discussion
   - Introduce new unnecessary dependencies
 
-Remember, we serve a wide community of users. Our day-to-day involves us constantly asking "which top priority is our top priority." If you submit well-written PRs that solve problems concisely, that's an awesome contribution. Otherwise, as much as we'd love to accept your ideas and contributions, we really don't have the bandwidth.
+Remember, we serve a wide community of users. Our day-to-day involves us constantly asking "which of our priorities should take precedence." If you submit well-written PRs that solve problems concisely, that's an awesome contribution. Otherwise, as much as we'd love to accept your ideas and contributions, we really don't have the bandwidth.
 
 ## Are you a developer interested in building on atproto?
 
@@ -112,4 +112,4 @@ This project is dual-licensed under MIT and Apache 2.0 terms:
 - MIT license ([LICENSE-MIT.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-MIT.txt) or http://opensource.org/licenses/MIT)
 - Apache License, Version 2.0, ([LICENSE-APACHE.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-APACHE.txt) or http://www.apache.org/licenses/LICENSE-2.0)
 
-Downstream projects and end users may chose either license individually, or both together, at their discretion. The motivation for this dual-licensing is the additional software patent assurance provided by Apache 2.0.
+Downstream projects and end users may choose either license individually, or both together, at their discretion. The motivation for this dual-licensing is the additional software patent assurance provided by Apache 2.0.

@@ -1,12 +1,12 @@
 # OAuth Client Quickstart
 
-This document describes how to implement OAuth based authentication in a
+This document describes how to implement OAuth-based authentication in a
 browser-based Single Page App (SPA), to communicate with
 [atproto](https://atproto.com) API services.
 
 ## Prerequisites
 
-- You need a web server - or at the very least a static file server - to host your SPA.
+- You need a web server&ndash;or at the very least a static file server&ndash;to host your SPA.
 
 > [!TIP]
 >
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', main)
 
 > [!CAUTION]
 >
-> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
+> Using Bluesky-hosted services for handle resolution (e.g., the `bsky.social`
 > endpoint) will leak both user IP addresses and handle identifier to Bluesky,
 > a third party. While Bluesky has a declared privacy policy, both developers
 > and users of applications need to be informed of and aware of the privacy
