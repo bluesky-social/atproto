@@ -212,7 +212,7 @@ export class OzoneServiceProfile {
               blurs: 'content',
               severity: 'alert',
               defaultSetting: 'warn',
-              adultOnly: false,
+              adultOnly: true,
               locales: [
                 {
                   lang: 'en',
