@@ -50,7 +50,6 @@
             "modTool": {
               "type": "object",
               "description": "Information about the moderation tool that generated the event.",
-              "required": ["name", "meta"],
               "properties": {
               "name": {
                 "type": "string",
