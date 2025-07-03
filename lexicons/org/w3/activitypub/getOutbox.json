@@ -1,0 +1,34 @@
+{
+  "lexicon": 1,
+  "id": "org.w3.activitypub.getOutbox",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Fetches a user' outbox, in ActivityPub format",
+      "parameters": {
+        "type": "params",
+        "required": ["repo"],
+        "properties": {
+          "repo": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The handle or DID of the repo."
+          },
+          "page": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/activity+json",
+        "schema": {
+          "type": "union",
+          "refs": [
+            "org.w3.activitystreams.orderedCollection",
+            "org.w3.activitystreams.orderedCollectionPage"
+          ]
+        }
+      }
+    }
+  }
+}
