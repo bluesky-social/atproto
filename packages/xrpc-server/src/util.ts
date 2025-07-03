@@ -118,10 +118,13 @@ export function validateInput(
   }
 
   // mimetype
-  const inputEncoding = normalizeMime(req.headers['content-type'] || '')
+  const contentType = req.headers['content-type'] || ''
+  const inputEncoding = normalizeMime(contentType)
   if (
     def.input?.encoding &&
-    (!inputEncoding || !isValidEncoding(def.input?.encoding, inputEncoding))
+    (!inputEncoding ||
+      (!isValidEncoding(def.input?.encoding, inputEncoding) &&
+        !isValidEncoding(def.input?.encoding, contentType)))
   ) {
     if (!inputEncoding) {
       throw new InvalidRequestError(
@@ -211,7 +214,7 @@ export function validateOutput(
   }
 }
 
-export function normalizeMime(v: string) {
+export function normalizeMime(v: string): string | false {
   if (!v) return false
   const fullType = mime.contentType(v)
   if (!fullType) return false
@@ -220,12 +223,17 @@ export function normalizeMime(v: string) {
   return shortType
 }
 
-function isValidEncoding(possibleStr: string, value: string) {
-  const possible = possibleStr.split(',').map((v) => v.trim())
+export function isValidEncoding(
+  possibleStr: string | string[],
+  value: string,
+): boolean {
+  const possible = Array.isArray(possibleStr)
+    ? possibleStr
+    : possibleStr.split(',').map((v) => v.trim())
   const normalized = normalizeMime(value)
   if (!normalized) return false
   if (possible.includes('*/*')) return true
-  return possible.includes(normalized)
+  return possible.includes(normalized) || possible.includes(value)
 }
 
 type BodyPresence = 'missing' | 'empty' | 'present'
