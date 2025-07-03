@@ -7,6 +7,7 @@ import { fileExists, isErrnoException, rmIfExists } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { httpLogger as log } from './logger'
+import { recursiveWithRetry } from './util/fs'
 
 export class DiskBlobStore implements BlobStore {
   constructor(
@@ -141,9 +142,12 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async deleteAll(): Promise<void> {
-    await rmIfExists(path.join(this.location, this.did), true)
-    await rmIfExists(path.join(this.tmpLocation, this.did), true)
-    await rmIfExists(path.join(this.quarantineLocation, this.did), true)
+    await rmIfExists(path.join(this.location, this.did), recursiveWithRetry)
+    await rmIfExists(path.join(this.tmpLocation, this.did), recursiveWithRetry)
+    await rmIfExists(
+      path.join(this.quarantineLocation, this.did),
+      recursiveWithRetry,
+    )
   }
 }
 
