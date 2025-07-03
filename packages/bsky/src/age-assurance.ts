@@ -31,7 +31,7 @@ export class AgeAssuranceClient {
   private async auth() {
     try {
       const auth = await fetch(
-        `${this.cfg.authUrl}/auth/realms/kws/protocol/openid-connect/token`,
+        `${this.cfg.authOrigin}/auth/realms/kws/protocol/openid-connect/token`,
         {
           method: 'POST',
           headers: {
@@ -109,7 +109,7 @@ export class AgeAssuranceClient {
     externalPayload: AgeAssuranceExternalPayload
   }) {
     const res = await this.fetchWithAuth(
-      `${this.cfg.apiUrl}/v1/verifications/send-email`,
+      `${this.cfg.apiOrigin}/v1/verifications/send-email`,
       {
         method: 'POST',
         headers: {

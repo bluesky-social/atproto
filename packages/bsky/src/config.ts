@@ -9,8 +9,8 @@ type LiveNowConfig = {
 export interface KwsConfig {
   clientId: string
   apiKey: string
-  apiUrl: string
-  authUrl: string
+  apiOrigin: string
+  authOrigin: string
   redirectUrl: string
   signingKey: string
   userAgent: string
@@ -236,8 +236,8 @@ export class ServerConfig {
 
     let kws: KwsConfig | undefined
     const kwsApiKey = process.env.BSKY_KWS_API_KEY
-    const kwsApiUrl = process.env.BSKY_KWS_API_URL
-    const kwsAuthUrl = process.env.BSKY_KWS_AUTH_URL
+    const kwsApiOrigin = process.env.BSKY_KWS_API_ORIGIN
+    const kwsAuthOrigin = process.env.BSKY_KWS_AUTH_ORIGIN
     const kwsClientId = process.env.BSKY_KWS_CLIENT_ID
     const kwsRedirectUrl = process.env.BSKY_KWS_REDIRECT_URL
     const kwsSigningKey = process.env.BSKY_KWS_SIGNING_KEY
@@ -245,8 +245,8 @@ export class ServerConfig {
     const kwsWebhookSigningKey = process.env.BSKY_KWS_WEBHOOK_SIGNING_KEY
     if (
       kwsApiKey ||
-      kwsApiUrl ||
-      kwsAuthUrl ||
+      kwsApiOrigin ||
+      kwsAuthOrigin ||
       kwsClientId ||
       kwsRedirectUrl ||
       kwsSigningKey ||
@@ -255,8 +255,8 @@ export class ServerConfig {
     ) {
       assert(
         kwsApiKey &&
-          kwsApiUrl &&
-          kwsAuthUrl &&
+          kwsApiOrigin &&
+          kwsAuthOrigin &&
           kwsClientId &&
           kwsRedirectUrl &&
           kwsSigningKey &&
@@ -266,8 +266,8 @@ export class ServerConfig {
       )
       kws = {
         apiKey: kwsApiKey,
-        apiUrl: kwsApiUrl,
-        authUrl: kwsAuthUrl,
+        apiOrigin: kwsApiOrigin,
+        authOrigin: kwsAuthOrigin,
         clientId: kwsClientId,
         redirectUrl: kwsRedirectUrl,
         signingKey: kwsSigningKey,

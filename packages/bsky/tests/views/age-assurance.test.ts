@@ -53,8 +53,8 @@ describe('age assurance views', () => {
       bsky: {
         kws: {
           apiKey: 'apiKey',
-          apiUrl: kwsServer.url,
-          authUrl: kwsServer.url,
+          apiOrigin: kwsServer.url,
+          authOrigin: kwsServer.url,
           clientId: 'clientId',
           redirectUrl,
           signingKey,
