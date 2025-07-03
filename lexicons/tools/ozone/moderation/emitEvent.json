@@ -46,7 +46,23 @@
               "type": "array",
               "items": { "type": "string", "format": "cid" }
             },
-            "createdBy": { "type": "string", "format": "did" }
+            "createdBy": { "type": "string", "format": "did" },
+            "modTool": {
+              "type": "object",
+              "description": "Information about the moderation tool that generated the event.",
+              "required": ["name", "meta"],
+              "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the moderation tool."
+              },
+              "meta": {
+                "type": "object",
+                "description": "Arbitrary metadata or key-value pairs related to the moderation event.",
+                "additionalProperties": true
+              }
+              }
+            }
           }
         }
       },
