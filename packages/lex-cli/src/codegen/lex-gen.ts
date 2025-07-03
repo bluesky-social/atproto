@@ -7,6 +7,8 @@ import {
   type LexCidLink,
   type LexIpldType,
   type LexObject,
+  type LexRef,
+  type LexRefUnion,
   type LexPrimitive,
   type LexToken,
   type LexUserType,
@@ -136,6 +138,16 @@ export function genUserType(
       })
       break
     }
+    case 'ref': {
+      const ifaceName: string = toTitleCase(getHash(lexUri))
+      genRef(file, imports, lexUri, def, ifaceName)
+      break
+    }
+    case 'union': {
+      const ifaceName: string = toTitleCase(getHash(lexUri))
+      genRefUnion(file, imports, lexUri, def, ifaceName)
+      break
+    }
 
     case 'blob':
     case 'bytes':
@@ -152,6 +164,40 @@ export function genUserType(
         `genLexUserType() called with wrong definition type (${def.type}) in ${lexUri}`,
       )
   }
+}
+
+function genRef(
+  file: SourceFile,
+  imports: Set<string>,
+  lexUri: string,
+  def: LexRef,
+  ifaceName: string
+)
+{
+  const type = refToType(def.ref, stripScheme(stripHash(lexUri)), imports)
+  const iface = file.addTypeAlias({
+    name: ifaceName,
+    type: makeType(type, {nullable: false}),
+    isExported: true,
+  })
+  genComment(iface, def)
+}
+
+function genRefUnion(
+  file: SourceFile,
+  imports: Set<string>,
+  lexUri: string,
+  def: LexRefUnion,
+  ifaceName: string
+)
+{
+  const types = def.refs.map((ref) => refToUnionType(ref, lexUri, imports))
+  const iface = file.addTypeAlias({
+    name: ifaceName,
+    type: makeType(types, {nullable: false}),
+    isExported: true,
+  })
+  genComment(iface, def)
 }
 
 function genObject(
