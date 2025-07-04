@@ -26,6 +26,7 @@ import {
   InvalidRequestError,
   MethodNotImplementedError,
   XRPCError,
+  excludeErrorResult,
   isErrorResult,
 } from './errors'
 import log, { LOGGER_NAME } from './logger'
@@ -279,10 +280,7 @@ export class Server {
 
     return async (ctx: C) => {
       const result = await auth(ctx)
-      if (isErrorResult(result)) {
-        throw XRPCError.fromErrorResult(result)
-      }
-      return result
+      return excludeErrorResult(result)
     }
   }
 

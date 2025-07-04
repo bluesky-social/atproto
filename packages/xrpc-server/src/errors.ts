@@ -22,6 +22,11 @@ export function isErrorResult(v: unknown): v is ErrorResult {
   return errorResult.safeParse(v).success
 }
 
+export function excludeErrorResult<V>(v: V) {
+  if (isErrorResult(v)) throw XRPCError.fromErrorResult(v)
+  return v as Exclude<V, ErrorResult>
+}
+
 export { ResponseType }
 
 export class XRPCError extends Error {
