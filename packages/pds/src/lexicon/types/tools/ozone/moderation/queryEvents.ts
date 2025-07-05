@@ -49,6 +49,8 @@ export interface QueryParams {
   removedTags?: string[]
   reportTypes?: string[]
   policies?: string[]
+  /** If specified, only events where the modTool name matches any of the given values are returned */
+  modTool?: string[]
   cursor?: string
 }
 
