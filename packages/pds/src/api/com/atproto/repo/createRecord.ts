@@ -14,7 +14,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
     }),
@@ -33,6 +33,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
+
+      auth.credentials.permissions.assertRepo({ action: 'create', collection })
+
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,
       })

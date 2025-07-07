@@ -10,7 +10,14 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
 
   server.app.bsky.feed.getFeed({
-    auth: ctx.authVerifier.accessStandard(),
+    auth: ctx.authVerifier.authorization({
+      authorize: ({ permissions }) => {
+        permissions.assertRpc({
+          aud: `${bskyAppView.did}#bsky_appview`,
+          lxm: ids.AppBskyFeedGetFeed,
+        })
+      },
+    }),
     handler: async ({ params, auth, req }) => {
       const requester = auth.credentials.did
 

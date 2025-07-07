@@ -17,7 +17,7 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
-    auth: ctx.authVerifier.accessFull({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
     }),
     handler: async ({ input, auth }) => {
@@ -25,6 +25,10 @@ export default function (server: Server, ctx: AppContext) {
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
       }
+
+      // Scope "repo:*" needed to import a repo
+      auth.credentials.permissions.assertRepo({ action: '*', collection: '*' })
+
       await ctx.actorStore.transact(did, (store) =>
         importRepo(store, input.body),
       )

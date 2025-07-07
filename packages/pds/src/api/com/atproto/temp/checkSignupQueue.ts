@@ -1,4 +1,4 @@
-import { AuthScope } from '../../../../auth-verifier'
+import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { resultPassthru } from '../../../proxy'
@@ -7,7 +7,7 @@ import { resultPassthru } from '../../../proxy'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.checkSignupQueue({
     auth: ctx.authVerifier.accessStandard({
-      additional: [AuthScope.SignupQueued],
+      extraScopes: [AuthScope.SignupQueued],
     }),
     handler: async ({ req }) => {
       if (!ctx.entrywayAgent) {

@@ -1,5 +1,5 @@
 import { AtpAgent } from '@atproto/api'
-import { AuthScope } from '../../../../auth-verifier'
+import { ACCESS_STANDARD, AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -7,8 +7,9 @@ import { parseProxyInfo } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
-    auth: ctx.authVerifier.accessStandard({
-      additional: [AuthScope.Takendown],
+    auth: ctx.authVerifier.authorization({
+      scopes: [...ACCESS_STANDARD, AuthScope.Takendown],
+      authorize: (ctx) => ctx.permissions.assertIdentity({}),
     }),
     handler: async ({ auth, input, req }) => {
       const { url, did: aud } = await parseProxyInfo(

@@ -25,10 +25,18 @@ import {
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.bskyAppView) return
+  const { bskyAppView } = ctx
+  if (!bskyAppView) return
 
   server.app.bsky.feed.getPostThread({
-    auth: ctx.authVerifier.accessStandard(),
+    auth: ctx.authVerifier.authorization({
+      authorize: ({ permissions }) => {
+        permissions.assertRpc({
+          aud: `${bskyAppView.did}#bsky_appview`,
+          lxm: ids.AppBskyFeedGetPostThread,
+        })
+      },
+    }),
     handler: async (reqCtx) => {
       try {
         return await pipethroughReadAfterWrite(ctx, reqCtx, getPostThreadMunge)

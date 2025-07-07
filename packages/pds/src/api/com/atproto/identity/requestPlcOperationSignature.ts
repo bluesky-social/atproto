@@ -1,12 +1,15 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-verifier'
+import { ACCESS_STANDARD, AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
-    auth: ctx.authVerifier.accessFull({ additional: [AuthScope.Takendown] }),
+    auth: ctx.authVerifier.authorization({
+      scopes: [...ACCESS_STANDARD, AuthScope.Takendown],
+      authorize: (ctx) => ctx.permissions.assertIdentity({}),
+    }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(

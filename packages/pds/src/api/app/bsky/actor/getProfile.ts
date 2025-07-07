@@ -1,5 +1,6 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import {
   LocalRecords,
@@ -8,10 +9,18 @@ import {
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.bskyAppView) return
+  const { bskyAppView } = ctx
+  if (!bskyAppView) return
 
   server.app.bsky.actor.getProfile({
-    auth: ctx.authVerifier.accessStandard(),
+    auth: ctx.authVerifier.authorization({
+      authorize: ({ permissions }) => {
+        permissions.assertRpc({
+          aud: `${bskyAppView.did}#bsky_appview`,
+          lxm: ids.AppBskyActorGetProfile,
+        })
+      },
+    }),
     handler: async (reqCtx) => {
       return pipethroughReadAfterWrite(ctx, reqCtx, getProfileMunge)
     },

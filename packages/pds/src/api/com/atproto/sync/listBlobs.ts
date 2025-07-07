@@ -1,20 +1,17 @@
-import { AuthScope } from '../../../../auth-verifier'
+import { ACCESS_STANDARD, AuthScope } from '../../../../auth-scope'
+import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listBlobs({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken({
-      additional: [AuthScope.Takendown],
+    auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
+      scopes: [...ACCESS_STANDARD, AuthScope.Takendown],
     }),
     handler: async ({ params, auth }) => {
       const { did, since, limit, cursor } = params
-      await assertRepoAvailability(
-        ctx,
-        did,
-        ctx.authVerifier.isUserOrAdmin(auth, did),
-      )
+      await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
       const blobCids = await ctx.actorStore.read(did, (store) =>
         store.repo.blob.listBlobs({ since, limit, cursor }),

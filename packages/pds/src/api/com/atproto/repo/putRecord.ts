@@ -20,7 +20,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
     }),
@@ -46,6 +46,12 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
+
+      auth.credentials.permissions.assertRepo({
+        action: 'update',
+        collection,
+      })
+
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,
       })

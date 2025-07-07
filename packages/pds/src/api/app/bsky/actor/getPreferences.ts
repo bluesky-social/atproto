@@ -1,19 +1,33 @@
-import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.bskyAppView) return
+  const { bskyAppView } = ctx
+  if (!bskyAppView) return
 
   server.app.bsky.actor.getPreferences({
-    auth: ctx.authVerifier.accessStandard({
-      additional: [AuthScope.Takendown],
+    auth: ctx.authVerifier.authorization({
+      authorize: ({ permissions }) => {
+        permissions.assertRpc({
+          aud: `${bskyAppView.did}#bsky_appview`,
+          lxm: ids.AppBskyActorGetPreferences,
+        })
+      },
     }),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
-      const preferences = await ctx.actorStore.read(requester, (store) =>
-        store.pref.getPreferences('app.bsky', auth.credentials.scope),
-      )
+
+      // @NOTE This is a "hack" that uses a fake lxm to allow for full access
+      const fullAccess = auth.credentials.permissions.allowsRpc({
+        aud: `${bskyAppView.did}#bsky_appview`,
+        lxm: `${ids.AppBskyActorGetPreferences}Full`,
+      })
+
+      const preferences = await ctx.actorStore.read(requester, (store) => {
+        return store.pref.getPreferences('app.bsky', { fullAccess })
+      })
+
       return {
         encoding: 'application/json',
         body: { preferences },

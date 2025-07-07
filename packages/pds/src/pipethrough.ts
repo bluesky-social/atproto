@@ -16,15 +16,20 @@ import {
   InternalServerError,
   InvalidRequestError,
   XRPCError as XRPCServerError,
+  excludeErrorResult,
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { AppContext } from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
+import { RpcOptions } from './permissions'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
-  const accessStandard = ctx.authVerifier.accessStandard()
+  const performAuth = ctx.authVerifier.authorization<RpcOptions, void>({
+    authorize: ({ permissions, params }) => permissions.assertRpc(params),
+  })
+
   return async (req, res, next) => {
     // /!\ Hot path
     try {
@@ -50,12 +55,13 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const auth = await accessStandard({ req, res })
-      if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.has(lxm)) {
-        throw new InvalidRequestError('Bad token method', 'InvalidToken')
-      }
-
       const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+
+      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+
+      const { credentials } = excludeErrorResult(authResult)
+
+      const serviceAuthJwt = await ctx.serviceAuthJwt(credentials.did, aud, lxm)
 
       const headers: IncomingHttpHeaders = {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
@@ -67,9 +73,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: auth.credentials.did
-          ? `Bearer ${await ctx.serviceAuthJwt(auth.credentials.did, aud, lxm)}`
-          : undefined,
+        authorization: `Bearer ${serviceAuthJwt}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -472,7 +476,7 @@ function* responseHeaders(
 // Utils
 // -------------------
 
-export const PRIVILEGED_METHODS = new Set<string>([
+export const CHAT_BSKY_METHODS = new Set<string>([
   ids.ChatBskyActorDeleteAccount,
   ids.ChatBskyActorExportAccountData,
   ids.ChatBskyConvoDeleteMessageForSelf,
@@ -487,6 +491,10 @@ export const PRIVILEGED_METHODS = new Set<string>([
   ids.ChatBskyConvoSendMessageBatch,
   ids.ChatBskyConvoUnmuteConvo,
   ids.ChatBskyConvoUpdateRead,
+])
+
+export const PRIVILEGED_METHODS = new Set<string>([
+  ...CHAT_BSKY_METHODS,
   ids.ComAtprotoServerCreateAccount,
 ])
 

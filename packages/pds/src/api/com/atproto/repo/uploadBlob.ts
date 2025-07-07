@@ -6,8 +6,9 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
-    auth: ctx.authVerifier.accessOrUserServiceAuth({
+    auth: ctx.authVerifier.authorizationOrUserServiceAuth({
       checkTakedown: true,
+      authorize: ({ permissions }) => permissions.assertBlob(),
     }),
     rateLimit: {
       durationMs: DAY,

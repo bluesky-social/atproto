@@ -38,10 +38,11 @@ const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
     }),
+
     rateLimit: [
       {
         name: 'repo-write-hour',
@@ -56,8 +57,8 @@ export default function (server: Server, ctx: AppContext) {
     ],
 
     handler: async ({ input, auth }) => {
-      const tx = input.body
-      const { repo, validate, swapCommit } = tx
+      const { repo, validate, swapCommit, writes } = input.body
+
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,
       })
@@ -72,15 +73,26 @@ export default function (server: Server, ctx: AppContext) {
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
-      if (tx.writes.length > 200) {
+      if (writes.length > 200) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
 
+      // Verify permission of every unique "action" / "collection" pair
+      for (const [action, collections] of [
+        ['create', new Set(writes.filter(isCreate).map((w) => w.collection))],
+        ['update', new Set(writes.filter(isUpdate).map((w) => w.collection))],
+        ['delete', new Set(writes.filter(isDelete).map((w) => w.collection))],
+      ] as const) {
+        for (const collection of collections) {
+          auth.credentials.permissions.assertRepo({ action, collection })
+        }
+      }
+
       // @NOTE should preserve order of ts.writes for final use in response
-      let writes: PreparedWrite[]
+      let preparedWrites: PreparedWrite[]
       try {
-        writes = await Promise.all(
-          tx.writes.map((write) => {
+        preparedWrites = await Promise.all(
+          writes.map(async (write) => {
             if (isCreate(write)) {
               return prepareCreate({
                 did,
@@ -121,7 +133,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const commit = await actorTxn.repo
-          .processWrites(writes, swapCommitCid)
+          .processWrites(preparedWrites, swapCommitCid)
           .catch((err) => {
             if (err instanceof BadCommitSwapError) {
               throw new InvalidRequestError(err.message, 'InvalidSwap')
@@ -150,7 +162,7 @@ export default function (server: Server, ctx: AppContext) {
             cid: commit.cid.toString(),
             rev: commit.rev,
           },
-          results: writes.map(writeToOutputResult),
+          results: preparedWrites.map(writeToOutputResult),
         },
       }
     },

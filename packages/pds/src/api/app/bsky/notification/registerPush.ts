@@ -1,7 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -11,15 +10,17 @@ export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
   if (!bskyAppView) return
 
+  const aud = `${bskyAppView.did}#bsky_appview`
+
   server.app.bsky.notification.registerPush({
-    auth: ctx.authVerifier.accessStandard({
-      additional: [AuthScope.SignupQueued],
+    auth: ctx.authVerifier.authorization({
+      authorize: ({ permissions }) => {
+        permissions.assertRpc({ aud, lxm: ids.AppBskyNotificationRegisterPush })
+      },
     }),
     handler: async ({ auth, input }) => {
       const { serviceDid } = input.body
-      const {
-        credentials: { did },
-      } = auth
+      const { did } = auth.credentials
 
       const authHeaders = await ctx.serviceAuthHeaders(
         did,
