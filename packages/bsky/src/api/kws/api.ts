@@ -7,6 +7,7 @@ import {
 } from './types'
 import {
   createStashEvent,
+  kwsWwwAuthenticate,
   parseExternalPayload,
   parseStatus,
   validateSignature,
@@ -24,7 +25,7 @@ export const apiAuth =
       typeof externalPayload !== 'string' ||
       typeof signature !== 'string'
     ) {
-      return res.status(401).json({
+      return res.status(401).header(kwsWwwAuthenticate()).json({
         success: false,
         error: 'Invalid authentication for KWS API: missing parameters',
       })
@@ -36,7 +37,7 @@ export const apiAuth =
       next()
     } catch (err) {
       log.error({ err }, 'Invalid KWS API signature')
-      return res.status(401).json({
+      return res.status(401).header(kwsWwwAuthenticate()).json({
         success: false,
         error: 'Invalid authentication for KWS API: signature mismatch',
       })

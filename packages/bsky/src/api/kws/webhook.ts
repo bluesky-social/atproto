@@ -7,6 +7,7 @@ import {
 } from './types'
 import {
   createStashEvent,
+  kwsWwwAuthenticate,
   parseExternalPayload,
   validateSignature,
 } from './util'
@@ -17,7 +18,7 @@ export const webhookAuth =
     const body: Buffer = req.body
     const sigHeader = req.headers['x-kws-signature']
     if (!sigHeader || typeof sigHeader !== 'string') {
-      return res.status(401).json({
+      return res.status(401).header(kwsWwwAuthenticate()).json({
         success: false,
         error:
           'Invalid authentication for KWS webhook: missing signature header',
@@ -37,7 +38,7 @@ export const webhookAuth =
       next()
     } catch (err) {
       log.error({ err }, 'Invalid KWS webhook signature')
-      return res.status(401).json({
+      return res.status(401).header(kwsWwwAuthenticate()).json({
         success: false,
         error: 'Invalid authentication for KWS webhook: signature mismatch',
       })

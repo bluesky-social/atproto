@@ -89,3 +89,7 @@ export const parseStatus = (serialized: string): AgeAssuranceStatus => {
     throw new Error(`Invalid status: ${serialized}`, { cause: err })
   }
 }
+
+export const kwsWwwAuthenticate = (): Record<string, string> => ({
+  'www-authenticate': `Signature realm="kws"`,
+})
