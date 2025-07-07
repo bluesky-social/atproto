@@ -10696,9 +10696,9 @@ export const schemaDict = {
       ageAssuranceEvent: {
         type: 'object',
         description: 'Object used to store age assurance data in stash.',
-        required: ['timestamp', 'status', 'attemptId'],
+        required: ['createdAt', 'status', 'attemptId'],
         properties: {
-          timestamp: {
+          createdAt: {
             type: 'string',
             format: 'datetime',
             description: 'The date and time of this write operation.',

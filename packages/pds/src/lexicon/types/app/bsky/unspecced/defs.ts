@@ -222,7 +222,7 @@ export function validateAgeAssuranceState<V>(v: V) {
 export interface AgeAssuranceEvent {
   $type?: 'app.bsky.unspecced.defs#ageAssuranceEvent'
   /** The date and time of this write operation. */
-  timestamp: string
+  createdAt: string
   /** The status of the age assurance process. */
   status: 'unknown' | 'pending' | 'assured' | (string & {})
   /** The unique identifier for this instance of the age assurance flow, in UUID format. */

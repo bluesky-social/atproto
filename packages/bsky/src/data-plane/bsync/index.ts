@@ -305,11 +305,11 @@ const handleAgeAssuranceEventOperation = async (
   const parsed = jsonStringToLex(
     Buffer.from(payload).toString('utf8'),
   ) as AgeAssuranceEvent
-  const { status, timestamp } = parsed
+  const { status, createdAt } = parsed
 
   const update = {
     ageAssuranceStatus: status,
-    ageAssuranceLastInitiatedAt: status === 'pending' ? timestamp : undefined,
+    ageAssuranceLastInitiatedAt: status === 'pending' ? createdAt : undefined,
   }
 
   return db.db
@@ -317,5 +317,4 @@ const handleAgeAssuranceEventOperation = async (
     .set(update)
     .where('did', '=', actorDid)
     .execute()
-    .then(() => {})
 }

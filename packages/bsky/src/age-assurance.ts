@@ -1,8 +1,7 @@
-import * as jose from 'jose'
 import { z } from 'zod'
-import { SECOND } from '@atproto/common'
 import { AgeAssuranceExternalPayload } from './api/kws/types'
 import { serializeExternalPayload } from './api/kws/util'
+import { buildBasicAuth } from './auth-verifier'
 import { KwsConfig } from './config'
 import { httpLogger as log } from './logger'
 
@@ -12,20 +11,12 @@ export const createAgeAssuranceClient = (
   return new AgeAssuranceClient(cfg)
 }
 
-type Auth = {
-  accessToken: string
-  expMs: number
-}
-
 // Not `.strict()` to avoid breaking if KWS adds fields.
 const authResponseSchema = z.object({
   access_token: z.string(),
-  expires_in: z.number(),
 })
 
 export class AgeAssuranceClient {
-  private authCache: Auth | undefined
-
   constructor(public cfg: KwsConfig) {}
 
   private async auth() {
@@ -37,7 +28,7 @@ export class AgeAssuranceClient {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Basic ${Buffer.from(`${this.cfg.clientId}:${this.cfg.apiKey}`).toString('base64')}`,
+            Authorization: buildBasicAuth(this.cfg.clientId, this.cfg.apiKey),
           },
           body: new URLSearchParams({
             grant_type: 'client_credentials',
@@ -53,12 +44,7 @@ export class AgeAssuranceClient {
 
       const res = await auth.json()
       const authResponse = authResponseSchema.parse(res)
-      const decoded = jose.decodeJwt(authResponse.access_token)
-      const iatMs = decoded.iat ? decoded.iat * SECOND : Date.now()
-      this.authCache = {
-        accessToken: authResponse.access_token,
-        expMs: iatMs * authResponse.expires_in * SECOND,
-      }
+      return authResponse.access_token
     } catch (err) {
       log.error({ err }, 'Failed to authenticate with KWS')
       throw err
@@ -68,35 +54,16 @@ export class AgeAssuranceClient {
   private async fetchWithAuth(
     url: string,
     init: RequestInit,
-    retry = true,
   ): Promise<Response> {
-    if (!this.authCache || Date.now() >= this.authCache.expMs) {
-      if (retry) {
-        await this.auth()
-        return this.fetchWithAuth(url, init, false)
-      }
-      log.error('KWS authentication failed: no valid access token available')
-      throw new Error(
-        'KWS authentication failed: no valid access token available',
-      )
-    }
+    const accessToken = await this.auth()
 
-    const res = await fetch(url, {
+    return fetch(url, {
       ...init,
       headers: {
         ...(init.headers ?? {}),
-        Authorization: `Bearer ${this.authCache.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     })
-
-    if (res.status === 401 && retry) {
-      log.warn('KWS auth was retried due to 401 Unauthorized response')
-      // If the token is expired, try to re-authenticate and retry the request.
-      this.authCache = undefined
-      return this.fetchWithAuth(url, init, false)
-    }
-
-    return res
   }
 
   async sendEmail({
@@ -127,11 +94,14 @@ export class AgeAssuranceClient {
     )
 
     if (!res.ok) {
+      const errorText = await res.text()
       log.error(
-        { status: res.status, statusText: res.statusText },
+        { status: res.status, statusText: res.statusText, errorText },
         'Failed to send age assurance email',
       )
       throw new Error('Failed to send KWS age assurance email')
     }
+
+    return res.json()
   }
 }

@@ -1,11 +1,10 @@
 import crypto from 'node:crypto'
 import express from 'express'
-import { TID } from '@atproto/common'
 import { MethodNotImplementedError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceEvent } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import { Namespaces } from '../../../../stash'
+import { AgeAssuranceExternalPayload } from '../../../kws/types'
+import { createStashEvent } from '../../../kws/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.initAgeAssurance({
@@ -20,36 +19,30 @@ export default function (server: Server, ctx: AppContext) {
       const actorDid = auth.credentials.iss
       const attemptId = crypto.randomUUID()
       const attemptIp = getClientIp(req)
+      const externalPayload: AgeAssuranceExternalPayload = {
+        actorDid,
+        attemptId,
+        attemptIp,
+      }
+
       await ctx.ageAssuranceClient.sendEmail({
         email: input.body.email,
-        externalPayload: {
-          actorDid,
-          attemptId,
-          attemptIp,
-        },
+        externalPayload,
         language: input.body.language,
       })
 
-      const status = 'pending'
-      const now = new Date().toISOString()
-      const payload: AgeAssuranceEvent = {
+      const event = await createStashEvent(ctx, {
+        actorDid,
         attemptId,
         attemptIp,
-        status,
-        timestamp: now,
-      }
-      await ctx.stashClient.create({
-        actorDid,
-        namespace: Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent,
-        key: TID.nextStr(),
-        payload,
+        status: 'pending',
       })
 
       return {
         encoding: 'application/json',
         body: {
-          status,
-          lastInitiatedAt: now,
+          status: event.status,
+          lastInitiatedAt: event.createdAt,
         },
       }
     },

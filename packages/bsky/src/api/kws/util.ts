@@ -1,7 +1,10 @@
 import crypto from 'node:crypto'
 import { TID } from '@atproto/common'
 import { AppContext } from '../../context'
-import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
+import {
+  AgeAssuranceEvent,
+  AgeAssuranceState,
+} from '../../lexicon/types/app/bsky/unspecced/defs'
 import { Namespaces } from '../../stash'
 import {
   AgeAssuranceExternalPayload,
@@ -12,11 +15,21 @@ import {
 
 export const createStashEvent = async (
   ctx: AppContext,
-  { actorDid, attemptId, attemptIp }: AgeAssuranceExternalPayload,
+  {
+    actorDid,
+    attemptId,
+    attemptIp,
+    status,
+  }: {
+    actorDid: string
+    attemptId: string
+    attemptIp?: string
+    status: AgeAssuranceState['status']
+  },
 ) => {
   const stashPayload: AgeAssuranceEvent = {
-    timestamp: new Date().toISOString(),
-    status: 'assured',
+    createdAt: new Date().toISOString(),
+    status,
     attemptId,
     attemptIp,
   }
@@ -26,6 +39,7 @@ export const createStashEvent = async (
     key: TID.nextStr(),
     payload: stashPayload,
   })
+  return stashPayload
 }
 
 export const validateSignature = (

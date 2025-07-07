@@ -17,16 +17,17 @@ export const webhookAuth =
     const body: Buffer = req.body
     const sigHeader = req.headers['x-kws-signature']
     if (!sigHeader || typeof sigHeader !== 'string') {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        error: 'Missing or invalid signature header',
+        error:
+          'Invalid authentication for KWS webhook: missing signature header',
       })
     }
 
     try {
-      const [t, v1] = sigHeader.split(',')
-      const timestamp = t?.split('=')[1]
-      const signature = v1?.split('=')[1]
+      const parts = sigHeader.split(',')
+      const timestamp = parts.find((p) => p.startsWith('t='))?.split('=')[1]
+      const signature = parts.find((p) => p.startsWith('v1='))?.split('=')[1]
       if (typeof timestamp !== 'string' || typeof signature !== 'string') {
         throw new Error('Invalid webhook signature format')
       }
@@ -36,9 +37,9 @@ export const webhookAuth =
       next()
     } catch (err) {
       log.error({ err }, 'Invalid KWS webhook signature')
-      return res.status(403).json({
+      return res.status(401).json({
         success: false,
-        error: 'Invalid authentication for KWS webhook',
+        error: 'Invalid authentication for KWS webhook: signature mismatch',
       })
     }
   }
@@ -49,10 +50,7 @@ type AgeAssuranceWebhookIntermediateBody = {
   }
 }
 
-const parseBody = (
-  ctx: AppContextWithAgeAssuranceClient,
-  serialized: string,
-): AgeAssuranceWebhookBody => {
+const parseBody = (serialized: string): AgeAssuranceWebhookBody => {
   try {
     const value: unknown = JSON.parse(serialized)
     const intermediate: AgeAssuranceWebhookIntermediateBody =
@@ -77,7 +75,7 @@ export const webhookHandler =
   async (req: express.Request, res: express.Response) => {
     let body: AgeAssuranceWebhookBody
     try {
-      body = parseBody(ctx, req.body)
+      body = parseBody(req.body)
     } catch (err) {
       log.error({ err }, 'Invalid KWS webhook body')
       return res.status(400).json(err)
@@ -100,7 +98,12 @@ export const webhookHandler =
     }
 
     try {
-      await createStashEvent(ctx, externalPayload)
+      await createStashEvent(ctx, {
+        actorDid,
+        attemptId,
+        attemptIp,
+        status: 'assured',
+      })
       return res.status(200).end()
     } catch (err) {
       log.error({ err }, 'Failed to handle KWS webhook')

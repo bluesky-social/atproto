@@ -1,4 +1,3 @@
-import qs from 'node:querystring'
 import express, { RequestHandler } from 'express'
 import { httpLogger as log } from '../../logger'
 import {
@@ -25,9 +24,9 @@ export const apiAuth =
       typeof externalPayload !== 'string' ||
       typeof signature !== 'string'
     ) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        error: 'Missing or invalid query parameters',
+        error: 'Invalid authentication for KWS API: missing parameters',
       })
     }
 
@@ -37,9 +36,9 @@ export const apiAuth =
       next()
     } catch (err) {
       log.error({ err }, 'Invalid KWS API signature')
-      return res.status(403).json({
+      return res.status(401).json({
         success: false,
-        error: 'Invalid authentication for KWS API',
+        error: 'Invalid authentication for KWS API: signature mismatch',
       })
     }
   }
@@ -97,17 +96,22 @@ export const verificationResponseHandler =
           .status(302)
           .setHeader(
             'Location',
-            `${ctx.cfg.kws.redirectUrl}?${qs.stringify({ success: false })}`,
+            `${ctx.cfg.kws.redirectUrl}?${new URLSearchParams({ success: 'false' })}`,
           )
           .end()
       }
 
-      await createStashEvent(ctx, externalPayload)
+      await createStashEvent(ctx, {
+        actorDid,
+        attemptId,
+        attemptIp,
+        status: 'assured',
+      })
       return res
         .status(302)
         .setHeader(
           'Location',
-          `${ctx.cfg.kws.redirectUrl}?${qs.stringify({ success: true })}`,
+          `${ctx.cfg.kws.redirectUrl}?${new URLSearchParams({ success: 'true' })}`,
         )
         .end()
     } catch (err) {
@@ -116,7 +120,7 @@ export const verificationResponseHandler =
         .status(302)
         .setHeader(
           'Location',
-          `${ctx.cfg.kws.redirectUrl}?${qs.stringify({ success: false })}`,
+          `${ctx.cfg.kws.redirectUrl}?${new URLSearchParams({ success: 'false' })}`,
         )
         .end()
     }
