@@ -251,6 +251,12 @@ import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
+import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
+import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
+import * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
+import * as ToolsOzoneSafelinkRemoveRule from './types/tools/ozone/safelink/removeRule.js'
+import * as ToolsOzoneSafelinkUpdateRule from './types/tools/ozone/safelink/updateRule.js'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
 import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
 import * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs.js'
@@ -519,6 +525,12 @@ export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
+export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
+export * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
+export * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
+export * as ToolsOzoneSafelinkRemoveRule from './types/tools/ozone/safelink/removeRule.js'
+export * as ToolsOzoneSafelinkUpdateRule from './types/tools/ozone/safelink/updateRule.js'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
 export * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
 export * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs.js'
@@ -4526,6 +4538,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
   setting: ToolsOzoneSettingNS
@@ -4538,6 +4551,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.hosting = new ToolsOzoneHostingNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
+    this.safelink = new ToolsOzoneSafelinkNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
     this.setting = new ToolsOzoneSettingNS(client)
@@ -4755,6 +4769,71 @@ export class ToolsOzoneModerationNS {
       undefined,
       opts,
     )
+  }
+}
+
+export class ToolsOzoneSafelinkNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  addRule(
+    data?: ToolsOzoneSafelinkAddRule.InputSchema,
+    opts?: ToolsOzoneSafelinkAddRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkAddRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.addRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkAddRule.toKnownErr(e)
+      })
+  }
+
+  queryEvents(
+    data?: ToolsOzoneSafelinkQueryEvents.InputSchema,
+    opts?: ToolsOzoneSafelinkQueryEvents.CallOptions,
+  ): Promise<ToolsOzoneSafelinkQueryEvents.Response> {
+    return this._client.call(
+      'tools.ozone.safelink.queryEvents',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  queryRules(
+    data?: ToolsOzoneSafelinkQueryRules.InputSchema,
+    opts?: ToolsOzoneSafelinkQueryRules.CallOptions,
+  ): Promise<ToolsOzoneSafelinkQueryRules.Response> {
+    return this._client.call(
+      'tools.ozone.safelink.queryRules',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  removeRule(
+    data?: ToolsOzoneSafelinkRemoveRule.InputSchema,
+    opts?: ToolsOzoneSafelinkRemoveRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkRemoveRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.removeRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkRemoveRule.toKnownErr(e)
+      })
+  }
+
+  updateRule(
+    data?: ToolsOzoneSafelinkUpdateRule.InputSchema,
+    opts?: ToolsOzoneSafelinkUpdateRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkUpdateRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.updateRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkUpdateRule.toKnownErr(e)
+      })
   }
 }
 

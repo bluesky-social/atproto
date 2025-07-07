@@ -207,6 +207,11 @@ import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
+import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
+import * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
+import * as ToolsOzoneSafelinkRemoveRule from './types/tools/ozone/safelink/removeRule.js'
+import * as ToolsOzoneSafelinkUpdateRule from './types/tools/ozone/safelink/updateRule.js'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
 import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
 import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet.js'
@@ -2743,6 +2748,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
   setting: ToolsOzoneSettingNS
@@ -2755,6 +2761,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.hosting = new ToolsOzoneHostingNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
+    this.safelink = new ToolsOzoneSafelinkNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
     this.setting = new ToolsOzoneSettingNS(server)
@@ -2976,6 +2983,74 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSafelinkNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  addRule<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneSafelinkAddRule.QueryParams,
+      ToolsOzoneSafelinkAddRule.HandlerInput,
+      ToolsOzoneSafelinkAddRule.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.safelink.addRule' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryEvents<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneSafelinkQueryEvents.QueryParams,
+      ToolsOzoneSafelinkQueryEvents.HandlerInput,
+      ToolsOzoneSafelinkQueryEvents.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.safelink.queryEvents' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryRules<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneSafelinkQueryRules.QueryParams,
+      ToolsOzoneSafelinkQueryRules.HandlerInput,
+      ToolsOzoneSafelinkQueryRules.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.safelink.queryRules' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeRule<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneSafelinkRemoveRule.QueryParams,
+      ToolsOzoneSafelinkRemoveRule.HandlerInput,
+      ToolsOzoneSafelinkRemoveRule.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.safelink.removeRule' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateRule<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneSafelinkUpdateRule.QueryParams,
+      ToolsOzoneSafelinkUpdateRule.HandlerInput,
+      ToolsOzoneSafelinkUpdateRule.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.safelink.updateRule' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

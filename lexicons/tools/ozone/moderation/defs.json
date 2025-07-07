@@ -50,7 +50,8 @@
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "creatorHandle": { "type": "string" },
-        "subjectHandle": { "type": "string" }
+        "subjectHandle": { "type": "string" },
+        "modTool": { "type": "ref", "ref": "#modTool" }
       }
     },
     "modEventViewDetail": {
@@ -103,7 +104,8 @@
           "items": { "type": "ref", "ref": "#blobView" }
         },
         "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "createdAt": { "type": "string", "format": "datetime" },
+        "modTool": { "type": "ref", "ref": "#modTool" }
       }
     },
     "subjectStatusView": {
@@ -892,6 +894,21 @@
         "labeledRecordCount": {
           "type": "integer",
           "description": "The total number of records labeled as a result of the user's reports."
+        }
+      }
+    },
+    "modTool": {
+      "type": "object",
+      "description": "Moderation tool information for tracing the source of the action",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')"
+        },
+        "meta": {
+          "type": "unknown",
+          "description": "Additional arbitrary metadata about the source"
         }
       }
     }

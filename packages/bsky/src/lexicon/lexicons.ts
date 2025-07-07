@@ -1389,6 +1389,10 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.createReport#modTool',
+              },
             },
           },
         },
@@ -1432,6 +1436,23 @@ export const schemaDict = {
                 format: 'datetime',
               },
             },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
           },
         },
       },
@@ -4790,10 +4811,14 @@ export const schemaDict = {
             format: 'at-uri',
           },
           knownFollowers: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
           },
           activitySubscription: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
@@ -10129,6 +10154,7 @@ export const schemaDict = {
               'unverified',
               'like-via-repost',
               'repost-via-repost',
+              'subscribed-post',
             ],
           },
           reasonSubject: {

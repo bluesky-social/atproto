@@ -27,6 +27,7 @@ export interface InputSchema {
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>
     | { $type: string }
+  modTool?: ModTool
 }
 
 export interface OutputSchema {
@@ -58,3 +59,22 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
+
+/** Moderation tool information for tracing the source of the action */
+export interface ModTool {
+  $type?: 'com.atproto.moderation.createReport#modTool'
+  /** Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome') */
+  name: string
+  /** Additional arbitrary metadata about the source */
+  meta?: { [_ in string]: unknown }
+}
+
+const hashModTool = 'modTool'
+
+export function isModTool<V>(v: V) {
+  return is$typed(v, id, hashModTool)
+}
+
+export function validateModTool<V>(v: V) {
+  return validate<ModTool & V>(v, id, hashModTool)
+}

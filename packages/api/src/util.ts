@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { TID } from '@atproto/common-web'
 import { AtUri } from '@atproto/syntax'
 import { AppBskyActorDefs } from './client'
 import { Nux } from './client/types/app/bsky/actor/defs'
@@ -61,7 +60,9 @@ export function getSavedFeedType(
 }
 
 export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
-  new TID(savedFeed.id)
+  if (!savedFeed.id) {
+    throw new Error('Saved feed must have an `id` - use a TID')
+  }
 
   if (['feed', 'list'].includes(savedFeed.type)) {
     const uri = new AtUri(savedFeed.value)

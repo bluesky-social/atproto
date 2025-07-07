@@ -1,6 +1,6 @@
 import { Insertable, RawBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -167,6 +167,7 @@ export class ModerationService {
     collections: string[]
     subjectType?: string
     policies?: string[]
+    modTool?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -188,6 +189,7 @@ export class ModerationService {
       collections,
       subjectType,
       policies,
+      modTool,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -287,6 +289,11 @@ export class ModerationService {
         })
         return qb
       })
+    }
+    if (modTool?.length) {
+      builder = builder
+        .where('modTool', 'is not', null)
+        .where(sql`("modTool" ->> 'name')`, 'in', modTool)
     }
 
     const keyset = new TimeIdKeyset(
@@ -397,12 +404,13 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
+    modTool?: ToolsOzoneModerationDefs.ModTool
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
   }> {
     this.db.assertTransaction()
-    const { event, subject, createdBy, createdAt = new Date() } = info
+    const { event, subject, createdBy, createdAt = new Date(), modTool } = info
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0
@@ -508,6 +516,7 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
+        modTool: modTool ? jsonb(modTool) : null,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -802,6 +811,10 @@ export class ModerationService {
     subject: ModSubject
     reportedBy: string
     createdAt?: Date
+    modTool?: {
+      name: string
+      meta?: { [_ in string]: unknown }
+    }
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -812,6 +825,7 @@ export class ModerationService {
       reportedBy,
       createdAt = new Date(),
       subject,
+      modTool,
     } = info
 
     const result = await this.logEvent({
@@ -823,6 +837,7 @@ export class ModerationService {
       createdBy: reportedBy,
       subject,
       createdAt,
+      modTool,
     })
 
     return result
