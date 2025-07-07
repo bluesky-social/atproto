@@ -31,7 +31,10 @@ import {
 } from './errors'
 import log, { LOGGER_NAME } from './logger'
 import {
+  CalcKeyFn,
+  CalcPointsFn,
   RateLimiterI,
+  RateLimiterOptions,
   RouteRateLimiter,
   WrappedRateLimiter,
 } from './rate-limiter'
@@ -48,6 +51,7 @@ import {
   Options,
   Params,
   RouteOpts,
+  ServerRateLimitDescription,
   StreamConfig,
   StreamConfigOrHandler,
   isHandlerPipeThroughBuffer,
@@ -99,18 +103,16 @@ export class Server {
 
       if (global) {
         this.globalRateLimiter = RouteRateLimiter.from(
-          global.map(({ name, ...limit }) =>
-            creator({ ...limit, keyPrefix: `rl-${name}` }),
-          ),
+          global.map((options) => creator(buildRateLimiterOptions(options))),
           { bypass },
         )
       }
 
       if (shared) {
         this.sharedRateLimiters = new Map(
-          shared.map(({ name, ...limit }) => [
-            name,
-            creator({ ...limit, keyPrefix: `rl-${name}` }),
+          shared.map((options) => [
+            options.name,
+            creator(buildRateLimiterOptions(options)),
           ]),
         )
       }
@@ -492,7 +494,12 @@ export class Server {
 
         return WrappedRateLimiter.from<any>(rateLimiter, options)
       } else {
-        return creator({ ...options, keyPrefix: `${nsid}-${i}` })
+        return creator({
+          ...options,
+          calcKey: options.calcKey ?? defaultKey,
+          calcPoints: options.calcPoints ?? defaultPoints,
+          keyPrefix: `${nsid}-${i}`,
+        })
       }
     })
 
@@ -579,3 +586,22 @@ function toSimplifiedErrorLike(err: unknown): unknown {
 
   return err
 }
+
+function buildRateLimiterOptions<C extends HandlerContext = HandlerContext>({
+  name,
+  calcKey = defaultKey,
+  calcPoints = defaultPoints,
+  ...desc
+}: ServerRateLimitDescription<C>): RateLimiterOptions<C> {
+  return { ...desc, calcKey, calcPoints, keyPrefix: `rl-${name}` }
+}
+
+const defaultPoints: CalcPointsFn = () => 1
+
+/**
+ * @note when using a proxy, ensure headers are getting forwarded correctly:
+ * `app.set('trust proxy', true)`
+ *
+ * @see {@link https://expressjs.com/en/guide/behind-proxies.html}
+ */
+const defaultKey: CalcKeyFn<HandlerContext> = ({ req }) => req.ip

@@ -3,7 +3,7 @@ import { Readable } from 'node:stream'
 import { NextFunction, Request, Response } from 'express'
 import { z } from 'zod'
 import { ErrorResult, XRPCError } from './errors'
-import { CalcKeyFn, CalcPointsFn, RateLimiterCreator } from './rate-limiter'
+import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -130,6 +130,17 @@ export type MethodHandler<
   O extends Output = Output,
 > = (ctx: HandlerContext<A, P, I>) => Awaitable<O | HandlerPipeThrough>
 
+export type RateLimiterCreator<T extends HandlerContext = HandlerContext> = <
+  C extends T = T,
+>(opts: {
+  keyPrefix: string
+  durationMs: number
+  points: number
+  calcKey: CalcKeyFn<C>
+  calcPoints: CalcPointsFn<C>
+  failClosed?: boolean
+}) => RateLimiterI<C>
+
 export type ServerRateLimitDescription<
   C extends HandlerContext = HandlerContext,
 > = {
@@ -138,6 +149,7 @@ export type ServerRateLimitDescription<
   points: number
   calcKey?: CalcKeyFn<C>
   calcPoints?: CalcPointsFn<C>
+  failClosed?: boolean
 }
 
 export type SharedRateLimitOpts<C extends HandlerContext = HandlerContext> = {

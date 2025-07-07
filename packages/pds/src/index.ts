@@ -12,8 +12,9 @@ import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import {
+  MemoryRateLimiter,
   MethodHandler,
-  RateLimiter,
+  RedisRateLimiter,
   ResponseType,
   XRPCError,
 } from '@atproto/xrpc-server'
@@ -30,17 +31,17 @@ import { proxyHandler } from './pipethrough'
 import compression from './util/compression'
 import * as wellKnown from './well-known'
 
+export { createSecretKeyObject } from './auth-verifier'
 export * from './config'
+export { AppContext } from './context'
 export { Database } from './db'
 export { DiskBlobStore } from './disk-blobstore'
-export { AppContext } from './context'
-export { httpLogger } from './logger'
-export { createSecretKeyObject } from './auth-verifier'
 export { createServer as createLexiconServer } from './lexicon'
-export * as sequencer from './sequencer'
+export { httpLogger } from './logger'
 export { type CommitDataWithOps, type PreparedWrite } from './repo'
 export * as repoPrepare from './repo/prepare'
 export { scripts } from './scripts'
+export * as sequencer from './sequencer'
 
 // Legacy export for backwards compatibility
 export type SkeletonHandler = MethodHandler<
@@ -105,8 +106,8 @@ export class PDS {
       rateLimits: rateLimits.enabled
         ? {
             creator: ctx.redisScratch
-              ? (opts) => RateLimiter.redis(ctx.redisScratch, opts)
-              : (opts) => RateLimiter.memory(opts),
+              ? (opts) => new RedisRateLimiter(ctx.redisScratch, opts)
+              : (opts) => new MemoryRateLimiter(opts),
             bypass: ({ req }) => {
               const { bypassKey, bypassIps } = rateLimits
               if (

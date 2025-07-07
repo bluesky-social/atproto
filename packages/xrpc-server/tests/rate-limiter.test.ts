@@ -4,7 +4,7 @@ import { MINUTE } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
-import { RateLimiter } from '../src'
+import { MemoryRateLimiter } from '../src'
 import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [
@@ -132,7 +132,7 @@ describe('Parameters', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
-      creator: (opts) => RateLimiter.memory(opts),
+      creator: (opts) => new MemoryRateLimiter(opts),
       bypass: ({ req }) => req.headers['x-ratelimit-bypass'] === 'bypass',
       shared: [
         {
