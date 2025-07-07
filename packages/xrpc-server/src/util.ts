@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { IncomingMessage, OutgoingMessage } from 'node:http'
 import { Duplex, Readable, pipeline } from 'node:stream'
-import { Request } from 'express'
+import { Request, Response, json, text } from 'express'
 import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import {
@@ -14,10 +14,11 @@ import {
 import { ResponseType } from '@atproto/xrpc'
 import { InternalServerError, InvalidRequestError, XRPCError } from './errors'
 import {
+  Awaitable,
   HandlerSuccess,
   Input,
   Params,
-  RouteOpts,
+  RouteOptions,
   UndecodedParams,
   handlerSuccess,
 } from './types'
@@ -91,21 +92,28 @@ export function getQueryParams(url = ''): QueryParams {
 
   const searchParams = new URLSearchParams(queryString)
   for (const key of searchParams.keys()) {
+    if (key === '__proto__') {
+      // Prevent prototype pollution
+      throw new InvalidRequestError(
+        `Invalid query parameter: ${key}`,
+        'InvalidQueryParameter',
+      )
+    }
+
     const values = searchParams.getAll(key)
     result[key] = values.length === 1 ? values[0] : values
   }
+
   return result
 }
 
 export function createInputVerifier(
   nsid: string,
-  def: LexXrpcProcedure,
-  opts: RouteOpts,
+  def: LexXrpcProcedure | LexXrpcQuery,
+  options: RouteOptions,
   lexicons: Lexicons,
-): (req: Request) => Input {
-  const { input } = def
-
-  if (!input) {
+): (req: Request, res: Response) => Awaitable<Input> {
+  if (def.type === 'query' || !def.input) {
     return (req) => {
       // @NOTE We allow (and ignore) "empty" bodies
       if (getBodyPresence(req) === 'present') {
@@ -118,23 +126,45 @@ export function createInputVerifier(
     }
   }
 
-  return (req) => {
+  // Lexicon definition expects a request body
+
+  const { input } = def
+  const { blobLimit, jsonLimit, textLimit } = options
+  const jsonParser = json({ limit: jsonLimit })
+  const textParser = text({ limit: textLimit })
+
+  // Transform json and text parser middlewares into a single function
+  const bodyParser = (req: Request, res: Response) => {
+    return new Promise<void>((resolve, reject) => {
+      jsonParser(req, res, (err) => {
+        if (err) return reject(err)
+        textParser(req, res, (err) => {
+          if (err) return reject(err)
+          resolve()
+        })
+      })
+    })
+  }
+
+  return async (req, res) => {
     if (getBodyPresence(req) === 'missing') {
       throw new InvalidRequestError(
         `A request body is expected but none was provided`,
       )
     }
 
-    const encoding = normalizeMime(req.headers['content-type'])
-    if (!encoding) {
+    const reqEncoding = normalizeMime(req.headers['content-type'])
+    if (!reqEncoding) {
       throw new InvalidRequestError(
         `Request encoding (Content-Type) required but not provided`,
       )
-    } else if (!isValidEncoding(input.encoding, encoding)) {
+    } else if (!isValidEncoding(input.encoding, reqEncoding)) {
       throw new InvalidRequestError(
-        `Wrong request encoding (Content-Type): ${encoding}`,
+        `Wrong request encoding (Content-Type): ${reqEncoding}`,
       )
     }
+
+    await bodyParser(req, res)
 
     if (input.schema) {
       try {
@@ -149,11 +179,9 @@ export function createInputVerifier(
 
     // if middleware already got the body, we pass that along as input
     // otherwise, we pass along a decoded readable stream
-    const body = req.readableEnded
-      ? req.body
-      : decodeBodyStream(req, opts.blobLimit)
+    const body = req.readableEnded ? req.body : decodeBodyStream(req, blobLimit)
 
-    return { encoding, body }
+    return { encoding: reqEncoding, body }
   }
 }
 

@@ -16,11 +16,7 @@ export type CatchallHandler = (
 export type Options = {
   validateResponse?: boolean
   catchall?: CatchallHandler
-  payload?: {
-    jsonLimit?: number
-    blobLimit?: number
-    textLimit?: number
-  }
+  payload?: RouteOptions
   rateLimits?: {
     creator: RateLimiterCreator<HandlerContext>
     global?: ServerRateLimitDescription<HandlerContext>[]
@@ -98,12 +94,8 @@ export type AuthVerifier<C, A extends AuthResult = AuthResult> =
   | ((ctx: C) => Awaitable<A | ErrorResult>)
   | ((ctx: C) => Awaitable<A>)
 
-export type MethodAuthContext<
-  P extends Params = Params,
-  I extends Input = Input,
-> = {
+export type MethodAuthContext<P extends Params = Params> = {
   params: P
-  input: I
   req: Request
   res: Response
 }
@@ -111,15 +103,15 @@ export type MethodAuthContext<
 export type MethodAuthVerifier<
   A extends AuthResult = AuthResult,
   P extends Params = Params,
-  I extends Input = Input,
-> = AuthVerifier<MethodAuthContext<P, I>, A>
+> = AuthVerifier<MethodAuthContext<P>, A>
 
 export type HandlerContext<
   A extends Auth = Auth,
   P extends Params = Params,
   I extends Input = Input,
-> = MethodAuthContext<P, I> & {
+> = MethodAuthContext<P> & {
   auth: A
+  input: I
   resetRouteRateLimits: () => Promise<void>
 }
 
@@ -175,8 +167,10 @@ export function isSharedRateLimitOpts<
   return typeof opts['name'] === 'string'
 }
 
-export type RouteOpts = {
+export type RouteOptions = {
   blobLimit?: number
+  jsonLimit?: number
+  textLimit?: number
 }
 
 export type MethodConfig<
@@ -186,8 +180,8 @@ export type MethodConfig<
   O extends Output = Output,
 > = {
   handler: MethodHandler<A, P, I, O>
-  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P, I>
-  opts?: RouteOpts
+  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P>
+  opts?: RouteOptions
   rateLimit?:
     | RateLimitOpts<HandlerContext<A, P, I>>
     | RateLimitOpts<HandlerContext<A, P, I>>[]

@@ -9,8 +9,6 @@ import express, {
   Request,
   RequestHandler,
   Router,
-  json as jsonParser,
-  text as textParser,
 } from 'express'
 import { check, schema } from '@atproto/common'
 import {
@@ -46,11 +44,12 @@ import {
   CatchallHandler,
   HandlerContext,
   HandlerSuccess,
+  Input,
   MethodConfig,
   MethodConfigOrHandler,
   Options,
   Params,
-  RouteOpts,
+  RouteOptions,
   ServerRateLimitDescription,
   StreamConfig,
   StreamConfigOrHandler,
@@ -78,7 +77,6 @@ export class Server {
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options
-  middleware: Record<'json' | 'text', RequestHandler>
   globalRateLimiter?: RouteRateLimiter<HandlerContext>
   sharedRateLimiters?: Map<string, RateLimiterI<HandlerContext>>
 
@@ -93,10 +91,6 @@ export class Server {
       this.enableStreamingOnListen(app)
     })
     this.options = opts
-    this.middleware = {
-      json: jsonParser({ limit: opts.payload?.jsonLimit }),
-      text: textParser({ limit: opts.payload?.textLimit }),
-    }
 
     if (opts.rateLimits) {
       const { global, shared, creator, bypass } = opts.rateLimits
@@ -189,12 +183,7 @@ export class Server {
     const handler = this.createHandler(nsid, def, config)
 
     if (def.type === 'procedure') {
-      this.routes.post(
-        path,
-        this.middleware.json,
-        this.middleware.text,
-        handler,
-      )
+      this.routes.post(path, handler)
     } else {
       this.routes.get(path, handler)
     }
@@ -267,11 +256,9 @@ export class Server {
   protected createInputVerifier(
     nsid: string,
     def: LexXrpcQuery | LexXrpcProcedure,
-    routeOpts: RouteOpts,
+    routeOpts: RouteOptions,
   ) {
-    if (def.type === 'procedure') {
-      return createInputVerifier(nsid, def, routeOpts, this.lex)
-    }
+    return createInputVerifier(nsid, def, routeOpts, this.lex)
   }
 
   protected createAuthVerifier<C, A extends Auth>(cfg: {
@@ -295,6 +282,8 @@ export class Server {
     const paramsVerifier = this.createParamsVerifier(nsid, def)
     const inputVerifier = this.createInputVerifier(nsid, def, {
       blobLimit: cfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
+      jsonLimit: cfg.opts?.jsonLimit ?? this.options.payload?.jsonLimit,
+      textLimit: cfg.opts?.textLimit ?? this.options.payload?.textLimit,
     })
 
     const validateResOutput =
@@ -307,13 +296,16 @@ export class Server {
 
     return async function (req, res, next) {
       try {
-        // validate request
-        const params = paramsVerifier(req)
-        const input = inputVerifier?.(req)
+        // parse & validate params
+        const params: Params = paramsVerifier(req)
+
         // authenticate request
-        const auth = authVerifier
-          ? await authVerifier({ params, input, req, res })
+        const auth: A = authVerifier
+          ? await authVerifier({ req, res, params })
           : (undefined as A)
+
+        // parse & validate input
+        const input: Input = await inputVerifier(req, res)
 
         const ctx: HandlerContext<A> = {
           params,
