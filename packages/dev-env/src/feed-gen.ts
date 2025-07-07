@@ -4,9 +4,8 @@ import * as plc from '@did-plc/lib'
 import express from 'express'
 import getPort from 'get-port'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { createLexiconServer } from '@atproto/pds'
+import { SkeletonHandler, createLexiconServer } from '@atproto/pds'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { SkeletonHandler } from './types'
 
 export class TestFeedGen {
   destroyed = false
