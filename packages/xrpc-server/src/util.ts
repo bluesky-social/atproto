@@ -137,9 +137,9 @@ export function createInputVerifier(
   const bodyParser = (req: Request, res: Response) => {
     return new Promise<void>((resolve, reject) => {
       jsonParser(req, res, (err) => {
-        if (err) return reject(err)
+        if (err) return reject(XRPCError.fromError(err))
         textParser(req, res, (err) => {
-          if (err) return reject(err)
+          if (err) return reject(XRPCError.fromError(err))
           resolve()
         })
       })
