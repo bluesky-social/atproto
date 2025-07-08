@@ -67,13 +67,10 @@ export type ExtraScopedOptions<S extends AuthScope = AuthScope> = {
   extraScopes?: readonly S[]
 }
 
-export type AuthorizedOptions<
-  P extends Params = Params,
-  Authorization = unknown,
-> = {
-  authorize: (
+export type AuthorizedOptions<P extends Params = Params> = {
+  authorize?: (
     ctx: MethodAuthContext<P> & { permissions: PermissionSet },
-  ) => Awaitable<Authorization>
+  ) => Awaitable<void>
 }
 
 export type AuthVerifierOpts = {
@@ -190,17 +187,14 @@ export class AuthVerifier {
           type: 'access',
           did: result.sub,
           scope: result.scope,
-          isPrivileged:
-            result.scope === AuthScope.Access ||
-            result.scope === AuthScope.AppPassPrivileged,
         },
       }
     }
   }
 
-  public accessAuthorization<P extends Params, R>(
-    options: VerifiedOptions & ScopedOptions & AuthorizedOptions<P, R>,
-  ): MethodAuthVerifier<AuthorizationOutput<R>, P> {
+  public accessAuthorization<P extends Params>(
+    options: VerifiedOptions & ScopedOptions & AuthorizedOptions<P>,
+  ): MethodAuthVerifier<AuthorizationOutput, P> {
     const access = this.access(options)
 
     const { authorize } = options
@@ -211,13 +205,14 @@ export class AuthVerifier {
       // Then turn the credentials into an AuthorizationOutput
       const { did, scope } = credentials
       const permissions = buildScopePermissionSet(scope)
-      const authorization = await authorize({ ...ctx, permissions })
+
+      if (authorize) await authorize({ ...ctx, permissions })
+
       return {
         credentials: {
           type: 'authorization',
           did,
           permissions,
-          authorization,
         },
       }
     }
@@ -274,19 +269,11 @@ export class AuthVerifier {
     }
   }
 
-  public authorization<P extends Params, R>(
-    options: VerifiedOptions & Partial<ScopedOptions> & AuthorizedOptions<P, R>,
-  ): MethodAuthVerifier<AuthorizationOutput<R>, P>
   public authorization<P extends Params>(
-    options?: VerifiedOptions &
-      Partial<ScopedOptions> &
-      Partial<AuthorizedOptions<P, void>>,
-  ): MethodAuthVerifier<AuthorizationOutput<void>, P>
-  public authorization(
     options: VerifiedOptions &
       Partial<ScopedOptions> &
-      Partial<AuthorizedOptions> = {},
-  ): MethodAuthVerifier<AuthorizationOutput> {
+      AuthorizedOptions<P> = {},
+  ): MethodAuthVerifier<AuthorizationOutput, P> {
     const { authorize = noop, scopes = ACCESS_STANDARD, ...opts } = options
     const oauth = this.oauthAuthorization({ ...opts, authorize })
     const access = this.accessAuthorization({ ...opts, authorize, scopes })
@@ -313,23 +300,9 @@ export class AuthVerifier {
   }
 
   public authorizationOrAdminTokenOptional<P extends Params>(
-    opts?: VerifiedOptions &
-      Partial<ScopedOptions> &
-      Partial<AuthorizedOptions<P, void>>,
+    opts: VerifiedOptions & Partial<ScopedOptions> & AuthorizedOptions<P> = {},
   ): MethodAuthVerifier<
-    AuthorizationOutput<void> | AdminTokenOutput | NullOutput,
-    P
-  >
-  public authorizationOrAdminTokenOptional<P extends Params, R>(
-    opts: VerifiedOptions & Partial<ScopedOptions> & AuthorizedOptions<P, R>,
-  ): MethodAuthVerifier<
-    AuthorizationOutput<R> | AdminTokenOutput | NullOutput,
-    P
-  >
-  public authorizationOrAdminTokenOptional<P extends Params, R>(
-    opts: VerifiedOptions & Partial<ScopedOptions> & AuthorizedOptions<P, R>,
-  ): MethodAuthVerifier<
-    AuthorizationOutput<R> | AdminTokenOutput | NullOutput,
+    AuthorizationOutput | AdminTokenOutput | NullOutput,
     P
   > {
     const authorization = this.authorization(opts)
@@ -368,26 +341,13 @@ export class AuthVerifier {
     }
   }
 
-  public authorizationOrUserServiceAuth<P extends Params, R>(
-    options: VerifiedOptions & Partial<ScopedOptions> & AuthorizedOptions<P, R>,
-  ): MethodAuthVerifier<AuthorizationOutput<R>, P>
-  public authorizationOrUserServiceAuth<P extends Params>(
-    options?: VerifiedOptions &
-      Partial<ScopedOptions> &
-      Partial<AuthorizedOptions<P, void>>,
-  ): MethodAuthVerifier<AuthorizationOutput<void>, P>
-  public authorizationOrUserServiceAuth({
-    authorize = noop,
+  public authorizationOrUserServiceAuth<P extends Params>({
     scopes = ACCESS_STANDARD,
     ...opts
   }: Partial<
-    VerifiedOptions & ScopedOptions & AuthorizedOptions
-  > = {}): MethodAuthVerifier<UserServiceAuthOutput | AuthorizationOutput> {
-    const authorizationVerifier = this.authorization({
-      authorize,
-      scopes,
-      ...opts,
-    })
+    VerifiedOptions & ScopedOptions & AuthorizedOptions<P>
+  > = {}): MethodAuthVerifier<UserServiceAuthOutput | AuthorizationOutput, P> {
+    const authorizationVerifier = this.authorization({ scopes, ...opts })
     return async (ctx) => {
       if (isUserServiceAuth(ctx.req)) {
         return this.userServiceAuth(ctx)
@@ -397,15 +357,9 @@ export class AuthVerifier {
     }
   }
 
-  public oauthAuthorization<P extends Params, R>(
-    options: VerifiedOptions & AuthorizedOptions<P, R>,
-  ): MethodAuthVerifier<AuthorizationOutput<R>, P>
   public oauthAuthorization<P extends Params>(
-    options?: VerifiedOptions & Partial<AuthorizedOptions<P, void>>,
-  ): MethodAuthVerifier<AuthorizationOutput<void>, P>
-  public oauthAuthorization<P extends Params, R>(
-    options: VerifiedOptions & Partial<AuthorizedOptions<P, R>> = {},
-  ): MethodAuthVerifier<AuthorizationOutput<R>, P> {
+    options: VerifiedOptions & Partial<AuthorizedOptions<P>> = {},
+  ): MethodAuthVerifier<AuthorizationOutput, P> {
     const { authorize, ...verifyStatusOptions } = options
 
     const verifyTokenOptions: VerifyTokenClaimsOptions = {
@@ -473,16 +427,14 @@ export class AuthVerifier {
       await this.verifyStatus(did, verifyStatusOptions)
 
       const permissions = new PermissionsOAuth(tokenClaims)
-      const authorization = authorize
-        ? await authorize({ ...ctx, permissions })
-        : (undefined as R)
+
+      if (authorize) await authorize({ ...ctx, permissions })
 
       return {
         credentials: {
           type: 'authorization',
           did,
           permissions,
-          authorization,
         },
       }
     }

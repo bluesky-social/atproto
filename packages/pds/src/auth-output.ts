@@ -24,16 +24,14 @@ export type AccessOutput<S extends AuthScope = AuthScope> = {
     type: 'access'
     did: string
     scope: S
-    isPrivileged: boolean
   }
 }
 
-export type AuthorizationOutput<R = unknown> = {
+export type AuthorizationOutput = {
   credentials: {
     type: 'authorization'
     did: string
     permissions: PermissionSet
-    authorization: R
   }
 }
 
