@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ACCESS_STANDARD, AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -14,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier.authorization({
+      scopes: [...ACCESS_STANDARD, AuthScope.SignupQueued],
       authorize: ({ permissions }) => {
         permissions.assertRpc({ aud, lxm: ids.AppBskyNotificationRegisterPush })
       },

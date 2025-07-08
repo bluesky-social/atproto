@@ -1,6 +1,5 @@
 import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -19,9 +18,7 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ auth }) => auth.credentials.did,
       },
     ],
-    auth: ctx.authVerifier.accessFull({
-      extraScopes: [AuthScope.Takendown],
-    }),
+    auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did, {

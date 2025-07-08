@@ -8,6 +8,7 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.actor.getPreferences({
     auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
       authorize: ({ permissions }) => {
         permissions.assertRpc({
           aud: `${bskyAppView.did}#bsky_appview`,

@@ -21,7 +21,6 @@ export class PermissionsTakendown extends PermissionSet {
   allowsRpc({ lxm }: RpcOptions): boolean {
     return (
       lxm === ids.AppBskyActorGetPreferences ||
-      lxm === ids.AppBskyActorPutPreferences ||
       lxm === ids.ComAtprotoServerCreateAccount
     )
   }

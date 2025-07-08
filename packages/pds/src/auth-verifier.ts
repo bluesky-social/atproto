@@ -282,13 +282,12 @@ export class AuthVerifier {
       Partial<ScopedOptions> &
       Partial<AuthorizedOptions<P, void>>,
   ): MethodAuthVerifier<AuthorizationOutput<void>, P>
-  public authorization({
-    authorize = noop,
-    scopes = ACCESS_STANDARD,
-    ...opts
-  }: Partial<
-    VerifiedOptions & ScopedOptions & AuthorizedOptions
-  > = {}): MethodAuthVerifier<AuthorizationOutput> {
+  public authorization(
+    options: VerifiedOptions &
+      Partial<ScopedOptions> &
+      Partial<AuthorizedOptions> = {},
+  ): MethodAuthVerifier<AuthorizationOutput> {
+    const { authorize = noop, scopes = ACCESS_STANDARD, ...opts } = options
     const oauth = this.oauthAuthorization({ ...opts, authorize })
     const access = this.accessAuthorization({ ...opts, authorize, scopes })
 
