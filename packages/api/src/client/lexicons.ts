@@ -15174,6 +15174,11 @@ export const schemaDict = {
               description:
                 'If specified, only events where the modTool name matches any of the given values are returned',
             },
+            ageAssuranceState: {
+              type: 'string',
+              description:
+                'If specified, only events where the age assurance state matches the given value are returned',
+            },
             cursor: {
               type: 'string',
             },
@@ -15403,6 +15408,11 @@ export const schemaDict = {
               type: 'integer',
               description:
                 'If specified, only subjects that have priority score value above the given value will be returned.',
+            },
+            ageAssuranceState: {
+              type: 'string',
+              description:
+                'If specified, only subjects with the given age assurance state will be returned.',
             },
           },
         },

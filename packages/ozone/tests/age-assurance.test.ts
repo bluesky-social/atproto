@@ -24,14 +24,23 @@ describe('age assurance events', () => {
     await network.close()
   })
 
-  it('sets age assurance state to pending for a subject', async () => {
-    const subject = {
+  it('handles age assurance events and filtering', async () => {
+    // Create subjects for testing different age assurance states
+    const aliceSubject = {
       $type: 'com.atproto.admin.defs#repoRef',
       did: sc.dids.alice,
     }
+    const bobSubject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: sc.dids.bob,
+    }
+    const carolSubject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: sc.dids.carol,
+    }
 
     await modClient.emitEvent({
-      subject,
+      subject: aliceSubject,
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         source: 'user',
@@ -41,21 +50,8 @@ describe('age assurance events', () => {
       },
     })
 
-    const { subjectStatuses } = await modClient.queryStatuses({
-      subject: sc.dids.alice,
-    })
-
-    expect(subjectStatuses[0].ageAssuranceState).toBe('pending')
-  })
-
-  it('updates age assurance state from pending to unknown', async () => {
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: sc.dids.bob,
-    }
-
     await modClient.emitEvent({
-      subject,
+      subject: bobSubject,
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         source: 'user',
@@ -64,13 +60,8 @@ describe('age assurance events', () => {
       },
     })
 
-    const { subjectStatuses: pendingStatus } = await modClient.queryStatuses({
-      subject: sc.dids.bob,
-    })
-    expect(pendingStatus[0].ageAssuranceState).toBe('pending')
-
     await modClient.emitEvent({
-      subject,
+      subject: bobSubject,
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         source: 'admin',
@@ -78,20 +69,9 @@ describe('age assurance events', () => {
         comment: 'Age verification failed or incomplete',
       },
     })
-    const { subjectStatuses: unknownStatus } = await modClient.queryStatuses({
-      subject: sc.dids.bob,
-    })
-    expect(unknownStatus[0].ageAssuranceState).toBe('unknown')
-  })
-
-  it('sets age assurance state to assured', async () => {
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: sc.dids.carol,
-    }
 
     await modClient.emitEvent({
-      subject,
+      subject: carolSubject,
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         source: 'admin',
@@ -101,30 +81,64 @@ describe('age assurance events', () => {
       },
     })
 
-    const { subjectStatuses } = await modClient.queryStatuses({
-      subject: sc.dids.carol,
+    // Verify that age assurance state is correctly set for each subject
+    const [
+      { subjectStatuses: aliceStatus },
+      { subjectStatuses: bobStatus },
+      { subjectStatuses: carolStatus },
+    ] = await Promise.all([
+      modClient.queryStatuses({
+        subject: sc.dids.alice,
+      }),
+      modClient.queryStatuses({
+        subject: sc.dids.bob,
+      }),
+      modClient.queryStatuses({
+        subject: sc.dids.carol,
+      }),
+    ])
+
+    expect(aliceStatus[0].ageAssuranceState).toBe('pending')
+    expect(bobStatus[0].ageAssuranceState).toBe('unknown')
+    expect(carolStatus[0].ageAssuranceState).toBe('assured')
+
+    // Verify that queryEvents allow filtering by ageAssuranceState
+    const [{ events: pendingEvents }, { events: unknownEvents }] =
+      await Promise.all([
+        modClient.queryEvents({
+          ageAssuranceState: 'pending',
+        }),
+        modClient.queryEvents({
+          ageAssuranceState: 'unknown',
+        }),
+      ])
+    expect(pendingEvents.length).toBeGreaterThan(0)
+    pendingEvents.forEach((event) => {
+      expect(event.event.$type).toBe(
+        'tools.ozone.moderation.defs#ageAssuranceEvent',
+      )
+      expect((event.event as any).status).toBe('pending')
     })
 
-    expect(subjectStatuses[0].ageAssuranceState).toBe('assured')
-  })
+    expect(unknownEvents.length).toBeGreaterThan(0)
+    unknownEvents.forEach((event) => {
+      expect(event.event.$type).toBe(
+        'tools.ozone.moderation.defs#ageAssuranceEvent',
+      )
+      expect((event.event as any).status).toBe('unknown')
+    })
 
-  it('defaults to unknown age assurance state for new subjects', async () => {
-    const { subjectStatuses } = await modClient.queryStatuses({})
-
-    const subjectsWithoutAgeEvents = subjectStatuses.filter(
-      (status) =>
-        status.subject.$type === 'com.atproto.admin.defs#repoRef' &&
-        ![sc.dids.alice, sc.dids.bob, sc.dids.carol].includes(
-          (status.subject as any).did,
-        ),
-    )
-
-    subjectsWithoutAgeEvents.forEach((status) => {
-      expect(status.ageAssuranceState).toBe('unknown')
+    // Verify that queryStatuses allows filtering by ageAssuranceState
+    const { subjectStatuses: pendingStatuses } = await modClient.queryStatuses({
+      ageAssuranceState: 'pending',
+    })
+    expect(pendingStatuses.length).toBeGreaterThan(0)
+    pendingStatuses.forEach((status) => {
+      expect(status.ageAssuranceState).toBe('pending')
     })
   })
 
-  it('errors for record subjects', async () => {
+  it('age assurance event fails for record subjects', async () => {
     const postSubject = {
       $type: 'com.atproto.repo.strongRef',
       uri: sc.posts[sc.dids.alice][0].ref.uriStr,

@@ -83,6 +83,8 @@ export interface QueryParams {
   minTakendownRecordsCount?: number
   /** If specified, only subjects that have priority score value above the given value will be returned. */
   minPriorityScore?: number
+  /** If specified, only subjects with the given age assurance state will be returned. */
+  ageAssuranceState?: string
 }
 
 export type InputSchema = undefined

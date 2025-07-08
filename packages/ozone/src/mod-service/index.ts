@@ -169,6 +169,7 @@ export class ModerationService {
     subjectType?: string
     policies?: string[]
     modTool?: string[]
+    ageAssuranceState?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -191,6 +192,7 @@ export class ModerationService {
       subjectType,
       policies,
       modTool,
+      ageAssuranceState,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -295,6 +297,11 @@ export class ModerationService {
       builder = builder
         .where('modTool', 'is not', null)
         .where(sql`("modTool" ->> 'name')`, 'in', modTool)
+    }
+    if (ageAssuranceState) {
+      builder = builder
+        .where('action', '=', 'tools.ozone.moderation.defs#ageAssuranceEvent')
+        .where(sql`meta->>'status'`, '=', ageAssuranceState)
     }
 
     const keyset = new TimeIdKeyset(
@@ -886,6 +893,7 @@ export class ModerationService {
     minReportedRecordsCount,
     minTakendownRecordsCount,
     minPriorityScore,
+    ageAssuranceState,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
@@ -1147,6 +1155,14 @@ export class ModerationService {
         'moderation_subject_status.priorityScore',
         '>=',
         minPriorityScore,
+      )
+    }
+
+    if (ageAssuranceState) {
+      builder = builder.where(
+        'moderation_subject_status.ageAssuranceState',
+        '=',
+        ageAssuranceState,
       )
     }
 
