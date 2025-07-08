@@ -124,6 +124,7 @@ const getSubjectStatusForModerationEvent = ({
         appealed: false,
       }
     case 'tools.ozone.moderation.defs#ageAssuranceEvent':
+    case 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent':
       return {
         reviewState: defaultReviewState,
       }

@@ -14014,26 +14014,45 @@ export const schemaDict = {
       ageAssuranceEvent: {
         type: 'object',
         description:
-          'Set age assurance state of the subject. Only works on DID subjects.',
-        required: ['source', 'status'],
+          'Age assurance info coming directly from users. Only works on DID subjects.',
+        required: ['createdAt', 'status', 'attemptId'],
         properties: {
-          comment: {
+          createdAt: {
             type: 'string',
-          },
-          source: {
-            type: 'string',
-            description: 'The source of the age assurance information.',
-            knownValues: ['user', 'admin'],
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
           },
           status: {
             type: 'string',
-            knownValues: ['pending', 'assured', 'unknown'],
-            description: 'The age assurance status.',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
           },
           attemptId: {
             type: 'string',
             description:
-              'An optional identifier for the age assurance attempt, typically coming from the AA provider.',
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          attemptIp: {
+            type: 'string',
+            description: 'The IP address used for this age assurance flow.',
+          },
+        },
+      },
+      ageAssuranceOverrideEvent: {
+        type: 'object',
+        description:
+          'Age assurance status override by moderators. Only works on DID subjects.',
+        required: ['comment'],
+        properties: {
+          status: {
+            type: 'string',
+            description:
+              'The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.',
+            knownValues: ['assured', 'reset'],
+          },
+          comment: {
+            type: 'string',
+            description: 'Comment describing the reason for the override.',
           },
         },
       },

@@ -390,16 +390,17 @@ export function validateModEventPriorityScore<V>(v: V) {
   return validate<ModEventPriorityScore & V>(v, id, hashModEventPriorityScore)
 }
 
-/** Set age assurance state of the subject. Only works on DID subjects. */
+/** Age assurance info coming directly from users. Only works on DID subjects. */
 export interface AgeAssuranceEvent {
   $type?: 'tools.ozone.moderation.defs#ageAssuranceEvent'
-  comment?: string
-  /** The source of the age assurance information. */
-  source: 'user' | 'admin' | (string & {})
-  /** The age assurance status. */
-  status: 'pending' | 'assured' | 'unknown' | (string & {})
-  /** An optional identifier for the age assurance attempt, typically coming from the AA provider. */
-  attemptId?: string
+  /** The date and time of this write operation. */
+  createdAt: string
+  /** The status of the age assurance process. */
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
+  /** The unique identifier for this instance of the age assurance flow, in UUID format. */
+  attemptId: string
+  /** The IP address used for this age assurance flow. */
+  attemptIp?: string
 }
 
 const hashAgeAssuranceEvent = 'ageAssuranceEvent'
@@ -410,6 +411,29 @@ export function isAgeAssuranceEvent<V>(v: V) {
 
 export function validateAgeAssuranceEvent<V>(v: V) {
   return validate<AgeAssuranceEvent & V>(v, id, hashAgeAssuranceEvent)
+}
+
+/** Age assurance status override by moderators. Only works on DID subjects. */
+export interface AgeAssuranceOverrideEvent {
+  $type?: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
+  /** The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state. */
+  status?: 'assured' | 'reset' | (string & {})
+  /** Comment describing the reason for the override. */
+  comment: string
+}
+
+const hashAgeAssuranceOverrideEvent = 'ageAssuranceOverrideEvent'
+
+export function isAgeAssuranceOverrideEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceOverrideEvent)
+}
+
+export function validateAgeAssuranceOverrideEvent<V>(v: V) {
+  return validate<AgeAssuranceOverrideEvent & V>(
+    v,
+    id,
+    hashAgeAssuranceOverrideEvent,
+  )
 }
 
 export interface ModEventAcknowledge {
