@@ -10703,6 +10703,10 @@ export const schemaDict = {
             format: 'datetime',
             description: 'The date and time of this write operation.',
           },
+          email: {
+            type: 'string',
+            description: 'The email used for AA.',
+          },
           status: {
             type: 'string',
             description: 'The status of the age assurance process.',
@@ -10713,9 +10717,21 @@ export const schemaDict = {
             description:
               'The unique identifier for this instance of the age assurance flow, in UUID format.',
           },
-          attemptIp: {
+          initIp: {
             type: 'string',
-            description: 'The IP address used for this age assurance flow.',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
           },
         },
       },

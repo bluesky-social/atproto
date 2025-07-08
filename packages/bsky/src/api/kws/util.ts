@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import express from 'express'
 import { TID } from '@atproto/common'
 import { AppContext } from '../../context'
 import {
@@ -18,21 +19,34 @@ export const createStashEvent = async (
   {
     actorDid,
     attemptId,
-    attemptIp,
+    email,
+    initIp,
+    initUa,
+    completeIp,
+    completeUa,
     status,
   }: {
     actorDid: string
     attemptId: string
-    attemptIp?: string
+    email: string
+    initIp?: string
+    initUa?: string
+    completeIp?: string
+    completeUa?: string
     status: AgeAssuranceState['status']
   },
 ) => {
   const stashPayload: AgeAssuranceEvent = {
     createdAt: new Date().toISOString(),
+    email,
     status,
     attemptId,
-    attemptIp,
+    initIp,
+    initUa,
+    completeIp,
+    completeUa,
   }
+
   await ctx.stashClient.create({
     actorDid,
     namespace: Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent,
@@ -93,3 +107,18 @@ export const parseStatus = (serialized: string): AgeAssuranceStatus => {
 export const kwsWwwAuthenticate = (): Record<string, string> => ({
   'www-authenticate': `Signature realm="kws"`,
 })
+
+export const getClientIp = (req: express.Request): string | undefined => {
+  const forwardedFor = req.headers['x-forwarded-for']
+  if (typeof forwardedFor === 'string') {
+    return forwardedFor.split(',')[0].trim()
+  }
+  if (Array.isArray(forwardedFor)) {
+    return forwardedFor[0]?.trim()
+  }
+  return undefined
+}
+
+export const getClientUa = (req: express.Request): string | undefined => {
+  return req.headers['user-agent']
+}

@@ -88,11 +88,11 @@ export const webhookHandler =
         externalPayload,
       },
     } = body
-    const { actorDid, attemptId, attemptIp } = externalPayload
+    const { actorDid, attemptId, email, initIp, initUa } = externalPayload
 
     if (!verified) {
       log.warn(
-        { actorDid, attemptId, attemptIp },
+        { actorDid, attemptId, initIp, initUa },
         'Unexpected KWS webhook call with unverified status',
       )
       return res.status(200).end()
@@ -102,7 +102,9 @@ export const webhookHandler =
       await createStashEvent(ctx, {
         actorDid,
         attemptId,
-        attemptIp,
+        email,
+        initIp,
+        initUa,
         status: 'assured',
       })
       return res.status(200).end()

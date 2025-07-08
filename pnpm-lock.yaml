@@ -211,6 +211,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      '@hapi/address':
+        specifier: ^5.1.1
+        version: 5.1.1
       '@types/http-errors':
         specifier: ^2.0.1
         version: 2.0.4

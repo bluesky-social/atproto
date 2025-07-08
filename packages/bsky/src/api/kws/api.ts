@@ -7,6 +7,8 @@ import {
 } from './types'
 import {
   createStashEvent,
+  getClientIp,
+  getClientUa,
   kwsWwwAuthenticate,
   parseExternalPayload,
   parseStatus,
@@ -51,7 +53,6 @@ type AgeAssuranceApiIntermediateQuery = {
 }
 
 const parseQuery = (
-  ctx: AppContextWithAgeAssuranceClient,
   externalPayload: express.Request['query'][string],
   signature: express.Request['query'][string],
   status: express.Request['query'][string],
@@ -82,15 +83,15 @@ export const verificationResponseHandler =
   async (req: express.Request, res: express.Response) => {
     const { externalPayload, signature, status } = req.query
 
-    const query = parseQuery(ctx, externalPayload, signature, status)
+    const query = parseQuery(externalPayload, signature, status)
 
     try {
       const { externalPayload, status } = query
-      const { actorDid, attemptId, attemptIp } = externalPayload
+      const { actorDid, attemptId, email, initIp, initUa } = externalPayload
 
       if (!status.verified) {
         log.warn(
-          { actorDid, attemptId, attemptIp },
+          { actorDid, attemptId, initIp, initUa },
           'Unexpected KWS verification response call with unverified status',
         )
         return res
@@ -102,10 +103,16 @@ export const verificationResponseHandler =
           .end()
       }
 
+      const completeIp = getClientIp(req)
+      const completeUa = getClientUa(req)
       await createStashEvent(ctx, {
         actorDid,
         attemptId,
-        attemptIp,
+        email,
+        initIp,
+        initUa,
+        completeIp,
+        completeUa,
         status: 'assured',
       })
       return res

@@ -1,10 +1,13 @@
 import crypto from 'node:crypto'
-import express from 'express'
-import { MethodNotImplementedError } from '@atproto/xrpc-server'
+import { isEmailValid } from '@hapi/address'
+import {
+  InvalidRequestError,
+  MethodNotImplementedError,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { AgeAssuranceExternalPayload } from '../../../kws/types'
-import { createStashEvent } from '../../../kws/util'
+import { createStashEvent, getClientIp, getClientUa } from '../../../kws/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.initAgeAssurance({
@@ -15,26 +18,37 @@ export default function (server: Server, ctx: AppContext) {
           'This service is not configured to support age assurance.',
         )
       }
+      const { email, language } = input.body
+      if (!isEmailValid(email)) {
+        throw new InvalidRequestError(
+          'This email address is not supported, please use a different email.',
+        )
+      }
 
       const actorDid = auth.credentials.iss
       const attemptId = crypto.randomUUID()
-      const attemptIp = getClientIp(req)
+      const initIp = getClientIp(req)
+      const initUa = getClientUa(req)
       const externalPayload: AgeAssuranceExternalPayload = {
         actorDid,
         attemptId,
-        attemptIp,
+        email,
+        initIp,
+        initUa,
       }
 
       await ctx.ageAssuranceClient.sendEmail({
-        email: input.body.email,
+        email,
         externalPayload,
-        language: input.body.language,
+        language,
       })
 
       const event = await createStashEvent(ctx, {
         actorDid,
         attemptId,
-        attemptIp,
+        email,
+        initIp,
+        initUa,
         status: 'pending',
       })
 
@@ -47,15 +61,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-const getClientIp = (req: express.Request): string | undefined => {
-  const forwardedFor = req.headers['x-forwarded-for']
-  if (typeof forwardedFor === 'string') {
-    return forwardedFor.split(',')[0].trim()
-  }
-  if (Array.isArray(forwardedFor)) {
-    return forwardedFor[0]?.trim()
-  }
-  return undefined
 }

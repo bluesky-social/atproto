@@ -43,7 +43,9 @@ export const webhookBodyIntermediateSchema = z.object({
 export type AgeAssuranceExternalPayload = {
   actorDid: string
   attemptId: string
-  attemptIp?: string
+  email: string
+  initIp?: string
+  initUa?: string
 }
 
 // `.strict()` because we control the payload structure.
@@ -51,7 +53,9 @@ export const externalPayloadSchema = z
   .object({
     actorDid: z.string(),
     attemptId: z.string(),
-    attemptIp: z.string().optional(),
+    email: z.string(),
+    initIp: z.string().optional(),
+    initUa: z.string().optional(),
   })
   .strict()
 

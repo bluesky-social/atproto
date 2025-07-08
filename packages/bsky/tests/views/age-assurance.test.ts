@@ -22,7 +22,9 @@ describe('age assurance views', () => {
   const signingKey = 'signingKey'
   const webhookSigningKey = 'webhookSigningKey'
   const attemptId = crypto.randomUUID()
-  const attemptIp = '8.42.140.125'
+  const initIp = '8.42.140.125'
+  const initUa =
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
   const redirectUrl = 'https://bsky.app/intent/age-assurance'
 
   let network: TestNetwork
@@ -31,9 +33,8 @@ describe('age assurance views', () => {
   let sc: SeedClient
   let aac: AgeAssuranceClient
 
-  // account dids, for convenience
   let actorDid: string
-  let alice: string
+  let actorEmail: string
 
   let kwsServer: MockKwsServer
   const authMock = jest.fn()
@@ -70,8 +71,8 @@ describe('age assurance views', () => {
     await basicSeed(sc)
     await network.processAll()
 
-    alice = sc.dids.alice
-    actorDid = alice
+    actorDid = sc.dids.alice
+    actorEmail = sc.accounts[actorDid].email
   })
 
   beforeEach(async () => {
@@ -128,64 +129,80 @@ describe('age assurance views', () => {
     return data
   }
 
-  describe('age assurance client', () => {
-    describe('parsing external payload', () => {
-      it('fails if actorDid is missing', () => {
-        const serialized = JSON.stringify({
-          attemptId,
-          attemptIp,
-        })
-
-        expect(() => parseExternalPayload(serialized)).toThrow(
-          `Invalid external payload: {"attemptId":"${attemptId}","attemptIp":"${attemptIp}"}`,
-        )
+  describe('parsing external payload', () => {
+    it('fails if actorDid is missing', () => {
+      const serialized = JSON.stringify({
+        attemptId,
+        email: actorEmail,
+        initIp,
       })
 
-      it('fails if attemptId is missing', () => {
-        const serialized = JSON.stringify({
-          actorDid,
-          attemptIp,
-        })
+      expect(() => parseExternalPayload(serialized)).toThrow(
+        `Invalid external payload`,
+      )
+    })
 
-        expect(() => parseExternalPayload(serialized)).toThrow(
-          `Invalid external payload: {"actorDid":"${actorDid}","attemptIp":"${attemptIp}"}`,
-        )
+    it('fails if attemptId is missing', () => {
+      const serialized = JSON.stringify({
+        actorDid,
+        email: actorEmail,
+        initIp,
       })
 
-      it('fails if extra field is present', () => {
-        const serialized = JSON.stringify({
-          actorDid,
-          attemptId,
-          extra: 'field',
-        })
+      expect(() => parseExternalPayload(serialized)).toThrow(
+        `Invalid external payload`,
+      )
+    })
 
-        expect(() => parseExternalPayload(serialized)).toThrow(
-          `Invalid external payload: {"actorDid":"${actorDid}","attemptId":"${attemptId}","extra":"field"}`,
-        )
+    it('fails if email is missing', () => {
+      const serialized = JSON.stringify({
+        actorDid,
+        attemptId,
+        initIp,
       })
 
-      it('does not fail if attemptIp is missing', () => {
-        const payload: AgeAssuranceExternalPayload = {
-          actorDid,
-          attemptId,
-        }
-        const serialized = JSON.stringify(payload)
+      expect(() => parseExternalPayload(serialized)).toThrow(
+        `Invalid external payload`,
+      )
+    })
 
-        const parsed = parseExternalPayload(serialized)
-        expect(parsed).toStrictEqual(payload)
+    it('fails if extra field is present', () => {
+      const serialized = JSON.stringify({
+        actorDid,
+        attemptId,
+        email: actorEmail,
+        extra: 'field',
       })
 
-      it('does not fail if all fields are set', () => {
-        const payload: AgeAssuranceExternalPayload = {
-          actorDid,
-          attemptId,
-          attemptIp,
-        }
-        const serialized = JSON.stringify(payload)
+      expect(() => parseExternalPayload(serialized)).toThrow(
+        `Invalid external payload`,
+      )
+    })
 
-        const parsed = parseExternalPayload(serialized)
-        expect(parsed).toStrictEqual(payload)
-      })
+    it('does not fail if optional property is missing', () => {
+      const externalPayload: AgeAssuranceExternalPayload = {
+        actorDid,
+        attemptId,
+        email: actorEmail,
+      }
+      const serialized = JSON.stringify(externalPayload)
+
+      const parsed = parseExternalPayload(serialized)
+      expect(parsed).toStrictEqual(externalPayload)
+    })
+
+    it('does not fail if all fields are set', () => {
+      const externalPayload: AgeAssuranceExternalPayload = {
+        actorDid,
+        attemptId,
+        email: actorEmail,
+        initIp,
+        initUa,
+      }
+      const serialized = JSON.stringify(externalPayload)
+
+      const parsed = parseExternalPayload(serialized)
+      expect(parsed).toStrictEqual(externalPayload)
     })
   })
 
@@ -210,9 +227,10 @@ describe('age assurance views', () => {
       })
       expect(sendEmailMock).toHaveBeenCalledTimes(1)
 
-      const externalPayload = {
+      const externalPayload: AgeAssuranceExternalPayload = {
         actorDid,
         attemptId,
+        email: actorEmail,
       }
       const status = { verified: true }
       const verificationRes = await kwsServer.callVerificationResponse(
@@ -235,9 +253,10 @@ describe('age assurance views', () => {
     it('does not assure if the verification response has status not verified', async () => {
       await initAgeAssurance(actorDid)
 
-      const externalPayload = {
+      const externalPayload: AgeAssuranceExternalPayload = {
         actorDid,
         attemptId,
+        email: actorEmail,
       }
       const status = { verified: false }
       const verificationRes = await kwsServer.callVerificationResponse(
@@ -277,6 +296,7 @@ describe('age assurance views', () => {
           externalPayload: {
             actorDid,
             attemptId,
+            email: actorEmail,
           },
           status: {
             verified: true,
@@ -300,6 +320,7 @@ describe('age assurance views', () => {
           externalPayload: {
             actorDid,
             attemptId,
+            email: actorEmail,
           },
           status: {
             verified: false,
