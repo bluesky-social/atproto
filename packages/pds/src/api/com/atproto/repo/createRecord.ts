@@ -34,7 +34,12 @@ export default function (server: Server, ctx: AppContext) {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
 
-      auth.credentials.permissions.assertRepo({ action: 'create', collection })
+      if (auth.credentials.type === 'permissions') {
+        auth.credentials.permissions.assertRepo({
+          action: 'create',
+          collection,
+        })
+      }
 
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,

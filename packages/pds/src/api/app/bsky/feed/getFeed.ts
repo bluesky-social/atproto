@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.authorization({
-      authorize: ({ permissions }) => {
+      authorize: (permissions) => {
         permissions.assertRpc({
           aud: `${bskyAppView.did}#bsky_appview`,
           lxm: ids.AppBskyFeedGetFeed,

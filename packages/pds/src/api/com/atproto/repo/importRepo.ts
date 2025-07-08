@@ -19,6 +19,10 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
+      // Scope "repo:*" needed to import a repo
+      authorize: (permissions) => {
+        permissions.assertRepo({ action: '*', collection: '*' })
+      },
     }),
     handler: async ({ input, auth }) => {
       if (!ctx.cfg.service.acceptingImports) {
@@ -26,9 +30,6 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const { did } = auth.credentials
-
-      // Scope "repo:*" needed to import a repo
-      auth.credentials.permissions.assertRepo({ action: '*', collection: '*' })
 
       await ctx.actorStore.transact(did, (store) =>
         importRepo(store, input.body),

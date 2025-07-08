@@ -42,15 +42,7 @@ import {
 } from './auth-scope'
 import { softDeleted } from './db'
 import { oauthLogger } from './logger'
-import {
-  PermissionSet,
-  PermissionsAppPass,
-  PermissionsAppPassPrivileged,
-  PermissionsFull,
-  PermissionsOAuth,
-  PermissionsSignupQueued,
-  PermissionsTakendown,
-} from './permissions/index.js'
+import { PermissionSet, PermissionsOAuth } from './permissions/index.js'
 import { appendVary } from './util/http'
 import { WithRequired } from './util/types'
 
@@ -69,7 +61,8 @@ export type ExtraScopedOptions<S extends AuthScope = AuthScope> = {
 
 export type AuthorizedOptions<P extends Params = Params> = {
   authorize?: (
-    ctx: MethodAuthContext<P> & { permissions: PermissionSet },
+    permissions: PermissionSet,
+    ctx: MethodAuthContext<P>,
   ) => Awaitable<void>
 }
 
@@ -249,41 +242,36 @@ export class AuthVerifier {
   }
 
   public authorization<P extends Params>({
+    scopes = ACCESS_STANDARD,
     extraScopes = [],
     authorize,
     ...options
   }: VerifiedOptions &
+    Partial<ScopedOptions> &
     ExtraScopedOptions &
-    AuthorizedOptions<P> = {}): MethodAuthVerifier<AuthorizationOutput, P> {
-    const scopes = [...ACCESS_STANDARD, ...extraScopes]
-    const access = this.access({ ...options, scopes })
+    AuthorizedOptions<P> = {}): MethodAuthVerifier<
+    AccessOutput | AuthorizationOutput,
+    P
+  > {
+    const access = this.access({
+      ...options,
+      scopes: [...scopes, ...extraScopes],
+    })
     const oauth = this.oauth(options)
 
     return async (ctx) => {
       const [type] = parseAuthorizationHeader(ctx.req.headers.authorization)
 
-      if (type === AuthType.BEARER) {
-        const { credentials } = excludeErrorResult(await access(ctx))
-        const permissions = buildScopePermissionSet(credentials.scope)
-        if (authorize) await authorize({ ...ctx, permissions })
-
-        return {
-          credentials: {
-            type: 'authorization',
-            did: credentials.did,
-            permissions,
-          },
-        }
-      }
+      if (type === AuthType.BEARER) return access(ctx)
 
       if (type === AuthType.DPOP) {
         const { credentials } = excludeErrorResult(await oauth(ctx))
         const permissions = new PermissionsOAuth(credentials.tokenClaims)
-        if (authorize) await authorize({ ...ctx, permissions })
+        if (authorize) await authorize(permissions, ctx)
 
         return {
           credentials: {
-            type: 'authorization',
+            type: 'permissions',
             did: credentials.did,
             permissions,
           },
@@ -308,7 +296,7 @@ export class AuthVerifier {
   public authorizationOrAdminTokenOptional<P extends Params>(
     opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P> = {},
   ): MethodAuthVerifier<
-    AuthorizationOutput | AdminTokenOutput | NullOutput,
+    AuthorizationOutput | AccessOutput | AdminTokenOutput | NullOutput,
     P
   > {
     const authorization = this.authorization(opts)
@@ -348,7 +336,10 @@ export class AuthVerifier {
 
   public authorizationOrUserServiceAuth<P extends Params>(
     options: Partial<VerifiedOptions & AuthorizedOptions<P>> = {},
-  ): MethodAuthVerifier<UserServiceAuthOutput | AuthorizationOutput, P> {
+  ): MethodAuthVerifier<
+    UserServiceAuthOutput | AuthorizationOutput | AccessOutput,
+    P
+  > {
     const authorizationVerifier = this.authorization(options)
     return async (ctx) => {
       if (isUserServiceAuth(ctx.req)) {
@@ -679,21 +670,4 @@ export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
 function setAuthHeaders(res: ServerResponse) {
   res.setHeader('Cache-Control', 'private')
   appendVary(res, 'Authorization')
-}
-
-// @NOTE using memoized map to avoid creating new instances of PermissionSet on
-// every request
-const scopePermissionSetMap = new Map<AuthScope, PermissionSet>([
-  [AuthScope.Access, new PermissionsFull()],
-  [AuthScope.AppPass, new PermissionsAppPass()],
-  [AuthScope.AppPassPrivileged, new PermissionsAppPassPrivileged()],
-  [AuthScope.SignupQueued, new PermissionsSignupQueued()],
-  [AuthScope.Takendown, new PermissionsTakendown()],
-])
-
-function buildScopePermissionSet(scope: AuthScope): PermissionSet {
-  const permissionSet = scopePermissionSetMap.get(scope)
-  if (permissionSet) return permissionSet
-
-  throw new InvalidRequestError('Invalid token scope', 'InvalidToken')
 }

@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier.authorization({
       extraScopes: [AuthScope.SignupQueued],
-      authorize: ({ permissions }) => {
+      authorize: (permissions) => {
         permissions.assertRpc({ aud, lxm: ids.AppBskyNotificationRegisterPush })
       },
     }),

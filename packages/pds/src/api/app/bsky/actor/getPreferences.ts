@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getPreferences({
     auth: ctx.authVerifier.authorization({
       extraScopes: [AuthScope.Takendown],
-      authorize: ({ permissions }) => {
+      authorize: (permissions) => {
         permissions.assertRpc({
           aud: `${bskyAppView.did}#bsky_appview`,
           lxm: ids.AppBskyActorGetPreferences,
@@ -21,10 +21,13 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       // @NOTE This is a "hack" that uses a fake lxm to allow for full access
-      const fullAccess = auth.credentials.permissions.allowsRpc({
-        aud: `${bskyAppView.did}#bsky_appview`,
-        lxm: `${ids.AppBskyActorGetPreferences}Full`,
-      })
+      const fullAccess =
+        auth.credentials.type === 'access'
+          ? auth.credentials.scope === AuthScope.Access
+          : auth.credentials.permissions.allowsRpc({
+              aud: `${bskyAppView.did}#bsky_appview`,
+              lxm: `${ids.AppBskyActorGetPreferences}Full`,
+            })
 
       const preferences = await ctx.actorStore.read(requester, (store) => {
         return store.pref.getPreferences('app.bsky', { fullAccess })

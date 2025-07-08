@@ -1,5 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountPreference } from '../../../../actor-store/preference/reader'
+import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -11,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.putPreferences({
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
-      authorize: ({ permissions }) => {
+      authorize: (permissions) => {
         permissions.assertRpc({
           aud: `${bskyAppView.did}#bsky_appview`,
           lxm: ids.AppBskyActorPutPreferences,
@@ -31,10 +32,13 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // @NOTE This is a "hack" that uses a fake lxm to allow for full access
-      const fullAccess = auth.credentials.permissions.allowsRpc({
-        aud: `${bskyAppView.did}#bsky_appview`,
-        lxm: `${ids.AppBskyActorPutPreferences}Full`,
-      })
+      const fullAccess =
+        auth.credentials.type === 'access'
+          ? auth.credentials.scope === AuthScope.Access
+          : auth.credentials.permissions.allowsRpc({
+              aud: `${bskyAppView.did}#bsky_appview`,
+              lxm: `${ids.AppBskyActorPutPreferences}Full`,
+            })
 
       await ctx.actorStore.transact(requester, async (actorTxn) => {
         await actorTxn.pref.putPreferences(checkedPreferences, 'app.bsky', {

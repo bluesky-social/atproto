@@ -9,9 +9,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     auth: ctx.authVerifier.authorization({
       extraScopes: [AuthScope.Takendown],
-      authorize: (ctx) => {
-        ctx.permissions.assertIdentity({ report: true })
-      },
+      authorize: (permissions) => permissions.assertIdentity({ report: true }),
     }),
     handler: async ({ auth, input, req }) => {
       const { url, did: aud } = await parseProxyInfo(

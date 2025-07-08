@@ -27,7 +27,7 @@ import { RpcOptions } from './permissions'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcOptions>({
-    authorize: ({ permissions, params }) => permissions.assertRpc(params),
+    authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
 
   return async (req, res, next) => {

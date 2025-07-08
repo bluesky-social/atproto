@@ -29,7 +29,7 @@ export type AccessOutput<S extends AuthScope = AuthScope> = {
 
 export type AuthorizationOutput = {
   credentials: {
-    type: 'authorization'
+    type: 'permissions'
     did: string
     permissions: PermissionSet
   }

@@ -9,8 +9,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       // @NOTE Reflect any change in signPlcOperation
       extraScopes: [AuthScope.Takendown],
-      authorize: (ctx) => {
-        ctx.permissions.assertIdentity({ plcOpRequest: true })
+      authorize: (permissions) => {
+        permissions.assertIdentity({ plcOpRequest: true })
       },
     }),
     handler: async ({ auth, req }) => {

@@ -47,10 +47,12 @@ export default function (server: Server, ctx: AppContext) {
         swapRecord,
       } = input.body
 
-      auth.credentials.permissions.assertRepo({
-        action: 'update',
-        collection,
-      })
+      if (auth.credentials.type === 'permissions') {
+        auth.credentials.permissions.assertRepo({
+          action: 'update',
+          collection,
+        })
+      }
 
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,

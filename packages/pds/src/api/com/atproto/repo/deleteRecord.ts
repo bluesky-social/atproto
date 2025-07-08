@@ -30,7 +30,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, swapCommit, swapRecord } = input.body
 
-      auth.credentials.permissions.assertRepo({ action: 'delete', collection })
+      if (auth.credentials.type === 'permissions') {
+        auth.credentials.permissions.assertRepo({
+          action: 'delete',
+          collection,
+        })
+      }
 
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,

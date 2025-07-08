@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.authorization({
-      authorize: ({ permissions }) => {
+      authorize: (permissions) => {
         permissions.assertRpc({
           aud: `${bskyAppView.did}#bsky_appview`,
           lxm: ids.AppBskyActorGetProfiles,

@@ -2,7 +2,8 @@ import { ComAtprotoServerGetSession } from '@atproto/api'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
-import { AuthorizationOutput } from '../../../../auth-output'
+import { AccessOutput, AuthorizationOutput } from '../../../../auth-output'
+import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
@@ -10,7 +11,8 @@ import { didDocForSession } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
     auth: ctx.authVerifier.authorization({
-      authorize: ({ permissions }) => permissions.assertAccount({}),
+      extraScopes: [AuthScope.SignupQueued],
+      authorize: (permissions) => permissions.assertAccount({}),
     }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
@@ -61,10 +63,13 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function output(
-  { credentials }: AuthorizationOutput,
+  { credentials }: AuthorizationOutput | AccessOutput,
   data: ComAtprotoServerGetSession.OutputSchema,
 ): ComAtprotoServerGetSession.OutputSchema {
-  if (!credentials.permissions.allowsAccount({ email: true })) {
+  if (
+    credentials.type === 'permissions' &&
+    !credentials.permissions.allowsAccount({ email: true })
+  ) {
     const { email, emailAuthFactor, emailConfirmed, ...rest } = data
     return rest
   }

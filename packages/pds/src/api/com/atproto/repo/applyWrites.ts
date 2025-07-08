@@ -68,13 +68,15 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // Verify permission of every unique "action" / "collection" pair
-      for (const [action, collections] of [
-        ['create', new Set(writes.filter(isCreate).map((w) => w.collection))],
-        ['update', new Set(writes.filter(isUpdate).map((w) => w.collection))],
-        ['delete', new Set(writes.filter(isDelete).map((w) => w.collection))],
-      ] as const) {
-        for (const collection of collections) {
-          auth.credentials.permissions.assertRepo({ action, collection })
+      if (auth.credentials.type === 'permissions') {
+        for (const [action, collections] of [
+          ['create', new Set(writes.filter(isCreate).map((w) => w.collection))],
+          ['update', new Set(writes.filter(isUpdate).map((w) => w.collection))],
+          ['delete', new Set(writes.filter(isDelete).map((w) => w.collection))],
+        ] as const) {
+          for (const collection of collections) {
+            auth.credentials.permissions.assertRepo({ action, collection })
+          }
         }
       }
 
