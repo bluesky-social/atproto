@@ -1,3 +1,4 @@
+import { SignedTokenPayload } from '@atproto/oauth-provider'
 import { AuthScope } from './auth-scope'
 import { PermissionSet } from './permissions'
 
@@ -31,6 +32,14 @@ export type AuthorizationOutput = {
     type: 'authorization'
     did: string
     permissions: PermissionSet
+  }
+}
+
+export type OAuthOutput = {
+  credentials: {
+    type: 'oauth'
+    did: string
+    tokenClaims: SignedTokenPayload
   }
 }
 

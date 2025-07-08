@@ -30,6 +30,7 @@ import {
   AuthorizationOutput,
   ModServiceOutput,
   NullOutput,
+  OAuthOutput,
   RefreshOutput,
   UserServiceAuthOutput,
 } from './auth-output'
@@ -196,45 +197,19 @@ export class AuthVerifier {
     }
   }
 
-  public accessAuthorization<P extends Params>(
-    options: VerifiedOptions & ScopedOptions & AuthorizedOptions<P>,
-  ): MethodAuthVerifier<AuthorizationOutput, P> {
-    const access = this.access(options)
-
-    const { authorize } = options
-    return async (ctx) => {
-      // Run the "access" authentication method
-      const { credentials } = excludeErrorResult(await access(ctx))
-
-      // Then turn the credentials into an AuthorizationOutput
-      const { did, scope } = credentials
-      const permissions = buildScopePermissionSet(scope)
-
-      if (authorize) await authorize({ ...ctx, permissions })
-
-      return {
-        credentials: {
-          type: 'authorization',
-          did,
-          permissions,
-        },
-      }
-    }
-  }
-
   public accessStandard<S extends AuthScope = never>({
-    extraScopes: additional = [],
+    extraScopes = [],
     ...options
   }: VerifiedOptions & ExtraScopedOptions<S> = {}) {
-    const scopes = [...ACCESS_STANDARD, ...additional]
+    const scopes = [...ACCESS_STANDARD, ...extraScopes]
     return this.access({ ...options, scopes })
   }
 
   public accessFull<S extends AuthScope = never>({
-    extraScopes: additional = [],
+    extraScopes = [],
     ...options
   }: VerifiedOptions & ExtraScopedOptions<S> = {}) {
-    const scopes = [...ACCESS_FULL, ...additional]
+    const scopes = [...ACCESS_FULL, ...extraScopes]
     return this.access({ ...options, scopes })
   }
 
@@ -273,20 +248,47 @@ export class AuthVerifier {
     }
   }
 
-  public authorization<P extends Params>(
-    options: VerifiedOptions & AuthorizedOptions<P> = {},
-  ): MethodAuthVerifier<AuthorizationOutput, P> {
-    const oauth = this.oauthAuthorization(options)
-    const access = this.accessAuthorization({
-      ...options,
-      scopes: [...ACCESS_STANDARD, AuthScope.SignupQueued, AuthScope.Takendown],
-    })
+  public authorization<P extends Params>({
+    extraScopes = [],
+    authorize,
+    ...options
+  }: VerifiedOptions &
+    AuthorizedOptions<P> &
+    ExtraScopedOptions = {}): MethodAuthVerifier<AuthorizationOutput, P> {
+    const scopes = [...ACCESS_STANDARD, ...extraScopes]
+    const access = this.access({ ...options, scopes })
+    const oauth = this.oauth(options)
 
     return async (ctx) => {
       const [type] = parseAuthorizationHeader(ctx.req.headers.authorization)
 
-      if (type === AuthType.BEARER) return access(ctx)
-      if (type === AuthType.DPOP) return oauth(ctx)
+      if (type === AuthType.BEARER) {
+        const { credentials } = excludeErrorResult(await access(ctx))
+        const permissions = buildScopePermissionSet(credentials.scope)
+        if (authorize) await authorize({ ...ctx, permissions })
+
+        return {
+          credentials: {
+            type: 'authorization',
+            did: credentials.did,
+            permissions,
+          },
+        }
+      }
+
+      if (type === AuthType.DPOP) {
+        const { credentials } = excludeErrorResult(await oauth(ctx))
+        const permissions = new PermissionsOAuth(credentials.tokenClaims)
+        if (authorize) await authorize({ ...ctx, permissions })
+
+        return {
+          credentials: {
+            type: 'authorization',
+            did: credentials.did,
+            permissions,
+          },
+        }
+      }
 
       // Auth headers are set through the access and oauth methods so we only
       // need to set them here if we reach this point
@@ -304,7 +306,7 @@ export class AuthVerifier {
   }
 
   public authorizationOrAdminTokenOptional<P extends Params>(
-    opts: VerifiedOptions & Partial<ScopedOptions> & AuthorizedOptions<P> = {},
+    opts: VerifiedOptions & AuthorizedOptions<P> = {},
   ): MethodAuthVerifier<
     AuthorizationOutput | AdminTokenOutput | NullOutput,
     P
@@ -357,11 +359,9 @@ export class AuthVerifier {
     }
   }
 
-  public oauthAuthorization<P extends Params>(
-    options: VerifiedOptions & Partial<AuthorizedOptions<P>> = {},
-  ): MethodAuthVerifier<AuthorizationOutput, P> {
-    const { authorize, ...verifyStatusOptions } = options
-
+  public oauth<P extends Params>(
+    verifyStatusOptions: VerifiedOptions = {},
+  ): MethodAuthVerifier<OAuthOutput, P> {
     const verifyTokenOptions: VerifyTokenClaimsOptions = {
       audience: [this.dids.pds],
       scope: ['atproto'],
@@ -426,15 +426,11 @@ export class AuthVerifier {
 
       await this.verifyStatus(did, verifyStatusOptions)
 
-      const permissions = new PermissionsOAuth(tokenClaims)
-
-      if (authorize) await authorize({ ...ctx, permissions })
-
       return {
         credentials: {
-          type: 'authorization',
+          type: 'oauth',
           did,
-          permissions,
+          tokenClaims,
         },
       }
     }
