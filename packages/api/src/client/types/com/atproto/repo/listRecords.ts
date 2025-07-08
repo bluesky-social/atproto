@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.repo.listRecords'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The handle or DID of the repo. */
   repo: string
   /** The NSID of the record type. */
@@ -26,7 +26,6 @@ export interface QueryParams {
   /** Flag to reverse the order of the returned records. */
   reverse?: boolean
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -60,7 +60,9 @@ describe('server', () => {
     const response = await fetch(
       `${network.bsky.url}/xrpc/com.atproto.repo.createRecord`,
       {
-        body: 'x'.repeat(100 * 1024), // 100kb
+        method: 'POST',
+        body: '"' + 'x'.repeat(150 * 1024) + '"', // ~150kb
+        headers: { 'Content-Type': 'application/json' },
       },
     )
 

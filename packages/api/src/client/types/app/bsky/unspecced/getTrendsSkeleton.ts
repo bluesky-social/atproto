@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getTrendsSkeleton'
 
-export interface QueryParams {
+export type QueryParams = {
   /** DID of the account making the request (not included for public/unauthenticated queries). */
   viewer?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -16,11 +16,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getFeedGenerator'
 
-export interface QueryParams {
+export type QueryParams = {
   /** AT-URI of the feed generator record. */
   feed: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

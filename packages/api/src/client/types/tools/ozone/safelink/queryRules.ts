@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.safelink.queryRules'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** Cursor for pagination */

@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.queryEvents'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The types of events (fully qualified string in the format of tools.ozone.moderation.defs#modEvent<name>) to filter by. If not specified, all events are returned. */
   types?: string[]
   createdBy?: string
@@ -52,7 +52,6 @@ export interface QueryParams {
   modTool?: string[]
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
