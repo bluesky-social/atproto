@@ -13,8 +13,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did
-      const { aud, lxm = null } = params
-      const exp = params.exp ? params.exp * 1000 : undefined
+      const { aud, exp, lxm = null } = params
 
       // Takendown accounts should not be able to generate service auth tokens except for methods necessary for account migration
       if (
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (exp) {
-        const diff = exp - Date.now()
+        const diff = exp * 1000 - Date.now()
         if (diff < 0) {
           throw new InvalidRequestError(
             'expiration is in past',
