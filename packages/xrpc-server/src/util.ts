@@ -1,8 +1,8 @@
 import assert from 'node:assert'
 import { IncomingMessage, OutgoingMessage } from 'node:http'
 import { Duplex, Readable, pipeline } from 'node:stream'
-import express from 'express'
-import mime from 'mime-types'
+import { Request, Response, json, text } from 'express'
+import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import {
   LexXrpcProcedure,
@@ -12,15 +12,14 @@ import {
   jsonToLex,
 } from '@atproto/lexicon'
 import { ResponseType } from '@atproto/xrpc'
+import { InternalServerError, InvalidRequestError, XRPCError } from './errors'
 import {
-  HandlerInput,
+  Awaitable,
   HandlerSuccess,
-  InternalServerError,
-  InvalidRequestError,
+  Input,
   Params,
-  RouteOpts,
+  RouteOptions,
   UndecodedParams,
-  XRPCError,
   handlerSuccess,
 } from './types'
 
@@ -81,93 +80,115 @@ export function decodeQueryParam(
   }
 }
 
-export function getQueryParams(url = ''): Record<string, string | string[]> {
-  const { searchParams } = new URL(url ?? '', 'http://x')
-  const result: Record<string, string | string[]> = {}
+export type QueryParams = Record<string, undefined | string | string[]>
+export function getQueryParams(url = ''): QueryParams {
+  const result: QueryParams = Object.create(null)
+
+  const queryStringIdx = url.indexOf('?')
+  if (queryStringIdx === -1) return result
+
+  const queryString = url.slice(queryStringIdx + 1)
+  if (queryString === '') return result
+
+  const searchParams = new URLSearchParams(queryString)
   for (const key of searchParams.keys()) {
-    result[key] = searchParams.getAll(key)
-    if (result[key].length === 1) {
-      result[key] = result[key][0]
+    if (key === '__proto__') {
+      // Prevent prototype pollution
+      throw new InvalidRequestError(
+        `Invalid query parameter: ${key}`,
+        'InvalidQueryParameter',
+      )
     }
+
+    const values = searchParams.getAll(key)
+    result[key] = values.length === 1 ? values[0] : values
   }
+
   return result
 }
 
-export function validateInput(
+export function createInputVerifier(
   nsid: string,
   def: LexXrpcProcedure | LexXrpcQuery,
-  req: express.Request,
-  opts: RouteOpts,
+  options: RouteOptions,
   lexicons: Lexicons,
-): HandlerInput | undefined {
-  // request expectation
+): (req: Request, res: Response) => Awaitable<Input> {
+  if (def.type === 'query' || !def.input) {
+    return (req) => {
+      // @NOTE We allow (and ignore) "empty" bodies
+      if (getBodyPresence(req) === 'present') {
+        throw new InvalidRequestError(
+          `A request body was provided when none was expected`,
+        )
+      }
 
-  const bodyPresence = getBodyPresence(req)
-  if (bodyPresence === 'present' && (def.type !== 'procedure' || !def.input)) {
-    throw new InvalidRequestError(
-      `A request body was provided when none was expected`,
-    )
-  }
-  if (def.type === 'query') {
-    return
-  }
-  if (bodyPresence === 'missing' && def.input) {
-    throw new InvalidRequestError(
-      `A request body is expected but none was provided`,
-    )
+      return undefined
+    }
   }
 
-  // mimetype
-  const inputEncoding = normalizeMime(req.headers['content-type'] || '')
-  if (
-    def.input?.encoding &&
-    (!inputEncoding || !isValidEncoding(def.input?.encoding, inputEncoding))
-  ) {
-    if (!inputEncoding) {
+  // Lexicon definition expects a request body
+
+  const { input } = def
+  const { blobLimit, jsonLimit, textLimit } = options
+  const jsonParser = json({ limit: jsonLimit })
+  const textParser = text({ limit: textLimit })
+
+  // Transform json and text parser middlewares into a single function
+  const bodyParser = (req: Request, res: Response) => {
+    return new Promise<void>((resolve, reject) => {
+      jsonParser(req, res, (err) => {
+        if (err) return reject(XRPCError.fromError(err))
+        textParser(req, res, (err) => {
+          if (err) return reject(XRPCError.fromError(err))
+          resolve()
+        })
+      })
+    })
+  }
+
+  return async (req, res) => {
+    if (getBodyPresence(req) === 'missing') {
+      throw new InvalidRequestError(
+        `A request body is expected but none was provided`,
+      )
+    }
+
+    const reqEncoding = normalizeMime(req.headers['content-type'])
+    if (!reqEncoding) {
       throw new InvalidRequestError(
         `Request encoding (Content-Type) required but not provided`,
       )
-    } else {
+    } else if (!isValidEncoding(input.encoding, reqEncoding)) {
       throw new InvalidRequestError(
-        `Wrong request encoding (Content-Type): ${inputEncoding}`,
+        `Wrong request encoding (Content-Type): ${reqEncoding}`,
       )
     }
-  }
 
-  if (!inputEncoding) {
-    // no input body
-    return undefined
-  }
+    await bodyParser(req, res)
 
-  // if input schema, validate
-  if (def.input?.schema) {
-    try {
-      const lexBody = req.body ? jsonToLex(req.body) : req.body
-      req.body = lexicons.assertValidXrpcInput(nsid, lexBody)
-    } catch (e) {
-      throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
+    if (input.schema) {
+      try {
+        const lexBody = req.body ? jsonToLex(req.body) : req.body
+        req.body = lexicons.assertValidXrpcInput(nsid, lexBody)
+      } catch (e) {
+        throw new InvalidRequestError(
+          e instanceof Error ? e.message : String(e),
+        )
+      }
     }
-  }
 
-  // if middleware already got the body, we pass that along as input
-  // otherwise, we pass along a decoded readable stream
-  let body
-  if (req.readableEnded) {
-    body = req.body
-  } else {
-    body = decodeBodyStream(req, opts.blobLimit)
-  }
+    // if middleware already got the body, we pass that along as input
+    // otherwise, we pass along a decoded readable stream
+    const body = req.readableEnded ? req.body : decodeBodyStream(req, blobLimit)
 
-  return {
-    encoding: inputEncoding,
-    body,
+    return { encoding: reqEncoding, body }
   }
 }
 
 export function validateOutput(
   nsid: string,
   def: LexXrpcProcedure | LexXrpcQuery,
-  output: HandlerSuccess | undefined,
+  output: HandlerSuccess | void,
   lexicons: Lexicons,
 ): void {
   // initial validation
@@ -211,9 +232,9 @@ export function validateOutput(
   }
 }
 
-export function normalizeMime(v: string) {
+export function normalizeMime(v?: string): string | false {
   if (!v) return false
-  const fullType = mime.contentType(v)
+  const fullType = contentType(v)
   if (!fullType) return false
   const shortType = fullType.split(';')[0]
   if (!shortType) return false
@@ -230,23 +251,15 @@ function isValidEncoding(possibleStr: string, value: string) {
 
 type BodyPresence = 'missing' | 'empty' | 'present'
 
-function getBodyPresence(req: express.Request): BodyPresence {
+function getBodyPresence(req: IncomingMessage): BodyPresence {
   if (req.headers['transfer-encoding'] != null) return 'present'
   if (req.headers['content-length'] === '0') return 'empty'
   if (req.headers['content-length'] != null) return 'present'
   return 'missing'
 }
 
-export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
-  return new Promise((resolve) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk) => chunks.push(chunk))
-    req.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))))
-  })
-}
-
 function decodeBodyStream(
-  req: express.Request,
+  req: IncomingMessage,
   maxSize: number | undefined,
 ): Readable {
   const contentEncoding = req.headers['content-encoding']
@@ -332,13 +345,19 @@ export interface ServerTiming {
   description?: string
 }
 
-export const parseReqNsid = (req: express.Request | IncomingMessage) =>
+export const parseReqNsid = (req: Request | IncomingMessage) =>
   parseUrlNsid('originalUrl' in req ? req.originalUrl : req.url || '/')
 
 /**
  * Validates and extracts the nsid from an xrpc path
  */
 export const parseUrlNsid = (url: string): string => {
+  const nsid = extractUrlNsid(url)
+  if (nsid) return nsid
+  throw new InvalidRequestError('invalid xrpc path')
+}
+
+export const extractUrlNsid = (url: string): string | undefined => {
   // /!\ Hot path
 
   if (
@@ -351,7 +370,7 @@ export const parseUrlNsid = (url: string): string => {
     url[1] !== 'x' ||
     url[0] !== '/'
   ) {
-    throw new InvalidRequestError('invalid xrpc path')
+    return undefined
   }
 
   const startOfNsid = 6
@@ -369,7 +388,7 @@ export const parseUrlNsid = (url: string): string => {
       alphaNumRequired = false
     } else if (char === 45 /* "-" */ || char === 46 /* "." */) {
       if (alphaNumRequired) {
-        throw new InvalidRequestError('invalid xrpc path')
+        return undefined
       }
       alphaNumRequired = true
     } else if (char === 47 /* "/" */) {
@@ -377,25 +396,25 @@ export const parseUrlNsid = (url: string): string => {
       if (curr === url.length - 1 || url.charCodeAt(curr + 1) === 63) {
         break
       }
-      throw new InvalidRequestError('invalid xrpc path')
+      return undefined
     } else if (char === 63 /* "?"" */) {
       break
     } else {
-      throw new InvalidRequestError('invalid xrpc path')
+      return undefined
     }
   }
 
   // last char was one of: '-', '.', '/'
   if (alphaNumRequired) {
-    throw new InvalidRequestError('invalid xrpc path')
+    return undefined
   }
 
   // A domain name consists of minimum two characters
   if (curr - startOfNsid < 2) {
-    throw new InvalidRequestError('invalid xrpc path')
+    return undefined
   }
 
-  // @TODO is there a max ?
+  // @TODO check max length of nsid
 
   return url.slice(startOfNsid, curr)
 }

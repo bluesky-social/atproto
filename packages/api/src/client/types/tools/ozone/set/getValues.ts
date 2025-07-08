@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.set.getValues'
 
-export interface QueryParams {
+export type QueryParams = {
   name: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

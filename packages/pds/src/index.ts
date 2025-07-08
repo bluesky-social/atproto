@@ -11,7 +11,13 @@ import cors from 'cors'
 import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
-import { RateLimiter, ResponseType, XRPCError } from '@atproto/xrpc-server'
+import {
+  MemoryRateLimiter,
+  MethodHandler,
+  RedisRateLimiter,
+  ResponseType,
+  XRPCError,
+} from '@atproto/xrpc-server'
 import apiRoutes from './api'
 import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
@@ -19,23 +25,31 @@ import { ServerConfig, ServerSecrets } from './config'
 import { AppContext, AppContextOptions } from './context'
 import * as error from './error'
 import { createServer } from './lexicon'
+import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
 import compression from './util/compression'
 import * as wellKnown from './well-known'
 
+export { createSecretKeyObject } from './auth-verifier'
 export * from './config'
+export { AppContext } from './context'
 export { Database } from './db'
 export { DiskBlobStore } from './disk-blobstore'
-export { AppContext } from './context'
-export { httpLogger } from './logger'
-export { createSecretKeyObject } from './auth-verifier'
-export { type Handler as SkeletonHandler } from './lexicon/types/app/bsky/feed/getFeedSkeleton'
 export { createServer as createLexiconServer } from './lexicon'
-export * as sequencer from './sequencer'
+export { httpLogger } from './logger'
 export { type CommitDataWithOps, type PreparedWrite } from './repo'
 export * as repoPrepare from './repo/prepare'
 export { scripts } from './scripts'
+export * as sequencer from './sequencer'
+
+// Legacy export for backwards compatibility
+export type SkeletonHandler = MethodHandler<
+  void,
+  AppBskyFeedGetFeedSkeleton.QueryParams,
+  AppBskyFeedGetFeedSkeleton.HandlerInput,
+  AppBskyFeedGetFeedSkeleton.HandlerOutput
+>
 
 export class PDS {
   public ctx: AppContext
@@ -92,8 +106,8 @@ export class PDS {
       rateLimits: rateLimits.enabled
         ? {
             creator: ctx.redisScratch
-              ? (opts) => RateLimiter.redis(ctx.redisScratch, opts)
-              : (opts) => RateLimiter.memory(opts),
+              ? (opts) => new RedisRateLimiter(ctx.redisScratch, opts)
+              : (opts) => new MemoryRateLimiter(opts),
             bypass: ({ req }) => {
               const { bypassKey, bypassIps } = rateLimits
               if (

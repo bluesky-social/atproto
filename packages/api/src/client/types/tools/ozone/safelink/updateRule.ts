@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.safelink.updateRule'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** The URL or domain to update the rule for */

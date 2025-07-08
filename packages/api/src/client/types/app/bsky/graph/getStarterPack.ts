@@ -16,11 +16,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.getStarterPack'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Reference (AT-URI) of the starter pack record. */
   starterPack: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.admin.updateAccountEmail'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** The handle or DID of the repo. */

@@ -15,10 +15,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'chat.bsky.moderation.getActorMetadata'
 
-export interface QueryParams {
+export type QueryParams = {
   actor: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

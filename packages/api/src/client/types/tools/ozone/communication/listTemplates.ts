@@ -16,8 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.communication.listTemplates'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
