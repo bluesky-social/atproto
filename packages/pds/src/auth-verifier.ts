@@ -253,8 +253,8 @@ export class AuthVerifier {
     authorize,
     ...options
   }: VerifiedOptions &
-    AuthorizedOptions<P> &
-    ExtraScopedOptions = {}): MethodAuthVerifier<AuthorizationOutput, P> {
+    ExtraScopedOptions &
+    AuthorizedOptions<P> = {}): MethodAuthVerifier<AuthorizationOutput, P> {
     const scopes = [...ACCESS_STANDARD, ...extraScopes]
     const access = this.access({ ...options, scopes })
     const oauth = this.oauth(options)
@@ -306,7 +306,7 @@ export class AuthVerifier {
   }
 
   public authorizationOrAdminTokenOptional<P extends Params>(
-    opts: VerifiedOptions & AuthorizedOptions<P> = {},
+    opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P> = {},
   ): MethodAuthVerifier<
     AuthorizationOutput | AdminTokenOutput | NullOutput,
     P

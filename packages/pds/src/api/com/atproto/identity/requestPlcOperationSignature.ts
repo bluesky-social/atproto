@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -6,6 +7,8 @@ import { ids } from '../../../../lexicon/lexicons'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
     auth: ctx.authVerifier.authorization({
+      // @NOTE Reflect any change in signPlcOperation
+      extraScopes: [AuthScope.Takendown],
       authorize: (ctx) => {
         ctx.permissions.assertIdentity({ plcOpRequest: true })
       },

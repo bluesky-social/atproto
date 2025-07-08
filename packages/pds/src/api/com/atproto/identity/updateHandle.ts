@@ -8,6 +8,7 @@ import { httpLogger } from '../../../../logger'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
     auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
       authorize: (ctx) => {
         ctx.permissions.assertIdentity({ handle: true })
       },

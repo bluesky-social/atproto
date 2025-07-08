@@ -4,7 +4,9 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deactivateAccount({
-    auth: ctx.authVerifier.accessFull({ extraScopes: [AuthScope.Takendown] }),
+    auth: ctx.authVerifier.accessFull({
+      extraScopes: [AuthScope.Takendown],
+    }),
     handler: async ({ req, auth, input }) => {
       // in the case of entryway, the full flow is deactivateAccount (PDS) -> deactivateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayAgent) {

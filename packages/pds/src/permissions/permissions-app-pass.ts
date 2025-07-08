@@ -1,6 +1,6 @@
 import { ids } from '../lexicon/lexicons.js'
 import { PRIVILEGED_METHODS } from '../pipethrough.js'
-import { PermissionSet, RpcOptions } from './permission-set.js'
+import { IdentityOptions, PermissionSet, RpcOptions } from './permission-set.js'
 
 export class PermissionsAppPass extends PermissionSet {
   allowsAccount() {
@@ -11,7 +11,13 @@ export class PermissionsAppPass extends PermissionSet {
     return true
   }
 
-  allowsIdentity() {
+  allowsIdentity(options: IdentityOptions) {
+    if (options.plcOpRequest) return false
+    // @NOTE The following is 'true', although it "plcOpRequest" returns false,
+    // because "submitPlcOperation" used to allow AppPass to sign PLC
+    // operations, while "requestPlcOperationSignature" ("plcOpRequest")
+    // required "accessFull" auth.
+    if (options.plcOp) return true
     return true
   }
 

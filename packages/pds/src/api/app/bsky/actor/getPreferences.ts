@@ -1,3 +1,4 @@
+import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -8,6 +9,7 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.actor.getPreferences({
     auth: ctx.authVerifier.authorization({
+      extraScopes: [AuthScope.Takendown],
       authorize: ({ permissions }) => {
         permissions.assertRpc({
           aud: `${bskyAppView.did}#bsky_appview`,

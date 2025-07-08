@@ -1,3 +1,4 @@
+import { AuthScope } from '../../../../auth-scope'
 import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -5,7 +6,9 @@ import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listBlobs({
-    auth: ctx.authVerifier.authorizationOrAdminTokenOptional(),
+    auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
+      extraScopes: [AuthScope.Takendown],
+    }),
     handler: async ({ params, auth }) => {
       const { did, since, limit, cursor } = params
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
