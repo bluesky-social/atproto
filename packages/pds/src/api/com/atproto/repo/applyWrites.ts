@@ -59,18 +59,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, validate, swapCommit, writes } = input.body
 
-      const account = await ctx.accountManager.getAccount(repo, {
-        includeDeactivated: true,
-      })
-
-      if (!account) {
-        throw new InvalidRequestError(`Could not find repo: ${repo}`)
-      } else if (account.deactivatedAt) {
-        throw new InvalidRequestError('Account is deactivated')
-      }
-
-      const did = account.did
-      if (did !== auth.credentials.did) {
+      const { did } = auth.credentials
+      if (repo !== did) {
         throw new AuthRequiredError()
       }
       if (writes.length > 200) {
