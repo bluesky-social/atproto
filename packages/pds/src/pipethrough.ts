@@ -20,6 +20,7 @@ import {
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
+import { AuthScope } from './auth-scope'
 import { AppContext } from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
@@ -61,7 +62,14 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
 
       const { credentials } = excludeErrorResult(authResult)
 
-      const serviceAuthJwt = await ctx.serviceAuthJwt(credentials.did, aud, lxm)
+      if (
+        credentials.type === 'access' &&
+        credentials.scope !== AuthScope.Access &&
+        credentials.scope !== AuthScope.AppPassPrivileged &&
+        PRIVILEGED_METHODS.has(lxm)
+      ) {
+        throw new InvalidRequestError('Bad token method', 'InvalidToken')
+      }
 
       const headers: IncomingHttpHeaders = {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
@@ -73,7 +81,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${serviceAuthJwt}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
