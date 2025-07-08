@@ -104,31 +104,29 @@ describe('app_passwords', () => {
 
   it('restricts privileged app password actions', async () => {
     const attempt = appAgent.api.chat.bsky.convo.listConvos({})
-    await expect(attempt).rejects.toThrow(
-      'Authentication using method "chat.bsky.convo.listConvos" against "did:example:invalid" is forbidden',
-    )
+    await expect(attempt).rejects.toThrow('Bad token method')
   })
 
   it('restricts privileged app password actions', async () => {
     const attempt = appAgent.api.chat.bsky.convo.listConvos()
-    await expect(attempt).rejects.toThrow(
-      'Authentication using method "chat.bsky.convo.listConvos" against "did:example:invalid" is forbidden',
-    )
+    await expect(attempt).rejects.toThrow('Bad token method')
   })
 
   it('restricts service auth token methods for non-privileged access tokens', async () => {
-    const aud = 'did:example:test'
-    const lxm = 'com.atproto.server.createAccount'
-    const attempt = appAgent.com.atproto.server.getServiceAuth({ aud, lxm })
+    const attempt = appAgent.api.com.atproto.server.getServiceAuth({
+      aud: 'did:example:test',
+      lxm: 'com.atproto.server.createAccount',
+    })
     await expect(attempt).rejects.toThrow(
-      `Authentication using method "${lxm}" against "${aud}" is forbidden`,
+      /insufficient access to request a service auth token for the following method/,
     )
   })
 
   it('allows privileged service auth token scopes for privileged access tokens', async () => {
-    const aud = 'did:example:test'
-    const lxm = 'com.atproto.server.createAccount'
-    await priviAgent.com.atproto.server.getServiceAuth({ aud, lxm })
+    await priviAgent.api.com.atproto.server.getServiceAuth({
+      aud: 'did:example:test',
+      lxm: 'com.atproto.server.createAccount',
+    })
   })
 
   it('persists scope across refreshes', async () => {
@@ -156,13 +154,12 @@ describe('app_passwords', () => {
     )
 
     // allows privileged app passwords or higher
-    const aud = 'did:example:test'
-    const lxm = 'com.atproto.server.createAccount'
-
-    await expect(() =>
-      appAgent.com.atproto.server.getServiceAuth({ aud, lxm }),
-    ).rejects.toThrow(
-      `Authentication using method "${lxm}" against "${aud}" is forbidden`,
+    const priviAttempt = appAgent.api.com.atproto.server.getServiceAuth({
+      aud: 'did:example:test',
+      lxm: 'com.atproto.server.createAccount',
+    })
+    await expect(priviAttempt).rejects.toThrow(
+      /insufficient access to request a service auth token for the following method/,
     )
 
     // allows only full access auth
