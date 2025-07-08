@@ -1,4 +1,4 @@
-export function isValidPermission(value) {
+export function isValidPermission(value: string) {
   return (
     value === 'atproto' ||
     value === 'transition:email' ||

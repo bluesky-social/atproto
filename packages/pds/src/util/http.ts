@@ -1,15 +1,30 @@
 import { ServerResponse } from 'node:http'
 
+/**
+ * Set or appends a value to the `Vary` header in the response, only if the
+ * value is not already present.
+ */
 export function appendVary(res: ServerResponse, value: string) {
-  const current = res.getHeader('Vary')
-  if (current == null || typeof current === 'number') {
-    res.setHeader('Vary', value)
-  } else {
-    const alreadyIncluded = Array.isArray(current)
-      ? current.some((value) => value.includes(value))
-      : current.includes(value)
-    if (!alreadyIncluded) {
-      res.appendHeader('Vary', value)
-    }
+  if (!headerContains(res.getHeader('Vary'), value, ',')) {
+    res.appendHeader('Vary', value)
+  }
+}
+
+function headerContains(
+  headerValue: undefined | number | string | string[],
+  searchValue: string,
+  separator: string | null,
+) {
+  switch (typeof headerValue) {
+    case 'string':
+      return separator
+        ? headerValue.split(separator).some((v) => v.trim() === searchValue)
+        : headerValue.trim() === searchValue
+    case 'number':
+      return String(headerValue) === searchValue
+    case 'object':
+      return headerValue.some((h) => headerContains(h, searchValue, separator))
+    default:
+      return false
   }
 }
