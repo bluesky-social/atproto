@@ -663,13 +663,15 @@ export class OAuthProvider extends OAuthVerifier {
           })
         : parameters.scope
             ?.split(' ')
-            .map((scope): ScopeDetail => ({ scope })) ?? []
+            .map((scope): ScopeDetail => ({ scope }))
+            .sort((a, b) => a.scope.localeCompare(b.scope)) ?? []
 
       return {
         issuer,
         client,
         parameters,
         requestUri,
+        scopeDetails,
         sessions: sessions.map((session) => ({
           // Map to avoid leaking other data that might be present in the session
           account: session.account,
@@ -677,9 +679,6 @@ export class OAuthProvider extends OAuthVerifier {
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
         })),
-        scopeDetails: scopeDetails.sort((a, b) =>
-          a.scope.localeCompare(b.scope),
-        ),
       }
     } catch (err) {
       try {

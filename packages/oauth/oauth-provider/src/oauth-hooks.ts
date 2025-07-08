@@ -119,11 +119,9 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
-   * Allows validating the authorization request (typically the requested
-   * scopes) before it is created. Note that the validity against the client
-   * metadata is already enforced by the OAuth provider. If a value is returned
-   * from this hook, it will be used as the final parameters for the
-   * authorization request.
+   * Allows validating an authorization request (typically the requested scopes)
+   * before it is created. Note that the validity against the client metadata is
+   * already enforced by the OAuth provider.
    *
    * @throws {AuthorizationError}
    */
