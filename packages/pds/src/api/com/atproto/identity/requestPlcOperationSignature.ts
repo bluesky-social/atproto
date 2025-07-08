@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
     auth: ctx.authVerifier.authorization({
       // @NOTE Reflect any change in signPlcOperation
-      extraScopes: [AuthScope.Takendown],
+      additional: [AuthScope.Takendown],
       authorize: (permissions) => {
         permissions.assertIdentity({ plcOpRequest: true })
       },

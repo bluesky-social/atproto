@@ -8,7 +8,7 @@ import { parseProxyInfo } from '../../../../pipethrough'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     auth: ctx.authVerifier.authorization({
-      extraScopes: [AuthScope.Takendown],
+      additional: [AuthScope.Takendown],
       authorize: (permissions) => permissions.assertIdentity({ report: true }),
     }),
     handler: async ({ auth, input, req }) => {

@@ -11,7 +11,7 @@ import { didDocForSession } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
     auth: ctx.authVerifier.authorization({
-      extraScopes: [AuthScope.SignupQueued],
+      additional: [AuthScope.SignupQueued],
       authorize: (permissions) => permissions.assertAccount({}),
     }),
     handler: async ({ auth, req }) => {

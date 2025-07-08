@@ -9,7 +9,7 @@ import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
     auth: ctx.authVerifier.authorization({
-      extraScopes: [AuthScope.Takendown],
+      additional: [AuthScope.Takendown],
       authorize: (permissions, { params }) => permissions.assertRpc(params),
     }),
     handler: async ({ params, auth }) => {

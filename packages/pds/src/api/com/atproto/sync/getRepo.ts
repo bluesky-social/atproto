@@ -14,7 +14,7 @@ import { assertRepoAvailability } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
-      extraScopes: [AuthScope.Takendown],
+      additional: [AuthScope.Takendown],
     }),
     handler: async ({ params, auth }) => {
       const { did, since } = params

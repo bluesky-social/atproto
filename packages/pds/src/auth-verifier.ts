@@ -56,7 +56,7 @@ export type ScopedOptions<S extends AuthScope = AuthScope> = {
 }
 
 export type ExtraScopedOptions<S extends AuthScope = AuthScope> = {
-  extraScopes?: readonly S[]
+  additional?: readonly S[]
 }
 
 export type AuthorizedOptions<P extends Params = Params> = {
@@ -191,18 +191,18 @@ export class AuthVerifier {
   }
 
   public accessStandard<S extends AuthScope = never>({
-    extraScopes = [],
+    additional = [],
     ...options
   }: VerifiedOptions & ExtraScopedOptions<S> = {}) {
-    const scopes = [...ACCESS_STANDARD, ...extraScopes]
+    const scopes = [...ACCESS_STANDARD, ...additional]
     return this.access({ ...options, scopes })
   }
 
   public accessFull<S extends AuthScope = never>({
-    extraScopes = [],
+    additional = [],
     ...options
   }: VerifiedOptions & ExtraScopedOptions<S> = {}) {
-    const scopes = [...ACCESS_FULL, ...extraScopes]
+    const scopes = [...ACCESS_FULL, ...additional]
     return this.access({ ...options, scopes })
   }
 
@@ -243,7 +243,7 @@ export class AuthVerifier {
 
   public authorization<P extends Params>({
     scopes = ACCESS_STANDARD,
-    extraScopes = [],
+    additional = [],
     authorize,
     ...options
   }: VerifiedOptions &
@@ -255,7 +255,7 @@ export class AuthVerifier {
   > {
     const access = this.access({
       ...options,
-      scopes: [...scopes, ...extraScopes],
+      scopes: [...scopes, ...additional],
     })
     const oauth = this.oauth(options)
 

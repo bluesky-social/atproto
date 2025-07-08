@@ -10,7 +10,7 @@ import { assertRepoAvailability } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
-      extraScopes: [AuthScope.Takendown],
+      additional: [AuthScope.Takendown],
     }),
     handler: async ({ params, res, auth }) => {
       const { did } = params

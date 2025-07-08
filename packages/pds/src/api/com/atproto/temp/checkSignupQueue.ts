@@ -7,7 +7,7 @@ import { resultPassthru } from '../../../proxy'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.checkSignupQueue({
     auth: ctx.authVerifier.accessStandard({
-      extraScopes: [AuthScope.SignupQueued],
+      additional: [AuthScope.SignupQueued],
     }),
     handler: async ({ req }) => {
       if (!ctx.entrywayAgent) {
