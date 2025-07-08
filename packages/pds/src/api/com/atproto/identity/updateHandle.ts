@@ -1,6 +1,5 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ACCESS_STANDARD, AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -9,8 +8,9 @@ import { httpLogger } from '../../../../logger'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
     auth: ctx.authVerifier.authorization({
-      scopes: [...ACCESS_STANDARD, AuthScope.Takendown],
-      authorize: (ctx) => ctx.permissions.assertIdentity({}),
+      authorize: (ctx) => {
+        ctx.permissions.assertIdentity({ handle: true })
+      },
     }),
     rateLimit: [
       {

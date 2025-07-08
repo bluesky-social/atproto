@@ -1,7 +1,6 @@
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -10,8 +9,9 @@ import { resultPassthru } from '../../../proxy'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.signPlcOperation({
     auth: ctx.authVerifier.authorization({
-      scopes: ACCESS_FULL,
-      authorize: (ctx) => ctx.permissions.assertIdentity({}),
+      authorize: (ctx) => {
+        ctx.permissions.assertIdentity({ plcOpRequest: true })
+      },
     }),
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {

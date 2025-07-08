@@ -4,7 +4,10 @@ export type AccountOptions = {
   email?: boolean
 }
 export type IdentityOptions = {
-  //
+  plcOp?: boolean
+  plcOpRequest?: boolean
+  handle?: boolean
+  report?: boolean
 }
 export type RepoOptions = {
   collection: string

@@ -50,7 +50,6 @@ import {
   PermissionsSignupQueued,
   PermissionsTakendown,
 } from './permissions/index.js'
-import { noop } from './util/functions'
 import { appendVary } from './util/http'
 import { WithRequired } from './util/types'
 
@@ -173,20 +172,26 @@ export class AuthVerifier {
     const verifyJwtOptions: VerifyBearerJwtOptions<S> = {
       audience: this.dids.pds,
       typ: 'at+jwt',
-      scopes,
+      scopes:
+        // @NOTE We can reject taken down credentials based on the scope if
+        // "checkTakedown" is set.
+        verifyStatusOptions.checkTakedown &&
+        scopes.includes(AuthScope.Takendown as S)
+          ? scopes.filter((s) => s !== AuthScope.Takendown)
+          : scopes,
     }
 
     return async (ctx) => {
       setAuthHeaders(ctx.res)
-      const result = await this.verifyBearerJwt(ctx.req, verifyJwtOptions)
-      await this.verifyStatus(result.sub, verifyStatusOptions)
+      const { sub: did, scope } = await this.verifyBearerJwt(
+        ctx.req,
+        verifyJwtOptions,
+      )
+
+      await this.verifyStatus(did, verifyStatusOptions)
 
       return {
-        credentials: {
-          type: 'access',
-          did: result.sub,
-          scope: result.scope,
-        },
+        credentials: { type: 'access', did, scope },
       }
     }
   }
@@ -269,13 +274,13 @@ export class AuthVerifier {
   }
 
   public authorization<P extends Params>(
-    options: VerifiedOptions &
-      Partial<ScopedOptions> &
-      AuthorizedOptions<P> = {},
+    options: VerifiedOptions & AuthorizedOptions<P> = {},
   ): MethodAuthVerifier<AuthorizationOutput, P> {
-    const { authorize = noop, scopes = ACCESS_STANDARD, ...opts } = options
-    const oauth = this.oauthAuthorization({ ...opts, authorize })
-    const access = this.accessAuthorization({ ...opts, authorize, scopes })
+    const oauth = this.oauthAuthorization(options)
+    const access = this.accessAuthorization({
+      ...options,
+      scopes: [...ACCESS_STANDARD, AuthScope.SignupQueued, AuthScope.Takendown],
+    })
 
     return async (ctx) => {
       const [type] = parseAuthorizationHeader(ctx.req.headers.authorization)
@@ -339,13 +344,10 @@ export class AuthVerifier {
     }
   }
 
-  public authorizationOrUserServiceAuth<P extends Params>({
-    scopes = ACCESS_STANDARD,
-    ...opts
-  }: Partial<
-    VerifiedOptions & ScopedOptions & AuthorizedOptions<P>
-  > = {}): MethodAuthVerifier<UserServiceAuthOutput | AuthorizationOutput, P> {
-    const authorizationVerifier = this.authorization({ scopes, ...opts })
+  public authorizationOrUserServiceAuth<P extends Params>(
+    options: Partial<VerifiedOptions & AuthorizedOptions<P>> = {},
+  ): MethodAuthVerifier<UserServiceAuthOutput | AuthorizationOutput, P> {
+    const authorizationVerifier = this.authorization(options)
     return async (ctx) => {
       if (isUserServiceAuth(ctx.req)) {
         return this.userServiceAuth(ctx)

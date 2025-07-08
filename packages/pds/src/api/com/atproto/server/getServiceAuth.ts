@@ -1,6 +1,5 @@
 import { HOUR, MINUTE } from '@atproto/common'
 import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
-import { ACCESS_STANDARD, AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { PROTECTED_METHODS } from '../../../../pipethrough'
@@ -8,7 +7,6 @@ import { PROTECTED_METHODS } from '../../../../pipethrough'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
     auth: ctx.authVerifier.authorization({
-      scopes: [...ACCESS_STANDARD, AuthScope.Takendown],
       authorize: ({ permissions, params }) => permissions.assertRpc(params),
     }),
     handler: async ({ params, auth }) => {

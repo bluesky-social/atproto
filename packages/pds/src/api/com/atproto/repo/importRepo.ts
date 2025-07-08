@@ -21,10 +21,11 @@ export default function (server: Server, ctx: AppContext) {
       checkTakedown: true,
     }),
     handler: async ({ input, auth }) => {
-      const did = auth.credentials.did
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
       }
+
+      const { did } = auth.credentials
 
       // Scope "repo:*" needed to import a repo
       auth.credentials.permissions.assertRepo({ action: '*', collection: '*' })

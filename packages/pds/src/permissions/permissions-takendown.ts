@@ -1,5 +1,5 @@
 import { ids } from '../lexicon/lexicons.js'
-import { PermissionSet, RpcOptions } from './permission-set.js'
+import { IdentityOptions, PermissionSet, RpcOptions } from './permission-set.js'
 
 export class PermissionsTakendown extends PermissionSet {
   allowsAccount() {
@@ -10,7 +10,8 @@ export class PermissionsTakendown extends PermissionSet {
     return false
   }
 
-  allowsIdentity() {
+  allowsIdentity(options: IdentityOptions) {
+    if (options.plcOp) return false
     return true
   }
 
