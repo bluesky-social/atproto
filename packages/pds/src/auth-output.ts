@@ -14,8 +14,7 @@ export type AdminTokenOutput = {
 export type ModServiceOutput = {
   credentials: {
     type: 'mod_service'
-    aud: string
-    iss: string
+    did: string
   }
 }
 
@@ -47,7 +46,6 @@ export type RefreshOutput = {
 export type UserServiceAuthOutput = {
   credentials: {
     type: 'user_service_auth'
-    aud: string
     did: string
   }
 }

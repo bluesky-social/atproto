@@ -151,8 +151,7 @@ export class AuthVerifier {
     return {
       credentials: {
         type: 'mod_service',
-        aud: payload.aud,
-        iss: payload.iss,
+        did: payload.iss,
       },
     }
   }
@@ -325,7 +324,6 @@ export class AuthVerifier {
     return {
       credentials: {
         type: 'user_service_auth',
-        aud: payload.aud,
         did: payload.iss,
       },
     }
