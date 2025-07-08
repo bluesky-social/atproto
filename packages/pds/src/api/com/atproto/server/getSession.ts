@@ -3,7 +3,6 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
 import { AuthorizationOutput } from '../../../../auth-output'
-import { ACCESS_STANDARD, AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
@@ -11,7 +10,6 @@ import { didDocForSession } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
     auth: ctx.authVerifier.authorization({
-      scopes: [...ACCESS_STANDARD, AuthScope.SignupQueued],
       authorize: ({ permissions }) => permissions.assertAccount({}),
     }),
     handler: async ({ auth, req }) => {

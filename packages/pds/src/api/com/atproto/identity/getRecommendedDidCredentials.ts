@@ -3,7 +3,9 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.getRecommendedDidCredentials({
-    auth: ctx.authVerifier.authorization(),
+    auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+    }),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
       const signingKey = await ctx.actorStore.keypair(requester)
