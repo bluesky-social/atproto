@@ -1,4 +1,4 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ForbiddenError } from '@atproto/xrpc-server'
 
 export type AccountOptions = {
   email?: boolean
@@ -22,29 +22,46 @@ export abstract class PermissionSet {
   abstract allowsAccount(options: AccountOptions): boolean
   public assertAccount(options: AccountOptions): void {
     if (!this.allowsAccount(options)) {
-      throw new InvalidRequestError('insufficient access to account')
+      throw new ForbiddenError(
+        options.email
+          ? 'Email access is forbidden'
+          : 'Access to account is forbidden',
+      )
     }
   }
 
   abstract allowsIdentity(options: IdentityOptions): boolean
   public assertIdentity(options: IdentityOptions): void {
     if (!this.allowsIdentity(options)) {
-      throw new InvalidRequestError('insufficient access to identity')
+      const actionsName = options.plcOpRequest
+        ? 'PLC operation request'
+        : options.plcOp
+          ? 'PLC operation'
+          : options.handle
+            ? 'handle update'
+            : options.report
+              ? 'report'
+              : null
+      throw new ForbiddenError(
+        actionsName
+          ? `Missing identity permission to access ${actionsName}`
+          : 'Access to identity is forbidden',
+      )
     }
   }
 
   abstract allowsBlob(): boolean
   public assertBlob(): void {
     if (!this.allowsBlob()) {
-      throw new InvalidRequestError('blob upload not allowed')
+      throw new ForbiddenError('Blob upload not allowed')
     }
   }
 
   abstract allowsRepo(options: RepoOptions): boolean
   public assertRepo(options: RepoOptions): void {
     if (!this.allowsRepo(options)) {
-      throw new InvalidRequestError(
-        `insufficient access to repo collection "${options.collection}"`,
+      throw new ForbiddenError(
+        `Access (${options.action}) to collection "${options.collection}" is forbidden`,
       )
     }
   }
@@ -53,8 +70,8 @@ export abstract class PermissionSet {
   public assertRpc(options: RpcOptions): void {
     if (!this.allowsRpc(options)) {
       const { aud, lxm } = options
-      throw new InvalidRequestError(
-        `Authentication ${lxm ? `for method "${lxm}" ` : ''}against "${aud}" is not allowed`,
+      throw new ForbiddenError(
+        `Authentication ${lxm ? `using method "${lxm}" ` : ''}against "${aud}" is forbidden`,
       )
     }
   }

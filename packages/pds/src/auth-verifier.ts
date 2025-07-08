@@ -476,45 +476,54 @@ export class AuthVerifier {
     if (!token) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    try {
-      const { payload } = await jose.jwtVerify(token, this._jwtKey, options)
 
-      const { sub, aud, scope, lxm, cnf, jti } = payload
+    const { payload, protectedHeader } = await jose
+      .jwtVerify(token, this._jwtKey, { ...options, typ: undefined })
+      .catch((cause) => {
+        throw cause instanceof jose.errors.JWTExpired
+          ? new InvalidRequestError('Token has expired', 'ExpiredToken', {
+              cause,
+            })
+          : new InvalidRequestError(
+              'Token could not be verified',
+              'InvalidToken',
+              { cause },
+            )
+      })
 
-      if (typeof lxm !== 'undefined') {
-        // Service auth tokens are not allowed here
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
-      }
-      if (typeof cnf !== 'undefined') {
-        // Proof-of-Possession (PoP) tokens are not allowed here
-        // https://www.rfc-editor.org/rfc/rfc7800.html
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
-      }
-      if (typeof sub !== 'string' || !sub.startsWith('did:')) {
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
-      }
-      if (typeof aud !== 'string' || !aud.startsWith('did:')) {
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
-      }
-      if (typeof jti !== 'string' && typeof jti !== 'undefined') {
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
-      }
-      if (!isAuthScope(scope) || !scopes.includes(scope as any)) {
-        throw new InvalidRequestError('Bad token scope', 'InvalidToken')
-      }
-
-      return { sub, aud, jti, scope: scope as S }
-    } catch (cause) {
-      throw cause instanceof jose.errors.JWTExpired
-        ? new InvalidRequestError('Token has expired', 'ExpiredToken', {
-            cause,
-          })
-        : new InvalidRequestError(
-            'Token could not be verified',
-            'InvalidToken',
-            { cause },
-          )
+    // @NOTE: the "typ" is now set in production environments, so we should be
+    // able to safely check it through jose.jwtVerify(). However, tests depend
+    // on @atproto/pds-entryway which does not set "typ" in the access tokens.
+    // For that reason, we still allow it to be missing.
+    if (protectedHeader.typ && options.typ !== protectedHeader.typ) {
+      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
     }
+
+    const { sub, aud, scope, lxm, cnf, jti } = payload
+
+    if (typeof lxm !== 'undefined') {
+      // Service auth tokens are not allowed here
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if (typeof cnf !== 'undefined') {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if (typeof sub !== 'string' || !sub.startsWith('did:')) {
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if (typeof aud !== 'string' || !aud.startsWith('did:')) {
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if (typeof jti !== 'string' && typeof jti !== 'undefined') {
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if (!isAuthScope(scope) || !scopes.includes(scope as any)) {
+      throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+    }
+
+    return { sub, aud, jti, scope: scope as S }
   }
 
   protected async verifyServiceJwt(
