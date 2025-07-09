@@ -129,22 +129,9 @@ export function createInputVerifier(
   // Lexicon definition expects a request body
 
   const { input } = def
-  const { blobLimit, jsonLimit, textLimit } = options
-  const jsonParser = json({ limit: jsonLimit })
-  const textParser = text({ limit: textLimit })
+  const { blobLimit } = options
 
-  // Transform json and text parser middlewares into a single function
-  const bodyParser = (req: Request, res: Response) => {
-    return new Promise<void>((resolve, reject) => {
-      jsonParser(req, res, (err) => {
-        if (err) return reject(XRPCError.fromError(err))
-        textParser(req, res, (err) => {
-          if (err) return reject(XRPCError.fromError(err))
-          resolve()
-        })
-      })
-    })
-  }
+  const bodyParser = createBodyParser(input.encoding, options)
 
   return async (req, res) => {
     if (getBodyPresence(req) === 'missing') {
@@ -164,7 +151,7 @@ export function createInputVerifier(
       )
     }
 
-    if (input.encoding !== ENCODING_ANY) {
+    if (bodyParser) {
       await bodyParser(req, res)
     }
 
@@ -260,6 +247,28 @@ function getBodyPresence(req: IncomingMessage): BodyPresence {
   if (req.headers['content-length'] === '0') return 'empty'
   if (req.headers['content-length'] != null) return 'present'
   return 'missing'
+}
+
+function createBodyParser(inputEncoding: string, options: RouteOptions) {
+  if (inputEncoding === ENCODING_ANY) {
+    // When the lexicon's input encoding is */*, the handler will determine how to process it
+    return
+  }
+  const { jsonLimit, textLimit } = options
+  const jsonParser = json({ limit: jsonLimit })
+  const textParser = text({ limit: textLimit })
+  // Transform json and text parser middlewares into a single function
+  return (req: Request, res: Response) => {
+    return new Promise<void>((resolve, reject) => {
+      jsonParser(req, res, (err) => {
+        if (err) return reject(XRPCError.fromError(err))
+        textParser(req, res, (err) => {
+          if (err) return reject(XRPCError.fromError(err))
+          resolve()
+        })
+      })
+    })
+  }
 }
 
 function decodeBodyStream(
