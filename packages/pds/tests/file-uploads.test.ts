@@ -273,4 +273,36 @@ describe('file uploads', () => {
 
     expect(found?.mimeType).toBe('test/fake')
   })
+
+  it('handles text', async () => {
+    const file = 'hello world!'
+    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
+      encoding: 'text/plain',
+    } as any)
+
+    const found = await aliceDb.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.blob.ref.toString())
+      .executeTakeFirst()
+
+    expect(found?.mimeType).toBe('text/plain')
+  })
+
+  it('handles json', async () => {
+    const file = '{"hello":"world"}'
+    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
+      encoding: 'application/json',
+    } as any)
+
+    const found = await aliceDb.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.blob.ref.toString())
+      .executeTakeFirst()
+
+    expect(found?.mimeType).toBe('application/json')
+  })
 })

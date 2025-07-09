@@ -289,9 +289,6 @@ describe('Bodies', () => {
     expect(fileResponse.data.cid).toEqual(expectedCid.toString())
   })
 
-  // This does not work because the xrpc-server will add a json middleware
-  // regardless of the "input" definition. This is probably a behavior that
-  // should be fixed in the xrpc-server.
   it('supports upload of json data', async () => {
     const jsonFile = new Blob([Buffer.from(`{"foo":"bar","baz":[3, null]}`)], {
       type: 'application/json',
