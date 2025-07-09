@@ -41,6 +41,9 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it is based on the request body
+      },
     }),
 
     rateLimit: [

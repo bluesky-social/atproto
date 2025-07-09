@@ -12,6 +12,7 @@ import {
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
+import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 
@@ -19,8 +20,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
-      // Scope "repo:*" needed to import a repo
+      scopes: ACCESS_FULL,
       authorize: (permissions) => {
+        // OAuth scope "repo:*" required to import a repo
         permissions.assertRepo({ action: '*', collection: '*' })
       },
     }),

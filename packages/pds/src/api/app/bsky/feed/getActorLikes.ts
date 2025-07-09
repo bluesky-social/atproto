@@ -2,6 +2,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
+import { computeProxyTo } from '../../../../pipethrough'
 import {
   LocalRecords,
   LocalViewer,
@@ -14,11 +15,10 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.authorization({
-      authorize: (permissions) => {
-        permissions.assertRpc({
-          aud: `${bskyAppView.did}#bsky_appview`,
-          lxm: ids.AppBskyFeedGetActorLikes,
-        })
+      authorize: (permissions, { req }) => {
+        const lxm = ids.AppBskyFeedGetActorLikes
+        const aud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud, lxm })
       },
     }),
     handler: async (reqCtx) => {

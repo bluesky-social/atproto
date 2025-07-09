@@ -22,3 +22,19 @@ const authScopesValues = new Set(Object.values(AuthScope))
 export function isAuthScope(val: unknown): val is AuthScope {
   return (authScopesValues as Set<unknown>).has(val)
 }
+
+export function isAccessFull(
+  scope: AuthScope,
+): scope is (typeof ACCESS_FULL)[number] {
+  return (ACCESS_FULL as readonly string[]).includes(scope)
+}
+
+export function isAccessPrivileged(
+  scope: AuthScope,
+): scope is (typeof ACCESS_PRIVILEGED)[number] {
+  return (ACCESS_PRIVILEGED as readonly string[]).includes(scope)
+}
+
+export function isTakendown(scope: unknown): scope is AuthScope.Takendown {
+  return scope === AuthScope.Takendown
+}

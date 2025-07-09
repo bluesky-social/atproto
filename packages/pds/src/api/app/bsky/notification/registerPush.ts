@@ -11,18 +11,26 @@ export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
   if (!bskyAppView) return
 
-  const aud = `${bskyAppView.did}#bsky_appview`
-
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier.authorization({
       additional: [AuthScope.SignupQueued],
-      authorize: (permissions) => {
-        permissions.assertRpc({ aud, lxm: ids.AppBskyNotificationRegisterPush })
+      authorize: () => {
+        // @NOTE this endpoint predates generic service proxying but we want to
+        // map the permission to the "RPC" scope for consistency. However, since
+        // the service info is only available in the request body, we can't
+        // assert permissions here.
       },
     }),
     handler: async ({ auth, input }) => {
       const { serviceDid } = input.body
       const { did } = auth.credentials
+
+      if (auth.credentials.type === 'permissions') {
+        auth.credentials.permissions.assertRpc({
+          aud: `${serviceDid}#bsky_appview`,
+          lxm: ids.AppBskyNotificationRegisterPush,
+        })
+      }
 
       const authHeaders = await ctx.serviceAuthHeaders(
         did,

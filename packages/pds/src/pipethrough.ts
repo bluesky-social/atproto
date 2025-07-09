@@ -1,6 +1,6 @@
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import { PassThrough, Readable } from 'node:stream'
-import express from 'express'
+import { Request } from 'express'
 import { Dispatcher } from 'undici'
 import {
   decodeStream,
@@ -20,7 +20,7 @@ import {
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
-import { AuthScope } from './auth-scope'
+import { isAccessPrivileged } from './auth-scope'
 import { AppContext } from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
@@ -64,8 +64,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
 
       if (
         credentials.type === 'access' &&
-        credentials.scope !== AuthScope.Access &&
-        credentials.scope !== AuthScope.AppPassPrivileged &&
+        !isAccessPrivileged(credentials.scope) &&
         PRIVILEGED_METHODS.has(lxm)
       ) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
@@ -134,7 +133,7 @@ export type PipethroughOptions = {
 
 export async function pipethrough(
   ctx: AppContext,
-  req: express.Request,
+  req: Request,
   options?: PipethroughOptions,
 ): Promise<
   HandlerPipeThroughStream & {
@@ -201,9 +200,26 @@ export async function pipethrough(
 // Request setup/formatting
 // -------------------
 
+export function computeProxyTo(
+  ctx: AppContext,
+  req: Request,
+  lxm: string,
+): string {
+  const proxyToHeader = req.header('atproto-proxy')
+  if (proxyToHeader) return proxyToHeader
+
+  const service = defaultService(ctx, lxm)
+  if (service) {
+    const serviceId = lxm.startsWith('app.bsky.') ? `bsky_appview` : null
+    return `${service.did}${serviceId ? `#${serviceId}` : ''}`
+  }
+
+  throw new InvalidRequestError(`No service configured for ${lxm}`)
+}
+
 export async function parseProxyInfo(
   ctx: AppContext,
-  req: express.Request,
+  req: Request,
   lxm: string,
 ): Promise<{ url: string; did: string }> {
   // /!\ Hot path

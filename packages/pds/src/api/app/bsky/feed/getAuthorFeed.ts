@@ -3,6 +3,7 @@ import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { computeProxyTo } from '../../../../pipethrough'
 import {
   LocalRecords,
   LocalViewer,
@@ -15,11 +16,10 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.authorization({
-      authorize: (permissions) => {
-        permissions.assertRpc({
-          aud: `${bskyAppView.did}#bsky_appview`,
-          lxm: ids.AppBskyFeedGetAuthorFeed,
-        })
+      authorize: (permissions, { req }) => {
+        const lxm = ids.AppBskyFeedGetAuthorFeed
+        const aud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud, lxm })
       },
     }),
     handler: async (reqCtx) => {

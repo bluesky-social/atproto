@@ -2,7 +2,7 @@ import { SignedTokenPayload } from '@atproto/oauth-provider'
 import { AuthScope } from './auth-scope'
 import { PermissionSet } from './permissions'
 
-export type NullOutput = {
+export type UnauthenticatedOutput = {
   credentials: null
 }
 

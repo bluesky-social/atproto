@@ -29,9 +29,9 @@ import {
   AdminTokenOutput,
   AuthorizationOutput,
   ModServiceOutput,
-  NullOutput,
   OAuthOutput,
   RefreshOutput,
+  UnauthenticatedOutput,
   UserServiceAuthOutput,
 } from './auth-output'
 import {
@@ -112,7 +112,7 @@ export class AuthVerifier {
 
   // verifiers (arrow fns to preserve scope)
 
-  public null: MethodAuthVerifier<NullOutput> = (ctx) => {
+  public unauthenticated: MethodAuthVerifier<UnauthenticatedOutput> = (ctx) => {
     setAuthHeaders(ctx.res)
     return {
       credentials: null,
@@ -296,7 +296,10 @@ export class AuthVerifier {
   public authorizationOrAdminTokenOptional<P extends Params>(
     opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P> = {},
   ): MethodAuthVerifier<
-    AuthorizationOutput | AccessOutput | AdminTokenOutput | NullOutput,
+    | AuthorizationOutput
+    | AccessOutput
+    | AdminTokenOutput
+    | UnauthenticatedOutput,
     P
   > {
     const authorization = this.authorization(opts)
@@ -306,7 +309,7 @@ export class AuthVerifier {
       } else if (isBasicToken(ctx.req)) {
         return await this.adminToken(ctx)
       } else {
-        return this.null(ctx)
+        return this.unauthenticated(ctx)
       }
     }
   }
@@ -325,12 +328,12 @@ export class AuthVerifier {
   }
 
   public userServiceAuthOptional: MethodAuthVerifier<
-    UserServiceAuthOutput | NullOutput
+    UserServiceAuthOutput | UnauthenticatedOutput
   > = async (ctx) => {
     if (isBearerToken(ctx.req)) {
       return await this.userServiceAuth(ctx)
     } else {
-      return this.null(ctx)
+      return this.unauthenticated(ctx)
     }
   }
 
@@ -342,7 +345,7 @@ export class AuthVerifier {
   > {
     const authorizationVerifier = this.authorization(options)
     return async (ctx) => {
-      if (isUserServiceAuth(ctx.req)) {
+      if (isDefinitelyServiceAuth(ctx.req)) {
         return this.userServiceAuth(ctx)
       } else {
         return authorizationVerifier(ctx)
@@ -471,15 +474,17 @@ export class AuthVerifier {
     const { payload, protectedHeader } = await jose
       .jwtVerify(token, this._jwtKey, { ...options, typ: undefined })
       .catch((cause) => {
-        throw cause instanceof jose.errors.JWTExpired
-          ? new InvalidRequestError('Token has expired', 'ExpiredToken', {
-              cause,
-            })
-          : new InvalidRequestError(
-              'Token could not be verified',
-              'InvalidToken',
-              { cause },
-            )
+        if (cause instanceof jose.errors.JWTExpired) {
+          throw new InvalidRequestError('Token has expired', 'ExpiredToken', {
+            cause,
+          })
+        } else {
+          throw new InvalidRequestError(
+            'Token could not be verified',
+            'InvalidToken',
+            { cause },
+          )
+        }
       })
 
     // @NOTE: the "typ" is now set in production environments, so we should be
@@ -493,7 +498,11 @@ export class AuthVerifier {
     const { sub, aud, scope, lxm, cnf, jti } = payload
 
     if (typeof lxm !== 'undefined') {
-      // Service auth tokens are not allowed here
+      // Service auth tokens should never make it to here. But since service
+      // auth tokens do not have a "typ" header, the "typ" check above will not
+      // catch them. This check here is mainly to protect against the
+      // hypothetical case in which a PDS would issue service auth tokens using
+      // its private key.
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (typeof cnf !== 'undefined') {
@@ -569,7 +578,11 @@ export class AuthVerifier {
 // ---------
 
 export function isUserOrAdmin(
-  auth: AccessOutput | AuthorizationOutput | AdminTokenOutput | NullOutput,
+  auth:
+    | AccessOutput
+    | AuthorizationOutput
+    | AdminTokenOutput
+    | UnauthenticatedOutput,
   did: string,
 ): boolean {
   if (!auth.credentials) {
@@ -627,7 +640,12 @@ const isBasicToken = (req: IncomingMessage): boolean => {
   return type === AuthType.BASIC
 }
 
-const isUserServiceAuth = (req: IncomingMessage): boolean => {
+/**
+ * @note Not all service auth tokens are guaranteed to have "lxm" claim, so this
+ * function should not be used to verify service auth tokens. It is only used to
+ * check if a token is definitely a service auth token.
+ */
+const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
   const token = bearerTokenFromReq(req)
   if (!token) return false
   const payload = jose.decodeJwt(token)

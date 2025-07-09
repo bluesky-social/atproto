@@ -1,9 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountPreference } from '../../../../actor-store/preference/reader'
-import { AuthScope } from '../../../../auth-scope'
+import { isAccessFull } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { computeProxyTo, pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
@@ -12,18 +13,25 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.putPreferences({
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
-      authorize: (permissions) => {
-        permissions.assertRpc({
-          aud: `${bskyAppView.did}#bsky_appview`,
-          lxm: ids.AppBskyActorPutPreferences,
-        })
+      authorize: (permissions, { req }) => {
+        const lxm = ids.AppBskyActorPutPreferences
+        const aud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud, lxm })
       },
     }),
-    handler: async ({ auth, input }) => {
-      const { preferences } = input.body
-      const requester = auth.credentials.did
+    handler: async ({ req, auth, input }) => {
+      const { did } = auth.credentials
+
+      // If the request has a proxy header different from the bsky app view,
+      // we need to proxy the request to the requested app view.
+      const lxm = ids.AppBskyActorPutPreferences
+      const aud = computeProxyTo(ctx, req, lxm)
+      if (aud !== `${bskyAppView.did}#bsky_appview`) {
+        return pipethrough(ctx, req, { iss: did, aud, lxm })
+      }
+
       const checkedPreferences: AccountPreference[] = []
-      for (const pref of preferences) {
+      for (const pref of input.body.preferences) {
         if (typeof pref.$type === 'string') {
           checkedPreferences.push(pref as AccountPreference)
         } else {
@@ -34,13 +42,10 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE This is a "hack" that uses a fake lxm to allow for full access
       const fullAccess =
         auth.credentials.type === 'access'
-          ? auth.credentials.scope === AuthScope.Access
-          : auth.credentials.permissions.allowsRpc({
-              aud: `${bskyAppView.did}#bsky_appview`,
-              lxm: `${ids.AppBskyActorPutPreferences}Full`,
-            })
+          ? isAccessFull(auth.credentials.scope)
+          : auth.credentials.permissions.allowsRpc({ aud, lxm: `${lxm}Full` })
 
-      await ctx.actorStore.transact(requester, async (actorTxn) => {
+      await ctx.actorStore.transact(did, async (actorTxn) => {
         await actorTxn.pref.putPreferences(checkedPreferences, 'app.bsky', {
           fullAccess,
         })

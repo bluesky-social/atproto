@@ -2,6 +2,7 @@ import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
+import { computeProxyTo, pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
@@ -10,26 +11,30 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getPreferences({
     auth: ctx.authVerifier.authorization({
       additional: [AuthScope.Takendown],
-      authorize: (permissions) => {
-        permissions.assertRpc({
-          aud: `${bskyAppView.did}#bsky_appview`,
-          lxm: ids.AppBskyActorGetPreferences,
-        })
+      authorize: (permissions, { req }) => {
+        const lxm = ids.AppBskyActorGetPreferences
+        const aud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud, lxm })
       },
     }),
-    handler: async ({ auth }) => {
-      const requester = auth.credentials.did
+    handler: async ({ auth, req }) => {
+      const { did } = auth.credentials
+
+      // If the request has a proxy header different from the bsky app view,
+      // we need to proxy the request to the requested app view.
+      const lxm = ids.AppBskyActorGetPreferences
+      const aud = computeProxyTo(ctx, req, lxm)
+      if (aud !== `${bskyAppView.did}#bsky_appview`) {
+        return pipethrough(ctx, req, { iss: did, aud, lxm })
+      }
 
       // @NOTE This is a "hack" that uses a fake lxm to allow for full access
       const fullAccess =
         auth.credentials.type === 'access'
           ? auth.credentials.scope === AuthScope.Access
-          : auth.credentials.permissions.allowsRpc({
-              aud: `${bskyAppView.did}#bsky_appview`,
-              lxm: `${ids.AppBskyActorGetPreferences}Full`,
-            })
+          : auth.credentials.permissions.allowsRpc({ aud, lxm: `${lxm}Full` })
 
-      const preferences = await ctx.actorStore.read(requester, (store) => {
+      const preferences = await ctx.actorStore.read(did, (store) => {
         return store.pref.getPreferences('app.bsky', { fullAccess })
       })
 

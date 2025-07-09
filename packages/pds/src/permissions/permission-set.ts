@@ -7,7 +7,6 @@ export type IdentityOptions = {
   plcOp?: boolean
   plcOpRequest?: boolean
   handle?: boolean
-  report?: boolean
 }
 export type RepoOptions = {
   collection: string
@@ -39,9 +38,7 @@ export abstract class PermissionSet {
           ? 'PLC operation'
           : options.handle
             ? 'handle update'
-            : options.report
-              ? 'report'
-              : null
+            : null
       throw new ForbiddenError(
         actionsName
           ? `Missing identity permission to access ${actionsName}`

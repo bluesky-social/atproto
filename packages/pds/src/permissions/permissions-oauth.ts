@@ -53,17 +53,22 @@ export class PermissionsOAuth extends PermissionSet {
     if (lxm && CHAT_BSKY_METHODS.has(lxm)) {
       return this.hasTransitionChatBsky
     }
+
     if (lxm && PRIVILEGED_METHODS.has(lxm)) {
       // @NOTE PRIVILEGED_METHODS is a superset of CHAT_BSKY_METHODS so we check
       // it after CHAT_BSKY_METHODS.
       return false
     }
+
+    // @NOTE These are fictional lexicon methods used to determine if the http
+    // request has full access to the actor preferences.
     if (lxm && lxm === `${ids.AppBskyActorGetPreferences}Full`) {
       return false
     }
     if (lxm && lxm === `${ids.AppBskyActorPutPreferences}Full`) {
       return false
     }
+
     return this.hasTransitionGeneric
   }
 }

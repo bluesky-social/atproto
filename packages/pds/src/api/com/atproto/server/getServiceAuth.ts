@@ -1,6 +1,10 @@
 import { HOUR, MINUTE } from '@atproto/common'
 import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-scope'
+import {
+  AuthScope,
+  isAccessPrivileged,
+  isTakendown,
+} from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -18,13 +22,30 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE "exp" is expressed in seconds since epoch, not milliseconds
       const { aud, exp, lxm = null } = params
 
-      // Takendown accounts should not be able to generate service auth tokens except for methods necessary for account migration
-      if (
-        auth.credentials.type === 'access' &&
-        auth.credentials.scope === AuthScope.Takendown &&
-        lxm !== ids.ComAtprotoServerCreateAccount
-      ) {
-        throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+      // @NOTE Extra authorization checks not performed during auth as "access"
+      // based authentication doesn't provide a way to run custom authorization
+      // logic. "permissions" based authentication were covered during auth.
+      if (auth.credentials.type === 'access') {
+        // @NOTE We should probably use "ForbiddenError" here. Using
+        // "InvalidRequestError" for legacy reasons.
+        if (
+          isTakendown(auth.credentials.scope) &&
+          lxm !== ids.ComAtprotoServerCreateAccount
+        ) {
+          // Takendown accounts should not be able to generate service auth
+          // tokens except for methods necessary for account migration
+          throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+        }
+
+        if (
+          !isAccessPrivileged(auth.credentials.scope) &&
+          lxm &&
+          PRIVILEGED_METHODS.has(lxm)
+        ) {
+          throw new InvalidRequestError(
+            `insufficient access to request a service auth token for the following method: ${lxm}`,
+          )
+        }
       }
 
       if (exp) {
@@ -47,24 +68,10 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      if (lxm) {
-        if (PROTECTED_METHODS.has(lxm)) {
-          throw new InvalidRequestError(
-            `cannot request a service auth token for the following protected method: ${lxm}`,
-          )
-        }
-
-        if (
-          auth.credentials.type === 'access' &&
-          auth.credentials.scope !== AuthScope.Access &&
-          auth.credentials.scope !== AuthScope.AppPassPrivileged
-        ) {
-          if (PRIVILEGED_METHODS.has(lxm)) {
-            throw new InvalidRequestError(
-              `insufficient access to request a service auth token for the following method: ${lxm}`,
-            )
-          }
-        }
+      if (lxm && PROTECTED_METHODS.has(lxm)) {
+        throw new InvalidRequestError(
+          `cannot request a service auth token for the following protected method: ${lxm}`,
+        )
       }
 
       const keypair = await ctx.actorStore.keypair(did)
