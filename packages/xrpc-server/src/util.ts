@@ -164,7 +164,9 @@ export function createInputVerifier(
       )
     }
 
-    await bodyParser(req, res)
+    if (input.encoding !== ENCODING_ANY) {
+      await bodyParser(req, res)
+    }
 
     if (input.schema) {
       try {
@@ -241,11 +243,13 @@ export function normalizeMime(v?: string): string | false {
   return shortType
 }
 
+const ENCODING_ANY = '*/*'
+
 function isValidEncoding(possibleStr: string, value: string) {
   const possible = possibleStr.split(',').map((v) => v.trim())
   const normalized = normalizeMime(value)
   if (!normalized) return false
-  if (possible.includes('*/*')) return true
+  if (possible.includes(ENCODING_ANY)) return true
   return possible.includes(normalized)
 }
 
