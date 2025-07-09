@@ -27,6 +27,7 @@ import {
   REVIEWOPEN,
   isAccountEvent,
   isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isIdentityEvent,
   isModEventAcknowledge,
   isModEventComment,
@@ -474,10 +475,26 @@ export class ModerationService {
 
     if (isAgeAssuranceEvent(event)) {
       meta.status = event.status
-      meta.source = event.source
+      meta.createdAt = event.createdAt
       if (event.attemptId) {
         meta.attemptId = event.attemptId
       }
+      if (event.initIp) {
+        meta.initIp = event.initIp
+      }
+      if (event.initUa) {
+        meta.initUa = event.initUa
+      }
+      if (event.completeIp) {
+        meta.completeIp = event.completeIp
+      }
+      if (event.completeUa) {
+        meta.completeUa = event.completeUa
+      }
+    }
+
+    if (isAgeAssuranceOverrideEvent(event)) {
+      meta.status = event.status
     }
 
     if (

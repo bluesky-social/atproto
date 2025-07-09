@@ -6,6 +6,7 @@ import { Server } from '../../lexicon'
 import {
   ModEventTag,
   isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
@@ -53,6 +54,10 @@ const handleModerationEvent = async ({
   )
 
   if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
+    throw new InvalidRequestError('Invalid subject type')
+  }
+
+  if (isAgeAssuranceOverrideEvent(event) && !subject.isRepo()) {
     throw new InvalidRequestError('Invalid subject type')
   }
 

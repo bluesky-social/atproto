@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`age assurance events handles age assurance events from user 1`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "user(1)",
+  "event": Object {
+    "$type": "tools.ozone.moderation.defs#ageAssuranceEvent",
+    "attemptId": "attempt-123",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "initIp": "123.456.789.012",
+    "initUa": "Mozilla/5.0",
+    "status": "pending",
+  },
+  "id": 1,
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(0)",
+  },
+  "subjectBlobCids": Array [],
+}
+`;
+
+exports[`age assurance events handles age assurance events from user 2`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "user(1)",
+  "event": Object {
+    "$type": "tools.ozone.moderation.defs#ageAssuranceEvent",
+    "attemptId": "attempt-345",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "initIp": "234.567.890.123",
+    "initUa": "Mozilla/5.0",
+    "status": "pending",
+  },
+  "id": 3,
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(0)",
+  },
+  "subjectBlobCids": Array [],
+}
+`;
+
+exports[`age assurance events handles age assurance events from user 3`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "user(1)",
+  "event": Object {
+    "$type": "tools.ozone.moderation.defs#ageAssuranceEvent",
+    "attemptId": "attempt-345",
+    "completeIp": "345.678.901.234",
+    "completeUa": "Mozilla/5.0",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "initIp": "234.567.890.123",
+    "initUa": "Mozilla/5.0",
+    "status": "assured",
+  },
+  "id": 5,
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(0)",
+  },
+  "subjectBlobCids": Array [],
+}
+`;

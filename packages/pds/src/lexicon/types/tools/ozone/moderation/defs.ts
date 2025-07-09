@@ -44,6 +44,7 @@ export interface ModEventView {
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
     | $Typed<AgeAssuranceEvent>
+    | $Typed<AgeAssuranceOverrideEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -92,6 +93,7 @@ export interface ModEventViewDetail {
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
     | $Typed<AgeAssuranceEvent>
+    | $Typed<AgeAssuranceOverrideEvent>
     | { $type: string }
   subject:
     | $Typed<RepoView>
@@ -151,6 +153,8 @@ export interface SubjectStatusView {
   recordsStats?: RecordsStats
   /** Current age assurance state of the subject. */
   ageAssuranceState?: 'pending' | 'assured' | 'unknown' | (string & {})
+  /** Whether or not the last successful update to age assurance was made by the user or admin. */
+  ageAssuranceUpdatedBy?: 'admin' | 'user' | (string & {})
 }
 
 const hashSubjectStatusView = 'subjectStatusView'
@@ -399,8 +403,14 @@ export interface AgeAssuranceEvent {
   status: 'unknown' | 'pending' | 'assured' | (string & {})
   /** The unique identifier for this instance of the age assurance flow, in UUID format. */
   attemptId: string
-  /** The IP address used for this age assurance flow. */
-  attemptIp?: string
+  /** The IP address used when initiating the AA flow. */
+  initIp?: string
+  /** The user agent used when initiating the AA flow. */
+  initUa?: string
+  /** The IP address used when completing the AA flow. */
+  completeIp?: string
+  /** The user agent used when completing the AA flow. */
+  completeUa?: string
 }
 
 const hashAgeAssuranceEvent = 'ageAssuranceEvent'
@@ -417,7 +427,7 @@ export function validateAgeAssuranceEvent<V>(v: V) {
 export interface AgeAssuranceOverrideEvent {
   $type?: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
   /** The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state. */
-  status?: 'assured' | 'reset' | (string & {})
+  status: 'assured' | 'reset' | (string & {})
   /** Comment describing the reason for the override. */
   comment: string
 }

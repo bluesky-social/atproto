@@ -435,12 +435,28 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.tags = newStatus.tags
   }
 
-  if (
-    action === 'tools.ozone.moderation.defs#ageAssuranceEvent' &&
-    typeof meta?.status === 'string'
-  ) {
-    newStatus.ageAssuranceState = meta.status
-    subjectStatus.ageAssuranceState = meta.status
+  if (action === 'tools.ozone.moderation.defs#ageAssuranceEvent') {
+    // Only when the last update was made by an admin AND state was set to reset user event can override final state
+    if (
+      currentStatus?.ageAssuranceUpdatedBy !== 'admin' ||
+      currentStatus?.ageAssuranceState === 'reset'
+    ) {
+      if (typeof meta?.status === 'string') {
+        newStatus.ageAssuranceState = meta.status
+        subjectStatus.ageAssuranceState = meta.status
+        newStatus.ageAssuranceUpdatedBy = 'user'
+        subjectStatus.ageAssuranceUpdatedBy = 'user'
+      }
+    }
+  }
+
+  if (action === 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent') {
+    if (typeof meta?.status === 'string') {
+      newStatus.ageAssuranceState = meta.status
+      subjectStatus.ageAssuranceState = meta.status
+    }
+    newStatus.ageAssuranceUpdatedBy = 'admin'
+    subjectStatus.ageAssuranceUpdatedBy = 'admin'
   }
 
   if (blobCids?.length) {

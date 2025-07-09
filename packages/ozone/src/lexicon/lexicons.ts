@@ -13533,6 +13533,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#recordEvent',
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
+              'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
             ],
           },
           subject: {
@@ -13606,6 +13607,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#recordEvent',
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
+              'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
             ],
           },
           subject: {
@@ -13756,6 +13758,12 @@ export const schemaDict = {
             type: 'string',
             description: 'Current age assurance state of the subject.',
             knownValues: ['pending', 'assured', 'unknown'],
+          },
+          ageAssuranceUpdatedBy: {
+            type: 'string',
+            description:
+              'Whether or not the last successful update to age assurance was made by the user or admin.',
+            knownValues: ['admin', 'user'],
           },
         },
       },
@@ -14032,9 +14040,21 @@ export const schemaDict = {
             description:
               'The unique identifier for this instance of the age assurance flow, in UUID format.',
           },
-          attemptIp: {
+          initIp: {
             type: 'string',
-            description: 'The IP address used for this age assurance flow.',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
           },
         },
       },
@@ -14042,7 +14062,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Age assurance status override by moderators. Only works on DID subjects.',
-        required: ['comment'],
+        required: ['comment', 'status'],
         properties: {
           status: {
             type: 'string',
@@ -14757,6 +14777,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#recordEvent',
                   'lex:tools.ozone.moderation.defs#modEventPriorityScore',
                   'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
+                  'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
                 ],
               },
               subject: {
