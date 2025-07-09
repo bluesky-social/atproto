@@ -1,5 +1,130 @@
 # @atproto/bsky
 
+## 0.0.169
+
+### Patch Changes
+
+- [#3991](https://github.com/bluesky-social/atproto/pull/3991) [`0c0381a2b`](https://github.com/bluesky-social/atproto/commit/0c0381a2bb9b9dc14ca6c1c8c4a6b966f0d516e8) Thanks [@foysalit](https://github.com/foysalit)! - Add modTool parameter to ozone events
+
+- Updated dependencies [[`0c0381a2b`](https://github.com/bluesky-social/atproto/commit/0c0381a2bb9b9dc14ca6c1c8c4a6b966f0d516e8)]:
+  - @atproto/api@0.15.23
+
+## 0.0.168
+
+### Patch Changes
+
+- Updated dependencies [[`02c358d0c`](https://github.com/bluesky-social/atproto/commit/02c358d0ca280922c20da5be1e23b4aa9e90a30b)]:
+  - @atproto/api@0.15.22
+
+## 0.0.167
+
+### Patch Changes
+
+- Updated dependencies [[`d344723a1`](https://github.com/bluesky-social/atproto/commit/d344723a1018b2436b5453526397936bd587a2e2)]:
+  - @atproto/api@0.15.21
+
+## 0.0.166
+
+### Patch Changes
+
+- [#4005](https://github.com/bluesky-social/atproto/pull/4005) [`bb65f7a6e`](https://github.com/bluesky-social/atproto/commit/bb65f7a6e22ceedb57c74a18cf0539c1dd04c0a7) Thanks [@mozzius](https://github.com/mozzius)! - add `subscribed-post` notification reason
+
+- Updated dependencies [[`bb65f7a6e`](https://github.com/bluesky-social/atproto/commit/bb65f7a6e22ceedb57c74a18cf0539c1dd04c0a7)]:
+  - @atproto/api@0.15.20
+
+## 0.0.165
+
+### Patch Changes
+
+- Updated dependencies [[`376778a92`](https://github.com/bluesky-social/atproto/commit/376778a92f08fb6709c4cde736bfaca7393a72e1)]:
+  - @atproto/api@0.15.19
+
+## 0.0.164
+
+### Patch Changes
+
+- Updated dependencies [[`e3e31b2b9`](https://github.com/bluesky-social/atproto/commit/e3e31b2b9bf8c4de6b2d7fa992c3b3795686ea72)]:
+  - @atproto/api@0.15.18
+
+## 0.0.163
+
+### Patch Changes
+
+- [#3990](https://github.com/bluesky-social/atproto/pull/3990) [`6cd120206`](https://github.com/bluesky-social/atproto/commit/6cd12020657bfb5f87e97cd16e4abb379b64f60b) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add activity subscription lexicons
+
+- Updated dependencies [[`a8dee6af3`](https://github.com/bluesky-social/atproto/commit/a8dee6af33618d3072ebae7f23843242a32c926c), [`6cd120206`](https://github.com/bluesky-social/atproto/commit/6cd12020657bfb5f87e97cd16e4abb379b64f60b)]:
+  - @atproto/repo@0.8.4
+  - @atproto/api@0.15.17
+  - @atproto/sync@0.1.28
+
+## 0.0.162
+
+### Patch Changes
+
+- Updated dependencies [[`5fccbd2a1`](https://github.com/bluesky-social/atproto/commit/5fccbd2a14420e4a7c6f56ad9af4ecfe15a971e3)]:
+  - @atproto/repo@0.8.3
+  - @atproto/sync@0.1.27
+
+## 0.0.161
+
+### Patch Changes
+
+- [#3966](https://github.com/bluesky-social/atproto/pull/3966) [`97ef11657`](https://github.com/bluesky-social/atproto/commit/97ef116571909c95713017bcd7b621c8afbc90ef) Thanks [@mozzius](https://github.com/mozzius)! - Rename notification preference lexicon "filter" key to "include"
+
+- Updated dependencies [[`97ef11657`](https://github.com/bluesky-social/atproto/commit/97ef116571909c95713017bcd7b621c8afbc90ef)]:
+  - @atproto/api@0.15.16
+
+## 0.0.160
+
+### Patch Changes
+
+- Updated dependencies [[`8bd45e2f8`](https://github.com/bluesky-social/atproto/commit/8bd45e2f898a87b3550c7f4a0c8312fad9cb4736)]:
+  - @atproto/repo@0.8.2
+  - @atproto/sync@0.1.26
+
+## 0.0.159
+
+### Patch Changes
+
+- Updated dependencies [[`7f1316748`](https://github.com/bluesky-social/atproto/commit/7f1316748dedb512ae739ad51b95644baa39fe80), [`7f1316748`](https://github.com/bluesky-social/atproto/commit/7f1316748dedb512ae739ad51b95644baa39fe80)]:
+  - @atproto/api@0.15.15
+
+## 0.0.158
+
+### Patch Changes
+
+- Updated dependencies [[`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c), [`b675fbbf1`](https://github.com/bluesky-social/atproto/commit/b675fbbf17e000fad2b38a52db550702830a807d), [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c), [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c), [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c), [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c)]:
+  - @atproto/xrpc-server@0.8.0
+  - @atproto-labs/xrpc-utils@0.0.16
+  - @atproto/sync@0.1.25
+
+## 0.0.157
+
+### Patch Changes
+
+- [#3901](https://github.com/bluesky-social/atproto/pull/3901) [`a48671e73`](https://github.com/bluesky-social/atproto/commit/a48671e730681f692a88053e8f137bd9e2aed5f1) Thanks [@mozzius](https://github.com/mozzius)! - Add notification preferences V2 lexicons
+
+- Updated dependencies [[`a48671e73`](https://github.com/bluesky-social/atproto/commit/a48671e730681f692a88053e8f137bd9e2aed5f1)]:
+  - @atproto/api@0.15.14
+
+## 0.0.156
+
+### Patch Changes
+
+- [#3929](https://github.com/bluesky-social/atproto/pull/3929) [`c6eb8a12e`](https://github.com/bluesky-social/atproto/commit/c6eb8a12e291c88fea79da447f9da8608d02300d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Rename `getPostThreadHiddenV2` to `getPostThreadOtherV2` to better reflect the intent of the API.
+
+- Updated dependencies [[`c6eb8a12e`](https://github.com/bluesky-social/atproto/commit/c6eb8a12e291c88fea79da447f9da8608d02300d)]:
+  - @atproto/api@0.15.13
+
+## 0.0.155
+
+### Patch Changes
+
+- Updated dependencies [[`9214bd017`](https://github.com/bluesky-social/atproto/commit/9214bd01705381aed6b5bde2900d6dc5486b6e9f)]:
+  - @atproto/xrpc-server@0.7.19
+  - @atproto-labs/xrpc-utils@0.0.15
+  - @atproto/sync@0.1.24
+
 ## 0.0.154
 
 ### Patch Changes

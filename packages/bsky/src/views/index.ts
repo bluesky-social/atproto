@@ -1,6 +1,6 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { ProfileViewerState } from '../hydration/actor'
+import { Actor, ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
@@ -10,6 +10,7 @@ import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
   KnownFollowers,
+  ProfileAssociatedActivitySubscription,
   ProfileView,
   ProfileViewBasic,
   ProfileViewDetailed,
@@ -58,8 +59,11 @@ import {
   Record as LabelerRecord,
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
-import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
-import { ThreadHiddenItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadHiddenV2'
+import {
+  ActivitySubscription,
+  RecordDeleted as NotificationRecordDeleted,
+} from '../lexicon/types/app/bsky/notification/defs'
+import { ThreadItem as ThreadOtherItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
 import {
   QueryParams as GetPostThreadV2QueryParams,
   ThreadItem,
@@ -75,13 +79,13 @@ import {
   uriToDid as creatorFromUri,
 } from '../util/uris'
 import {
-  ThreadHiddenAnchorPostNode,
-  ThreadHiddenItemValuePost,
-  ThreadHiddenPostNode,
   ThreadItemValueBlocked,
   ThreadItemValueNoUnauthenticated,
   ThreadItemValueNotFound,
   ThreadItemValuePost,
+  ThreadOtherAnchorPostNode,
+  ThreadOtherItemValuePost,
+  ThreadOtherPostNode,
   ThreadTree,
   ThreadTreeVisible,
   sortTrimFlattenThreadTree,
@@ -284,6 +288,7 @@ export class Views {
         chat: actor.allowIncomingChatsFrom
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
+        activitySubscription: this.profileAssociatedActivitySubscription(actor),
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
@@ -345,22 +350,26 @@ export class Views {
         : undefined,
       // associated.feedgens and associated.lists info not necessarily included
       // on profile and profile-basic views, but should be on profile-detailed.
-      associated:
-        actor.isLabeler || actor.allowIncomingChatsFrom
-          ? {
-              labeler: actor.isLabeler ? true : undefined,
-              // @TODO apply default chat policy?
-              chat: actor.allowIncomingChatsFrom
-                ? { allowIncoming: actor.allowIncomingChatsFrom }
-                : undefined,
-            }
+      associated: {
+        labeler: actor.isLabeler ? true : undefined,
+        // @TODO apply default chat policy?
+        chat: actor.allowIncomingChatsFrom
+          ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
+        activitySubscription: this.profileAssociatedActivitySubscription(actor),
+      },
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
     }
+  }
+
+  profileAssociatedActivitySubscription(
+    actor: Actor,
+  ): ProfileAssociatedActivitySubscription {
+    return { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
   }
 
   profileKnownFollowers(
@@ -402,7 +411,35 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
+      activitySubscription: this.profileViewerActivitySubscription(
+        viewer,
+        did,
+        state,
+      ),
     }
+  }
+
+  profileViewerActivitySubscription(
+    profileViewer: ProfileViewerState,
+    did: string,
+    state: HydrationState,
+  ): ActivitySubscription | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor) return undefined
+
+    const activitySubscription = state.activitySubscriptions?.get(did)
+    if (!activitySubscription) return undefined
+
+    const allowFrom = actor.allowActivitySubscriptionsFrom
+    const actorFollowsViewer = !!profileViewer.followedBy
+    const viewerFollowsActor = !!profileViewer.following
+    if (
+      (allowFrom === 'followers' && viewerFollowsActor) ||
+      (allowFrom === 'mutuals' && actorFollowsViewer && viewerFollowsActor)
+    ) {
+      return activitySubscription
+    }
+    return undefined
   }
 
   knownFollowers(
@@ -1161,7 +1198,7 @@ export class Views {
       prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
     },
-  ): { hasHiddenReplies: boolean; thread: ThreadItem[] } {
+  ): { hasOtherReplies: boolean; thread: ThreadItem[] } {
     const { anchor: anchorUri, uris } = skeleton
 
     // Not found.
@@ -1169,7 +1206,7 @@ export class Views {
     const post = state.posts?.get(anchorUri)
     if (!post || !postView) {
       return {
-        hasHiddenReplies: false,
+        hasOtherReplies: false,
         thread: [
           this.threadV2ItemNotFound({
             uri: anchorUri,
@@ -1182,7 +1219,7 @@ export class Views {
     // Blocked (only 1p for anchor).
     if (this.viewerBlockExists(postView.author.did, state)) {
       return {
-        hasHiddenReplies: false,
+        hasOtherReplies: false,
         thread: [
           this.threadV2ItemBlocked({
             uri: anchorUri,
@@ -1229,7 +1266,7 @@ export class Views {
 
     const anchorDepth = 0 // The depth of the anchor post is always 0.
     let anchorTree: ThreadTree
-    let hasHiddenReplies = false
+    let hasOtherReplies = false
 
     if (this.noUnauthenticatedPost(state, postView)) {
       anchorTree = {
@@ -1241,7 +1278,7 @@ export class Views {
         parent,
       }
     } else {
-      const { replies, hasHiddenReplies: hasHiddenRepliesShadow } =
+      const { replies, hasOtherReplies: hasOtherRepliesShadow } =
         !anchorViolatesThreadGate
           ? this.threadV2Replies(
               {
@@ -1257,8 +1294,8 @@ export class Views {
               },
               state,
             )
-          : { replies: undefined, hasHiddenReplies: false }
-      hasHiddenReplies = hasHiddenRepliesShadow
+          : { replies: undefined, hasOtherReplies: false }
+      hasOtherReplies = hasOtherRepliesShadow
 
       anchorTree = {
         type: 'post',
@@ -1287,7 +1324,7 @@ export class Views {
     })
 
     return {
-      hasHiddenReplies,
+      hasOtherReplies,
       thread,
     }
   }
@@ -1432,14 +1469,14 @@ export class Views {
       prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
-  ): { replies: ThreadTreeVisible[] | undefined; hasHiddenReplies: boolean } {
+  ): { replies: ThreadTreeVisible[] | undefined; hasOtherReplies: boolean } {
     // Reached the `below` limit.
     if (depth > below) {
-      return { replies: undefined, hasHiddenReplies: false }
+      return { replies: undefined, hasOtherReplies: false }
     }
 
     const childrenUris = childrenByParentUri[parentUri] ?? []
-    let hasHiddenReplies = false
+    let hasOtherReplies = false
     const replies = mapDefined(childrenUris, (uri) => {
       const replyInclusion = this.checkThreadV2ReplyInclusion({
         uri,
@@ -1452,14 +1489,14 @@ export class Views {
       const { authorDid, post, postView } = replyInclusion
 
       // Hidden.
-      const { isHidden } = this.isHiddenThreadPost(
+      const { isOther } = this.isOtherThreadPost(
         { post, postView, prioritizeFollowedUsers, rootUri, uri },
         state,
       )
-      if (isHidden) {
+      if (isOther) {
         // Only care about anchor replies
         if (depth === 1) {
-          hasHiddenReplies = true
+          hasOtherReplies = true
         }
         return undefined
       }
@@ -1504,7 +1541,7 @@ export class Views {
 
     return {
       replies,
-      hasHiddenReplies,
+      hasOtherReplies,
     }
   }
 
@@ -1537,8 +1574,8 @@ export class Views {
         moreParents: moreParents ?? false,
         moreReplies,
         opThread: isOPThread,
-        hiddenByThreadgate: false, // Hidden posts are handled by threadHiddenV2
-        mutedByViewer: false, // Hidden posts are handled by threadHiddenV2
+        hiddenByThreadgate: false, // Hidden posts are handled by threadOtherV2
+        mutedByViewer: false, // Hidden posts are handled by threadOtherV2
       },
     }
   }
@@ -1599,7 +1636,7 @@ export class Views {
     }
   }
 
-  threadHiddenV2(
+  threadOtherV2(
     skeleton: { anchor: string; uris: string[] },
     state: HydrationState,
     {
@@ -1611,7 +1648,7 @@ export class Views {
       branchingFactor: number
       prioritizeFollowedUsers: boolean
     },
-  ): ThreadHiddenItem[] {
+  ): ThreadOtherItem[] {
     const { anchor: anchorUri, uris } = skeleton
 
     // Not found.
@@ -1634,10 +1671,10 @@ export class Views {
     const rootUri = getRootUri(anchorUri, post)
     const opDid = uriToDid(rootUri)
 
-    const anchorTree: ThreadHiddenAnchorPostNode = {
+    const anchorTree: ThreadOtherAnchorPostNode = {
       type: 'hiddenAnchor',
-      item: this.threadHiddenV2ItemPostAnchor({ depth: 0, uri: anchorUri }),
-      replies: this.threadHiddenV2Replies(
+      item: this.threadOtherV2ItemPostAnchor({ depth: 0, uri: anchorUri }),
+      replies: this.threadOtherV2Replies(
         {
           parentUri: anchorUri,
           rootUri,
@@ -1660,7 +1697,7 @@ export class Views {
     })
   }
 
-  private threadHiddenV2Replies(
+  private threadOtherV2Replies(
     {
       parentUri,
       rootUri,
@@ -1677,7 +1714,7 @@ export class Views {
       prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
-  ): ThreadHiddenPostNode[] | undefined {
+  ): ThreadOtherPostNode[] | undefined {
     // Reached the `below` limit.
     if (depth > below) {
       return undefined
@@ -1695,13 +1732,13 @@ export class Views {
       }
       const { post, postView } = replyInclusion
 
-      // Hidden.
-      const { isHidden, hiddenByThreadgate, mutedByViewer } =
-        this.isHiddenThreadPost(
+      // Other posts to pull out
+      const { isOther, hiddenByThreadgate, mutedByViewer } =
+        this.isOtherThreadPost(
           { post, postView, rootUri, prioritizeFollowedUsers, uri },
           state,
         )
-      if (isHidden) {
+      if (isOther) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
           return undefined
@@ -1712,7 +1749,7 @@ export class Views {
       }
 
       // Recurse down.
-      const replies = this.threadHiddenV2Replies(
+      const replies = this.threadOtherV2Replies(
         {
           parentUri: uri,
           rootUri,
@@ -1724,7 +1761,7 @@ export class Views {
         state,
       )
 
-      const item = this.threadHiddenV2ItemPost({
+      const item = this.threadOtherV2ItemPost({
         depth,
         hiddenByThreadgate,
         mutedByViewer,
@@ -1732,7 +1769,7 @@ export class Views {
         uri,
       })
 
-      const tree: ThreadHiddenPostNode = {
+      const tree: ThreadOtherPostNode = {
         type: 'hiddenPost',
         item: item,
         tags: post.tags,
@@ -1743,13 +1780,13 @@ export class Views {
     })
   }
 
-  private threadHiddenV2ItemPostAnchor({
+  private threadOtherV2ItemPostAnchor({
     depth,
     uri,
   }: {
     depth: number
     uri: string
-  }): ThreadHiddenAnchorPostNode['item'] {
+  }): ThreadOtherAnchorPostNode['item'] {
     return {
       uri,
       depth,
@@ -1759,7 +1796,7 @@ export class Views {
     }
   }
 
-  private threadHiddenV2ItemPost({
+  private threadOtherV2ItemPost({
     depth,
     hiddenByThreadgate,
     mutedByViewer,
@@ -1771,8 +1808,8 @@ export class Views {
     mutedByViewer: boolean
     postView: PostView
     uri: string
-  }): ThreadHiddenItemValuePost {
-    const base = this.threadHiddenV2ItemPostAnchor({ depth, uri })
+  }): ThreadOtherItemValuePost {
+    const base = this.threadOtherV2ItemPostAnchor({ depth, uri })
     return {
       ...base,
       value: {
@@ -1780,9 +1817,9 @@ export class Views {
         post: postView,
         hiddenByThreadgate,
         mutedByViewer,
-        moreParents: false, // Hidden replies don't have parents.
-        moreReplies: 0, // Hidden replies don't have replies hydrated.
-        opThread: false, // Hidden replies don't contain OP threads.
+        moreParents: false, // "Other" replies don't have parents.
+        moreReplies: 0, // "Other" replies don't have replies hydrated.
+        opThread: false, // "Other" replies don't contain OP threads.
       },
     }
   }
@@ -1834,7 +1871,7 @@ export class Views {
     return { authorDid, post, postView }
   }
 
-  private isHiddenThreadPost(
+  private isOtherThreadPost(
     {
       post,
       postView,
@@ -1850,7 +1887,7 @@ export class Views {
     },
     state: HydrationState,
   ): {
-    isHidden: boolean
+    isOther: boolean
     hiddenByTag: boolean
     hiddenByThreadgate: boolean
     mutedByViewer: boolean
@@ -1873,7 +1910,7 @@ export class Views {
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
 
     return {
-      isHidden: hiddenByTag || hiddenByThreadgate || mutedByViewer,
+      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer,
       hiddenByTag,
       hiddenByThreadgate,
       mutedByViewer,

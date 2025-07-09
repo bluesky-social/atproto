@@ -77,6 +77,7 @@ export class TeamService {
     const members = await builder
       .limit(limit)
       .orderBy('createdAt', 'asc')
+      .orderBy('handle', 'asc')
       .execute()
 
     return { members, cursor: members.at(-1)?.createdAt.toISOString() }

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider",
-  "version": "0.7.9",
+  "version": "0.9.3",
   "license": "MIT",
   "description": "Generic OAuth2 and OpenID Connect provider for Node.js. Currently only supports features needed for Atproto.",
   "keywords": [
@@ -37,6 +37,7 @@
     "@atproto-labs/simple-store": "workspace:*",
     "@atproto-labs/simple-store-memory": "workspace:*",
     "@atproto/common": "workspace:^",
+    "@atproto/did": "workspace:*",
     "@atproto/jwk": "workspace:*",
     "@atproto/jwk-jose": "workspace:*",
     "@atproto/oauth-types": "workspace:*",

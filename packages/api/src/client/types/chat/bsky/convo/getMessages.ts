@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'chat.bsky.convo.getMessages'
 
-export interface QueryParams {
+export type QueryParams = {
   convoId: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

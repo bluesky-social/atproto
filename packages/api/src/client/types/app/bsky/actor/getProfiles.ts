@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.actor.getProfiles'
 
-export interface QueryParams {
+export type QueryParams = {
   actors: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

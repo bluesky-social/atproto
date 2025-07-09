@@ -56,8 +56,8 @@ describe('Auth', () => {
       return {
         encoding: 'application/json',
         body: {
-          username: auth?.credentials?.username,
-          original: auth?.artifacts?.original,
+          username: auth.credentials.username,
+          original: auth.artifacts.original,
         },
       }
     },

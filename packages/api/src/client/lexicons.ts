@@ -1389,6 +1389,10 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.createReport#modTool',
+              },
             },
           },
         },
@@ -1432,6 +1436,23 @@ export const schemaDict = {
                 format: 'datetime',
               },
             },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
           },
         },
       },
@@ -4732,6 +4753,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
           },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
+          },
         },
       },
       profileAssociatedChat: {
@@ -4741,6 +4766,16 @@ export const schemaDict = {
           allowIncoming: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedActivitySubscription: {
+        type: 'object',
+        required: ['allowSubscriptions'],
+        properties: {
+          allowSubscriptions: {
+            type: 'string',
+            knownValues: ['followers', 'mutuals', 'none'],
           },
         },
       },
@@ -4776,8 +4811,16 @@ export const schemaDict = {
             format: 'at-uri',
           },
           knownFollowers: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
+          },
+          activitySubscription: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
         },
       },
@@ -7239,6 +7282,48 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7300,48 +7385,6 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
-      },
-    },
-  },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -9724,6 +9767,30 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationDeclaration: {
+    lexicon: 1,
+    id: 'app.bsky.notification.declaration',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "A declaration of the user's choices related to notifications that can be produced by them.",
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['allowSubscriptions'],
+          properties: {
+            allowSubscriptions: {
+              type: 'string',
+              description:
+                "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'.",
+              knownValues: ['followers', 'mutuals', 'none'],
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationDefs: {
     lexicon: 1,
     id: 'app.bsky.notification.defs',
@@ -9731,6 +9798,175 @@ export const schemaDict = {
       recordDeleted: {
         type: 'object',
         properties: {},
+      },
+      chatPreference: {
+        type: 'object',
+        required: ['include', 'push'],
+        properties: {
+          include: {
+            type: 'string',
+            knownValues: ['all', 'accepted'],
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      filterablePreference: {
+        type: 'object',
+        required: ['include', 'list', 'push'],
+        properties: {
+          include: {
+            type: 'string',
+            knownValues: ['all', 'follows'],
+          },
+          list: {
+            type: 'boolean',
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      preference: {
+        type: 'object',
+        required: ['list', 'push'],
+        properties: {
+          list: {
+            type: 'boolean',
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      preferences: {
+        type: 'object',
+        required: [
+          'chat',
+          'follow',
+          'like',
+          'likeViaRepost',
+          'mention',
+          'quote',
+          'reply',
+          'repost',
+          'repostViaRepost',
+          'starterpackJoined',
+          'subscribedPost',
+          'unverified',
+          'verified',
+        ],
+        properties: {
+          chat: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#chatPreference',
+          },
+          follow: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          like: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          likeViaRepost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          mention: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          quote: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          reply: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          repost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          repostViaRepost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          starterpackJoined: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          subscribedPost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          unverified: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          verified: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+        },
+      },
+      activitySubscription: {
+        type: 'object',
+        required: ['post', 'reply'],
+        properties: {
+          post: {
+            type: 'boolean',
+          },
+          reply: {
+            type: 'boolean',
+          },
+        },
+      },
+      subjectActivitySubscription: {
+        description:
+          'Object used to store activity subscription data in stash.',
+        type: 'object',
+        required: ['subject', 'activitySubscription'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationGetPreferences: {
+    lexicon: 1,
+    id: 'app.bsky.notification.getPreferences',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get notification-related preferences for an account. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferences',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -9762,6 +9998,50 @@ export const schemaDict = {
             properties: {
               count: {
                 type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationListActivitySubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.notification.listActivitySubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate all accounts to which the requesting account is subscribed to receive notifications for. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
               },
             },
           },
@@ -9874,6 +10154,7 @@ export const schemaDict = {
               'unverified',
               'like-via-repost',
               'repost-via-repost',
+              'subscribed-post',
             ],
           },
           reasonSubject: {
@@ -9901,6 +10182,51 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationPutActivitySubscription: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putActivitySubscription',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Puts an activity subscription entry. The key should be omitted for creation and provided for updates. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'activitySubscription'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationPutPreferences: {
     lexicon: 1,
     id: 'app.bsky.notification.putPreferences',
@@ -9917,6 +10243,90 @@ export const schemaDict = {
             properties: {
               priority: {
                 type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutPreferencesV2: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putPreferencesV2',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Set notification-related preferences for an account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              chat: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#chatPreference',
+              },
+              follow: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              like: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              likeViaRepost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              mention: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              quote: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              reply: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              repost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              repostViaRepost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              starterpackJoined: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              subscribedPost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              unverified: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              verified: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferences',
               },
             },
           },
@@ -10354,14 +10764,14 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedGetPostThreadHiddenV2: {
+  AppBskyUnspeccedGetPostThreadOtherV2: {
     lexicon: 1,
-    id: 'app.bsky.unspecced.getPostThreadHiddenV2',
+    id: 'app.bsky.unspecced.getPostThreadOtherV2',
     defs: {
       main: {
         type: 'query',
         description:
-          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get the hidden posts in a thread. It is based in an anchor post at any depth of the tree, and returns hidden replies (recursive replies, with branching to their replies) below the anchor. It does not include ancestors nor the anchor. This should be called after exhausting `app.bsky.unspecced.getPostThreadV2`. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get additional posts under a thread e.g. replies hidden by threadgate. Based on an anchor post at any depth of the tree, returns top-level replies below that anchor. It does not include ancestors nor the anchor itself. This should be called after exhausting `app.bsky.unspecced.getPostThreadV2`. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
         parameters: {
           type: 'params',
           required: ['anchor'],
@@ -10389,17 +10799,17 @@ export const schemaDict = {
               thread: {
                 type: 'array',
                 description:
-                  'A flat list of hidden thread items. The depth of each item is indicated by the depth property inside the item.',
+                  'A flat list of other thread items. The depth of each item is indicated by the depth property inside the item.',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.unspecced.getPostThreadHiddenV2#threadHiddenItem',
+                  ref: 'lex:app.bsky.unspecced.getPostThreadOtherV2#threadItem',
                 },
               },
             },
           },
         },
       },
-      threadHiddenItem: {
+      threadItem: {
         type: 'object',
         required: ['uri', 'depth', 'value'],
         properties: {
@@ -10477,7 +10887,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['thread', 'hasHiddenReplies'],
+            required: ['thread', 'hasOtherReplies'],
             properties: {
               thread: {
                 type: 'array',
@@ -10492,10 +10902,10 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:app.bsky.feed.defs#threadgateView',
               },
-              hasHiddenReplies: {
+              hasOtherReplies: {
                 type: 'boolean',
                 description:
-                  'Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them.',
+                  'Whether this thread has additional replies. If true, a call can be made to the `getPostThreadOtherV2` endpoint to retrieve them.',
               },
             },
           },
@@ -13152,6 +13562,10 @@ export const schemaDict = {
           subjectHandle: {
             type: 'string',
           },
+          modTool: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
+          },
         },
       },
       modEventViewDetail: {
@@ -13215,6 +13629,10 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          modTool: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
           },
         },
       },
@@ -14232,6 +14650,23 @@ export const schemaDict = {
           },
         },
       },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -14288,6 +14723,10 @@ export const schemaDict = {
               createdBy: {
                 type: 'string',
                 format: 'did',
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
               },
             },
           },
@@ -14693,6 +15132,14 @@ export const schemaDict = {
                   'If specified, only events where the action policies match any of the given policies are returned',
               },
             },
+            modTool: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where the modTool name matches any of the given values are returned',
+            },
             cursor: {
               type: 'string',
             },
@@ -14994,6 +15441,451 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ToolsOzoneSafelinkAddRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.addRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a new URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern', 'action', 'reason'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to apply the rule to',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              action: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#actionType',
+              },
+              reason: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#reasonType',
+              },
+              comment: {
+                type: 'string',
+                description: 'Optional comment about the decision',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description: 'Author DID. Only respected when using admin auth',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidUrl',
+            description: 'The provided URL is invalid',
+          },
+          {
+            name: 'RuleAlreadyExists',
+            description: 'A rule for this URL/domain already exists',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSafelinkDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.defs',
+    defs: {
+      event: {
+        type: 'object',
+        description: 'An event for URL safety decisions',
+        required: [
+          'id',
+          'eventType',
+          'url',
+          'pattern',
+          'action',
+          'reason',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Auto-incrementing row ID',
+          },
+          eventType: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#eventType',
+          },
+          url: {
+            type: 'string',
+            description: 'The URL that this rule applies to',
+          },
+          pattern: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#patternType',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#actionType',
+          },
+          reason: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#reasonType',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who created this rule',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional comment about the decision',
+          },
+        },
+      },
+      eventType: {
+        type: 'string',
+        knownValues: ['addRule', 'updateRule', 'removeRule'],
+      },
+      patternType: {
+        type: 'string',
+        knownValues: ['domain', 'url'],
+      },
+      actionType: {
+        type: 'string',
+        knownValues: ['block', 'warn', 'whitelist'],
+      },
+      reasonType: {
+        type: 'string',
+        knownValues: ['csam', 'spam', 'phishing', 'none'],
+      },
+      urlRule: {
+        type: 'object',
+        description: 'Input for creating a URL safety rule',
+        required: [
+          'url',
+          'pattern',
+          'action',
+          'reason',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+        ],
+        properties: {
+          url: {
+            type: 'string',
+            description: 'The URL or domain to apply the rule to',
+          },
+          pattern: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#patternType',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#actionType',
+          },
+          reason: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#reasonType',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional comment about the decision',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user added the rule.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Timestamp when the rule was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Timestamp when the rule was last updated',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkQueryEvents: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.queryEvents',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Query URL safety audit events',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              urls: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by specific URLs or domains',
+              },
+              patternType: {
+                type: 'string',
+                description: 'Filter by pattern type',
+              },
+              sortDirection: {
+                type: 'string',
+                knownValues: ['asc', 'desc'],
+                default: 'desc',
+                description: 'Sort direction',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+                description:
+                  'Next cursor for pagination. Only present if there are more results.',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.safelink.defs#event',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkQueryRules: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.queryRules',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Query URL safety rules',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              urls: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by specific URLs or domains',
+              },
+              patternType: {
+                type: 'string',
+                description: 'Filter by pattern type',
+              },
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by action types',
+              },
+              reason: {
+                type: 'string',
+                description: 'Filter by reason type',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description: 'Filter by rule creator',
+              },
+              sortDirection: {
+                type: 'string',
+                knownValues: ['asc', 'desc'],
+                default: 'desc',
+                description: 'Sort direction',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['rules'],
+            properties: {
+              cursor: {
+                type: 'string',
+                description:
+                  'Next cursor for pagination. Only present if there are more results.',
+              },
+              rules: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.safelink.defs#urlRule',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkRemoveRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.removeRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove an existing URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to remove the rule for',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional comment about why the rule is being removed',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'Optional DID of the user. Only respected when using admin auth.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'RuleNotFound',
+            description: 'No active rule found for this URL/domain',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSafelinkUpdateRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.updateRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Update an existing URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern', 'action', 'reason'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to update the rule for',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              action: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#actionType',
+              },
+              reason: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#reasonType',
+              },
+              comment: {
+                type: 'string',
+                description: 'Optional comment about the update',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'Optional DID to credit as the creator. Only respected for admin_token authentication.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'RuleNotFound',
+            description: 'No active rule found for this URL/domain',
+          },
+        ],
       },
     },
   },
@@ -16510,8 +17402,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
@@ -16556,11 +17448,18 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationDeclaration: 'app.bsky.notification.declaration',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
+  AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
+  AppBskyNotificationListActivitySubscriptions:
+    'app.bsky.notification.listActivitySubscriptions',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutActivitySubscription:
+    'app.bsky.notification.putActivitySubscription',
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
+  AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
@@ -16568,8 +17467,8 @@ export const ids = {
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
-  AppBskyUnspeccedGetPostThreadHiddenV2:
-    'app.bsky.unspecced.getPostThreadHiddenV2',
+  AppBskyUnspeccedGetPostThreadOtherV2:
+    'app.bsky.unspecced.getPostThreadOtherV2',
   AppBskyUnspeccedGetPostThreadV2: 'app.bsky.unspecced.getPostThreadV2',
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
   AppBskyUnspeccedGetSuggestedFeedsSkeleton:
@@ -16645,6 +17544,12 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
+  ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
+  ToolsOzoneSafelinkQueryEvents: 'tools.ozone.safelink.queryEvents',
+  ToolsOzoneSafelinkQueryRules: 'tools.ozone.safelink.queryRules',
+  ToolsOzoneSafelinkRemoveRule: 'tools.ozone.safelink.removeRule',
+  ToolsOzoneSafelinkUpdateRule: 'tools.ozone.safelink.updateRule',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
   ToolsOzoneSetAddValues: 'tools.ozone.set.addValues',
   ToolsOzoneSetDefs: 'tools.ozone.set.defs',

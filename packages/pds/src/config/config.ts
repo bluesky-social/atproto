@@ -225,7 +225,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const rateLimitsCfg: ServerConfig['rateLimits'] = env.rateLimitsEnabled
     ? {
         enabled: true,
-        mode: redisCfg !== null ? 'redis' : 'memory',
         bypassKey: env.rateLimitBypassKey,
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
@@ -489,7 +488,6 @@ export type RedisScratchConfig = {
 export type RateLimitsConfig =
   | {
       enabled: true
-      mode: 'memory' | 'redis'
       bypassKey?: string
       bypassIps?: string[]
     }

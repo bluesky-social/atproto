@@ -42,14 +42,18 @@ import unmuteActor from './app/bsky/graph/unmuteActor'
 import unmuteActorList from './app/bsky/graph/unmuteActorList'
 import unmuteThread from './app/bsky/graph/unmuteThread'
 import getLabelerServices from './app/bsky/labeler/getServices'
+import getPreferences from './app/bsky/notification/getPreferences'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
+import listActivitySubscriptions from './app/bsky/notification/listActivitySubscriptions'
 import listNotifications from './app/bsky/notification/listNotifications'
+import putActivitySubscription from './app/bsky/notification/putActivitySubscription'
 import putPreferences from './app/bsky/notification/putPreferences'
+import putPreferencesV2 from './app/bsky/notification/putPreferencesV2'
 import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
-import getPostThreadHiddenV2 from './app/bsky/unspecced/getPostThreadHiddenV2'
+import getPostThreadOtherV2 from './app/bsky/unspecced/getPostThreadOtherV2'
 import getPostThreadV2 from './app/bsky/unspecced/getPostThreadV2'
 import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
@@ -84,7 +88,7 @@ export default function (server: Server, ctx: AppContext) {
   getListFeed(server, ctx)
   getQuotes(server, ctx)
   getPostThread(server, ctx)
-  getPostThreadHiddenV2(server, ctx)
+  getPostThreadOtherV2(server, ctx)
   getPostThreadV2(server, ctx)
   getPosts(server, ctx)
   searchPosts(server, ctx)
@@ -122,10 +126,14 @@ export default function (server: Server, ctx: AppContext) {
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
   getSuggestions(server, ctx)
+  getPreferences(server, ctx)
   getUnreadCount(server, ctx)
+  listActivitySubscriptions(server, ctx)
   listNotifications(server, ctx)
+  putActivitySubscription(server, ctx)
   updateSeen(server, ctx)
   putPreferences(server, ctx)
+  putPreferencesV2(server, ctx)
   registerPush(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)

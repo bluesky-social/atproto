@@ -17,7 +17,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getPostThreadV2'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Reference (AT-URI) to post record. This is the anchor post, and the thread will be built around it. It can be any post in the tree, not necessarily a root post. */
   anchor: string
   /** Whether to include parents above the anchor. */
@@ -31,15 +31,14 @@ export interface QueryParams {
   /** Sorting for the thread replies. */
   sort?: 'newest' | 'oldest' | 'top' | (string & {})
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   /** A flat list of thread items. The depth of each item is indicated by the depth property inside the item. */
   thread: ThreadItem[]
   threadgate?: AppBskyFeedDefs.ThreadgateView
-  /** Whether this thread has hidden replies. If true, a call can be made to the `getPostThreadHiddenV2` endpoint to retrieve them. */
-  hasHiddenReplies: boolean
+  /** Whether this thread has additional replies. If true, a call can be made to the `getPostThreadOtherV2` endpoint to retrieve them. */
+  hasOtherReplies: boolean
 }
 
 export interface CallOptions {

@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.signature.searchAccounts'
 
-export interface QueryParams {
+export type QueryParams = {
   values: string[]
   cursor?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

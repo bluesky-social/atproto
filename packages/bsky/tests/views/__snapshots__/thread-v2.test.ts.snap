@@ -2,7 +2,7 @@
 
 exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] = `
 Object {
-  "hasHiddenReplies": false,
+  "hasOtherReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
@@ -16,6 +16,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -56,6 +61,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -100,7 +110,7 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] = `
 Object {
-  "hasHiddenReplies": false,
+  "hasOtherReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
@@ -114,6 +124,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -154,6 +169,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-bob.test",
             "labels": Array [],
@@ -204,6 +224,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -248,7 +273,7 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on 2.0 1`] = `
 Object {
-  "hasHiddenReplies": false,
+  "hasOtherReplies": false,
   "thread": Array [
     Object {
       "depth": -2,
@@ -262,6 +287,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -302,6 +332,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-bob.test",
             "labels": Array [],
@@ -352,6 +387,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -396,7 +436,7 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] = `
 Object {
-  "hasHiddenReplies": false,
+  "hasOtherReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
@@ -410,6 +450,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -450,6 +495,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-carol.test",
             "labels": Array [],
@@ -494,7 +544,7 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`] = `
 Object {
-  "hasHiddenReplies": false,
+  "hasOtherReplies": false,
   "thread": Array [
     Object {
       "depth": -1,
@@ -508,6 +558,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -548,6 +603,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -598,6 +658,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -642,7 +707,7 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on r 0.0 1`] = `
 Object {
-  "hasHiddenReplies": false,
+  "hasOtherReplies": false,
   "thread": Array [
     Object {
       "depth": -2,
@@ -656,6 +721,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -696,6 +766,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -746,6 +821,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -790,7 +870,7 @@ Object {
 
 exports[`appview thread views v2 simple thread returns thread anchored on root 1`] = `
 Object {
-  "hasHiddenReplies": false,
+  "hasOtherReplies": false,
   "thread": Array [
     Object {
       "depth": 0,
@@ -804,6 +884,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -844,6 +929,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -894,6 +984,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -944,6 +1039,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -994,6 +1094,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "simple-bob.test",
             "labels": Array [],
@@ -1044,6 +1149,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -1094,6 +1204,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(3)",
             "handle": "simple-carol.test",
             "labels": Array [],

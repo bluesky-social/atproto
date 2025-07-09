@@ -14,6 +14,62 @@ import type {
 import { Message, proto3, protoInt64, Timestamp } from '@bufbuild/protobuf'
 
 /**
+ * @generated from enum bsky.NotificationInclude
+ */
+export enum NotificationInclude {
+  /**
+   * @generated from enum value: NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: NOTIFICATION_INCLUDE_ALL = 1;
+   */
+  ALL = 1,
+
+  /**
+   * @generated from enum value: NOTIFICATION_INCLUDE_FOLLOWS = 2;
+   */
+  FOLLOWS = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(NotificationInclude)
+proto3.util.setEnumType(NotificationInclude, 'bsky.NotificationInclude', [
+  { no: 0, name: 'NOTIFICATION_INCLUDE_UNSPECIFIED' },
+  { no: 1, name: 'NOTIFICATION_INCLUDE_ALL' },
+  { no: 2, name: 'NOTIFICATION_INCLUDE_FOLLOWS' },
+])
+
+/**
+ * @generated from enum bsky.ChatNotificationInclude
+ */
+export enum ChatNotificationInclude {
+  /**
+   * @generated from enum value: CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: CHAT_NOTIFICATION_INCLUDE_ALL = 1;
+   */
+  ALL = 1,
+
+  /**
+   * @generated from enum value: CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
+   */
+  ACCEPTED = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(ChatNotificationInclude)
+proto3.util.setEnumType(
+  ChatNotificationInclude,
+  'bsky.ChatNotificationInclude',
+  [
+    { no: 0, name: 'CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED' },
+    { no: 1, name: 'CHAT_NOTIFICATION_INCLUDE_ALL' },
+    { no: 2, name: 'CHAT_NOTIFICATION_INCLUDE_ACCEPTED' },
+  ],
+)
+
+/**
  * @generated from enum bsky.FeedType
  */
 export enum FeedType {
@@ -1427,6 +1483,142 @@ export class GetActorChatDeclarationRecordsResponse extends Message<GetActorChat
       | undefined,
   ): boolean {
     return proto3.util.equals(GetActorChatDeclarationRecordsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetNotificationDeclarationRecordsRequest
+ */
+export class GetNotificationDeclarationRecordsRequest extends Message<GetNotificationDeclarationRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetNotificationDeclarationRecordsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetNotificationDeclarationRecordsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetNotificationDeclarationRecordsRequest {
+    return new GetNotificationDeclarationRecordsRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationDeclarationRecordsRequest {
+    return new GetNotificationDeclarationRecordsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationDeclarationRecordsRequest {
+    return new GetNotificationDeclarationRecordsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetNotificationDeclarationRecordsRequest
+      | PlainMessage<GetNotificationDeclarationRecordsRequest>
+      | undefined,
+    b:
+      | GetNotificationDeclarationRecordsRequest
+      | PlainMessage<GetNotificationDeclarationRecordsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetNotificationDeclarationRecordsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetNotificationDeclarationRecordsResponse
+ */
+export class GetNotificationDeclarationRecordsResponse extends Message<GetNotificationDeclarationRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = []
+
+  constructor(
+    data?: PartialMessage<GetNotificationDeclarationRecordsResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetNotificationDeclarationRecordsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetNotificationDeclarationRecordsResponse {
+    return new GetNotificationDeclarationRecordsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationDeclarationRecordsResponse {
+    return new GetNotificationDeclarationRecordsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationDeclarationRecordsResponse {
+    return new GetNotificationDeclarationRecordsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetNotificationDeclarationRecordsResponse
+      | PlainMessage<GetNotificationDeclarationRecordsResponse>
+      | undefined,
+    b:
+      | GetNotificationDeclarationRecordsResponse
+      | PlainMessage<GetNotificationDeclarationRecordsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetNotificationDeclarationRecordsResponse, a, b)
   }
 }
 
@@ -5412,6 +5604,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   statusRecord?: Record
 
+  /**
+   * @generated from field: string allow_activity_subscriptions_from = 18;
+   */
+  allowActivitySubscriptionsFrom = ''
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5480,6 +5677,12 @@ export class ActorInfo extends Message<ActorInfo> {
       repeated: true,
     },
     { no: 17, name: 'status_record', kind: 'message', T: Record },
+    {
+      no: 18,
+      name: 'allow_activity_subscriptions_from',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
   ])
 
   static fromBinary(
@@ -8181,6 +8384,629 @@ export class GetBlocklistSubscriptionsResponse extends Message<GetBlocklistSubsc
 }
 
 /**
+ * @generated from message bsky.GetNotificationPreferencesRequest
+ */
+export class GetNotificationPreferencesRequest extends Message<GetNotificationPreferencesRequest> {
+  /**
+   * @generated from field: repeated string dids = 1;
+   */
+  dids: string[] = []
+
+  constructor(data?: PartialMessage<GetNotificationPreferencesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetNotificationPreferencesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetNotificationPreferencesRequest {
+    return new GetNotificationPreferencesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationPreferencesRequest {
+    return new GetNotificationPreferencesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationPreferencesRequest {
+    return new GetNotificationPreferencesRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetNotificationPreferencesRequest
+      | PlainMessage<GetNotificationPreferencesRequest>
+      | undefined,
+    b:
+      | GetNotificationPreferencesRequest
+      | PlainMessage<GetNotificationPreferencesRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetNotificationPreferencesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.NotificationChannelList
+ */
+export class NotificationChannelList extends Message<NotificationChannelList> {
+  /**
+   * @generated from field: bool enabled = 1;
+   */
+  enabled = false
+
+  constructor(data?: PartialMessage<NotificationChannelList>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.NotificationChannelList'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'enabled', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): NotificationChannelList {
+    return new NotificationChannelList().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationChannelList {
+    return new NotificationChannelList().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationChannelList {
+    return new NotificationChannelList().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | NotificationChannelList
+      | PlainMessage<NotificationChannelList>
+      | undefined,
+    b:
+      | NotificationChannelList
+      | PlainMessage<NotificationChannelList>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(NotificationChannelList, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.NotificationChannelPush
+ */
+export class NotificationChannelPush extends Message<NotificationChannelPush> {
+  /**
+   * @generated from field: bool enabled = 1;
+   */
+  enabled = false
+
+  constructor(data?: PartialMessage<NotificationChannelPush>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.NotificationChannelPush'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'enabled', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): NotificationChannelPush {
+    return new NotificationChannelPush().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationChannelPush {
+    return new NotificationChannelPush().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationChannelPush {
+    return new NotificationChannelPush().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | NotificationChannelPush
+      | PlainMessage<NotificationChannelPush>
+      | undefined,
+    b:
+      | NotificationChannelPush
+      | PlainMessage<NotificationChannelPush>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(NotificationChannelPush, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.FilterableNotificationPreference
+ */
+export class FilterableNotificationPreference extends Message<FilterableNotificationPreference> {
+  /**
+   * @generated from field: bsky.NotificationInclude include = 1;
+   */
+  include = NotificationInclude.UNSPECIFIED
+
+  /**
+   * @generated from field: bsky.NotificationChannelList list = 2;
+   */
+  list?: NotificationChannelList
+
+  /**
+   * @generated from field: bsky.NotificationChannelPush push = 3;
+   */
+  push?: NotificationChannelPush
+
+  constructor(data?: PartialMessage<FilterableNotificationPreference>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.FilterableNotificationPreference'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'include',
+      kind: 'enum',
+      T: proto3.getEnumType(NotificationInclude),
+    },
+    { no: 2, name: 'list', kind: 'message', T: NotificationChannelList },
+    { no: 3, name: 'push', kind: 'message', T: NotificationChannelPush },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): FilterableNotificationPreference {
+    return new FilterableNotificationPreference().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): FilterableNotificationPreference {
+    return new FilterableNotificationPreference().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): FilterableNotificationPreference {
+    return new FilterableNotificationPreference().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | FilterableNotificationPreference
+      | PlainMessage<FilterableNotificationPreference>
+      | undefined,
+    b:
+      | FilterableNotificationPreference
+      | PlainMessage<FilterableNotificationPreference>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(FilterableNotificationPreference, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.NotificationPreference
+ */
+export class NotificationPreference extends Message<NotificationPreference> {
+  /**
+   * @generated from field: bsky.NotificationChannelList list = 1;
+   */
+  list?: NotificationChannelList
+
+  /**
+   * @generated from field: bsky.NotificationChannelPush push = 2;
+   */
+  push?: NotificationChannelPush
+
+  constructor(data?: PartialMessage<NotificationPreference>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.NotificationPreference'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'list', kind: 'message', T: NotificationChannelList },
+    { no: 2, name: 'push', kind: 'message', T: NotificationChannelPush },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): NotificationPreference {
+    return new NotificationPreference().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreference {
+    return new NotificationPreference().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreference {
+    return new NotificationPreference().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | NotificationPreference
+      | PlainMessage<NotificationPreference>
+      | undefined,
+    b:
+      | NotificationPreference
+      | PlainMessage<NotificationPreference>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(NotificationPreference, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ChatNotificationPreference
+ */
+export class ChatNotificationPreference extends Message<ChatNotificationPreference> {
+  /**
+   * @generated from field: bsky.ChatNotificationInclude include = 1;
+   */
+  include = ChatNotificationInclude.UNSPECIFIED
+
+  /**
+   * @generated from field: bsky.NotificationChannelPush push = 2;
+   */
+  push?: NotificationChannelPush
+
+  constructor(data?: PartialMessage<ChatNotificationPreference>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ChatNotificationPreference'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'include',
+      kind: 'enum',
+      T: proto3.getEnumType(ChatNotificationInclude),
+    },
+    { no: 2, name: 'push', kind: 'message', T: NotificationChannelPush },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ChatNotificationPreference {
+    return new ChatNotificationPreference().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ChatNotificationPreference {
+    return new ChatNotificationPreference().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ChatNotificationPreference {
+    return new ChatNotificationPreference().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ChatNotificationPreference
+      | PlainMessage<ChatNotificationPreference>
+      | undefined,
+    b:
+      | ChatNotificationPreference
+      | PlainMessage<ChatNotificationPreference>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ChatNotificationPreference, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.NotificationPreferences
+ */
+export class NotificationPreferences extends Message<NotificationPreferences> {
+  /**
+   * @generated from field: bytes entry = 1;
+   */
+  entry = new Uint8Array(0)
+
+  /**
+   * @generated from field: bsky.ChatNotificationPreference chat = 2;
+   */
+  chat?: ChatNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference follow = 3;
+   */
+  follow?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference like = 4;
+   */
+  like?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference like_via_repost = 5;
+   */
+  likeViaRepost?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference mention = 6;
+   */
+  mention?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference quote = 7;
+   */
+  quote?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference reply = 8;
+   */
+  reply?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference repost = 9;
+   */
+  repost?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.FilterableNotificationPreference repost_via_repost = 10;
+   */
+  repostViaRepost?: FilterableNotificationPreference
+
+  /**
+   * @generated from field: bsky.NotificationPreference starterpack_joined = 11;
+   */
+  starterpackJoined?: NotificationPreference
+
+  /**
+   * @generated from field: bsky.NotificationPreference subscribed_post = 12;
+   */
+  subscribedPost?: NotificationPreference
+
+  /**
+   * @generated from field: bsky.NotificationPreference unverified = 13;
+   */
+  unverified?: NotificationPreference
+
+  /**
+   * @generated from field: bsky.NotificationPreference verified = 14;
+   */
+  verified?: NotificationPreference
+
+  constructor(data?: PartialMessage<NotificationPreferences>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.NotificationPreferences'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'entry', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 2, name: 'chat', kind: 'message', T: ChatNotificationPreference },
+    {
+      no: 3,
+      name: 'follow',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 4,
+      name: 'like',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 5,
+      name: 'like_via_repost',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 6,
+      name: 'mention',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 7,
+      name: 'quote',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 8,
+      name: 'reply',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 9,
+      name: 'repost',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 10,
+      name: 'repost_via_repost',
+      kind: 'message',
+      T: FilterableNotificationPreference,
+    },
+    {
+      no: 11,
+      name: 'starterpack_joined',
+      kind: 'message',
+      T: NotificationPreference,
+    },
+    {
+      no: 12,
+      name: 'subscribed_post',
+      kind: 'message',
+      T: NotificationPreference,
+    },
+    { no: 13, name: 'unverified', kind: 'message', T: NotificationPreference },
+    { no: 14, name: 'verified', kind: 'message', T: NotificationPreference },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): NotificationPreferences {
+    return new NotificationPreferences().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreferences {
+    return new NotificationPreferences().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): NotificationPreferences {
+    return new NotificationPreferences().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | NotificationPreferences
+      | PlainMessage<NotificationPreferences>
+      | undefined,
+    b:
+      | NotificationPreferences
+      | PlainMessage<NotificationPreferences>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(NotificationPreferences, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetNotificationPreferencesResponse
+ */
+export class GetNotificationPreferencesResponse extends Message<GetNotificationPreferencesResponse> {
+  /**
+   * @generated from field: repeated bsky.NotificationPreferences preferences = 1;
+   */
+  preferences: NotificationPreferences[] = []
+
+  constructor(data?: PartialMessage<GetNotificationPreferencesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetNotificationPreferencesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'preferences',
+      kind: 'message',
+      T: NotificationPreferences,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetNotificationPreferencesResponse {
+    return new GetNotificationPreferencesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationPreferencesResponse {
+    return new GetNotificationPreferencesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetNotificationPreferencesResponse {
+    return new GetNotificationPreferencesResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetNotificationPreferencesResponse
+      | PlainMessage<GetNotificationPreferencesResponse>
+      | undefined,
+    b:
+      | GetNotificationPreferencesResponse
+      | PlainMessage<GetNotificationPreferencesResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetNotificationPreferencesResponse, a, b)
+  }
+}
+
+/**
  * - list recent notifications for a user
  *     - notifications should include a uri for the record that caused the notif & a “reason” for the notification (reply, like, quotepost, etc)
  *     - this should include both read & unread notifs
@@ -8778,6 +9604,507 @@ export class GetUnreadNotificationCountResponse extends Message<GetUnreadNotific
       | undefined,
   ): boolean {
     return proto3.util.equals(GetUnreadNotificationCountResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionDidsRequest
+ */
+export class GetActivitySubscriptionDidsRequest extends Message<GetActivitySubscriptionDidsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActivitySubscriptionDidsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActivitySubscriptionDidsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionDidsRequest {
+    return new GetActivitySubscriptionDidsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionDidsRequest {
+    return new GetActivitySubscriptionDidsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionDidsRequest {
+    return new GetActivitySubscriptionDidsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionDidsRequest
+      | PlainMessage<GetActivitySubscriptionDidsRequest>
+      | undefined,
+    b:
+      | GetActivitySubscriptionDidsRequest
+      | PlainMessage<GetActivitySubscriptionDidsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActivitySubscriptionDidsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionDidsResponse
+ */
+export class GetActivitySubscriptionDidsResponse extends Message<GetActivitySubscriptionDidsResponse> {
+  /**
+   * @generated from field: repeated string dids = 1;
+   */
+  dids: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActivitySubscriptionDidsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActivitySubscriptionDidsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionDidsResponse {
+    return new GetActivitySubscriptionDidsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionDidsResponse {
+    return new GetActivitySubscriptionDidsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionDidsResponse {
+    return new GetActivitySubscriptionDidsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionDidsResponse
+      | PlainMessage<GetActivitySubscriptionDidsResponse>
+      | undefined,
+    b:
+      | GetActivitySubscriptionDidsResponse
+      | PlainMessage<GetActivitySubscriptionDidsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActivitySubscriptionDidsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.PostActivitySubscription
+ */
+export class PostActivitySubscription extends Message<PostActivitySubscription> {
+  constructor(data?: PartialMessage<PostActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.PostActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): PostActivitySubscription {
+    return new PostActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | PostActivitySubscription
+      | PlainMessage<PostActivitySubscription>
+      | undefined,
+    b:
+      | PostActivitySubscription
+      | PlainMessage<PostActivitySubscription>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(PostActivitySubscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ReplyActivitySubscription
+ */
+export class ReplyActivitySubscription extends Message<ReplyActivitySubscription> {
+  constructor(data?: PartialMessage<ReplyActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ReplyActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ReplyActivitySubscription {
+    return new ReplyActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ReplyActivitySubscription
+      | PlainMessage<ReplyActivitySubscription>
+      | undefined,
+    b:
+      | ReplyActivitySubscription
+      | PlainMessage<ReplyActivitySubscription>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ReplyActivitySubscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ActivitySubscription
+ */
+export class ActivitySubscription extends Message<ActivitySubscription> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string namespace = 2;
+   */
+  namespace = ''
+
+  /**
+   * @generated from field: string key = 3;
+   */
+  key = ''
+
+  /**
+   * @generated from field: optional bsky.PostActivitySubscription post = 4;
+   */
+  post?: PostActivitySubscription
+
+  /**
+   * @generated from field: optional bsky.ReplyActivitySubscription reply = 5;
+   */
+  reply?: ReplyActivitySubscription
+
+  /**
+   * @generated from field: string subject_did = 6;
+   */
+  subjectDid = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 7;
+   */
+  indexedAt?: Timestamp
+
+  constructor(data?: PartialMessage<ActivitySubscription>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ActivitySubscription'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'namespace', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'key', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 4,
+      name: 'post',
+      kind: 'message',
+      T: PostActivitySubscription,
+      opt: true,
+    },
+    {
+      no: 5,
+      name: 'reply',
+      kind: 'message',
+      T: ReplyActivitySubscription,
+      opt: true,
+    },
+    {
+      no: 6,
+      name: 'subject_did',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 7, name: 'indexed_at', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ActivitySubscription {
+    return new ActivitySubscription().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
+    b: ActivitySubscription | PlainMessage<ActivitySubscription> | undefined,
+  ): boolean {
+    return proto3.util.equals(ActivitySubscription, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionsByActorAndSubjectsRequest
+ */
+export class GetActivitySubscriptionsByActorAndSubjectsRequest extends Message<GetActivitySubscriptionsByActorAndSubjectsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: repeated string subject_dids = 2;
+   */
+  subjectDids: string[] = []
+
+  constructor(
+    data?: PartialMessage<GetActivitySubscriptionsByActorAndSubjectsRequest>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName =
+    'bsky.GetActivitySubscriptionsByActorAndSubjectsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'subject_dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsRequest {
+    return new GetActivitySubscriptionsByActorAndSubjectsRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsRequest {
+    return new GetActivitySubscriptionsByActorAndSubjectsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsRequest {
+    return new GetActivitySubscriptionsByActorAndSubjectsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionsByActorAndSubjectsRequest
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsRequest>
+      | undefined,
+    b:
+      | GetActivitySubscriptionsByActorAndSubjectsRequest
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(
+      GetActivitySubscriptionsByActorAndSubjectsRequest,
+      a,
+      b,
+    )
+  }
+}
+
+/**
+ * @generated from message bsky.GetActivitySubscriptionsByActorAndSubjectsResponse
+ */
+export class GetActivitySubscriptionsByActorAndSubjectsResponse extends Message<GetActivitySubscriptionsByActorAndSubjectsResponse> {
+  /**
+   * @generated from field: repeated bsky.ActivitySubscription subscriptions = 1;
+   */
+  subscriptions: ActivitySubscription[] = []
+
+  constructor(
+    data?: PartialMessage<GetActivitySubscriptionsByActorAndSubjectsResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName =
+    'bsky.GetActivitySubscriptionsByActorAndSubjectsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'subscriptions',
+      kind: 'message',
+      T: ActivitySubscription,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsResponse {
+    return new GetActivitySubscriptionsByActorAndSubjectsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsResponse {
+    return new GetActivitySubscriptionsByActorAndSubjectsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActivitySubscriptionsByActorAndSubjectsResponse {
+    return new GetActivitySubscriptionsByActorAndSubjectsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActivitySubscriptionsByActorAndSubjectsResponse
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsResponse>
+      | undefined,
+    b:
+      | GetActivitySubscriptionsByActorAndSubjectsResponse
+      | PlainMessage<GetActivitySubscriptionsByActorAndSubjectsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(
+      GetActivitySubscriptionsByActorAndSubjectsResponse,
+      a,
+      b,
+    )
   }
 }
 
