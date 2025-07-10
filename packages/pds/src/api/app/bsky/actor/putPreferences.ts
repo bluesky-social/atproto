@@ -39,11 +39,9 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      // @NOTE This is a "hack" that uses a fake lxm to allow for full access
       const fullAccess =
-        auth.credentials.type === 'access'
-          ? isAccessFull(auth.credentials.scope)
-          : auth.credentials.permissions.allowsRpc({ aud, lxm: `${lxm}Full` })
+        auth.credentials.type === 'access' &&
+        isAccessFull(auth.credentials.scope)
 
       await ctx.actorStore.transact(did, async (actorTxn) => {
         await actorTxn.pref.putPreferences(checkedPreferences, 'app.bsky', {

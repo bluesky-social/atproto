@@ -60,15 +60,6 @@ export class PermissionsOAuth extends PermissionSet {
       return false
     }
 
-    // @NOTE These are fictional lexicon methods used to determine if the http
-    // request has full access to the actor preferences.
-    if (lxm && lxm === `${ids.AppBskyActorGetPreferences}Full`) {
-      return false
-    }
-    if (lxm && lxm === `${ids.AppBskyActorPutPreferences}Full`) {
-      return false
-    }
-
     return this.hasTransitionGeneric
   }
 }

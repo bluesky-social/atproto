@@ -1,4 +1,4 @@
-import { AuthScope } from '../../../../auth-scope'
+import { AuthScope, isAccessFull } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -28,11 +28,9 @@ export default function (server: Server, ctx: AppContext) {
         return pipethrough(ctx, req, { iss: did, aud, lxm })
       }
 
-      // @NOTE This is a "hack" that uses a fake lxm to allow for full access
       const fullAccess =
-        auth.credentials.type === 'access'
-          ? auth.credentials.scope === AuthScope.Access
-          : auth.credentials.permissions.allowsRpc({ aud, lxm: `${lxm}Full` })
+        auth.credentials.type === 'access' &&
+        isAccessFull(auth.credentials.scope)
 
       const preferences = await ctx.actorStore.read(did, (store) => {
         return store.pref.getPreferences('app.bsky', { fullAccess })
