@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
           'This service is not configured to support push token registration.',
         )
       }
-      const { token, platform, serviceDid, appId } = input.body
+      const { token, platform, serviceDid, appId, ageRestricted } = input.body
       const did = auth.credentials.iss
       if (serviceDid !== auth.credentials.aud) {
         throw new InvalidRequestError('Invalid serviceDid.')
@@ -35,6 +35,7 @@ export default function (server: Server, ctx: AppContext) {
               ? AppPlatform.ANDROID
               : AppPlatform.WEB,
         appId,
+        ageRestricted,
       })
     },
   })

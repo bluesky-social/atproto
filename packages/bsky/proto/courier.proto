@@ -46,6 +46,7 @@ message RegisterDeviceTokenRequest {
   string token = 2;
   string app_id = 3;
   AppPlatform platform = 4;
+  bool age_restricted = 5;
 }
 
 message RegisterDeviceTokenResponse {}

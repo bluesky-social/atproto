@@ -381,6 +381,11 @@ export class RegisterDeviceTokenRequest extends Message<RegisterDeviceTokenReque
    */
   platform = AppPlatform.UNSPECIFIED
 
+  /**
+   * @generated from field: bool age_restricted = 5;
+   */
+  ageRestricted = false
+
   constructor(data?: PartialMessage<RegisterDeviceTokenRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -397,6 +402,12 @@ export class RegisterDeviceTokenRequest extends Message<RegisterDeviceTokenReque
       name: 'platform',
       kind: 'enum',
       T: proto3.getEnumType(AppPlatform),
+    },
+    {
+      no: 5,
+      name: 'age_restricted',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
     },
   ])
 
