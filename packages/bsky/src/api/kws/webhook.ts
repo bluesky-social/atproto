@@ -1,8 +1,8 @@
 import express, { RequestHandler } from 'express'
 import { httpLogger as log } from '../../logger'
 import {
-  AgeAssuranceWebhookBody,
-  AppContextWithAgeAssuranceClient,
+  AppContextWithKwsClient,
+  KwsWebhookBody,
   webhookBodyIntermediateSchema,
 } from './types'
 import {
@@ -13,7 +13,7 @@ import {
 } from './util'
 
 export const webhookAuth =
-  (ctx: AppContextWithAgeAssuranceClient): RequestHandler =>
+  (ctx: AppContextWithKwsClient): RequestHandler =>
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const body: Buffer = req.body
     const sigHeader = req.headers['x-kws-signature']
@@ -46,12 +46,12 @@ export const webhookAuth =
   }
 
 type AgeAssuranceWebhookIntermediateBody = {
-  payload: Omit<AgeAssuranceWebhookBody['payload'], 'externalPayload'> & {
+  payload: Omit<KwsWebhookBody['payload'], 'externalPayload'> & {
     externalPayload: string
   }
 }
 
-const parseBody = (serialized: string): AgeAssuranceWebhookBody => {
+const parseBody = (serialized: string): KwsWebhookBody => {
   try {
     const value: unknown = JSON.parse(serialized)
     const intermediate: AgeAssuranceWebhookIntermediateBody =
@@ -72,9 +72,9 @@ const parseBody = (serialized: string): AgeAssuranceWebhookBody => {
 }
 
 export const webhookHandler =
-  (ctx: AppContextWithAgeAssuranceClient): RequestHandler =>
+  (ctx: AppContextWithKwsClient): RequestHandler =>
   async (req: express.Request, res: express.Response) => {
-    let body: AgeAssuranceWebhookBody
+    let body: KwsWebhookBody
     try {
       body = parseBody(req.body)
     } catch (err) {
@@ -88,23 +88,15 @@ export const webhookHandler =
         externalPayload,
       },
     } = body
-    const { actorDid, attemptId, email, initIp, initUa } = externalPayload
-
+    const { actorDid, attemptId } = externalPayload
     if (!verified) {
-      log.warn(
-        { actorDid, attemptId, initIp, initUa },
-        'Unexpected KWS webhook call with unverified status',
-      )
-      return res.status(200).end()
+      throw new Error('Unexpected KWS webhook call with unverified status')
     }
 
     try {
       await createStashEvent(ctx, {
         actorDid,
         attemptId,
-        email,
-        initIp,
-        initUa,
         status: 'assured',
       })
       return res.status(200).end()

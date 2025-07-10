@@ -5,7 +5,6 @@ import { Dispatcher } from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { AgeAssuranceClient } from './age-assurance'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'
@@ -13,6 +12,7 @@ import { CourierClient } from './courier'
 import { DataPlaneClient, HostList } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
+import { KwsClient } from './kws'
 import { httpLogger as log } from './logger'
 import { StashClient } from './stash'
 import {
@@ -42,7 +42,7 @@ export class AppContext {
       authVerifier: AuthVerifier
       featureGates: FeatureGates
       blobDispatcher: Dispatcher
-      ageAssuranceClient: AgeAssuranceClient | undefined
+      kwsClient: KwsClient | undefined
     },
   ) {}
 
@@ -118,8 +118,8 @@ export class AppContext {
     return this.opts.blobDispatcher
   }
 
-  get ageAssuranceClient(): AgeAssuranceClient | undefined {
-    return this.opts.ageAssuranceClient
+  get kwsClient(): KwsClient | undefined {
+    return this.opts.kwsClient
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {

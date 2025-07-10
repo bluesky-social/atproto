@@ -1,14 +1,12 @@
 import { z } from 'zod'
-import { AgeAssuranceExternalPayload } from './api/kws/types'
+import { KwsExternalPayload } from './api/kws/types'
 import { serializeExternalPayload } from './api/kws/util'
 import { buildBasicAuth } from './auth-verifier'
 import { KwsConfig } from './config'
 import { httpLogger as log } from './logger'
 
-export const createAgeAssuranceClient = (
-  cfg: KwsConfig,
-): AgeAssuranceClient => {
-  return new AgeAssuranceClient(cfg)
+export const createKwsClient = (cfg: KwsConfig): KwsClient => {
+  return new KwsClient(cfg)
 }
 
 // Not `.strict()` to avoid breaking if KWS adds fields.
@@ -16,7 +14,7 @@ const authResponseSchema = z.object({
   access_token: z.string(),
 })
 
-export class AgeAssuranceClient {
+export class KwsClient {
   constructor(public cfg: KwsConfig) {}
 
   private async auth() {
@@ -73,7 +71,7 @@ export class AgeAssuranceClient {
   }: {
     email: string
     language: string
-    externalPayload: AgeAssuranceExternalPayload
+    externalPayload: KwsExternalPayload
   }) {
     const res = await this.fetchWithAuth(
       `${this.cfg.apiOrigin}/v1/verifications/send-email`,

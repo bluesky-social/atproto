@@ -10,7 +10,6 @@ import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { createAgeAssuranceClient } from './age-assurance'
 import API, { blobResolver, external, health, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
@@ -28,6 +27,7 @@ import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
+import { createKwsClient } from './kws'
 import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
 import { createStashClient } from './stash'
@@ -59,6 +59,7 @@ export class BskyAppView {
   }): BskyAppView {
     const { config, signingKey } = opts
     const app = express()
+    app.set('trust proxy', true)
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
@@ -151,9 +152,7 @@ export class BskyAppView {
         })
       : undefined
 
-    const ageAssuranceClient = config.kws
-      ? createAgeAssuranceClient(config.kws)
-      : undefined
+    const kwsClient = config.kws ? createKwsClient(config.kws) : undefined
 
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
@@ -191,7 +190,7 @@ export class BskyAppView {
       authVerifier,
       featureGates,
       blobDispatcher,
-      ageAssuranceClient,
+      kwsClient,
     })
 
     let server = createServer({

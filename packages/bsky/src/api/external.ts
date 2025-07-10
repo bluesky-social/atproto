@@ -5,7 +5,7 @@ import * as kwsApi from './kws'
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
 
-  if (ctx.ageAssuranceClient) {
+  if (ctx.kwsClient) {
     router.use('/kws', kwsApi.createRouter(ctx))
   }
 

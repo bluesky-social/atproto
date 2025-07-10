@@ -1,25 +1,26 @@
 import crypto from 'node:crypto'
 import { isEmailValid } from '@hapi/address'
+import { isDisposableEmail } from 'disposable-email-domains-js'
 import {
   InvalidRequestError,
   MethodNotImplementedError,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AgeAssuranceExternalPayload } from '../../../kws/types'
-import { createStashEvent, getClientIp, getClientUa } from '../../../kws/util'
+import { KwsExternalPayload } from '../../../kws/types'
+import { createStashEvent, getClientUa } from '../../../kws/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.initAgeAssurance({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input, req }) => {
-      if (!ctx.ageAssuranceClient) {
+      if (!ctx.kwsClient) {
         throw new MethodNotImplementedError(
           'This service is not configured to support age assurance.',
         )
       }
       const { email, language } = input.body
-      if (!isEmailValid(email)) {
+      if (!isEmailValid(email) || isDisposableEmail(email)) {
         throw new InvalidRequestError(
           'This email address is not supported, please use a different email.',
         )
@@ -27,17 +28,11 @@ export default function (server: Server, ctx: AppContext) {
 
       const actorDid = auth.credentials.iss
       const attemptId = crypto.randomUUID()
-      const initIp = getClientIp(req)
+      const initIp = req.ip // Assumes `app.set('trust proxy', true)`.
       const initUa = getClientUa(req)
-      const externalPayload: AgeAssuranceExternalPayload = {
-        actorDid,
-        attemptId,
-        email,
-        initIp,
-        initUa,
-      }
+      const externalPayload: KwsExternalPayload = { actorDid, attemptId }
 
-      await ctx.ageAssuranceClient.sendEmail({
+      await ctx.kwsClient.sendEmail({
         email,
         externalPayload,
         language,

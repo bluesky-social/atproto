@@ -8,8 +8,8 @@ import {
 } from '../../lexicon/types/app/bsky/unspecced/defs'
 import { Namespaces } from '../../stash'
 import {
-  AgeAssuranceExternalPayload,
-  AgeAssuranceStatus,
+  KwsExternalPayload,
+  KwsStatus,
   externalPayloadSchema,
   statusSchema,
 } from './types'
@@ -28,7 +28,7 @@ export const createStashEvent = async (
   }: {
     actorDid: string
     attemptId: string
-    email: string
+    email?: string
     initIp?: string
     initUa?: string
     completeIp?: string
@@ -78,15 +78,13 @@ export const validateSignature = (
   }
 }
 
-export const serializeExternalPayload = (
-  value: AgeAssuranceExternalPayload,
-): string => {
+export const serializeExternalPayload = (value: KwsExternalPayload): string => {
   return JSON.stringify(value)
 }
 
 export const parseExternalPayload = (
   serialized: string,
-): AgeAssuranceExternalPayload => {
+): KwsExternalPayload => {
   try {
     const value: unknown = JSON.parse(serialized)
     return externalPayloadSchema.parse(value)
@@ -95,7 +93,7 @@ export const parseExternalPayload = (
   }
 }
 
-export const parseStatus = (serialized: string): AgeAssuranceStatus => {
+export const parseStatus = (serialized: string): KwsStatus => {
   try {
     const value: unknown = JSON.parse(serialized)
     return statusSchema.parse(value)
@@ -107,17 +105,6 @@ export const parseStatus = (serialized: string): AgeAssuranceStatus => {
 export const kwsWwwAuthenticate = (): Record<string, string> => ({
   'www-authenticate': `Signature realm="kws"`,
 })
-
-export const getClientIp = (req: express.Request): string | undefined => {
-  const forwardedFor = req.headers['x-forwarded-for']
-  if (typeof forwardedFor === 'string') {
-    return forwardedFor.split(',')[0].trim()
-  }
-  if (Array.isArray(forwardedFor)) {
-    return forwardedFor[0]?.trim()
-  }
-  return undefined
-}
 
 export const getClientUa = (req: express.Request): string | undefined => {
   return req.headers['user-agent']
