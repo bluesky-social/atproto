@@ -57,8 +57,15 @@ const handleModerationEvent = async ({
     throw new InvalidRequestError('Invalid subject type')
   }
 
-  if (isAgeAssuranceOverrideEvent(event) && !subject.isRepo()) {
-    throw new InvalidRequestError('Invalid subject type')
+  if (isAgeAssuranceOverrideEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+    if (!auth.credentials.isModerator) {
+      throw new AuthRequiredError(
+        'Must be a full moderator to override age assurance',
+      )
+    }
   }
 
   // if less than moderator access then can only take ack and escalation actions
