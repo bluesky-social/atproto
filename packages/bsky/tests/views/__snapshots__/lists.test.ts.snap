@@ -4,6 +4,11 @@ exports[`bsky actor likes feed views does include users with creator block relat
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "frankie.test",
       "labels": Array [],
@@ -16,6 +21,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -33,6 +43,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(3)",
       "handle": "eve.test",
       "labels": Array [],
@@ -50,6 +65,11 @@ exports[`bsky actor likes feed views does include users with creator block relat
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "frankie.test",
       "labels": Array [],
@@ -62,6 +82,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -79,6 +104,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(3)",
       "handle": "eve.test",
       "labels": Array [],
@@ -97,6 +127,11 @@ Array [
   Object {
     "cid": "cids(0)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
@@ -111,6 +146,11 @@ Array [
   Object {
     "cid": "cids(1)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
@@ -129,6 +169,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -142,6 +187,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -155,6 +205,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -168,6 +223,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -181,6 +241,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -198,6 +263,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -216,6 +286,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -233,6 +308,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -251,6 +331,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -268,6 +353,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -285,6 +375,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -302,6 +397,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -319,6 +419,11 @@ exports[`bsky actor likes feed views does return all users regardless of creator
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "greta.test",
       "labels": Array [],
@@ -331,6 +436,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(1)",
       "handle": "frankie.test",
       "labels": Array [],
@@ -349,6 +459,11 @@ Array [
   Object {
     "cid": "cids(0)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
@@ -363,6 +478,11 @@ Array [
   Object {
     "cid": "cids(1)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],

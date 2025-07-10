@@ -191,3 +191,41 @@ const memberRoles = new Set([
   ROLETRIAGE,
   ROLEVERIFIER,
 ])
+
+export const getSafelinkPattern = (pattern: string): SafelinkPatternType => {
+  if (safelinkPatterns.has(pattern)) {
+    return pattern as SafelinkPatternType
+  }
+  throw new InvalidRequestError('Invalid safelink pattern type')
+}
+
+export const getSafelinkAction = (action: string): SafelinkActionType => {
+  if (safelinkActions.has(action)) {
+    return action as SafelinkActionType
+  }
+  throw new InvalidRequestError('Invalid safelink action type')
+}
+
+export const getSafelinkReason = (reason: string): SafelinkReasonType => {
+  if (safelinkReasons.has(reason)) {
+    return reason as SafelinkReasonType
+  }
+  throw new InvalidRequestError('Invalid safelink reason type')
+}
+
+export const getSafelinkEventType = (eventType: string): SafelinkEventType => {
+  if (safelinkEventTypes.has(eventType)) {
+    return eventType as SafelinkEventType
+  }
+  throw new InvalidRequestError('Invalid safelink event type')
+}
+
+export type SafelinkEventType = 'addRule' | 'updateRule' | 'removeRule'
+export type SafelinkPatternType = 'domain' | 'url'
+export type SafelinkActionType = 'block' | 'warn' | 'whitelist'
+export type SafelinkReasonType = 'csam' | 'spam' | 'phishing' | 'none'
+
+const safelinkPatterns = new Set(['domain', 'url'])
+const safelinkActions = new Set(['block', 'warn', 'whitelist'])
+const safelinkReasons = new Set(['csam', 'spam', 'phishing', 'none'])
+const safelinkEventTypes = new Set(['addRule', 'updateRule', 'removeRule'])

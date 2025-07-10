@@ -16,11 +16,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.temp.fetchLabels'
 
-export interface QueryParams {
+export type QueryParams = {
   since?: number
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

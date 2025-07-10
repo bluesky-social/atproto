@@ -54,6 +54,7 @@ export interface ModEventView {
   createdAt: string
   creatorHandle?: string
   subjectHandle?: string
+  modTool?: ModTool
 }
 
 const hashModEventView = 'modEventView'
@@ -99,6 +100,7 @@ export interface ModEventViewDetail {
   subjectBlobs: BlobView[]
   createdBy: string
   createdAt: string
+  modTool?: ModTool
 }
 
 const hashModEventViewDetail = 'modEventViewDetail'
@@ -892,4 +894,23 @@ export function isReporterStats<V>(v: V) {
 
 export function validateReporterStats<V>(v: V) {
   return validate<ReporterStats & V>(v, id, hashReporterStats)
+}
+
+/** Moderation tool information for tracing the source of the action */
+export interface ModTool {
+  $type?: 'tools.ozone.moderation.defs#modTool'
+  /** Name/identifier of the source (e.g., 'automod', 'ozone/workspace') */
+  name: string
+  /** Additional arbitrary metadata about the source */
+  meta?: { [_ in string]: unknown }
+}
+
+const hashModTool = 'modTool'
+
+export function isModTool<V>(v: V) {
+  return is$typed(v, id, hashModTool)
+}
+
+export function validateModTool<V>(v: V) {
+  return validate<ModTool & V>(v, id, hashModTool)
 }

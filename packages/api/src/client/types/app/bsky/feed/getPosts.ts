@@ -16,11 +16,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getPosts'
 
-export interface QueryParams {
+export type QueryParams = {
   /** List of post AT-URIs to return hydrated views for. */
   uris: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

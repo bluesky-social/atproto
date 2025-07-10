@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const requester =
         'iss' in auth.credentials ? auth.credentials.iss : ctx.cfg.service.did
-      const { reasonType, reason } = input.body
+      const { reasonType, reason, modTool } = input.body
       const subject = subjectFromInput(input.body.subject)
 
       // If the report is an appeal, the requester must be the author of the subject
@@ -37,6 +37,7 @@ export default function (server: Server, ctx: AppContext) {
             reason,
             subject,
             reportedBy: requester || ctx.cfg.service.did,
+            modTool,
           })
 
         const tagService = new TagService(
