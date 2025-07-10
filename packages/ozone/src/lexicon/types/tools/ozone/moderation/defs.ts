@@ -152,7 +152,13 @@ export interface SubjectStatusView {
   accountStats?: AccountStats
   recordsStats?: RecordsStats
   /** Current age assurance state of the subject. */
-  ageAssuranceState?: 'pending' | 'assured' | 'unknown' | (string & {})
+  ageAssuranceState?:
+    | 'pending'
+    | 'assured'
+    | 'unknown'
+    | 'reset'
+    | 'blocked'
+    | (string & {})
   /** Whether or not the last successful update to age assurance was made by the user or admin. */
   ageAssuranceUpdatedBy?: 'admin' | 'user' | (string & {})
 }
@@ -427,7 +433,7 @@ export function validateAgeAssuranceEvent<V>(v: V) {
 export interface AgeAssuranceOverrideEvent {
   $type?: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
   /** The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state. */
-  status: 'assured' | 'reset' | (string & {})
+  status: 'assured' | 'reset' | 'blocked' | (string & {})
   /** Comment describing the reason for the override. */
   comment: string
 }

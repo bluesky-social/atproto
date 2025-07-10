@@ -122,7 +122,8 @@
           },
           "ageAssuranceState": {
             "type": "string",
-            "description": "If specified, only events where the age assurance state matches the given value are returned"
+            "description": "If specified, only events where the age assurance state matches the given value are returned",
+            "knownValues": ["pending", "assured", "unknown", "reset", "blocked"]
           },
           "cursor": {
             "type": "string"

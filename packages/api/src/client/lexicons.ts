@@ -13757,7 +13757,7 @@ export const schemaDict = {
           ageAssuranceState: {
             type: 'string',
             description: 'Current age assurance state of the subject.',
-            knownValues: ['pending', 'assured', 'unknown'],
+            knownValues: ['pending', 'assured', 'unknown', 'reset', 'blocked'],
           },
           ageAssuranceUpdatedBy: {
             type: 'string',
@@ -14068,7 +14068,7 @@ export const schemaDict = {
             type: 'string',
             description:
               'The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.',
-            knownValues: ['assured', 'reset'],
+            knownValues: ['assured', 'reset', 'blocked'],
           },
           comment: {
             type: 'string',
@@ -15218,6 +15218,13 @@ export const schemaDict = {
               type: 'string',
               description:
                 'If specified, only events where the age assurance state matches the given value are returned',
+              knownValues: [
+                'pending',
+                'assured',
+                'unknown',
+                'reset',
+                'blocked',
+              ],
             },
             cursor: {
               type: 'string',
@@ -15453,6 +15460,13 @@ export const schemaDict = {
               type: 'string',
               description:
                 'If specified, only subjects with the given age assurance state will be returned.',
+              knownValues: [
+                'pending',
+                'assured',
+                'unknown',
+                'reset',
+                'blocked',
+              ],
             },
           },
         },
