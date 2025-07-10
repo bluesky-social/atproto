@@ -52,7 +52,7 @@ export type VerifiedOptions = {
 }
 
 export type ScopedOptions<S extends AuthScope = AuthScope> = {
-  scopes: readonly S[]
+  scopes?: readonly S[]
 }
 
 export type ExtraScopedOptions<S extends AuthScope = AuthScope> = {
@@ -60,7 +60,7 @@ export type ExtraScopedOptions<S extends AuthScope = AuthScope> = {
 }
 
 export type AuthorizedOptions<P extends Params = Params> = {
-  authorize?: (
+  authorize: (
     permissions: PermissionSet,
     ctx: MethodAuthContext<P>,
   ) => Awaitable<void>
@@ -114,6 +114,15 @@ export class AuthVerifier {
 
   public unauthenticated: MethodAuthVerifier<UnauthenticatedOutput> = (ctx) => {
     setAuthHeaders(ctx.res)
+
+    // @NOTE this auth method is typically used as fallback when no other auth
+    // method is applicable. This means that the presence of an "authorization"
+    // header means that that header is invalid (as it did not match any of the
+    // other auth methods).
+    if (ctx.req.headers['authorization']) {
+      throw new AuthRequiredError('Invalid authorization header', 'AuthMissing')
+    }
+
     return {
       credentials: null,
     }
@@ -121,7 +130,7 @@ export class AuthVerifier {
 
   public adminToken: MethodAuthVerifier<AdminTokenOutput> = async (ctx) => {
     setAuthHeaders(ctx.res)
-    const parsed = parseBasicAuth(ctx.req.headers.authorization)
+    const parsed = parseBasicAuth(ctx.req.headers['authorization'])
     if (!parsed) {
       throw new AuthRequiredError()
     }
@@ -159,9 +168,9 @@ export class AuthVerifier {
     }
 
   public access<S extends AuthScope>(
-    options: VerifiedOptions & ScopedOptions<S>,
+    options: VerifiedOptions & Required<ScopedOptions<S>>,
   ): MethodAuthVerifier<AccessOutput<S>> {
-    const { scopes, ...verifyStatusOptions } = options
+    const { scopes, ...statusOptions } = options
 
     const verifyJwtOptions: VerifyBearerJwtOptions<S> = {
       audience: this.dids.pds,
@@ -169,20 +178,20 @@ export class AuthVerifier {
       scopes:
         // @NOTE We can reject taken down credentials based on the scope if
         // "checkTakedown" is set.
-        verifyStatusOptions.checkTakedown &&
-        scopes.includes(AuthScope.Takendown as S)
+        statusOptions.checkTakedown && scopes.includes(AuthScope.Takendown as S)
           ? scopes.filter((s) => s !== AuthScope.Takendown)
           : scopes,
     }
 
     return async (ctx) => {
       setAuthHeaders(ctx.res)
+
       const { sub: did, scope } = await this.verifyBearerJwt(
         ctx.req,
         verifyJwtOptions,
       )
 
-      await this.verifyStatus(did, verifyStatusOptions)
+      await this.verifyStatus(did, statusOptions)
 
       return {
         credentials: { type: 'access', did, scope },
@@ -247,9 +256,9 @@ export class AuthVerifier {
     authorize,
     ...options
   }: VerifiedOptions &
-    Partial<ScopedOptions> &
+    ScopedOptions &
     ExtraScopedOptions &
-    AuthorizedOptions<P> = {}): MethodAuthVerifier<
+    AuthorizedOptions<P>): MethodAuthVerifier<
     AccessOutput | AuthorizationOutput,
     P
   > {
@@ -260,14 +269,15 @@ export class AuthVerifier {
     const oauth = this.oauth(options)
 
     return async (ctx) => {
-      const [type] = parseAuthorizationHeader(ctx.req.headers.authorization)
+      const [type] = parseAuthorizationHeader(ctx.req.headers['authorization'])
 
       if (type === AuthType.BEARER) return access(ctx)
 
       if (type === AuthType.DPOP) {
         const { credentials } = excludeErrorResult(await oauth(ctx))
         const permissions = new PermissionsOAuth(credentials.tokenClaims)
-        if (authorize) await authorize(permissions, ctx)
+
+        await authorize(permissions, ctx)
 
         return {
           credentials: {
@@ -294,7 +304,7 @@ export class AuthVerifier {
   }
 
   public authorizationOrAdminTokenOptional<P extends Params>(
-    opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P> = {},
+    opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P>,
   ): MethodAuthVerifier<
     | AuthorizationOutput
     | AccessOutput
@@ -305,9 +315,9 @@ export class AuthVerifier {
     const authorization = this.authorization(opts)
     return async (ctx) => {
       if (isAccessToken(ctx.req)) {
-        return await authorization(ctx)
+        return authorization(ctx)
       } else if (isBasicToken(ctx.req)) {
-        return await this.adminToken(ctx)
+        return this.adminToken(ctx)
       } else {
         return this.unauthenticated(ctx)
       }
@@ -338,7 +348,10 @@ export class AuthVerifier {
   }
 
   public authorizationOrUserServiceAuth<P extends Params>(
-    options: Partial<VerifiedOptions & AuthorizedOptions<P>> = {},
+    options: VerifiedOptions &
+      ScopedOptions &
+      ExtraScopedOptions &
+      AuthorizedOptions<P>,
   ): MethodAuthVerifier<
     UserServiceAuthOutput | AuthorizationOutput | AccessOutput,
     P
@@ -626,17 +639,17 @@ const parseAuthorizationHeader = (
 }
 
 const isAccessToken = (req: IncomingMessage): boolean => {
-  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  const [type] = parseAuthorizationHeader(req.headers['authorization'])
   return type === AuthType.BEARER || type === AuthType.DPOP
 }
 
 const isBearerToken = (req: IncomingMessage): boolean => {
-  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  const [type] = parseAuthorizationHeader(req.headers['authorization'])
   return type === AuthType.BEARER
 }
 
 const isBasicToken = (req: IncomingMessage): boolean => {
-  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  const [type] = parseAuthorizationHeader(req.headers['authorization'])
   return type === AuthType.BASIC
 }
 
@@ -653,7 +666,7 @@ const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
 }
 
 const bearerTokenFromReq = (req: IncomingMessage) => {
-  const [type, token] = parseAuthorizationHeader(req.headers.authorization)
+  const [type, token] = parseAuthorizationHeader(req.headers['authorization'])
   return type === AuthType.BEARER ? token : null
 }
 

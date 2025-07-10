@@ -10,7 +10,11 @@ import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord({
-    auth: ctx.authVerifier.authorizationOrAdminTokenOptional(),
+    auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
+      authorize: () => {
+        // always allow
+      },
+    }),
     handler: async ({ params, auth }) => {
       const { did, collection, rkey } = params
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))

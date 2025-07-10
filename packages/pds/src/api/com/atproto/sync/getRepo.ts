@@ -15,6 +15,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       additional: [AuthScope.Takendown],
+      authorize: () => {
+        // always allow
+      },
     }),
     handler: async ({ params, auth }) => {
       const { did, since } = params
