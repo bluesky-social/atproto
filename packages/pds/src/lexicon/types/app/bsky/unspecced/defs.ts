@@ -205,7 +205,7 @@ export interface AgeAssuranceState {
   /** The timestamp when this state was last updated. */
   lastInitiatedAt?: string
   /** The status of the age assurance process. */
-  status: 'unknown' | 'pending' | 'assured' | (string & {})
+  status: 'unknown' | 'pending' | 'assured' | 'blocked' | (string & {})
 }
 
 const hashAgeAssuranceState = 'ageAssuranceState'

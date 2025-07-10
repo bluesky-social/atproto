@@ -10689,7 +10689,7 @@ export const schemaDict = {
           status: {
             type: 'string',
             description: 'The status of the age assurance process.',
-            knownValues: ['unknown', 'pending', 'assured'],
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
           },
         },
       },
