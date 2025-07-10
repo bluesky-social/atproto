@@ -12,7 +12,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
     auth: ctx.authVerifier.authorization({
       additional: [AuthScope.SignupQueued],
-      authorize: (permissions) => permissions.assertAccount({}),
+      authorize: () => {
+        // Always allowed. "email" access is checked in the handler.
+      },
     }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
@@ -68,7 +70,7 @@ function output(
 ): ComAtprotoServerGetSession.OutputSchema {
   if (
     credentials.type === 'permissions' &&
-    !credentials.permissions.allowsAccount({ email: true })
+    !credentials.permissions.allowsAccount({ feature: 'email' })
   ) {
     const { email, emailAuthFactor, emailConfirmed, ...rest } = data
     return rest

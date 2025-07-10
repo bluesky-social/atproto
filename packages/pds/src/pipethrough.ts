@@ -24,10 +24,10 @@ import { isAccessPrivileged } from './auth-scope'
 import { AppContext } from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
-import { RpcOptions } from './permissions'
+import { RpcScopeMatch } from './permissions'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
-  const performAuth = ctx.authVerifier.authorization<RpcOptions>({
+  const performAuth = ctx.authVerifier.authorization<RpcScopeMatch>({
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
 
@@ -209,9 +209,8 @@ export function computeProxyTo(
   if (proxyToHeader) return proxyToHeader
 
   const service = defaultService(ctx, lxm)
-  if (service) {
-    const serviceId = lxm.startsWith('app.bsky.') ? `bsky_appview` : null
-    return `${service.did}${serviceId ? `#${serviceId}` : ''}`
+  if (service.serviceInfo) {
+    return `${service.serviceInfo.did}#${service.serviceId}`
   }
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
@@ -227,8 +226,8 @@ export async function parseProxyInfo(
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
-  const defaultProxy = defaultService(ctx, lxm)
-  if (defaultProxy) return defaultProxy
+  const { serviceInfo } = defaultService(ctx, lxm)
+  if (serviceInfo) return serviceInfo
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -547,7 +546,10 @@ export const PROTECTED_METHODS = new Set<string>([
 const defaultService = (
   ctx: AppContext,
   nsid: string,
-): { url: string; did: string } | null => {
+): {
+  serviceId: string
+  serviceInfo: { url: string; did: string } | null
+} => {
   switch (nsid) {
     case ids.ToolsOzoneTeamAddMember:
     case ids.ToolsOzoneTeamDeleteMember:
@@ -572,11 +574,20 @@ const defaultService = (
     case ids.ToolsOzoneSafelinkRemoveRule:
     case ids.ToolsOzoneSafelinkQueryEvents:
     case ids.ToolsOzoneSafelinkQueryRules:
-      return ctx.cfg.modService
+      return {
+        serviceId: 'atproto_labeler',
+        serviceInfo: ctx.cfg.modService,
+      }
     case ids.ComAtprotoModerationCreateReport:
-      return ctx.cfg.reportService
+      return {
+        serviceId: 'atproto_labeler',
+        serviceInfo: ctx.cfg.reportService,
+      }
     default:
-      return ctx.cfg.bskyAppView
+      return {
+        serviceId: 'bsky_appview',
+        serviceInfo: ctx.cfg.bskyAppView,
+      }
   }
 }
 

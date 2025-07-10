@@ -20,7 +20,9 @@ export default function (server: Server, ctx: AppContext) {
     ],
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
-      authorize: (permissions) => permissions.assertAccount({ email: true }),
+      authorize: (permissions) => {
+        permissions.assertAccount({ feature: 'email' })
+      },
     }),
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did

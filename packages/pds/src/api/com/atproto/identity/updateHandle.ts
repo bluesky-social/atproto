@@ -9,7 +9,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
-      authorize: (permissions) => permissions.assertIdentity({ handle: true }),
+      authorize: (permissions) => {
+        permissions.assertIdentity({ feature: 'handle' })
+      },
     }),
     rateLimit: [
       {

@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       scopes: ACCESS_FULL,
       additional: [AuthScope.Takendown],
       authorize: (permissions) => {
-        permissions.assertIdentity({ plcOpRequest: true })
+        permissions.assertIdentity({ feature: 'plc-unsafe' })
       },
     }),
     handler: async ({ auth, req }) => {

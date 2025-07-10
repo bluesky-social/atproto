@@ -1,75 +1,73 @@
 import { ForbiddenError } from '@atproto/xrpc-server'
+import { AccountScope, AccountScopeMatch } from './resources/account-scope'
+import { BlobScope, BlobScopeMatch } from './resources/blob-scope'
+import { IdentityScope, IdentityScopeMatch } from './resources/identity-scope'
+import { RepoScope, RepoScopeMatch } from './resources/repo-scope'
+import { RpcScope, RpcScopeMatch } from './resources/rpc-scope'
+import { ScopesSet } from './scopes-set'
 
-export type AccountOptions = {
-  email?: boolean
-}
-export type IdentityOptions = {
-  plcOp?: boolean
-  plcOpRequest?: boolean
-  handle?: boolean
-}
-export type RepoOptions = {
-  collection: string
-  action: 'create' | 'update' | 'delete' | '*'
-}
-export type RpcOptions = {
-  aud: string
-  lxm?: string
+export type {
+  AccountScopeMatch,
+  BlobScopeMatch,
+  IdentityScopeMatch,
+  RepoScopeMatch,
+  RpcScopeMatch,
 }
 
-export abstract class PermissionSet {
-  abstract allowsAccount(options: AccountOptions): boolean
-  public assertAccount(options: AccountOptions): void {
+export class PermissionSet {
+  public readonly scopes: ScopesSet
+
+  constructor(scopes?: null | Iterable<string>) {
+    this.scopes = new ScopesSet(scopes)
+  }
+
+  public allowsAccount(options: AccountScopeMatch): boolean {
+    return this.scopes.matches('account', options)
+  }
+  public assertAccount(options: AccountScopeMatch): void {
     if (!this.allowsAccount(options)) {
-      throw new ForbiddenError(
-        options.email
-          ? 'Email access is forbidden'
-          : 'Access to account is forbidden',
-      )
+      const scope = AccountScope.scopeNeededFor(options)
+      throw new ForbiddenError(`Missing scope "${scope}"`)
     }
   }
 
-  abstract allowsIdentity(options: IdentityOptions): boolean
-  public assertIdentity(options: IdentityOptions): void {
+  public allowsIdentity(options: IdentityScopeMatch): boolean {
+    return this.scopes.matches('identity', options)
+  }
+  public assertIdentity(options: IdentityScopeMatch): void {
     if (!this.allowsIdentity(options)) {
-      const actionsName = options.plcOpRequest
-        ? 'PLC operation request'
-        : options.plcOp
-          ? 'PLC operation'
-          : options.handle
-            ? 'handle update'
-            : null
-      throw new ForbiddenError(
-        actionsName
-          ? `Missing identity permission to access ${actionsName}`
-          : 'Access to identity is forbidden',
-      )
+      const scope = IdentityScope.scopeNeededFor(options)
+      throw new ForbiddenError(`Missing scope "${scope}"`)
     }
   }
 
-  abstract allowsBlob(): boolean
-  public assertBlob(): void {
-    if (!this.allowsBlob()) {
-      throw new ForbiddenError('Blob upload not allowed')
+  public allowsBlob(options: BlobScopeMatch): boolean {
+    return this.scopes.matches('blob', options)
+  }
+  public assertBlob(options: BlobScopeMatch): void {
+    if (!this.allowsBlob(options)) {
+      const scope = BlobScope.scopeNeededFor(options)
+      throw new ForbiddenError(`Missing scope "blob", "blob:*/*" or "${scope}"`)
     }
   }
 
-  abstract allowsRepo(options: RepoOptions): boolean
-  public assertRepo(options: RepoOptions): void {
+  public allowsRepo(options: RepoScopeMatch): boolean {
+    return this.scopes.matches('repo', options)
+  }
+  public assertRepo(options: RepoScopeMatch): void {
     if (!this.allowsRepo(options)) {
-      throw new ForbiddenError(
-        `Access (${options.action}) to collection "${options.collection}" is forbidden`,
-      )
+      const scope = RepoScope.scopeNeededFor(options)
+      throw new ForbiddenError(`Missing scope "${scope}"`)
     }
   }
 
-  abstract allowsRpc(options: RpcOptions): boolean
-  public assertRpc(options: RpcOptions): void {
+  public allowsRpc(options: RpcScopeMatch): boolean {
+    return this.scopes.matches('rpc', options)
+  }
+  public assertRpc(options: RpcScopeMatch): void {
     if (!this.allowsRpc(options)) {
-      const { aud, lxm } = options
-      throw new ForbiddenError(
-        `Authentication ${lxm ? `using method "${lxm}" ` : ''}against "${aud}" is forbidden`,
-      )
+      const scope = RpcScope.scopeNeededFor(options)
+      throw new ForbiddenError(`Missing scope "${scope}"`)
     }
   }
 }

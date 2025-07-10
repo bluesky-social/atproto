@@ -42,7 +42,7 @@ import {
 } from './auth-scope'
 import { softDeleted } from './db'
 import { oauthLogger } from './logger'
-import { PermissionSet, PermissionsOAuth } from './permissions/index.js'
+import { PermissionSet, PermissionSetTransition } from './permissions/index.js'
 import { appendVary } from './util/http'
 import { WithRequired } from './util/types'
 
@@ -275,7 +275,17 @@ export class AuthVerifier {
 
       if (type === AuthType.DPOP) {
         const { credentials } = excludeErrorResult(await oauth(ctx))
-        const permissions = new PermissionsOAuth(credentials.tokenClaims)
+        const permissions = new PermissionSetTransition(
+          credentials.tokenClaims.scope?.split(' '),
+        )
+
+        // Should never happen
+        if (!permissions.scopes.has('atproto')) {
+          throw new InvalidRequestError(
+            'OAuth token does not have "atproto" scope',
+            'InvalidToken',
+          )
+        }
 
         await authorize(permissions, ctx)
 

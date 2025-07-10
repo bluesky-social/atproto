@@ -8,7 +8,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
     auth: ctx.authVerifier.authorizationOrUserServiceAuth({
       checkTakedown: true,
-      authorize: (permissions) => permissions.assertBlob(),
+      authorize: () => {
+        // Checked in the handler, as it requires the mime type
+      },
     }),
     rateLimit: {
       durationMs: DAY,
@@ -33,6 +35,12 @@ export default function (server: Server, ctx: AppContext) {
               )
             }
             throw err
+          }
+
+          if (auth.credentials.type === 'permissions') {
+            auth.credentials.permissions.assertBlob({
+              mime: metadata.mimeType,
+            })
           }
 
           return store.transact(async (actorTxn) => {
