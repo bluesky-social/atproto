@@ -454,9 +454,9 @@ export const adjustModerationSubjectStatus = async (
     if (typeof meta?.status === 'string') {
       newStatus.ageAssuranceState = meta.status
       subjectStatus.ageAssuranceState = meta.status
+      newStatus.ageAssuranceUpdatedBy = 'admin'
+      subjectStatus.ageAssuranceUpdatedBy = 'admin'
     }
-    newStatus.ageAssuranceUpdatedBy = 'admin'
-    subjectStatus.ageAssuranceUpdatedBy = 'admin'
   }
 
   if (blobCids?.length) {

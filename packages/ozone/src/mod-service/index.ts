@@ -301,7 +301,10 @@ export class ModerationService {
     }
     if (ageAssuranceState) {
       builder = builder
-        .where('action', '=', 'tools.ozone.moderation.defs#ageAssuranceEvent')
+        .where('action', 'in', [
+          'tools.ozone.moderation.defs#ageAssuranceEvent',
+          'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+        ])
         .where(sql`meta->>'status'`, '=', ageAssuranceState)
     }
 
