@@ -130,19 +130,6 @@ export class RequestManager {
       )
     }
 
-    // Every scope requested by the client must be defined in the client
-    // metadata.
-    if (parameters.scope) {
-      for (const scope of parameters.scope.split(' ')) {
-        if (!this.metadata.scopes_supported?.includes(scope)) {
-          throw new AuthorizationError(
-            parameters,
-            `Scope "${scope}" is not supported by this server`,
-          )
-        }
-      }
-    }
-
     if (parameters.authorization_details) {
       for (const detail of parameters.authorization_details) {
         if (

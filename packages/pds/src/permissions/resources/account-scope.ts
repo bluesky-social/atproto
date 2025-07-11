@@ -28,7 +28,10 @@ export class AccountScope {
 
   static fromString(scope: string): AccountScope | null {
     const parsed = ParsedResourceScope.fromString(scope)
+    return this.fromParsed(parsed)
+  }
 
+  static fromParsed(parsed: ParsedResourceScope): AccountScope | null {
     if (!parsed.is('account')) return null
 
     const features = parsed.getMulti('feature', true)

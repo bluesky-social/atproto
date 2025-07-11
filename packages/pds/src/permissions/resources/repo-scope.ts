@@ -41,7 +41,10 @@ export class RepoScope {
 
   static fromString(scope: string): RepoScope | null {
     const parsed = ParsedResourceScope.fromString(scope)
+    return this.fromParsed(parsed)
+  }
 
+  static fromParsed(parsed: ParsedResourceScope): RepoScope | null {
     if (!parsed.is('repo')) return null
 
     const collection = parsed.getSingle('collection', true)

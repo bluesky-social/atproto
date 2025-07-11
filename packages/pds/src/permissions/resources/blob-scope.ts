@@ -44,7 +44,10 @@ export class BlobScope {
 
   static fromString(scope: string): BlobScope | null {
     const parsed = ParsedResourceScope.fromString(scope)
+    return this.fromParsed(parsed)
+  }
 
+  static fromParsed(parsed: ParsedResourceScope): BlobScope | null {
     if (!parsed.is('blob')) return null
 
     const accept = parsed.getMulti('accept', true)

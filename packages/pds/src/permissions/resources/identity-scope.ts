@@ -36,7 +36,10 @@ export class IdentityScope {
 
   static fromString(scope: string): IdentityScope | null {
     const parsed = ParsedResourceScope.fromString(scope)
+    return this.fromParsed(parsed)
+  }
 
+  static fromParsed(parsed: ParsedResourceScope): IdentityScope | null {
     if (!parsed.is('identity')) return null
 
     const features = parsed.getMulti('feature', true)

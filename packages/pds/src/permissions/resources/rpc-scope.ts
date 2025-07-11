@@ -30,7 +30,10 @@ export class RpcScope {
 
   static fromString(scope: string): RpcScope | null {
     const parsed = ParsedResourceScope.fromString(scope)
+    return this.fromParsed(parsed)
+  }
 
+  static fromParsed(parsed: ParsedResourceScope): RpcScope | null {
     if (!parsed.is('rpc')) return null
 
     const aud = parsed.getSingle('aud', true)
