@@ -31,11 +31,7 @@ export class IdentityScope {
   }
 
   toString(): string {
-    return formatScope('identity', { feature: this.features }, 'feature')
-  }
-
-  static scopeNeededFor(options: IdentityScopeMatch): string {
-    return new IdentityScope([options.feature]).toString()
+    return formatScope('identity', [['feature', this.features]])
   }
 
   static fromString(scope: string): IdentityScope | null {
@@ -56,5 +52,9 @@ export class IdentityScope {
     return new IdentityScope(
       features as [IdentityScopeFeatures, ...IdentityScopeFeatures[]],
     )
+  }
+
+  static scopeNeededFor(options: IdentityScopeMatch): string {
+    return new IdentityScope([options.feature]).toString()
   }
 }

@@ -22,7 +22,10 @@ export class RpcScope {
 
   toString(): string {
     const { aud, lxm } = this
-    return formatScope('rpc', { aud, lxm }, 'aud')
+    return formatScope('rpc', [
+      ['aud', aud],
+      ['lxm', lxm],
+    ])
   }
 
   static fromString(scope: string): RpcScope | null {

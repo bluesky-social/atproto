@@ -40,7 +40,7 @@ export class ParsedResourceScope<R extends string = string> {
     return this.resource === (resource as string)
   }
 
-  containsParamsOtherThan(allowedParam: readonly string[]): boolean {
+  containsParamsOtherThan(allowedParam: NeRoArray<string>): boolean {
     const { params } = this
     if (params) {
       for (const key of params.keys()) {
@@ -89,18 +89,15 @@ export class ParsedResourceScope<R extends string = string> {
    * incorrect (i.e. there is bot a positional and named parameter), it will
    * return `null`.
    */
-  getMulti(
-    name: string,
-    isPositional?: false,
-  ): readonly [string, ...string[]] | undefined
+  getMulti(name: string, isPositional?: false): NeRoArray<string> | undefined
   getMulti(
     name: string,
     isPositional: true, // Only if this arg is true, will this method return null
-  ): readonly [string, ...string[]] | null | undefined
+  ): NeRoArray<string> | null | undefined
   getMulti(
     name: string,
     isPositional = false,
-  ): readonly [string, ...string[]] | null | undefined {
+  ): NeRoArray<string> | null | undefined {
     const { params } = this
     const values =
       params != null && params.has(name)
@@ -154,12 +151,13 @@ export class ParsedResourceScope<R extends string = string> {
     ) as R
     const positional =
       colonIdx !== -1
-        ? decodeURIComponent(
+        ? // There is a positional parameter, extract it
+          decodeURIComponent(
             paramIdx === -1
               ? scope.slice(colonIdx + 1)
               : scope.slice(colonIdx + 1, paramIdx),
           )
-        : undefined // None
+        : undefined
     const params =
       paramIdx !== -1 && paramIdx < scope.length - 1
         ? // There is a (non-empty) query string, parse it
@@ -174,43 +172,57 @@ const minIdx = (a: number, b: number): number =>
   a === -1 ? b : b === -1 ? a : Math.min(a, b)
 
 /**
- * Format a scope string for a resource with parameters.
+ * Format a scope string for a resource with parameters
+ *
+ * @param resource - The resource name (e.g. `rpc`, `repo`, etc.)
+ * @param params - The list of parameters. The first parameter will be formatted
+ * as a positional parameter, if possible (if ti has only one value).
  */
-export function formatScope<
-  P extends Record<string, undefined | string | NeRoArray<string>>,
->(resource: string, params: P, positionalName?: keyof P) {
+export function formatScope(
+  resource: string,
+  params: ReadonlyArray<
+    [name: string, value: undefined | string | NeRoArray<string>]
+  >,
+): string {
   let positional: string | undefined = undefined
   const queryParams = new URLSearchParams()
 
-  for (const key in params) {
-    const value = params[key]
+  for (let i = 0; i < params.length; i++) {
+    const value = params[i][1]
     if (value === undefined) continue
 
+    const name = params[i][0]
+    const isPositional = i === 0
+
     if (typeof value === 'string') {
-      if (key === positionalName) {
+      if (isPositional) {
         positional = value
       } else {
-        queryParams.append(key, value)
+        queryParams.append(name, value)
       }
     } else {
-      // value is "readonly string[]"
+      // value is "readonly [string, ...string[]]"
       if (value.length === 0) {
-        // Because some scope default to "*" (allow everything) when a parameter
-        // is not specified, let's be safe.
+        // This should never happen (because "value" is supposed to be a
+        // non-empty array). Because some scope default to "*" (allow
+        // everything) when a parameter is not specified, we'd rather be safe
+        // here.
         throw new Error(
-          `Invalid scope: parameter "${key}" cannot be an empty array`,
+          `Invalid scope: parameter "${name}" cannot be an empty array`,
         )
-      } else if (value.length === 1 && key === positionalName) {
+      } else if (isPositional && value.length === 1) {
         positional = value[0]!
       } else {
-        for (const v of value) queryParams.append(key, v)
+        for (const v of value) {
+          queryParams.append(name, v)
+        }
       }
     }
   }
 
-  const query = queryParams.size ? `?${queryParams.toString()}` : ''
+  const queryString = queryParams.size ? `?${queryParams.toString()}` : ''
 
   return positional != null
-    ? `${resource}:${encodeURIComponent(positional)}${query}`
-    : `${resource}${query}`
+    ? `${resource}:${encodeURIComponent(positional)}${queryString}`
+    : `${resource}${queryString}`
 }

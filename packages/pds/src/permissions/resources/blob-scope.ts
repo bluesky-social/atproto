@@ -1,4 +1,4 @@
-import { ParsedResourceScope } from '../scope-syntax'
+import { NeRoArray, ParsedResourceScope, formatScope } from '../scope-syntax'
 
 type Accept = `${string}/${string}`
 function isAccept(value: string): value is Accept {
@@ -27,14 +27,19 @@ export type BlobScopeMatch = {
 }
 
 export class BlobScope {
-  constructor(public readonly accept: Accept = '*/*') {}
+  constructor(public readonly accept: NeRoArray<Accept>) {}
 
   matches(options: BlobScopeMatch): boolean {
-    return matchAccept(this.accept, options.mime)
+    for (const accept of this.accept) {
+      if (matchAccept(accept, options.mime)) {
+        return true
+      }
+    }
+    return false
   }
 
-  static scopeNeededFor(options: BlobScopeMatch): string {
-    return `blob:${encodeURIComponent(options.mime)}`
+  toString(): string {
+    return formatScope('blob', [['accept', this.accept]])
   }
 
   static fromString(scope: string): BlobScope | null {
@@ -42,14 +47,18 @@ export class BlobScope {
 
     if (!parsed.is('blob')) return null
 
-    const accept = parsed.getSingle('accept', true)
-    if (accept === null) return null
-    if (accept !== undefined && !isAccept(accept)) return null
+    const accept = parsed.getMulti('accept', true)
+    if (accept == null) return null
+    if (!accept.every(isAccept)) return null
 
     if (parsed.containsParamsOtherThan(ALLOWED_PARAMS)) {
       return null
     }
 
-    return new BlobScope(accept)
+    return new BlobScope(accept as NeRoArray<Accept>)
+  }
+
+  static scopeNeededFor(options: BlobScopeMatch): string {
+    return `blob:${encodeURIComponent(options.mime)}`
   }
 }

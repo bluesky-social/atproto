@@ -19,6 +19,12 @@ export class RepoScope {
     public readonly actions: NeRoArray<RepoAction> = REPO_ACTIONS,
   ) {}
 
+  matches(options: RepoScopeMatch): boolean {
+    const { collection, actions } = this
+    if (collection !== options.collection) return false
+    return actions.includes(options.action)
+  }
+
   toString(): string {
     const { collection, actions } = this
 
@@ -27,17 +33,10 @@ export class RepoScope {
       ? undefined
       : (REPO_ACTIONS.filter(includedIn, actions) as [string, ...string[]])
 
-    return formatScope('repo', { collection, action }, 'collection')
-  }
-
-  matches(options: RepoScopeMatch): boolean {
-    const { collection, actions } = this
-    if (collection !== options.collection) return false
-    return actions.includes(options.action)
-  }
-
-  static scopeNeededFor(options: RepoScopeMatch): string {
-    return new RepoScope(options.collection, [options.action]).toString()
+    return formatScope('repo', [
+      ['collection', collection],
+      ['action', action],
+    ])
   }
 
   static fromString(scope: string): RepoScope | null {
@@ -58,10 +57,22 @@ export class RepoScope {
       return null
     }
 
+    // @NOTE We do not check for duplicate actions here
+
     return new RepoScope(collection, actions as NeRoArray<RepoAction>)
+  }
+
+  static scopeNeededFor(options: RepoScopeMatch): string {
+    return new RepoScope(options.collection, [options.action]).toString()
   }
 }
 
+/**
+ * Special utility function to be used as predicate for array methods like
+ * `Array.prototype.includes`, etc. When used as predicate, it expects that
+ * the array method is called with a `thisArg` that is a readonly array of
+ * the same type as the `value` parameter.
+ */
 function includedIn<T>(this: readonly T[], value: T): boolean {
   return this.includes(value)
 }
