@@ -1,5 +1,11 @@
 # @atproto/lexicon
 
+## 0.4.12
+
+### Patch Changes
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve return type of `assertValidXrpcParams`
+
 ## 0.4.11
 
 ### Patch Changes
