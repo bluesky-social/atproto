@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         { userID: actorDid },
         GateID.AgeAssurance,
       )
-      if (!enabled) {
+      if (!enabled && !ctx.cfg.debugMode) {
         throw new ForbiddenError()
       }
 
