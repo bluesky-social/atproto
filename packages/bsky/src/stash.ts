@@ -5,6 +5,7 @@ import {
   Preferences,
   SubjectActivitySubscription,
 } from './lexicon/types/app/bsky/notification/defs'
+import { AgeAssuranceEvent } from './lexicon/types/app/bsky/unspecced/defs'
 import { Method } from './proto/bsync_pb'
 
 type PickNSID<T extends { $type?: string }> = Exclude<T['$type'], undefined>
@@ -14,6 +15,8 @@ export const Namespaces = {
     'app.bsky.notification.defs#preferences' satisfies PickNSID<Preferences>,
   AppBskyNotificationDefsSubjectActivitySubscription:
     'app.bsky.notification.defs#subjectActivitySubscription' satisfies PickNSID<SubjectActivitySubscription>,
+  AppBskyUnspeccedDefsAgeAssuranceEvent:
+    'app.bsky.unspecced.defs#ageAssuranceEvent' satisfies PickNSID<AgeAssuranceEvent>,
 }
 
 export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]

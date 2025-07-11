@@ -198,3 +198,53 @@ export function isThreadItemBlocked<V>(v: V) {
 export function validateThreadItemBlocked<V>(v: V) {
   return validate<ThreadItemBlocked & V>(v, id, hashThreadItemBlocked)
 }
+
+/** The computed state of the age assurance process, returned to the user in question on certain authenticated requests. */
+export interface AgeAssuranceState {
+  $type?: 'app.bsky.unspecced.defs#ageAssuranceState'
+  /** The timestamp when this state was last updated. */
+  lastInitiatedAt?: string
+  /** The status of the age assurance process. */
+  status: 'unknown' | 'pending' | 'assured' | 'blocked' | (string & {})
+}
+
+const hashAgeAssuranceState = 'ageAssuranceState'
+
+export function isAgeAssuranceState<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceState)
+}
+
+export function validateAgeAssuranceState<V>(v: V) {
+  return validate<AgeAssuranceState & V>(v, id, hashAgeAssuranceState)
+}
+
+/** Object used to store age assurance data in stash. */
+export interface AgeAssuranceEvent {
+  $type?: 'app.bsky.unspecced.defs#ageAssuranceEvent'
+  /** The date and time of this write operation. */
+  createdAt: string
+  /** The status of the age assurance process. */
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
+  /** The unique identifier for this instance of the age assurance flow, in UUID format. */
+  attemptId: string
+  /** The email used for AA. */
+  email?: string
+  /** The IP address used when initiating the AA flow. */
+  initIp?: string
+  /** The user agent used when initiating the AA flow. */
+  initUa?: string
+  /** The IP address used when completing the AA flow. */
+  completeIp?: string
+  /** The user agent used when completing the AA flow. */
+  completeUa?: string
+}
+
+const hashAgeAssuranceEvent = 'ageAssuranceEvent'
+
+export function isAgeAssuranceEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceEvent)
+}
+
+export function validateAgeAssuranceEvent<V>(v: V) {
+  return validate<AgeAssuranceEvent & V>(v, id, hashAgeAssuranceEvent)
+}

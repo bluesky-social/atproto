@@ -5458,6 +5458,11 @@ export class GetActorsRequest extends Message<GetActorsRequest> {
    */
   skipCacheForDids: string[] = []
 
+  /**
+   * @generated from field: repeated string return_age_assurance_for_dids = 3;
+   */
+  returnAgeAssuranceForDids: string[] = []
+
   constructor(data?: PartialMessage<GetActorsRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5476,6 +5481,13 @@ export class GetActorsRequest extends Message<GetActorsRequest> {
     {
       no: 2,
       name: 'skip_cache_for_dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    {
+      no: 3,
+      name: 'return_age_assurance_for_dids',
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
       repeated: true,
@@ -5609,6 +5621,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   allowActivitySubscriptionsFrom = ''
 
+  /**
+   * @generated from field: optional bsky.AgeAssuranceStatus age_assurance_status = 19;
+   */
+  ageAssuranceStatus?: AgeAssuranceStatus
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5683,6 +5700,13 @@ export class ActorInfo extends Message<ActorInfo> {
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
     },
+    {
+      no: 19,
+      name: 'age_assurance_status',
+      kind: 'message',
+      T: AgeAssuranceStatus,
+      opt: true,
+    },
   ])
 
   static fromBinary(
@@ -5711,6 +5735,61 @@ export class ActorInfo extends Message<ActorInfo> {
     b: ActorInfo | PlainMessage<ActorInfo> | undefined,
   ): boolean {
     return proto3.util.equals(ActorInfo, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.AgeAssuranceStatus
+ */
+export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
+  /**
+   * @generated from field: string status = 1;
+   */
+  status = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp last_initiated_at = 2;
+   */
+  lastInitiatedAt?: Timestamp
+
+  constructor(data?: PartialMessage<AgeAssuranceStatus>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.AgeAssuranceStatus'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'status', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'last_initiated_at', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): AgeAssuranceStatus {
+    return new AgeAssuranceStatus().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): AgeAssuranceStatus {
+    return new AgeAssuranceStatus().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): AgeAssuranceStatus {
+    return new AgeAssuranceStatus().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: AgeAssuranceStatus | PlainMessage<AgeAssuranceStatus> | undefined,
+    b: AgeAssuranceStatus | PlainMessage<AgeAssuranceStatus> | undefined,
+  ): boolean {
+    return proto3.util.equals(AgeAssuranceStatus, a, b)
   }
 }
 

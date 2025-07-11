@@ -109,8 +109,8 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -148,6 +148,7 @@ import * as AppBskyNotificationPutPreferences from './types/app/bsky/notificatio
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
+import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
@@ -163,6 +164,7 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -1652,18 +1654,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getPosts<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetPosts.QueryParams,
-      AppBskyFeedGetPosts.HandlerInput,
-      AppBskyFeedGetPosts.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getPostThread<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1673,6 +1663,18 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPosts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetPosts.QueryParams,
+      AppBskyFeedGetPosts.HandlerInput,
+      AppBskyFeedGetPosts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2160,6 +2162,18 @@ export class AppBskyUnspeccedNS {
     this._server = server
   }
 
+  getAgeAssuranceState<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetAgeAssuranceState.QueryParams,
+      AppBskyUnspeccedGetAgeAssuranceState.HandlerInput,
+      AppBskyUnspeccedGetAgeAssuranceState.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getAgeAssuranceState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getConfig<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2337,6 +2351,18 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getTrendsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  initAgeAssurance<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedInitAgeAssurance.QueryParams,
+      AppBskyUnspeccedInitAgeAssurance.HandlerInput,
+      AppBskyUnspeccedInitAgeAssurance.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.initAgeAssurance' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

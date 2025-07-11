@@ -6,6 +6,17 @@ type LiveNowConfig = {
   domains: string[]
 }[]
 
+export interface KwsConfig {
+  apiKey: string
+  apiOrigin: string
+  authOrigin: string
+  clientId: string
+  redirectUrl: string
+  userAgent: string
+  verificationSecret: string
+  webhookSecret: string
+}
+
 export interface ServerConfigValues {
   // service
   version?: string
@@ -72,6 +83,7 @@ export interface ServerConfigValues {
   proxyMaxResponseSize?: number
   proxyMaxRetries?: number
   proxyPreferCompressed?: boolean
+  kws?: KwsConfig
 }
 
 export class ServerConfig {
@@ -222,6 +234,48 @@ export class ServerConfig {
     const proxyPreferCompressed =
       process.env.BSKY_PROXY_PREFER_COMPRESSED === 'true'
 
+    let kws: KwsConfig | undefined
+    const kwsApiKey = process.env.BSKY_KWS_API_KEY
+    const kwsApiOrigin = process.env.BSKY_KWS_API_ORIGIN
+    const kwsAuthOrigin = process.env.BSKY_KWS_AUTH_ORIGIN
+    const kwsClientId = process.env.BSKY_KWS_CLIENT_ID
+    const kwsRedirectUrl = process.env.BSKY_KWS_REDIRECT_URL
+    const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
+    const kwsVerificationSecret = process.env.BSKY_KWS_VERIFICATION_SECRET
+    const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SIGNING_KEY
+    if (
+      kwsApiKey ||
+      kwsApiOrigin ||
+      kwsAuthOrigin ||
+      kwsClientId ||
+      kwsRedirectUrl ||
+      kwsUserAgent ||
+      kwsVerificationSecret ||
+      kwsWebhookSecret
+    ) {
+      assert(
+        kwsApiOrigin &&
+          kwsAuthOrigin &&
+          kwsClientId &&
+          kwsRedirectUrl &&
+          kwsUserAgent &&
+          kwsVerificationSecret &&
+          kwsWebhookSecret &&
+          kwsApiKey,
+        'all KWS environment variables must be set if any are set',
+      )
+      kws = {
+        apiKey: kwsApiKey,
+        apiOrigin: kwsApiOrigin,
+        authOrigin: kwsAuthOrigin,
+        clientId: kwsClientId,
+        redirectUrl: kwsRedirectUrl,
+        userAgent: kwsUserAgent,
+        verificationSecret: kwsVerificationSecret,
+        webhookSecret: kwsWebhookSecret,
+      }
+    }
+
     return new ServerConfig({
       version,
       debugMode,
@@ -279,6 +333,7 @@ export class ServerConfig {
       proxyMaxResponseSize,
       proxyMaxRetries,
       proxyPreferCompressed,
+      kws,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -512,6 +567,10 @@ export class ServerConfig {
 
   get proxyPreferCompressed(): boolean {
     return this.cfg.proxyPreferCompressed ?? true
+  }
+
+  get kws() {
+    return this.cfg.kws
   }
 }
 

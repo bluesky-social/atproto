@@ -459,6 +459,7 @@ message GetActorRepostsResponse {
 message GetActorsRequest {
   repeated string dids = 1;
   repeated string skip_cache_for_dids = 2;
+  repeated string return_age_assurance_for_dids = 3;
 }
 
 message ActorInfo {
@@ -482,6 +483,12 @@ message ActorInfo {
   repeated string profile_tags = 16;
   Record status_record = 17;
   string allow_activity_subscriptions_from = 18;
+  optional AgeAssuranceStatus age_assurance_status = 19;
+}
+
+message AgeAssuranceStatus {
+  string status = 1;
+  google.protobuf.Timestamp last_initiated_at = 2;
 }
 
 message GetActorsResponse {

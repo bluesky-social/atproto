@@ -46,9 +46,11 @@
     "@connectrpc/connect-express": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
     "@did-plc/lib": "^0.0.1",
+    "@hapi/address": "^5.1.1",
     "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
+    "disposable-email-domains-js": "^1.5.0",
     "etcd3": "^1.1.2",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
@@ -68,7 +70,8 @@
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
-    "undici": "^6.19.8"
+    "undici": "^6.19.8",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",

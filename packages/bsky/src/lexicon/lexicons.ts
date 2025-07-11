@@ -7282,48 +7282,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7385,6 +7343,48 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -10675,6 +10675,84 @@ export const schemaDict = {
           },
         },
       },
+      ageAssuranceState: {
+        type: 'object',
+        description:
+          'The computed state of the age assurance process, returned to the user in question on certain authenticated requests.',
+        required: ['status'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+        },
+      },
+      ageAssuranceEvent: {
+        type: 'object',
+        description: 'Object used to store age assurance data in stash.',
+        required: ['createdAt', 'status', 'attemptId'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for AA.',
+          },
+          initIp: {
+            type: 'string',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetAgeAssuranceState: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getAgeAssuranceState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -11433,6 +11511,48 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedInitAgeAssurance: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.initAgeAssurance',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
           },
         },
       },
@@ -13306,8 +13426,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
@@ -13368,6 +13488,8 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetAgeAssuranceState:
+    'app.bsky.unspecced.getAgeAssuranceState',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
@@ -13391,6 +13513,7 @@ export const ids = {
   AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
   AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
+  AppBskyUnspeccedInitAgeAssurance: 'app.bsky.unspecced.initAgeAssurance',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

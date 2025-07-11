@@ -22,7 +22,7 @@ type VerifiedBy = {
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActors(req) {
-    const { dids } = req
+    const { dids, returnAgeAssuranceForDids } = req
     if (dids.length === 0) {
       return { actors: [] }
     }
@@ -105,6 +105,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         }
         return acc
       }, {} as VerifiedBy)
+      const ageAssuranceForDids = new Set(returnAgeAssuranceForDids)
 
       const activitySubscription = () => {
         const record = parseRecordBytes<AppBskyNotificationDeclaration.Record>(
@@ -125,6 +126,19 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             return record.allowSubscriptions
           default:
             return defaultVal
+        }
+      }
+
+      const ageAssuranceStatus = () => {
+        if (!ageAssuranceForDids.has(did)) {
+          return undefined
+        }
+
+        return {
+          status: row?.ageAssuranceStatus ?? 'unknown',
+          lastInitiatedAt: row?.ageAssuranceLastInitiatedAt
+            ? Timestamp.fromDate(new Date(row?.ageAssuranceLastInitiatedAt))
+            : undefined,
         }
       }
 
@@ -149,6 +163,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         tags: [],
         profileTags: [],
         allowActivitySubscriptionsFrom: activitySubscription(),
+        ageAssuranceStatus: ageAssuranceStatus(),
       }
     })
     return { actors }
