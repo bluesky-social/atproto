@@ -1,5 +1,6 @@
 ---
 "@atproto/api": patch
+"@atproto/bsky": patch
 ---
 
-Age assurance lexicons
+Age assurance compliance
