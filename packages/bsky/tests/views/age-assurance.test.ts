@@ -3,6 +3,7 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
+import Statsig from 'statsig-node'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
@@ -14,6 +15,7 @@ import {
   parseExternalPayload,
   serializeExternalPayload,
 } from '../../src/api/kws/util'
+import { GateID } from '../../src/feature-gates'
 import { ids } from '../../src/lexicon/lexicons'
 
 type Database = TestNetwork['bsky']['db']
@@ -47,6 +49,8 @@ describe('age assurance views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_age_assurance',
       bsky: {
+        statsigEnv: 'test',
+        statsigKey: 'secret-key',
         kws: {
           apiKey: 'apiKey',
           apiOrigin: kwsServer.url,
@@ -59,6 +63,7 @@ describe('age assurance views', () => {
         },
       },
     })
+    Statsig.overrideGate(GateID.AgeAssurance, true)
     db = network.bsky.db
     agent = network.bsky.getClient()
     sc = network.getSeedClient()

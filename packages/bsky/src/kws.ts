@@ -19,7 +19,7 @@ export class KwsClient {
 
   private async auth() {
     try {
-      const auth = await fetch(
+      const res = await fetch(
         `${this.cfg.authOrigin}/auth/realms/kws/protocol/openid-connect/token`,
         {
           method: 'POST',
@@ -34,14 +34,15 @@ export class KwsClient {
           }),
         },
       )
-      if (!auth.ok) {
+      if (!res.ok) {
+        const errorText = await res.text()
         throw new Error(
-          `Failed to fetch access token: ${auth.status} ${auth.statusText}`,
+          `Failed to fetch age assurance access token: status: ${res.status}, statusText: ${res.statusText}, errorText: ${errorText}`,
         )
       }
 
-      const res = await auth.json()
-      const authResponse = authResponseSchema.parse(res)
+      const auth = await res.json()
+      const authResponse = authResponseSchema.parse(auth)
       return authResponse.access_token
     } catch (err) {
       log.error({ err }, 'Failed to authenticate with KWS')
@@ -99,7 +100,7 @@ export class KwsClient {
         { status: res.status, statusText: res.statusText, errorText },
         'Failed to send age assurance email',
       )
-      throw new Error('Failed to send KWS age assurance email')
+      throw new Error('Failed to send age assurance email')
     }
 
     return res.json()
