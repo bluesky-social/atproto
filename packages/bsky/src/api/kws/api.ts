@@ -61,7 +61,8 @@ export const verificationHandler =
 
       const { actorDid: externalPayloadActorDid, attemptId } = externalPayload
       actorDid = externalPayloadActorDid
-      const completeIp = req.ip // Assumes `app.set('trust proxy', true)`.
+      // Assumes `app.set('trust proxy', ...)` configured with `true` or specific values.
+      const completeIp = req.ip
       const completeUa = getClientUa(req)
       await createStashEvent(ctx, {
         actorDid,

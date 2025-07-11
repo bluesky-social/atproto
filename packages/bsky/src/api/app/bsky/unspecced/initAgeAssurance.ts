@@ -28,7 +28,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const actorDid = auth.credentials.iss
       const attemptId = crypto.randomUUID()
-      const initIp = req.ip // Assumes `app.set('trust proxy', true)`.
+      // Assumes `app.set('trust proxy', ...)` configured with `true` or specific values.
+      const initIp = req.ip
       const initUa = getClientUa(req)
       const externalPayload: KwsExternalPayload = { actorDid, attemptId }
 
