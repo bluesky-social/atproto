@@ -18,8 +18,6 @@ const assertAppContextWithAgeAssuranceClient: (
   ctx: AppContext,
 ) => asserts ctx is AppContextWithKwsClient = (ctx: AppContext) => {
   if (!ctx.kwsClient) {
-    throw new Error(
-      'Tried to set up KWS webhook without age assurance client configured.',
-    )
+    throw new Error('Tried to set up KWS router without kwsClient configured.')
   }
 }

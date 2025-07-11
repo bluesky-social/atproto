@@ -19,8 +19,8 @@ import { ids } from '../../src/lexicon/lexicons'
 type Database = TestNetwork['bsky']['db']
 
 describe('age assurance views', () => {
-  const signingKey = 'signingKey'
-  const webhookSigningKey = 'webhookSigningKey'
+  const verificationSecret = 'verificationSecret'
+  const webhookSecret = 'webhookSecret'
   const attemptId = crypto.randomUUID()
   const redirectUrl = 'https://bsky.app/intent/age-assurance'
 
@@ -37,8 +37,8 @@ describe('age assurance views', () => {
 
   beforeAll(async () => {
     kwsServer = new MockKwsServer({
-      signingKey,
-      webhookSigningKey,
+      verificationSecret,
+      webhookSecret,
       authMock,
       sendEmailMock,
     })
@@ -53,9 +53,9 @@ describe('age assurance views', () => {
           authOrigin: kwsServer.url,
           clientId: 'clientId',
           redirectUrl,
-          signingKey,
           userAgent: 'userAgent',
-          webhookSigningKey,
+          verificationSecret,
+          webhookSecret,
         },
       },
     })
@@ -314,24 +314,24 @@ const clearActorAgeAssurance = async (db: Database) => {
 }
 
 class MockKwsServer {
-  private signingKey: string
-  private webhookSigningKey: string
+  private verificationSecret: string
+  private webhookSecret: string
   private app: Application
   private server: Server
 
   constructor({
-    signingKey,
-    webhookSigningKey,
+    verificationSecret,
+    webhookSecret,
     authMock,
     sendEmailMock,
   }: {
-    signingKey: string
-    webhookSigningKey: string
+    verificationSecret: string
+    webhookSecret: string
     authMock: jest.Mock
     sendEmailMock: jest.Mock
   }) {
-    this.signingKey = signingKey
-    this.webhookSigningKey = webhookSigningKey
+    this.verificationSecret = verificationSecret
+    this.webhookSecret = webhookSecret
 
     this.app = express()
       .post('/auth/realms/kws/protocol/openid-connect/token', (req, res) =>
@@ -362,7 +362,7 @@ class MockKwsServer {
     const statusJson = JSON.stringify(query.status)
 
     const sig = crypto
-      .createHmac('sha256', this.signingKey)
+      .createHmac('sha256', this.verificationSecret)
       .update(`${statusJson}:${externalPayloadJson}`)
       .digest('hex')
 
@@ -395,7 +395,7 @@ class MockKwsServer {
 
     const timestamp = new Date().valueOf()
     const sig = crypto
-      .createHmac('sha256', this.webhookSigningKey)
+      .createHmac('sha256', this.webhookSecret)
       .update(`${timestamp}.${bodyBuffer}`)
       .digest('hex')
 

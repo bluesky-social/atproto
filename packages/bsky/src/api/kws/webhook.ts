@@ -34,7 +34,7 @@ export const webhookAuth =
       }
 
       const data = `${timestamp}.${body}`
-      validateSignature(ctx.cfg.kws.webhookSigningKey, data, signature)
+      validateSignature(ctx.cfg.kws.webhookSecret, data, signature)
       next()
     } catch (err) {
       log.error({ err }, 'Invalid KWS webhook signature')

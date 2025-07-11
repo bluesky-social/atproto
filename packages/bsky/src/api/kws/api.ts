@@ -27,7 +27,11 @@ const validateRequest = (
       })
 
     const data = `${intermediate.status}:${intermediate.externalPayload}`
-    validateSignature(ctx.cfg.kws.signingKey, data, intermediate.signature)
+    validateSignature(
+      ctx.cfg.kws.verificationSecret,
+      data,
+      intermediate.signature,
+    )
 
     return {
       ...intermediate,

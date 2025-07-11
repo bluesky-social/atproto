@@ -7,14 +7,14 @@ type LiveNowConfig = {
 }[]
 
 export interface KwsConfig {
-  clientId: string
   apiKey: string
   apiOrigin: string
   authOrigin: string
+  clientId: string
   redirectUrl: string
-  signingKey: string
   userAgent: string
-  webhookSigningKey: string
+  verificationSecret: string
+  webhookSecret: string
 }
 
 export interface ServerConfigValues {
@@ -240,28 +240,28 @@ export class ServerConfig {
     const kwsAuthOrigin = process.env.BSKY_KWS_AUTH_ORIGIN
     const kwsClientId = process.env.BSKY_KWS_CLIENT_ID
     const kwsRedirectUrl = process.env.BSKY_KWS_REDIRECT_URL
-    const kwsSigningKey = process.env.BSKY_KWS_SIGNING_KEY
     const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
-    const kwsWebhookSigningKey = process.env.BSKY_KWS_WEBHOOK_SIGNING_KEY
+    const kwsVerificationSecret = process.env.BSKY_KWS_VERIFICATION_SECRET
+    const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SIGNING_KEY
     if (
       kwsApiKey ||
       kwsApiOrigin ||
       kwsAuthOrigin ||
       kwsClientId ||
       kwsRedirectUrl ||
-      kwsSigningKey ||
       kwsUserAgent ||
-      kwsWebhookSigningKey
+      kwsVerificationSecret ||
+      kwsWebhookSecret
     ) {
       assert(
-        kwsApiKey &&
-          kwsApiOrigin &&
+        kwsApiOrigin &&
           kwsAuthOrigin &&
           kwsClientId &&
           kwsRedirectUrl &&
-          kwsSigningKey &&
           kwsUserAgent &&
-          kwsWebhookSigningKey,
+          kwsVerificationSecret &&
+          kwsWebhookSecret &&
+          kwsApiKey,
         'all KWS environment variables must be set if any are set',
       )
       kws = {
@@ -270,9 +270,9 @@ export class ServerConfig {
         authOrigin: kwsAuthOrigin,
         clientId: kwsClientId,
         redirectUrl: kwsRedirectUrl,
-        signingKey: kwsSigningKey,
         userAgent: kwsUserAgent,
-        webhookSigningKey: kwsWebhookSigningKey,
+        verificationSecret: kwsVerificationSecret,
+        webhookSecret: kwsWebhookSecret,
       }
     }
 
