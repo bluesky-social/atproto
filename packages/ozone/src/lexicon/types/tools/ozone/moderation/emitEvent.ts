@@ -40,6 +40,8 @@ export interface InputSchema {
     | $Typed<ToolsOzoneModerationDefs.IdentityEvent>
     | $Typed<ToolsOzoneModerationDefs.RecordEvent>
     | $Typed<ToolsOzoneModerationDefs.ModEventPriorityScore>
+    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceEvent>
+    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceOverrideEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
