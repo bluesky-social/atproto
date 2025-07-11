@@ -60,10 +60,16 @@ export class RequestManager {
   ) {
     const parameters = await this.validate(client, clientAuth, input)
 
-    const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
-    const id = await generateRequestId()
+    await callAsync(this.hooks.onAuthorizationRequest, {
+      client,
+      clientAuth,
+      parameters,
+    })
 
-    await this.store.createRequest(id, {
+    const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
+    const requestId = await generateRequestId()
+
+    await this.store.createRequest(requestId, {
       clientId: client.id,
       clientAuth,
       parameters,
@@ -73,8 +79,8 @@ export class RequestManager {
       code: null,
     })
 
-    const uri = encodeRequestUri(id)
-    return { uri, expiresAt, parameters }
+    const requestUri = encodeRequestUri(requestId)
+    return { requestUri, expiresAt, parameters }
   }
 
   protected async validate(
@@ -122,20 +128,6 @@ export class RequestManager {
         `Unsupported grant_type "authorization_code"`,
         'invalid_request',
       )
-    }
-
-    if (parameters.scope) {
-      for (const scope of parameters.scope.split(' ')) {
-        // Currently, the implementation requires all the scopes to be statically
-        // defined in the server metadata. In the future, we might add support
-        // for dynamic scopes.
-        if (!this.metadata.scopes_supported?.includes(scope)) {
-          throw new AuthorizationError(
-            parameters,
-            `Scope "${scope}" is not supported by this server`,
-          )
-        }
-      }
     }
 
     if (parameters.authorization_details) {
@@ -290,10 +282,10 @@ export class RequestManager {
     return parameters
   }
 
-  async get(uri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
-    const id = decodeRequestUri(uri)
+  async get(requestUri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
+    const requestId = decodeRequestUri(requestUri)
 
-    const data = await this.store.readRequest(id)
+    const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     const updates: UpdateRequestData = {}
@@ -332,16 +324,16 @@ export class RequestManager {
         )
       }
     } catch (err) {
-      await this.store.deleteRequest(id)
+      await this.store.deleteRequest(requestId)
       throw err
     }
 
     if (Object.keys(updates).length > 0) {
-      await this.store.updateRequest(id, updates)
+      await this.store.updateRequest(requestId, updates)
     }
 
     return {
-      uri,
+      requestUri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
       clientId: data.clientId,
@@ -349,13 +341,13 @@ export class RequestManager {
   }
 
   async setAuthorized(
-    uri: RequestUri,
+    requestUri: RequestUri,
     client: Client,
     account: Account,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<Code> {
-    const requestId = decodeRequestUri(uri)
+    const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
@@ -418,12 +410,12 @@ export class RequestManager {
     const result = await this.store.consumeRequestCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
-    const { id, data } = result
+    const { requestId, data } = result
 
     // Fool-proofing the store implementation against code replay attacks (in
     // case consumeRequestCode() does not delete the request).
     if (NODE_ENV !== 'production') {
-      const result = await this.store.readRequest(id)
+      const result = await this.store.readRequest(requestId)
       if (result) {
         throw new Error('Invalid store implementation: request not deleted')
       }
@@ -441,8 +433,8 @@ export class RequestManager {
     return data
   }
 
-  async delete(uri: RequestUri): Promise<void> {
-    const id = decodeRequestUri(uri)
-    await this.store.deleteRequest(id)
+  async delete(requestUri: RequestUri): Promise<void> {
+    const requestId = decodeRequestUri(requestUri)
+    await this.store.deleteRequest(requestId)
   }
 }
