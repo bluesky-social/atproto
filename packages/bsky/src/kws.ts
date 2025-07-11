@@ -65,13 +65,15 @@ export class KwsClient {
   }
 
   async sendEmail({
+    countryCode,
     email,
-    language,
     externalPayload,
+    language,
   }: {
+    countryCode: string
     email: string
-    language: string
     externalPayload: KwsExternalPayload
+    language: string
   }) {
     const res = await this.fetchWithAuth(
       `${this.cfg.apiOrigin}/v1/verifications/send-email`,
@@ -85,7 +87,7 @@ export class KwsClient {
           email,
           externalPayload: serializeExternalPayload(externalPayload),
           language,
-          location: 'US',
+          location: countryCode,
           userContext: 'adult',
         }),
       },

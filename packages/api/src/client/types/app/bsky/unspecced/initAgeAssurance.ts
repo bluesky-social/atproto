@@ -23,6 +23,8 @@ export interface InputSchema {
   email: string
   /** The user's preferred language for communication during the assurance process. */
   language: string
+  /** An ISO 3166-1 alpha-2 code of the user's location. */
+  countryCode: string
 }
 
 export type OutputSchema = AppBskyUnspeccedDefs.AgeAssuranceState

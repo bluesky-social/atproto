@@ -11528,7 +11528,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['email', 'language'],
+            required: ['email', 'language', 'countryCode'],
             properties: {
               email: {
                 type: 'string',
@@ -11539,6 +11539,11 @@ export const schemaDict = {
                 type: 'string',
                 description:
                   "The user's preferred language for communication during the assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
               },
             },
           },

@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
           'This service is not configured to support age assurance.',
         )
       }
-      const { email, language } = input.body
+      const { email, language, countryCode } = input.body
       if (!isEmailValid(email) || isDisposableEmail(email)) {
         throw new InvalidRequestError(
           'This email address is not supported, please use a different email.',
@@ -34,6 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       const externalPayload: KwsExternalPayload = { actorDid, attemptId }
 
       await ctx.kwsClient.sendEmail({
+        countryCode,
         email,
         externalPayload,
         language,

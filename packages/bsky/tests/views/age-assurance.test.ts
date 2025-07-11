@@ -111,7 +111,11 @@ describe('age assurance views', () => {
 
   const initAgeAssurance = async (did: string, email?: string) => {
     const { data } = await agent.app.bsky.unspecced.initAgeAssurance(
-      { email: email ?? sc.accounts[did].email, language: 'en' },
+      {
+        email: email ?? sc.accounts[did].email,
+        language: 'en',
+        countryCode: 'CC',
+      },
       {
         headers: await network.serviceHeaders(
           did,
