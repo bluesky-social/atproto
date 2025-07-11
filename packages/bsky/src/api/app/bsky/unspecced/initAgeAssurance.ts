@@ -23,11 +23,10 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const actorDid = auth.credentials.iss
-      const enabled = ctx.featureGates.check(
-        { userID: actorDid },
-        GateID.AgeAssurance,
-      )
-      if (!enabled && !ctx.cfg.debugMode) {
+      const enabled =
+        ctx.cfg.debugMode ||
+        ctx.featureGates.check({ userID: actorDid }, GateID.AgeAssurance)
+      if (!enabled) {
         throw new ForbiddenError()
       }
 
