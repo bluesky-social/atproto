@@ -6,7 +6,9 @@ import { assertValidDidDocumentForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
-    auth: ctx.authVerifier.accessFull(),
+    auth: ctx.authVerifier.accessFull({
+      additionalOauthScopes: ['transition:identity'],
+    }),
     handler: async ({ req, auth }) => {
       // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayAgent) {

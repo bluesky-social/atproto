@@ -36,6 +36,7 @@ export enum AuthScope {
 
 export type AccessOpts = {
   additional: AuthScope[]
+  additionalOauthScopes: string[]
   checkTakedown: boolean
   checkDeactivated: boolean
 }
@@ -154,6 +155,7 @@ export class AuthVerifier {
           AuthScope.AppPass,
           ...(opts.additional ?? []),
         ],
+        opts.additionalOauthScopes ?? [],
         opts,
       )
     }
@@ -164,6 +166,7 @@ export class AuthVerifier {
       return this.validateAccessToken(
         ctx,
         [AuthScope.Access, ...(opts.additional ?? [])],
+        opts.additionalOauthScopes ?? [],
         opts,
       )
     }
@@ -171,11 +174,16 @@ export class AuthVerifier {
   accessPrivileged =
     (opts: Partial<AccessOpts> = {}) =>
     (ctx: ReqCtx): Promise<AccessOutput | OAuthOutput> => {
-      return this.validateAccessToken(ctx, [
-        AuthScope.Access,
-        AuthScope.AppPassPrivileged,
-        ...(opts.additional ?? []),
-      ])
+      return this.validateAccessToken(
+        ctx,
+        [
+          AuthScope.Access,
+          AuthScope.AppPassPrivileged,
+          ...(opts.additional ?? []),
+        ],
+        ['transition:chat.bsky', ...(opts.additionalOauthScopes ?? [])],
+        opts,
+      )
     }
 
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
@@ -411,6 +419,7 @@ export class AuthVerifier {
   protected async validateAccessToken(
     ctx: ReqCtx,
     scopes: AuthScope[],
+    oauthScopes: string[],
     {
       checkTakedown = false,
       checkDeactivated = false,
@@ -427,7 +436,11 @@ export class AuthVerifier {
         break
       }
       case AuthType.DPOP: {
-        accessOutput = await this.validateDpopAccessToken(ctx, scopes)
+        accessOutput = await this.validateDpopAccessToken(
+          ctx,
+          scopes,
+          oauthScopes,
+        )
         break
       }
       case null:
@@ -471,6 +484,7 @@ export class AuthVerifier {
   protected async validateDpopAccessToken(
     ctx: ReqCtx,
     scopes: AuthScope[],
+    oauthScopes: string[],
   ): Promise<OAuthOutput> {
     this.setAuthHeaders(ctx)
 
@@ -515,20 +529,26 @@ export class AuthVerifier {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
-      const oauthScopes = new Set(tokenClaims.scope?.split(' '))
+      const parsedOauthScopes = new Set(tokenClaims.scope?.split(' '))
 
-      if (!oauthScopes.has('transition:generic')) {
+      if (!parsedOauthScopes.has('transition:generic')) {
         throw new AuthRequiredError(
           'Missing required scope: transition:generic',
           'InvalidToken',
         )
       }
 
-      const scopeEquivalent: AuthScope = oauthScopes.has('transition:chat.bsky')
+      const scopeEquivalent: AuthScope = parsedOauthScopes.has(
+        'transition:chat.bsky',
+      )
         ? AuthScope.AppPassPrivileged
         : AuthScope.AppPass
 
-      if (!scopes.includes(scopeEquivalent)) {
+      const isAdditionalScope = oauthScopes.some((scope) =>
+        parsedOauthScopes.has(scope),
+      )
+
+      if (!scopes.includes(scopeEquivalent) && !isAdditionalScope) {
         // AppPassPrivileged is sufficient but was not provided "transition:chat.bsky"
         if (scopes.includes(AuthScope.AppPassPrivileged)) {
           throw new InvalidRequestError(
@@ -537,8 +557,7 @@ export class AuthVerifier {
           )
         }
 
-        // AuthScope.Access and AuthScope.SignupQueued do not have an OAuth
-        // scope equivalent.
+        // AuthScope.SignupQueued does not have an OAuth scope equivalent.
         throw new InvalidRequestError(
           'DPoP access token cannot be used for this request',
           'InvalidToken',
@@ -550,7 +569,7 @@ export class AuthVerifier {
           type: 'oauth',
           did: tokenClaims.sub,
           scope: scopeEquivalent,
-          oauthScopes,
+          oauthScopes: parsedOauthScopes,
           isPrivileged: scopeEquivalent === AuthScope.AppPassPrivileged,
         },
       }
