@@ -68,12 +68,32 @@ export class Firehose {
   private sub: Subscription<RepoEvent>
   private abortController: AbortController
   private destoryDefer: Deferrable
+  private matchCollection: ((col: string) => boolean) | null = null
 
   constructor(public opts: FirehoseOptions) {
     this.destoryDefer = createDeferrable()
     this.abortController = new AbortController()
     if (this.opts.getCursor && this.opts.runner) {
       throw new Error('Must set only `getCursor` or `runner`')
+    }
+    if (opts.filterCollections) {
+      const exact = new Set<string>()
+      const prefixes: string[] = []
+      
+      for (const pattern of opts.filterCollections) {
+        if (pattern.endsWith('.*')) {
+          prefixes.push(pattern.slice(0, -2))
+        } else {
+          exact.add(pattern)
+        }
+      }
+      this.matchCollection = (col: string): boolean => {
+        if (exact.has(col)) return true
+        for (const prefix of prefixes) {
+          if (col.startsWith(prefix)) return true
+        }
+        return false
+      }
     }
     this.sub = new Subscription({
       ...opts,
@@ -188,7 +208,7 @@ export const parseCommitAuthenticated = async (
   forceKeyRefresh = false,
 ): Promise<CommitEvt[]> => {
   const did = evt.repo
-  const ops = maybeFilterOps(evt.ops, filterCollections)
+  const ops = maybeFilterOps(evt.ops, this.matchCollection)
   if (ops.length === 0) {
     return []
   }
@@ -228,18 +248,18 @@ export const parseCommitUnauthenticated = async (
   evt: Commit,
   filterCollections?: string[],
 ): Promise<CommitEvt[]> => {
-  const ops = maybeFilterOps(evt.ops, filterCollections)
+  const ops = maybeFilterOps(evt.ops, this.matchCollection)
   return formatCommitOps(evt, ops)
 }
 
 const maybeFilterOps = (
   ops: RepoOp[],
-  filterCollections?: string[],
+  matchCollection?: (col: string) => boolean,
 ): RepoOp[] => {
-  if (!filterCollections) return ops
+  if (!matchCollection) return ops
   return ops.filter((op) => {
     const { collection } = parseDataKey(op.path)
-    return filterCollections.includes(collection)
+    return matchCollection(collection)
   })
 }
 
