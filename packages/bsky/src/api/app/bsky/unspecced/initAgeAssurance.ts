@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       const externalPayload: KwsExternalPayload = { actorDid, attemptId }
 
       await ctx.kwsClient.sendEmail({
-        countryCode,
+        countryCode: countryCode.toUpperCase(),
         email,
         externalPayload,
         language,
