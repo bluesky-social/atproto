@@ -4,7 +4,7 @@ import {
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { AppPlatform } from '../../../../proto/courier_pb'
+import { assertLexPlatform, lexPlatformToProtoPlatform } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.unregisterPush({
@@ -20,7 +20,9 @@ export default function (server: Server, ctx: AppContext) {
       if (serviceDid !== auth.credentials.aud) {
         throw new InvalidRequestError('Invalid serviceDid.')
       }
-      if (platform !== 'ios' && platform !== 'android' && platform !== 'web') {
+      try {
+        assertLexPlatform(platform)
+      } catch (err) {
         throw new InvalidRequestError(
           'Unsupported platform: must be "ios", "android", or "web".',
         )
@@ -28,12 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.courierClient.unregisterDeviceToken({
         did,
         token,
-        platform:
-          platform === 'ios'
-            ? AppPlatform.IOS
-            : platform === 'android'
-              ? AppPlatform.ANDROID
-              : AppPlatform.WEB,
+        platform: lexPlatformToProtoPlatform(platform),
         appId,
       })
     },
