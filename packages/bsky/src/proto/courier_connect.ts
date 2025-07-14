@@ -10,6 +10,8 @@ import {
   PushNotificationsResponse,
   RegisterDeviceTokenRequest,
   RegisterDeviceTokenResponse,
+  SetAgeRestrictedRequest,
+  SetAgeRestrictedResponse,
   UnregisterDeviceTokenRequest,
   UnregisterDeviceTokenResponse,
 } from './courier_pb'
@@ -55,6 +57,15 @@ export const Service = {
       name: 'UnregisterDeviceToken',
       I: UnregisterDeviceTokenRequest,
       O: UnregisterDeviceTokenResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc courier.Service.SetAgeRestricted
+     */
+    setAgeRestricted: {
+      name: 'SetAgeRestricted',
+      I: SetAgeRestrictedRequest,
+      O: SetAgeRestrictedResponse,
       kind: MethodKind.Unary,
     },
   },
