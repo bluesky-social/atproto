@@ -489,6 +489,7 @@ message ActorInfo {
 message AgeAssuranceStatus {
   string status = 1;
   google.protobuf.Timestamp last_initiated_at = 2;
+  bool override_applied = 3;
 }
 
 message GetActorsResponse {

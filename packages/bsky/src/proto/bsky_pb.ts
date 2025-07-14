@@ -5752,6 +5752,11 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
    */
   lastInitiatedAt?: Timestamp
 
+  /**
+   * @generated from field: bool override_applied = 3;
+   */
+  overrideApplied = false
+
   constructor(data?: PartialMessage<AgeAssuranceStatus>) {
     super()
     proto3.util.initPartial(data, this)
@@ -5762,6 +5767,12 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'status', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 2, name: 'last_initiated_at', kind: 'message', T: Timestamp },
+    {
+      no: 3,
+      name: 'override_applied',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
   ])
 
   static fromBinary(
