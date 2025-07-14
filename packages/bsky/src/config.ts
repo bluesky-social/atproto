@@ -242,7 +242,7 @@ export class ServerConfig {
     const kwsRedirectUrl = process.env.BSKY_KWS_REDIRECT_URL
     const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
     const kwsVerificationSecret = process.env.BSKY_KWS_VERIFICATION_SECRET
-    const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SIGNING_KEY
+    const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SECRET
     if (
       kwsApiKey ||
       kwsApiOrigin ||
