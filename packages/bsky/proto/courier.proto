@@ -51,8 +51,18 @@ message RegisterDeviceTokenRequest {
 
 message RegisterDeviceTokenResponse {}
 
+message UnregisterDeviceTokenRequest {
+  string did = 1;
+  string token = 2;
+  string app_id = 3;
+  AppPlatform platform = 4;
+}
+
+message UnregisterDeviceTokenResponse {}
+
 service Service {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc PushNotifications(PushNotificationsRequest) returns (PushNotificationsResponse);
   rpc RegisterDeviceToken(RegisterDeviceTokenRequest) returns (RegisterDeviceTokenResponse);
+  rpc UnregisterDeviceToken(UnregisterDeviceTokenRequest) returns (UnregisterDeviceTokenResponse);
 }

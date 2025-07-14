@@ -10,6 +10,8 @@ import {
   PushNotificationsResponse,
   RegisterDeviceTokenRequest,
   RegisterDeviceTokenResponse,
+  UnregisterDeviceTokenRequest,
+  UnregisterDeviceTokenResponse,
 } from './courier_pb'
 import { MethodKind } from '@bufbuild/protobuf'
 
@@ -44,6 +46,15 @@ export const Service = {
       name: 'RegisterDeviceToken',
       I: RegisterDeviceTokenRequest,
       O: RegisterDeviceTokenResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc courier.Service.UnregisterDeviceToken
+     */
+    unregisterDeviceToken: {
+      name: 'UnregisterDeviceToken',
+      I: UnregisterDeviceTokenRequest,
+      O: UnregisterDeviceTokenResponse,
       kind: MethodKind.Unary,
     },
   },

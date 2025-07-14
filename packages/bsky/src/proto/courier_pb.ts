@@ -493,3 +493,135 @@ export class RegisterDeviceTokenResponse extends Message<RegisterDeviceTokenResp
     return proto3.util.equals(RegisterDeviceTokenResponse, a, b)
   }
 }
+
+/**
+ * @generated from message courier.UnregisterDeviceTokenRequest
+ */
+export class UnregisterDeviceTokenRequest extends Message<UnregisterDeviceTokenRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string token = 2;
+   */
+  token = ''
+
+  /**
+   * @generated from field: string app_id = 3;
+   */
+  appId = ''
+
+  /**
+   * @generated from field: courier.AppPlatform platform = 4;
+   */
+  platform = AppPlatform.UNSPECIFIED
+
+  constructor(data?: PartialMessage<UnregisterDeviceTokenRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'courier.UnregisterDeviceTokenRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'token', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'app_id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 4,
+      name: 'platform',
+      kind: 'enum',
+      T: proto3.getEnumType(AppPlatform),
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UnregisterDeviceTokenRequest {
+    return new UnregisterDeviceTokenRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UnregisterDeviceTokenRequest {
+    return new UnregisterDeviceTokenRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UnregisterDeviceTokenRequest {
+    return new UnregisterDeviceTokenRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UnregisterDeviceTokenRequest
+      | PlainMessage<UnregisterDeviceTokenRequest>
+      | undefined,
+    b:
+      | UnregisterDeviceTokenRequest
+      | PlainMessage<UnregisterDeviceTokenRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UnregisterDeviceTokenRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message courier.UnregisterDeviceTokenResponse
+ */
+export class UnregisterDeviceTokenResponse extends Message<UnregisterDeviceTokenResponse> {
+  constructor(data?: PartialMessage<UnregisterDeviceTokenResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'courier.UnregisterDeviceTokenResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UnregisterDeviceTokenResponse {
+    return new UnregisterDeviceTokenResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UnregisterDeviceTokenResponse {
+    return new UnregisterDeviceTokenResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UnregisterDeviceTokenResponse {
+    return new UnregisterDeviceTokenResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UnregisterDeviceTokenResponse
+      | PlainMessage<UnregisterDeviceTokenResponse>
+      | undefined,
+    b:
+      | UnregisterDeviceTokenResponse
+      | PlainMessage<UnregisterDeviceTokenResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UnregisterDeviceTokenResponse, a, b)
+  }
+}
