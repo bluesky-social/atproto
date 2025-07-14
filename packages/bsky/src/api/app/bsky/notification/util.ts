@@ -13,6 +13,7 @@ import {
   NotificationPreference,
   NotificationPreferences,
 } from '../../../../proto/bsky_pb'
+import { AppPlatform } from '../../../../proto/courier_pb'
 
 type DeepPartial<T> = T extends object
   ? {
@@ -122,3 +123,20 @@ export const protobufToLex = (
     verified: protobufPreferenceToLex(res.verified),
   })
 }
+
+type LexPlatform = 'ios' | 'android' | 'web'
+
+export function assertLexPlatform(
+  platform: string,
+): asserts platform is LexPlatform {
+  if (platform !== 'ios' && platform !== 'android' && platform !== 'web') {
+    throw new Error('Unsupported platform: must be "ios", "android", or "web".')
+  }
+}
+
+export const lexPlatformToProtoPlatform = (platform: string): AppPlatform =>
+  platform === 'ios'
+    ? AppPlatform.IOS
+    : platform === 'android'
+      ? AppPlatform.ANDROID
+      : AppPlatform.WEB

@@ -7,7 +7,7 @@ import { Server } from '../../../../lexicon'
 import { assertLexPlatform, lexPlatformToProtoPlatform } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.registerPush({
+  server.app.bsky.notification.unregisterPush({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       if (!ctx.courierClient) {
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
           'This service is not configured to support push token registration.',
         )
       }
-      const { token, platform, serviceDid, appId, ageRestricted } = input.body
+      const { token, platform, serviceDid, appId } = input.body
       const did = auth.credentials.iss
       if (serviceDid !== auth.credentials.aud) {
         throw new InvalidRequestError('Invalid serviceDid.')
@@ -27,12 +27,11 @@ export default function (server: Server, ctx: AppContext) {
           'Unsupported platform: must be "ios", "android", or "web".',
         )
       }
-      await ctx.courierClient.registerDeviceToken({
+      await ctx.courierClient.unregisterDeviceToken({
         did,
         token,
         platform: lexPlatformToProtoPlatform(platform),
         appId,
-        ageRestricted,
       })
     },
   })

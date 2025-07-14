@@ -10372,6 +10372,40 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationUnregisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.unregisterPush',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['serviceDid', 'token', 'platform', 'appId'],
+            properties: {
+              serviceDid: {
+                type: 'string',
+                format: 'did',
+              },
+              token: {
+                type: 'string',
+              },
+              platform: {
+                type: 'string',
+                knownValues: ['ios', 'android', 'web'],
+              },
+              appId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationUpdateSeen: {
     lexicon: 1,
     id: 'app.bsky.notification.updateSeen',
@@ -13485,6 +13519,7 @@ export const ids = {
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
+  AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
