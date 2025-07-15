@@ -186,6 +186,7 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
+import * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
@@ -463,6 +464,7 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
+export * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
@@ -3901,6 +3903,22 @@ export class AppBskyUnspeccedNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  checkHandleAvailability(
+    params?: AppBskyUnspeccedCheckHandleAvailability.QueryParams,
+    opts?: AppBskyUnspeccedCheckHandleAvailability.CallOptions,
+  ): Promise<AppBskyUnspeccedCheckHandleAvailability.Response> {
+    return this._client
+      .call(
+        'app.bsky.unspecced.checkHandleAvailability',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedCheckHandleAvailability.toKnownErr(e)
+      })
   }
 
   getAgeAssuranceState(
