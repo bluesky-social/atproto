@@ -1,5 +1,18 @@
 # @atproto/ozone
 
+## 0.1.131
+
+### Patch Changes
+
+- [#4041](https://github.com/bluesky-social/atproto/pull/4041) [`083566ddf`](https://github.com/bluesky-social/atproto/commit/083566ddfc3c9263423ebd5e59bfdbfe7b091c82) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add `unregisterPush` API
+
+- [#4048](https://github.com/bluesky-social/atproto/pull/4048) [`3b356c509`](https://github.com/bluesky-social/atproto/commit/3b356c5096a269f1be6c4e69bdee7f5d14eb5d7e) Thanks [@foysalit](https://github.com/foysalit)! - Add externalId to ozone events for deduping events per subject and event type
+
+- [#4044](https://github.com/bluesky-social/atproto/pull/4044) [`5ae998797`](https://github.com/bluesky-social/atproto/commit/5ae9987972b7ab8f9d6740886ed56b552d5664dd) Thanks [@foysalit](https://github.com/foysalit)! - Allow filtering ozone event stream for age assurance events
+
+- Updated dependencies [[`083566ddf`](https://github.com/bluesky-social/atproto/commit/083566ddfc3c9263423ebd5e59bfdbfe7b091c82), [`3b356c509`](https://github.com/bluesky-social/atproto/commit/3b356c5096a269f1be6c4e69bdee7f5d14eb5d7e)]:
+  - @atproto/api@0.15.26
+
 ## 0.1.130
 
 ### Patch Changes
