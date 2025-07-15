@@ -14960,6 +14960,11 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:tools.ozone.moderation.defs#modTool',
               },
+              externalId: {
+                type: 'string',
+                description:
+                  'An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject.',
+              },
             },
           },
         },
@@ -14973,6 +14978,11 @@ export const schemaDict = {
         errors: [
           {
             name: 'SubjectHasAction',
+          },
+          {
+            name: 'DuplicateExternalId',
+            description:
+              'An event with the same external ID already exists for the subject.',
           },
         ],
       },

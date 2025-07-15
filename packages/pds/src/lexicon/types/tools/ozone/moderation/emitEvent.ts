@@ -50,6 +50,8 @@ export interface InputSchema {
   subjectBlobCids?: string[]
   createdBy: string
   modTool?: ToolsOzoneModerationDefs.ModTool
+  /** An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject. */
+  externalId?: string
 }
 
 export type OutputSchema = ToolsOzoneModerationDefs.ModEventView
@@ -68,7 +70,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'SubjectHasAction'
+  error?: 'SubjectHasAction' | 'DuplicateExternalId'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

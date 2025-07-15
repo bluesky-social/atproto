@@ -149,6 +149,22 @@ export class ModerationService {
     return event
   }
 
+  async getEventByExternalId(
+    eventType: ModerationEvent['action'],
+    externalId: string,
+    subject: ModSubject,
+  ): Promise<boolean> {
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .where('action', '=', eventType)
+      .where('externalId', '=', externalId)
+      .where('subjectDid', '=', subject.did)
+      .select(sql`1`.as('exists'))
+      .limit(1)
+      .executeTakeFirst()
+    return !!result
+  }
+
   async getEvents(opts: {
     subject?: string
     createdBy?: string
@@ -417,12 +433,20 @@ export class ModerationService {
     createdBy: string
     createdAt?: Date
     modTool?: ToolsOzoneModerationDefs.ModTool
+    externalId?: string
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
   }> {
     this.db.assertTransaction()
-    const { event, subject, createdBy, createdAt = new Date(), modTool } = info
+    const {
+      event,
+      subject,
+      createdBy,
+      externalId,
+      createdAt = new Date(),
+      modTool,
+    } = info
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0
@@ -553,6 +577,7 @@ export class ModerationService {
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
         modTool: modTool ? jsonb(modTool) : null,
+        externalId: externalId ?? null,
       })
       .returningAll()
       .executeTakeFirstOrThrow()

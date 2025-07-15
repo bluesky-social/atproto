@@ -25,6 +25,7 @@ import { ProtectedTagSetting } from '../../setting/types'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
+import { getEventType } from '../util'
 
 const handleModerationEvent = async ({
   ctx,
@@ -43,7 +44,7 @@ const handleModerationEvent = async ({
   const db = ctx.db
   const moderationService = ctx.modService(db)
   const settingService = ctx.settingService(db)
-  const { event } = input.body
+  const { event, externalId } = input.body
   const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
@@ -162,6 +163,20 @@ const handleModerationEvent = async ({
     await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
   }
 
+  if (externalId) {
+    const existingEvent = await moderationService.getEventByExternalId(
+      getEventType(event.$type),
+      externalId,
+      subject,
+    )
+    if (existingEvent) {
+      throw new InvalidRequestError(
+        `An event with the same external ID already exists for the subject.`,
+        'DuplicateExternalId',
+      )
+    }
+  }
+
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
 
@@ -170,6 +185,7 @@ const handleModerationEvent = async ({
       subject,
       createdBy,
       modTool: input.body.modTool,
+      externalId,
     })
 
     const tagService = new TagService(
