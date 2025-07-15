@@ -163,22 +163,23 @@ const handleModerationEvent = async ({
     await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
   }
 
-  if (externalId) {
-    const existingEvent = await moderationService.getEventByExternalId(
-      getEventType(event.$type),
-      externalId,
-      subject,
-    )
-    if (existingEvent) {
-      throw new InvalidRequestError(
-        `An event with the same external ID already exists for the subject.`,
-        'DuplicateExternalId',
-      )
-    }
-  }
-
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
+
+    if (externalId) {
+      const existingEvent = await moderationTxn.getEventByExternalId(
+        getEventType(event.$type),
+        externalId,
+        subject,
+      )
+
+      if (existingEvent) {
+        throw new InvalidRequestError(
+          `An event with the same external ID already exists for the subject.`,
+          'DuplicateExternalId',
+        )
+      }
+    }
 
     const result = await moderationTxn.logEvent({
       event,
