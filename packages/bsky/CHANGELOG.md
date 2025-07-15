@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.172
+
+### Patch Changes
+
+- [#4042](https://github.com/bluesky-social/atproto/pull/4042) [`2aecd2b29`](https://github.com/bluesky-social/atproto/commit/2aecd2b290849bf8fbef223464862732cc04d139) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Uppercase countryCode in `initAgeAssurance` method.
+
+- [#4041](https://github.com/bluesky-social/atproto/pull/4041) [`083566ddf`](https://github.com/bluesky-social/atproto/commit/083566ddfc3c9263423ebd5e59bfdbfe7b091c82) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add `unregisterPush` API
+
+- Updated dependencies [[`083566ddf`](https://github.com/bluesky-social/atproto/commit/083566ddfc3c9263423ebd5e59bfdbfe7b091c82), [`3b356c509`](https://github.com/bluesky-social/atproto/commit/3b356c5096a269f1be6c4e69bdee7f5d14eb5d7e)]:
+  - @atproto/api@0.15.26
+
 ## 0.0.171
 
 ### Patch Changes
