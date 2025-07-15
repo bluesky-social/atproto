@@ -78,6 +78,7 @@ export class ModeratorClient {
       createdBy?: string
       meta?: unknown
       modTool?: ToolsOzoneModerationDefs.ModTool
+      externalId?: string
     },
     role?: ModLevel,
   ) {
@@ -87,6 +88,7 @@ export class ModeratorClient {
       subjectBlobCids,
       createdBy = 'did:example:admin',
       modTool,
+      externalId,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
@@ -95,6 +97,7 @@ export class ModeratorClient {
         subjectBlobCids,
         createdBy,
         modTool,
+        externalId,
       },
       {
         encoding: 'application/json',

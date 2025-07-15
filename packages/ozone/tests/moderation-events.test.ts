@@ -474,6 +474,42 @@ describe('moderation-events', () => {
     })
   })
 
+  describe('deduping by external id', () => {
+    it('fails on events with duplicate external id', async () => {
+      const externalId = 'external-id-1'
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          attemptId: 'attempt-1',
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        externalId,
+      })
+      await expect(
+        modClient.emitEvent({
+          event: {
+            $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            attemptId: 'attempt-1',
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.alice,
+          },
+          externalId,
+        }),
+      ).rejects.toThrow(
+        'An event with the same external ID already exists for the subject.',
+      )
+    })
+  })
+
   describe('blobs', () => {
     it('are tracked on takedown event', async () => {
       const post = sc.posts[sc.dids.carol][0]
