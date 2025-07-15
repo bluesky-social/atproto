@@ -9,7 +9,7 @@ const DOC_PATH = '/.well-known/did.json'
 const routes = express.Router()
 
 // Get DID Doc
-routes.get('/*', async (req, res) => {
+routes.get('/{*splat}', async (req, res) => {
   const db = res.locals.db
   const got = await db.get(req.url)
   if (got === null) {
