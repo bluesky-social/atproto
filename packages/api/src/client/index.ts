@@ -4099,12 +4099,11 @@ export class AppBskyUnspeccedNS {
     data?: AppBskyUnspeccedInitAgeAssurance.InputSchema,
     opts?: AppBskyUnspeccedInitAgeAssurance.CallOptions,
   ): Promise<AppBskyUnspeccedInitAgeAssurance.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.initAgeAssurance',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('app.bsky.unspecced.initAgeAssurance', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedInitAgeAssurance.toKnownErr(e)
+      })
   }
 
   searchActorsSkeleton(

@@ -14,6 +14,9 @@ const authResponseSchema = z.object({
   access_token: z.string(),
 })
 
+const EXTERNAL_PAYLOAD_CHAR_LIMIT = 200
+export class KwsExternalPayloadError extends Error {}
+
 export class KwsClient {
   constructor(public cfg: KwsConfig) {}
 
@@ -76,6 +79,11 @@ export class KwsClient {
     externalPayload: KwsExternalPayload
     language: string
   }) {
+    const serializedExternalPayload = serializeExternalPayload(externalPayload)
+    if (serializedExternalPayload.length > EXTERNAL_PAYLOAD_CHAR_LIMIT) {
+      throw new KwsExternalPayloadError()
+    }
+
     const res = await this.fetchWithAuth(
       `${this.cfg.apiOrigin}/v1/verifications/send-email`,
       {
@@ -86,7 +94,7 @@ export class KwsClient {
         },
         body: JSON.stringify({
           email,
-          externalPayload: serializeExternalPayload(externalPayload),
+          externalPayload: serializedExternalPayload,
           language,
           location: countryCode,
           userContext: 'adult',

@@ -42,6 +42,23 @@ export interface Response {
   data: OutputSchema
 }
 
+export class InvalidEmailError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class DidTooLongError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidEmail') return new InvalidEmailError(e)
+    if (e.error === 'DidTooLong') return new DidTooLongError(e)
+  }
+
   return e
 }
