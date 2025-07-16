@@ -137,7 +137,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
     const nsidToEnum = (nsid: string): string => {
       return nsid
         .split('.')
-        .map((word) => word[0].toUpperCase() + word.slice(1))
+        .map((word) => word.replace(/(^|-)./g, (s) => s.at(-1)!.toUpperCase()))
         .join('')
     }
 
