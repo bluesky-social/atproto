@@ -9,6 +9,7 @@ export type InternalStateData = {
   authMethod?: ClientAuthMethod
   verifier?: string
   appState?: string
+  redirectUri?: string
 }
 
 export type StateStore = SimpleStore<string, InternalStateData>
