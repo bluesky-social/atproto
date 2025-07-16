@@ -8,8 +8,10 @@ import {
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { GateID } from '../../../../feature-gates'
+import { KwsExternalPayloadError } from '../../../../kws'
 import { Server } from '../../../../lexicon'
 import { InputSchema } from '../../../../lexicon/types/app/bsky/unspecced/initAgeAssurance'
+import { httpLogger as log } from '../../../../logger'
 import { KwsExternalPayload } from '../../../kws/types'
 import { createStashEvent, getClientUa } from '../../../kws/util'
 
@@ -39,12 +41,26 @@ export default function (server: Server, ctx: AppContext) {
       const initUa = getClientUa(req)
       const externalPayload: KwsExternalPayload = { actorDid, attemptId }
 
-      await ctx.kwsClient.sendEmail({
-        countryCode: countryCode.toUpperCase(),
-        email,
-        externalPayload,
-        language,
-      })
+      try {
+        await ctx.kwsClient.sendEmail({
+          countryCode: countryCode.toUpperCase(),
+          email,
+          externalPayload,
+          language,
+        })
+      } catch (err) {
+        if (err instanceof KwsExternalPayloadError) {
+          log.error(
+            { externalPayload },
+            'Age Assurance flow failed because external payload got too long, which is caused by the DID being too long',
+          )
+          throw new InvalidRequestError(
+            'Age Assurance flow failed because DID is too long',
+            'DidTooLong',
+          )
+        }
+        throw err
+      }
 
       const event = await createStashEvent(ctx, {
         actorDid,
@@ -96,6 +112,7 @@ const validateInput = (input: InputSchema): InputSchema => {
   if (!isEmailValid(email) || isDisposableEmail(email)) {
     throw new InvalidRequestError(
       'This email address is not supported, please use a different email.',
+      'InvalidEmail',
     )
   }
 

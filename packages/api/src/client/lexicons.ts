@@ -11589,6 +11589,14 @@ export const schemaDict = {
             ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
           },
         },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+        ],
       },
     },
   },
