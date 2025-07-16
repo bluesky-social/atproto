@@ -10586,9 +10586,24 @@ export const schemaDict = {
             description:
               'List of suggested handles based on the provided inputs.',
             items: {
-              type: 'string',
-              format: 'handle',
+              type: 'ref',
+              ref: 'lex:app.bsky.unspecced.checkHandleAvailability#suggestion',
             },
+          },
+        },
+      },
+      suggestion: {
+        type: 'object',
+        required: ['handle', 'method'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          method: {
+            type: 'string',
+            description:
+              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
           },
         },
       },

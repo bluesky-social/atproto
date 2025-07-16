@@ -78,7 +78,7 @@ export function validateResultAvailable<V>(v: V) {
 export interface ResultUnavailable {
   $type?: 'app.bsky.unspecced.checkHandleAvailability#resultUnavailable'
   /** List of suggested handles based on the provided inputs. */
-  suggestions: string[]
+  suggestions: Suggestion[]
 }
 
 const hashResultUnavailable = 'resultUnavailable'
@@ -89,4 +89,21 @@ export function isResultUnavailable<V>(v: V) {
 
 export function validateResultUnavailable<V>(v: V) {
   return validate<ResultUnavailable & V>(v, id, hashResultUnavailable)
+}
+
+export interface Suggestion {
+  $type?: 'app.bsky.unspecced.checkHandleAvailability#suggestion'
+  handle: string
+  /** Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics. */
+  method: string
+}
+
+const hashSuggestion = 'suggestion'
+
+export function isSuggestion<V>(v: V) {
+  return is$typed(v, id, hashSuggestion)
+}
+
+export function validateSuggestion<V>(v: V) {
+  return validate<Suggestion & V>(v, id, hashSuggestion)
 }
