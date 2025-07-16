@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.173
+
+### Patch Changes
+
+- [#4050](https://github.com/bluesky-social/atproto/pull/4050) [`77c6dffd0`](https://github.com/bluesky-social/atproto/commit/77c6dffd0b3577a0fbdc5f0975c9eeb2a46b55c9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add errors to app.bsky.unspecced.initAgeAssurance lexicon
+
 ## 0.0.172
 
 ### Patch Changes
