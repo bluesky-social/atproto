@@ -9,6 +9,7 @@ import {
 import { AppContext } from '../../../../context'
 import { GateID } from '../../../../feature-gates'
 import { Server } from '../../../../lexicon'
+import { InputSchema } from '../../../../lexicon/types/app/bsky/unspecced/initAgeAssurance'
 import { KwsExternalPayload } from '../../../kws/types'
 import { createStashEvent, getClientUa } from '../../../kws/util'
 
@@ -30,12 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError()
       }
 
-      const { email, language, countryCode } = input.body
-      if (!isEmailValid(email) || isDisposableEmail(email)) {
-        throw new InvalidRequestError(
-          'This email address is not supported, please use a different email.',
-        )
-      }
+      const { countryCode, email, language } = validateInput(input.body)
 
       const attemptId = crypto.randomUUID()
       // Assumes `app.set('trust proxy', ...)` configured with `true` or specific values.
@@ -68,4 +64,44 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+// Supported languages for KWS Adult Verification.
+// This list comes from KWS's AV Developer Guide PDF doc.
+const kwsAvSupportedLanguages = [
+  'en',
+  'ar',
+  'zh-Hans',
+  'nl',
+  'tl',
+  'fr',
+  'de',
+  'id',
+  'it',
+  'ja',
+  'ko',
+  'pl',
+  'pt-BR',
+  'pt',
+  'ru',
+  'es',
+  'th',
+  'tr',
+  'vi',
+]
+
+const validateInput = (input: InputSchema): InputSchema => {
+  const { countryCode, email, language } = input
+
+  if (!isEmailValid(email) || isDisposableEmail(email)) {
+    throw new InvalidRequestError(
+      'This email address is not supported, please use a different email.',
+    )
+  }
+
+  return {
+    countryCode,
+    email,
+    language: kwsAvSupportedLanguages.includes(language) ? language : 'en',
+  }
 }
