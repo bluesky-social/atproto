@@ -35,6 +35,10 @@ describe('handle availability', () => {
     handleSubdomain = handle.split('.')[0]
   })
 
+  afterEach(() => {
+    jest.resetAllMocks()
+  })
+
   afterAll(async () => {
     await network.close()
   })
@@ -200,12 +204,9 @@ describe('handle availability', () => {
         })
 
         assertUnavailable(result)
-        const suggestion = result.suggestions.find((s) =>
-          s.handle.includes('-'),
-        )
-        assert(suggestion)
-        expect(suggestion).not.toBe(handle)
-        expect(suggestion.handle.replace('-', '')).toBe(handle)
+        const suggestion = result.suggestions.find((s) => s.method === 'hyphen')
+        expect(suggestion?.handle).not.toBe(handle)
+        expect(suggestion?.handle.replace('-', '')).toBe(handle)
       })
 
       it('suggests random digits at the end of handle', async () => {
@@ -216,12 +217,28 @@ describe('handle availability', () => {
         })
 
         assertUnavailable(result)
-        const suggestion = result.suggestions.find((s) =>
-          /\d+$/.test(s.handle.split('.')[0]),
+        const suggestion = result.suggestions.find(
+          (s) => s.method === 'random_digits',
         )
-        assert(suggestion)
-        expect(suggestion).not.toBe(handle)
-        expect(suggestion.handle.replace(/\d+/, '')).toBe(handle)
+        expect(suggestion?.handle).not.toBe(handle)
+        expect(suggestion?.handle.replace(/\d+/, '')).toBe(handle)
+      })
+
+      it('dedupes suggestions', async () => {
+        jest.spyOn(global.Math, 'random').mockReturnValue(0)
+
+        const {
+          data: { result },
+        } = await agent.app.bsky.unspecced.checkHandleAvailability({
+          handle,
+        })
+
+        assertUnavailable(result)
+        expect(result.suggestions).toStrictEqual([
+          { handle: 'a-lice.test', method: 'hyphen' },
+          { handle: 'al-ice.test', method: 'hyphen' },
+          { handle: 'alice0.test', method: 'random_digits' },
+        ])
       })
     })
   })

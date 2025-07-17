@@ -60,6 +60,11 @@ const validateParams = (params: QueryParams) => {
   }
 }
 
+const uniqueSuggestions = (suggestions: Suggestion[]): Suggestion[] =>
+  suggestions.filter((s0, i, ss) => {
+    return ss.findIndex((s1) => s0.handle === s1.handle) === i
+  })
+
 /** Gets the target number of suggestions, ensuring uniqueness and availability. */
 const getSuggestions = async (
   ctx: AppContext,
@@ -92,7 +97,7 @@ const getSuggestions = async (
     )
     suggestions.push(...random)
 
-    suggestions = [...suggestions, ...random]
+    suggestions = uniqueSuggestions([...suggestions, ...random])
     attempt++
   }
 
@@ -226,7 +231,7 @@ const suggestHyphens = (
 
   while (got < want) {
     // Exclude first and last character to avoid leading/trailing hyphens.
-    for (let i = 1; i < s.length; i++) {
+    for (let i = 1; i < s.length && got < want; i++) {
       // Randomly skip some combinations.
       if (Math.random() > 0.5) continue
 
