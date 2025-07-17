@@ -149,6 +149,7 @@ import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notificat
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
+import * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -2118,6 +2119,18 @@ export class AppBskyUnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  checkHandleAvailability<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedCheckHandleAvailability.QueryParams,
+      AppBskyUnspeccedCheckHandleAvailability.HandlerInput,
+      AppBskyUnspeccedCheckHandleAvailability.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.checkHandleAvailability' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getAgeAssuranceState<A extends Auth = void>(
