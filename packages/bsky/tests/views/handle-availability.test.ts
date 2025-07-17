@@ -52,6 +52,17 @@ describe('handle availability', () => {
         }),
       ).rejects.toThrow(InvalidEmailError)
     })
+
+    it(`returns unavailable with empty suggestions input is already a slur`, async () => {
+      const {
+        data: { result },
+      } = await agent.app.bsky.unspecced.checkHandleAvailability({
+        handle: 'shit.test',
+      })
+
+      assertUnavailable(result)
+      expect(result.suggestions).toStrictEqual([])
+    })
   })
 
   describe('available handle', () => {
@@ -76,27 +87,29 @@ describe('handle availability', () => {
       assertUnavailable(data.result)
     })
 
-    it(`returns empty list if can't create suggestions`, async () => {
-      // This handle has the maximum allowed length. Suggestions are additive,
-      // so no valid suggestion can be made by adding characters.
-      const longestAllowedHandle = 'abcdefghijklmnopqr.test'
-      const userMaxLength = {
-        email: 'usermaxlength@mail.com',
-        handle: longestAllowedHandle,
-        password: 'hunter2',
-      }
-      await sc.createAccount('userMaxLength', userMaxLength)
-      await network.processAll()
-      const { data } = await agent.app.bsky.unspecced.checkHandleAvailability({
-        handle: longestAllowedHandle,
+    describe('suggestions', () => {
+      it(`returns empty list if can't create suggestions`, async () => {
+        // This handle has the maximum allowed length. Suggestions are additive,
+        // so no valid suggestion can be made by adding characters.
+        const longestAllowedHandle = 'abcdefghijklmnopqr.test'
+        const userMaxLength = {
+          email: 'usermaxlength@mail.com',
+          handle: longestAllowedHandle,
+          password: 'hunter2',
+        }
+        await sc.createAccount('userMaxLength', userMaxLength)
+        await network.processAll()
+        const { data } = await agent.app.bsky.unspecced.checkHandleAvailability(
+          {
+            handle: longestAllowedHandle,
+          },
+        )
+
+        expect(data.handle).toBe(longestAllowedHandle)
+        assertUnavailable(data.result)
+        expect(data.result.suggestions).toHaveLength(0)
       })
 
-      expect(data.handle).toBe(longestAllowedHandle)
-      assertUnavailable(data.result)
-      expect(data.result.suggestions).toHaveLength(0)
-    })
-
-    describe('suggestions', () => {
       it('suggests appending YOB to tentative handle', async () => {
         const {
           data: { result },
@@ -239,6 +252,30 @@ describe('handle availability', () => {
           { handle: 'al-ice.test', method: 'hyphen' },
           { handle: 'alice0.test', method: 'random_digits' },
         ])
+      })
+
+      it(`avoids slurs`, async () => {
+        jest.spyOn(global.Math, 'random').mockReturnValue(0)
+
+        const bass = {
+          email: 'bass@mail.com',
+          handle: 'bass.test',
+          password: 'hunter2',
+        }
+        await sc.createAccount('bass', bass)
+        await network.processAll()
+
+        const {
+          data: { result },
+        } = await agent.app.bsky.unspecced.checkHandleAvailability({
+          handle: bass.handle,
+        })
+
+        assertUnavailable(result)
+        const suggestion = result.suggestions.find(
+          (s) => s.handle === 'b-ass.test',
+        )
+        expect(suggestion).toBeUndefined()
       })
     })
   })
