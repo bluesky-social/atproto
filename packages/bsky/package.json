@@ -59,6 +59,7 @@
     "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
     "kysely": "^0.22.0",
+    "leo-profanity": "^1.8.0",
     "multiformats": "^9.9.0",
     "murmurhash": "^2.0.1",
     "p-queue": "^6.6.2",
