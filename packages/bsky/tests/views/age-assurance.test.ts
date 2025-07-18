@@ -228,9 +228,9 @@ describe('age assurance views', () => {
       lastInitiatedAt: expect.any(String),
     })
 
-    expect(() => {
-      return initAgeAssurance(actor)
-    }).rejects.toThrowErrorMatchingSnapshot()
+    await expect(initAgeAssurance(actor)).rejects.toThrowError(
+      `Cannot initiate age assurance flow from current state: assured`,
+    )
   })
 
   describe('verification response flow', () => {
