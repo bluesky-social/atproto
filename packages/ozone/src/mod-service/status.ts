@@ -333,7 +333,8 @@ export const adjustModerationSubjectStatus = async (
 
   const isAppealEvent =
     action === 'tools.ozone.moderation.defs#modEventReport' &&
-    isAppealReport(`${meta?.reportType}`)
+    meta?.reportType &&
+    isAppealReport(`${meta.reportType}`)
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     currentStatus,

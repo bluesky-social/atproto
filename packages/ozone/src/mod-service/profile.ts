@@ -84,7 +84,7 @@ export class ModerationServiceProfile {
     private appviewAgent: AtpAgent,
     cacheTTL?: number,
   ) {
-    this.CACHE_TTL = cacheTTL || cfg.service.serviceRecordCacheTTL || 5 * MINUTE
+    this.CACHE_TTL = cacheTTL || cfg.service.serviceRecordCacheTTL
   }
 
   static creator(
@@ -94,7 +94,7 @@ export class ModerationServiceProfile {
     return () => new ModerationServiceProfile(cfg, appviewAgent)
   }
 
-  async validateReasonType(reasonType: string): Promise<string> {
+  async getProfile() {
     const now = Date.now()
 
     if (!this.cache || now - this.cache.timestamp > this.CACHE_TTL) {
@@ -116,26 +116,29 @@ export class ModerationServiceProfile {
       }
     }
 
-    if (
-      this.cache?.profile?.reasonTypes &&
-      Array.isArray(this.cache.profile.reasonTypes)
-    ) {
-      const supportedReasonTypes = this.cache.profile.reasonTypes
+    return this.cache?.profile || null
+  }
 
-      // Check if the reason type is directly supported
-      if (supportedReasonTypes.includes(reasonType)) {
-        return reasonType
-      }
+  async validateReasonType(reasonType: string): Promise<string> {
+    const profile = await this.getProfile()
 
-      // Allow new reason types only if they map to a supported old reason type
-      const mappedOldReason = NEW_TO_OLD_REASON_MAPPING[reasonType]
-      if (mappedOldReason && supportedReasonTypes.includes(mappedOldReason)) {
-        return reasonType
-      }
-
-      throw new InvalidRequestError(`Invalid reason type: ${reasonType}`)
+    if (!Array.isArray(profile?.reasonTypes)) {
+      return reasonType
     }
 
-    return reasonType
+    const supportedReasonTypes = profile.reasonTypes
+
+    // Check if the reason type is directly supported
+    if (supportedReasonTypes.includes(reasonType)) {
+      return reasonType
+    }
+
+    // Allow new reason types only if they map to a supported old reason type
+    const mappedOldReason = NEW_TO_OLD_REASON_MAPPING[reasonType]
+    if (mappedOldReason && supportedReasonTypes.includes(mappedOldReason)) {
+      return reasonType
+    }
+
+    throw new InvalidRequestError(`Invalid reason type: ${reasonType}`)
   }
 }
