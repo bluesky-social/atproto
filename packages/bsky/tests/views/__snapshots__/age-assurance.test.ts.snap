@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`age assurance views webhook flow does not assure if the webhook has status not verified 1`] = `"TypeError: fetch failed"`;
