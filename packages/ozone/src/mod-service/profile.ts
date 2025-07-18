@@ -1,5 +1,4 @@
 import AtpAgent, { AppBskyLabelerDefs } from '@atproto/api'
-import { MINUTE } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { OzoneConfig } from '../config'
 import {
