@@ -54,10 +54,17 @@ export class DidTooLongError extends XRPCError {
   }
 }
 
+export class InvalidInitiationError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidEmail') return new InvalidEmailError(e)
     if (e.error === 'DidTooLong') return new DidTooLongError(e)
+    if (e.error === 'InvalidInitiation') return new InvalidInitiationError(e)
   }
 
   return e

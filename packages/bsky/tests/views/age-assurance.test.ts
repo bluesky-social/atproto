@@ -189,6 +189,50 @@ describe('age assurance views', () => {
     )
   })
 
+  it('ensures user cannot re-init flow from terminal state', async () => {
+    const actor = sc.dids.bob
+    const state0 = await getAgeAssurance(actor)
+    expect(state0).toStrictEqual({
+      status: 'unknown',
+    })
+
+    const init1 = await initAgeAssurance(actor)
+    expect(init1).toStrictEqual({
+      status: 'pending',
+      lastInitiatedAt: expect.any(String),
+    })
+
+    const init2 = await initAgeAssurance(actor)
+    expect(init2).toStrictEqual({
+      status: 'pending',
+      lastInitiatedAt: expect.any(String),
+    })
+
+    /**
+     * Can re-init flow if the state is pending.
+     */
+    expect(sendEmailMock).toHaveBeenCalledTimes(2)
+
+    const externalPayload: KwsExternalPayload = {
+      actorDid: actor,
+      attemptId,
+    }
+    const status = { verified: true }
+    await kwsServer.callVerificationResponse(network.bsky.url, {
+      externalPayload,
+      status,
+    })
+    const finalizedState = await getAgeAssurance(actor)
+    expect(finalizedState).toStrictEqual({
+      status: 'assured',
+      lastInitiatedAt: expect.any(String),
+    })
+
+    await expect(initAgeAssurance(actor)).rejects.toThrowError(
+      `Cannot initiate age assurance flow from current state: assured`,
+    )
+  })
+
   describe('verification response flow', () => {
     it('performs the AA flow', async () => {
       const state0 = await getAgeAssurance(actorDid)
