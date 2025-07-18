@@ -42,7 +42,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'InvalidEmail' | 'DidTooLong'
+  error?: 'InvalidEmail' | 'DidTooLong' | 'InvalidInitiation'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

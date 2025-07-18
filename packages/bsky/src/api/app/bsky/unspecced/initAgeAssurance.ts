@@ -14,6 +14,7 @@ import { InputSchema } from '../../../../lexicon/types/app/bsky/unspecced/initAg
 import { httpLogger as log } from '../../../../logger'
 import { KwsExternalPayload } from '../../../kws/types'
 import { createStashEvent, getClientUa } from '../../../kws/util'
+import { ActorInfo } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.initAgeAssurance({
@@ -31,6 +32,20 @@ export default function (server: Server, ctx: AppContext) {
         ctx.featureGates.check({ userID: actorDid }, GateID.AgeAssurance)
       if (!enabled) {
         throw new ForbiddenError()
+      }
+
+      const actorInfo = await getAgeVerificationState(ctx, actorDid)
+
+      if (actorInfo?.ageAssuranceStatus) {
+        if (
+          actorInfo.ageAssuranceStatus.status !== 'unknown' &&
+          actorInfo.ageAssuranceStatus.status !== 'pending'
+        ) {
+          throw new InvalidRequestError(
+            `Cannot initiate age assurance flow from current state: ${actorInfo.ageAssuranceStatus.status}`,
+            'InvalidInitiation',
+          )
+        }
       }
 
       const { countryCode, email, language } = validateInput(input.body)
@@ -120,5 +135,22 @@ const validateInput = (input: InputSchema): InputSchema => {
     countryCode,
     email,
     language: kwsAvSupportedLanguages.includes(language) ? language : 'en',
+  }
+}
+
+const getAgeVerificationState = async (
+  ctx: AppContext,
+  actorDid: string,
+): Promise<ActorInfo | undefined> => {
+  try {
+    const res = await ctx.dataplane.getActors({
+      dids: [actorDid],
+      returnAgeAssuranceForDids: [actorDid],
+      skipCacheForDids: [actorDid],
+    })
+
+    return res.actors[0]
+  } catch (err) {
+    return undefined
   }
 }
