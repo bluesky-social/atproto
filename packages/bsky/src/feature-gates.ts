@@ -13,6 +13,7 @@ export enum GateID {
    * appease TS
    */
   _ = '',
+  AgeAssurance = 'age_assurance',
 }
 
 /**

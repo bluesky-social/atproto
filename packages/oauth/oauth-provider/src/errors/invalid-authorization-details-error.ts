@@ -1,5 +1,5 @@
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { AccessDeniedError } from './access-denied-error.js'
+import { AuthorizationError } from './authorization-error.js'
 
 /**
  * @see
@@ -16,7 +16,7 @@ import { AccessDeniedError } from './access-denied-error.js'
  *  - contains fields with invalid values for the authorization details type, or
  *  - is missing required fields for the authorization details type.
  */
-export class InvalidAuthorizationDetailsError extends AccessDeniedError {
+export class InvalidAuthorizationDetailsError extends AuthorizationError {
   constructor(
     parameters: OAuthAuthorizationRequestParameters,
     error_description: string,

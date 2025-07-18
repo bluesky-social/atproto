@@ -1,5 +1,6 @@
 import { AppBskyGraphDefs } from '../client/index'
 import { LABELS } from './const/labels'
+import { MuteWordMatch } from './mutewords'
 import {
   BLOCK_BEHAVIOR,
   CUSTOM_LABEL_VALUE_RE,
@@ -195,12 +196,13 @@ export class ModerationDecision {
     }
   }
 
-  addMutedWord(mutedWord: boolean) {
-    if (mutedWord) {
+  addMutedWord(matches: MuteWordMatch[] | undefined) {
+    if (matches?.length) {
       this.causes.push({
         type: 'mute-word',
         source: { type: 'user' },
         priority: 6,
+        matches,
       })
     }
   }

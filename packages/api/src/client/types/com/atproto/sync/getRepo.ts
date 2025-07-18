@@ -15,13 +15,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.getRepo'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The DID of the repo. */
   did: string
   /** The revision ('rev') of the repo to create a diff from. */
   since?: string
 }
-
 export type InputSchema = undefined
 
 export interface CallOptions {

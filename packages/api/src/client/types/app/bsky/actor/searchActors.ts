@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.actor.searchActors'
 
-export interface QueryParams {
+export type QueryParams = {
   /** DEPRECATED: use 'q' instead. */
   term?: string
   /** Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
@@ -24,7 +24,6 @@ export interface QueryParams {
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

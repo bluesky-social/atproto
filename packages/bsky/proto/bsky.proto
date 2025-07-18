@@ -111,6 +111,14 @@ message GetActorChatDeclarationRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetNotificationDeclarationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetNotificationDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetStatusRecordsRequest {
   repeated string uris = 1;
 }
@@ -451,6 +459,7 @@ message GetActorRepostsResponse {
 message GetActorsRequest {
   repeated string dids = 1;
   repeated string skip_cache_for_dids = 2;
+  repeated string return_age_assurance_for_dids = 3;
 }
 
 message ActorInfo {
@@ -473,6 +482,14 @@ message ActorInfo {
   // Tags being applied to the profile record
   repeated string profile_tags = 16;
   Record status_record = 17;
+  string allow_activity_subscriptions_from = 18;
+  optional AgeAssuranceStatus age_assurance_status = 19;
+}
+
+message AgeAssuranceStatus {
+  string status = 1;
+  google.protobuf.Timestamp last_initiated_at = 2;
+  bool override_applied = 3;
 }
 
 message GetActorsResponse {
@@ -765,14 +782,14 @@ message NotificationChannelPush {
   bool enabled = 1;
 }
 
-enum NotificationFilter {
-  NOTIFICATION_FILTER_UNSPECIFIED = 0;
-  NOTIFICATION_FILTER_ALL = 1;
-  NOTIFICATION_FILTER_FOLLOWS = 2;
+enum NotificationInclude {
+  NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  NOTIFICATION_INCLUDE_ALL = 1;
+  NOTIFICATION_INCLUDE_FOLLOWS = 2;
 }
 
 message FilterableNotificationPreference {
-  NotificationFilter filter = 1;
+  NotificationInclude include = 1;
   NotificationChannelList list = 2;
   NotificationChannelPush push = 3;
 }
@@ -782,14 +799,14 @@ message NotificationPreference {
   NotificationChannelPush push = 2;
 }
 
-enum ChatNotificationFilter {
-  CHAT_NOTIFICATION_FILTER_UNSPECIFIED = 0;
-  CHAT_NOTIFICATION_FILTER_ALL = 1;
-  CHAT_NOTIFICATION_FILTER_ACCEPTED = 2;
+enum ChatNotificationInclude {
+  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
+  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
 }
 
 message ChatNotificationPreference {
-  ChatNotificationFilter filter = 1;
+  ChatNotificationInclude include = 1;
   NotificationChannelPush push = 2;
 }
 
@@ -868,6 +885,39 @@ message GetUnreadNotificationCountRequest {
 
 message GetUnreadNotificationCountResponse {
   int32 count = 1;
+}
+
+message GetActivitySubscriptionDidsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActivitySubscriptionDidsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
+message PostActivitySubscription {}
+message ReplyActivitySubscription {}
+
+message ActivitySubscription {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  optional PostActivitySubscription post = 4;
+  optional ReplyActivitySubscription reply = 5;
+  string subject_did = 6;
+  google.protobuf.Timestamp indexed_at = 7;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string subject_dids = 2;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsResponse {
+  repeated ActivitySubscription subscriptions = 1;
 }
 
 //
@@ -1243,6 +1293,7 @@ service Service {
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
+  rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
   rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
@@ -1321,6 +1372,8 @@ service Service {
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
+  rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
+  rpc GetActivitySubscriptionsByActorAndSubjects(GetActivitySubscriptionsByActorAndSubjectsRequest) returns (GetActivitySubscriptionsByActorAndSubjectsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
   // FeedGenerators

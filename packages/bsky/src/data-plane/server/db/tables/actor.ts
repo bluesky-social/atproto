@@ -7,6 +7,8 @@ export interface Actor {
   takedownRef: string | null
   upstreamStatus: string | null
   trustedVerifier: Generated<boolean>
+  ageAssuranceStatus: string | null
+  ageAssuranceLastInitiatedAt: string | null
 }
 
 export const tableName = 'actor'

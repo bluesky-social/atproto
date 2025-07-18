@@ -49,3 +49,9 @@ export async function parseHttpRequest<A extends readonly KnownNames[]>(
     Extract<KnownParser, { name: A[number] }>
   >
 }
+
+export async function flushStream(stream: AsyncIterable<any>): Promise<void> {
+  for await (const _ of stream) {
+    // Consume the stream to completion
+  }
+}

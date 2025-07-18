@@ -8,17 +8,17 @@
     },
     "chatPreference": {
       "type": "object",
-      "required": ["filter", "push"],
+      "required": ["include", "push"],
       "properties": {
-        "filter": { "type": "string", "knownValues": ["all", "accepted"] },
+        "include": { "type": "string", "knownValues": ["all", "accepted"] },
         "push": { "type": "boolean" }
       }
     },
     "filterablePreference": {
       "type": "object",
-      "required": ["filter", "list", "push"],
+      "required": ["include", "list", "push"],
       "properties": {
-        "filter": { "type": "string", "knownValues": ["all", "follows"] },
+        "include": { "type": "string", "knownValues": ["all", "follows"] },
         "list": { "type": "boolean" },
         "push": { "type": "boolean" }
       }
@@ -62,6 +62,26 @@
         "subscribedPost": { "type": "ref", "ref": "#preference" },
         "unverified": { "type": "ref", "ref": "#preference" },
         "verified": { "type": "ref", "ref": "#preference" }
+      }
+    },
+    "activitySubscription": {
+      "type": "object",
+      "required": ["post", "reply"],
+      "properties": {
+        "post": { "type": "boolean" },
+        "reply": { "type": "boolean" }
+      }
+    },
+    "subjectActivitySubscription": {
+      "description": "Object used to store activity subscription data in stash.",
+      "type": "object",
+      "required": ["subject", "activitySubscription"],
+      "properties": {
+        "subject": { "type": "string", "format": "did" },
+        "activitySubscription": {
+          "type": "ref",
+          "ref": "#activitySubscription"
+        }
       }
     }
   }

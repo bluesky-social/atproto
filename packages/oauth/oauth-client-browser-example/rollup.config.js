@@ -91,7 +91,7 @@ module.exports = defineConfig((commandLineArguments) => {
               )
               .join('\n')}
           </head>
-          <body class="bg-white dark:bg-slate-800">
+          <body class="bg-slate-100 dark:bg-slate-800 min-h-screen">
             <div id="root"></div>
             ${files.js
               .map(

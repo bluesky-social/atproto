@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.getKnownFollowers'
 
-export interface QueryParams {
+export type QueryParams = {
   actor: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -3,6 +3,11 @@
 exports[`pds posts views embeds video with record. 1`] = `
 Object {
   "author": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",
@@ -43,6 +48,11 @@ Object {
       "record": Object {
         "$type": "app.bsky.embed.record#viewRecord",
         "author": Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(0)",
@@ -125,6 +135,11 @@ Object {
 exports[`pds posts views embeds video. 1`] = `
 Object {
   "author": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",
@@ -194,6 +209,11 @@ exports[`pds posts views fetches posts 1`] = `
 Array [
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
@@ -256,6 +276,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
@@ -302,6 +327,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(2)",
@@ -339,6 +369,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(4)",
       "handle": "carol.test",
       "labels": Array [],
@@ -371,6 +406,11 @@ Array [
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(2)",
@@ -462,6 +502,9 @@ Array [
   Object {
     "author": Object {
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "chat": Object {
           "allowIncoming": "none",
         },
@@ -481,6 +524,11 @@ Array [
       "record": Object {
         "$type": "app.bsky.embed.record#viewRecord",
         "author": Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(4)",
           "handle": "carol.test",
           "labels": Array [],
@@ -514,6 +562,11 @@ Array [
               "record": Object {
                 "$type": "app.bsky.embed.record#viewRecord",
                 "author": Object {
+                  "associated": Object {
+                    "activitySubscription": Object {
+                      "allowSubscriptions": "followers",
+                    },
+                  },
                   "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
                   "createdAt": "1970-01-01T00:00:00.000Z",
                   "did": "user(2)",
@@ -638,6 +691,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",

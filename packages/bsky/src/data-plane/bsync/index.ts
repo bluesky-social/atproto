@@ -5,15 +5,21 @@ import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { TID } from '@atproto/common'
+import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
+import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
+import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
+import { httpLogger } from '../../logger'
 import { Service } from '../../proto/bsync_connect'
 import {
   Method,
   MuteOperation_Type,
   PutOperationRequest,
 } from '../../proto/bsync_pb'
+import { Namespaces } from '../../stash'
 import { Database } from '../server/db'
+import { excluded } from '../server/db/util'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -145,19 +151,40 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
 
     async putOperation(req) {
       const { actorDid, namespace, key, method, payload } = req
-      if (
-        method !== Method.CREATE &&
-        method !== Method.UPDATE &&
-        method !== Method.DELETE
-      ) {
-        throw new Error(`Unsupported method: ${method}`)
-      }
+      assert(
+        method === Method.CREATE ||
+          method === Method.UPDATE ||
+          method === Method.DELETE,
+        `Unsupported method: ${method}`,
+      )
 
       const now = new Date().toISOString()
-      if (namespace === 'app.bsky.notification.defs#preferences') {
-        await handleNotificationPreferencesOperation(db, req, now)
-      } else {
-        await handleGenericOperation(db, req, now)
+
+      // Index all items into private_data.
+      await handleGenericOperation(db, req, now)
+
+      // Maintain bespoke indexes for certain namespaces.
+      if (
+        namespace ===
+        Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
+      ) {
+        await handleSubjectActivitySubscriptionOperation(db, req, now).catch(
+          (err: unknown) =>
+            httpLogger.warn(
+              { err, namespace },
+              'mock bsync put operation failed',
+            ),
+        )
+      } else if (
+        namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
+      ) {
+        await handleAgeAssuranceEventOperation(db, req, now).catch(
+          (err: unknown) =>
+            httpLogger.warn(
+              { err, namespace },
+              'mock bsync put operation failed',
+            ),
+        )
       }
 
       return {
@@ -181,14 +208,15 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
     },
   })
 
-const handleNotificationPreferencesOperation = async (
+// upsert into or remove from private_data
+const handleGenericOperation = async (
   db: Database,
   req: PutOperationRequest,
   now: string,
 ) => {
   const { actorDid, namespace, key, method, payload } = req
   if (method === Method.CREATE || method === Method.UPDATE) {
-    return db.db
+    await db.db
       .insertInto('private_data')
       .values({
         actorDid,
@@ -200,53 +228,93 @@ const handleNotificationPreferencesOperation = async (
       })
       .onConflict((oc) =>
         oc.columns(['actorDid', 'namespace', 'key']).doUpdateSet({
-          payload: Buffer.from(payload).toString('utf8'),
-          updatedAt: now,
+          payload: excluded(db.db, 'payload'),
+          updatedAt: excluded(db.db, 'updatedAt'),
         }),
       )
       .execute()
+  } else if (method === Method.DELETE) {
+    await db.db
+      .deleteFrom('private_data')
+      .where('actorDid', '=', actorDid)
+      .where('namespace', '=', namespace)
+      .where('key', '=', key)
+      .execute()
+  } else {
+    assert.fail(`unexpected method ${method}`)
   }
-
-  return handleGenericOperation(db, req, now)
 }
 
-const handleGenericOperation = async (
+const handleSubjectActivitySubscriptionOperation = async (
   db: Database,
   req: PutOperationRequest,
   now: string,
 ) => {
-  const { actorDid, namespace, key, method, payload } = req
-  if (method === Method.CREATE) {
+  const { actorDid, key, method, payload } = req
+
+  if (method === Method.DELETE) {
     return db.db
-      .insertInto('private_data')
-      .values({
-        actorDid,
-        namespace,
-        key,
-        payload: Buffer.from(payload).toString('utf8'),
-        indexedAt: now,
-        updatedAt: now,
-      })
+      .deleteFrom('activity_subscription')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
       .execute()
   }
 
-  if (method === Method.UPDATE) {
+  const parsed = jsonStringToLex(
+    Buffer.from(payload).toString('utf8'),
+  ) as SubjectActivitySubscription
+  const {
+    subject,
+    activitySubscription: { post, reply },
+  } = parsed
+
+  if (method === Method.CREATE) {
     return db.db
-      .updateTable('private_data')
-      .where('actorDid', '=', actorDid)
-      .where('namespace', '=', namespace)
-      .where('key', '=', key)
-      .set({
-        payload: Buffer.from(payload).toString('utf8'),
-        updatedAt: now,
+      .insertInto('activity_subscription')
+      .values({
+        creator: actorDid,
+        subjectDid: subject,
+        key,
+        indexedAt: now,
+        post,
+        reply,
       })
       .execute()
   }
 
   return db.db
-    .deleteFrom('private_data')
-    .where('actorDid', '=', actorDid)
-    .where('namespace', '=', namespace)
+    .updateTable('activity_subscription')
+    .where('creator', '=', actorDid)
     .where('key', '=', key)
+    .set({
+      indexedAt: now,
+      post,
+      reply,
+    })
+    .execute()
+}
+
+const handleAgeAssuranceEventOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  _now: string,
+) => {
+  const { actorDid, method, payload } = req
+  if (method !== Method.CREATE) return
+
+  const parsed = jsonStringToLex(
+    Buffer.from(payload).toString('utf8'),
+  ) as AgeAssuranceEvent
+  const { status, createdAt } = parsed
+
+  const update = {
+    ageAssuranceStatus: status,
+    ageAssuranceLastInitiatedAt: status === 'pending' ? createdAt : undefined,
+  }
+
+  return db.db
+    .updateTable('actor')
+    .set(update)
+    .where('did', '=', actorDid)
     .execute()
 }
