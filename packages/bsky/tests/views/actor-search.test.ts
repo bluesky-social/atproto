@@ -188,7 +188,7 @@ describe.skip('pds actor search views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.users)
+    const results = (results) => results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.searchActors(
         { term: 'p', cursor, limit: 3 },

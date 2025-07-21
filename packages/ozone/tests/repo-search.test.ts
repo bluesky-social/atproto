@@ -85,7 +85,7 @@ describe('admin repo search view', () => {
   })
 
   it('paginates with term', async () => {
-    const results = (results) => results.flatMap((res) => res.users)
+    const results = (results) => results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.tools.ozone.moderation.searchRepos(
         { term: 'p', cursor, limit: 3 },
