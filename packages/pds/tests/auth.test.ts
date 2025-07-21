@@ -192,6 +192,59 @@ describe('auth', () => {
     expect(token2?.jti).not.toEqual(token0?.jti)
   })
 
+  it.only('refresh tokens generated from same base refresh token function normally', async () => {
+    const account = await createAccount({
+      handle: 'eric.test',
+      email: 'eric@test.com',
+      password: 'password',
+    })
+
+    const a = account.refreshJwt
+
+    /*
+     * Create two new sessions from the same refresh token.
+     */
+    const a_b = await refreshSession(a)
+    const a_b$ = await refreshSession(a)
+
+    /*
+     * New tokens have long expiry
+     */
+    const decoded_a_b = jose.decodeJwt(a_b.refreshJwt)
+    const a_b_ttl = ((decoded_a_b.exp! * 1000) - Date.now()) / 1000
+    expect(a_b_ttl).toBeGreaterThan(110) // close to 120s
+    const decoded_a_b$ = jose.decodeJwt(a_b$.refreshJwt)
+    const a_b$_ttl = ((decoded_a_b$.exp! * 1000) - Date.now()) / 1000
+    expect(a_b$_ttl).toBeGreaterThan(110) // close to 120s
+
+    /*
+     * `a` is past its grace period
+     */
+    await new Promise((resolve) => setTimeout(resolve, 15e3))
+    await expect(refreshSession(a)).rejects.toThrow('Token has been revoked')
+
+    /*
+     * Just wait for any time under the refresh token expiry length
+     */
+    await new Promise((resolve) => setTimeout(resolve, 15e3))
+
+    /*
+     * Create two new sessions from the initial forked sessions
+     */
+    const a_b_c = await refreshSession(a_b.refreshJwt)
+    const a_b$_c = await refreshSession(a_b$.refreshJwt)
+
+    /*
+     * New tokens have long expiry
+     */
+    const decoded_a_b_c = jose.decodeJwt(a_b_c.refreshJwt)
+    const a_b_c_ttl = ((decoded_a_b_c.exp! * 1000) - Date.now()) / 1000
+    expect(a_b_c_ttl).toBeGreaterThan(110) // close to 120s
+    const decoded_a_b$_c = jose.decodeJwt(a_b$_c.refreshJwt)
+    const a_b$_c_ttl = ((decoded_a_b$_c.exp! * 1000) - Date.now()) / 1000
+    expect(a_b$_c_ttl).toBeGreaterThan(110) // close to 120s
+  })
+
   it('refresh token is revoked after grace period completes.', async () => {
     const { db } = network.pds.ctx.accountManager
     const account = await createAccount({

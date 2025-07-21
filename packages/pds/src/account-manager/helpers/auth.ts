@@ -15,6 +15,10 @@ export type AuthToken = {
 
 export type RefreshToken = AuthToken & { scope: AuthScope.Refresh; jti: string }
 
+let refreshTokenCounter = 0
+const refreshTokens = {}
+export const getRefreshTokenName = (jwt: string) => refreshTokens[jwt] || 'unknown token'
+
 export const createTokens = async (opts: {
   did: string
   jwtKey: KeyObject
@@ -28,6 +32,7 @@ export const createTokens = async (opts: {
     createAccessToken({ did, jwtKey, serviceDid, scope, expiresIn }),
     createRefreshToken({ did, jwtKey, serviceDid, jti, expiresIn }),
   ])
+  refreshTokens[jti!] = `rt_${refreshTokenCounter++}`
   return { accessJwt, refreshJwt }
 }
 
@@ -43,7 +48,7 @@ export const createAccessToken = (opts: {
     jwtKey,
     serviceDid,
     scope = AuthScope.Access,
-    expiresIn = '120mins',
+    expiresIn = '30sec',
   } = opts
   const signer = new jose.SignJWT({ scope })
     .setProtectedHeader({
@@ -69,7 +74,7 @@ export const createRefreshToken = (opts: {
     jwtKey,
     serviceDid,
     jti = getRefreshTokenId(),
-    expiresIn = '90days',
+    expiresIn = '2mins',
   } = opts
   const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
     .setProtectedHeader({

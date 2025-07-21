@@ -1,6 +1,6 @@
 import { KeyObject } from 'node:crypto'
 import { CID } from 'multiformats/cid'
-import { HOUR, wait } from '@atproto/common'
+import { HOUR, MINUTE, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
@@ -299,11 +299,18 @@ export class AccountManager {
     // Shorten the refresh token lifespan down from its
     // original expiration time to its revocation grace period.
     const prevExpiresAt = new Date(token.expiresAt)
-    const REFRESH_GRACE_MS = 2 * HOUR
+    const REFRESH_GRACE_MS = MINUTE / 4 // 2 * HOUR
     const graceExpiresAt = new Date(now.getTime() + REFRESH_GRACE_MS)
 
     const expiresAt =
       graceExpiresAt < prevExpiresAt ? graceExpiresAt : prevExpiresAt
+
+    console.log(`refresh_debug: rotateRefreshToken`, {
+      name: auth.getRefreshTokenName(id),
+      expiresAt: prevExpiresAt.toISOString(),
+      graceExpiresAt: graceExpiresAt.toISOString(),
+      isExpired: expiresAt <= now,
+    })
 
     if (expiresAt <= now) {
       return null
