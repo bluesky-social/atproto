@@ -205,7 +205,7 @@ describe('auth', () => {
      * Create two new sessions from the same refresh token.
      */
     const a_b = await refreshSession(a)
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 1e3))
     const a_b$ = await refreshSession(a)
 
     /*
@@ -218,7 +218,8 @@ describe('auth', () => {
     const a_b$_ttl = ((decoded_a_b$.exp! * 1000) - Date.now()) / 1000
     expect(a_b$_ttl).toBeGreaterThan(110) // close to 120s
 
-    expect(decoded_a_b).toEqual(decoded_a_b$)
+    expect(decoded_a_b.jti).toEqual(decoded_a_b$.jti)
+    expect(decoded_a_b).not.toEqual(decoded_a_b$)
 
     /*
      * `a` is past its grace period
@@ -235,7 +236,7 @@ describe('auth', () => {
      * Create two new sessions from the initial forked sessions
      */
     const a_b_c = await refreshSession(a_b.refreshJwt)
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 1e3))
     const a_b$_c = await refreshSession(a_b$.refreshJwt)
 
     /*
@@ -248,7 +249,8 @@ describe('auth', () => {
     const a_b$_c_ttl = ((decoded_a_b$_c.exp! * 1000) - Date.now()) / 1000
     expect(a_b$_c_ttl).toBeGreaterThan(110) // close to 120s
 
-    expect(decoded_a_b_c).toEqual(decoded_a_b$_c)
+    expect(decoded_a_b_c.jti).toEqual(decoded_a_b$_c.jti)
+    expect(decoded_a_b_c).not.toEqual(decoded_a_b$_c)
   })
 
   it('refresh token is revoked after grace period completes.', async () => {
