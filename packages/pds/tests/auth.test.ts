@@ -205,6 +205,7 @@ describe('auth', () => {
      * Create two new sessions from the same refresh token.
      */
     const a_b = await refreshSession(a)
+    await new Promise((resolve) => setTimeout(resolve, 100))
     const a_b$ = await refreshSession(a)
 
     /*
@@ -234,6 +235,7 @@ describe('auth', () => {
      * Create two new sessions from the initial forked sessions
      */
     const a_b_c = await refreshSession(a_b.refreshJwt)
+    await new Promise((resolve) => setTimeout(resolve, 100))
     const a_b$_c = await refreshSession(a_b$.refreshJwt)
 
     /*
