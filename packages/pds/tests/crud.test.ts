@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AtpAgent } from '@atproto/api'
+import { AppBskyFeedPostRecord, AtpAgent } from '@atproto/api'
 import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobRef } from '@atproto/lexicon'
@@ -247,7 +247,9 @@ describe('crud operations', () => {
     })
 
     it('in forwards order', async () => {
-      const results = (results) => results.flatMap((res) => res.records)
+      const results = (
+        results: Awaited<ReturnType<AppBskyFeedPostRecord['list']>>[],
+      ) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
         const res = await agent.app.bsky.feed.post.list({
           repo: aliceAgent.accountDid,
@@ -271,7 +273,9 @@ describe('crud operations', () => {
     })
 
     it('in reverse order', async () => {
-      const results = (results) => results.flatMap((res) => res.records)
+      const results = (
+        results: Awaited<ReturnType<AppBskyFeedPostRecord['list']>>[],
+      ) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
         const res = await agent.app.bsky.feed.post.list({
           repo: aliceAgent.accountDid,

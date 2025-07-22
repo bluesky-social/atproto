@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { OutputSchema as GetListFeedOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getListFeed'
 import {
   forSnapshot,
   paginateAll,
@@ -59,7 +60,8 @@ describe('list feed views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
+    const results = (results: GetListFeedOutputSchema[]) =>
+      results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getListFeed(
         {
