@@ -217,6 +217,8 @@ describe('auth', () => {
     const a_b$_ttl = ((decoded_a_b$.exp! * 1000) - Date.now()) / 1000
     expect(a_b$_ttl).toBeGreaterThan(110) // close to 120s
 
+    expect(decoded_a_b).toEqual(decoded_a_b$)
+
     /*
      * `a` is past its grace period
      */
@@ -243,6 +245,8 @@ describe('auth', () => {
     const decoded_a_b$_c = jose.decodeJwt(a_b$_c.refreshJwt)
     const a_b$_c_ttl = ((decoded_a_b$_c.exp! * 1000) - Date.now()) / 1000
     expect(a_b$_c_ttl).toBeGreaterThan(110) // close to 120s
+
+    expect(decoded_a_b_c).toEqual(decoded_a_b$_c)
   })
 
   it('refresh token is revoked after grace period completes.', async () => {
