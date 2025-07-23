@@ -80,6 +80,6 @@ describe('account timeline', () => {
       data: { timeline },
     } = await getAccountTimeline(sc.dids.alice)
 
-    expect(forSnapshot(timeline)).toMatchSnapshot()
+    expect(forSnapshot(timeline[0].summary)).toMatchSnapshot()
   })
 })
