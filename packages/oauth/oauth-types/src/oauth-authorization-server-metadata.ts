@@ -45,7 +45,11 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
   authorization_endpoint: webUriSchema, // .optional(),
 
   token_endpoint: webUriSchema, // .optional(),
-  token_endpoint_auth_methods_supported: z.array(z.string()).optional(),
+  // https://www.rfc-editor.org/rfc/rfc8414.html#section-2
+  token_endpoint_auth_methods_supported: z
+    .array(z.string())
+    // > If omitted, the default is "client_secret_basic" [...].
+    .default(['client_secret_basic']),
   token_endpoint_auth_signing_alg_values_supported: z
     .array(z.string())
     .optional(),
@@ -96,5 +100,17 @@ export const oauthAuthorizationServerMetadataValidator =
             message: 'Response type "code" is required',
           })
         }
+      }
+    })
+    .superRefine((data, ctx) => {
+      if (
+        data.token_endpoint_auth_signing_alg_values_supported?.includes('none')
+      ) {
+        // https://openid.net/specs/openid-connect-discovery-1_0.html#rfc.section.3
+        // > The value `none` MUST NOT be used.
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Client authentication method "none" is not allowed',
+        })
       }
     })

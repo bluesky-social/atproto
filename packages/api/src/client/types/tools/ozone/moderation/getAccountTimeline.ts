@@ -15,10 +15,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.getAccountTimeline'
 
-export interface QueryParams {
+export type QueryParams = {
   did: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

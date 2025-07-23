@@ -6,6 +6,11 @@ Object {
     Object {
       "post": Object {
         "author": Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(0)",
@@ -70,6 +75,11 @@ Object {
     Object {
       "post": Object {
         "author": Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
@@ -102,6 +112,11 @@ Object {
             "record": Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
+                "associated": Object {
+                  "activitySubscription": Object {
+                    "allowSubscriptions": "followers",
+                  },
+                },
                 "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
                 "createdAt": "1970-01-01T00:00:00.000Z",
                 "did": "user(4)",

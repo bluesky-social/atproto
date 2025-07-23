@@ -19,7 +19,10 @@ export default function (server: Server, ctx: AppContext) {
       const record = records.get(params.uri)
 
       if (!record) {
-        throw new InvalidRequestError('Record not found', 'RecordNotFound')
+        throw new InvalidRequestError(
+          `Could not locate record: ${params.uri}`,
+          'RecordNotFound',
+        )
       }
 
       record.repo = addAccountInfoToRepoView(

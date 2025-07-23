@@ -116,7 +116,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
 
           // From this point on, triggering the next middleware (including any
           // error handler) can be problematic because content-type,
-          // content-enconding, etc. headers have already been set. Because of
+          // content-encoding, etc. headers have already been set. Because of
           // this, we make sure that res.headersSent is set to true, preventing
           // another error handler middleware from being called (from the catch
           // block bellow). Not flushing the headers here would require to

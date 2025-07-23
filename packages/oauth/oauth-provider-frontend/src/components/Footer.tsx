@@ -1,4 +1,3 @@
-import { InlineLink } from '#/components/Link'
 import { LocaleSelector } from '#/components/LocaleSelector'
 import { useCustomizationData } from '#/data/useCustomizationData'
 import { useLocale } from '#/locales'
@@ -12,13 +11,13 @@ export function Footer() {
     <footer className="h-15 bg-contrast-25 dark:bg-contrast-50 fixed inset-x-0 bottom-0 flex items-center justify-between px-4 md:px-6">
       <div className="flex flex-wrap">
         {links?.map((link) => (
-          <InlineLink
+          <a
             href={link.href}
-            className="text-text-light mr-4 text-sm"
+            className="text-text-light mr-4 text-sm hover:underline focus:underline focus:outline-none"
             key={link.href}
           >
             {localizeString(link.title)}
-          </InlineLink>
+          </a>
         ))}
       </div>
 

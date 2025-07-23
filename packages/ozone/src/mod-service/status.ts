@@ -123,6 +123,11 @@ const getSubjectStatusForModerationEvent = ({
       return {
         appealed: false,
       }
+    case 'tools.ozone.moderation.defs#ageAssuranceEvent':
+    case 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent':
+      return {
+        reviewState: defaultReviewState,
+      }
     default:
       return {}
   }
@@ -311,6 +316,9 @@ export const adjustModerationSubjectStatus = async (
         // @TODO: should we try to update this based on status property of account event?
         // For now we're the only one emitting takedowns so i don't think it makes too much of a difference
         takendown: currentStatus ? currentStatus.takendown : false,
+        ageAssuranceState: currentStatus
+          ? currentStatus.ageAssuranceState
+          : 'unknown',
         createdAt: now,
         updatedAt: now,
       })
@@ -366,6 +374,7 @@ export const adjustModerationSubjectStatus = async (
     // that shouldn't mean we want to review the subject
     reviewState: REVIEWNONE,
     recordCid: subjectCid || null,
+    ageAssuranceState: currentStatus?.ageAssuranceState || 'unknown',
   }
   const newStatus = {
     ...defaultData,
@@ -424,6 +433,30 @@ export const adjustModerationSubjectStatus = async (
     }
     newStatus.tags = jsonb([...new Set(tags)]) as unknown as string[]
     subjectStatus.tags = newStatus.tags
+  }
+
+  if (action === 'tools.ozone.moderation.defs#ageAssuranceEvent') {
+    // Only when the last update was made by an admin AND state was set to reset user event can override final state
+    if (
+      currentStatus?.ageAssuranceUpdatedBy !== 'admin' ||
+      currentStatus?.ageAssuranceState === 'reset'
+    ) {
+      if (typeof meta?.status === 'string') {
+        newStatus.ageAssuranceState = meta.status
+        subjectStatus.ageAssuranceState = meta.status
+        newStatus.ageAssuranceUpdatedBy = 'user'
+        subjectStatus.ageAssuranceUpdatedBy = 'user'
+      }
+    }
+  }
+
+  if (action === 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent') {
+    if (typeof meta?.status === 'string') {
+      newStatus.ageAssuranceState = meta.status
+      subjectStatus.ageAssuranceState = meta.status
+      newStatus.ageAssuranceUpdatedBy = 'admin'
+      subjectStatus.ageAssuranceUpdatedBy = 'admin'
+    }
   }
 
   if (blobCids?.length) {

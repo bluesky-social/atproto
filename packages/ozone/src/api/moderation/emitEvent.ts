@@ -5,6 +5,8 @@ import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import {
   ModEventTag,
+  isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
@@ -23,6 +25,7 @@ import { ProtectedTagSetting } from '../../setting/types'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
+import { getEventType } from '../util'
 
 const handleModerationEvent = async ({
   ctx,
@@ -41,7 +44,7 @@ const handleModerationEvent = async ({
   const db = ctx.db
   const moderationService = ctx.modService(db)
   const settingService = ctx.settingService(db)
-  const { event } = input.body
+  const { event, externalId } = input.body
   const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
@@ -51,7 +54,20 @@ const handleModerationEvent = async ({
     input.body.subjectBlobCids,
   )
 
-  // apply access rules
+  if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
+    throw new InvalidRequestError('Invalid subject type')
+  }
+
+  if (isAgeAssuranceOverrideEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+    if (!auth.credentials.isModerator) {
+      throw new AuthRequiredError(
+        'Must be a full moderator to override age assurance',
+      )
+    }
+  }
 
   // if less than moderator access then can only take ack and escalation actions
   if (isTakedownEvent || isReverseTakedownEvent) {
@@ -150,10 +166,27 @@ const handleModerationEvent = async ({
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
 
+    if (externalId) {
+      const existingEvent = await moderationTxn.getEventByExternalId(
+        getEventType(event.$type),
+        externalId,
+        subject,
+      )
+
+      if (existingEvent) {
+        throw new InvalidRequestError(
+          `An event with the same external ID already exists for the subject.`,
+          'DuplicateExternalId',
+        )
+      }
+    }
+
     const result = await moderationTxn.logEvent({
       event,
       subject,
       createdBy,
+      modTool: input.body.modTool,
+      externalId,
     })
 
     const tagService = new TagService(
@@ -243,6 +276,7 @@ export default function (server: Server, ctx: AppContext) {
                 comment:
                   '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
               },
+              modTool: input.body.modTool,
             },
           },
         })

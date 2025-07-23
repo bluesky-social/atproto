@@ -88,6 +88,7 @@ const skeleton = async (
   const timerSkele = new ServerTimer('skele').start()
   const {
     feedItems: algoItems,
+    reqId,
     cursor,
     resHeaders,
     ...passthrough
@@ -96,6 +97,7 @@ const skeleton = async (
   return {
     cursor,
     items: algoItems,
+    reqId,
     timerSkele: timerSkele.stop(),
     timerHydr: new ServerTimer('hydr').start(),
     resHeaders,
@@ -145,7 +147,7 @@ const presentation = (
     }
   })
   return {
-    feed,
+    feed: feed.map((fi) => ({ ...fi, reqId: skeleton.reqId })),
     cursor: skeleton.cursor,
     timerSkele: skeleton.timerSkele,
     timerHydr: skeleton.timerHydr,
@@ -163,6 +165,7 @@ type Params = GetFeedParams & {
 
 type Skeleton = {
   items: AlgoResponseItem[]
+  reqId?: string
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
   resHeaders?: Record<string, string>
   cursor?: string
@@ -266,6 +269,7 @@ export type AlgoResponse = {
   feedItems: AlgoResponseItem[]
   resHeaders?: Record<string, string>
   cursor?: string
+  reqId?: string
 }
 
 export type AlgoResponseItem = FeedItem & {

@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.notifyOfUpdate'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** Hostname of the current service (usually a PDS) that is notifying of update. */

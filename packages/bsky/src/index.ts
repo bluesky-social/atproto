@@ -10,7 +10,7 @@ import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import API, { blobResolver, health, wellKnown } from './api'
+import API, { blobResolver, external, health, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
@@ -27,8 +27,10 @@ import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
+import { createKwsClient } from './kws'
 import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
+import { createStashClient } from './stash'
 import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
 
@@ -57,6 +59,7 @@ export class BskyAppView {
   }): BskyAppView {
     const { config, signingKey } = opts
     const app = express()
+    app.set('trust proxy', true)
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
@@ -125,6 +128,8 @@ export class BskyAppView {
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,
       indexedAtEpoch: config.indexedAtEpoch,
+      threadTagsBumpDown: [...config.threadTagsBumpDown],
+      threadTagsHide: [...config.threadTagsHide],
     })
 
     const bsyncClient = createBsyncClient({
@@ -133,6 +138,8 @@ export class BskyAppView {
       nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
       interceptors: config.bsyncApiKey ? [bsyncAuth(config.bsyncApiKey)] : [],
     })
+
+    const stashClient = createStashClient(bsyncClient)
 
     const courierClient = config.courierUrl
       ? createCourierClient({
@@ -144,6 +151,8 @@ export class BskyAppView {
             : [],
         })
       : undefined
+
+    const kwsClient = config.kws ? createKwsClient(config.kws) : undefined
 
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
@@ -176,10 +185,12 @@ export class BskyAppView {
       signingKey,
       idResolver,
       bsyncClient,
+      stashClient,
       courierClient,
       authVerifier,
       featureGates,
       blobDispatcher,
+      kwsClient,
     })
 
     let server = createServer({
@@ -199,6 +210,7 @@ export class BskyAppView {
     app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
     app.use(server.xrpc.router)
     app.use(error.handler)
+    app.use('/external', external.createRouter(ctx))
 
     return new BskyAppView({ ctx, app })
   }

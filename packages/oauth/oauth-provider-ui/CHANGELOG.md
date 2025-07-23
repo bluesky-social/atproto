@@ -1,5 +1,31 @@
 # @atproto/oauth-provider-ui
 
+## 0.1.11
+
+## 0.1.10
+
+## 0.1.9
+
+## 0.1.8
+
+## 0.1.7
+
+### Patch Changes
+
+- [#3916](https://github.com/bluesky-social/atproto/pull/3916) [`71b9dcda9`](https://github.com/bluesky-social/atproto/commit/71b9dcda9611ab3662ccb2c4e175579396f16b3a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Show sign-in screen instead of welcome screen when user already signed-in
+
+## 0.1.6
+
+### Patch Changes
+
+- [`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve auto completion of sing-in & reset password flows
+
+## 0.1.5
+
+### Patch Changes
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `transition:email` oauth scope
+
 ## 0.1.4
 
 ### Patch Changes

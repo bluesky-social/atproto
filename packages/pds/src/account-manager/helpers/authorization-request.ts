@@ -73,10 +73,10 @@ export const removeOldExpiredQB = (db: AccountDb, delay = 600e3) =>
 export const removeByIdQB = (db: AccountDb, id: RequestId) =>
   db.db.deleteFrom('authorization_request').where('id', '=', id)
 
-export const findByCodeQB = (db: AccountDb, code: Code) =>
+export const consumeByCodeQB = (db: AccountDb, code: Code) =>
   db.db
-    .selectFrom('authorization_request')
+    .deleteFrom('authorization_request')
     // uses "authorization_request_code_idx" partial index (hence the null check)
     .where('code', '=', code)
     .where('code', 'is not', null)
-    .selectAll()
+    .returningAll()

@@ -1,7 +1,6 @@
-import net from 'node:net'
 import { Insertable, RawBuilder, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -27,6 +26,8 @@ import {
   REVIEWESCALATED,
   REVIEWOPEN,
   isAccountEvent,
+  isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isIdentityEvent,
   isModEventAcknowledge,
   isModEventComment,
@@ -62,7 +63,12 @@ import {
   ReporterStatsResult,
   ReversibleModerationEvent,
 } from './types'
-import { formatLabel, formatLabelRow, signLabel } from './util'
+import {
+  formatLabel,
+  formatLabelRow,
+  getPdsAgentForRepo,
+  signLabel,
+} from './util'
 import { AuthHeaders, ModerationViews } from './views'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
@@ -125,6 +131,8 @@ export class ModerationService {
       }
       return authHeaders
     },
+    this.idResolver,
+    this.cfg.service.devMode,
   )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
@@ -139,6 +147,22 @@ export class ModerationService {
     const event = await this.getEvent(id)
     if (!event) throw new InvalidRequestError('Moderation event not found')
     return event
+  }
+
+  async getEventByExternalId(
+    eventType: ModerationEvent['action'],
+    externalId: string,
+    subject: ModSubject,
+  ): Promise<boolean> {
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .where('action', '=', eventType)
+      .where('externalId', '=', externalId)
+      .where('subjectDid', '=', subject.did)
+      .select(sql`1`.as('exists'))
+      .limit(1)
+      .executeTakeFirst()
+    return !!result
   }
 
   async getEvents(opts: {
@@ -161,6 +185,8 @@ export class ModerationService {
     collections: string[]
     subjectType?: string
     policies?: string[]
+    modTool?: string[]
+    ageAssuranceState?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -182,6 +208,8 @@ export class ModerationService {
       collections,
       subjectType,
       policies,
+      modTool,
+      ageAssuranceState,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -281,6 +309,19 @@ export class ModerationService {
         })
         return qb
       })
+    }
+    if (modTool?.length) {
+      builder = builder
+        .where('modTool', 'is not', null)
+        .where(sql`("modTool" ->> 'name')`, 'in', modTool)
+    }
+    if (ageAssuranceState) {
+      builder = builder
+        .where('action', 'in', [
+          'tools.ozone.moderation.defs#ageAssuranceEvent',
+          'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+        ])
+        .where(sql`meta->>'status'`, '=', ageAssuranceState)
     }
 
     const keyset = new TimeIdKeyset(
@@ -391,12 +432,21 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
+    modTool?: ToolsOzoneModerationDefs.ModTool
+    externalId?: string
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
   }> {
     this.db.assertTransaction()
-    const { event, subject, createdBy, createdAt = new Date() } = info
+    const {
+      event,
+      subject,
+      createdBy,
+      externalId,
+      createdAt = new Date(),
+      modTool,
+    } = info
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0
@@ -448,6 +498,30 @@ export class ModerationService {
       meta.timestamp = event.timestamp
       meta.op = event.op
       if (event.cid) meta.cid = event.cid
+    }
+
+    if (isAgeAssuranceEvent(event)) {
+      meta.status = event.status
+      meta.createdAt = event.createdAt
+      if (event.attemptId) {
+        meta.attemptId = event.attemptId
+      }
+      if (event.initIp) {
+        meta.initIp = event.initIp
+      }
+      if (event.initUa) {
+        meta.initUa = event.initUa
+      }
+      if (event.completeIp) {
+        meta.completeIp = event.completeIp
+      }
+      if (event.completeUa) {
+        meta.completeUa = event.completeUa
+      }
+    }
+
+    if (isAgeAssuranceOverrideEvent(event)) {
+      meta.status = event.status
     }
 
     if (
@@ -502,6 +576,8 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
+        modTool: modTool ? jsonb(modTool) : null,
+        externalId: externalId ?? null,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -796,6 +872,10 @@ export class ModerationService {
     subject: ModSubject
     reportedBy: string
     createdAt?: Date
+    modTool?: {
+      name: string
+      meta?: { [_ in string]: unknown }
+    }
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -806,6 +886,7 @@ export class ModerationService {
       reportedBy,
       createdAt = new Date(),
       subject,
+      modTool,
     } = info
 
     const result = await this.logEvent({
@@ -817,6 +898,7 @@ export class ModerationService {
       createdBy: reportedBy,
       subject,
       createdAt,
+      modTool,
     })
 
     return result
@@ -856,6 +938,7 @@ export class ModerationService {
     minReportedRecordsCount,
     minTakendownRecordsCount,
     minPriorityScore,
+    ageAssuranceState,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
@@ -1120,6 +1203,14 @@ export class ModerationService {
       )
     }
 
+    if (ageAssuranceState) {
+      builder = builder.where(
+        'moderation_subject_status.ageAssuranceState',
+        '=',
+        ageAssuranceState,
+      )
+    }
+
     const keyset = new StatusKeyset(
       sortField === 'reportedRecordsCount'
         ? ref(`account_record_events_stats.reportedCount`)
@@ -1243,19 +1334,22 @@ export class ModerationService {
     subject: string
   }) {
     const { subject, content, recipientDid } = opts
-    const { pds } = await this.idResolver.did.resolveAtprotoData(recipientDid)
-    const url = new URL(pds)
-    if (!this.cfg.service.devMode && !isSafeUrl(url)) {
+    const { agent: pdsAgent, url } = await getPdsAgentForRepo(
+      this.idResolver,
+      recipientDid,
+      this.cfg.service.devMode,
+    )
+    if (!pdsAgent) {
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const agent = new AtpAgent({ service: url })
-    const { data: serverInfo } = await agent.com.atproto.server.describeServer()
+    const { data: serverInfo } =
+      await pdsAgent.com.atproto.server.describeServer()
     if (serverInfo.did !== `did:web:${url.hostname}`) {
       // @TODO do bidirectional check once implemented. in the meantime,
       // matching did to hostname we're talking to is pretty good.
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: delivery } = await agent.com.atproto.admin.sendEmail(
+    const { data: delivery } = await pdsAgent.com.atproto.admin.sendEmail(
       {
         subject,
         content,
@@ -1483,13 +1577,6 @@ const parseTags = (tags?: string[]) =>
     )
     // Ignore invalid items
     .filter((subTags): subTags is [string, ...string[]] => subTags.length > 0)
-
-const isSafeUrl = (url: URL) => {
-  if (url.protocol !== 'https:') return false
-  if (!url.hostname || url.hostname === 'localhost') return false
-  if (net.isIP(url.hostname) !== 0) return false
-  return true
-}
 
 const TAKEDOWNS = ['pds_takedown' as const, 'appview_takedown' as const]
 

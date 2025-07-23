@@ -2,6 +2,7 @@ import { ConnectRouter } from '@connectrpc/connect'
 import { IdResolver } from '@atproto/identity'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
+import activitySubscription from './activity-subscription'
 import blocks from './blocks'
 import feedGens from './feed-gens'
 import feeds from './feeds'
@@ -28,6 +29,7 @@ import threads from './threads'
 export default (db: Database, idResolver: IdResolver) =>
   (router: ConnectRouter) =>
     router.service(Service, {
+      ...activitySubscription(db),
       ...blocks(db),
       ...feedGens(db),
       ...feeds(db),

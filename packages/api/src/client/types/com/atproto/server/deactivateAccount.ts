@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.deactivateAccount'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** A recommendation to server as to how long they should hold onto the deactivated account before deleting. */

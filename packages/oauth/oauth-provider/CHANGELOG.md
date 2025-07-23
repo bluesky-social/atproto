@@ -1,5 +1,150 @@
 # @atproto/oauth-provider
 
+## 0.9.3
+
+### Patch Changes
+
+- [#3973](https://github.com/bluesky-social/atproto/pull/3973) [`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve propagation of authorization error codes
+
+- [#3973](https://github.com/bluesky-social/atproto/pull/3973) [`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error reporting in case of failed PAR
+
+- [#3953](https://github.com/bluesky-social/atproto/pull/3953) [`f792b9193`](https://github.com/bluesky-social/atproto/commit/f792b919386341d0dc4dcf873506f088af61ae16) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error reporting
+
+- Updated dependencies [[`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a), [`3a1e010e1`](https://github.com/bluesky-social/atproto/commit/3a1e010e148476bfdc0028c37cafbce85a46605a)]:
+  - @atproto/oauth-types@0.4.0
+  - @atproto/oauth-provider-api@0.1.6
+  - @atproto/oauth-provider-frontend@0.1.10
+  - @atproto/oauth-provider-ui@0.1.11
+
+## 0.9.2
+
+### Patch Changes
+
+- [#3967](https://github.com/bluesky-social/atproto/pull/3967) [`68c43a94b`](https://github.com/bluesky-social/atproto/commit/68c43a94bd76dc8040cdff9406cabaf1a484d999) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return `invalid_grant` instead of `invalid_client` when incorrectly authenticated with token endpoint
+
+- [#3967](https://github.com/bluesky-social/atproto/pull/3967) [`68c43a94b`](https://github.com/bluesky-social/atproto/commit/68c43a94bd76dc8040cdff9406cabaf1a484d999) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return `invalid_client` instead of `invalid_grant` when incorrectly authenticated with PAR endpoint
+
+- Updated dependencies [[`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee)]:
+  - @atproto/jwk@0.4.0
+  - @atproto/jwk-jose@0.1.9
+  - @atproto/oauth-provider-api@0.1.5
+  - @atproto/oauth-types@0.3.1
+  - @atproto/oauth-provider-frontend@0.1.9
+  - @atproto/oauth-provider-ui@0.1.10
+
+## 0.9.1
+
+### Patch Changes
+
+- [#3811](https://github.com/bluesky-social/atproto/pull/3811) [`7d9808ca8`](https://github.com/bluesky-social/atproto/commit/7d9808ca81dc13efbb9ced56ee2edd1e03966e10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow HTTPS `redirect_uris` from any origin
+
+- [#3883](https://github.com/bluesky-social/atproto/pull/3883) [`e27d90845`](https://github.com/bluesky-social/atproto/commit/e27d90845496e46e2b0e8b362d43881900d7a9e3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Increase oauth session & refresh token lifetimes
+
+## 0.9.0
+
+### Minor Changes
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error reporting in case an invalid `token_endpoint_auth_method` is used in the client metadata document.
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - OAuthProvider `requestStore` option is now required
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that the credentials used during a refresh correspond to those used to create the OAuth tokens.
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Represent missing client auth with a `null` instead of "none" when storing request data.
+
+### Patch Changes
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix a flawed logic preventing the proper error from being propagated upon failed code grant
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Verify the "aud" claim of JAR requests
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Verify the presence of a "kid" in signed JAR headers
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly authenticate revoke requests by requiring a DPoP proof to better comply with OAuth 2.0 Token Revocation (RFC7009)
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow missing DPoP header during PAR request if `dpop_jkt` is provided
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Protect against concurrent use of request code
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Validate presence of DPoP proofs sooner when processing token requests
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use client attestation's `exp` claim to determine the life time of JWT's `jti` nonce.
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Silently ignore "Refresh token replayed" errors when revoking a refresh token that has already been revoked.
+
+- Updated dependencies [[`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6), [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6), [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6), [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6), [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6)]:
+  - @atproto/oauth-types@0.3.0
+  - @atproto/jwk@0.3.0
+  - @atproto/oauth-provider-api@0.1.4
+  - @atproto/oauth-provider-frontend@0.1.8
+  - @atproto/oauth-provider-ui@0.1.9
+  - @atproto/jwk-jose@0.1.8
+
+## 0.8.1
+
+### Patch Changes
+
+- [#3933](https://github.com/bluesky-social/atproto/pull/3933) [`192f3ab89`](https://github.com/bluesky-social/atproto/commit/192f3ab89c943216683541f42cc1332e9c305eee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Normalize and validate `login_hint` in oauth request properties
+
+- Updated dependencies [[`30f851dee`](https://github.com/bluesky-social/atproto/commit/30f851dee8495b5034743fda1c095509f1fd95bf)]:
+  - @atproto/oauth-provider-frontend@0.1.7
+
+## 0.8.0
+
+### Minor Changes
+
+- [#3879](https://github.com/bluesky-social/atproto/pull/3879) [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve validation of DPoP proofs
+
+### Patch Changes
+
+- [#3879](https://github.com/bluesky-social/atproto/pull/3879) [`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return DPoP validation result from `authenticateRequest`
+
+- Updated dependencies [[`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05), [`a3b24ca77`](https://github.com/bluesky-social/atproto/commit/a3b24ca77ca24ac19b17cf9ee2a5ca9612ccf96c)]:
+  - @atproto/jwk@0.2.0
+  - @atproto/oauth-types@0.2.8
+  - @atproto/jwk-jose@0.1.7
+  - @atproto/oauth-provider-api@0.1.3
+  - @atproto/oauth-provider-frontend@0.1.6
+  - @atproto/oauth-provider-ui@0.1.8
+
+## 0.7.10
+
+### Patch Changes
+
+- Updated dependencies [[`71b9dcda9`](https://github.com/bluesky-social/atproto/commit/71b9dcda9611ab3662ccb2c4e175579396f16b3a)]:
+  - @atproto/oauth-provider-ui@0.1.7
+
+## 0.7.9
+
+### Patch Changes
+
+- [#3900](https://github.com/bluesky-social/atproto/pull/3900) [`06bf684a4`](https://github.com/bluesky-social/atproto/commit/06bf684a4a3fd2b8c73d2729e4951cedca8cba5e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add max length limit to passwords
+
+## 0.7.8
+
+### Patch Changes
+
+- [`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `/.well-known/change-password` endpoint
+
+- Updated dependencies [[`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5)]:
+  - @atproto/oauth-provider-frontend@0.1.5
+  - @atproto/oauth-provider-ui@0.1.6
+
+## 0.7.7
+
+### Patch Changes
+
+- [#3818](https://github.com/bluesky-social/atproto/pull/3818) [`43861a452`](https://github.com/bluesky-social/atproto/commit/43861a452b70268e738ef12033297cddacbe25d4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on the Public Suffix List
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `transition:email` oauth scope
+
+- Updated dependencies [[`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`36dbd4155`](https://github.com/bluesky-social/atproto/commit/36dbd41551f74052a3f584719a1a7edd86eca201), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`43861a452`](https://github.com/bluesky-social/atproto/commit/43861a452b70268e738ef12033297cddacbe25d4), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4), [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337), [`5050b6550`](https://github.com/bluesky-social/atproto/commit/5050b6550e07e71b0a524eda0b71b837583294d4)]:
+  - @atproto-labs/fetch-node@0.1.9
+  - @atproto-labs/pipe@0.1.1
+  - @atproto/oauth-provider-ui@0.1.5
+  - @atproto-labs/fetch@0.2.3
+  - @atproto/oauth-provider-frontend@0.1.4
+
 ## 0.7.6
 
 ### Patch Changes

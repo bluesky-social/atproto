@@ -16,13 +16,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.graph.getLists'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The account (actor) to enumerate lists from. */
   actor: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -61,6 +61,50 @@ export const jwtHeaderSchema = z
 
 export type JwtHeader = z.infer<typeof jwtHeaderSchema>
 
+/**
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6}
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9110#section-7.1}
+ */
+export const htuSchema = z.string().superRefine((value, ctx) => {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Only http: and https: protocols are allowed',
+      })
+    }
+
+    if (url.username || url.password) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Credentials not allowed',
+      })
+    }
+
+    if (url.search) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Query string not allowed',
+      })
+    }
+
+    if (url.hash) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Fragment not allowed',
+      })
+    }
+  } catch (err) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.invalid_string,
+      validation: 'url',
+    })
+  }
+
+  return value
+})
+
 // https://www.iana.org/assignments/jwt/jwt.xhtml
 export const jwtPayloadSchema = z
   .object({
@@ -72,7 +116,7 @@ export const jwtPayloadSchema = z
     iat: z.number().int().optional(),
     jti: z.string().optional(),
     htm: z.string().optional(),
-    htu: z.string().optional(),
+    htu: htuSchema.optional(),
     ath: z.string().optional(),
     acr: z.string().optional(),
     azp: z.string().optional(),

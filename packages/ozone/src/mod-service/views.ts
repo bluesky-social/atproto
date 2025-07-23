@@ -1,7 +1,12 @@
 import { sql } from 'kysely'
-import { AppBskyActorDefs, AtpAgent } from '@atproto/api'
+import {
+  AppBskyActorDefs,
+  AtpAgent,
+  ComAtprotoRepoGetRecord,
+} from '@atproto/api'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Database } from '../db'
@@ -24,6 +29,8 @@ import {
   RepoView,
   SubjectStatusView,
   isAccountEvent,
+  isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isIdentityEvent,
   isModEventAcknowledge,
   isModEventComment,
@@ -47,7 +54,7 @@ import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { formatLabel, signLabel } from './util'
+import { formatLabel, getPdsAgentForRepo, signLabel } from './util'
 
 const isValidSelfLabels = asPredicate(validateSelfLabels)
 
@@ -72,6 +79,8 @@ export class ModerationViews {
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
     private appviewAuth: (method: string) => Promise<AuthHeaders>,
+    public idResolver: IdResolver,
+    public devMode?: boolean,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
@@ -134,6 +143,12 @@ export class ModerationViews {
       createdAt: row.createdAt,
       subjectHandle: row.subjectHandle ?? undefined,
       creatorHandle: row.creatorHandle ?? undefined,
+      modTool: row.modTool
+        ? {
+            name: row.modTool.name,
+            meta: row.modTool.meta,
+          }
+        : undefined,
     }
 
     const { event } = eventView
@@ -233,6 +248,20 @@ export class ModerationViews {
       event.timestamp = ifString(meta.timestamp)!
     }
 
+    if (isAgeAssuranceEvent(event)) {
+      event.status = ifString(meta.status)!
+      event.createdAt = ifString(meta.createdAt)!
+      event.attemptId = ifString(meta.attemptId)!
+      event.initIp = ifString(meta.initIp)
+      event.initUa = ifString(meta.initUa)
+      event.completeIp = ifString(meta.completeIp)
+      event.completeUa = ifString(meta.completeUa)
+    }
+
+    if (isAgeAssuranceOverrideEvent(event)) {
+      event.status = ifString(meta.status)!
+    }
+
     return eventView
   }
 
@@ -294,28 +323,56 @@ export class ModerationViews {
     return results
   }
 
+  async fetchRecord(
+    params: ComAtprotoRepoGetRecord.QueryParams,
+    appviewAuth: AuthHeaders,
+  ) {
+    try {
+      const record = await this.appviewAgent.com.atproto.repo.getRecord(
+        params,
+        appviewAuth,
+      )
+      return record
+    } catch (err) {
+      if (err instanceof ComAtprotoRepoGetRecord.RecordNotFoundError) {
+        // If pds fetch fails, just return null regardless of the error
+        try {
+          const { agent: pdsAgent } = await getPdsAgentForRepo(
+            this.idResolver,
+            params.repo,
+            this.devMode,
+          )
+          if (!pdsAgent) {
+            return null
+          }
+
+          const record = await pdsAgent.com.atproto.repo.getRecord(params)
+          return record
+        } catch (error) {
+          return null
+        }
+      }
+
+      return null
+    }
+  }
+
   async fetchRecords(
     subjects: RecordSubject[],
   ): Promise<Map<string, RecordInfo>> {
-    const auth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
-    if (!auth) return new Map()
+    const appviewAuth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
+    if (!appviewAuth) return new Map()
+
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
-        try {
-          const record = await this.appviewAgent.api.com.atproto.repo.getRecord(
-            {
-              repo: uri.hostname,
-              collection: uri.collection,
-              rkey: uri.rkey,
-              cid: subject.cid,
-            },
-            auth,
-          )
-          return record
-        } catch {
-          return null
+        const params = {
+          repo: uri.hostname,
+          collection: uri.collection,
+          rkey: uri.rkey,
+          cid: subject.cid,
         }
+        return this.fetchRecord(params, appviewAuth)
       }),
     )
     return fetched.reduce((acc, cur) => {
@@ -646,6 +703,8 @@ export class ModerationViews {
       subjectBlobCids: status.blobCids || [],
       tags: status.tags || [],
       priorityScore: status.priorityScore,
+      ageAssuranceState: status.ageAssuranceState ?? undefined,
+      ageAssuranceUpdatedBy: status.ageAssuranceUpdatedBy ?? undefined,
       subject: subjectFromStatusRow(
         status,
       ).lex() as SubjectStatusView['subject'],

@@ -1,5 +1,53 @@
 # @atproto/xrpc-server
 
+## 0.9.0
+
+### Minor Changes
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Reorganize naming of exported types
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow stronger typing of `auth` result in method and stream handlers
+
+### Patch Changes
+
+- [#4027](https://github.com/bluesky-social/atproto/pull/4027) [`5ed4a8859`](https://github.com/bluesky-social/atproto/commit/5ed4a885963f082a642e2cfb2fcc824e708fff90) Thanks [@devinivy](https://github.com/devinivy)! - Fix json and text uploads: don't parse bodies with input encoding of _/_.
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use a generic to type RateLimiter's context
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ignore `__proto__` in query string params.
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `catchall` handler will not be triggered if the XRPC method is not a valid NSID
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make (typed) `params` available during auth
+
+- Updated dependencies [[`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20)]:
+  - @atproto/lexicon@0.4.12
+  - @atproto/xrpc@0.7.1
+
+## 0.8.0
+
+### Minor Changes
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `bypassSecret` and `bypassIps` from rate limiter options.
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Now applies global rate limiter to every single route. Previously, the global rate limiter was not applied if a route defined a local rate limit option.
+
+### Patch Changes
+
+- [#3884](https://github.com/bluesky-social/atproto/pull/3884) [`b675fbbf1`](https://github.com/bluesky-social/atproto/commit/b675fbbf17e000fad2b38a52db550702830a807d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return an error if the wrong HTTP verb is used for a known XRPC method, even when a `catchall` is provided.
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add optional `bypass` callback to global rate limits options
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Refactor route rate limiter builder
+
+- [#3886](https://github.com/bluesky-social/atproto/pull/3886) [`0286f7ee3`](https://github.com/bluesky-social/atproto/commit/0286f7ee3d56ae50cfe0b70add60cf4785587b3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Performance improvement: avoid computing rate limit bypass multiple times per request
+
+## 0.7.19
+
+### Patch Changes
+
+- [#3699](https://github.com/bluesky-social/atproto/pull/3699) [`9214bd017`](https://github.com/bluesky-social/atproto/commit/9214bd01705381aed6b5bde2900d6dc5486b6e9f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve logging of XRPC errors
+
 ## 0.7.18
 
 ### Patch Changes

@@ -1,6 +1,10 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
+import {
+  AppBskyNotificationDeclaration,
+  ChatBskyActorDeclaration,
+} from '@atproto/api'
 import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'
 import { Service } from '../../../proto/bsky_connect'
@@ -18,7 +22,7 @@ type VerifiedBy = {
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActors(req) {
-    const { dids } = req
+    const { dids, returnAgeAssuranceForDids } = req
     if (dids.length === 0) {
       return { actors: [] }
     }
@@ -31,6 +35,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const chatDeclarationUris = dids.map(
       (did) => `at://${did}/chat.bsky.actor.declaration/self`,
     )
+    const notifDeclarationUris = dids.map(
+      (did) => `at://${did}/app.bsky.notification.declaration/self`,
+    )
     const { ref } = db.db.dynamic
     const [
       handlesRes,
@@ -38,6 +45,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       profiles,
       statuses,
       chatDeclarations,
+      notifDeclarations,
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
@@ -64,6 +72,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       getRecords(db)({ uris: profileUris }),
       getRecords(db)({ uris: statusUris }),
       getRecords(db)({ uris: chatDeclarationUris }),
+      getRecords(db)({ uris: notifDeclarationUris }),
     ])
 
     const verificationsBySubjectDid = verificationsReceived.reduce(
@@ -82,7 +91,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const status = statuses.records[i]
 
-      const chatDeclaration = parseRecordBytes(
+      const chatDeclaration = parseRecordBytes<ChatBskyActorDeclaration.Record>(
         chatDeclarations.records[i].record,
       )
 
@@ -96,6 +105,42 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         }
         return acc
       }, {} as VerifiedBy)
+      const ageAssuranceForDids = new Set(returnAgeAssuranceForDids)
+
+      const activitySubscription = () => {
+        const record = parseRecordBytes<AppBskyNotificationDeclaration.Record>(
+          notifDeclarations.records[i].record,
+        )
+
+        // The dataplane is responsible for setting the default of "followers" (default according to the lexicon).
+        const defaultVal = 'followers'
+
+        if (typeof record?.allowSubscriptions !== 'string') {
+          return defaultVal
+        }
+
+        switch (record.allowSubscriptions) {
+          case 'followers':
+          case 'mutuals':
+          case 'none':
+            return record.allowSubscriptions
+          default:
+            return defaultVal
+        }
+      }
+
+      const ageAssuranceStatus = () => {
+        if (!ageAssuranceForDids.has(did)) {
+          return undefined
+        }
+
+        return {
+          status: row?.ageAssuranceStatus ?? 'unknown',
+          lastInitiatedAt: row?.ageAssuranceLastInitiatedAt
+            ? Timestamp.fromDate(new Date(row?.ageAssuranceLastInitiatedAt))
+            : undefined,
+        }
+      }
 
       return {
         exists: !!row,
@@ -117,6 +162,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         statusRecord: status,
         tags: [],
         profileTags: [],
+        allowActivitySubscriptionsFrom: activitySubscription(),
+        ageAssuranceStatus: ageAssuranceStatus(),
       }
     })
     return { actors }

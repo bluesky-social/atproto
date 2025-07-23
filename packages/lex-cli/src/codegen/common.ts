@@ -2,6 +2,7 @@ import { Options as PrettierOptions, format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
 import { type LexiconDoc } from '@atproto/lexicon'
 import { type GeneratedFile } from '../types'
+import { toTitleCase } from './util'
 
 const PRETTIER_OPTS: PrettierOptions = {
   parser: 'typescript',
@@ -134,13 +135,6 @@ export function asPredicate<V extends Validator>(validate: V) {
 
 export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
   gen(project, '/lexicons.ts', async (file) => {
-    const nsidToEnum = (nsid: string): string => {
-      return nsid
-        .split('.')
-        .map((word) => word[0].toUpperCase() + word.slice(1))
-        .join('')
-    }
-
     //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
     file
       .addImportDeclaration({
@@ -176,7 +170,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
               lexicons.reduce(
                 (acc, cur) => ({
                   ...acc,
-                  [nsidToEnum(cur.id)]: cur,
+                  [toTitleCase(cur.id)]: cur,
                 }),
                 {},
               ),
@@ -259,7 +253,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
           name: 'ids',
           initializer: `{${lexicons
             .map(
-              (lex) => `\n  ${nsidToEnum(lex.id)}: ${JSON.stringify(lex.id)},`,
+              (lex) => `\n  ${toTitleCase(lex.id)}: ${JSON.stringify(lex.id)},`,
             )
             .join('')}\n} as const`,
         },

@@ -15,12 +15,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getConfig'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
   checkEmailConfirmed?: boolean
+  liveNow?: LiveNowConfig[]
 }
 
 export interface CallOptions {
@@ -36,4 +36,20 @@ export interface Response {
 
 export function toKnownErr(e: any) {
   return e
+}
+
+export interface LiveNowConfig {
+  $type?: 'app.bsky.unspecced.getConfig#liveNowConfig'
+  did: string
+  domains: string[]
+}
+
+const hashLiveNowConfig = 'liveNowConfig'
+
+export function isLiveNowConfig<V>(v: V) {
+  return is$typed(v, id, hashLiveNowConfig)
+}
+
+export function validateLiveNowConfig<V>(v: V) {
+  return validate<LiveNowConfig & V>(v, id, hashLiveNowConfig)
 }

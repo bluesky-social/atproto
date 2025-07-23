@@ -120,7 +120,7 @@ export class OAuthStore
     password,
   }: SignUpData): Promise<Account> {
     // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
-    // @NOTE Password strength already enforced by the OAuthProvider
+    // @NOTE Password strength & length already enforced by the OAuthProvider
 
     await Promise.all([
       this.verifyEmailAvailability(email),
@@ -428,9 +428,9 @@ export class OAuthStore
     await this.db.executeWithRetry(authRequestHelper.removeByIdQB(this.db, id))
   }
 
-  async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
+  async consumeRequestCode(code: Code): Promise<FoundRequestResult | null> {
     const row = await authRequestHelper
-      .findByCodeQB(this.db, code)
+      .consumeByCodeQB(this.db, code)
       .executeTakeFirst()
     return row ? authRequestHelper.rowToFoundRequestResult(row) : null
   }

@@ -2,13 +2,12 @@ import {
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
   Fetch,
   asRequest,
+  explicitRedirectCheckRequestTransform,
   fetchMaxSizeProcessor,
   forbiddenDomainNameRequestTransform,
   protocolCheckRequestTransform,
-  redirectCheckRequestTransform,
   requireHostHeaderTransform,
   timedFetch,
-  toRequestTransformer,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 import { unicastFetchWrap } from './unicast.js'
@@ -34,58 +33,63 @@ export function safeFetchWrap({
   allowPrivateIps = !ssrfProtection,
   timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
-} = {}): Fetch<unknown> {
-  return toRequestTransformer(
-    pipe(
-      /**
-       * Disable HTTP redirects
-       */
-      redirectCheckRequestTransform(),
+  /**
+   * When `false`, a {@link RequestInit['redirect']} value must be explicitly
+   * provided or the request will fail.
+   *
+   * @default false
+   */
+  allowImplicitRedirect = false,
+} = {}) {
+  return pipe(
+    /**
+     * Require explicit {@link RequestInit['redirect']} mode
+     */
+    allowImplicitRedirect ? asRequest : explicitRedirectCheckRequestTransform(),
 
-      /**
-       * Only requests that will be issued with a "Host" header are allowed.
-       */
-      allowIpHost ? asRequest : requireHostHeaderTransform(),
+    /**
+     * Only requests that will be issued with a "Host" header are allowed.
+     */
+    allowIpHost ? asRequest : requireHostHeaderTransform(),
 
-      /**
-       * Prevent using http:, file: or data: protocols.
-       */
-      protocolCheckRequestTransform({
-        'about:': false,
-        'data:': allowData,
-        'file:': false,
-        'http:': allowHttp && { allowCustomPort },
-        'https:': { allowCustomPort },
-      }),
+    /**
+     * Prevent using http:, file: or data: protocols.
+     */
+    protocolCheckRequestTransform({
+      'about:': false,
+      'data:': allowData,
+      'file:': false,
+      'http:': allowHttp && { allowCustomPort },
+      'https:': { allowCustomPort },
+    }),
 
-      /**
-       * Disallow fetching from domains we know are not atproto/OIDC client
-       * implementation. Note that other domains can be blocked by providing a
-       * custom fetch function combined with another
-       * forbiddenDomainNameRequestTransform.
-       */
-      forbiddenDomainNameRequestTransform(forbiddenDomainNames),
+    /**
+     * Disallow fetching from domains we know are not atproto/OIDC client
+     * implementation. Note that other domains can be blocked by providing a
+     * custom fetch function combined with another
+     * forbiddenDomainNameRequestTransform.
+     */
+    forbiddenDomainNameRequestTransform(forbiddenDomainNames),
+
+    /**
+     * Since we will be fetching from the network based on user provided
+     * input, let's mitigate resource exhaustion attacks by setting a timeout.
+     */
+    timedFetch(
+      timeout,
 
       /**
        * Since we will be fetching from the network based on user provided
-       * input, let's mitigate resource exhaustion attacks by setting a timeout.
+       * input, we need to make sure that the request is not vulnerable to SSRF
+       * attacks.
        */
-      timedFetch(
-        timeout,
-
-        /**
-         * Since we will be fetching from the network based on user provided
-         * input, we need to make sure that the request is not vulnerable to SSRF
-         * attacks.
-         */
-        allowPrivateIps ? fetch : unicastFetchWrap({ fetch }),
-      ),
-
-      /**
-       * Since we will be fetching user owned data, we need to make sure that an
-       * attacker cannot force us to download a large amounts of data.
-       */
-      fetchMaxSizeProcessor(responseMaxSize),
+      allowPrivateIps ? fetch : unicastFetchWrap({ fetch }),
     ),
-  )
+
+    /**
+     * Since we will be fetching user owned data, we need to make sure that an
+     * attacker cannot force us to download a large amounts of data.
+     */
+    fetchMaxSizeProcessor(responseMaxSize),
+  ) satisfies Fetch<unknown>
 }

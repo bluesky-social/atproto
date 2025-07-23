@@ -42,19 +42,28 @@ import unmuteActor from './app/bsky/graph/unmuteActor'
 import unmuteActorList from './app/bsky/graph/unmuteActorList'
 import unmuteThread from './app/bsky/graph/unmuteThread'
 import getLabelerServices from './app/bsky/labeler/getServices'
+import getPreferences from './app/bsky/notification/getPreferences'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
+import listActivitySubscriptions from './app/bsky/notification/listActivitySubscriptions'
 import listNotifications from './app/bsky/notification/listNotifications'
+import putActivitySubscription from './app/bsky/notification/putActivitySubscription'
 import putPreferences from './app/bsky/notification/putPreferences'
+import putPreferencesV2 from './app/bsky/notification/putPreferencesV2'
 import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
+import checkHandleAvailability from './app/bsky/unspecced/checkHandleAvailability'
+import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState'
 import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
+import getPostThreadOtherV2 from './app/bsky/unspecced/getPostThreadOtherV2'
+import getPostThreadV2 from './app/bsky/unspecced/getPostThreadV2'
 import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
 import getSuggestedUsers from './app/bsky/unspecced/getSuggestedUsers'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getTrends from './app/bsky/unspecced/getTrends'
+import initAgeAssurance from './app/bsky/unspecced/initAgeAssurance'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
 import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
@@ -69,6 +78,8 @@ export * as wellKnown from './well-known'
 
 export * as blobResolver from './blob-resolver'
 
+export * as external from './external'
+
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
   getTimeline(server, ctx)
@@ -82,6 +93,8 @@ export default function (server: Server, ctx: AppContext) {
   getListFeed(server, ctx)
   getQuotes(server, ctx)
   getPostThread(server, ctx)
+  getPostThreadOtherV2(server, ctx)
+  getPostThreadV2(server, ctx)
   getPosts(server, ctx)
   searchPosts(server, ctx)
   getActorLikes(server, ctx)
@@ -118,14 +131,21 @@ export default function (server: Server, ctx: AppContext) {
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
   getSuggestions(server, ctx)
+  getPreferences(server, ctx)
   getUnreadCount(server, ctx)
+  listActivitySubscriptions(server, ctx)
   listNotifications(server, ctx)
+  putActivitySubscription(server, ctx)
   updateSeen(server, ctx)
   putPreferences(server, ctx)
+  putPreferencesV2(server, ctx)
   registerPush(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
+  checkHandleAvailability(server, ctx)
+  getAgeAssuranceState(server, ctx)
+  initAgeAssurance(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

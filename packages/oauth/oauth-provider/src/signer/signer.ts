@@ -3,13 +3,12 @@ import {
   JwtPayloadGetter,
   JwtSignHeader,
   Keyset,
-  RequiredKey,
   SignedJwt,
   VerifyOptions,
 } from '@atproto/jwk'
 import { EPHEMERAL_SESSION_MAX_AGE } from '../constants.js'
 import { dateToEpoch } from '../lib/util/date.js'
-import { OmitKey } from '../lib/util/type.js'
+import { OmitKey, RequiredKey } from '../lib/util/type.js'
 import { ApiTokenPayload, apiTokenPayloadSchema } from './api-token-payload.js'
 import {
   SignedTokenPayload,

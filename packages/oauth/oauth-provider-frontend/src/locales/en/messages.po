@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:157
+#: src/routes/account/_minimalLayout/sign-in.tsx:162
 msgid "@handle or email"
 msgstr "@handle or email"
 
@@ -49,7 +49,7 @@ msgid "Are you sure you want to revoke access? This application won't be able to
 msgstr "Are you sure you want to revoke access? This application won't be able to access your account anymore."
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:133
-#: src/routes/account/_minimalLayout/reset-password.tsx:206
+#: src/routes/account/_minimalLayout/reset-password.tsx:212
 msgid "Back to sign in"
 msgstr "Back to sign in"
 
@@ -61,12 +61,12 @@ msgstr "Branding"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:330
+#: src/routes/account/_minimalLayout/reset-password.tsx:345
 msgid "Click here to send a new code to your email."
 msgstr "Click here to send a new code to your email."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:195
-#: src/routes/account/_minimalLayout/reset-password.tsx:233
+#: src/routes/account/_minimalLayout/sign-in.tsx:204
+#: src/routes/account/_minimalLayout/reset-password.tsx:239
 msgid "Code"
 msgstr "Code"
 
@@ -82,7 +82,7 @@ msgstr "Connected apps"
 msgid "Credentials"
 msgstr "Credentials"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:325
+#: src/routes/account/_minimalLayout/reset-password.tsx:340
 msgid "Don't see the email? <0>Try sending again.</0>"
 msgstr "Don't see the email? <0>Try sending again.</0>"
 
@@ -98,11 +98,11 @@ msgstr "Email code is required"
 msgid "Email is required"
 msgstr "Email is required"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:275
+#: src/routes/account/_minimalLayout/reset-password.tsx:290
 msgid "Enter a new password"
 msgstr "Enter a new password"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:165
+#: src/routes/account/_minimalLayout/reset-password.tsx:171
 msgid "Enter your email"
 msgstr "Enter your email"
 
@@ -130,11 +130,11 @@ msgstr "Failed to resend code"
 msgid "Failed to sign out"
 msgstr "Failed to sign out"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:237
+#: src/routes/account/_minimalLayout/sign-in.tsx:250
 msgid "Forgot password?"
 msgstr "Forgot password?"
 
-#: src/routes/account/_minimalLayout/reset-password.tsx:197
+#: src/routes/account/_minimalLayout/reset-password.tsx:203
 msgid "Get reset code"
 msgstr "Get reset code"
 
@@ -187,9 +187,9 @@ msgstr "No connected apps"
 msgid "No devices"
 msgstr "No devices"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:172
-#: src/routes/account/_minimalLayout/sign-in.tsx:178
-#: src/routes/account/_minimalLayout/reset-password.tsx:268
+#: src/routes/account/_minimalLayout/sign-in.tsx:177
+#: src/routes/account/_minimalLayout/sign-in.tsx:187
+#: src/routes/account/_minimalLayout/reset-password.tsx:278
 msgid "Password"
 msgstr "Password"
 
@@ -207,7 +207,7 @@ msgstr "Remove this device"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:29
 #: src/routes/account/_minimalLayout/reset-password.tsx:140
-#: src/routes/account/_minimalLayout/reset-password.tsx:319
+#: src/routes/account/_minimalLayout/reset-password.tsx:334
 msgid "Reset password"
 msgstr "Reset password"
 
@@ -234,7 +234,7 @@ msgstr "Select the account you would like to manage."
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:32
 #: src/routes/account/_minimalLayout/sign-in.tsx:136
-#: src/routes/account/_minimalLayout/sign-in.tsx:228
+#: src/routes/account/_minimalLayout/sign-in.tsx:241
 msgid "Sign in"
 msgstr "Sign in"
 
@@ -297,8 +297,8 @@ msgstr "We weren't able to load your accounts. Please refresh the page to try ag
 msgid "Whoops! An error occurred."
 msgstr "Whoops! An error occurred."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:200
-#: src/routes/account/_minimalLayout/reset-password.tsx:239
+#: src/routes/account/_minimalLayout/sign-in.tsx:213
+#: src/routes/account/_minimalLayout/reset-password.tsx:249
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"
 
