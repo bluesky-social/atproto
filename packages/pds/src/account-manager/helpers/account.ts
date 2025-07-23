@@ -252,7 +252,7 @@ export const updateAccountTakedownStatus = async (
   takedown: StatusAttr,
 ) => {
   const takedownRef = takedown.applied
-    ? takedown.ref ?? new Date().toISOString()
+    ? (takedown.ref ?? new Date().toISOString())
     : null
   await db.executeWithRetry(
     db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),
