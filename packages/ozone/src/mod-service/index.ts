@@ -64,6 +64,7 @@ import {
   ReversibleModerationEvent,
 } from './types'
 import {
+  dateFromDbDatetime,
   formatLabel,
   formatLabelRow,
   getPdsAgentForRepo,
@@ -1554,7 +1555,7 @@ export class ModerationService {
           .selectFrom('moderation_event')
           .where('subjectDid', '=', did)
           .select([
-            sql<string>`SPLIT_PART(${ref('createdAt')}, 'T', 1)`.as('day'),
+            dateFromDbDatetime(ref('createdAt')).as('day'),
             'subjectUri',
             'action',
             sql<number>`count(*)`.as('count'),
