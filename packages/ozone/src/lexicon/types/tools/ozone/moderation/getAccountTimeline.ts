@@ -20,7 +20,7 @@ export type QueryParams = {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  timeline: AccountTimeline[]
+  timeline: TimelineItem[]
 }
 
 export type HandlerInput = void
@@ -39,35 +39,35 @@ export interface HandlerError {
 
 export type HandlerOutput = HandlerError | HandlerSuccess
 
-export interface AccountTimeline {
-  $type?: 'tools.ozone.moderation.getAccountTimeline#accountTimeline'
+export interface TimelineItem {
+  $type?: 'tools.ozone.moderation.getAccountTimeline#timelineItem'
   day: string
-  summary: AccountTimelineSummary[]
+  summary: TimelineItemSummary[]
 }
 
-const hashAccountTimeline = 'accountTimeline'
+const hashTimelineItem = 'timelineItem'
 
-export function isAccountTimeline<V>(v: V) {
-  return is$typed(v, id, hashAccountTimeline)
+export function isTimelineItem<V>(v: V) {
+  return is$typed(v, id, hashTimelineItem)
 }
 
-export function validateAccountTimeline<V>(v: V) {
-  return validate<AccountTimeline & V>(v, id, hashAccountTimeline)
+export function validateTimelineItem<V>(v: V) {
+  return validate<TimelineItem & V>(v, id, hashTimelineItem)
 }
 
-export interface AccountTimelineSummary {
-  $type?: 'tools.ozone.moderation.getAccountTimeline#accountTimelineSummary'
+export interface TimelineItemSummary {
+  $type?: 'tools.ozone.moderation.getAccountTimeline#timelineItemSummary'
   eventSubjectType: 'account' | 'record' | 'chat' | (string & {})
   eventType: string
   count: number
 }
 
-const hashAccountTimelineSummary = 'accountTimelineSummary'
+const hashTimelineItemSummary = 'timelineItemSummary'
 
-export function isAccountTimelineSummary<V>(v: V) {
-  return is$typed(v, id, hashAccountTimelineSummary)
+export function isTimelineItemSummary<V>(v: V) {
+  return is$typed(v, id, hashTimelineItemSummary)
 }
 
-export function validateAccountTimelineSummary<V>(v: V) {
-  return validate<AccountTimelineSummary & V>(v, id, hashAccountTimelineSummary)
+export function validateTimelineItemSummary<V>(v: V) {
+  return validate<TimelineItemSummary & V>(v, id, hashTimelineItemSummary)
 }

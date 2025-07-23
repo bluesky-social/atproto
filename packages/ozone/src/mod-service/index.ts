@@ -64,6 +64,7 @@ import {
   ReversibleModerationEvent,
 } from './types'
 import {
+  dateFromDbDatetime,
   formatLabel,
   formatLabelRow,
   getPdsAgentForRepo,
@@ -1547,19 +1548,17 @@ export class ModerationService {
   }
 
   async getAccountTimeline(did: string) {
+    const { ref } = this.db.db.dynamic
     const result = await this.db.db
       .selectFrom('moderation_event')
       .where('subjectDid', '=', did)
       .select([
-        sql<string>`TO_CHAR(CAST(${sql.ref('createdAt')} AS TIMESTAMP), 'YYYY-MM-DD')`.as(
-          'day',
-        ),
-        'subjectDid',
+        dateFromDbDatetime(ref('createdAt')).as('day'),
         'subjectUri',
         'action',
         sql<number>`count(*)`.as('count'),
       ])
-      .groupBy(['day', 'subjectDid', 'subjectUri', 'action'])
+      .groupBy(['day', 'subjectUri', 'action'])
       .orderBy('day', 'desc')
       .execute()
     return result

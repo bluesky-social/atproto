@@ -25,7 +25,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "#accountTimeline"
+                "ref": "#timelineItem"
               }
             }
           }
@@ -37,7 +37,7 @@
         }
       ]
     },
-    "accountTimeline": {
+    "timelineItem": {
       "type": "object",
       "required": ["day", "summary"],
       "properties": {
@@ -48,12 +48,12 @@
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "#accountTimelineSummary"
+            "ref": "#timelineItemSummary"
           }
         }
       }
     },
-    "accountTimelineSummary": {
+    "timelineItemSummary": {
       "type": "object",
       "required": ["eventSubjectType", "eventType", "count"],
       "properties": {

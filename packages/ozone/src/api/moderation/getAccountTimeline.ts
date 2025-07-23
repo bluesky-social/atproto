@@ -2,6 +2,7 @@ import { ToolsOzoneModerationGetAccountTimeline } from '@atproto/api'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { ids } from '../../lexicon/lexicons'
+import { dateFromDatetime } from '../../mod-service/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.getAccountTimeline({
@@ -18,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
         ])
       const timelineByDay = new Map<
         string,
-        ToolsOzoneModerationGetAccountTimeline.AccountTimelineSummary[]
+        ToolsOzoneModerationGetAccountTimeline.TimelineItemSummary[]
       >()
 
       if (movEventHistory.status === 'fulfilled') {
@@ -36,12 +37,14 @@ export default function (server: Server, ctx: AppContext) {
             timelineByDay.set(row.day, [summary])
           }
         }
+      } else {
+        throw new Error(movEventHistory.reason)
       }
 
       if (accountHistory.status === 'fulfilled') {
         for (const [rowDay, row] of Object.entries(accountHistory.value)) {
           const day = timelineByDay.get(rowDay)
-          const summaries: ToolsOzoneModerationGetAccountTimeline.AccountTimelineSummary[] =
+          const summaries: ToolsOzoneModerationGetAccountTimeline.TimelineItemSummary[] =
             []
           for (const [eventType, count] of Object.entries(row)) {
             summaries.push({
@@ -62,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
       if (plcHistory.status === 'fulfilled') {
         for (const [rowDay, row] of Object.entries(plcHistory.value)) {
           const day = timelineByDay.get(rowDay)
-          const summaries: ToolsOzoneModerationGetAccountTimeline.AccountTimelineSummary[] =
+          const summaries: ToolsOzoneModerationGetAccountTimeline.TimelineItemSummary[] =
             []
           for (const [eventType, count] of Object.entries(row)) {
             summaries.push({
@@ -80,8 +83,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const timeline: ToolsOzoneModerationGetAccountTimeline.AccountTimeline[] =
-        []
+      const timeline: ToolsOzoneModerationGetAccountTimeline.TimelineItem[] = []
 
       for (const [day, summary] of timelineByDay.entries()) {
         timeline.push({ day, summary: summary.flat() })
@@ -107,7 +109,7 @@ const getAccountHistory = async (ctx: AppContext, did: string) => {
 
   do {
     const { data } = await ctx.pdsAgent.tools.ozone.hosting.getAccountHistory(
-      { did },
+      { did, cursor },
       auth,
     )
     cursor = data.cursor
@@ -117,12 +119,10 @@ const getAccountHistory = async (ctx: AppContext, did: string) => {
         continue
       }
 
-      const day = new Date(event.createdAt).toISOString().split('T')[0]
-      if (!events[day]) {
-        events[day] = {}
-      }
-
-      events[day][event.$type] = (events[day][event.$type] || 0) + 1
+      const day = dateFromDatetime(new Date(event.createdAt))
+      events[day] ??= {}
+      events[day][event.$type] ??= 0
+      events[day][event.$type]++
     }
   } while (cursor)
 
@@ -139,12 +139,9 @@ const getPlcHistory = async (ctx: AppContext, did: string) => {
   const result = await ctx.plcClient.getAuditableLog(did)
   for (const event of result) {
     const day = new Date(event.createdAt).toISOString().split('T')[0]
-    if (!events[day]) {
-      events[day] = {}
-    }
-
-    events[day][event.operation.type] =
-      (events[day][event.operation.type] || 0) + 1
+    events[day] ??= {}
+    events[day][event.operation.type] ??= 0
+    events[day][event.operation.type]++
   }
 
   return events

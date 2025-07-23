@@ -15125,7 +15125,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:tools.ozone.moderation.getAccountTimeline#accountTimeline',
+                  ref: 'lex:tools.ozone.moderation.getAccountTimeline#timelineItem',
                 },
               },
             },
@@ -15137,7 +15137,7 @@ export const schemaDict = {
           },
         ],
       },
-      accountTimeline: {
+      timelineItem: {
         type: 'object',
         required: ['day', 'summary'],
         properties: {
@@ -15148,12 +15148,12 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:tools.ozone.moderation.getAccountTimeline#accountTimelineSummary',
+              ref: 'lex:tools.ozone.moderation.getAccountTimeline#timelineItemSummary',
             },
           },
         },
       },
-      accountTimelineSummary: {
+      timelineItemSummary: {
         type: 'object',
         required: ['eventSubjectType', 'eventType', 'count'],
         properties: {
