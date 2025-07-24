@@ -2,12 +2,10 @@ import crypto from 'node:crypto'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import {
-  ForbiddenError,
   InvalidRequestError,
   MethodNotImplementedError,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { GateID } from '../../../../feature-gates'
 import { KwsExternalPayloadError } from '../../../../kws'
 import { Server } from '../../../../lexicon'
 import { InputSchema } from '../../../../lexicon/types/app/bsky/unspecced/initAgeAssurance'
@@ -27,12 +25,6 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const actorDid = auth.credentials.iss
-      const enabled =
-        ctx.cfg.debugMode ||
-        ctx.featureGates.check({ userID: actorDid }, GateID.AgeAssurance)
-      if (!enabled) {
-        throw new ForbiddenError()
-      }
 
       const actorInfo = await getAgeVerificationState(ctx, actorDid)
 
