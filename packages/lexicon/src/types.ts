@@ -412,6 +412,8 @@ export type LexUserType = z.infer<typeof lexUserType>
 
 export const lexiconDoc = z
   .object({
+    // Compatibility with lexicon publishing
+    $type: z.literal('com.atproto.lexicon.schema').optional(),
     lexicon: z.literal(1),
     id: z.string().refine((v: string) => NSID.isValid(v), {
       message: 'Must be a valid NSID',
