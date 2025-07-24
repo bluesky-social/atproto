@@ -23,6 +23,7 @@
     { "path": "./packages/internal/xrpc-utils" },
     { "path": "./packages/lex-cli" },
     { "path": "./packages/lexicon" },
+    { "path": "./packages/lexicon-resolver" },
     { "path": "./packages/oauth/jwk" },
     { "path": "./packages/oauth/jwk-jose" },
     { "path": "./packages/oauth/jwk-webcrypto" },
