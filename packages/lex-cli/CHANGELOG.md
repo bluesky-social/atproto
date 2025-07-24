@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.9.1
+
+### Patch Changes
+
+- [`8d56743a1`](https://github.com/bluesky-social/atproto/commit/8d56743a18413a73e6bbca358336c770553d861f) Thanks [@devinivy](https://github.com/devinivy)! - Fix codegen for nsids containing dashes.
+
 ## 0.9.0
 
 ### Minor Changes
