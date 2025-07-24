@@ -6,8 +6,8 @@ on:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
     if: github.repository == 'bluesky-social/atproto'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout public repo
         uses: actions/checkout@v4
