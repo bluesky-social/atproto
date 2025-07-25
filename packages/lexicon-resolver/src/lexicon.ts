@@ -10,24 +10,37 @@ const DNS_PREFIX = 'did='
 export const LEXICON_SCHEMA_NSID = 'com.atproto.lexicon.schema'
 
 export type ResolveLexiconOptions = ResolveRecordOptions & {
-  authorityDid?: string
+  didAuthority?: string
 }
 
 export type LexiconResolution = {
   commit: Commit
   uri: AtUri
   cid: CID
+  nsid: NSID
   lexicon: LexiconDoc & LexiconSchemaRecord
 }
 
+/**
+ * Resolve a lexicon from the network, verifying its authenticity.
+ * @param nsidStr NSID or string representing one for the Lexicon that will be resolved.
+ * @param options
+ * @returns
+ */
 export async function resolveLexicon(
   nsidStr: NSID | string,
   options: ResolveLexiconOptions = {},
 ): Promise<LexiconResolution> {
   const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
-  const did = options.authorityDid ?? (await getLexiconAuthorityDid(nsid))
-  if (!did) {
-    throw new Error(`Could not resolve a DID authority for NSID: ${nsid}`)
+  let did: string | undefined
+  if (options.didAuthority) {
+    ensureValidDid(options.didAuthority)
+    did = options.didAuthority
+  } else {
+    did = await getLexiconDidAuthority(nsid)
+    if (!did) {
+      throw new Error(`Could not resolve a DID authority for NSID: ${nsid}`)
+    }
   }
   const verified = await resolveRecord(
     AtUri.make(did, LEXICON_SCHEMA_NSID, nsid.toString()),
@@ -37,15 +50,35 @@ export async function resolveLexicon(
   if (!isLexiconSchemaRecord(lexicon)) {
     throw new Error('Invalid lexicon schema record')
   }
+  if (lexicon.id !== nsid.toString()) {
+    throw new Error(
+      `Lexicon schema record id does not match NSID: ${lexicon.id}`,
+    )
+  }
   const { uri, cid, commit } = verified
-  return { commit, uri, cid, lexicon }
+  return { commit, uri, cid, nsid, lexicon }
 }
 
-export async function getLexiconAuthorityDid(nsidStr: NSID | string) {
+/**
+ *
+ * @param nsidStr NSID or string representing one for which to lookup its lexicon DID authority.
+ * @param options
+ * @returns
+ */
+export async function getLexiconDidAuthority(nsidStr: NSID | string) {
   const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
   const did = await resolveDns(nsid.authority)
-  if (did != null) ensureValidDid(did)
+  if (did == null || !isValidDid(did)) return
   return did
+}
+
+function isValidDid(did: string) {
+  try {
+    ensureValidDid(did)
+    return true
+  } catch {
+    return false
+  }
 }
 
 async function resolveDns(authority: string): Promise<string | undefined> {

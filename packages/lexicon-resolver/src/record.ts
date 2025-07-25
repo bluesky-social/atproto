@@ -28,6 +28,12 @@ export type RecordResolution = {
   record: RepoRecord
 }
 
+/**
+ * Resolve a record from the network, verifying its authenticity.
+ * @param uriStr AtUri or string representing one for the record that will be resolved.
+ * @param options
+ * @returns
+ */
 export async function resolveRecord(
   uriStr: AtUri | string,
   options: ResolveRecordOptions = {},
