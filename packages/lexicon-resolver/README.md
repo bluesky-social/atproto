@@ -6,38 +6,43 @@ ATProto Lexicon resolution
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
 ## Usage
-This package may be used to determine the DID authority for a Lexicon based on its NSID, and to resolve a Lexicon from its NSID based on [Lexicon Resolution](https://atproto.com/specs/lexicon#lexicon-publication-and-resolution) from the network.  Resolutions always verify the inclusion proof for the Lexicon schema document published to the ATProto network.
+
+This package may be used to determine the DID authority for a Lexicon based on its NSID, and to resolve a Lexicon from its NSID based on [Lexicon Resolution](https://atproto.com/specs/lexicon#lexicon-publication-and-resolution) from the network. Resolutions always verify the inclusion proof for the Lexicon schema document published to the ATProto network.
 
 ```ts
-import { resolveLexicon, getLexiconDidAuthority } from '@atproto/lexicon-resolution'
+import {
+  resolveLexicon,
+  getLexiconDidAuthority,
+} from '@atproto/lexicon-resolution'
 
 // Which DID is the authority over this lexicon?
 const didAuthority = await getLexiconDidAuthority('app.bsky.feed.post')
 // Resolve the Lexicon document with resolution details
 const resolved = await resolveLexicon('app.bsky.feed.post')
 /**
-  * {
-  *   commit: {
-  *     did: 'did:plc:4v4y5r3lwsbtmsxhile2ljac',
-  *     rev: '3lnlpukgipj2c',
-  *     sig: Uint8Array(64),
-  *     ...
-  *   },
-  *   uri: AtUri(at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.feed.post),
-  *   cid: CID(bafyreidgbehqwweghrrddfu6jgj7lyr6fwhzgazhirnszdb5lvr7iynkiy),
-  *   nsid: NSID('app.bsky.feed.post'),
-  *   lexicon: {
-  *     '$type': 'com.atproto.lexicon.schema',
-  *     lexicon: 1
-  *     id: 'app.bsky.feed.post',
-  *     defs: { main: [Object], ... },
-  *   }
-  * }
-  */
+ * {
+ *   commit: {
+ *     did: 'did:plc:4v4y5r3lwsbtmsxhile2ljac',
+ *     rev: '3lnlpukgipj2c',
+ *     sig: Uint8Array(64),
+ *     ...
+ *   },
+ *   uri: AtUri(at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.feed.post),
+ *   cid: CID(bafyreidgbehqwweghrrddfu6jgj7lyr6fwhzgazhirnszdb5lvr7iynkiy),
+ *   nsid: NSID('app.bsky.feed.post'),
+ *   lexicon: {
+ *     '$type': 'com.atproto.lexicon.schema',
+ *     lexicon: 1
+ *     id: 'app.bsky.feed.post',
+ *     defs: { main: [Object], ... },
+ *   }
+ * }
+ */
 ```
 
 ### With identity caching
-Identity data is used in order to fetch and verify record contents.  The @atproto/identity package can be used to offer more control over caching and other behaviors of identity lookups.
+
+Identity data is used in order to fetch and verify record contents. The @atproto/identity package can be used to offer more control over caching and other behaviors of identity lookups.
 
 ```ts
 import { IdResolver, MemoryCache } from '@atproto/identity'
@@ -48,18 +53,19 @@ const idResolver = new IdResolver({
 })
 
 const resolved = await resolveLexicon('app.bsky.feed.post', {
-  idResolver
+  idResolver,
 })
 ```
 
 ### With DID authority override
-You may specify a specific DID authority you'd like to use to perform a Lexicon resolution, overriding the ATProto's DNS-based authority over Lexicons.  This is described in some more detail in [Authority and Control](https://atproto.com/specs/lexicon#authority-and-control).
+
+You may specify a specific DID authority you'd like to use to perform a Lexicon resolution, overriding the ATProto's DNS-based authority over Lexicons. This is described in some more detail in [Authority and Control](https://atproto.com/specs/lexicon#authority-and-control).
 
 ```ts
 import { resolveLexicon } from '@atproto/lexicon-resolution'
 
 const resolved = await resolveLexicon('app.bsky.feed.post', {
-  didAuthority: 'did:plc:...'
+  didAuthority: 'did:plc:...',
 })
 ```
 
