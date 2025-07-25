@@ -59,7 +59,7 @@ const resolved = await resolveLexicon('app.bsky.feed.post', {
 
 ### With DID authority override
 
-You may specify a specific DID authority you'd like to use to perform a Lexicon resolution, overriding the ATProto's DNS-based authority over Lexicons. This is described in some more detail in [Authority and Control](https://atproto.com/specs/lexicon#authority-and-control).
+You may specify a specific DID authority you'd like to use to perform a Lexicon resolution, overriding ATProto's DNS-based authority over Lexicons. This is described in some more detail in [Authority and Control](https://atproto.com/specs/lexicon#authority-and-control).
 
 ```ts
 import { resolveLexicon } from '@atproto/lexicon-resolution'
