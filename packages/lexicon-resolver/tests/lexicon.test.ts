@@ -1,6 +1,6 @@
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { NSID } from '@atproto/syntax'
-import { getLexiconDidAuthority, resolveLexicon } from '../src/lexicon.js'
+import { getLexiconDidAuthority, resolveLexicon } from '../src/index.js'
 
 const dnsEntries: [entry: string, result: string][] = []
 

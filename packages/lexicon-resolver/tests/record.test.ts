@@ -1,6 +1,6 @@
 import { dataToCborBlock } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { resolveRecord } from '../src/record.js'
+import { resolveRecord } from '../src/index.js'
 
 describe.only('Record resolution', () => {
   let network: TestNetworkNoAppView
