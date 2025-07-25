@@ -64,7 +64,7 @@ describe('Lexicon resolution', () => {
     await network.close()
   })
 
-  it('resolves lexicon.', async () => {
+  it('resolves Lexicon.', async () => {
     const client = network.pds.getClient()
     const lex = await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.name1' },
@@ -129,7 +129,7 @@ describe('Lexicon resolution', () => {
         idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
-    ).rejects.toThrow('Could not resolve lexicon schema record')
+    ).rejects.toThrow('Could not resolve Lexicon schema record')
   })
 
   it('fails on bad verification.', async () => {
@@ -156,7 +156,7 @@ describe('Lexicon resolution', () => {
     ).rejects.toThrow(
       expect.objectContaining({
         name: 'LexiconResolutionError',
-        message: 'Could not resolve lexicon schema record',
+        message: 'Could not resolve Lexicon schema record',
         cause: expect.objectContaining({
           name: 'RecordResolutionError',
           message: expect.stringContaining('Invalid signature on commit'),
@@ -171,7 +171,7 @@ describe('Lexicon resolution', () => {
     )
   })
 
-  it('fails on invalid lexicon document.', async () => {
+  it('fails on invalid Lexicon document.', async () => {
     const client = network.pds.getClient()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.baddoc' },
@@ -187,7 +187,7 @@ describe('Lexicon resolution', () => {
     ).rejects.toThrow(
       expect.objectContaining({
         name: 'LexiconResolutionError',
-        message: 'Invalid lexicon document',
+        message: 'Invalid Lexicon document',
         cause: expect.objectContaining({
           name: 'ZodError',
         }),
@@ -195,7 +195,7 @@ describe('Lexicon resolution', () => {
     )
   })
 
-  it('resolves lexicon based on override authority.', async () => {
+  it('resolves Lexicon based on override authority.', async () => {
     const client = network.pds.getClient()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.override' },

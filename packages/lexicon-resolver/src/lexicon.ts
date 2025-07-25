@@ -23,7 +23,7 @@ export type LexiconResolution = {
 }
 
 /**
- * Resolve a lexicon from the network, verifying its authenticity.
+ * Resolve a Lexicon from the network, verifying its authenticity.
  * @param nsidStr NSID or string representing one for the Lexicon that will be resolved.
  * @param options
  * @returns
@@ -39,7 +39,7 @@ export async function resolveLexicon(
     options,
   ).catch((err) => {
     throw new LexiconResolutionError(
-      'Could not resolve lexicon schema record',
+      'Could not resolve Lexicon schema record',
       { cause: err },
     )
   })
@@ -47,10 +47,10 @@ export async function resolveLexicon(
   try {
     lexicon = parseLexiconDoc(verified.record)
   } catch (err) {
-    throw new LexiconResolutionError('Invalid lexicon document', { cause: err })
+    throw new LexiconResolutionError('Invalid Lexicon document', { cause: err })
   }
   if (!isLexiconSchemaRecord(lexicon)) {
-    throw new LexiconResolutionError('Invalid lexicon schema record')
+    throw new LexiconResolutionError('Invalid Lexicon schema record')
   }
   if (lexicon.id !== nsid.toString()) {
     throw new LexiconResolutionError(
@@ -62,8 +62,8 @@ export async function resolveLexicon(
 }
 
 /**
- *
- * @param nsidStr NSID or string representing one for which to lookup its lexicon DID authority.
+ * Resolve the DID authority for a Lexicon from the network using DNS, based on its NSID.
+ * @param nsidStr NSID or string representing one for which to lookup its Lexicon DID authority.
  * @param options
  * @returns
  */

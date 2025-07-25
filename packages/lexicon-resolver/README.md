@@ -15,7 +15,7 @@ import {
   resolveLexiconDidAuthority,
 } from '@atproto/lexicon-resolution'
 
-// Which DID is the authority over this lexicon?
+// Which DID is the authority over this Lexicon?
 const didAuthority = await resolveLexiconDidAuthority('app.bsky.feed.post')
 // Resolve the Lexicon document with resolution details
 const resolved = await resolveLexicon('app.bsky.feed.post')
