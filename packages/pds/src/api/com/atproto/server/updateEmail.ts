@@ -8,7 +8,10 @@ import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
-    auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
+    auth: ctx.authVerifier.accessFull({
+      additionalOauthScopes: ['transition:identity'],
+      checkTakedown: true,
+    }),
     handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
       const { token, email } = input.body
