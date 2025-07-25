@@ -4,6 +4,7 @@ import { LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
 import { Commit } from '@atproto/repo'
 import { AtUri, NSID, ensureValidDid } from '@atproto/syntax'
 import { ResolveRecordOptions, resolveRecord } from './record.js'
+import { isValidDid } from './util.js'
 
 const DNS_SUBDOMAIN = '_lexicon'
 const DNS_PREFIX = 'did='
@@ -66,24 +67,10 @@ export async function resolveLexicon(
  * @param options
  * @returns
  */
-export async function getLexiconDidAuthority(nsidStr: NSID | string) {
+export async function resolveLexiconDidAuthority(nsidStr: NSID | string) {
   const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
   const did = await resolveDns(nsid.authority)
   if (did == null || !isValidDid(did)) return
-  return did
-}
-
-async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
-  if (options.didAuthority) {
-    ensureValidDid(options.didAuthority)
-    return options.didAuthority
-  }
-  const did = await getLexiconDidAuthority(nsid)
-  if (!did) {
-    throw new LexiconResolutionError(
-      `Could not resolve a DID authority for NSID: ${nsid}`,
-    )
-  }
   return did
 }
 
@@ -94,13 +81,18 @@ export class LexiconResolutionError extends Error {
   }
 }
 
-function isValidDid(did: string) {
-  try {
-    ensureValidDid(did)
-    return true
-  } catch {
-    return false
+async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
+  if (options.didAuthority) {
+    ensureValidDid(options.didAuthority)
+    return options.didAuthority
   }
+  const did = await resolveLexiconDidAuthority(nsid)
+  if (!did) {
+    throw new LexiconResolutionError(
+      `Could not resolve a DID authority for NSID: ${nsid}`,
+    )
+  }
+  return did
 }
 
 async function resolveDns(authority: string): Promise<string | undefined> {

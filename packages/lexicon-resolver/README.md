@@ -12,11 +12,11 @@ This package may be used to determine the DID authority for a Lexicon based on i
 ```ts
 import {
   resolveLexicon,
-  getLexiconDidAuthority,
+  resolveLexiconDidAuthority,
 } from '@atproto/lexicon-resolution'
 
 // Which DID is the authority over this lexicon?
-const didAuthority = await getLexiconDidAuthority('app.bsky.feed.post')
+const didAuthority = await resolveLexiconDidAuthority('app.bsky.feed.post')
 // Resolve the Lexicon document with resolution details
 const resolved = await resolveLexicon('app.bsky.feed.post')
 /**

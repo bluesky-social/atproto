@@ -13,6 +13,7 @@ import { AtUri, ensureValidDid } from '@atproto/syntax'
 import { BuildFetchHandlerOptions, FetchHandler } from '@atproto/xrpc'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { AtpBaseClient as Client } from './client/index.js'
+import { isValidDid } from './util.js'
 
 export type ResolveRecordOptions = {
   idResolver?: IdResolver
@@ -87,20 +88,15 @@ async function getDidFromUri(
   uri: AtUri,
   { idResolver }: { idResolver: IdResolver },
 ) {
-  let did: string
   if (uri.host.startsWith('did:')) {
-    did = uri.host
-  } else {
-    const resolved = await idResolver.handle.resolve(uri.host)
-    if (!resolved) {
-      throw new RecordResolutionError(
-        'Could not resolve handle found in AT-URI',
-      )
-    }
-    did = resolved
+    ensureValidDid(uri.host)
+    return uri.host
   }
-  ensureValidDid(did)
-  return did
+  const resolved = await idResolver.handle.resolve(uri.host)
+  if (!resolved || !isValidDid(resolved)) {
+    throw new RecordResolutionError('Could not resolve handle found in AT-URI')
+  }
+  return resolved
 }
 
 async function verifyRecordProof(

@@ -1,6 +1,6 @@
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { NSID } from '@atproto/syntax'
-import { getLexiconDidAuthority, resolveLexicon } from '../src/index.js'
+import { resolveLexicon, resolveLexiconDidAuthority } from '../src/index.js'
 
 const dnsEntries: [entry: string, result: string][] = []
 
@@ -91,12 +91,12 @@ describe('Lexicon resolution', () => {
   it('fails on mismatched id.', async () => {
     const client = network.pds.getClient()
     await client.com.atproto.lexicon.schema.create(
-      { repo: sc.dids.alice, rkey: 'example.alice.name2' },
-      { id: 'example.test1.name2.bad', lexicon: 1, defs: {} },
+      { repo: sc.dids.alice, rkey: 'example.alice.mismatch' },
+      { id: 'example.test1.mismatch.bad', lexicon: 1, defs: {} },
       sc.getHeaders(sc.dids.alice),
     )
     await expect(
-      resolveLexicon('example.alice.name2', {
+      resolveLexicon('example.alice.mismatch', {
         rpc: { fetch },
         idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
@@ -235,38 +235,40 @@ describe('Lexicon resolution', () => {
 
   describe('DID authority', () => {
     it('handles a simple DNS resolution', async () => {
-      const did = await getLexiconDidAuthority('test.simple.name')
+      const did = await resolveLexiconDidAuthority('test.simple.name')
       expect(did).toBe('did:example:simpleDid')
     })
 
     it('handles a noisy DNS resolution', async () => {
-      const did = await getLexiconDidAuthority('test.noisy.name')
+      const did = await resolveLexiconDidAuthority('test.noisy.name')
       expect(did).toBe('did:example:noisyDid')
     })
 
     it('handles a bad DNS resolution', async () => {
-      const did = await getLexiconDidAuthority('test.bad.name')
+      const did = await resolveLexiconDidAuthority('test.bad.name')
       expect(did).toBeUndefined()
     })
 
     it('throws on multiple dids under same domain', async () => {
-      const did = await getLexiconDidAuthority('test.multi.name')
+      const did = await resolveLexiconDidAuthority('test.multi.name')
       expect(did).toBeUndefined()
     })
 
     it('fails on invalid NSID', async () => {
-      await expect(getLexiconDidAuthority('not an nsid')).rejects.toThrow(
+      await expect(resolveLexiconDidAuthority('not an nsid')).rejects.toThrow(
         'Disallowed characters in NSID',
       )
     })
 
     it('fails on invalid DID result', async () => {
-      const did = await getLexiconDidAuthority('test.invalid.name')
+      const did = await resolveLexiconDidAuthority('test.invalid.name')
       expect(did).toBeUndefined()
     })
 
     it('accepts NSID object', async () => {
-      const did = await getLexiconDidAuthority(NSID.parse('test.simple.name'))
+      const did = await resolveLexiconDidAuthority(
+        NSID.parse('test.simple.name'),
+      )
       expect(did).toBe('did:example:simpleDid')
     })
   })
