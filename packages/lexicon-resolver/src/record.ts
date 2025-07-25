@@ -81,7 +81,9 @@ async function verifyRecordProof(
   proofBytes: Uint8Array,
   { uri, signingKey }: { uri: AtUri; signingKey: string },
 ) {
-  const { root, blocks } = await readCarWithRoot(proofBytes)
+  const { root, blocks } = await readCarWithRoot(proofBytes, {
+    verifyCids: true,
+  })
   const blockstore = new MemoryBlockstore(blocks)
   const commit = await blockstore.readObj(root, repoDef.commit)
   if (commit.did !== uri.host) {
