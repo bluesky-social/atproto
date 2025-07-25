@@ -37,7 +37,9 @@
     "multiformats": "^9.9.0"
   },
   "devDependencies": {
+    "@atproto/common": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
+    "@atproto/dev-env": "workspace:^",
     "jest": "^28.1.2",
     "typescript": "^5.6.3"
   }

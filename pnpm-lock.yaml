@@ -822,6 +822,12 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
     devDependencies:
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
+      '@atproto/dev-env':
+        specifier: workspace:^
+        version: link:../dev-env
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
