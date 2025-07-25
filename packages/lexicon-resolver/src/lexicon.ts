@@ -32,26 +32,27 @@ export async function resolveLexicon(
   options: ResolveLexiconOptions = {},
 ): Promise<LexiconResolution> {
   const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
-  let did: string | undefined
-  if (options.didAuthority) {
-    ensureValidDid(options.didAuthority)
-    did = options.didAuthority
-  } else {
-    did = await getLexiconDidAuthority(nsid)
-    if (!did) {
-      throw new Error(`Could not resolve a DID authority for NSID: ${nsid}`)
-    }
-  }
+  const didAuthority = await getDidAuthority(nsid, options)
   const verified = await resolveRecord(
-    AtUri.make(did, LEXICON_SCHEMA_NSID, nsid.toString()),
+    AtUri.make(didAuthority, LEXICON_SCHEMA_NSID, nsid.toString()),
     options,
-  )
-  const lexicon = parseLexiconDoc(verified.record)
+  ).catch((err) => {
+    throw new LexiconResolutionError(
+      'Could not resolve lexicon schema record',
+      { cause: err },
+    )
+  })
+  let lexicon: LexiconDoc
+  try {
+    lexicon = parseLexiconDoc(verified.record)
+  } catch (err) {
+    throw new LexiconResolutionError('Invalid lexicon document', { cause: err })
+  }
   if (!isLexiconSchemaRecord(lexicon)) {
-    throw new Error('Invalid lexicon schema record')
+    throw new LexiconResolutionError('Invalid lexicon schema record')
   }
   if (lexicon.id !== nsid.toString()) {
-    throw new Error(
+    throw new LexiconResolutionError(
       `Lexicon schema record id does not match NSID: ${lexicon.id}`,
     )
   }
@@ -70,6 +71,27 @@ export async function getLexiconDidAuthority(nsidStr: NSID | string) {
   const did = await resolveDns(nsid.authority)
   if (did == null || !isValidDid(did)) return
   return did
+}
+
+async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
+  if (options.didAuthority) {
+    ensureValidDid(options.didAuthority)
+    return options.didAuthority
+  }
+  const did = await getLexiconDidAuthority(nsid)
+  if (!did) {
+    throw new LexiconResolutionError(
+      `Could not resolve a DID authority for NSID: ${nsid}`,
+    )
+  }
+  return did
+}
+
+export class LexiconResolutionError extends Error {
+  constructor(message?: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = 'LexiconResolutionError'
+  }
 }
 
 function isValidDid(did: string) {

@@ -129,7 +129,7 @@ describe('Lexicon resolution', () => {
         idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
-    ).rejects.toThrow('Record not found')
+    ).rejects.toThrow('Could not resolve lexicon schema record')
   })
 
   it('fails on bad verification.', async () => {
@@ -153,7 +153,16 @@ describe('Lexicon resolution', () => {
         idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
-    ).rejects.toThrow('Invalid signature on commit')
+    ).rejects.toThrow(
+      expect.objectContaining({
+        name: 'LexiconResolutionError',
+        message: 'Could not resolve lexicon schema record',
+        cause: expect.objectContaining({
+          name: 'RecordResolutionError',
+          message: expect.stringContaining('Invalid signature on commit'),
+        }),
+      }),
+    )
     // reset alice's key
     await network.pds.ctx.plcClient.updateAtprotoKey(
       sc.dids.alice,
@@ -175,7 +184,15 @@ describe('Lexicon resolution', () => {
         idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
-    ).rejects.toThrow('Invalid literal value, expected 1')
+    ).rejects.toThrow(
+      expect.objectContaining({
+        name: 'LexiconResolutionError',
+        message: 'Invalid lexicon document',
+        cause: expect.objectContaining({
+          name: 'ZodError',
+        }),
+      }),
+    )
   })
 
   it('resolves lexicon based on override authority.', async () => {

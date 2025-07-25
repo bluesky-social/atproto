@@ -5,7 +5,6 @@ import {
   Commit,
   MST,
   MemoryBlockstore,
-  RepoVerificationError,
   def as repoDef,
   readCarWithRoot,
   verifyCommitSig,
@@ -41,17 +40,29 @@ export async function resolveRecord(
   const { idResolver = new IdResolver(), forceRefresh, rpc } = options
   const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
   const did = await getDidFromUri(uri, { idResolver })
-  const identity = await idResolver.did.resolveAtprotoData(did, forceRefresh)
+  const identity = await idResolver.did
+    .resolveAtprotoData(did, forceRefresh)
+    .catch((err) => {
+      throw new RecordResolutionError('Could not resolve DID identity data', {
+        cause: err,
+      })
+    })
   const client = new Client(
     typeof rpc === 'function'
       ? rpc
       : { service: identity.pds, fetch: safeFetch, ...rpc },
   )
-  const { data: proofBytes } = await client.com.atproto.sync.getRecord({
-    did,
-    collection: uri.collection,
-    rkey: uri.rkey,
-  })
+  const { data: proofBytes } = await client.com.atproto.sync
+    .getRecord({
+      did,
+      collection: uri.collection,
+      rkey: uri.rkey,
+    })
+    .catch((err) => {
+      throw new RecordResolutionError('Could not fetch record proof', {
+        cause: err,
+      })
+    })
   const verified = await verifyRecordProof(proofBytes, {
     uri: AtUri.make(did, uri.collection, uri.rkey),
     signingKey: identity.signingKey,
@@ -65,6 +76,13 @@ export const safeFetch = safeFetchWrap({
   responseMaxSize: (1024 + 10) * 1024, // 1MB + 10kB, just a bit larger than max record size
 })
 
+export class RecordResolutionError extends Error {
+  constructor(message?: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = 'RecordResolutionError'
+  }
+}
+
 async function getDidFromUri(
   uri: AtUri,
   { idResolver }: { idResolver: IdResolver },
@@ -75,7 +93,9 @@ async function getDidFromUri(
   } else {
     const resolved = await idResolver.handle.resolve(uri.host)
     if (!resolved) {
-      throw new Error('Could not resolve handle found in AT-URI.')
+      throw new RecordResolutionError(
+        'Could not resolve handle found in AT-URI',
+      )
     }
     did = resolved
   }
@@ -93,18 +113,18 @@ async function verifyRecordProof(
   const blockstore = new MemoryBlockstore(blocks)
   const commit = await blockstore.readObj(root, repoDef.commit)
   if (commit.did !== uri.host) {
-    throw new RepoVerificationError(`Invalid repo did: ${commit.did}`)
+    throw new RecordResolutionError(`Invalid repo did: ${commit.did}`)
   }
   const validSig = await verifyCommitSig(commit, signingKey)
   if (!validSig) {
-    throw new RepoVerificationError(
+    throw new RecordResolutionError(
       `Invalid signature on commit: ${root.toString()}`,
     )
   }
   const mst = MST.load(blockstore, commit.data)
   const cid = await mst.get(`${uri.collection}/${uri.rkey}`)
   if (!cid) {
-    throw new RepoVerificationError('Record not found')
+    throw new RecordResolutionError('Record not found in proof')
   }
   const record = await blockstore.readRecord(cid)
   return { commit, uri, cid, record }
