@@ -1549,6 +1549,7 @@ export class ModerationService {
 
   async getAccountTimeline(did: string) {
     const { ref } = this.db.db.dynamic
+    // Without the subquery approach, pg tries to do the sort operation first which can be super expensive when a subjectDid has too many entries
     const result = await this.db.db
       .selectFrom(
         this.db.db
