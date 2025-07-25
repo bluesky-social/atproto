@@ -4,10 +4,15 @@ import chalk from 'chalk'
 import { ZodError, type ZodFormattedError } from 'zod'
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
 import { type FileDiff, type GeneratedAPI } from './types'
+import isGlob from 'is-glob'
+import { glob } from 'glob'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
   const docs: LexiconDoc[] = []
-  for (const path of paths) {
+  const pathsToSearch = paths.flatMap((path) =>
+    isGlob(path) ? glob.sync(path) : [path],
+  )
+  for (const path of pathsToSearch) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
       continue
     }
