@@ -1,6 +1,7 @@
 import { Lexicons } from '../lexicons'
 import {
   LexArray,
+  LexRecord,
   LexRefVariant,
   LexUserType,
   ValidationError,
@@ -25,6 +26,8 @@ export function validate(
       return array(lexicons, path, def, value)
     case 'blob':
       return blob(lexicons, path, def, value)
+    case 'record':
+      return record(lexicons, path, def, value)
     default:
       return validatePrimitive(lexicons, path, def, value)
   }
@@ -152,6 +155,24 @@ export function object(
   }
 
   return { success: true, value: resultValue }
+}
+
+export function record(
+  lexicons: Lexicons,
+  path: string,
+  def: LexRecord,
+  value: unknown,
+): ValidationResult {
+  if (!isObj(value) || !('$type' in value)) {
+    return {
+      success: false,
+      error: new ValidationError(
+        `${path} must be a record with a "$type" property`,
+      ),
+    }
+  }
+  const propPath = `${path}/record`
+  return validateOneOf(lexicons, propPath, def.record, value)
 }
 
 export function validateOneOf(
