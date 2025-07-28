@@ -19,8 +19,6 @@ import { OutputSchema as GetActorFeedsOutputSchema } from '../src/lexicon/types/
 import { OutputSchema as GetFeedOutputSchema } from '../src/lexicon/types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedSkeleton from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { forSnapshot, paginateAll } from './_util'
-import { date } from 'zod'
-import { paginate } from '../src/data-plane/server/db/pagination'
 
 describe('feed generation', () => {
   let network: TestNetwork
