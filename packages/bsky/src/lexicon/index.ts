@@ -89,6 +89,7 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
@@ -1297,6 +1298,18 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.addReservedHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  checkHandleAvailability<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoTempCheckHandleAvailability.QueryParams,
+      ComAtprotoTempCheckHandleAvailability.HandlerInput,
+      ComAtprotoTempCheckHandleAvailability.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.checkHandleAvailability' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

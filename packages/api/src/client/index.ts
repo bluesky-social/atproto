@@ -97,6 +97,7 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
@@ -374,6 +375,7 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+export * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
@@ -1713,6 +1715,17 @@ export class ComAtprotoTempNS {
       data,
       opts,
     )
+  }
+
+  checkHandleAvailability(
+    params?: ComAtprotoTempCheckHandleAvailability.QueryParams,
+    opts?: ComAtprotoTempCheckHandleAvailability.CallOptions,
+  ): Promise<ComAtprotoTempCheckHandleAvailability.Response> {
+    return this._client
+      .call('com.atproto.temp.checkHandleAvailability', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempCheckHandleAvailability.toKnownErr(e)
+      })
   }
 
   checkSignupQueue(
