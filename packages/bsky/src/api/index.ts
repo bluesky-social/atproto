@@ -51,7 +51,6 @@ import putPreferences from './app/bsky/notification/putPreferences'
 import putPreferencesV2 from './app/bsky/notification/putPreferencesV2'
 import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
-import checkHandleAvailability from './app/bsky/unspecced/checkHandleAvailability'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState'
 import getConfig from './app/bsky/unspecced/getConfig'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
@@ -143,7 +142,6 @@ export default function (server: Server, ctx: AppContext) {
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
-  checkHandleAvailability(server, ctx)
   getAgeAssuranceState(server, ctx)
   initAgeAssurance(server, ctx)
   // com.atproto
