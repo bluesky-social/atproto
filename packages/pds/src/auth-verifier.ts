@@ -120,7 +120,7 @@ export class AuthVerifier {
     // header means that that header is invalid (as it did not match any of the
     // other auth methods).
     if (ctx.req.headers['authorization']) {
-      throw new AuthRequiredError('Invalid authorization header', 'AuthMissing')
+      throw new AuthRequiredError('Invalid authorization header')
     }
 
     return {

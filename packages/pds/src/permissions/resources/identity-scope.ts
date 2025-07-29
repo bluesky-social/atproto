@@ -1,4 +1,9 @@
-import { ParsedResourceScope, formatScope } from '../scope-syntax'
+import {
+  NeRoArray,
+  ParsedResourceScope,
+  ScopeForResource,
+  formatScope,
+} from '../scope-syntax'
 
 const IDENTITY_PARAMS = Object.freeze(['feature'] as const)
 const IDENTITY_FEATURES = Object.freeze([
@@ -14,24 +19,30 @@ export function isIdentityScopeFeature(
   return (IDENTITY_FEATURES as readonly string[]).includes(feature)
 }
 
+export function isIdentityScopeFeatureArray(
+  features: NeRoArray<string>,
+): features is NeRoArray<IdentityScopeFeatures> {
+  return features.every(isIdentityScopeFeature)
+}
+
 export type IdentityScopeMatch = {
   feature: IdentityScopeFeatures
 }
 
 export class IdentityScope {
-  constructor(
-    public readonly features?: readonly [
-      IdentityScopeFeatures,
-      ...IdentityScopeFeatures[],
-    ],
-  ) {}
+  constructor(public readonly features: NeRoArray<IdentityScopeFeatures>) {}
 
   matches(options: IdentityScopeMatch): boolean {
-    return !this.features || this.features.includes(options.feature)
+    return this.features.includes(options.feature)
   }
 
-  toString(): string {
-    return formatScope('identity', [['feature', this.features]])
+  toString(): ScopeForResource<'identity'> {
+    const params: [string, NeRoArray<string>][] = []
+    // If no features are specified, it means "any" feature is allowed
+    if (!IDENTITY_FEATURES.every((f) => this.features.includes(f))) {
+      params.push(['feature', this.features])
+    }
+    return formatScope('identity', params)
   }
 
   static fromString(scope: string): IdentityScope | null {
@@ -44,7 +55,7 @@ export class IdentityScope {
 
     const features = parsed.getMulti('feature', true)
     if (features === null) return null
-    if (features !== undefined && !features.every(isIdentityScopeFeature)) {
+    if (features !== undefined && !isIdentityScopeFeatureArray(features)) {
       return null
     }
 
@@ -52,9 +63,8 @@ export class IdentityScope {
       return null
     }
 
-    return new IdentityScope(
-      features as [IdentityScopeFeatures, ...IdentityScopeFeatures[]],
-    )
+    // No features means "any" feature
+    return new IdentityScope(features ?? IDENTITY_FEATURES)
   }
 
   static scopeNeededFor(options: IdentityScopeMatch): string {

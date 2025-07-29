@@ -3,13 +3,18 @@
  */
 export type NeRoArray<T> = readonly [T, ...T[]]
 
+export type ScopeForResource<R extends string> =
+  | R
+  | `${R}:${string}`
+  | `${R}?${string}`
+
 /**
  * Allows to quickly check if a scope is for a specific resource.
  */
 export function isScopeForResource<R extends string>(
   scope: string,
   resource: R,
-): scope is R | `${R}:${string}` | `${R}?${string}` {
+): scope is ScopeForResource<R> {
   if (!scope.startsWith(resource)) return false
   if (scope.length === resource.length) return true
 
@@ -178,12 +183,12 @@ const minIdx = (a: number, b: number): number =>
  * @param params - The list of parameters. The first parameter will be formatted
  * as a positional parameter, if possible (if ti has only one value).
  */
-export function formatScope(
-  resource: string,
+export function formatScope<R extends string>(
+  resource: R,
   params: ReadonlyArray<
     [name: string, value: undefined | string | NeRoArray<string>]
   >,
-): string {
+): ScopeForResource<R> {
   let positional: string | undefined = undefined
   const queryParams = new URLSearchParams()
 
@@ -220,9 +225,13 @@ export function formatScope(
     }
   }
 
-  const queryString = queryParams.size ? `?${queryParams.toString()}` : ''
+  const queryString = queryParams.size
+    ? (`?${queryParams.toString()}` as const)
+    : null
 
   return positional != null
     ? `${resource}:${encodeURIComponent(positional)}${queryString}`
-    : `${resource}${queryString}`
+    : queryString != null
+      ? `${resource}${queryString}`
+      : resource
 }
