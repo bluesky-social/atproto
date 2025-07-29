@@ -129,6 +129,12 @@ const getAccountHistory = async (ctx: AppContext, did: string) => {
   return events
 }
 
+const PLC_OPERATION_MAP = {
+  create: 'tools.ozone.moderation.defs#timelineEventPlcCreate',
+  plc_operation: 'tools.ozone.moderation.defs#timelineEventPlcOperation',
+  plc_tombstone: 'tools.ozone.moderation.defs#timelineEventPlcTombstone',
+}
+
 const getPlcHistory = async (ctx: AppContext, did: string) => {
   const events: Record<string, Record<string, number>> = {}
 
@@ -138,10 +144,12 @@ const getPlcHistory = async (ctx: AppContext, did: string) => {
 
   const result = await ctx.plcClient.getAuditableLog(did)
   for (const event of result) {
-    const day = new Date(event.createdAt).toISOString().split('T')[0]
+    const day = dateFromDatetime(new Date(event.createdAt))
     events[day] ??= {}
-    events[day][event.operation.type] ??= 0
-    events[day][event.operation.type]++
+    const eventType =
+      PLC_OPERATION_MAP[event.operation.type] || event.operation.type
+    events[day][eventType] ??= 0
+    events[day][eventType]++
   }
 
   return events
