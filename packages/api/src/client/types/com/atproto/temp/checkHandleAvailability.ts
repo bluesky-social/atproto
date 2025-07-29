@@ -1,6 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
@@ -12,7 +13,7 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.unspecced.checkHandleAvailability'
+const id = 'com.atproto.temp.checkHandleAvailability'
 
 export type QueryParams = {
   /** Tentative handle. Will be checked for availability or used to build handle suggestions. */
@@ -33,25 +34,34 @@ export interface OutputSchema {
     | { $type: string }
 }
 
-export type HandlerInput = void
-
-export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
+export interface CallOptions {
+  signal?: AbortSignal
+  headers?: HeadersMap
 }
 
-export interface HandlerError {
-  status: number
-  message?: string
-  error?: 'InvalidEmail'
+export interface Response {
+  success: boolean
+  headers: HeadersMap
+  data: OutputSchema
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export class InvalidEmailError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidEmail') return new InvalidEmailError(e)
+  }
+
+  return e
+}
 
 /** Indicates the provided handle is available. */
 export interface ResultAvailable {
-  $type?: 'app.bsky.unspecced.checkHandleAvailability#resultAvailable'
+  $type?: 'com.atproto.temp.checkHandleAvailability#resultAvailable'
 }
 
 const hashResultAvailable = 'resultAvailable'
@@ -66,7 +76,7 @@ export function validateResultAvailable<V>(v: V) {
 
 /** Indicates the provided handle is unavailable and gives suggestions of available handles. */
 export interface ResultUnavailable {
-  $type?: 'app.bsky.unspecced.checkHandleAvailability#resultUnavailable'
+  $type?: 'com.atproto.temp.checkHandleAvailability#resultUnavailable'
   /** List of suggested handles based on the provided inputs. */
   suggestions: Suggestion[]
 }
@@ -82,7 +92,7 @@ export function validateResultUnavailable<V>(v: V) {
 }
 
 export interface Suggestion {
-  $type?: 'app.bsky.unspecced.checkHandleAvailability#suggestion'
+  $type?: 'com.atproto.temp.checkHandleAvailability#suggestion'
   handle: string
   /** Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics. */
   method: string

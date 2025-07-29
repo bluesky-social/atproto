@@ -97,6 +97,7 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
@@ -128,8 +129,8 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -186,7 +187,6 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
-import * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
@@ -375,6 +375,7 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+export * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
@@ -406,8 +407,8 @@ export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -464,7 +465,6 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
-export * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
 export * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
@@ -1717,6 +1717,17 @@ export class ComAtprotoTempNS {
     )
   }
 
+  checkHandleAvailability(
+    params?: ComAtprotoTempCheckHandleAvailability.QueryParams,
+    opts?: ComAtprotoTempCheckHandleAvailability.CallOptions,
+  ): Promise<ComAtprotoTempCheckHandleAvailability.Response> {
+    return this._client
+      .call('com.atproto.temp.checkHandleAvailability', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempCheckHandleAvailability.toKnownErr(e)
+      })
+  }
+
   checkSignupQueue(
     params?: ComAtprotoTempCheckSignupQueue.QueryParams,
     opts?: ComAtprotoTempCheckSignupQueue.CallOptions,
@@ -2191,13 +2202,6 @@ export class AppBskyFeedNS {
       })
   }
 
-  getPosts(
-    params?: AppBskyFeedGetPosts.QueryParams,
-    opts?: AppBskyFeedGetPosts.CallOptions,
-  ): Promise<AppBskyFeedGetPosts.Response> {
-    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
-  }
-
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
     opts?: AppBskyFeedGetPostThread.CallOptions,
@@ -2207,6 +2211,13 @@ export class AppBskyFeedNS {
       .catch((e) => {
         throw AppBskyFeedGetPostThread.toKnownErr(e)
       })
+  }
+
+  getPosts(
+    params?: AppBskyFeedGetPosts.QueryParams,
+    opts?: AppBskyFeedGetPosts.CallOptions,
+  ): Promise<AppBskyFeedGetPosts.Response> {
+    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
   }
 
   getQuotes(
@@ -3903,22 +3914,6 @@ export class AppBskyUnspeccedNS {
 
   constructor(client: XrpcClient) {
     this._client = client
-  }
-
-  checkHandleAvailability(
-    params?: AppBskyUnspeccedCheckHandleAvailability.QueryParams,
-    opts?: AppBskyUnspeccedCheckHandleAvailability.CallOptions,
-  ): Promise<AppBskyUnspeccedCheckHandleAvailability.Response> {
-    return this._client
-      .call(
-        'app.bsky.unspecced.checkHandleAvailability',
-        params,
-        undefined,
-        opts,
-      )
-      .catch((e) => {
-        throw AppBskyUnspeccedCheckHandleAvailability.toKnownErr(e)
-      })
   }
 
   getAgeAssuranceState(

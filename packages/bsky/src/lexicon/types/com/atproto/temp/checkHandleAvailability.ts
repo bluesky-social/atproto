@@ -12,7 +12,7 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.unspecced.checkHandleAvailability'
+const id = 'com.atproto.temp.checkHandleAvailability'
 
 export type QueryParams = {
   /** Tentative handle. Will be checked for availability or used to build handle suggestions. */
@@ -51,7 +51,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 
 /** Indicates the provided handle is available. */
 export interface ResultAvailable {
-  $type?: 'app.bsky.unspecced.checkHandleAvailability#resultAvailable'
+  $type?: 'com.atproto.temp.checkHandleAvailability#resultAvailable'
 }
 
 const hashResultAvailable = 'resultAvailable'
@@ -66,7 +66,7 @@ export function validateResultAvailable<V>(v: V) {
 
 /** Indicates the provided handle is unavailable and gives suggestions of available handles. */
 export interface ResultUnavailable {
-  $type?: 'app.bsky.unspecced.checkHandleAvailability#resultUnavailable'
+  $type?: 'com.atproto.temp.checkHandleAvailability#resultUnavailable'
   /** List of suggested handles based on the provided inputs. */
   suggestions: Suggestion[]
 }
@@ -82,7 +82,7 @@ export function validateResultUnavailable<V>(v: V) {
 }
 
 export interface Suggestion {
-  $type?: 'app.bsky.unspecced.checkHandleAvailability#suggestion'
+  $type?: 'com.atproto.temp.checkHandleAvailability#suggestion'
   handle: string
   /** Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics. */
   method: string
