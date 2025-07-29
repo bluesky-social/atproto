@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.16.0
+
+### Minor Changes
+
+- [#4072](https://github.com/bluesky-social/atproto/pull/4072) [`9751eebd7`](https://github.com/bluesky-social/atproto/commit/9751eebd718066984a91046b63e410caecd64022) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Remove app.bsky.unspecced.checkHandleAvailability, add com.atproto.temp.checkHandleAvailability
+
 ## 0.15.27
 
 ### Patch Changes
