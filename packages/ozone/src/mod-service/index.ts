@@ -26,6 +26,8 @@ import {
   REVIEWESCALATED,
   REVIEWOPEN,
   isAccountEvent,
+  isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isIdentityEvent,
   isModEventAcknowledge,
   isModEventComment,
@@ -147,6 +149,22 @@ export class ModerationService {
     return event
   }
 
+  async getEventByExternalId(
+    eventType: ModerationEvent['action'],
+    externalId: string,
+    subject: ModSubject,
+  ): Promise<boolean> {
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .where('action', '=', eventType)
+      .where('externalId', '=', externalId)
+      .where('subjectDid', '=', subject.did)
+      .select(sql`1`.as('exists'))
+      .limit(1)
+      .executeTakeFirst()
+    return !!result
+  }
+
   async getEvents(opts: {
     subject?: string
     createdBy?: string
@@ -168,6 +186,7 @@ export class ModerationService {
     subjectType?: string
     policies?: string[]
     modTool?: string[]
+    ageAssuranceState?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -190,6 +209,7 @@ export class ModerationService {
       subjectType,
       policies,
       modTool,
+      ageAssuranceState,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -294,6 +314,14 @@ export class ModerationService {
       builder = builder
         .where('modTool', 'is not', null)
         .where(sql`("modTool" ->> 'name')`, 'in', modTool)
+    }
+    if (ageAssuranceState) {
+      builder = builder
+        .where('action', 'in', [
+          'tools.ozone.moderation.defs#ageAssuranceEvent',
+          'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+        ])
+        .where(sql`meta->>'status'`, '=', ageAssuranceState)
     }
 
     const keyset = new TimeIdKeyset(
@@ -405,12 +433,20 @@ export class ModerationService {
     createdBy: string
     createdAt?: Date
     modTool?: ToolsOzoneModerationDefs.ModTool
+    externalId?: string
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
   }> {
     this.db.assertTransaction()
-    const { event, subject, createdBy, createdAt = new Date(), modTool } = info
+    const {
+      event,
+      subject,
+      createdBy,
+      externalId,
+      createdAt = new Date(),
+      modTool,
+    } = info
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0
@@ -462,6 +498,30 @@ export class ModerationService {
       meta.timestamp = event.timestamp
       meta.op = event.op
       if (event.cid) meta.cid = event.cid
+    }
+
+    if (isAgeAssuranceEvent(event)) {
+      meta.status = event.status
+      meta.createdAt = event.createdAt
+      if (event.attemptId) {
+        meta.attemptId = event.attemptId
+      }
+      if (event.initIp) {
+        meta.initIp = event.initIp
+      }
+      if (event.initUa) {
+        meta.initUa = event.initUa
+      }
+      if (event.completeIp) {
+        meta.completeIp = event.completeIp
+      }
+      if (event.completeUa) {
+        meta.completeUa = event.completeUa
+      }
+    }
+
+    if (isAgeAssuranceOverrideEvent(event)) {
+      meta.status = event.status
     }
 
     if (
@@ -517,6 +577,7 @@ export class ModerationService {
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
         modTool: modTool ? jsonb(modTool) : null,
+        externalId: externalId ?? null,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -877,6 +938,7 @@ export class ModerationService {
     minReportedRecordsCount,
     minTakendownRecordsCount,
     minPriorityScore,
+    ageAssuranceState,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
@@ -1138,6 +1200,14 @@ export class ModerationService {
         'moderation_subject_status.priorityScore',
         '>=',
         minPriorityScore,
+      )
+    }
+
+    if (ageAssuranceState) {
+      builder = builder.where(
+        'moderation_subject_status.ageAssuranceState',
+        '=',
+        ageAssuranceState,
       )
     }
 

@@ -183,9 +183,12 @@ import * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/no
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
+import * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
+import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
@@ -201,6 +204,7 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -457,9 +461,12 @@ export * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/no
 export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+export * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
+export * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
+export * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 export * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
@@ -475,6 +482,7 @@ export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+export * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -3769,6 +3777,18 @@ export class AppBskyNotificationNS {
     )
   }
 
+  unregisterPush(
+    data?: AppBskyNotificationUnregisterPush.InputSchema,
+    opts?: AppBskyNotificationUnregisterPush.CallOptions,
+  ): Promise<AppBskyNotificationUnregisterPush.Response> {
+    return this._client.call(
+      'app.bsky.notification.unregisterPush',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   updateSeen(
     data?: AppBskyNotificationUpdateSeen.InputSchema,
     opts?: AppBskyNotificationUpdateSeen.CallOptions,
@@ -3883,6 +3903,34 @@ export class AppBskyUnspeccedNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  checkHandleAvailability(
+    params?: AppBskyUnspeccedCheckHandleAvailability.QueryParams,
+    opts?: AppBskyUnspeccedCheckHandleAvailability.CallOptions,
+  ): Promise<AppBskyUnspeccedCheckHandleAvailability.Response> {
+    return this._client
+      .call(
+        'app.bsky.unspecced.checkHandleAvailability',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedCheckHandleAvailability.toKnownErr(e)
+      })
+  }
+
+  getAgeAssuranceState(
+    params?: AppBskyUnspeccedGetAgeAssuranceState.QueryParams,
+    opts?: AppBskyUnspeccedGetAgeAssuranceState.CallOptions,
+  ): Promise<AppBskyUnspeccedGetAgeAssuranceState.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getAgeAssuranceState',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   getConfig(
@@ -4063,6 +4111,17 @@ export class AppBskyUnspeccedNS {
       undefined,
       opts,
     )
+  }
+
+  initAgeAssurance(
+    data?: AppBskyUnspeccedInitAgeAssurance.InputSchema,
+    opts?: AppBskyUnspeccedInitAgeAssurance.CallOptions,
+  ): Promise<AppBskyUnspeccedInitAgeAssurance.Response> {
+    return this._client
+      .call('app.bsky.unspecced.initAgeAssurance', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedInitAgeAssurance.toKnownErr(e)
+      })
   }
 
   searchActorsSkeleton(

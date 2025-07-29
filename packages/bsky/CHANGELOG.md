@@ -1,5 +1,52 @@
 # @atproto/bsky
 
+## 0.0.174
+
+### Patch Changes
+
+- [#4058](https://github.com/bluesky-social/atproto/pull/4058) [`8787fd9de`](https://github.com/bluesky-social/atproto/commit/8787fd9dea769716412c9883e355cd496664bc6e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Only allow initiating age assurance flow from certain states, return `InvalidInitiation` error if violated.
+
+- Updated dependencies [[`8787fd9de`](https://github.com/bluesky-social/atproto/commit/8787fd9dea769716412c9883e355cd496664bc6e), [`dc84906c8`](https://github.com/bluesky-social/atproto/commit/dc84906c865e8a97939a909dd3f75decde538363)]:
+  - @atproto/api@0.15.27
+
+## 0.0.173
+
+### Patch Changes
+
+- [#4050](https://github.com/bluesky-social/atproto/pull/4050) [`77c6dffd0`](https://github.com/bluesky-social/atproto/commit/77c6dffd0b3577a0fbdc5f0975c9eeb2a46b55c9) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add errors to app.bsky.unspecced.initAgeAssurance lexicon
+
+## 0.0.172
+
+### Patch Changes
+
+- [#4042](https://github.com/bluesky-social/atproto/pull/4042) [`2aecd2b29`](https://github.com/bluesky-social/atproto/commit/2aecd2b290849bf8fbef223464862732cc04d139) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Uppercase countryCode in `initAgeAssurance` method.
+
+- [#4041](https://github.com/bluesky-social/atproto/pull/4041) [`083566ddf`](https://github.com/bluesky-social/atproto/commit/083566ddfc3c9263423ebd5e59bfdbfe7b091c82) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add `unregisterPush` API
+
+- Updated dependencies [[`083566ddf`](https://github.com/bluesky-social/atproto/commit/083566ddfc3c9263423ebd5e59bfdbfe7b091c82), [`3b356c509`](https://github.com/bluesky-social/atproto/commit/3b356c5096a269f1be6c4e69bdee7f5d14eb5d7e)]:
+  - @atproto/api@0.15.26
+
+## 0.0.171
+
+### Patch Changes
+
+- [#4028](https://github.com/bluesky-social/atproto/pull/4028) [`88c136427`](https://github.com/bluesky-social/atproto/commit/88c136427451a20d21812a1aa88a70cf21904138) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Age assurance compliance
+
+- Updated dependencies [[`88c136427`](https://github.com/bluesky-social/atproto/commit/88c136427451a20d21812a1aa88a70cf21904138)]:
+  - @atproto/api@0.15.25
+
+## 0.0.170
+
+### Patch Changes
+
+- Updated dependencies [[`5ed4a8859`](https://github.com/bluesky-social/atproto/commit/5ed4a885963f082a642e2cfb2fcc824e708fff90), [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20), [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20), [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20), [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20), [`34d7a0846`](https://github.com/bluesky-social/atproto/commit/34d7a0846bb14bb36a8cc2747fb7ce73005e59d1), [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20), [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20), [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20)]:
+  - @atproto/xrpc-server@0.9.0
+  - @atproto/api@0.15.24
+  - @atproto/lexicon@0.4.12
+  - @atproto-labs/xrpc-utils@0.0.17
+  - @atproto/sync@0.1.29
+  - @atproto/repo@0.8.5
+
 ## 0.0.169
 
 ### Patch Changes

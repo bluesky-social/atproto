@@ -49,6 +49,14 @@ export type QueryParams = {
   policies?: string[]
   /** If specified, only events where the modTool name matches any of the given values are returned */
   modTool?: string[]
+  /** If specified, only events where the age assurance state matches the given value are returned */
+  ageAssuranceState?:
+    | 'pending'
+    | 'assured'
+    | 'unknown'
+    | 'reset'
+    | 'blocked'
+    | (string & {})
   cursor?: string
 }
 export type InputSchema = undefined

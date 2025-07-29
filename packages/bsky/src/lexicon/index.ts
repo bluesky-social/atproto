@@ -147,7 +147,10 @@ import * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/no
 import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
 import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
+import * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
+import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
@@ -163,6 +166,7 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
 import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
 import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
 import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
@@ -2077,6 +2081,18 @@ export class AppBskyNotificationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  unregisterPush<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationUnregisterPush.QueryParams,
+      AppBskyNotificationUnregisterPush.HandlerInput,
+      AppBskyNotificationUnregisterPush.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.unregisterPush' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   updateSeen<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2103,6 +2119,30 @@ export class AppBskyUnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  checkHandleAvailability<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedCheckHandleAvailability.QueryParams,
+      AppBskyUnspeccedCheckHandleAvailability.HandlerInput,
+      AppBskyUnspeccedCheckHandleAvailability.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.checkHandleAvailability' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAgeAssuranceState<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetAgeAssuranceState.QueryParams,
+      AppBskyUnspeccedGetAgeAssuranceState.HandlerInput,
+      AppBskyUnspeccedGetAgeAssuranceState.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getAgeAssuranceState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getConfig<A extends Auth = void>(
@@ -2282,6 +2322,18 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getTrendsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  initAgeAssurance<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedInitAgeAssurance.QueryParams,
+      AppBskyUnspeccedInitAgeAssurance.HandlerInput,
+      AppBskyUnspeccedInitAgeAssurance.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.initAgeAssurance' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

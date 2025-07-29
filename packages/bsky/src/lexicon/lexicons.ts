@@ -10362,6 +10362,44 @@ export const schemaDict = {
               appId: {
                 type: 'string',
               },
+              ageRestricted: {
+                type: 'boolean',
+                description: 'Set to true when the actor is age restricted',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationUnregisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.unregisterPush',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['serviceDid', 'token', 'platform', 'appId'],
+            properties: {
+              serviceDid: {
+                type: 'string',
+                format: 'did',
+              },
+              token: {
+                type: 'string',
+              },
+              platform: {
+                type: 'string',
+                knownValues: ['ios', 'android', 'web'],
+              },
+              appId: {
+                type: 'string',
+              },
             },
           },
         },
@@ -10468,6 +10506,104 @@ export const schemaDict = {
           byteEnd: {
             type: 'integer',
             minimum: 0,
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedCheckHandleAvailability: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.checkHandleAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.',
+        parameters: {
+          type: 'params',
+          required: ['handle'],
+          properties: {
+            handle: {
+              type: 'string',
+              format: 'handle',
+              description:
+                'Tentative handle. Will be checked for availability or used to build handle suggestions.',
+            },
+            email: {
+              type: 'string',
+              description:
+                'User-provided email. Might be used to build handle suggestions.',
+            },
+            birthDate: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'User-provided birth date. Might be used to build handle suggestions.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'result'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'Echo of the input handle.',
+              },
+              result: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.unspecced.checkHandleAvailability#resultAvailable',
+                  'lex:app.bsky.unspecced.checkHandleAvailability#resultUnavailable',
+                ],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+            description: 'An invalid email was provided.',
+          },
+        ],
+      },
+      resultAvailable: {
+        type: 'object',
+        description: 'Indicates the provided handle is available.',
+        properties: {},
+      },
+      resultUnavailable: {
+        type: 'object',
+        description:
+          'Indicates the provided handle is unavailable and gives suggestions of available handles.',
+        required: ['suggestions'],
+        properties: {
+          suggestions: {
+            type: 'array',
+            description:
+              'List of suggested handles based on the provided inputs.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.unspecced.checkHandleAvailability#suggestion',
+            },
+          },
+        },
+      },
+      suggestion: {
+        type: 'object',
+        required: ['handle', 'method'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          method: {
+            type: 'string',
+            description:
+              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
           },
         },
       },
@@ -10668,6 +10804,84 @@ export const schemaDict = {
           author: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      ageAssuranceState: {
+        type: 'object',
+        description:
+          'The computed state of the age assurance process, returned to the user in question on certain authenticated requests.',
+        required: ['status'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+        },
+      },
+      ageAssuranceEvent: {
+        type: 'object',
+        description: 'Object used to store age assurance data in stash.',
+        required: ['createdAt', 'status', 'attemptId'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for AA.',
+          },
+          initIp: {
+            type: 'string',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetAgeAssuranceState: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getAgeAssuranceState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
           },
         },
       },
@@ -11431,6 +11645,59 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyUnspeccedInitAgeAssurance: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.initAgeAssurance',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+        ],
       },
     },
   },
@@ -13361,9 +13628,14 @@ export const ids = {
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
+  AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedCheckHandleAvailability:
+    'app.bsky.unspecced.checkHandleAvailability',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetAgeAssuranceState:
+    'app.bsky.unspecced.getAgeAssuranceState',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
@@ -13387,6 +13659,7 @@ export const ids = {
   AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
   AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
+  AppBskyUnspeccedInitAgeAssurance: 'app.bsky.unspecced.initAgeAssurance',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

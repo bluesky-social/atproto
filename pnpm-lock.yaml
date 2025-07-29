@@ -211,6 +211,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      '@hapi/address':
+        specifier: ^5.1.1
+        version: 5.1.1
       '@types/http-errors':
         specifier: ^2.0.1
         version: 2.0.4
@@ -220,6 +223,9 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
+      disposable-email-domains-js:
+        specifier: ^1.5.0
+        version: 1.5.0
       etcd3:
         specifier: ^1.1.2
         version: 1.1.2
@@ -244,6 +250,9 @@ importers:
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
+      leo-profanity:
+        specifier: ^1.8.0
+        version: 1.8.0
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -280,6 +289,9 @@ importers:
       undici:
         specifier: ^6.19.8
         version: 6.19.8
+      zod:
+        specifier: 3.23.8
+        version: 3.23.8
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^
@@ -1837,7 +1849,7 @@ packages:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
       pino: 8.21.0
-      zod: 3.24.2
+      zod: 3.25.67
 
   /@atproto/common@0.1.1:
     resolution: {integrity: sha512-GYwot5wF/z8iYGSPjrLHuratLc0CVgovmwfJss7+BUOB6y2/Vw8+1Vw0n9DDI0gb5vmx3UI8z0uJgC8aa8yuJg==}
@@ -1845,7 +1857,7 @@ packages:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
       pino: 8.21.0
-      zod: 3.24.2
+      zod: 3.25.67
 
   /@atproto/crypto@0.1.0:
     resolution: {integrity: sha512-9xgFEPtsCiJEPt9o3HtJT30IdFTGw5cQRSJVIy5CFhqBA4vDLcdXiRDLCjkzHEVbtNCsHUW6CrlfOgbeLPcmcg==}
@@ -1901,7 +1913,7 @@ packages:
       twilio: 4.21.0
       typed-emitter: 2.1.0
       uint8arrays: 3.0.0
-      zod: 3.24.2
+      zod: 3.25.67
     transitivePeerDependencies:
       - debug
       - pg-native
@@ -5234,7 +5246,7 @@ packages:
       axios: 1.6.7
       multiformats: 9.9.0
       uint8arrays: 3.0.0
-      zod: 3.24.2
+      zod: 3.25.67
     transitivePeerDependencies:
       - debug
 
@@ -5247,7 +5259,7 @@ packages:
       axios: 1.6.7
       multiformats: 9.9.0
       uint8arrays: 3.0.0
-      zod: 3.24.2
+      zod: 3.25.67
     transitivePeerDependencies:
       - debug
 
@@ -8279,7 +8291,7 @@ packages:
       '@tanstack/virtual-file-routes': 1.115.0
       prettier: 3.5.3
       tsx: 4.19.3
-      zod: 3.24.2
+      zod: 3.25.67
     dev: true
 
   /@tanstack/router-plugin@1.115.0(@tanstack/react-router@1.115.0)(vite@6.2.0):
@@ -8321,7 +8333,7 @@ packages:
       chokidar: 3.6.0
       unplugin: 2.2.2
       vite: 6.2.0(@types/node@18.19.67)
-      zod: 3.24.2
+      zod: 3.25.67
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -11976,6 +11988,12 @@ packages:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
     dev: true
 
+  /french-badwords-list@1.0.7:
+    resolution: {integrity: sha512-H1ziKs2PJh2+UXZ9oCGJ/rRQpsI9NBykGf2Sc7WaKaj1OnWFuBXfsvANTdRcfVmOghGQaUmRyZ1hJOPbDpy04Q==}
+    requiresBuild: true
+    dev: false
+    optional: true
+
   /fresh@0.5.2:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
     engines: {node: '>= 0.6'}
@@ -13741,6 +13759,13 @@ packages:
     resolution: {integrity: sha512-yT52DQh+UV2pEp08jOYrA4drDv0DbjpiRyZYgl25ak9G2cVR2AimzrqkYQWrD9a7Ud+qkAcaiDDoNH9DXfHPmw==}
     dependencies:
       toygrad: 2.6.0
+    dev: false
+
+  /leo-profanity@1.8.0:
+    resolution: {integrity: sha512-TATupbZhT3oFCtsiEXzgXcLvW6cDPhDtN+0yQAibjwBdSw3WJFLKM0DZ18eEW8KeFTT10x8gCP+DDZz0cI4Bfg==}
+    optionalDependencies:
+      french-badwords-list: 1.0.7
+      russian-bad-words: 0.5.0
     dev: false
 
   /leven@3.1.0:
@@ -16337,6 +16362,13 @@ packages:
       queue-microtask: 1.2.3
     dev: true
 
+  /russian-bad-words@0.5.0:
+    resolution: {integrity: sha512-euNvEYki6iYYpkNbeudW+lEMMYGEmN7EBwVF8ezlbv0bZoQpVYB7W10cCeUIGV7Ed50sJynLQ0c559q5iI0ejQ==}
+    engines: {node: '>=10'}
+    requiresBuild: true
+    dev: false
+    optional: true
+
   /rxjs@6.6.7:
     resolution: {integrity: sha512-hTdwr+7yYNIT5n4AMYp85KA6yw2Va0FLa3Rguvbpa4W3I5xynaBZo41cM3XM+4Q6fRMj3sBYIR1VAmZMXYJvRQ==}
     engines: {npm: '>=2.0.0'}
@@ -18243,7 +18275,9 @@ packages:
 
   /zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
-    dev: true
 
   /zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
+  /zod@3.25.67:
+    resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}

@@ -43,6 +43,8 @@ export interface ModEventView {
     | $Typed<IdentityEvent>
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
+    | $Typed<AgeAssuranceEvent>
+    | $Typed<AgeAssuranceOverrideEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -90,6 +92,8 @@ export interface ModEventViewDetail {
     | $Typed<IdentityEvent>
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
+    | $Typed<AgeAssuranceEvent>
+    | $Typed<AgeAssuranceOverrideEvent>
     | { $type: string }
   subject:
     | $Typed<RepoView>
@@ -147,6 +151,16 @@ export interface SubjectStatusView {
   tags?: string[]
   accountStats?: AccountStats
   recordsStats?: RecordsStats
+  /** Current age assurance state of the subject. */
+  ageAssuranceState?:
+    | 'pending'
+    | 'assured'
+    | 'unknown'
+    | 'reset'
+    | 'blocked'
+    | (string & {})
+  /** Whether or not the last successful update to age assurance was made by the user or admin. */
+  ageAssuranceUpdatedBy?: 'admin' | 'user' | (string & {})
 }
 
 const hashSubjectStatusView = 'subjectStatusView'
@@ -384,6 +398,58 @@ export function isModEventPriorityScore<V>(v: V) {
 
 export function validateModEventPriorityScore<V>(v: V) {
   return validate<ModEventPriorityScore & V>(v, id, hashModEventPriorityScore)
+}
+
+/** Age assurance info coming directly from users. Only works on DID subjects. */
+export interface AgeAssuranceEvent {
+  $type?: 'tools.ozone.moderation.defs#ageAssuranceEvent'
+  /** The date and time of this write operation. */
+  createdAt: string
+  /** The status of the age assurance process. */
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
+  /** The unique identifier for this instance of the age assurance flow, in UUID format. */
+  attemptId: string
+  /** The IP address used when initiating the AA flow. */
+  initIp?: string
+  /** The user agent used when initiating the AA flow. */
+  initUa?: string
+  /** The IP address used when completing the AA flow. */
+  completeIp?: string
+  /** The user agent used when completing the AA flow. */
+  completeUa?: string
+}
+
+const hashAgeAssuranceEvent = 'ageAssuranceEvent'
+
+export function isAgeAssuranceEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceEvent)
+}
+
+export function validateAgeAssuranceEvent<V>(v: V) {
+  return validate<AgeAssuranceEvent & V>(v, id, hashAgeAssuranceEvent)
+}
+
+/** Age assurance status override by moderators. Only works on DID subjects. */
+export interface AgeAssuranceOverrideEvent {
+  $type?: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
+  /** The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state. */
+  status: 'assured' | 'reset' | 'blocked' | (string & {})
+  /** Comment describing the reason for the override. */
+  comment: string
+}
+
+const hashAgeAssuranceOverrideEvent = 'ageAssuranceOverrideEvent'
+
+export function isAgeAssuranceOverrideEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceOverrideEvent)
+}
+
+export function validateAgeAssuranceOverrideEvent<V>(v: V) {
+  return validate<AgeAssuranceOverrideEvent & V>(
+    v,
+    id,
+    hashAgeAssuranceOverrideEvent,
+  )
 }
 
 export interface ModEventAcknowledge {

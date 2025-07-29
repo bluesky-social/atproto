@@ -182,6 +182,11 @@
             "maximum": 100,
             "type": "integer",
             "description": "If specified, only subjects that have priority score value above the given value will be returned."
+          },
+          "ageAssuranceState": {
+            "type": "string",
+            "description": "If specified, only subjects with the given age assurance state will be returned.",
+            "knownValues": ["pending", "assured", "unknown", "reset", "blocked"]
           }
         }
       },

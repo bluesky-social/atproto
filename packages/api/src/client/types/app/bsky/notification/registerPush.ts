@@ -22,6 +22,8 @@ export interface InputSchema {
   token: string
   platform: 'ios' | 'android' | 'web' | (string & {})
   appId: string
+  /** Set to true when the actor is age restricted */
+  ageRestricted?: boolean
 }
 
 export interface CallOptions {

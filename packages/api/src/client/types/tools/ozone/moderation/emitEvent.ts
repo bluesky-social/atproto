@@ -41,6 +41,8 @@ export interface InputSchema {
     | $Typed<ToolsOzoneModerationDefs.IdentityEvent>
     | $Typed<ToolsOzoneModerationDefs.RecordEvent>
     | $Typed<ToolsOzoneModerationDefs.ModEventPriorityScore>
+    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceEvent>
+    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceOverrideEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -49,6 +51,8 @@ export interface InputSchema {
   subjectBlobCids?: string[]
   createdBy: string
   modTool?: ToolsOzoneModerationDefs.ModTool
+  /** An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject. */
+  externalId?: string
 }
 
 export type OutputSchema = ToolsOzoneModerationDefs.ModEventView
@@ -72,9 +76,17 @@ export class SubjectHasActionError extends XRPCError {
   }
 }
 
+export class DuplicateExternalIdError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'SubjectHasAction') return new SubjectHasActionError(e)
+    if (e.error === 'DuplicateExternalId')
+      return new DuplicateExternalIdError(e)
   }
 
   return e

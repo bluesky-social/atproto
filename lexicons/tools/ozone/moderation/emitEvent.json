@@ -32,7 +32,9 @@
                 "tools.ozone.moderation.defs#accountEvent",
                 "tools.ozone.moderation.defs#identityEvent",
                 "tools.ozone.moderation.defs#recordEvent",
-                "tools.ozone.moderation.defs#modEventPriorityScore"
+                "tools.ozone.moderation.defs#modEventPriorityScore",
+                "tools.ozone.moderation.defs#ageAssuranceEvent",
+                "tools.ozone.moderation.defs#ageAssuranceOverrideEvent"
               ]
             },
             "subject": {
@@ -56,6 +58,10 @@
             "modTool": {
               "type": "ref",
               "ref": "tools.ozone.moderation.defs#modTool"
+            },
+            "externalId": {
+              "type": "string",
+              "description": "An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject."
             }
           }
         }
@@ -70,6 +76,10 @@
       "errors": [
         {
           "name": "SubjectHasAction"
+        },
+        {
+          "name": "DuplicateExternalId",
+          "description": "An event with the same external ID already exists for the subject."
         }
       ]
     }

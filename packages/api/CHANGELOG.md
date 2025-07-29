@@ -1,5 +1,37 @@
 # @atproto/api
 
+## 0.15.27
+
+### Patch Changes
+
+- [#4058](https://github.com/bluesky-social/atproto/pull/4058) [`8787fd9de`](https://github.com/bluesky-social/atproto/commit/8787fd9dea769716412c9883e355cd496664bc6e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Only allow initiating age assurance flow from certain states, return `InvalidInitiation` error if violated.
+
+- [#4049](https://github.com/bluesky-social/atproto/pull/4049) [`dc84906c8`](https://github.com/bluesky-social/atproto/commit/dc84906c865e8a97939a909dd3f75decde538363) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - app.bsky.unspecced.checkHandleAvailability lexicon
+
+## 0.15.26
+
+### Patch Changes
+
+- [#4041](https://github.com/bluesky-social/atproto/pull/4041) [`083566ddf`](https://github.com/bluesky-social/atproto/commit/083566ddfc3c9263423ebd5e59bfdbfe7b091c82) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add `unregisterPush` API
+
+- [#4048](https://github.com/bluesky-social/atproto/pull/4048) [`3b356c509`](https://github.com/bluesky-social/atproto/commit/3b356c5096a269f1be6c4e69bdee7f5d14eb5d7e) Thanks [@foysalit](https://github.com/foysalit)! - Add externalId to ozone events for deduping events per subject and event type
+
+## 0.15.25
+
+### Patch Changes
+
+- [#4028](https://github.com/bluesky-social/atproto/pull/4028) [`88c136427`](https://github.com/bluesky-social/atproto/commit/88c136427451a20d21812a1aa88a70cf21904138) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Age assurance compliance
+
+## 0.15.24
+
+### Patch Changes
+
+- [#4034](https://github.com/bluesky-social/atproto/pull/4034) [`34d7a0846`](https://github.com/bluesky-social/atproto/commit/34d7a0846bb14bb36a8cc2747fb7ce73005e59d1) Thanks [@foysalit](https://github.com/foysalit)! - Add age assurance event types to ozone lexicons
+
+- Updated dependencies [[`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20)]:
+  - @atproto/lexicon@0.4.12
+  - @atproto/xrpc@0.7.1
+
 ## 0.15.23
 
 ### Patch Changes

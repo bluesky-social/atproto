@@ -12,6 +12,7 @@ import { CourierClient } from './courier'
 import { DataPlaneClient, HostList } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
+import { KwsClient } from './kws'
 import { httpLogger as log } from './logger'
 import { StashClient } from './stash'
 import {
@@ -41,6 +42,7 @@ export class AppContext {
       authVerifier: AuthVerifier
       featureGates: FeatureGates
       blobDispatcher: Dispatcher
+      kwsClient: KwsClient | undefined
     },
   ) {}
 
@@ -114,6 +116,10 @@ export class AppContext {
 
   get blobDispatcher(): Dispatcher {
     return this.opts.blobDispatcher
+  }
+
+  get kwsClient(): KwsClient | undefined {
+    return this.opts.kwsClient
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {
