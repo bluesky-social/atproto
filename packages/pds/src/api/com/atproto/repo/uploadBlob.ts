@@ -1,5 +1,5 @@
 import { DAY } from '@atproto/common'
-import { UpstreamTimeoutError } from '@atproto/xrpc-server'
+import { UpstreamTimeoutError, parseReqEncoding } from '@atproto/xrpc-server'
 import { BlobMetadata } from '../../../../actor-store/blob/transactor'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -8,8 +8,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
     auth: ctx.authVerifier.authorizationOrUserServiceAuth({
       checkTakedown: true,
-      authorize: () => {
-        // Checked in the handler, as it requires the mime type
+      authorize: (permissions, { req }) => {
+        const encoding = parseReqEncoding(req)
+        permissions.assertBlob({ mime: encoding })
       },
     }),
     rateLimit: {
@@ -35,12 +36,6 @@ export default function (server: Server, ctx: AppContext) {
               )
             }
             throw err
-          }
-
-          if (auth.credentials.type === 'permissions') {
-            auth.credentials.permissions.assertBlob({
-              mime: metadata.mimeType,
-            })
           }
 
           return store.transact(async (actorTxn) => {

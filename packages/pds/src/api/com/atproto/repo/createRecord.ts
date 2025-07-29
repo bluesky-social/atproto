@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       checkTakedown: true,
       checkDeactivated: true,
       authorize: () => {
-        // always allow
+        // Performed in the handler as it requires the request body
       },
     }),
     rateLimit: [

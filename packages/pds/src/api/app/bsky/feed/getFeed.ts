@@ -15,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
         const lxm = ids.AppBskyFeedGetFeed
         const aud = computeProxyTo(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
+        permissions.assertRpc({ aud, lxm: ids.AppBskyFeedGetFeedSkeleton })
       },
     }),
     handler: async ({ params, auth, req }) => {

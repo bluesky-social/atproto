@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (auth.credentials.type === 'permissions') {
         auth.credentials.permissions.assertRpc({
-          aud: `${serviceDid}#bsky_appview`,
+          aud: `${serviceDid}#bsky_notif`,
           lxm: ids.AppBskyNotificationRegisterPush,
         })
       }
