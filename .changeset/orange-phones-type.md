@@ -2,4 +2,4 @@
 "@atproto/repo": patch
 ---
 
-Add option to verify CIDs found within CARs.
+Verify CID to content mapping within CARs unless explicitly skipped.

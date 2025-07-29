@@ -55,7 +55,10 @@ async function* iterateBlocks(blocks: BlockMap) {
 }
 
 export type ReadCarOptions = {
-  verifyCids?: boolean
+  /**
+   * When true, does not verify CID-to-content mapping within CAR.
+   */
+  skipCidVerification?: boolean
 }
 
 export const readCar = async (
@@ -121,7 +124,7 @@ const readCarBlocksIter = (
   opts?: ReadCarOptions,
 ): CarBlockIterable => {
   let generator = readCarBlocksIterGenerator(reader)
-  if (opts?.verifyCids) {
+  if (!opts?.skipCidVerification) {
     generator = verifyIncomingCarBlocks(generator)
   }
   return Object.assign(generator, {
