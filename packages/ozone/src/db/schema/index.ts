@@ -10,6 +10,7 @@ import * as member from './member'
 import * as modEvent from './moderation_event'
 import * as modSubjectStatus from './moderation_subject_status'
 import * as set from './ozone_set'
+import * as publicSubjectStatus from './public_subject_status'
 import * as recordEventsStats from './record_events_stats'
 import * as recordPushEvent from './record_push_event'
 import * as repoPushEvent from './repo_push_event'
@@ -29,6 +30,7 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   set.PartialDB &
   member.PartialDB &
   setting.PartialDB &
+  publicSubjectStatus.PartialDB &
   accountEventsStats.PartialDB &
   recordEventsStats.PartialDB &
   accountRecordEventsStats.PartialDB &
