@@ -34,7 +34,7 @@ export const ErrorCard = memo(function ErrorCard({
         ? // Already parsed:
           error
         : // If "error" is a json object, try parsing it as a JsonErrorResponse:
-          Api.parseError(error) ?? error,
+          (Api.parseError(error) ?? error),
     [error],
   )
 
