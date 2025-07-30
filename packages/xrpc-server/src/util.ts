@@ -5,6 +5,7 @@ import { Request, Response, json, text } from 'express'
 import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import {
+  LexXrpcBody,
   LexXrpcProcedure,
   LexXrpcQuery,
   LexXrpcSubscription,
@@ -131,6 +132,11 @@ export function createInputVerifier(
   const { input } = def
   const { blobLimit } = options
 
+  const allowedEncodings = parseDefEncoding(input)
+  const checkEncoding = allowedEncodings.includes(ENCODING_ANY)
+    ? undefined // No need to check
+    : (encoding: string) => allowedEncodings.includes(encoding)
+
   const bodyParser = createBodyParser(input.encoding, options)
 
   return async (req, res) => {
@@ -140,12 +146,8 @@ export function createInputVerifier(
       )
     }
 
-    const reqEncoding = normalizeMime(req.headers['content-type'])
-    if (!reqEncoding) {
-      throw new InvalidRequestError(
-        `Request encoding (Content-Type) required but not provided`,
-      )
-    } else if (!isValidEncoding(input.encoding, reqEncoding)) {
+    const reqEncoding = parseReqEncoding(req)
+    if (checkEncoding && !checkEncoding(reqEncoding)) {
       throw new InvalidRequestError(
         `Wrong request encoding (Content-Type): ${reqEncoding}`,
       )
@@ -180,64 +182,81 @@ export function validateOutput(
   output: HandlerSuccess | void,
   lexicons: Lexicons,
 ): void {
-  // initial validation
-  if (output) {
-    handlerSuccess.parse(output)
-  }
+  if (def.output) {
+    // An output is expected
+    if (output === undefined) {
+      throw new InternalServerError(
+        `A response body is expected but none was provided`,
+      )
+    }
 
-  // response expectation
-  if (output?.body && !def.output) {
-    throw new InternalServerError(
-      `A response body was provided when none was expected`,
-    )
-  }
-  if (!output?.body && def.output) {
-    throw new InternalServerError(
-      `A response body is expected but none was provided`,
-    )
-  }
+    // Fool-proofing (should not be necessary due to type system)
+    const result = handlerSuccess.safeParse(output)
+    if (!result.success) {
+      throw new InternalServerError(`Invalid handler output`, undefined, {
+        cause: result.error,
+      })
+    }
 
-  // mimetype
-  if (
-    def.output?.encoding &&
-    (!output?.encoding ||
-      !isValidEncoding(def.output?.encoding, output?.encoding))
-  ) {
-    throw new InternalServerError(
-      `Invalid response encoding: ${output?.encoding}`,
-    )
-  }
+    // output mime
+    const { encoding } = output
+    if (!encoding || !isValidEncoding(def.output, encoding)) {
+      throw new InternalServerError(`Invalid response encoding: ${encoding}`)
+    }
 
-  // output schema
-  if (def.output?.schema) {
-    try {
-      const result = lexicons.assertValidXrpcOutput(nsid, output?.body)
-      if (output) {
-        output.body = result
+    // output schema
+    if (def.output.schema) {
+      try {
+        output.body = lexicons.assertValidXrpcOutput(nsid, output.body)
+      } catch (e) {
+        throw new InternalServerError(
+          e instanceof Error ? e.message : String(e),
+        )
       }
-    } catch (e) {
-      throw new InternalServerError(e instanceof Error ? e.message : String(e))
+    }
+  } else {
+    // Expects no output
+    if (output !== undefined) {
+      throw new InternalServerError(
+        `A response body was provided when none was expected`,
+      )
     }
   }
 }
 
-export function normalizeMime(v?: string): string | false {
-  if (!v) return false
+export function parseReqEncoding(req: IncomingMessage): string {
+  const encoding = normalizeMime(req.headers['content-type'])
+  if (encoding) return encoding
+  throw new InvalidRequestError(
+    `Request encoding (Content-Type) required but not provided`,
+  )
+}
+
+function normalizeMime(v?: string): string | null {
+  if (!v) return null
   const fullType = contentType(v)
-  if (!fullType) return false
+  if (!fullType) return null
   const shortType = fullType.split(';')[0]
-  if (!shortType) return false
+  if (!shortType) return null
   return shortType
 }
 
 const ENCODING_ANY = '*/*'
 
-function isValidEncoding(possibleStr: string, value: string) {
-  const possible = possibleStr.split(',').map((v) => v.trim())
-  const normalized = normalizeMime(value)
+function parseDefEncoding({ encoding }: LexXrpcBody) {
+  return encoding.split(',').map(trimString)
+}
+
+function trimString(str: string): string {
+  return str.trim()
+}
+
+function isValidEncoding(output: LexXrpcBody, encoding: string) {
+  const normalized = normalizeMime(encoding)
   if (!normalized) return false
-  if (possible.includes(ENCODING_ANY)) return true
-  return possible.includes(normalized)
+
+  const allowed = parseDefEncoding(output)
+  return allowed.includes(ENCODING_ANY) || allowed.includes(normalized)
 }
 
 type BodyPresence = 'missing' | 'empty' | 'present'

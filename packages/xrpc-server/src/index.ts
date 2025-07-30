@@ -5,5 +5,10 @@ export * from './server'
 export * from './stream'
 export * from './types'
 
-export { ServerTimer, parseReqNsid, serverTimingHeader } from './util'
+export {
+  ServerTimer,
+  parseReqEncoding,
+  parseReqNsid,
+  serverTimingHeader,
+} from './util'
 export type { ServerTiming } from './util'
