@@ -30,7 +30,7 @@ Array [
   Object {
     "count": 1,
     "eventSubjectType": "account",
-    "eventType": "plc_operation",
+    "eventType": "tools.ozone.moderation.defs#timelineEventPlcOperation",
   },
 ]
 `;
