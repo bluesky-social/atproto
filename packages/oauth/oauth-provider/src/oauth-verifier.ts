@@ -8,6 +8,7 @@ import {
 } from '@atproto/oauth-types'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
+import { DpopProof } from './dpop/dpop-proof.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidTokenError } from './errors/invalid-token-error.js'
 import { UseDpopNonceError } from './errors/use-dpop-nonce-error.js'
@@ -50,7 +51,7 @@ export type OAuthVerifierOptions = Override<
 >
 
 export { DpopNonce, Key, Keyset }
-export type { RedisOptions, ReplayStore, VerifyTokenClaimsOptions }
+export type { DpopProof, RedisOptions, ReplayStore, VerifyTokenClaimsOptions }
 
 export class OAuthVerifier {
   public readonly issuer: OAuthIssuerIdentifier
@@ -95,30 +96,30 @@ export class OAuthVerifier {
   }
 
   public async checkDpopProof(
-    proof: unknown,
-    htm: string,
-    htu: string | URL,
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    httpHeaders: Record<string, undefined | string | string[]>,
     accessToken?: string,
-  ): Promise<string | null> {
-    if (proof === undefined) return null
-
-    const { payload, jkt } = await this.dpopManager.checkProof(
-      proof,
-      htm,
-      htu,
+  ): Promise<null | DpopProof> {
+    const dpopProof = await this.dpopManager.checkProof(
+      httpMethod,
+      httpUrl,
+      httpHeaders,
       accessToken,
     )
 
-    const unique = await this.replayManager.uniqueDpop(payload.jti)
-    if (!unique) throw new InvalidDpopProofError('DPoP proof jti is not unique')
+    if (dpopProof) {
+      const unique = await this.replayManager.uniqueDpop(dpopProof.jti)
+      if (!unique) throw new InvalidDpopProofError('DPoP proof replayed')
+    }
 
-    return jkt
+    return dpopProof
   }
 
   protected async verifyToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
-    dpopJkt: string | null,
+    dpopProof: null | DpopProof,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
     if (!isSignedJwt(token)) {
@@ -135,35 +136,37 @@ export class OAuthVerifier {
       token,
       payload.jti,
       tokenType,
-      dpopJkt,
       payload,
+      dpopProof,
       verifyOptions,
     )
   }
 
   public async authenticateRequest(
-    method: string,
-    url: URL,
-    headers: {
-      authorization?: string
-      dpop?: unknown
-    },
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    httpHeaders: Record<string, undefined | string | string[]>,
     verifyOptions?: VerifyTokenClaimsOptions,
-  ) {
-    const [tokenType, token] = parseAuthorizationHeader(headers.authorization)
+  ): Promise<VerifyTokenClaimsResult> {
+    const [tokenType, token] = parseAuthorizationHeader(
+      httpHeaders['authorization'],
+    )
     try {
-      const dpopJkt = await this.checkDpopProof(
-        headers.dpop,
-        method,
-        url,
+      const dpopProof = await this.checkDpopProof(
+        httpMethod,
+        httpUrl,
+        httpHeaders,
         token,
       )
 
-      if (tokenType === 'DPoP' && !dpopJkt) {
-        throw new InvalidDpopProofError(`DPoP proof required`)
-      }
+      const tokenResult = await this.verifyToken(
+        tokenType,
+        token,
+        dpopProof,
+        verifyOptions,
+      )
 
-      return await this.verifyToken(tokenType, token, dpopJkt, verifyOptions)
+      return tokenResult
     } catch (err) {
       if (err instanceof UseDpopNonceError) throw err.toWwwAuthenticateError()
       if (err instanceof WWWAuthenticateError) throw err

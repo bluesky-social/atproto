@@ -172,6 +172,10 @@ export class AccountManager {
     deactivated?: boolean
     refreshJwt?: string
   }) {
+    if (password && password.length > scrypt.NEW_PASSWORD_MAX_LENGTH) {
+      throw new InvalidRequestError('Password too long')
+    }
+
     const passwordScrypt = password
       ? await scrypt.genSaltAndHash(password)
       : undefined

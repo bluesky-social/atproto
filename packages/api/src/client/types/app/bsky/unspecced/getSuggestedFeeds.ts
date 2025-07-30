@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getSuggestedFeeds'
 
-export interface QueryParams {
+export type QueryParams = {
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

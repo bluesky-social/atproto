@@ -9,13 +9,15 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { XRPCError } from '@atproto/xrpc'
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, MethodHandler } from '@atproto/xrpc-server'
 import { ids } from '../src/lexicon/lexicons'
 import {
   FeedViewPost,
   SkeletonFeedPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { OutputSchema as GetActorFeedsOutputSchema } from '../src/lexicon/types/app/bsky/feed/getActorFeeds'
+import { OutputSchema as GetFeedOutputSchema } from '../src/lexicon/types/app/bsky/feed/getFeed'
+import * as AppBskyFeedGetFeedSkeleton from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { forSnapshot, paginateAll } from './_util'
 
 describe('feed generation', () => {
@@ -226,7 +228,8 @@ describe('feed generation', () => {
     await sc.like(sc.dids.carol, feedUriAllRef)
     await network.processAll()
 
-    const results = (results) => results.flatMap((res) => res.feeds)
+    const results = (results: GetActorFeedsOutputSchema[]) =>
+      results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getActorFeeds(
         { actor: alice, cursor, limit: 2 },
@@ -632,7 +635,8 @@ describe('feed generation', () => {
     })
 
     it('paginates, handling replies and reposts.', async () => {
-      const results = (results) => results.flatMap((res) => res.feed)
+      const results = (results: GetFeedOutputSchema[]) =>
+        results.flatMap((res) => res.feed)
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.getFeed(
           { feed: feedUriAll, cursor, limit: 2 },
@@ -792,7 +796,12 @@ describe('feed generation', () => {
         | 'bad-pagination-limit'
         | 'bad-pagination-cursor'
         | 'needs-auth',
-    ): SkeletonHandler =>
+    ): MethodHandler<
+      void,
+      AppBskyFeedGetFeedSkeleton.QueryParams,
+      AppBskyFeedGetFeedSkeleton.HandlerInput,
+      AppBskyFeedGetFeedSkeleton.HandlerOutput
+    > =>
     async ({ req, params }) => {
       if (feedName === 'needs-auth' && !req.headers.authorization) {
         throw new AuthRequiredError('This feed requires auth')
@@ -848,6 +857,7 @@ describe('feed generation', () => {
         body: {
           feed: feedResults,
           cursor: cursorResult,
+          reqId: 'req-id-abc-def-ghi',
           $auth: jwtBody(req.headers.authorization), // for testing purposes
         },
       }

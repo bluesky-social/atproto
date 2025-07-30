@@ -205,7 +205,7 @@ describe('proxies admin requests', () => {
       { uri: 'at://did:does:not:exist/bad.collection.name/badrkey' },
       { headers: sc.getHeaders(moderator) },
     )
-    await expect(tryGetRecord).rejects.toThrow('Record not found')
+    await expect(tryGetRecord).rejects.toThrow('Could not locate record')
   })
 
   it('takesdown and labels repos, and reverts.', async () => {

@@ -141,7 +141,7 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      await page.clickOnButton('Sign up')
+      await page.clickOnButton('Login or signup')
     })
 
     await page.checkTitle('Authentification')
@@ -167,9 +167,11 @@ describe('oauth', () => {
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.ensureTextVisibility('Logged in!')
+    await page.ensureTextVisibility('Token info', 'h2')
 
-    await page.clickOnButton('Sign-out')
+    await page.clickOn('button[aria-label="User menu"]')
+
+    await page.clickOnButton('Sign out')
 
     await page.waitForNetworkIdle()
 
@@ -187,10 +189,7 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      const input = await page.typeIn(
-        'input[placeholder="@handle, DID or PDS url"]',
-        'alice.test',
-      )
+      const input = await page.typeIn('input[name="identifier"]', 'alice.test')
 
       await input.press('Enter')
     })
@@ -246,10 +245,7 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      const input = await page.typeIn(
-        'input[placeholder="@handle, DID or PDS url"]',
-        'alice.test',
-      )
+      const input = await page.typeIn('input[name="identifier"]', 'alice.test')
 
       await input.press('Enter')
     })
@@ -275,9 +271,11 @@ describe('oauth', () => {
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.ensureTextVisibility('Logged in!')
+    await page.ensureTextVisibility('Token info', 'h2')
 
-    await page.clickOnButton('Sign-out')
+    await page.clickOn('button[aria-label="User menu"]')
+
+    await page.clickOnButton('Sign out')
 
     await page.waitForNetworkIdle()
 
@@ -293,10 +291,7 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      const input = await page.typeIn(
-        'input[placeholder="@handle, DID or PDS url"]',
-        'alice.test',
-      )
+      const input = await page.typeIn('input[name="identifier"]', 'alice.test')
 
       await input.press('Enter')
     })
@@ -309,9 +304,11 @@ describe('oauth', () => {
 
     await page.checkTitle('OAuth Client Example')
 
-    await page.ensureTextVisibility('Logged in!')
+    await page.ensureTextVisibility('Token info', 'h2')
 
-    await page.clickOnButton('Sign-out')
+    await page.clickOn('button[aria-label="User menu"]')
+
+    await page.clickOnButton('Sign out')
 
     await page.waitForNetworkIdle()
 

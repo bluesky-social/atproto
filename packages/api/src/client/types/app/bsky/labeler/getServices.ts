@@ -16,11 +16,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.labeler.getServices'
 
-export interface QueryParams {
+export type QueryParams = {
   dids: string[]
   detailed?: boolean
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

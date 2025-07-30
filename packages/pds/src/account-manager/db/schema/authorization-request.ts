@@ -1,6 +1,7 @@
 import { Selectable } from 'kysely'
 import {
   ClientAuth,
+  ClientAuthLegacy,
   Code,
   DeviceId,
   OAuthAuthorizationRequestParameters,
@@ -15,7 +16,7 @@ export interface AuthorizationRequest {
   deviceId: DeviceId | null
 
   clientId: OAuthClientId
-  clientAuth: JsonEncoded<ClientAuth>
+  clientAuth: JsonEncoded<null | ClientAuth | ClientAuthLegacy>
   parameters: JsonEncoded<OAuthAuthorizationRequestParameters>
   expiresAt: DateISO
   code: Code | null

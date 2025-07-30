@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.label.queryLabels'
 
-export interface QueryParams {
+export type QueryParams = {
   /** List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI. */
   uriPatterns: string[]
   /** Optional list of label sources (DIDs) to filter on. */
@@ -24,7 +24,6 @@ export interface QueryParams {
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

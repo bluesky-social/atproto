@@ -1,5 +1,25 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.5
+
+### Patch Changes
+
+- [#3952](https://github.com/bluesky-social/atproto/pull/3952) [`09d90ae48`](https://github.com/bluesky-social/atproto/commit/09d90ae486c451512e72c098228de3f3dd058101) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve UI
+
+## 0.0.4
+
+### Patch Changes
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `com.atproto.server.getSession` query.
+
+- [#3820](https://github.com/bluesky-social/atproto/pull/3820) [`8318c5718`](https://github.com/bluesky-social/atproto/commit/8318c57187a1fed443be73bfd7639f49febc7337) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow configuration of loopback client id scope through query param
+
+## 0.0.3
+
+### Patch Changes
+
+- [#3797](https://github.com/bluesky-social/atproto/pull/3797) [`a48b093f0`](https://github.com/bluesky-social/atproto/commit/a48b093f0ba3cf67b7abc50d309afcb336d8ead8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `pdsAgent` as global constant
+
 ## 0.0.2
 
 ### Patch Changes

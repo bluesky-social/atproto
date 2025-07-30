@@ -373,38 +373,38 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     method.setBodyText(
       [
         `const collection = '${nsid}'`,
-        `const res = await this._client.call('${ATP_METHODS.create}', undefined, { collection, ${maybeRkeyPart}...params, record: { ...record, $type: collection} }, {encoding: 'application/json', headers })`,
+        `const res = await this._client.call('${ATP_METHODS.create}', undefined, { collection, ${maybeRkeyPart}...params, record: { ...record, $type: collection } }, { encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
   }
-  // {
-  //   //= put()
-  //   const method = cls.addMethod({
-  //     isAsync: true,
-  //     name: 'put',
-  //     returnType: 'Promise<{uri: string, cid: string}>',
-  //   })
-  //   method.addParameter({
-  //     name: 'params',
-  //     type: `OmitKey<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
-  //   })
-  //   method.addParameter({
-  //     name: 'record',
-  //     type: `${typeModule}.Record`,
-  //   })
-  //   method.addParameter({
-  //     name: 'headers?',
-  //     type: `Record<string, string>`,
-  //   })
-  //   method.setBodyText(
-  //     [
-  //       `record.$type = '${userType.nsid}'`,
-  //       `const res = await this._client.call('${ATP_METHODS.put}', undefined, { collection: '${userType.nsid}', record, ...params }, {encoding: 'application/json', headers})`,
-  //       `return res.data`,
-  //     ].join('\n'),
-  //   )
-  // }
+  {
+    //= put()
+    const method = cls.addMethod({
+      isAsync: true,
+      name: 'put',
+      returnType: 'Promise<{uri: string, cid: string}>',
+    })
+    method.addParameter({
+      name: 'params',
+      type: `OmitKey<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
+    })
+    method.addParameter({
+      name: 'record',
+      type: `Un$Typed<${typeModule}.Record>`,
+    })
+    method.addParameter({
+      name: 'headers?',
+      type: `Record<string, string>`,
+    })
+    method.setBodyText(
+      [
+        `const collection = '${nsid}'`,
+        `const res = await this._client.call('${ATP_METHODS.put}', undefined, { collection, ...params, record: { ...record, $type: collection } }, { encoding: 'application/json', headers })`,
+        `return res.data`,
+      ].join('\n'),
+    )
+  }
   {
     //= delete()
     const method = cls.addMethod({

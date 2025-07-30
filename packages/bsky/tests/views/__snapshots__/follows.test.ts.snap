@@ -5,6 +5,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
@@ -21,6 +26,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
@@ -37,6 +47,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
@@ -53,6 +68,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
@@ -70,6 +90,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-alice",
@@ -91,6 +116,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
@@ -107,6 +137,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -122,6 +157,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-bob",
@@ -145,6 +185,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
@@ -161,6 +206,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
@@ -177,6 +227,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -192,6 +247,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-carol",
@@ -215,6 +275,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -230,6 +295,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-dan",
@@ -253,6 +323,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
@@ -269,6 +344,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -284,6 +364,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-eve",
@@ -307,6 +392,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
@@ -323,6 +413,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
@@ -339,6 +434,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
@@ -355,6 +455,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
@@ -372,6 +477,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-alice",
@@ -393,6 +503,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
@@ -409,6 +524,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -424,6 +544,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-bob",
@@ -447,6 +572,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -462,6 +592,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-carol",
@@ -485,6 +620,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
@@ -501,6 +641,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
@@ -517,6 +662,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -532,6 +682,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-dan",
@@ -555,6 +710,11 @@ Object {
   "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
@@ -571,6 +731,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
@@ -586,6 +751,11 @@ Object {
     },
   ],
   "subject": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-eve",

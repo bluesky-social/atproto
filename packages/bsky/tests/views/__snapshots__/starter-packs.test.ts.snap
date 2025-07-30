@@ -4,6 +4,11 @@ exports[`starter packs does include users with creator block relationship in lis
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
@@ -36,6 +41,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "greta.test",
       "labels": Array [],
@@ -48,6 +58,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(3)",
       "handle": "frankie.test",
       "labels": Array [],
@@ -65,6 +80,11 @@ exports[`starter packs does not include users with creator block relationship in
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
@@ -98,6 +118,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "greta.test",
       "labels": Array [],
@@ -115,6 +140,11 @@ exports[`starter packs does not include users with creator block relationship in
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
@@ -149,6 +179,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "greta.test",
       "labels": Array [],
@@ -166,6 +201,11 @@ exports[`starter packs does not include users with creator block relationship in
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
@@ -194,6 +234,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "greta.test",
       "labels": Array [],
@@ -207,6 +252,11 @@ exports[`starter packs generates notifications 1`] = `
 Array [
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "New here",
@@ -252,6 +302,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "New here",
@@ -297,6 +352,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "New here",
@@ -348,6 +408,11 @@ Array [
   Object {
     "cid": "cids(0)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
@@ -386,6 +451,11 @@ Array [
   Object {
     "cid": "cids(3)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
@@ -424,6 +494,11 @@ Array [
   Object {
     "cid": "cids(4)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
@@ -470,6 +545,11 @@ exports[`starter packs gets starter pack details 1`] = `
 Object {
   "cid": "cids(0)",
   "creator": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",
@@ -496,6 +576,11 @@ Object {
     Object {
       "cid": "cids(3)",
       "creator": Object {
+        "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
+        },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
@@ -544,6 +629,11 @@ Object {
   "listItemsSample": Array [
     Object {
       "subject": Object {
+        "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
+        },
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
@@ -552,6 +642,11 @@ Object {
     },
     Object {
       "subject": Object {
+        "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
+        },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
@@ -566,6 +661,9 @@ Object {
     Object {
       "subject": Object {
         "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
           "chat": Object {
             "allowIncoming": "none",
           },
@@ -597,6 +695,11 @@ Array [
   Object {
     "cid": "cids(0)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
@@ -635,6 +738,11 @@ Array [
   Object {
     "cid": "cids(3)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
@@ -681,6 +789,11 @@ exports[`starter packs gets starter pack used on profile detail 1`] = `
 Object {
   "cid": "cids(0)",
   "creator": Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",

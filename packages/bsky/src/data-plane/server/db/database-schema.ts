@@ -1,4 +1,5 @@
 import { Kysely } from 'kysely'
+import * as activitySubscription from './tables/activity-subscription'
 import * as actor from './tables/actor'
 import * as actorBlock from './tables/actor-block'
 import * as actorState from './tables/actor-state'
@@ -24,6 +25,7 @@ import * as post from './tables/post'
 import * as postAgg from './tables/post-agg'
 import * as postEmbed from './tables/post-embed'
 import * as postgate from './tables/post-gate'
+import * as privateData from './tables/private-data'
 import * as profile from './tables/profile'
 import * as profileAgg from './tables/profile-agg'
 import * as quote from './tables/quote'
@@ -77,6 +79,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   starterPack.PartialDB &
   taggedSuggestion.PartialDB &
   quote.PartialDB &
-  verification.PartialDB
+  verification.PartialDB &
+  privateData.PartialDB &
+  activitySubscription.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

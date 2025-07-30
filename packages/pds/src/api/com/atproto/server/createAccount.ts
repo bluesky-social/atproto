@@ -6,6 +6,7 @@ import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountStatus } from '../../../../account-manager/account-manager'
+import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
 import { AppContext } from '../../../../context'
 import { baseNormalizeAndValidate } from '../../../../handle'
 import { Server } from '../../../../lexicon'
@@ -170,6 +171,12 @@ const validateInputsForLocalPds = async (
   const { email, password, inviteCode } = input
   if (input.plcOp) {
     throw new InvalidRequestError('Unsupported input: "plcOp"')
+  }
+
+  if (password && password.length > NEW_PASSWORD_MAX_LENGTH) {
+    throw new InvalidRequestError(
+      `Password too long. Maximum length is ${NEW_PASSWORD_MAX_LENGTH} characters.`,
+    )
   }
 
   if (ctx.cfg.invites.required && !inviteCode) {

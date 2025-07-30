@@ -12,7 +12,6 @@ const ReadableStream = globalThis.ReadableStream as
 
 export type DpopFetchWrapperOptions<C = FetchContext> = {
   key: Key
-  iss: string
   nonces: SimpleStore<string, string>
   supportedAlgs?: string[]
   sha256?: (input: string) => Promise<string>
@@ -30,7 +29,7 @@ export type DpopFetchWrapperOptions<C = FetchContext> = {
 
 export function dpopFetchWrapper<C = FetchContext>({
   key,
-  iss,
+  // @TODO we should provide a default based on specs
   supportedAlgs,
   nonces,
   sha256 = typeof subtle !== 'undefined' ? subtleSha256 : undefined,
@@ -43,13 +42,10 @@ export function dpopFetchWrapper<C = FetchContext>({
     )
   }
 
+  // Throws if negotiation fails
   const alg = negotiateAlg(key, supportedAlgs)
 
   return async function (this: C, input, init) {
-    if (!key.algorithms.includes(alg)) {
-      throw new TypeError(`Key does not support the algorithm ${alg}`)
-    }
-
     const request: Request =
       init == null && input instanceof Request
         ? input
@@ -60,8 +56,10 @@ export function dpopFetchWrapper<C = FetchContext>({
       ? await sha256(authorizationHeader.slice(5))
       : undefined
 
-    const { method, url } = request
-    const { origin } = new URL(url)
+    const { origin } = new URL(request.url)
+
+    const htm = request.method
+    const htu = buildHtu(request.url)
 
     let initNonce: string | undefined
     try {
@@ -70,15 +68,7 @@ export function dpopFetchWrapper<C = FetchContext>({
       // Ignore get errors, we will just not send a nonce
     }
 
-    const initProof = await buildProof(
-      key,
-      alg,
-      iss,
-      method,
-      url,
-      initNonce,
-      ath,
-    )
+    const initProof = await buildProof(key, alg, htm, htu, initNonce, ath)
     request.headers.set('DPoP', initProof)
 
     const initResponse = await fetch.call(this, request)
@@ -126,32 +116,58 @@ export function dpopFetchWrapper<C = FetchContext>({
     // The initial response body must be consumed (see cancelBody's doc).
     await cancelBody(initResponse, 'log')
 
-    const nextProof = await buildProof(
-      key,
-      alg,
-      iss,
-      method,
-      url,
-      nextNonce,
-      ath,
-    )
+    const nextProof = await buildProof(key, alg, htm, htu, nextNonce, ath)
     const nextRequest = new Request(input, init)
     nextRequest.headers.set('DPoP', nextProof)
 
-    return fetch.call(this, nextRequest)
+    const retryRequest = await fetch.call(this, nextRequest)
+    const retryNonce = retryRequest.headers.get('DPoP-Nonce')
+    if (!retryNonce || retryNonce === initNonce) {
+      // No nonce was returned or it is the same as the one we sent. No need to
+      // update the nonce store, or retry the request.
+      return retryRequest
+    }
+
+    // Store the fresh nonce for future requests
+    try {
+      await nonces.set(origin, retryNonce)
+    } catch {
+      // Ignore set errors
+    }
+
+    return retryRequest
   }
+}
+
+/**
+ * Strip query and fragment
+ *
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9449.html#section-4.2-4.6}
+ */
+function buildHtu(url: string): string {
+  const fragmentIndex = url.indexOf('#')
+  const queryIndex = url.indexOf('?')
+
+  const end =
+    fragmentIndex === -1
+      ? queryIndex
+      : queryIndex === -1
+        ? fragmentIndex
+        : Math.min(fragmentIndex, queryIndex)
+
+  return end === -1 ? url : url.slice(0, end)
 }
 
 async function buildProof(
   key: Key,
   alg: string,
-  iss: string,
   htm: string,
   htu: string,
   nonce?: string,
   ath?: string,
 ) {
-  if (!key.bareJwk) {
+  const jwk = key.bareJwk
+  if (!jwk) {
     throw new Error('Only asymmetric keys can be used as DPoP proofs')
   }
 
@@ -162,10 +178,9 @@ async function buildProof(
     {
       alg,
       typ: 'dpop+jwt',
-      jwk: key.bareJwk,
+      jwk,
     },
     {
-      iss,
       iat: now,
       // Any collision will cause the request to be rejected by the server. no biggie.
       jti: Math.random().toString(36).slice(2),

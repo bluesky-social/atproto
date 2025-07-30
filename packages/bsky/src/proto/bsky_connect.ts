@@ -22,6 +22,10 @@ import {
   DeleteActorMuteResponse,
   DeleteThreadMuteRequest,
   DeleteThreadMuteResponse,
+  GetActivitySubscriptionDidsRequest,
+  GetActivitySubscriptionDidsResponse,
+  GetActivitySubscriptionsByActorAndSubjectsRequest,
+  GetActivitySubscriptionsByActorAndSubjectsResponse,
   GetActorChatDeclarationRecordsRequest,
   GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
@@ -126,6 +130,10 @@ import {
   GetMutesResponse,
   GetNewUserCountForRangeRequest,
   GetNewUserCountForRangeResponse,
+  GetNotificationDeclarationRecordsRequest,
+  GetNotificationDeclarationRecordsResponse,
+  GetNotificationPreferencesRequest,
+  GetNotificationPreferencesResponse,
   GetNotificationSeenRequest,
   GetNotificationSeenResponse,
   GetNotificationsRequest,
@@ -152,6 +160,8 @@ import {
   GetStarterPackCountsResponse,
   GetStarterPackRecordsRequest,
   GetStarterPackRecordsResponse,
+  GetStatusRecordsRequest,
+  GetStatusRecordsResponse,
   GetSuggestedEntitiesRequest,
   GetSuggestedEntitiesResponse,
   GetSuggestedFeedsRequest,
@@ -301,6 +311,24 @@ export const Service = {
       name: 'GetActorChatDeclarationRecords',
       I: GetActorChatDeclarationRecordsRequest,
       O: GetActorChatDeclarationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetNotificationDeclarationRecords
+     */
+    getNotificationDeclarationRecords: {
+      name: 'GetNotificationDeclarationRecords',
+      I: GetNotificationDeclarationRecordsRequest,
+      O: GetNotificationDeclarationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetStatusRecords
+     */
+    getStatusRecords: {
+      name: 'GetStatusRecords',
+      I: GetStatusRecordsRequest,
+      O: GetStatusRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -721,6 +749,15 @@ export const Service = {
     /**
      * Notifications
      *
+     * @generated from rpc bsky.Service.GetNotificationPreferences
+     */
+    getNotificationPreferences: {
+      name: 'GetNotificationPreferences',
+      I: GetNotificationPreferencesRequest,
+      O: GetNotificationPreferencesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.GetNotifications
      */
     getNotifications: {
@@ -745,6 +782,24 @@ export const Service = {
       name: 'GetUnreadNotificationCount',
       I: GetUnreadNotificationCountRequest,
       O: GetUnreadNotificationCountResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetActivitySubscriptionDids
+     */
+    getActivitySubscriptionDids: {
+      name: 'GetActivitySubscriptionDids',
+      I: GetActivitySubscriptionDidsRequest,
+      O: GetActivitySubscriptionDidsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetActivitySubscriptionsByActorAndSubjects
+     */
+    getActivitySubscriptionsByActorAndSubjects: {
+      name: 'GetActivitySubscriptionsByActorAndSubjects',
+      I: GetActivitySubscriptionsByActorAndSubjectsRequest,
+      O: GetActivitySubscriptionsByActorAndSubjectsResponse,
       kind: MethodKind.Unary,
     },
     /**

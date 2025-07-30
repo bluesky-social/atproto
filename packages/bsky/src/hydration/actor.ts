@@ -1,15 +1,24 @@
+import { AppBskyNotificationDeclaration } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
+import { Record as NotificationDeclarationRecord } from '../lexicon/types/app/bsky/notification/declaration'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { VerificationMeta } from '../proto/bsky_pb'
+import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
   RecordInfo,
+  isActivitySubscriptionEnabled,
   parseRecord,
   parseString,
   safeTakedownRef,
 } from './util'
+
+type AllowActivitySubscriptions = Extract<
+  AppBskyNotificationDeclaration.Record['allowSubscriptions'],
+  'followers' | 'mutuals' | 'none'
+>
 
 export type Actor = {
   did: string
@@ -27,6 +36,8 @@ export type Actor = {
   priorityNotifications: boolean
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
+  status?: RecordInfo<StatusRecord>
+  allowActivitySubscriptionsFrom: AllowActivitySubscriptions
 }
 
 export type VerificationHydrationState = {
@@ -44,6 +55,12 @@ export type Actors = HydrationMap<Actor>
 export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
 
 export type ChatDeclarations = HydrationMap<ChatDeclaration>
+export type NotificationDeclaration = RecordInfo<NotificationDeclarationRecord>
+
+export type NotificationDeclarations = HydrationMap<NotificationDeclaration>
+
+export type Status = RecordInfo<StatusRecord>
+export type Statuses = HydrationMap<Status>
 
 export type ProfileViewerState = {
   muted?: boolean
@@ -54,15 +71,25 @@ export type ProfileViewerState = {
   blockingByList?: string
   following?: string
   followedBy?: string
-  knownFollowers?: {
-    count: number
-    followers: string[]
-  }
 }
 
 export type ProfileViewerStates = HydrationMap<ProfileViewerState>
 
-export type KnownFollowers = HydrationMap<ProfileViewerState['knownFollowers']>
+type ActivitySubscriptionState = {
+  post: boolean
+  reply: boolean
+}
+
+export type ActivitySubscriptionStates = HydrationMap<
+  ActivitySubscriptionState | undefined
+>
+
+type KnownFollowersState = {
+  count: number
+  followers: string[]
+}
+
+export type KnownFollowersStates = HydrationMap<KnownFollowersState | undefined>
 
 export type ProfileAgg = {
   followers: number
@@ -147,6 +174,10 @@ export class ActorHydrator {
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
+      const status = actor.statusRecord
+        ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedowns)
+        : undefined
+
       const verifications = mapDefined(
         Object.entries(actor.verifiedBy),
         ([actorDid, verificationMeta]) => {
@@ -168,6 +199,20 @@ export class ActorHydrator {
         },
       )
 
+      const allowActivitySubscriptionsFrom = (
+        val: string,
+      ): AllowActivitySubscriptions => {
+        switch (val) {
+          case 'followers':
+          case 'mutuals':
+          case 'none':
+            return val
+          default:
+            // The dataplane should set the default of "FOLLOWERS". Just in case.
+            return 'followers'
+        }
+      }
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -184,6 +229,10 @@ export class ActorHydrator {
         priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,
+        status: status,
+        allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
+          actor.allowActivitySubscriptionsFrom,
+        ),
       })
     }, new HydrationMap<Actor>())
   }
@@ -203,6 +252,30 @@ export class ActorHydrator {
     }, new HydrationMap<ChatDeclaration>())
   }
 
+  async getNotificationDeclarations(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<NotificationDeclarations> {
+    if (!uris.length) return new HydrationMap<NotificationDeclaration>()
+    const res = await this.dataplane.getActorChatDeclarationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<NotificationDeclarationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<NotificationDeclaration>())
+  }
+
+  async getStatus(uris: string[], includeTakedowns = false): Promise<Statuses> {
+    if (!uris.length) return new HydrationMap<Status>()
+    const res = await this.dataplane.getStatusRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<StatusRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Status>())
+  }
+
   // "naive" because this method does not verify the existence of the list itself
   // a later check in the main hydrator will remove list uris that have been deleted or
   // repurposed to "curate lists"
@@ -215,10 +288,11 @@ export class ActorHydrator {
       actorDid: viewer,
       targetDids: dids,
     })
+
     return dids.reduce((acc, did, i) => {
       const rels = res.relationships[i]
       if (viewer === did) {
-        // ignore self-follows, self-mutes, self-blocks
+        // ignore self-follows, self-mutes, self-blocks, self-activity-subscriptions
         return acc.set(did, {})
       }
       return acc.set(did, {
@@ -237,8 +311,8 @@ export class ActorHydrator {
   async getKnownFollowers(
     dids: string[],
     viewer: string | null,
-  ): Promise<KnownFollowers> {
-    if (!viewer) return new HydrationMap<ProfileViewerState['knownFollowers']>()
+  ): Promise<KnownFollowersStates> {
+    if (!viewer) return new HydrationMap<KnownFollowersState | undefined>()
     const { results: knownFollowersResults } = await this.dataplane
       .getFollowsFollowing(
         {
@@ -261,7 +335,39 @@ export class ActorHydrator {
             }
           : undefined,
       )
-    }, new HydrationMap<ProfileViewerState['knownFollowers']>())
+    }, new HydrationMap<KnownFollowersState | undefined>())
+  }
+
+  async getActivitySubscriptions(
+    dids: string[],
+    viewer: string | null,
+  ): Promise<ActivitySubscriptionStates> {
+    if (!viewer) {
+      return new HydrationMap<ActivitySubscriptionState | undefined>()
+    }
+
+    const activitySubscription = (val: ActivitySubscription | undefined) => {
+      if (!val) return undefined
+
+      const result = {
+        post: !!val.post,
+        reply: !!val.reply,
+      }
+      if (!isActivitySubscriptionEnabled(result)) return undefined
+
+      return result
+    }
+
+    const { subscriptions } = await this.dataplane
+      .getActivitySubscriptionsByActorAndSubjects(
+        { actorDid: viewer, subjectDids: dids },
+        { signal: AbortSignal.timeout(100) },
+      )
+      .catch(() => ({ subscriptions: [] }))
+
+    return dids.reduce((acc, did, i) => {
+      return acc.set(did, activitySubscription(subscriptions[i]))
+    }, new HydrationMap<ActivitySubscriptionState | undefined>())
   }
 
   async getProfileAggregates(dids: string[]): Promise<ProfileAggs> {

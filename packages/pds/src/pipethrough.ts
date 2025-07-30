@@ -503,6 +503,7 @@ export const PROTECTED_METHODS = new Set<string>([
   ids.ComAtprotoServerCreateAppPassword,
   ids.ComAtprotoServerDeactivateAccount,
   ids.ComAtprotoServerGetAccountInviteCodes,
+  ids.ComAtprotoServerGetSession,
   ids.ComAtprotoServerListAppPasswords,
   ids.ComAtprotoServerRequestAccountDelete,
   ids.ComAtprotoServerRequestEmailConfirmation,
@@ -534,6 +535,11 @@ const defaultService = (
     case ids.ToolsOzoneVerificationListVerifications:
     case ids.ToolsOzoneVerificationGrantVerifications:
     case ids.ToolsOzoneVerificationRevokeVerifications:
+    case ids.ToolsOzoneSafelinkAddRule:
+    case ids.ToolsOzoneSafelinkUpdateRule:
+    case ids.ToolsOzoneSafelinkRemoveRule:
+    case ids.ToolsOzoneSafelinkQueryEvents:
+    case ids.ToolsOzoneSafelinkQueryRules:
       return ctx.cfg.modService
     case ids.ComAtprotoModerationCreateReport:
       return ctx.cfg.reportService

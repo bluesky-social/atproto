@@ -23,8 +23,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getPostgateRecords: getRecords(db, ids.AppBskyFeedPostgate),
   getLabelerRecords: getRecords(db, ids.AppBskyLabelerService),
   getActorChatDeclarationRecords: getRecords(db, ids.ChatBskyActorDeclaration),
+  getNotificationDeclarationRecords: getRecords(
+    db,
+    ids.AppBskyNotificationDeclaration,
+  ),
   getStarterPackRecords: getRecords(db, ids.AppBskyGraphStarterpack),
   getVerificationRecords: getRecords(db, ids.AppBskyGraphVerification),
+  getStatusRecords: getRecords(db, ids.AppBskyActorStatus),
 })
 
 export const getRecords =
@@ -60,6 +65,7 @@ export const getRecords =
         sortedAt: compositeTime(createdAt, indexedAt),
         takenDown: !!row?.takedownRef,
         takedownRef: row?.takedownRef ?? undefined,
+        tags: row?.tags ?? undefined,
       })
     })
     return { records }

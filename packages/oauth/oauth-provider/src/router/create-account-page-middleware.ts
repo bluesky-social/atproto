@@ -6,6 +6,7 @@ import {
   validateFetchDest,
   validateFetchMode,
   validateOrigin,
+  writeRedirect,
 } from '../lib/http/index.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { sendAccountPageFactory } from './assets/send-account-page.js'
@@ -28,6 +29,13 @@ export function createAccountPageMiddleware<
 
   const router = new Router<Ctx, Req, Res>(issuerUrl)
 
+  // Create password reset discovery endpoint
+  // https://w3c.github.io/webappsec-change-password-url/
+  router.get('/.well-known/change-password', (_req, res) => {
+    writeRedirect(res, new URL('/account/reset-password', issuerUrl).toString())
+  })
+
+  // Create frontend account pages
   router.get<never>(/^\/account(?:\/.*)?$/, async function (req, res) {
     try {
       res.setHeader('Referrer-Policy', 'same-origin')

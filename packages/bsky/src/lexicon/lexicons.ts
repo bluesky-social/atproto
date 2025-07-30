@@ -1389,6 +1389,10 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.createReport#modTool',
+              },
             },
           },
         },
@@ -1432,6 +1436,23 @@ export const schemaDict = {
                 format: 'datetime',
               },
             },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
           },
         },
       },
@@ -4428,6 +4449,104 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempCheckHandleAvailability: {
+    lexicon: 1,
+    id: 'com.atproto.temp.checkHandleAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.',
+        parameters: {
+          type: 'params',
+          required: ['handle'],
+          properties: {
+            handle: {
+              type: 'string',
+              format: 'handle',
+              description:
+                'Tentative handle. Will be checked for availability or used to build handle suggestions.',
+            },
+            email: {
+              type: 'string',
+              description:
+                'User-provided email. Might be used to build handle suggestions.',
+            },
+            birthDate: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'User-provided birth date. Might be used to build handle suggestions.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'result'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'Echo of the input handle.',
+              },
+              result: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.temp.checkHandleAvailability#resultAvailable',
+                  'lex:com.atproto.temp.checkHandleAvailability#resultUnavailable',
+                ],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+            description: 'An invalid email was provided.',
+          },
+        ],
+      },
+      resultAvailable: {
+        type: 'object',
+        description: 'Indicates the provided handle is available.',
+        properties: {},
+      },
+      resultUnavailable: {
+        type: 'object',
+        description:
+          'Indicates the provided handle is unavailable and gives suggestions of available handles.',
+        required: ['suggestions'],
+        properties: {
+          suggestions: {
+            type: 'array',
+            description:
+              'List of suggested handles based on the provided inputs.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.temp.checkHandleAvailability#suggestion',
+            },
+          },
+        },
+      },
+      suggestion: {
+        type: 'object',
+        required: ['handle', 'method'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          method: {
+            type: 'string',
+            description:
+              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempCheckSignupQueue: {
     lexicon: 1,
     id: 'com.atproto.temp.checkSignupQueue',
@@ -4568,6 +4687,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
           },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
+          },
         },
       },
       profileView: {
@@ -4622,6 +4745,10 @@ export const schemaDict = {
           verification: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
           },
         },
       },
@@ -4699,6 +4826,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
           },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#statusView',
+          },
         },
       },
       profileAssociated: {
@@ -4720,6 +4851,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
           },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
+          },
         },
       },
       profileAssociatedChat: {
@@ -4729,6 +4864,16 @@ export const schemaDict = {
           allowIncoming: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedActivitySubscription: {
+        type: 'object',
+        required: ['allowSubscriptions'],
+        properties: {
+          allowSubscriptions: {
+            type: 'string',
+            knownValues: ['followers', 'mutuals', 'none'],
           },
         },
       },
@@ -4764,8 +4909,16 @@ export const schemaDict = {
             format: 'at-uri',
           },
           knownFollowers: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
+          },
+          activitySubscription: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
         },
       },
@@ -5240,6 +5393,36 @@ export const schemaDict = {
           },
         },
       },
+      statusView: {
+        type: 'object',
+        required: ['status', 'record'],
+        properties: {
+          status: {
+            type: 'string',
+            description: 'The status for the account.',
+            knownValues: ['app.bsky.actor.status#live'],
+          },
+          record: {
+            type: 'unknown',
+          },
+          embed: {
+            type: 'union',
+            description: 'An optional embed associated with the status.',
+            refs: ['lex:app.bsky.embed.external#view'],
+          },
+          expiresAt: {
+            type: 'string',
+            description:
+              'The date when this status will expire. The application might choose to no longer return the status after expiration.',
+            format: 'datetime',
+          },
+          isActive: {
+            type: 'boolean',
+            description:
+              'True if the status is not expired, false if it is expired. Only present if expiration was set.',
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
@@ -5566,6 +5749,48 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyActorStatus: {
+    lexicon: 1,
+    id: 'app.bsky.actor.status',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of a Bluesky account status.',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['status', 'createdAt'],
+          properties: {
+            status: {
+              type: 'string',
+              description: 'The status for the account.',
+              knownValues: ['app.bsky.actor.status#live'],
+            },
+            embed: {
+              type: 'union',
+              description: 'An optional embed associated with the status.',
+              refs: ['lex:app.bsky.embed.external'],
+            },
+            durationMinutes: {
+              type: 'integer',
+              description:
+                'The duration of the status in minutes. Applications can choose to impose minimum and maximum limits.',
+              minimum: 1,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      live: {
+        type: 'token',
+        description:
+          'Advertises an account as currently offering live content.',
       },
     },
   },
@@ -6137,6 +6362,12 @@ export const schemaDict = {
               'Context provided by feed generator that may be passed back alongside interactions.',
             maxLength: 2000,
           },
+          reqId: {
+            type: 'string',
+            description:
+              'Unique identifier per request that may be passed back alongside interactions.',
+            maxLength: 100,
+          },
         },
       },
       replyRef: {
@@ -6174,6 +6405,14 @@ export const schemaDict = {
           by: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           indexedAt: {
             type: 'string',
@@ -6432,6 +6671,12 @@ export const schemaDict = {
             description:
               'Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.',
             maxLength: 2000,
+          },
+          reqId: {
+            type: 'string',
+            description:
+              'Unique identifier per request that may be passed back alongside interactions.',
+            maxLength: 100,
           },
         },
       },
@@ -6981,6 +7226,12 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
                 },
               },
+              reqId: {
+                type: 'string',
+                description:
+                  'Unique identifier per request that may be passed back alongside interactions.',
+                maxLength: 100,
+              },
             },
           },
         },
@@ -7474,6 +7725,10 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
             },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
           },
         },
       },
@@ -7688,6 +7943,10 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
             },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
           },
         },
       },
@@ -7700,7 +7959,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Find posts matching search criteria, returning views of those posts.',
+          'Find posts matching search criteria, returning views of those posts. Note that this API endpoint may require authentication (eg, not public) for some service providers and implementations.',
         parameters: {
           type: 'params',
           required: ['q'],
@@ -9606,6 +9865,30 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationDeclaration: {
+    lexicon: 1,
+    id: 'app.bsky.notification.declaration',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "A declaration of the user's choices related to notifications that can be produced by them.",
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['allowSubscriptions'],
+          properties: {
+            allowSubscriptions: {
+              type: 'string',
+              description:
+                "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'.",
+              knownValues: ['followers', 'mutuals', 'none'],
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationDefs: {
     lexicon: 1,
     id: 'app.bsky.notification.defs',
@@ -9613,6 +9896,175 @@ export const schemaDict = {
       recordDeleted: {
         type: 'object',
         properties: {},
+      },
+      chatPreference: {
+        type: 'object',
+        required: ['include', 'push'],
+        properties: {
+          include: {
+            type: 'string',
+            knownValues: ['all', 'accepted'],
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      filterablePreference: {
+        type: 'object',
+        required: ['include', 'list', 'push'],
+        properties: {
+          include: {
+            type: 'string',
+            knownValues: ['all', 'follows'],
+          },
+          list: {
+            type: 'boolean',
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      preference: {
+        type: 'object',
+        required: ['list', 'push'],
+        properties: {
+          list: {
+            type: 'boolean',
+          },
+          push: {
+            type: 'boolean',
+          },
+        },
+      },
+      preferences: {
+        type: 'object',
+        required: [
+          'chat',
+          'follow',
+          'like',
+          'likeViaRepost',
+          'mention',
+          'quote',
+          'reply',
+          'repost',
+          'repostViaRepost',
+          'starterpackJoined',
+          'subscribedPost',
+          'unverified',
+          'verified',
+        ],
+        properties: {
+          chat: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#chatPreference',
+          },
+          follow: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          like: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          likeViaRepost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          mention: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          quote: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          reply: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          repost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          repostViaRepost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#filterablePreference',
+          },
+          starterpackJoined: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          subscribedPost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          unverified: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+          verified: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#preference',
+          },
+        },
+      },
+      activitySubscription: {
+        type: 'object',
+        required: ['post', 'reply'],
+        properties: {
+          post: {
+            type: 'boolean',
+          },
+          reply: {
+            type: 'boolean',
+          },
+        },
+      },
+      subjectActivitySubscription: {
+        description:
+          'Object used to store activity subscription data in stash.',
+        type: 'object',
+        required: ['subject', 'activitySubscription'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationGetPreferences: {
+    lexicon: 1,
+    id: 'app.bsky.notification.getPreferences',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get notification-related preferences for an account. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferences',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -9644,6 +10096,50 @@ export const schemaDict = {
             properties: {
               count: {
                 type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationListActivitySubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.notification.listActivitySubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate all accounts to which the requesting account is subscribed to receive notifications for. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
               },
             },
           },
@@ -9743,7 +10239,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', 'starterpack-joined', 'verified', and 'unverified'.",
+              'The reason why this notification was delivered - e.g. your post was liked, or you received a new follower.',
             knownValues: [
               'like',
               'repost',
@@ -9754,6 +10250,9 @@ export const schemaDict = {
               'starterpack-joined',
               'verified',
               'unverified',
+              'like-via-repost',
+              'repost-via-repost',
+              'subscribed-post',
             ],
           },
           reasonSubject: {
@@ -9775,6 +10274,51 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutActivitySubscription: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putActivitySubscription',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Puts an activity subscription entry. The key should be omitted for creation and provided for updates. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'activitySubscription'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
             },
           },
         },
@@ -9804,6 +10348,90 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationPutPreferencesV2: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putPreferencesV2',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Set notification-related preferences for an account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              chat: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#chatPreference',
+              },
+              follow: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              like: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              likeViaRepost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              mention: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              quote: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              reply: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              repost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              repostViaRepost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#filterablePreference',
+              },
+              starterpackJoined: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              subscribedPost: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              unverified: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+              verified: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preference',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#preferences',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationRegisterPush: {
     lexicon: 1,
     id: 'app.bsky.notification.registerPush',
@@ -9812,6 +10440,44 @@ export const schemaDict = {
         type: 'procedure',
         description:
           'Register to receive push notifications, via a specified service, for the requesting account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['serviceDid', 'token', 'platform', 'appId'],
+            properties: {
+              serviceDid: {
+                type: 'string',
+                format: 'did',
+              },
+              token: {
+                type: 'string',
+              },
+              platform: {
+                type: 'string',
+                knownValues: ['ios', 'android', 'web'],
+              },
+              appId: {
+                type: 'string',
+              },
+              ageRestricted: {
+                type: 'boolean',
+                description: 'Set to true when the actor is age restricted',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationUnregisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.unregisterPush',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -10081,6 +10747,144 @@ export const schemaDict = {
           },
         },
       },
+      threadItemPost: {
+        type: 'object',
+        required: [
+          'post',
+          'moreParents',
+          'moreReplies',
+          'opThread',
+          'hiddenByThreadgate',
+          'mutedByViewer',
+        ],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          moreParents: {
+            type: 'boolean',
+            description:
+              'This post has more parents that were not present in the response. This is just a boolean, without the number of parents.',
+          },
+          moreReplies: {
+            type: 'integer',
+            description:
+              'This post has more replies that were not present in the response. This is a numeric value, which is best-effort and might not be accurate.',
+          },
+          opThread: {
+            type: 'boolean',
+            description:
+              'This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread.',
+          },
+          hiddenByThreadgate: {
+            type: 'boolean',
+            description:
+              'The threadgate created by the author indicates this post as a reply to be hidden for everyone consuming the thread.',
+          },
+          mutedByViewer: {
+            type: 'boolean',
+            description:
+              'This is by an account muted by the viewer requesting it.',
+          },
+        },
+      },
+      threadItemNoUnauthenticated: {
+        type: 'object',
+        properties: {},
+      },
+      threadItemNotFound: {
+        type: 'object',
+        properties: {},
+      },
+      threadItemBlocked: {
+        type: 'object',
+        required: ['author'],
+        properties: {
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      ageAssuranceState: {
+        type: 'object',
+        description:
+          'The computed state of the age assurance process, returned to the user in question on certain authenticated requests.',
+        required: ['status'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+        },
+      },
+      ageAssuranceEvent: {
+        type: 'object',
+        description: 'Object used to store age assurance data in stash.',
+        required: ['createdAt', 'status', 'attemptId'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for AA.',
+          },
+          initIp: {
+            type: 'string',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetAgeAssuranceState: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getAgeAssuranceState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -10099,6 +10903,29 @@ export const schemaDict = {
               checkEmailConfirmed: {
                 type: 'boolean',
               },
+              liveNow: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getConfig#liveNowConfig',
+                },
+              },
+            },
+          },
+        },
+      },
+      liveNowConfig: {
+        type: 'object',
+        required: ['did', 'domains'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          domains: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
         },
@@ -10146,6 +10973,179 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetPostThreadOtherV2: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPostThreadOtherV2',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get additional posts under a thread e.g. replies hidden by threadgate. Based on an anchor post at any depth of the tree, returns top-level replies below that anchor. It does not include ancestors nor the anchor itself. This should be called after exhausting `app.bsky.unspecced.getPostThreadV2`. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+        parameters: {
+          type: 'params',
+          required: ['anchor'],
+          properties: {
+            anchor: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'Reference (AT-URI) to post record. This is the anchor post.',
+            },
+            prioritizeFollowedUsers: {
+              type: 'boolean',
+              description:
+                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
+              default: false,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['thread'],
+            properties: {
+              thread: {
+                type: 'array',
+                description:
+                  'A flat list of other thread items. The depth of each item is indicated by the depth property inside the item.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getPostThreadOtherV2#threadItem',
+                },
+              },
+            },
+          },
+        },
+      },
+      threadItem: {
+        type: 'object',
+        required: ['uri', 'depth', 'value'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          value: {
+            type: 'union',
+            refs: ['lex:app.bsky.unspecced.defs#threadItemPost'],
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetPostThreadV2: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPostThreadV2',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "(NOTE: this endpoint is under development and WILL change without notice. Don't use it until it is moved out of `unspecced` or your application WILL break) Get posts in a thread. It is based in an anchor post at any depth of the tree, and returns posts above it (recursively resolving the parent, without further branching to their replies) and below it (recursive replies, with branching to their replies). Does not require auth, but additional metadata and filtering will be applied for authed requests.",
+        parameters: {
+          type: 'params',
+          required: ['anchor'],
+          properties: {
+            anchor: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'Reference (AT-URI) to post record. This is the anchor post, and the thread will be built around it. It can be any post in the tree, not necessarily a root post.',
+            },
+            above: {
+              type: 'boolean',
+              description: 'Whether to include parents above the anchor.',
+              default: true,
+            },
+            below: {
+              type: 'integer',
+              description:
+                'How many levels of replies to include below the anchor.',
+              default: 6,
+              minimum: 0,
+              maximum: 20,
+            },
+            branchingFactor: {
+              type: 'integer',
+              description:
+                'Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are (NOTE: currently, during unspecced phase) all returned (NOTE: later they might be paginated).',
+              default: 10,
+              minimum: 0,
+              maximum: 100,
+            },
+            prioritizeFollowedUsers: {
+              type: 'boolean',
+              description:
+                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
+              default: false,
+            },
+            sort: {
+              type: 'string',
+              description: 'Sorting for the thread replies.',
+              knownValues: ['newest', 'oldest', 'top'],
+              default: 'oldest',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['thread', 'hasOtherReplies'],
+            properties: {
+              thread: {
+                type: 'array',
+                description:
+                  'A flat list of thread items. The depth of each item is indicated by the depth property inside the item.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getPostThreadV2#threadItem',
+                },
+              },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
+              hasOtherReplies: {
+                type: 'boolean',
+                description:
+                  'Whether this thread has additional replies. If true, a call can be made to the `getPostThreadOtherV2` endpoint to retrieve them.',
+              },
+            },
+          },
+        },
+      },
+      threadItem: {
+        type: 'object',
+        required: ['uri', 'depth', 'value'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          depth: {
+            type: 'integer',
+            description:
+              'The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths.',
+          },
+          value: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.unspecced.defs#threadItemPost',
+              'lex:app.bsky.unspecced.defs#threadItemNoUnauthenticated',
+              'lex:app.bsky.unspecced.defs#threadItemNotFound',
+              'lex:app.bsky.unspecced.defs#threadItemBlocked',
+            ],
           },
         },
       },
@@ -10645,6 +11645,59 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyUnspeccedInitAgeAssurance: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.initAgeAssurance',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+        ],
       },
     },
   },
@@ -12484,6 +13537,8 @@ export const ids = {
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   ComAtprotoTempAddReservedHandle: 'com.atproto.temp.addReservedHandle',
+  ComAtprotoTempCheckHandleAvailability:
+    'com.atproto.temp.checkHandleAvailability',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
@@ -12497,6 +13552,7 @@ export const ids = {
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyActorStatus: 'app.bsky.actor.status',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
@@ -12561,18 +13617,31 @@ export const ids = {
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationDeclaration: 'app.bsky.notification.declaration',
   AppBskyNotificationDefs: 'app.bsky.notification.defs',
+  AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
+  AppBskyNotificationListActivitySubscriptions:
+    'app.bsky.notification.listActivitySubscriptions',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutActivitySubscription:
+    'app.bsky.notification.putActivitySubscription',
   AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
+  AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
+  AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetAgeAssuranceState:
+    'app.bsky.unspecced.getAgeAssuranceState',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetPostThreadOtherV2:
+    'app.bsky.unspecced.getPostThreadOtherV2',
+  AppBskyUnspeccedGetPostThreadV2: 'app.bsky.unspecced.getPostThreadV2',
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
   AppBskyUnspeccedGetSuggestedFeedsSkeleton:
     'app.bsky.unspecced.getSuggestedFeedsSkeleton',
@@ -12590,6 +13659,7 @@ export const ids = {
   AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
   AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
   AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
+  AppBskyUnspeccedInitAgeAssurance: 'app.bsky.unspecced.initAgeAssurance',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

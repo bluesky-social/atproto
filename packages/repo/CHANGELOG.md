@@ -1,5 +1,40 @@
 # @atproto/repo
 
+## 0.8.5
+
+### Patch Changes
+
+- Updated dependencies [[`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20)]:
+  - @atproto/lexicon@0.4.12
+
+## 0.8.4
+
+### Patch Changes
+
+- [#3981](https://github.com/bluesky-social/atproto/pull/3981) [`a8dee6af3`](https://github.com/bluesky-social/atproto/commit/a8dee6af33618d3072ebae7f23843242a32c926c) Thanks [@bnewbold](https://github.com/bnewbold)! - allow tilde character in MST keys (as allowed by record key syntax)
+
+## 0.8.3
+
+### Patch Changes
+
+- [#3971](https://github.com/bluesky-social/atproto/pull/3971) [`5fccbd2a1`](https://github.com/bluesky-social/atproto/commit/5fccbd2a14420e4a7c6f56ad9af4ecfe15a971e3) Thanks [@pfrazee](https://github.com/pfrazee)! - improve performance of reading repos from car files
+
+## 0.8.2
+
+### Patch Changes
+
+- [#3956](https://github.com/bluesky-social/atproto/pull/3956) [`8bd45e2f8`](https://github.com/bluesky-social/atproto/commit/8bd45e2f898a87b3550c7f4a0c8312fad9cb4736) Thanks [@bnewbold](https://github.com/bnewbold)! - increase max MST key from 256 to 1024 chars
+
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812), [`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/common-web@0.4.2
+  - @atproto/lexicon@0.4.11
+  - @atproto/common@0.4.11
+  - @atproto/crypto@0.4.4
+
 ## 0.8.0
 
 ### Minor Changes

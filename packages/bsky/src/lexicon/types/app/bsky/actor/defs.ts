@@ -12,8 +12,10 @@ import {
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyGraphDefs from '../graph/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+import type * as AppBskyNotificationDefs from '../notification/defs.js'
 import type * as AppBskyFeedThreadgate from '../feed/threadgate.js'
 import type * as AppBskyFeedPostgate from '../feed/postgate.js'
+import type * as AppBskyEmbedExternal from '../embed/external.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -30,6 +32,7 @@ export interface ProfileViewBasic {
   labels?: ComAtprotoLabelDefs.Label[]
   createdAt?: string
   verification?: VerificationState
+  status?: StatusView
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -55,6 +58,7 @@ export interface ProfileView {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   verification?: VerificationState
+  status?: StatusView
 }
 
 const hashProfileView = 'profileView'
@@ -86,6 +90,7 @@ export interface ProfileViewDetailed {
   labels?: ComAtprotoLabelDefs.Label[]
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   verification?: VerificationState
+  status?: StatusView
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
@@ -105,6 +110,7 @@ export interface ProfileAssociated {
   starterPacks?: number
   labeler?: boolean
   chat?: ProfileAssociatedChat
+  activitySubscription?: ProfileAssociatedActivitySubscription
 }
 
 const hashProfileAssociated = 'profileAssociated'
@@ -132,6 +138,26 @@ export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
 }
 
+export interface ProfileAssociatedActivitySubscription {
+  $type?: 'app.bsky.actor.defs#profileAssociatedActivitySubscription'
+  allowSubscriptions: 'followers' | 'mutuals' | 'none' | (string & {})
+}
+
+const hashProfileAssociatedActivitySubscription =
+  'profileAssociatedActivitySubscription'
+
+export function isProfileAssociatedActivitySubscription<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedActivitySubscription)
+}
+
+export function validateProfileAssociatedActivitySubscription<V>(v: V) {
+  return validate<ProfileAssociatedActivitySubscription & V>(
+    v,
+    id,
+    hashProfileAssociatedActivitySubscription,
+  )
+}
+
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
 export interface ViewerState {
   $type?: 'app.bsky.actor.defs#viewerState'
@@ -143,6 +169,7 @@ export interface ViewerState {
   following?: string
   followedBy?: string
   knownFollowers?: KnownFollowers
+  activitySubscription?: AppBskyNotificationDefs.ActivitySubscription
 }
 
 const hashViewerState = 'viewerState'
@@ -591,4 +618,26 @@ export function validatePostInteractionSettingsPref<V>(v: V) {
     id,
     hashPostInteractionSettingsPref,
   )
+}
+
+export interface StatusView {
+  $type?: 'app.bsky.actor.defs#statusView'
+  /** The status for the account. */
+  status: 'app.bsky.actor.status#live' | (string & {})
+  record: { [_ in string]: unknown }
+  embed?: $Typed<AppBskyEmbedExternal.View> | { $type: string }
+  /** The date when this status will expire. The application might choose to no longer return the status after expiration. */
+  expiresAt?: string
+  /** True if the status is not expired, false if it is expired. Only present if expiration was set. */
+  isActive?: boolean
+}
+
+const hashStatusView = 'statusView'
+
+export function isStatusView<V>(v: V) {
+  return is$typed(v, id, hashStatusView)
+}
+
+export function validateStatusView<V>(v: V) {
+  return validate<StatusView & V>(v, id, hashStatusView)
 }
