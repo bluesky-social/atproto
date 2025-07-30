@@ -360,9 +360,7 @@ describe('General validation', () => {
       },
     })
     expect(result.success).toBe(false)
-    expect(result['error']?.message).toBe(
-      'Object/union/record/test must be a string',
-    )
+    expect(result['error']?.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testUnionWithUnkownRef', {
       union: {

@@ -163,7 +163,7 @@ export function record(
   def: LexRecord,
   value: unknown,
 ): ValidationResult {
-  if (!isObj(value) || !('$type' in value)) {
+  if (!isDiscriminatedObject(value)) {
     return {
       success: false,
       error: new ValidationError(
@@ -171,8 +171,7 @@ export function record(
       ),
     }
   }
-  const propPath = `${path}/record`
-  return validateOneOf(lexicons, propPath, def.record, value)
+  return validateOneOf(lexicons, path, def.record, value)
 }
 
 export function validateOneOf(
