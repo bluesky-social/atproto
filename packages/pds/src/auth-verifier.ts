@@ -10,11 +10,7 @@ import {
   VerifyTokenClaimsOptions,
   WWWAuthenticateError,
 } from '@atproto/oauth-provider'
-import {
-  PermissionSet,
-  PermissionSetTransition,
-  ScopeMissingError,
-} from '@atproto/oauth-scopes'
+import { PermissionSet, PermissionSetTransition } from '@atproto/oauth-scopes'
 import {
   AuthRequiredError,
   Awaitable,
@@ -291,14 +287,7 @@ export class AuthVerifier {
           )
         }
 
-        try {
-          await authorize(permissions, ctx)
-        } catch (err) {
-          if (err instanceof ScopeMissingError) {
-            throw new ForbiddenError(err.message, undefined, { cause: err })
-          }
-          throw err
-        }
+        await authorize(permissions, ctx)
 
         return {
           credentials: {
