@@ -1297,6 +1297,12 @@ importers:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
 
+  packages/oauth/oauth-scopes:
+    devDependencies:
+      typescript:
+        specifier: ^5.6.3
+        version: 5.8.3
+
   packages/oauth/oauth-types:
     dependencies:
       '@atproto/jwk':
@@ -1448,6 +1454,9 @@ importers:
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider
+      '@atproto/oauth-scopes':
+        specifier: workspace:^
+        version: link:../oauth/oauth-scopes
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo

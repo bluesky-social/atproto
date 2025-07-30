@@ -1,11 +1,11 @@
-import { AccountScope } from '../permissions/resources/account-scope'
-import { BlobScope } from '../permissions/resources/blob-scope'
-import { IdentityScope } from '../permissions/resources/identity-scope'
-import { RepoScope } from '../permissions/resources/repo-scope'
-import { RpcScope } from '../permissions/resources/rpc-scope'
-import { ParsedResourceScope } from '../permissions/scope-syntax'
+import { AccountScope } from './resources/account-scope.js'
+import { BlobScope } from './resources/blob-scope.js'
+import { IdentityScope } from './resources/identity-scope.js'
+import { RepoScope } from './resources/repo-scope.js'
+import { RpcScope } from './resources/rpc-scope.js'
+import { ParsedResourceScope } from './syntax.js'
 
-export function isValidPermission(value: string) {
+export function isValidAtprotoOauthScope(value: string) {
   if (value === 'atproto') return true
   if (value === 'transition:email') return true
   if (value === 'transition:generic') return true

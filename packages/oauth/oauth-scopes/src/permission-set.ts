@@ -1,10 +1,13 @@
-import { ForbiddenError } from '@atproto/xrpc-server'
-import { AccountScope, AccountScopeMatch } from './resources/account-scope'
-import { BlobScope, BlobScopeMatch } from './resources/blob-scope'
-import { IdentityScope, IdentityScopeMatch } from './resources/identity-scope'
-import { RepoScope, RepoScopeMatch } from './resources/repo-scope'
-import { RpcScope, RpcScopeMatch } from './resources/rpc-scope'
-import { ScopesSet } from './scopes-set'
+import { AccountScope, AccountScopeMatch } from './resources/account-scope.js'
+import { BlobScope, BlobScopeMatch } from './resources/blob-scope.js'
+import {
+  IdentityScope,
+  IdentityScopeMatch,
+} from './resources/identity-scope.js'
+import { RepoScope, RepoScopeMatch } from './resources/repo-scope.js'
+import { RpcScope, RpcScopeMatch } from './resources/rpc-scope.js'
+import { ScopeMissingError } from './scope-missing-error.js'
+import { ScopesSet } from './scopes-set.js'
 
 export type {
   AccountScopeMatch,
@@ -27,7 +30,7 @@ export class PermissionSet {
   public assertAccount(options: AccountScopeMatch): void {
     if (!this.allowsAccount(options)) {
       const scope = AccountScope.scopeNeededFor(options)
-      throw new ForbiddenError(`Missing scope "${scope}"`)
+      throw new ScopeMissingError(scope)
     }
   }
 
@@ -37,7 +40,7 @@ export class PermissionSet {
   public assertIdentity(options: IdentityScopeMatch): void {
     if (!this.allowsIdentity(options)) {
       const scope = IdentityScope.scopeNeededFor(options)
-      throw new ForbiddenError(`Missing scope "${scope}"`)
+      throw new ScopeMissingError(scope)
     }
   }
 
@@ -47,7 +50,7 @@ export class PermissionSet {
   public assertBlob(options: BlobScopeMatch): void {
     if (!this.allowsBlob(options)) {
       const scope = BlobScope.scopeNeededFor(options)
-      throw new ForbiddenError(`Missing scope "blob", "blob:*/*" or "${scope}"`)
+      throw new ScopeMissingError(scope)
     }
   }
 
@@ -57,7 +60,7 @@ export class PermissionSet {
   public assertRepo(options: RepoScopeMatch): void {
     if (!this.allowsRepo(options)) {
       const scope = RepoScope.scopeNeededFor(options)
-      throw new ForbiddenError(`Missing scope "${scope}"`)
+      throw new ScopeMissingError(scope)
     }
   }
 
@@ -67,7 +70,7 @@ export class PermissionSet {
   public assertRpc(options: RpcScopeMatch): void {
     if (!this.allowsRpc(options)) {
       const scope = RpcScope.scopeNeededFor(options)
-      throw new ForbiddenError(`Missing scope "${scope}"`)
+      throw new ScopeMissingError(scope)
     }
   }
 }

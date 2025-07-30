@@ -1,7 +1,12 @@
 import { CID } from 'multiformats/cid'
 import { BlobRef } from '@atproto/lexicon'
+import { ScopeMissingError } from '@atproto/oauth-scopes'
 import { AtUri } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
 import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -53,14 +58,19 @@ export default function (server: Server, ctx: AppContext) {
       // We can't compute permissions based on the request payload ("input") in
       // the 'auth' phase, so we do it here.
       if (auth.credentials.type === 'permissions') {
-        auth.credentials.permissions.assertRepo({
-          action: 'create',
-          collection,
-        })
-        auth.credentials.permissions.assertRepo({
-          action: 'update',
-          collection,
-        })
+        try {
+          auth.credentials.permissions.assertRepo({
+            action: 'create',
+            collection,
+          })
+          auth.credentials.permissions.assertRepo({
+            action: 'update',
+            collection,
+          })
+        } catch (err) {
+          const msg = err instanceof ScopeMissingError ? err.message : undefined
+          throw new ForbiddenError(msg, undefined, { cause: err })
+        }
       }
 
       const { did } = auth.credentials

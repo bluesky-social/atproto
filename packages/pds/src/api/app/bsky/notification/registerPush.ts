@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { getNotif } from '@atproto/identity'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ScopeMissingError } from '@atproto/oauth-scopes'
+import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -26,10 +27,15 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = auth.credentials
 
       if (auth.credentials.type === 'permissions') {
-        auth.credentials.permissions.assertRpc({
-          aud: `${serviceDid}#bsky_notif`,
-          lxm: ids.AppBskyNotificationRegisterPush,
-        })
+        try {
+          auth.credentials.permissions.assertRpc({
+            aud: `${serviceDid}#bsky_notif`,
+            lxm: ids.AppBskyNotificationRegisterPush,
+          })
+        } catch (err) {
+          const msg = err instanceof ScopeMissingError ? err.message : undefined
+          throw new ForbiddenError(msg, undefined, { cause: err })
+        }
       }
 
       const authHeaders = await ctx.serviceAuthHeaders(

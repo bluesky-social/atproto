@@ -11,6 +11,11 @@ import {
   WWWAuthenticateError,
 } from '@atproto/oauth-provider'
 import {
+  PermissionSet,
+  PermissionSetTransition,
+  ScopeMissingError,
+} from '@atproto/oauth-scopes'
+import {
   AuthRequiredError,
   Awaitable,
   ForbiddenError,
@@ -42,7 +47,6 @@ import {
 } from './auth-scope'
 import { softDeleted } from './db'
 import { oauthLogger } from './logger'
-import { PermissionSet, PermissionSetTransition } from './permissions/index.js'
 import { appendVary } from './util/http'
 import { WithRequired } from './util/types'
 
@@ -287,7 +291,14 @@ export class AuthVerifier {
           )
         }
 
-        await authorize(permissions, ctx)
+        try {
+          await authorize(permissions, ctx)
+        } catch (err) {
+          if (err instanceof ScopeMissingError) {
+            throw new ForbiddenError(err.message, undefined, { cause: err })
+          }
+          throw err
+        }
 
         return {
           credentials: {

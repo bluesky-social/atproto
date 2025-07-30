@@ -1,5 +1,10 @@
 import { CID } from 'multiformats/cid'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { ScopeMissingError } from '@atproto/oauth-scopes'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { dbLogger } from '../../../../logger'
@@ -36,10 +41,15 @@ export default function (server: Server, ctx: AppContext) {
       // We can't compute permissions based on the request payload ("input") in
       // the 'auth' phase, so we do it here.
       if (auth.credentials.type === 'permissions') {
-        auth.credentials.permissions.assertRepo({
-          action: 'delete',
-          collection,
-        })
+        try {
+          auth.credentials.permissions.assertRepo({
+            action: 'delete',
+            collection,
+          })
+        } catch (err) {
+          const msg = err instanceof ScopeMissingError ? err.message : undefined
+          throw new ForbiddenError(msg, undefined, { cause: err })
+        }
       }
 
       const account = await ctx.accountManager.getAccount(repo, {

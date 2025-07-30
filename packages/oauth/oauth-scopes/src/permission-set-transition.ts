@@ -1,4 +1,3 @@
-import { CHAT_BSKY_METHODS, PRIVILEGED_METHODS } from '../pipethrough.js'
 import {
   AccountScopeMatch,
   BlobScopeMatch,
@@ -52,15 +51,14 @@ export class PermissionSetTransition extends PermissionSet {
   }
 
   override allowsRpc(options: RpcScopeMatch) {
-    if (this.hasTransitionGeneric) {
-      const { lxm } = options
-      if (lxm && CHAT_BSKY_METHODS.has(lxm)) {
-        if (this.hasTransitionChatBsky) {
-          return true
-        }
-      } else if (!lxm || !PRIVILEGED_METHODS.has(lxm)) {
-        return true
-      }
+    const { lxm } = options
+
+    if (this.hasTransitionGeneric && lxm == null) {
+      return true
+    }
+
+    if (this.hasTransitionChatBsky && lxm?.startsWith('chat.bsky.')) {
+      return true
     }
 
     return super.allowsRpc(options)

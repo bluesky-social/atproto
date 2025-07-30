@@ -1,6 +1,6 @@
 import { SignedTokenPayload } from '@atproto/oauth-provider'
+import { PermissionSet } from '@atproto/oauth-scopes'
 import { AuthScope } from './auth-scope'
-import { PermissionSet } from './permissions'
 
 export type UnauthenticatedOutput = {
   credentials: null

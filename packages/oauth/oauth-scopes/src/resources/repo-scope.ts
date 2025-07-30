@@ -1,4 +1,4 @@
-import { NeRoArray, ParsedResourceScope, formatScope } from '../scope-syntax'
+import { NeRoArray, ParsedResourceScope, formatScope } from '../syntax'
 
 const REPO_PARAMS = Object.freeze(['collection', 'action'] as const)
 const REPO_ACTIONS = Object.freeze(['create', 'delete', 'update'] as const)

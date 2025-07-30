@@ -3,7 +3,7 @@ import {
   ParsedResourceScope,
   ScopeForResource,
   formatScope,
-} from '../scope-syntax'
+} from '../syntax'
 
 const IDENTITY_PARAMS = Object.freeze(['feature'] as const)
 const IDENTITY_FEATURES = Object.freeze([

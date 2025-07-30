@@ -1,4 +1,4 @@
-import { ParsedResourceScope, formatScope } from '../scope-syntax'
+import { ParsedResourceScope, formatScope } from '../syntax'
 
 export type RpcScopeMatch = {
   aud: string

@@ -1,9 +1,12 @@
-import { AccountScope, AccountScopeMatch } from './resources/account-scope'
-import { BlobScope, BlobScopeMatch } from './resources/blob-scope'
-import { IdentityScope, IdentityScopeMatch } from './resources/identity-scope'
-import { RepoScope, RepoScopeMatch } from './resources/repo-scope'
-import { RpcScope, RpcScopeMatch } from './resources/rpc-scope'
-import { isScopeForResource } from './scope-syntax'
+import { AccountScope, AccountScopeMatch } from './resources/account-scope.js'
+import { BlobScope, BlobScopeMatch } from './resources/blob-scope.js'
+import {
+  IdentityScope,
+  IdentityScopeMatch,
+} from './resources/identity-scope.js'
+import { RepoScope, RepoScopeMatch } from './resources/repo-scope.js'
+import { RpcScope, RpcScopeMatch } from './resources/rpc-scope.js'
+import { isScopeForResource } from './syntax.js'
 
 type ScopeMatchingOptionsByResource = {
   account: AccountScopeMatch

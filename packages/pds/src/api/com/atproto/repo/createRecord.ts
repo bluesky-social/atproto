@@ -1,6 +1,11 @@
 import { CID } from 'multiformats/cid'
+import { ScopeMissingError } from '@atproto/oauth-scopes'
 import { InvalidRecordKeyError } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { dbLogger } from '../../../../logger'
@@ -38,10 +43,15 @@ export default function (server: Server, ctx: AppContext) {
         input.body
 
       if (auth.credentials.type === 'permissions') {
-        auth.credentials.permissions.assertRepo({
-          action: 'create',
-          collection,
-        })
+        try {
+          auth.credentials.permissions.assertRepo({
+            action: 'create',
+            collection,
+          })
+        } catch (err) {
+          const msg = err instanceof ScopeMissingError ? err.message : undefined
+          throw new ForbiddenError(msg, undefined, { cause: err })
+        }
       }
 
       const account = await ctx.accountManager.getAccount(repo, {

@@ -33,6 +33,7 @@
     { "path": "./packages/oauth/oauth-provider-api" },
     { "path": "./packages/oauth/oauth-provider-frontend" },
     { "path": "./packages/oauth/oauth-provider-ui" },
+    { "path": "./packages/oauth/oauth-scopes" },
     { "path": "./packages/oauth/oauth-types" },
     { "path": "./packages/ozone" },
     { "path": "./packages/pds" },

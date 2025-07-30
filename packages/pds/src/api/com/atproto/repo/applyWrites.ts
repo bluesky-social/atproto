@@ -1,6 +1,11 @@
 import { CID } from 'multiformats/cid'
+import { ScopeMissingError } from '@atproto/oauth-scopes'
 import { WriteOpAction } from '@atproto/repo'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
@@ -77,8 +82,14 @@ export default function (server: Server, ctx: AppContext) {
           ['update', new Set(writes.filter(isUpdate).map((w) => w.collection))],
           ['delete', new Set(writes.filter(isDelete).map((w) => w.collection))],
         ] as const) {
-          for (const collection of collections) {
-            auth.credentials.permissions.assertRepo({ action, collection })
+          try {
+            for (const collection of collections) {
+              auth.credentials.permissions.assertRepo({ action, collection })
+            }
+          } catch (err) {
+            const msg =
+              err instanceof ScopeMissingError ? err.message : undefined
+            throw new ForbiddenError(msg, undefined, { cause: err })
           }
         }
       }

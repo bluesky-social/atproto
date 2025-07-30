@@ -1,13 +1,16 @@
-import { NeRoArray, ParsedResourceScope, formatScope } from '../scope-syntax'
+import { NeRoArray, ParsedResourceScope, formatScope } from '../syntax'
 
 type Accept = `${string}/${string}`
 function isAccept(value: string): value is Accept {
-  return (
-    value.includes('/') &&
-    !value.startsWith('/') &&
-    !value.endsWith('/') &&
-    !value.includes(' ')
-  )
+  const slashIndex = value.indexOf('/')
+
+  if (slashIndex === -1) return false
+  if (slashIndex === 0 || slashIndex === value.length - 1) return false
+
+  if (value.includes('/', slashIndex + 1)) return false
+  if (value.includes(' ')) return false
+
+  return true
 }
 
 const ALLOWED_PARAMS = Object.freeze(['accept'] as const)

@@ -16,6 +16,7 @@ import {
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
+import { isValidAtprotoOauthScope } from '@atproto/oauth-scopes'
 import { BlobStore } from '@atproto/repo'
 import {
   createServiceAuthHeaders,
@@ -47,7 +48,6 @@ import { ImageUrlBuilder } from './image/image-url-builder'
 import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { isValidPermission } from './oauth/oauth-scopes'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
@@ -349,7 +349,7 @@ export class AppContext {
 
           getClientInfo(clientId, { metadata }) {
             for (const scope of metadata.scope?.split(' ') ?? []) {
-              if (!isValidPermission(scope)) {
+              if (!isValidAtprotoOauthScope(scope)) {
                 throw new InvalidClientMetadataError(
                   `Unsupported scope: ${scope}`,
                 )

@@ -3,7 +3,7 @@ import {
   ParsedResourceScope,
   ScopeForResource,
   formatScope,
-} from '../scope-syntax'
+} from '../syntax'
 
 const ACCOUNT_PARAMS = Object.freeze(['feature'] as const)
 const ACCOUNT_FEATURES = Object.freeze(['email', 'emailUpdate'] as const)

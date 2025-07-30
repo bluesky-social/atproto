@@ -1,0 +1,12 @@
+export * from './scope-missing-error.js'
+export * from './permission-set.js'
+export * from './permission-set-transition.js'
+export * from './scopes-set.js'
+export * from './syntax.js'
+export * from './validation.js'
+
+export { AccountScope } from './resources/account-scope.js'
+export { BlobScope } from './resources/blob-scope.js'
+export { IdentityScope } from './resources/identity-scope.js'
+export { RepoScope } from './resources/repo-scope.js'
+export { RpcScope } from './resources/rpc-scope.js'
