@@ -16,7 +16,6 @@ export class TestBsky {
     public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
-    public bsync: bsky.MockBsync,
     public sub: bsky.RepoSubscription,
   ) {}
 
@@ -62,9 +61,6 @@ export class TestBsky {
       cfg.plcUrl,
     )
 
-    const bsyncPort = await getPort()
-    const bsync = await bsky.MockBsync.create(db, bsyncPort)
-
     const config = new bsky.ServerConfig({
       version: 'unknown',
       port,
@@ -74,7 +70,6 @@ export class TestBsky {
       alternateAudienceDids: [],
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
-      bsyncUrl: `http://localhost:${bsyncPort}`,
       bsyncHttpVersion: '1.1',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
@@ -116,7 +111,7 @@ export class TestBsky {
 
     sub.start()
 
-    return new TestBsky(url, port, db, server, dataplane, bsync, sub)
+    return new TestBsky(url, port, db, server, dataplane, sub)
   }
 
   get ctx(): bsky.AppContext {
@@ -145,7 +140,6 @@ export class TestBsky {
 
   async close() {
     await this.server.destroy()
-    await this.bsync.destroy()
     await this.dataplane.destroy()
     await this.sub.destroy()
     await this.db.close()

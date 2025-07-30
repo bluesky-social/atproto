@@ -21,6 +21,7 @@ import { Namespaces } from '../../stash'
 import { Database } from '../server/db'
 import { excluded } from '../server/db/util'
 
+// @TODO: remove
 export class MockBsync {
   constructor(public server: http.Server) {}
 

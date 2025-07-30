@@ -4,6 +4,7 @@ import * as uint8arrays from 'uint8arrays'
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestBsky } from './bsky'
+import { TestBsync } from './bsync'
 import { EXAMPLE_LABELER } from './const'
 import { IntrospectServer } from './introspect'
 import { TestNetworkNoAppView } from './network-no-appview'
@@ -21,6 +22,7 @@ export class TestNetwork extends TestNetworkNoAppView {
   constructor(
     public plc: TestPlc,
     public pds: TestPds,
+    public bsync: TestBsync,
     public bsky: TestBsky,
     public ozone: TestOzone,
     public introspect?: IntrospectServer,
@@ -55,10 +57,15 @@ export class TestNetwork extends TestNetworkNoAppView {
     const { did: ozoneDid, key: ozoneKey } =
       await ozoneServiceProfile.createDidAndKey()
 
+    const bsync = await TestBsync.create({
+      dbUrl: dbPostgresUrl,
+    })
+
     const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
       pdsPort,
+      bsyncUrl: bsync.url,
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPostgresUrl,
@@ -136,12 +143,13 @@ export class TestNetwork extends TestNetworkNoAppView {
         params.introspect.port,
         plc,
         pds,
+        bsync,
         bsky,
         ozone,
       )
     }
 
-    return new TestNetwork(plc, pds, bsky, ozone, introspect)
+    return new TestNetwork(plc, pds, bsync, bsky, ozone, introspect)
   }
 
   async processFullSubscription(timeout = 5000) {
@@ -200,6 +208,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
     await this.ozone.close()
     await this.bsky.close()
+    await this.bsync.close()
     await this.pds.close()
     await this.plc.close()
     await this.introspect?.close()
