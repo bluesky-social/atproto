@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = params
       const db = ctx.db
       const modService = ctx.modService(db)
-      const [movEventHistory, accountHistory, plcHistory] =
+      const [modEventHistory, accountHistory, plcHistory] =
         await Promise.allSettled([
           modService.getAccountTimeline(did),
           getAccountHistory(ctx, did),
@@ -22,8 +22,8 @@ export default function (server: Server, ctx: AppContext) {
         ToolsOzoneModerationGetAccountTimeline.TimelineItemSummary[]
       >()
 
-      if (movEventHistory.status === 'fulfilled') {
-        for (const row of movEventHistory.value) {
+      if (modEventHistory.status === 'fulfilled') {
+        for (const row of modEventHistory.value) {
           const day = timelineByDay.get(row.day)
           const summary = {
             eventSubjectType: row.subjectUri ? 'record' : 'account',
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       } else {
-        throw new Error(movEventHistory.reason)
+        throw modEventHistory.reason
       }
 
       if (accountHistory.status === 'fulfilled') {
@@ -144,6 +144,10 @@ const getPlcHistory = async (ctx: AppContext, did: string) => {
 
   const result = await ctx.plcClient.getAuditableLog(did)
   for (const event of result) {
+    // Skip events that are not mapped, this means we will have to add correct mapping if/when new event types are introduced here
+    if (!Object.hasOwn(PLC_OPERATION_MAP, event.operation.type)) {
+      continue
+    }
     const day = dateFromDatetime(new Date(event.createdAt))
     events[day] ??= {}
     const eventType =
