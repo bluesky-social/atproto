@@ -1,0 +1,14 @@
+{
+  "lexicon": 1,
+  "id": "org.w3.activitypub.defs",
+  "defs": {
+    "urlObjectType" : {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "href" : { "type": "string", "format": "uri" },
+        "mediaType": { "type": "string" }
+      }
+    }
+  }
+}
