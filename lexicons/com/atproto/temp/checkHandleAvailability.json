@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.unspecced.checkHandleAvailability",
+  "id": "com.atproto.temp.checkHandleAvailability",
   "defs": {
     "main": {
       "type": "query",

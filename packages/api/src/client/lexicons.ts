@@ -4449,6 +4449,104 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempCheckHandleAvailability: {
+    lexicon: 1,
+    id: 'com.atproto.temp.checkHandleAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.',
+        parameters: {
+          type: 'params',
+          required: ['handle'],
+          properties: {
+            handle: {
+              type: 'string',
+              format: 'handle',
+              description:
+                'Tentative handle. Will be checked for availability or used to build handle suggestions.',
+            },
+            email: {
+              type: 'string',
+              description:
+                'User-provided email. Might be used to build handle suggestions.',
+            },
+            birthDate: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'User-provided birth date. Might be used to build handle suggestions.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'result'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'Echo of the input handle.',
+              },
+              result: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.temp.checkHandleAvailability#resultAvailable',
+                  'lex:com.atproto.temp.checkHandleAvailability#resultUnavailable',
+                ],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+            description: 'An invalid email was provided.',
+          },
+        ],
+      },
+      resultAvailable: {
+        type: 'object',
+        description: 'Indicates the provided handle is available.',
+        properties: {},
+      },
+      resultUnavailable: {
+        type: 'object',
+        description:
+          'Indicates the provided handle is unavailable and gives suggestions of available handles.',
+        required: ['suggestions'],
+        properties: {
+          suggestions: {
+            type: 'array',
+            description:
+              'List of suggested handles based on the provided inputs.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.temp.checkHandleAvailability#suggestion',
+            },
+          },
+        },
+      },
+      suggestion: {
+        type: 'object',
+        required: ['handle', 'method'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          method: {
+            type: 'string',
+            description:
+              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempCheckSignupQueue: {
     lexicon: 1,
     id: 'com.atproto.temp.checkSignupQueue',
@@ -7282,48 +7380,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7385,6 +7441,48 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -10506,104 +10604,6 @@ export const schemaDict = {
           byteEnd: {
             type: 'integer',
             minimum: 0,
-          },
-        },
-      },
-    },
-  },
-  AppBskyUnspeccedCheckHandleAvailability: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.checkHandleAvailability',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.',
-        parameters: {
-          type: 'params',
-          required: ['handle'],
-          properties: {
-            handle: {
-              type: 'string',
-              format: 'handle',
-              description:
-                'Tentative handle. Will be checked for availability or used to build handle suggestions.',
-            },
-            email: {
-              type: 'string',
-              description:
-                'User-provided email. Might be used to build handle suggestions.',
-            },
-            birthDate: {
-              type: 'string',
-              format: 'datetime',
-              description:
-                'User-provided birth date. Might be used to build handle suggestions.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'result'],
-            properties: {
-              handle: {
-                type: 'string',
-                format: 'handle',
-                description: 'Echo of the input handle.',
-              },
-              result: {
-                type: 'union',
-                refs: [
-                  'lex:app.bsky.unspecced.checkHandleAvailability#resultAvailable',
-                  'lex:app.bsky.unspecced.checkHandleAvailability#resultUnavailable',
-                ],
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidEmail',
-            description: 'An invalid email was provided.',
-          },
-        ],
-      },
-      resultAvailable: {
-        type: 'object',
-        description: 'Indicates the provided handle is available.',
-        properties: {},
-      },
-      resultUnavailable: {
-        type: 'object',
-        description:
-          'Indicates the provided handle is unavailable and gives suggestions of available handles.',
-        required: ['suggestions'],
-        properties: {
-          suggestions: {
-            type: 'array',
-            description:
-              'List of suggested handles based on the provided inputs.',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.unspecced.checkHandleAvailability#suggestion',
-            },
-          },
-        },
-      },
-      suggestion: {
-        type: 'object',
-        required: ['handle', 'method'],
-        properties: {
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          method: {
-            type: 'string',
-            description:
-              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
           },
         },
       },
@@ -17745,6 +17745,8 @@ export const ids = {
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   ComAtprotoTempAddReservedHandle: 'com.atproto.temp.addReservedHandle',
+  ComAtprotoTempCheckHandleAvailability:
+    'com.atproto.temp.checkHandleAvailability',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
@@ -17777,8 +17779,8 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
@@ -17839,8 +17841,6 @@ export const ids = {
   AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
-  AppBskyUnspeccedCheckHandleAvailability:
-    'app.bsky.unspecced.checkHandleAvailability',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetAgeAssuranceState:
     'app.bsky.unspecced.getAgeAssuranceState',

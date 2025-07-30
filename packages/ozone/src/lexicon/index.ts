@@ -89,6 +89,7 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
@@ -109,8 +110,8 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
 import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
@@ -149,7 +150,6 @@ import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notificat
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
 import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
-import * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
 import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
@@ -1356,6 +1356,18 @@ export class ComAtprotoTempNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  checkHandleAvailability<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoTempCheckHandleAvailability.QueryParams,
+      ComAtprotoTempCheckHandleAvailability.HandlerInput,
+      ComAtprotoTempCheckHandleAvailability.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.checkHandleAvailability' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   checkSignupQueue<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1656,18 +1668,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getPosts<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetPosts.QueryParams,
-      AppBskyFeedGetPosts.HandlerInput,
-      AppBskyFeedGetPosts.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getPostThread<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1677,6 +1677,18 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPosts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetPosts.QueryParams,
+      AppBskyFeedGetPosts.HandlerInput,
+      AppBskyFeedGetPosts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2174,18 +2186,6 @@ export class AppBskyUnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
-  }
-
-  checkHandleAvailability<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedCheckHandleAvailability.QueryParams,
-      AppBskyUnspeccedCheckHandleAvailability.HandlerInput,
-      AppBskyUnspeccedCheckHandleAvailability.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.checkHandleAvailability' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 
   getAgeAssuranceState<A extends Auth = void>(
