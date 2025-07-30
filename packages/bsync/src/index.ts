@@ -1,4 +1,4 @@
-import events from 'node:events'
+import events, { setMaxListeners } from 'node:events'
 import http from 'node:http'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
@@ -39,6 +39,8 @@ export class BsyncService {
     overrides?: Partial<AppContextOptions>,
   ): Promise<BsyncService> {
     const ac = new AbortController()
+    // Prevents unhelpful warnings.
+    setMaxListeners(Infinity, ac.signal)
     const ctx = await AppContext.fromConfig(cfg, ac.signal, overrides)
     const handler = connectNodeAdapter({
       routes: routes(ctx),

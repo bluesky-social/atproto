@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -9,6 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const { actor } = input.body
       const requester = auth.credentials.iss
+      assert(requester !== actor, 'cannot mute yourself')
       const [did] = await ctx.hydrator.actor.getDids([actor])
       if (!did) throw new InvalidRequestError('Actor not found')
       await ctx.bsyncClient.addMuteOperation({

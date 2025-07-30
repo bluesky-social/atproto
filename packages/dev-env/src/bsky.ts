@@ -16,6 +16,7 @@ export class TestBsky {
     public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
+    public bsyncSub: bsky.BsyncSubscription,
     public sub: bsky.RepoSubscription,
   ) {}
 
@@ -71,6 +72,7 @@ export class TestBsky {
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
       bsyncHttpVersion: '1.1',
+      bsyncApiKey: 'bsync-api-key',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
       bigThreadUris: new Set(),
@@ -101,6 +103,11 @@ export class TestBsky {
       signingKey: serviceKeypair,
     })
 
+    const bsyncSub = new bsky.BsyncSubscription({
+      config,
+      db,
+    })
+
     const sub = new bsky.RepoSubscription({
       service: cfg.repoProvider,
       db,
@@ -109,9 +116,10 @@ export class TestBsky {
 
     await server.start()
 
+    bsyncSub.start()
     sub.start()
 
-    return new TestBsky(url, port, db, server, dataplane, sub)
+    return new TestBsky(url, port, db, server, dataplane, bsyncSub, sub)
   }
 
   get ctx(): bsky.AppContext {
@@ -142,6 +150,7 @@ export class TestBsky {
     await this.server.destroy()
     await this.dataplane.destroy()
     await this.sub.destroy()
+    await this.bsyncSub.destroy()
     await this.db.close()
   }
 }

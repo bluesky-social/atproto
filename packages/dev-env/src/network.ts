@@ -57,7 +57,9 @@ export class TestNetwork extends TestNetworkNoAppView {
     const { did: ozoneDid, key: ozoneKey } =
       await ozoneServiceProfile.createDidAndKey()
 
+    const bsyncApiKey = 'bsync-api-key'
     const bsync = await TestBsync.create({
+      apiKeys: [bsyncApiKey],
       dbUrl: dbPostgresUrl,
     })
 
@@ -65,6 +67,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       port: bskyPort,
       plcUrl: plc.url,
       pdsPort,
+      bsyncApiKey,
       bsyncUrl: bsync.url,
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
@@ -127,6 +130,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
+    await bsky.bsyncSub.processAll()
     await bsky.sub.processAll()
     await thirdPartyPds.close()
 
