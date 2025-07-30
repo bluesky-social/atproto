@@ -37,12 +37,11 @@ export class IdentityScope {
   }
 
   toString(): ScopeForResource<'identity'> {
-    const params: [string, NeRoArray<string>][] = []
-    // If no features are specified, it means "any" feature is allowed
-    if (!IDENTITY_FEATURES.every((f) => this.features.includes(f))) {
-      params.push(['feature', this.features])
-    }
-    return formatScope('identity', params)
+    const feature = IDENTITY_FEATURES.every(includedIn, this.features)
+      ? undefined // No features in scope string means "every" feature
+      : this.features
+
+    return formatScope('identity', [['feature', feature]], 'feature')
   }
 
   static fromString(scope: string): IdentityScope | null {
@@ -70,4 +69,8 @@ export class IdentityScope {
   static scopeNeededFor(options: IdentityScopeMatch): string {
     return new IdentityScope([options.feature]).toString()
   }
+}
+
+function includedIn(this: readonly unknown[], value: unknown): boolean {
+  return this.includes(value)
 }

@@ -155,7 +155,7 @@ export class ParsedResourceScope<R extends string = string> {
       resourceEnd !== -1 ? scope.slice(0, resourceEnd) : scope
     ) as R
     const positional =
-      colonIdx !== -1
+      colonIdx !== -1 && colonIdx < resourceEnd
         ? // There is a positional parameter, extract it
           decodeURIComponent(
             paramIdx === -1
@@ -173,35 +173,40 @@ export class ParsedResourceScope<R extends string = string> {
   }
 }
 
-const minIdx = (a: number, b: number): number =>
-  a === -1 ? b : b === -1 ? a : Math.min(a, b)
+const minIdx = (a: number, b: number): number => {
+  if (a === -1) return b
+  if (b === -1) return a
+  return Math.min(a, b)
+}
 
 /**
  * Format a scope string for a resource with parameters
- *
+ * as a positional parameter, if possible (if it has only one value).
  * @param resource - The resource name (e.g. `rpc`, `repo`, etc.)
- * @param params - The list of parameters. The first parameter will be formatted
- * as a positional parameter, if possible (if ti has only one value).
+ * @param params - The list of parameters.
+ * @param positionalName - The name of the parameter that should be used as
+ * positional parameter.
  */
 export function formatScope<R extends string>(
   resource: R,
-  params: ReadonlyArray<
+  params: Iterable<
     [name: string, value: undefined | string | NeRoArray<string>]
   >,
+  positionalName?: string,
 ): ScopeForResource<R> {
-  let positional: string | undefined = undefined
   const queryParams = new URLSearchParams()
 
-  for (let i = 0; i < params.length; i++) {
-    const value = params[i][1]
+  let positionalValue: string | undefined = undefined
+
+  for (const [name, value] of params) {
     if (value === undefined) continue
 
-    const name = params[i][0]
-    const isPositional = i === 0
+    const setPositional =
+      name === positionalName && positionalValue === undefined
 
     if (typeof value === 'string') {
-      if (isPositional) {
-        positional = value
+      if (setPositional) {
+        positionalValue = value
       } else {
         queryParams.append(name, value)
       }
@@ -215,8 +220,8 @@ export function formatScope<R extends string>(
         throw new Error(
           `Invalid scope: parameter "${name}" cannot be an empty array`,
         )
-      } else if (isPositional && value.length === 1) {
-        positional = value[0]!
+      } else if (setPositional && value.length === 1) {
+        positionalValue = value[0]!
       } else {
         for (const v of value) {
           queryParams.append(name, v)
@@ -225,13 +230,20 @@ export function formatScope<R extends string>(
     }
   }
 
-  const queryString = queryParams.size
-    ? (`?${queryParams.toString()}` as const)
-    : null
+  // Fool-proof: If the input iterable defines multiple times the same
+  // positional parameter (name), and it ended up being used as both positional
+  // and query param, move the positional value to the query params.
+  if (positionalValue !== undefined && queryParams.has(positionalName!)) {
+    queryParams.append(positionalName!, positionalValue)
+    positionalValue = undefined
+  }
 
-  return positional != null
-    ? `${resource}:${encodeURIComponent(positional)}${queryString}`
-    : queryString != null
-      ? `${resource}${queryString}`
-      : resource
+  let scope: ScopeForResource<R> = resource
+  if (positionalValue !== undefined) {
+    scope = `${scope}:${encodeURIComponent(positionalValue)}`
+  }
+  if (queryParams.size > 0) {
+    scope = `${scope}?${queryParams.toString()}`
+  }
+  return scope
 }

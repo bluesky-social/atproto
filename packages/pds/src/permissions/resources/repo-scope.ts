@@ -33,10 +33,14 @@ export class RepoScope {
       ? undefined
       : (REPO_ACTIONS.filter(includedIn, actions) as [string, ...string[]])
 
-    return formatScope('repo', [
-      ['collection', collection],
-      ['action', action],
-    ])
+    return formatScope(
+      'repo',
+      [
+        ['collection', collection],
+        ['action', action],
+      ],
+      'action',
+    )
   }
 
   static fromString(scope: string): RepoScope | null {

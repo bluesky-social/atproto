@@ -39,7 +39,7 @@ export class BlobScope {
   }
 
   toString(): string {
-    return formatScope('blob', [['accept', this.accept]])
+    return formatScope('blob', [['accept', this.accept]], 'accept')
   }
 
   static fromString(scope: string): BlobScope | null {
