@@ -532,6 +532,7 @@ const defaultService = (
     case ids.ToolsOzoneModerationQueryEvents:
     case ids.ToolsOzoneModerationQueryStatuses:
     case ids.ToolsOzoneModerationSearchRepos:
+    case ids.ToolsOzoneModerationGetAccountTimeline:
     case ids.ToolsOzoneVerificationListVerifications:
     case ids.ToolsOzoneVerificationGrantVerifications:
     case ids.ToolsOzoneVerificationRevokeVerifications:

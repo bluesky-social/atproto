@@ -9,6 +9,7 @@ import fetchLabels from './label/fetchLabels'
 import queryLabels from './label/queryLabels'
 import subscribeLabels from './label/subscribeLabels'
 import emitEvent from './moderation/emitEvent'
+import getAccountTimeline from './moderation/getAccountTimeline'
 import getEvent from './moderation/getEvent'
 import adminGetRecord from './moderation/getRecord'
 import adminGetRecords from './moderation/getRecords'
@@ -92,5 +93,6 @@ export default function (server: Server, ctx: AppContext) {
   removeSafelinkRule(server, ctx)
   querySafelinkEvents(server, ctx)
   querySafelinkRules(server, ctx)
+  getAccountTimeline(server, ctx)
   return server
 }
