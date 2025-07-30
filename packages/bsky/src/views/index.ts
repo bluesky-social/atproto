@@ -840,6 +840,7 @@ export class Views {
           )
         : undefined,
       likeCount: aggs?.likes ?? 0,
+      acceptsInteractions: feedgen.record.acceptsInteractions,
       labels,
       viewer: viewer
         ? {
