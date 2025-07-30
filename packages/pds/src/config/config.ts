@@ -39,6 +39,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     accountDbLoc: env.accountDbLocation ?? dbLoc('account.sqlite'),
     sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
     didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
+    ssoDbLoc: env.ssoDbLocation ?? dbLoc('sso.sqlite'),
     disableWalAutoCheckpoint,
   }
 
@@ -381,6 +382,7 @@ export type DatabaseConfig = {
   accountDbLoc: string
   sequencerDbLoc: string
   didCacheDbLoc: string
+  ssoDbLoc: string
   disableWalAutoCheckpoint: boolean
 }
 
