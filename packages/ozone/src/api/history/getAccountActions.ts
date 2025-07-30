@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
 
       // Allow admins to check mod history for any reporter
-      let viewerDid: string | null
+      let viewerDid: string | null = null
       if (access.type === 'admin_token') {
         if (!account) {
           throw new Error('Admins must provide an account param')
@@ -21,7 +21,9 @@ export default function (server: Server, ctx: AppContext) {
         viewerDid = account
       } else if (access.iss) {
         viewerDid = access.iss
-      } else {
+      }
+
+      if (!viewerDid) {
         throw new InvalidRequestError('unauthorized')
       }
 

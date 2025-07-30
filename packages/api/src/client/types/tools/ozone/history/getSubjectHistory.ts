@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.history.getSubjectHistory'
 
-export interface QueryParams {
+export type QueryParams = {
   subject: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

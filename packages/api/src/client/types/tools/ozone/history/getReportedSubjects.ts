@@ -16,13 +16,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.history.getReportedSubjects'
 
-export interface QueryParams {
+export type QueryParams = {
   account?: string
   limit?: number
   sortDirection?: 'asc' | 'desc' | (string & {})
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -2898,33 +2898,36 @@ export class ToolsOzoneHistoryNS {
     this._server = server
   }
 
-  getAccountActions<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ToolsOzoneHistoryGetAccountActions.Handler<ExtractAuth<AV>>,
-      ToolsOzoneHistoryGetAccountActions.HandlerReqCtx<ExtractAuth<AV>>
+  getAccountActions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneHistoryGetAccountActions.QueryParams,
+      ToolsOzoneHistoryGetAccountActions.HandlerInput,
+      ToolsOzoneHistoryGetAccountActions.HandlerOutput
     >,
   ) {
     const nsid = 'tools.ozone.history.getAccountActions' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getReportedSubjects<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ToolsOzoneHistoryGetReportedSubjects.Handler<ExtractAuth<AV>>,
-      ToolsOzoneHistoryGetReportedSubjects.HandlerReqCtx<ExtractAuth<AV>>
+  getReportedSubjects<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneHistoryGetReportedSubjects.QueryParams,
+      ToolsOzoneHistoryGetReportedSubjects.HandlerInput,
+      ToolsOzoneHistoryGetReportedSubjects.HandlerOutput
     >,
   ) {
     const nsid = 'tools.ozone.history.getReportedSubjects' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getSubjectHistory<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ToolsOzoneHistoryGetSubjectHistory.Handler<ExtractAuth<AV>>,
-      ToolsOzoneHistoryGetSubjectHistory.HandlerReqCtx<ExtractAuth<AV>>
+  getSubjectHistory<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneHistoryGetSubjectHistory.QueryParams,
+      ToolsOzoneHistoryGetSubjectHistory.HandlerInput,
+      ToolsOzoneHistoryGetSubjectHistory.HandlerOutput
     >,
   ) {
     const nsid = 'tools.ozone.history.getSubjectHistory' // @ts-ignore
