@@ -42,11 +42,6 @@ export class BsyncSubscription {
     this.scanOperations()
   }
 
-  async restart() {
-    await this.destroy()
-    this.start()
-  }
-
   async processAll() {
     await this.background.processAll()
   }
@@ -58,7 +53,7 @@ export class BsyncSubscription {
     await this.processAll()
   }
 
-  private scanBsyncEndpoint(
+  private startScanning(
     callFn: (cursor?: string) => Promise<string>,
     cursor?: string,
   ) {
@@ -66,7 +61,7 @@ export class BsyncSubscription {
 
     callFn(cursor)
       .then((nextCursor) => {
-        this.scanBsyncEndpoint(callFn, nextCursor)
+        this.startScanning(callFn, nextCursor)
       })
       .catch((err) => {
         if (this.destroyed) return
@@ -75,9 +70,9 @@ export class BsyncSubscription {
   }
 
   private scanMuteOperations() {
-    this.scanBsyncEndpoint((cursor?: string) => {
+    this.startScanning((cursor?: string) => {
       return this.bsyncClient
-        .scanMuteOperations({ limit: 100, cursor }, { signal: this.ac.signal })
+        .scanMuteOperations({ cursor }, { signal: this.ac.signal })
         .then(async (res) => {
           this.background.add(async () => {
             for await (const op of res.operations) {
@@ -159,9 +154,9 @@ export class BsyncSubscription {
   }
 
   private scanNotifOperations() {
-    this.scanBsyncEndpoint((cursor?: string) => {
+    this.startScanning((cursor?: string) => {
       return this.bsyncClient
-        .scanNotifOperations({ limit: 100, cursor }, { signal: this.ac.signal })
+        .scanNotifOperations({ cursor }, { signal: this.ac.signal })
         .then(async (res) => {
           this.background.add(async () => {
             for await (const op of res.operations) {
@@ -188,9 +183,9 @@ export class BsyncSubscription {
   }
 
   private scanOperations() {
-    this.scanBsyncEndpoint((cursor?: string) => {
+    this.startScanning((cursor?: string) => {
       return this.bsyncClient
-        .scanOperations({ limit: 100, cursor }, { signal: this.ac.signal })
+        .scanOperations({ cursor }, { signal: this.ac.signal })
         .then(async (res) => {
           this.background.add(async () => {
             for await (const op of res.operations) {
@@ -224,8 +219,14 @@ export class BsyncSubscription {
   }
 }
 
+type HandleOperation = (
+  db: Database,
+  op: Operation,
+  now: string,
+) => Promise<void>
+
 // upsert into or remove from private_data
-const handleGenericOperation = async (
+const handleGenericOperation: HandleOperation = async (
   db: Database,
   op: Operation,
   now: string,
@@ -261,7 +262,7 @@ const handleGenericOperation = async (
   }
 }
 
-const handleSubjectActivitySubscriptionOperation = async (
+const handleSubjectActivitySubscriptionOperation: HandleOperation = async (
   db: Database,
   op: Operation,
   now: string,
@@ -269,7 +270,7 @@ const handleSubjectActivitySubscriptionOperation = async (
   const { actorDid, key, method, payload } = op
 
   if (method === Method.DELETE) {
-    return db.db
+    await db.db
       .deleteFrom('activity_subscription')
       .where('creator', '=', actorDid)
       .where('key', '=', key)
@@ -285,7 +286,7 @@ const handleSubjectActivitySubscriptionOperation = async (
   } = parsed
 
   if (method === Method.CREATE) {
-    return db.db
+    await db.db
       .insertInto('activity_subscription')
       .values({
         creator: actorDid,
@@ -298,7 +299,7 @@ const handleSubjectActivitySubscriptionOperation = async (
       .execute()
   }
 
-  return db.db
+  await db.db
     .updateTable('activity_subscription')
     .where('creator', '=', actorDid)
     .where('key', '=', key)
@@ -310,10 +311,9 @@ const handleSubjectActivitySubscriptionOperation = async (
     .execute()
 }
 
-const handleAgeAssuranceEventOperation = async (
+const handleAgeAssuranceEventOperation: HandleOperation = async (
   db: Database,
   op: Operation,
-  _now: string,
 ) => {
   const { actorDid, method, payload } = op
   if (method !== Method.CREATE) return
@@ -328,7 +328,7 @@ const handleAgeAssuranceEventOperation = async (
     ageAssuranceLastInitiatedAt: status === 'pending' ? createdAt : undefined,
   }
 
-  return db.db
+  await db.db
     .updateTable('actor')
     .set(update)
     .where('did', '=', actorDid)

@@ -40,7 +40,7 @@ export class BsyncService {
   ): Promise<BsyncService> {
     const ac = new AbortController()
     // Prevents unhelpful warnings.
-    setMaxListeners(Infinity, ac.signal)
+    setMaxListeners(100, ac.signal)
     const ctx = await AppContext.fromConfig(cfg, ac.signal, overrides)
     const handler = connectNodeAdapter({
       routes: routes(ctx),
