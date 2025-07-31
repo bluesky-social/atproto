@@ -14,8 +14,7 @@ import { Database } from './db'
 import { excluded } from './db/util'
 
 export class BsyncSubscription {
-  private ac = new AbortController()
-  private destroyed = false
+  private ac: AbortController | undefined
   private background: BackgroundQueue
   private bsyncClient: BsyncClient
   private db: Database
@@ -36,7 +35,8 @@ export class BsyncSubscription {
   }
 
   start() {
-    this.destroyed = false
+    if (this.ac) return
+    this.ac = new AbortController()
     this.scanMuteOperations()
     this.scanNotifOperations()
     this.scanOperations()
@@ -47,33 +47,33 @@ export class BsyncSubscription {
   }
 
   async destroy() {
-    if (this.destroyed) return
-    this.destroyed = true
-    this.ac.abort()
+    if (this.ac?.signal.aborted) return
+    this.ac?.abort()
     await this.processAll()
   }
 
   private startScanning(
-    callFn: (cursor?: string) => Promise<string>,
+    callFn: (cursor?: string) => Promise<string | undefined>,
     cursor?: string,
   ) {
-    if (this.destroyed) return
+    if (this.ac?.signal.aborted) return
 
     callFn(cursor)
       .then((nextCursor) => {
         this.startScanning(callFn, nextCursor)
       })
       .catch((err) => {
-        if (this.destroyed) return
-        log.error({ err }, 'error in bsync notif scan')
+        if (this.ac?.signal.aborted) return
+        log.error({ err }, 'error in bsync scan')
       })
   }
 
   private scanMuteOperations() {
     this.startScanning((cursor?: string) => {
       return this.bsyncClient
-        .scanMuteOperations({ cursor }, { signal: this.ac.signal })
+        .scanMuteOperations({ cursor }, { signal: this.ac?.signal })
         .then(async (res) => {
+          if (this.ac?.signal.aborted) return
           this.background.add(async () => {
             for await (const op of res.operations) {
               const { type, actorDid, subject } = op
@@ -156,8 +156,9 @@ export class BsyncSubscription {
   private scanNotifOperations() {
     this.startScanning((cursor?: string) => {
       return this.bsyncClient
-        .scanNotifOperations({ cursor }, { signal: this.ac.signal })
+        .scanNotifOperations({ cursor }, { signal: this.ac?.signal })
         .then(async (res) => {
+          if (this.ac?.signal.aborted) return
           this.background.add(async () => {
             for await (const op of res.operations) {
               const { actorDid, priority } = op
@@ -185,8 +186,9 @@ export class BsyncSubscription {
   private scanOperations() {
     this.startScanning((cursor?: string) => {
       return this.bsyncClient
-        .scanOperations({ cursor }, { signal: this.ac.signal })
+        .scanOperations({ cursor }, { signal: this.ac?.signal })
         .then(async (res) => {
+          if (this.ac?.signal.aborted) return
           this.background.add(async () => {
             for await (const op of res.operations) {
               const { namespace } = op
@@ -213,6 +215,7 @@ export class BsyncSubscription {
               }
             }
           })
+
           return res.cursor
         })
     })
