@@ -1,11 +1,17 @@
 import { NeRoArray, ParsedResourceScope, formatScope } from '../syntax'
 
 const REPO_PARAMS = Object.freeze(['collection', 'action'] as const)
-const REPO_ACTIONS = Object.freeze(['create', 'delete', 'update'] as const)
+const REPO_ACTIONS = Object.freeze(['create', 'delete', 'update', '*'] as const)
 
 export type RepoAction = (typeof REPO_ACTIONS)[number]
 export function isRepoAction(action: string): action is RepoAction {
   return (REPO_ACTIONS as readonly string[]).includes(action)
+}
+
+export function isRepoActionArray(
+  actions: NeRoArray<string>,
+): actions is NeRoArray<RepoAction> {
+  return actions.every(isRepoAction)
 }
 
 export type RepoScopeMatch = {
@@ -15,23 +21,28 @@ export type RepoScopeMatch = {
 
 export class RepoScope {
   constructor(
-    public readonly collection: string,
-    public readonly actions: NeRoArray<RepoAction> = REPO_ACTIONS,
+    public readonly collections: NeRoArray<string>,
+    public readonly actions: NeRoArray<RepoAction>,
   ) {}
 
-  matches(options: RepoScopeMatch): boolean {
-    const { collection, actions } = this
-    if (collection !== options.collection) return false
-    return actions.includes(options.action)
+  matches({ action, collection }: RepoScopeMatch): boolean {
+    return (
+      (this.actions.includes('*') || this.actions.includes(action)) &&
+      (this.collections.includes('*') || this.collections.includes(collection))
+    )
   }
 
   toString(): string {
-    const { collection, actions } = this
+    const { collections, actions } = this
 
-    // Normalize action (default value, de-dupe, sort)
-    const action = REPO_ACTIONS.every(includedIn, actions)
-      ? undefined
+    // Normalize (wildcard, de-dupe, sort)
+    const action: NeRoArray<string> = actions.includes('*')
+      ? ['*']
       : (REPO_ACTIONS.filter(includedIn, actions) as [string, ...string[]])
+
+    const collection: NeRoArray<string> = collections.includes('*')
+      ? ['*']
+      : ([...new Set(collections)].sort() as [string, ...string[]])
 
     return formatScope(
       'repo',
@@ -51,14 +62,12 @@ export class RepoScope {
   static fromParsed(parsed: ParsedResourceScope): RepoScope | null {
     if (!parsed.is('repo')) return null
 
-    const collection = parsed.getSingle('collection', true)
-    if (!collection) return null
+    const collections = parsed.getMulti('collection', true)
+    if (!collections) return null
 
     const actions = parsed.getMulti('action')
-    if (actions === null) return null
-    if (actions !== undefined && !actions.every(isRepoAction)) {
-      return null
-    }
+    if (!actions || !isRepoActionArray(actions)) return null
+    if (actions.includes('*') && actions.length > 1) return null
 
     if (parsed.containsParamsOtherThan(REPO_PARAMS)) {
       return null
@@ -66,11 +75,11 @@ export class RepoScope {
 
     // @NOTE We do not check for duplicate actions here
 
-    return new RepoScope(collection, actions as NeRoArray<RepoAction>)
+    return new RepoScope(collections, actions)
   }
 
   static scopeNeededFor(options: RepoScopeMatch): string {
-    return new RepoScope(options.collection, [options.action]).toString()
+    return new RepoScope([options.collection], [options.action]).toString()
   }
 }
 

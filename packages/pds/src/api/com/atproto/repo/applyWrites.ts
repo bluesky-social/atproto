@@ -72,6 +72,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // Verify permission of every unique "action" / "collection" pair
       if (auth.credentials.type === 'permissions') {
+        // @NOTE Unlike "importRepo", we do not require "action" = "*" here.
         for (const [action, collections] of [
           ['create', new Set(writes.filter(isCreate).map((w) => w.collection))],
           ['update', new Set(writes.filter(isUpdate).map((w) => w.collection))],
