@@ -8,6 +8,12 @@ export type ScopeForResource<R extends string> =
   | `${R}:${string}`
   | `${R}?${string}`
 
+export type ParsedResourceScopeJson<R extends string = string> = {
+  resource: R
+  positional?: string
+  params?: Record<string, undefined | string | NeRoArray<string>>
+}
+
 /**
  * Allows to quickly check if a scope is for a specific resource.
  */
@@ -132,7 +138,7 @@ export class ParsedResourceScope<R extends string = string> {
   toString(): string {
     let scope: string = this.resource
 
-    if (this.positional) {
+    if (this.positional !== undefined) {
       scope += `:${encodeURIComponent(this.positional)}`
     }
 
@@ -141,6 +147,14 @@ export class ParsedResourceScope<R extends string = string> {
     }
 
     return scope
+  }
+
+  toJSON(): ParsedResourceScopeJson<R> {
+    return {
+      resource: this.resource,
+      positional: this.positional,
+      params: this.params?.size ? toRecord(this.params) : undefined,
+    }
   }
 
   static fromString<R extends string>(
@@ -155,7 +169,7 @@ export class ParsedResourceScope<R extends string = string> {
       resourceEnd !== -1 ? scope.slice(0, resourceEnd) : scope
     ) as R
     const positional =
-      colonIdx !== -1 && colonIdx < resourceEnd
+      colonIdx !== -1 && (paramIdx === -1 || colonIdx < paramIdx)
         ? // There is a positional parameter, extract it
           decodeURIComponent(
             paramIdx === -1
@@ -246,4 +260,18 @@ export function formatScope<R extends string>(
     scope = `${scope}?${queryParams.toString()}`
   }
   return scope
+}
+
+function toRecord(
+  iterable: Iterable<[key: string, value: string]>,
+): Record<string, string | [string, ...string[]]> {
+  const record: Record<string, [string, ...string[]]> = Object.create(null)
+  for (const [key, value] of iterable) {
+    if (Object.hasOwn(record, key)) {
+      record[key]!.push(value)
+    } else {
+      record[key] = [value]
+    }
+  }
+  return record
 }
