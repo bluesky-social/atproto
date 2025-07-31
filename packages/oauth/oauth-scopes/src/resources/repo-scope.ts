@@ -67,7 +67,6 @@ export class RepoScope {
 
     const actions = parsed.getMulti('action')
     if (!actions || !isRepoActionArray(actions)) return null
-    if (actions.includes('*') && actions.length > 1) return null
 
     if (parsed.containsParamsOtherThan(REPO_PARAMS)) {
       return null
