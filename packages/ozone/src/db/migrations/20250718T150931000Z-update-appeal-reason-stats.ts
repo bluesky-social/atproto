@@ -8,6 +8,8 @@ import * as recordEventsStats from '../schema/record_events_stats'
 export async function up(db: Kysely<any>): Promise<void> {
   // Drop and recreate materialized views to update appeal reason counting
   // to include both REASONAPPEAL and OZONE_APPEAL_REASON_TYPE
+  // The primary difference between the old and new query is that we were using = and != operators
+  // to match against the meta->>'reportType' field and now we use IN and NOT IN
 
   // Drop existing materialized views in reverse dependency order
   await db.schema
