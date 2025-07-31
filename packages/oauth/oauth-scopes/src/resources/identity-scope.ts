@@ -7,6 +7,7 @@ import {
 
 const IDENTITY_PARAMS = Object.freeze(['feature'] as const)
 const IDENTITY_FEATURES = Object.freeze([
+  '*',
   'plc',
   'plc-unsafe',
   'handle',
@@ -33,12 +34,14 @@ export class IdentityScope {
   constructor(public readonly features: NeRoArray<IdentityScopeFeatures>) {}
 
   matches(options: IdentityScopeMatch): boolean {
-    return this.features.includes(options.feature)
+    return (
+      this.features.includes('*') || this.features.includes(options.feature)
+    )
   }
 
   toString(): ScopeForResource<'identity'> {
-    const feature = IDENTITY_FEATURES.every(includedIn, this.features)
-      ? undefined // No features in scope string means "every" feature
+    const feature: NeRoArray<string> = this.features.includes('*')
+      ? ['*']
       : this.features
 
     return formatScope('identity', [['feature', feature]], 'feature')
@@ -53,10 +56,7 @@ export class IdentityScope {
     if (!parsed.is('identity')) return null
 
     const features = parsed.getMulti('feature', true)
-    if (features === null) return null
-    if (features !== undefined && !isIdentityScopeFeatureArray(features)) {
-      return null
-    }
+    if (!features || !isIdentityScopeFeatureArray(features)) return null
 
     if (parsed.containsParamsOtherThan(IDENTITY_PARAMS)) {
       return null
@@ -69,8 +69,4 @@ export class IdentityScope {
   static scopeNeededFor(options: IdentityScopeMatch): string {
     return new IdentityScope([options.feature]).toString()
   }
-}
-
-function includedIn(this: readonly unknown[], value: unknown): boolean {
-  return this.includes(value)
 }

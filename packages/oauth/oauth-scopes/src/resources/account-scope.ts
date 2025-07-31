@@ -6,7 +6,7 @@ import {
 } from '../syntax'
 
 const ACCOUNT_PARAMS = Object.freeze(['feature'] as const)
-const ACCOUNT_FEATURES = Object.freeze(['email', 'emailUpdate'] as const)
+const ACCOUNT_FEATURES = Object.freeze(['*', 'email', 'email-update'] as const)
 
 export type AccountFeature = (typeof ACCOUNT_FEATURES)[number]
 export function isAccountFeature(feature: string): feature is AccountFeature {
@@ -27,12 +27,14 @@ export class AccountScope {
   constructor(public readonly features: NeRoArray<AccountFeature>) {}
 
   matches(options: AccountScopeMatch): boolean {
-    return this.features.includes(options.feature)
+    return (
+      this.features.includes('*') || this.features.includes(options.feature)
+    )
   }
 
   toString(): ScopeForResource<'account'> {
-    const feature = ACCOUNT_FEATURES.every(includedIn, this.features)
-      ? undefined // No features in scope string means "every" feature
+    const feature: NeRoArray<string> = this.features.includes('*')
+      ? ['*']
       : this.features
 
     return formatScope('account', [['feature', feature]], 'feature')
@@ -47,10 +49,7 @@ export class AccountScope {
     if (!parsed.is('account')) return null
 
     const features = parsed.getMulti('feature', true)
-    if (features === null) return null
-    if (features !== undefined && !isAccountFeatureArray(features)) {
-      return null
-    }
+    if (!features || !isAccountFeatureArray(features)) return null
 
     if (parsed.containsParamsOtherThan(ACCOUNT_PARAMS)) {
       return null
@@ -63,8 +62,4 @@ export class AccountScope {
   static scopeNeededFor(options: AccountScopeMatch): string {
     return new AccountScope([options.feature]).toString()
   }
-}
-
-function includedIn(this: readonly unknown[], value: unknown): boolean {
-  return this.includes(value)
 }
