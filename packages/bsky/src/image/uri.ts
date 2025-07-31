@@ -87,15 +87,15 @@ export const presets: Record<ImagePreset, Options> = {
   feed_thumbnail: {
     format: 'jpeg',
     fit: 'inside',
-    height: 2000,
-    width: 2000,
+    height: 1000,
+    width: 1000,
     min: true,
   },
   feed_fullsize: {
     format: 'jpeg',
     fit: 'inside',
-    height: 1000,
-    width: 1000,
+    height: 2000,
+    width: 2000,
     min: true,
   },
 }
