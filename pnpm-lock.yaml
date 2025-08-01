@@ -1064,6 +1064,9 @@ importers:
       '@atproto/oauth-provider-ui':
         specifier: workspace:*
         version: link:../oauth-provider-ui
+      '@atproto/oauth-scopes':
+        specifier: workspace:*
+        version: link:../oauth-scopes
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
@@ -1239,6 +1242,9 @@ importers:
       '@atproto-labs/rollup-plugin-bundle-manifest':
         specifier: workspace:*
         version: link:../../internal/rollup-plugin-bundle-manifest
+      '@atproto/oauth-scopes':
+        specifier: workspace:*
+        version: link:../oauth-scopes
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types

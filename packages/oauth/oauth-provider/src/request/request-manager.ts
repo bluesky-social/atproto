@@ -1,5 +1,6 @@
 import { isAtprotoDid } from '@atproto/did'
 import type { Account } from '@atproto/oauth-provider-api'
+import { isValidAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
@@ -169,8 +170,11 @@ export class RequestManager {
     // > server MUST include the scope response parameter in the token response
     // > (Section 3.2.3) to inform the client of the actual scope granted.
 
-    // Let's make sure the scopes are unique (to reduce the token & storage size)
-    const scopes = new Set(parameters.scope?.split(' '))
+    // Let's make sure the scopes are unique (to reduce the token & storage
+    // size) & are indeed supported.
+    const scopes = new Set(
+      parameters.scope?.split(' ')?.filter(isValidAtprotoOauthScope),
+    )
 
     parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
 

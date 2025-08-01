@@ -1,5 +1,5 @@
 import { Jwks } from '@atproto/jwk'
-import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
@@ -130,15 +130,6 @@ export type OAuthHooks = {
     clientAuth: null | ClientAuth
     parameters: Readonly<OAuthAuthorizationRequestParameters>
   }) => Awaitable<void>
-
-  /**
-   * Allows building a user friendly description of the scopes requested, for
-   * display to the user.
-   */
-  onScopeDetails?: (data: {
-    client: Client
-    parameters: Readonly<OAuthAuthorizationRequestParameters>
-  }) => Awaitable<ScopeDetail[]>
 
   /**
    * This hook is called when a client is authorized.

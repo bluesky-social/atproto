@@ -7,7 +7,7 @@ import {
 import { RepoScope, RepoScopeMatch } from './resources/repo-scope.js'
 import { RpcScope, RpcScopeMatch } from './resources/rpc-scope.js'
 import { ScopeMissingError } from './scope-missing-error.js'
-import { isScopeForResource } from './syntax.js'
+import { ResourceSyntax, isScopeForResource } from './syntax.js'
 
 export { ScopeMissingError }
 
@@ -80,6 +80,16 @@ export class ScopesSet extends Set<string> {
       throw new ScopeMissingError(scope)
     }
   }
+}
+
+export function fromString(string: string) {
+  const syntax = ResourceSyntax.fromString(string)
+  if (syntax.is('account')) return AccountScope.fromSyntax(syntax)
+  if (syntax.is('identity')) return IdentityScope.fromSyntax(syntax)
+  if (syntax.is('repo')) return RepoScope.fromSyntax(syntax)
+  if (syntax.is('rpc')) return RpcScope.fromSyntax(syntax)
+  if (syntax.is('blob')) return BlobScope.fromSyntax(syntax)
+  return null
 }
 
 export function scopeNeededFor<R extends keyof ScopeMatchingOptionsByResource>(

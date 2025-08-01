@@ -42,8 +42,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
         clientMetadata: data.client.metadata,
         clientTrusted: data.client.info.isTrusted,
 
-        scopeDetails: data.scopeDetails,
-
+        scope: data.parameters.scope,
         uiLocales: data.parameters.ui_locales,
         loginHint: data.parameters.login_hint,
       },

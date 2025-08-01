@@ -1,3 +1,5 @@
+export type NeArray<T> = [T, ...T[]]
+
 /**
  * Non-empty readonly array
  */

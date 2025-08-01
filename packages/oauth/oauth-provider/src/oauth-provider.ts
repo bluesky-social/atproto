@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
-import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
+import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
@@ -75,7 +75,6 @@ import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
 import { formatError } from './lib/util/error.js'
-import { callAsync } from './lib/util/function.js'
 import { LocalizedString, MultiLangString } from './lib/util/locale.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
@@ -656,22 +655,11 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-      const scopeDetails: ScopeDetail[] = this.hooks.onScopeDetails
-        ? await callAsync(this.hooks.onScopeDetails, {
-            client,
-            parameters,
-          })
-        : parameters.scope
-            ?.split(' ')
-            .map((scope): ScopeDetail => ({ scope }))
-            .sort((a, b) => a.scope.localeCompare(b.scope)) ?? []
-
       return {
         issuer,
         client,
         parameters,
         requestUri,
-        scopeDetails,
         sessions: sessions.map((session) => ({
           // Map to avoid leaking other data that might be present in the session
           account: session.account,

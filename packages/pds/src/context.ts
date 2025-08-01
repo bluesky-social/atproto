@@ -11,12 +11,10 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
   AccessTokenMode,
-  InvalidClientMetadataError,
   JoseKey,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
-import { isValidAtprotoOauthScope } from '@atproto/oauth-scopes'
 import { BlobStore } from '@atproto/repo'
 import {
   createServiceAuthHeaders,
@@ -347,15 +345,7 @@ export class AppContext {
           // always use up-to-date token data from the token store.
           accessTokenMode: AccessTokenMode.light,
 
-          getClientInfo(clientId, { metadata }) {
-            for (const scope of metadata.scope?.split(' ') ?? []) {
-              if (!isValidAtprotoOauthScope(scope)) {
-                throw new InvalidClientMetadataError(
-                  `Unsupported scope: ${scope}`,
-                )
-              }
-            }
-
+          getClientInfo(clientId) {
             return {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
