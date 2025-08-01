@@ -8958,6 +8958,15 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            purposes: {
+              type: 'array',
+              description:
+                'Optional filter by list purpose. If not specified, all supported types are returned.',
+              items: {
+                type: 'string',
+                knownValues: ['modlist', 'curatelist'],
+              },
+            },
           },
         },
         output: {
