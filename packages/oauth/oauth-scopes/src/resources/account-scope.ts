@@ -1,65 +1,64 @@
-import {
-  NeRoArray,
-  ParsedResourceScope,
-  ScopeForResource,
-  formatScope,
-} from '../syntax'
+import { Parser, knownValuesValidator } from '../parser.js'
+import { ResourceSyntax } from '../syntax.js'
 
-const ACCOUNT_PARAMS = Object.freeze(['feature'] as const)
-const ACCOUNT_FEATURES = Object.freeze(['*', 'email', 'email-update'] as const)
+const ACCOUNT_ATTRIBUTES = Object.freeze(['email', 'repo', 'status'] as const)
+export type AccountAttribute = (typeof ACCOUNT_ATTRIBUTES)[number]
 
-export type AccountFeature = (typeof ACCOUNT_FEATURES)[number]
-export function isAccountFeature(feature: string): feature is AccountFeature {
-  return (ACCOUNT_FEATURES as readonly string[]).includes(feature)
-}
+const ACCOUNT_ACTIONS = Object.freeze(['read', 'manage'] as const)
+export type AccountAction = (typeof ACCOUNT_ACTIONS)[number]
 
-export function isAccountFeatureArray(
-  features: NeRoArray<string>,
-): features is NeRoArray<AccountFeature> {
-  return features.every(isAccountFeature)
-}
+export const accountParser = new Parser(
+  'account',
+  {
+    attribute: {
+      multiple: false,
+      required: true,
+      validate: knownValuesValidator(ACCOUNT_ATTRIBUTES),
+    },
+    action: {
+      multiple: false,
+      required: false,
+      validate: knownValuesValidator(ACCOUNT_ACTIONS),
+      default: 'read' as const,
+    },
+  },
+  'attribute',
+)
 
 export type AccountScopeMatch = {
-  feature: AccountFeature
+  attribute: AccountAttribute
+  action: AccountAction
 }
 
 export class AccountScope {
-  constructor(public readonly features: NeRoArray<AccountFeature>) {}
+  constructor(
+    public readonly attribute: AccountAttribute,
+    public readonly action: AccountAction,
+  ) {}
 
   matches(options: AccountScopeMatch): boolean {
     return (
-      this.features.includes('*') || this.features.includes(options.feature)
+      this.attribute === options.attribute && this.action === options.action
     )
   }
 
-  toString(): ScopeForResource<'account'> {
-    const feature: NeRoArray<string> = this.features.includes('*')
-      ? ['*']
-      : this.features
-
-    return formatScope('account', [['feature', feature]], 'feature')
+  toString() {
+    return accountParser.format(this)
   }
 
-  static fromString(scope: string): AccountScope | null {
-    const parsed = ParsedResourceScope.fromString(scope)
-    return this.fromParsed(parsed)
+  static fromString(scope: string) {
+    const syntax = ResourceSyntax.fromString(scope)
+    return this.fromSyntax(syntax)
   }
 
-  static fromParsed(parsed: ParsedResourceScope): AccountScope | null {
-    if (!parsed.is('account')) return null
+  static fromSyntax(syntax: ResourceSyntax) {
+    const result = accountParser.parse(syntax)
+    if (!result) return null
 
-    const features = parsed.getMulti('feature', true)
-    if (!features || !isAccountFeatureArray(features)) return null
-
-    if (parsed.containsParamsOtherThan(ACCOUNT_PARAMS)) {
-      return null
-    }
-
-    // No features means "any" feature
-    return new AccountScope(features ?? ACCOUNT_FEATURES)
+    return new AccountScope(result.attribute, result.action)
   }
 
   static scopeNeededFor(options: AccountScopeMatch): string {
-    return new AccountScope([options.feature]).toString()
+    return accountParser.format(options)
   }
 }

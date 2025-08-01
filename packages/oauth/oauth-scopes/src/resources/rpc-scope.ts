@@ -1,64 +1,66 @@
-import { ParsedResourceScope, formatScope } from '../syntax'
+import { Parser } from '../parser.js'
+import { NeRoArray, ResourceSyntax } from '../syntax.js'
+import { DIDLike, isDIDLike } from './util/did.js'
+import { NSID, isNSID } from './util/nsid.js'
+
+export const rpcParser = new Parser(
+  'rpc',
+  {
+    lxm: {
+      multiple: true,
+      required: true,
+      validate: (value) => value === '*' || isNSID(value),
+    },
+    aud: {
+      multiple: false,
+      required: true,
+      validate: (value) => value === '*' || isDIDLike(value),
+    },
+  },
+  'lxm',
+)
 
 export type RpcScopeMatch = {
-  aud: string
-  lxm?: string
+  lxm: '*' | NSID
+  aud: '*' | DIDLike
 }
-
-const ALLOWED_PARAMS = Object.freeze(['aud', 'lxm'] as const)
 
 export class RpcScope {
   private constructor(
-    public readonly aud: string,
-    public readonly lxm?: readonly [string, ...string[]],
+    public readonly lxm: NeRoArray<'*' | NSID>,
+    public readonly aud: '*' | DIDLike,
   ) {}
 
   matches(options: RpcScopeMatch): boolean {
-    const { aud, lxm } = this
-    if (aud !== '*' && aud !== options.aud) return false
-    if (!lxm) return true // No lxm means all methods are allowed
-    return options.lxm != null && lxm.includes(options.lxm)
-  }
-
-  toString(): string {
-    return formatScope(
-      'rpc',
-      [
-        ['aud', this.aud],
-        ['lxm', this.lxm],
-      ],
-      'aud',
+    return (
+      (this.aud === '*' || this.aud === options.aud) &&
+      this.lxm.includes(options.lxm)
     )
   }
 
-  static fromString(scope: string): RpcScope | null {
-    const parsed = ParsedResourceScope.fromString(scope)
-    return this.fromParsed(parsed)
+  toString(): string {
+    return rpcParser.format(this)
   }
 
-  static fromParsed(parsed: ParsedResourceScope): RpcScope | null {
-    if (!parsed.is('rpc')) return null
+  static fromString(scope: string): RpcScope | null {
+    const syntax = ResourceSyntax.fromString(scope)
+    return this.fromSyntax(syntax)
+  }
 
-    const aud = parsed.getSingle('aud', true)
+  static fromSyntax(syntax: ResourceSyntax): RpcScope | null {
+    const result = rpcParser.parse(syntax)
+    if (!result) return null
 
-    // a (single) audience value is required
-    if (!aud) return null
+    // rpc:*?aud=* is forbidden
+    if (result.aud === '*' && result.lxm.includes('*')) return null
 
-    const lxm = parsed.getMulti('lxm')
-
-    if (aud === '*' && !lxm) return null // "rpc" cannot be unbound
-
-    if (parsed.containsParamsOtherThan(ALLOWED_PARAMS)) {
-      return null
-    }
-
-    return new RpcScope(aud, lxm)
+    return new RpcScope(result.lxm, result.aud)
   }
 
   static scopeNeededFor(options: RpcScopeMatch): string {
-    return new RpcScope(
-      options.aud,
-      options.lxm ? [options.lxm] : undefined,
-    ).toString()
+    return rpcParser.format({
+      lxm: [options.lxm],
+      aud: options.aud,
+    })
   }
 }

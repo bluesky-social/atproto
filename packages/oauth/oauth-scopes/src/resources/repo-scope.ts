@@ -1,84 +1,85 @@
-import { NeRoArray, ParsedResourceScope, formatScope } from '../syntax'
+import { Parser, knownValuesValidator } from '../parser.js'
+import { NeRoArray, ResourceSyntax } from '../syntax.js'
+import { NSID, isNSID } from './util/nsid.js'
 
-const REPO_PARAMS = Object.freeze(['collection', 'action'] as const)
-const REPO_ACTIONS = Object.freeze(['create', 'delete', 'update', '*'] as const)
-
+const REPO_ACTIONS = Object.freeze(['create', 'update', 'delete'] as const)
 export type RepoAction = (typeof REPO_ACTIONS)[number]
-export function isRepoAction(action: string): action is RepoAction {
-  return (REPO_ACTIONS as readonly string[]).includes(action)
-}
+export const isRepoAction = knownValuesValidator(REPO_ACTIONS)
 
-export function isRepoActionArray(
-  actions: NeRoArray<string>,
-): actions is NeRoArray<RepoAction> {
-  return actions.every(isRepoAction)
-}
+export const repoParser = new Parser(
+  'repo',
+  {
+    collection: {
+      multiple: true,
+      required: true,
+      validate: (value) => value === '*' || isNSID(value),
+    },
+    action: {
+      multiple: true,
+      required: false,
+      validate: isRepoAction,
+      default: REPO_ACTIONS,
+    },
+  },
+  'collection',
+)
 
 export type RepoScopeMatch = {
-  collection: string
+  collection: '*' | NSID
   action: RepoAction
 }
 
 export class RepoScope {
   constructor(
-    public readonly collections: NeRoArray<string>,
-    public readonly actions: NeRoArray<RepoAction>,
+    public readonly collection: NeRoArray<'*' | NSID>,
+    public readonly action: NeRoArray<RepoAction>,
   ) {}
 
   matches({ action, collection }: RepoScopeMatch): boolean {
     return (
-      (this.actions.includes('*') || this.actions.includes(action)) &&
-      (this.collections.includes('*') || this.collections.includes(collection))
+      this.action.includes(action) &&
+      (this.collection.includes('*') || this.collection.includes(collection))
     )
   }
 
   toString(): string {
-    const { collections, actions } = this
-
-    // Normalize (wildcard, de-dupe, sort)
-    const action: NeRoArray<string> = actions.includes('*')
-      ? ['*']
-      : (REPO_ACTIONS.filter(includedIn, actions) as [string, ...string[]])
-
-    const collection: NeRoArray<string> = collections.includes('*')
-      ? ['*']
-      : ([...new Set(collections)].sort() as [string, ...string[]])
-
-    return formatScope(
-      'repo',
-      [
-        ['collection', collection],
-        ['action', action],
-      ],
-      'action',
-    )
+    // Normalize (compress, de-dupe, sort)
+    return repoParser.format({
+      collection: this.collection.includes('*')
+        ? ['*']
+        : ([...new Set(this.collection)].sort() as [NSID, ...NSID[]]),
+      action:
+        this.action === REPO_ACTIONS
+          ? REPO_ACTIONS // No need to filter if the default was used
+          : (REPO_ACTIONS.filter(includedIn, this.action) as [
+              RepoAction,
+              ...RepoAction[],
+            ]),
+    })
   }
 
   static fromString(scope: string): RepoScope | null {
-    const parsed = ParsedResourceScope.fromString(scope)
-    return this.fromParsed(parsed)
+    const syntax = ResourceSyntax.fromString(scope)
+    return this.fromSyntax(syntax)
   }
 
-  static fromParsed(parsed: ParsedResourceScope): RepoScope | null {
-    if (!parsed.is('repo')) return null
+  static fromSyntax(syntax: ResourceSyntax): RepoScope | null {
+    const result = repoParser.parse(syntax)
+    if (!result) return null
 
-    const collections = parsed.getMulti('collection', true)
-    if (!collections) return null
-
-    const actions = parsed.getMulti('action')
-    if (!actions || !isRepoActionArray(actions)) return null
-
-    if (parsed.containsParamsOtherThan(REPO_PARAMS)) {
+    // Containing both a "*" and specific collections is forbidden
+    if (result.collection.includes('*') && result.action.length > 1) {
       return null
     }
 
-    // @NOTE We do not check for duplicate actions here
-
-    return new RepoScope(collections, actions)
+    return new RepoScope(result.collection, result.action)
   }
 
   static scopeNeededFor(options: RepoScopeMatch): string {
-    return new RepoScope([options.collection], [options.action]).toString()
+    return repoParser.format({
+      collection: [options.collection],
+      action: [options.action],
+    })
   }
 }
 

@@ -1,72 +1,64 @@
-import {
-  NeRoArray,
-  ParsedResourceScope,
-  ScopeForResource,
-  formatScope,
-} from '../syntax'
+import { Parser, knownValuesValidator } from '../parser.js'
+import { ResourceSyntax } from '../syntax.js'
 
-const IDENTITY_PARAMS = Object.freeze(['feature'] as const)
-const IDENTITY_FEATURES = Object.freeze([
-  '*',
-  'plc',
-  'plc-unsafe',
-  'handle',
-] as const)
+const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
+export type IdentityAttribute = (typeof IDENTITY_ATTRIBUTES)[number]
 
-export type IdentityScopeFeatures = (typeof IDENTITY_FEATURES)[number]
-export function isIdentityScopeFeature(
-  feature: string,
-): feature is IdentityScopeFeatures {
-  return (IDENTITY_FEATURES as readonly string[]).includes(feature)
-}
+const IDENTITY_ACTIONS = Object.freeze(['manage', 'submit'] as const)
+export type IdentityAction = (typeof IDENTITY_ACTIONS)[number]
 
-export function isIdentityScopeFeatureArray(
-  features: NeRoArray<string>,
-): features is NeRoArray<IdentityScopeFeatures> {
-  return features.every(isIdentityScopeFeature)
-}
+export const identityParser = new Parser(
+  'identity',
+  {
+    attribute: {
+      multiple: false,
+      required: true,
+      validate: knownValuesValidator(IDENTITY_ATTRIBUTES),
+    },
+    action: {
+      multiple: false,
+      required: false,
+      validate: knownValuesValidator(IDENTITY_ACTIONS),
+      default: 'manage' as const,
+    },
+  },
+  'attribute',
+)
 
 export type IdentityScopeMatch = {
-  feature: IdentityScopeFeatures
+  attribute: IdentityAttribute
+  action: IdentityAction
 }
 
 export class IdentityScope {
-  constructor(public readonly features: NeRoArray<IdentityScopeFeatures>) {}
+  constructor(
+    public readonly attribute: IdentityAttribute,
+    public readonly action: IdentityAction,
+  ) {}
 
   matches(options: IdentityScopeMatch): boolean {
     return (
-      this.features.includes('*') || this.features.includes(options.feature)
+      (this.attribute === '*' || this.attribute === options.attribute) &&
+      this.action === options.action
     )
   }
 
-  toString(): ScopeForResource<'identity'> {
-    const feature: NeRoArray<string> = this.features.includes('*')
-      ? ['*']
-      : this.features
-
-    return formatScope('identity', [['feature', feature]], 'feature')
+  toString() {
+    return identityParser.format(this)
   }
 
-  static fromString(scope: string): IdentityScope | null {
-    const parsed = ParsedResourceScope.fromString(scope)
-    return this.fromParsed(parsed)
+  static fromString(scope: string) {
+    const syntax = ResourceSyntax.fromString(scope)
+    return this.fromSyntax(syntax)
   }
 
-  static fromParsed(parsed: ParsedResourceScope): IdentityScope | null {
-    if (!parsed.is('identity')) return null
-
-    const features = parsed.getMulti('feature', true)
-    if (!features || !isIdentityScopeFeatureArray(features)) return null
-
-    if (parsed.containsParamsOtherThan(IDENTITY_PARAMS)) {
-      return null
-    }
-
-    // No features means "any" feature
-    return new IdentityScope(features ?? IDENTITY_FEATURES)
+  static fromSyntax(syntax: ResourceSyntax) {
+    const result = identityParser.parse(syntax)
+    if (!result) return null
+    return new IdentityScope(result.attribute, result.action)
   }
 
   static scopeNeededFor(options: IdentityScopeMatch): string {
-    return new IdentityScope([options.feature]).toString()
+    return identityParser.format(options)
   }
 }
