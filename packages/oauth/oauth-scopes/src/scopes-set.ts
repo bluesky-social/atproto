@@ -6,9 +6,12 @@ import {
 } from './resources/identity-scope.js'
 import { RepoScope, RepoScopeMatch } from './resources/repo-scope.js'
 import { RpcScope, RpcScopeMatch } from './resources/rpc-scope.js'
+import { ScopeMissingError } from './scope-missing-error.js'
 import { isScopeForResource } from './syntax.js'
 
-type ScopeMatchingOptionsByResource = {
+export { ScopeMissingError }
+
+export type ScopeMatchingOptionsByResource = {
   account: AccountScopeMatch
   identity: IdentityScopeMatch
   repo: RepoScopeMatch
@@ -66,5 +69,33 @@ export class ScopesSet extends Set<string> {
     }
 
     return false
+  }
+
+  public assert<R extends keyof ScopeMatchingOptionsByResource>(
+    resource: R,
+    options: ScopeMatchingOptionsByResource[R],
+  ) {
+    if (!this.matches(resource, options)) {
+      const scope = scopeNeededFor(resource, options)
+      throw new ScopeMissingError(scope)
+    }
+  }
+}
+
+export function scopeNeededFor<R extends keyof ScopeMatchingOptionsByResource>(
+  resource: R,
+  options: ScopeMatchingOptionsByResource[R],
+): string {
+  switch (resource) {
+    case 'account':
+      return AccountScope.scopeNeededFor(options as AccountScopeMatch)
+    case 'identity':
+      return IdentityScope.scopeNeededFor(options as IdentityScopeMatch)
+    case 'repo':
+      return RepoScope.scopeNeededFor(options as RepoScopeMatch)
+    case 'rpc':
+      return RpcScope.scopeNeededFor(options as RpcScopeMatch)
+    case 'blob':
+      return BlobScope.scopeNeededFor(options as BlobScopeMatch)
   }
 }

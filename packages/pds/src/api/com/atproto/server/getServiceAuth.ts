@@ -14,7 +14,10 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
     auth: ctx.authVerifier.authorization({
       additional: [AuthScope.Takendown],
-      authorize: (permissions, { params }) => permissions.assertRpc(params),
+      authorize: (permissions, ctx) => {
+        const { aud, lxm = '*' } = ctx.params
+        permissions.assertRpc({ aud, lxm })
+      },
     }),
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did

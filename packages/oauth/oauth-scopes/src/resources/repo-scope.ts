@@ -25,7 +25,7 @@ export const repoParser = new Parser(
 )
 
 export type RepoScopeMatch = {
-  collection: '*' | NSID
+  collection: string
   action: RepoAction
 }
 
@@ -38,7 +38,8 @@ export class RepoScope {
   matches({ action, collection }: RepoScopeMatch): boolean {
     return (
       this.action.includes(action) &&
-      (this.collection.includes('*') || this.collection.includes(collection))
+      (this.collection.includes('*') ||
+        (this.collection as readonly string[]).includes(collection))
     )
   }
 
@@ -77,7 +78,7 @@ export class RepoScope {
 
   static scopeNeededFor(options: RepoScopeMatch): string {
     return repoParser.format({
-      collection: [options.collection],
+      collection: [options.collection as '*' | NSID],
       action: [options.action],
     })
   }

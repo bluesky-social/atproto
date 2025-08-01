@@ -24,7 +24,7 @@ export const blobParser = new Parser(
 )
 
 export type BlobScopeMatch = {
-  mime: Accept
+  mime: string
 }
 
 export class BlobScope {
@@ -51,6 +51,8 @@ export class BlobScope {
   }
 
   static scopeNeededFor(options: BlobScopeMatch) {
-    return blobParser.format({ accept: [options.mime] })
+    return blobParser.format({
+      accept: [options.mime as Accept],
+    })
   }
 }

@@ -3,26 +3,29 @@ import { NeRoArray, ResourceSyntax } from '../syntax.js'
 import { DIDLike, isDIDLike } from './util/did.js'
 import { NSID, isNSID } from './util/nsid.js'
 
+const validateLxm = (value: string) => value === '*' || isNSID(value)
+const validateAud = (value: string) => value === '*' || isDIDLike(value)
+
 export const rpcParser = new Parser(
   'rpc',
   {
     lxm: {
       multiple: true,
       required: true,
-      validate: (value) => value === '*' || isNSID(value),
+      validate: validateLxm,
     },
     aud: {
       multiple: false,
       required: true,
-      validate: (value) => value === '*' || isDIDLike(value),
+      validate: validateAud,
     },
   },
   'lxm',
 )
 
 export type RpcScopeMatch = {
-  lxm: '*' | NSID
-  aud: '*' | DIDLike
+  lxm: string
+  aud: string
 }
 
 export class RpcScope {
@@ -34,7 +37,7 @@ export class RpcScope {
   matches(options: RpcScopeMatch): boolean {
     return (
       (this.aud === '*' || this.aud === options.aud) &&
-      this.lxm.includes(options.lxm)
+      (this.lxm as readonly string[]).includes(options.lxm)
     )
   }
 
@@ -59,8 +62,8 @@ export class RpcScope {
 
   static scopeNeededFor(options: RpcScopeMatch): string {
     return rpcParser.format({
-      lxm: [options.lxm],
-      aud: options.aud,
+      aud: options.aud as DIDLike,
+      lxm: [options.lxm as NSID],
     })
   }
 }

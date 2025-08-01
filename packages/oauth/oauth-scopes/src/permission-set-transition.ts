@@ -24,9 +24,23 @@ export class PermissionSetTransition extends PermissionSet {
   }
 
   override allowsAccount(options: AccountScopeMatch): boolean {
+    if (this.hasTransitionGeneric && options.attribute !== 'email') {
+      return true
+    }
+
     if (
+      this.hasTransitionEmail &&
+      options.attribute === 'email' &&
+      options.action === 'read'
+    ) {
+      return true
+    }
+
+    if (
+      this.hasTransitionEmail &&
       this.hasTransitionGeneric &&
-      (options.feature !== 'email' || this.hasTransitionEmail)
+      options.attribute === 'email' &&
+      options.action === 'manage'
     ) {
       return true
     }
@@ -53,11 +67,11 @@ export class PermissionSetTransition extends PermissionSet {
   override allowsRpc(options: RpcScopeMatch) {
     const { lxm } = options
 
-    if (this.hasTransitionGeneric && lxm == null) {
+    if (this.hasTransitionGeneric && lxm === '*') {
       return true
     }
 
-    if (this.hasTransitionChatBsky && lxm?.startsWith('chat.bsky.')) {
+    if (this.hasTransitionChatBsky && lxm.startsWith('chat.bsky.')) {
       return true
     }
 

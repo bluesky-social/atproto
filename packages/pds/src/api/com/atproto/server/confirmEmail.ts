@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       authorize: (permissions) => {
-        permissions.assertAccount({ feature: 'email' })
+        permissions.assertAccount({ attribute: 'email', action: 'manage' })
       },
     }),
     handler: async ({ auth, input, req }) => {

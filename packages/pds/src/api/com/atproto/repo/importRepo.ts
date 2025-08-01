@@ -22,7 +22,10 @@ export default function (server: Server, ctx: AppContext) {
       checkTakedown: true,
       scopes: ACCESS_FULL,
       authorize: (permissions) => {
-        permissions.assertRepo({ action: '*', collection: '*' })
+        permissions.assertAccount({
+          attribute: 'repo',
+          action: 'manage',
+        })
       },
     }),
     handler: async ({ input, auth }) => {

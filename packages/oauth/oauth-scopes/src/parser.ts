@@ -14,7 +14,7 @@ type ParamsSchema = Record<
     }
   | {
       multiple: true
-      required?: boolean
+      required: boolean
       default?: NeRoArray<string>
       normalize?: (value: NeRoArray<string>) => NeRoArray<string>
       validate?: (value: string) => boolean
