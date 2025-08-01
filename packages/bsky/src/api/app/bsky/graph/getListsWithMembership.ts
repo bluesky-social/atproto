@@ -1,14 +1,7 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { ListMembershipState } from '../../../../hydration/graph'
-import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
-  mergeManyStates,
-} from '../../../../hydration/hydrator'
-import { HydrationMap } from '../../../../hydration/util'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import {
   CURATELIST,
@@ -80,41 +73,7 @@ const hydration = async (
   const { ctx, params, skeleton } = input
   const { actor } = params
   const { listUris } = skeleton
-
-  const [
-    actorsHydrationState,
-    listsHydrationState,
-    { listitemUris: listItemUris },
-  ] = await Promise.all([
-    ctx.hydrator.hydrateProfiles([actor], params.hydrateCtx),
-    ctx.hydrator.hydrateLists(listUris, params.hydrateCtx),
-    ctx.hydrator.dataplane.getListMembership({
-      actorDid: actor,
-      listUris,
-    }),
-  ])
-
-  const listMembershipHydrationState: HydrationState = {
-    listMemberships: listUris.reduce((acc, cur, i) => {
-      const userMap = new HydrationMap<ListMembershipState>()
-
-      const listItemUri = listItemUris[i]
-      if (listItemUri) {
-        userMap.set(actor, {
-          actorListItemUri: listItemUri,
-        } satisfies ListMembershipState)
-      }
-
-      acc.set(cur, userMap)
-      return acc
-    }, new HydrationMap<HydrationMap<ListMembershipState>>()),
-  }
-
-  return mergeManyStates(
-    actorsHydrationState,
-    listsHydrationState,
-    listMembershipHydrationState,
-  )
+  return ctx.hydrator.hydrateListsMembership(listUris, actor, params.hydrateCtx)
 }
 
 const filterPurposes = (

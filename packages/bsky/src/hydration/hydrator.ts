@@ -43,6 +43,7 @@ import {
   GraphHydrator,
   ListAggs,
   ListItems,
+  ListMembershipState,
   ListMembershipStates,
   ListViewerStates,
   Lists,
@@ -363,6 +364,47 @@ export class Hydrator {
     })
     const profileState = await this.hydrateProfiles(dids, ctx)
     return mergeStates(profileState, { listItems, ctx })
+  }
+
+  async hydrateListsMembership(
+    uris: string[],
+    did: string,
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const [
+      actorsHydrationState,
+      listsHydrationState,
+      { listitemUris: listItemUris },
+    ] = await Promise.all([
+      this.hydrateProfiles([did], ctx),
+      this.hydrateLists(uris, ctx),
+      this.dataplane.getListMembership({
+        actorDid: did,
+        listUris: uris,
+      }),
+    ])
+
+    const listMembershipHydrationState: HydrationState = {
+      listMemberships: uris.reduce((acc, cur, i) => {
+        const userMap = new HydrationMap<ListMembershipState>()
+
+        const listItemUri = listItemUris[i]
+        if (listItemUri) {
+          userMap.set(did, {
+            actorListItemUri: listItemUri,
+          } satisfies ListMembershipState)
+        }
+
+        acc.set(cur, userMap)
+        return acc
+      }, new HydrationMap<HydrationMap<ListMembershipState>>()),
+    }
+
+    return mergeManyStates(
+      actorsHydrationState,
+      listsHydrationState,
+      listMembershipHydrationState,
+    )
   }
 
   // app.bsky.feed.defs#postView
