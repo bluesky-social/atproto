@@ -43,6 +43,7 @@ import {
   GraphHydrator,
   ListAggs,
   ListItems,
+  ListMembershipStates,
   ListViewerStates,
   Lists,
   RelationshipPair,
@@ -109,6 +110,7 @@ export type HydrationState = {
   postgates?: Postgates
   lists?: Lists
   listAggs?: ListAggs
+  listMemberships?: ListMembershipStates
   listViewers?: ListViewerStates
   listItems?: ListItems
   likes?: Likes
@@ -1356,6 +1358,7 @@ export const mergeStates = (
     postgates: mergeMaps(stateA.postgates, stateB.postgates),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listAggs: mergeMaps(stateA.listAggs, stateB.listAggs),
+    listMemberships: mergeMaps(stateA.listMemberships, stateB.listMemberships),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
     likes: mergeMaps(stateA.likes, stateB.likes),

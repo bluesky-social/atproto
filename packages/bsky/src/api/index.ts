@@ -29,6 +29,7 @@ import getList from './app/bsky/graph/getList'
 import getListBlocks from './app/bsky/graph/getListBlocks'
 import getListMutes from './app/bsky/graph/getListMutes'
 import getLists from './app/bsky/graph/getLists'
+import getListsWithMembership from './app/bsky/graph/getListsWithMembership'
 import getMutes from './app/bsky/graph/getMutes'
 import getRelationships from './app/bsky/graph/getRelationships'
 import getStarterPack from './app/bsky/graph/getStarterPack'
@@ -108,6 +109,7 @@ export default function (server: Server, ctx: AppContext) {
   getFollows(server, ctx)
   getList(server, ctx)
   getLists(server, ctx)
+  getListsWithMembership(server, ctx)
   getListMutes(server, ctx)
   getMutes(server, ctx)
   getRelationships(server, ctx)
