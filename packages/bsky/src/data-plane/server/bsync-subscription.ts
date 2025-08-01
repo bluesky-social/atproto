@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { EventEmitter, once } from 'node:events'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { BsyncClient, authWithApiKey, createBsyncClient } from '../../bsync'
@@ -7,21 +8,26 @@ import { ids } from '../../lexicon/lexicons'
 import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
 import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
 import { subLogger as log } from '../../logger'
-import { Method, MuteOperation_Type, Operation } from '../../proto/bsync_pb'
+import {
+  Method,
+  MuteOperation,
+  MuteOperation_Type,
+  NotifOperation,
+  Operation,
+} from '../../proto/bsync_pb'
 import { Namespaces } from '../../stash'
-import { BackgroundQueue } from './background'
 import { Database } from './db'
 import { excluded } from './db/util'
 
-export class BsyncSubscription {
+export class BsyncSubscription extends EventEmitter {
   private ac: AbortController | undefined
-  private background: BackgroundQueue
+  private pendingScans = new Set<Promise<void>>()
   private bsyncClient: BsyncClient
   private db: Database
 
   constructor(public opts: { db: Database; config: ServerConfig }) {
+    super()
     const { config, db } = opts
-    this.background = new BackgroundQueue(db)
 
     this.db = db
     this.bsyncClient = createBsyncClient({
@@ -43,182 +49,244 @@ export class BsyncSubscription {
   }
 
   async processAll() {
-    await this.background.processAll()
+    // console.log('### bsync subscription processAll 0')
+    if (!this.ac) return
+    await Promise.all(this.pendingScans)
+
+    // console.log('### bsync subscription processAll 1')
+    // const signal = this.ac.signal
+    // try {
+    //   await Promise.all([
+    //     once(this, 'mute:idle', { signal }),
+    //     once(this, 'notif:idle', { signal }),
+    //     once(this, 'op:idle', { signal }),
+    //   ])
+    // } catch {
+    //   // stopped while waiting for idle
+    // }
+    // console.log('### bsync subscription processAll 2')
   }
 
   async destroy() {
-    if (this.ac?.signal.aborted) return
     this.ac?.abort()
-    await this.processAll()
+    this.ac = undefined
+    // Don't wait for the scans to become idle, just for the ongoing ones to finish.
+    await Promise.all(this.pendingScans)
   }
 
+  /**
+   * starts a scanner in the background, killing it when this instance is
+   * destroyed, and storing its promise in `this.pendingScans` to allow
+   * awaiting.
+   */
   private startScanning(
-    callFn: (cursor?: string) => Promise<string | undefined>,
-    cursor?: string,
+    scanner: (
+      cursor: undefined | string,
+      signal: AbortSignal,
+    ) => Promise<string | undefined>,
   ) {
-    if (this.ac?.signal.aborted) return
+    if (!this.ac) return
+    const signal = this.ac.signal
 
-    callFn(cursor)
-      .then((nextCursor) => {
-        this.startScanning(callFn, nextCursor)
+    const scanPromise = this.runScanner(scanner, signal)
+
+    this.pendingScans.add(scanPromise)
+    void scanPromise
+      .catch(() => {})
+      .finally(() => {
+        this.pendingScans.delete(scanPromise)
       })
-      .catch((err) => {
-        if (this.ac?.signal.aborted) return
+  }
+
+  private async runScanner(
+    scanner: (
+      cursor: undefined | string,
+      signal: AbortSignal,
+    ) => Promise<string | undefined>,
+    signal: AbortSignal,
+  ) {
+    let cursor: undefined | string
+
+    while (!signal.aborted) {
+      try {
+        cursor = await scanner(cursor, signal)
+      } catch (err) {
+        if (signal.aborted) break
+
         log.error({ err }, 'error in bsync scan')
-      })
+
+        // retry in a bit
+        await new Promise((r) => setTimeout(r, 100))
+      }
+    }
   }
 
   private scanMuteOperations() {
-    this.startScanning((cursor?: string) => {
-      return this.bsyncClient
-        .scanMuteOperations({ cursor }, { signal: this.ac?.signal })
-        .then(async (res) => {
-          if (this.ac?.signal.aborted) return
-          this.background.add(async () => {
-            for await (const op of res.operations) {
-              const { type, actorDid, subject } = op
-              if (type === MuteOperation_Type.ADD) {
-                if (subject.startsWith('did:')) {
-                  await this.db.db
-                    .insertInto('mute')
-                    .values({
-                      mutedByDid: actorDid,
-                      subjectDid: subject,
-                      createdAt: new Date().toISOString(),
-                    })
-                    .onConflict((oc) => oc.doNothing())
-                    .execute()
-                } else {
-                  const uri = new AtUri(subject)
-                  if (uri.collection === ids.AppBskyGraphList) {
-                    await this.db.db
-                      .insertInto('list_mute')
-                      .values({
-                        mutedByDid: actorDid,
-                        listUri: subject,
-                        createdAt: new Date().toISOString(),
-                      })
-                      .onConflict((oc) => oc.doNothing())
-                      .execute()
-                  } else {
-                    await this.db.db
-                      .insertInto('thread_mute')
-                      .values({
-                        mutedByDid: actorDid,
-                        rootUri: subject,
-                        createdAt: new Date().toISOString(),
-                      })
-                      .onConflict((oc) => oc.doNothing())
-                      .execute()
-                  }
-                }
-              } else if (type === MuteOperation_Type.REMOVE) {
-                if (subject.startsWith('did:')) {
-                  await this.db.db
-                    .deleteFrom('mute')
-                    .where('mutedByDid', '=', actorDid)
-                    .where('subjectDid', '=', subject)
-                    .execute()
-                } else {
-                  const uri = new AtUri(subject)
-                  if (uri.collection === ids.AppBskyGraphList) {
-                    await this.db.db
-                      .deleteFrom('list_mute')
-                      .where('mutedByDid', '=', actorDid)
-                      .where('listUri', '=', subject)
-                      .execute()
-                  } else {
-                    await this.db.db
-                      .deleteFrom('thread_mute')
-                      .where('mutedByDid', '=', actorDid)
-                      .where('rootUri', '=', subject)
-                      .execute()
-                  }
-                }
-              } else if (type === MuteOperation_Type.CLEAR) {
-                await this.db.db
-                  .deleteFrom('mute')
-                  .where('mutedByDid', '=', actorDid)
-                  .execute()
-                await this.db.db
-                  .deleteFrom('list_mute')
-                  .where('mutedByDid', '=', actorDid)
-                  .execute()
-              }
-            }
-          })
+    this.startScanning(async (cursor, signal) => {
+      const res = await this.bsyncClient.scanMuteOperations(
+        { cursor },
+        { signal },
+      )
 
-          return res.cursor
-        })
+      await this.processMuteOperations(res.operations)
+
+      const didWork = res.operations.length > 0
+      if (!didWork) {
+        console.log('### bsync subscription emit mute:idle')
+        this.emit('mute:idle')
+      }
+
+      return res.cursor
     })
+  }
+
+  private async processMuteOperations(operations: MuteOperation[]) {
+    for await (const op of operations) {
+      const { type, actorDid, subject } = op
+      if (type === MuteOperation_Type.ADD) {
+        if (subject.startsWith('did:')) {
+          await this.db.db
+            .insertInto('mute')
+            .values({
+              mutedByDid: actorDid,
+              subjectDid: subject,
+              createdAt: new Date().toISOString(),
+            })
+            .onConflict((oc) => oc.doNothing())
+            .execute()
+        } else {
+          const uri = new AtUri(subject)
+          if (uri.collection === ids.AppBskyGraphList) {
+            await this.db.db
+              .insertInto('list_mute')
+              .values({
+                mutedByDid: actorDid,
+                listUri: subject,
+                createdAt: new Date().toISOString(),
+              })
+              .onConflict((oc) => oc.doNothing())
+              .execute()
+          } else {
+            await this.db.db
+              .insertInto('thread_mute')
+              .values({
+                mutedByDid: actorDid,
+                rootUri: subject,
+                createdAt: new Date().toISOString(),
+              })
+              .onConflict((oc) => oc.doNothing())
+              .execute()
+          }
+        }
+      } else if (type === MuteOperation_Type.REMOVE) {
+        if (subject.startsWith('did:')) {
+          await this.db.db
+            .deleteFrom('mute')
+            .where('mutedByDid', '=', actorDid)
+            .where('subjectDid', '=', subject)
+            .execute()
+        } else {
+          const uri = new AtUri(subject)
+          if (uri.collection === ids.AppBskyGraphList) {
+            await this.db.db
+              .deleteFrom('list_mute')
+              .where('mutedByDid', '=', actorDid)
+              .where('listUri', '=', subject)
+              .execute()
+          } else {
+            await this.db.db
+              .deleteFrom('thread_mute')
+              .where('mutedByDid', '=', actorDid)
+              .where('rootUri', '=', subject)
+              .execute()
+          }
+        }
+      } else if (type === MuteOperation_Type.CLEAR) {
+        await this.db.db
+          .deleteFrom('mute')
+          .where('mutedByDid', '=', actorDid)
+          .execute()
+        await this.db.db
+          .deleteFrom('list_mute')
+          .where('mutedByDid', '=', actorDid)
+          .execute()
+      }
+    }
   }
 
   private scanNotifOperations() {
-    this.startScanning((cursor?: string) => {
-      return this.bsyncClient
-        .scanNotifOperations({ cursor }, { signal: this.ac?.signal })
-        .then(async (res) => {
-          if (this.ac?.signal.aborted) return
-          this.background.add(async () => {
-            for await (const op of res.operations) {
-              const { actorDid, priority } = op
-              if (priority !== undefined) {
-                await this.db.db
-                  .insertInto('actor_state')
-                  .values({
-                    did: actorDid,
-                    priorityNotifs: priority,
-                    lastSeenNotifs: new Date().toISOString(),
-                  })
-                  .onConflict((oc) =>
-                    oc.column('did').doUpdateSet({ priorityNotifs: priority }),
-                  )
-                  .execute()
-              }
-            }
-          })
+    this.startScanning(async (cursor, signal) => {
+      const res = await this.bsyncClient.scanNotifOperations(
+        { cursor },
+        { signal },
+      )
 
-          return res.cursor
-        })
+      await this.processNotifOperations(res.operations)
+      const didWork = res.operations.length > 0
+      if (!didWork) {
+        console.log('### bsync subscription emit notif:idle')
+        this.emit('notif:idle')
+      }
+
+      return res.cursor
     })
   }
 
-  private scanOperations() {
-    this.startScanning((cursor?: string) => {
-      return this.bsyncClient
-        .scanOperations({ cursor }, { signal: this.ac?.signal })
-        .then(async (res) => {
-          if (this.ac?.signal.aborted) return
-          this.background.add(async () => {
-            for await (const op of res.operations) {
-              const { namespace } = op
-
-              const now = new Date().toISOString()
-
-              // Index all items into private_data.
-              await handleGenericOperation(this.db, op, now)
-
-              // Maintain bespoke indexes for certain namespaces.
-              if (
-                namespace ===
-                Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
-              ) {
-                await handleSubjectActivitySubscriptionOperation(
-                  this.db,
-                  op,
-                  now,
-                )
-              } else if (
-                namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
-              ) {
-                await handleAgeAssuranceEventOperation(this.db, op, now)
-              }
-            }
+  private async processNotifOperations(operations: NotifOperation[]) {
+    for await (const op of operations) {
+      const { actorDid, priority } = op
+      if (priority !== undefined) {
+        await this.db.db
+          .insertInto('actor_state')
+          .values({
+            did: actorDid,
+            priorityNotifs: priority,
+            lastSeenNotifs: new Date().toISOString(),
           })
+          .onConflict((oc) =>
+            oc.column('did').doUpdateSet({ priorityNotifs: priority }),
+          )
+          .execute()
+      }
+    }
+  }
 
-          return res.cursor
-        })
+  private scanOperations() {
+    this.startScanning(async (cursor, signal) => {
+      const res = await this.bsyncClient.scanOperations({ cursor }, { signal })
+
+      await this.processOperations(res.operations)
+      const didWork = res.operations.length > 0
+      if (!didWork) {
+        console.log('### bsync subscription emit op:idle')
+        this.emit('op:idle')
+      }
+
+      return res.cursor
     })
+  }
+
+  private async processOperations(operations: Operation[]) {
+    for await (const op of operations) {
+      const { namespace } = op
+
+      const now = new Date().toISOString()
+
+      // Index all items into private_data.
+      await handleGenericOperation(this.db, op, now)
+
+      // Maintain bespoke indexes for certain namespaces.
+      if (
+        namespace ===
+        Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
+      ) {
+        await handleSubjectActivitySubscriptionOperation(this.db, op, now)
+      } else if (
+        namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
+      ) {
+        await handleAgeAssuranceEventOperation(this.db, op, now)
+      }
+    }
   }
 }
 

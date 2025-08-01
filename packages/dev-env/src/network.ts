@@ -177,6 +177,8 @@ export class TestNetwork extends TestNetworkNoAppView {
   async processAll(timeout?: number) {
     await this.pds.processAll()
     await this.ozone.processAll()
+    await this.bsky.sub.processAll()
+    await this.bsky.bsyncSub.processAll()
     await this.processFullSubscription(timeout)
   }
 
