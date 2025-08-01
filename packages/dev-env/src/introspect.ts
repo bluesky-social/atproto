@@ -2,6 +2,7 @@ import events from 'node:events'
 import http from 'node:http'
 import express from 'express'
 import { TestBsky } from './bsky'
+import { TestBsync } from './bsync'
 import { TestOzone } from './ozone'
 import { TestPds } from './pds'
 import { TestPlc } from './plc'
@@ -16,6 +17,7 @@ export class IntrospectServer {
     port: number,
     plc: TestPlc,
     pds: TestPds,
+    bsync: TestBsync,
     bsky: TestBsky,
     ozone: TestOzone,
   ) {
@@ -28,6 +30,9 @@ export class IntrospectServer {
         pds: {
           url: pds.url,
           did: pds.ctx.cfg.service.did,
+        },
+        bsync: {
+          url: bsync.url,
         },
         bsky: {
           url: bsky.url,
