@@ -50,7 +50,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
       moduleSpecifier: `${baseNsid
         .split('.')
         .map((_str) => '..')
-        .join('/')}/lexicons`,
+        .join('/')}/lexicons.js`,
     })
     .addNamedImports([{ name: 'validate', alias: '_validate' }])
 
@@ -60,7 +60,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
       moduleSpecifier: `${baseNsid
         .split('.')
         .map((_str) => '..')
-        .join('/')}/util`,
+        .join('/')}/util.js`,
     })
     .addNamedImports([
       { name: '$Typed', isTypeOnly: true },
