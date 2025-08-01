@@ -159,6 +159,7 @@ import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 import * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
@@ -438,6 +439,7 @@ export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+export * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 export * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
@@ -2934,6 +2936,18 @@ export class AppBskyGraphNS {
   ): Promise<AppBskyGraphGetStarterPacks.Response> {
     return this._client.call(
       'app.bsky.graph.getStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getStarterPacksWithMembership(
+    params?: AppBskyGraphGetStarterPacksWithMembership.QueryParams,
+    opts?: AppBskyGraphGetStarterPacksWithMembership.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacksWithMembership.Response> {
+    return this._client.call(
+      'app.bsky.graph.getStarterPacksWithMembership',
       params,
       undefined,
       opts,

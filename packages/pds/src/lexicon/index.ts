@@ -132,6 +132,7 @@ import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
@@ -1938,6 +1939,18 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacksWithMembership<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetStarterPacksWithMembership.QueryParams,
+      AppBskyGraphGetStarterPacksWithMembership.HandlerInput,
+      AppBskyGraphGetStarterPacksWithMembership.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacksWithMembership' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
