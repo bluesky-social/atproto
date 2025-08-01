@@ -32,6 +32,7 @@
     "@atproto-labs/fetch": "workspace:*",
     "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
     "@atproto/oauth-provider-api": "workspace:*",
+    "@atproto/oauth-scopes": "workspace:*",
     "@atproto/oauth-types": "workspace:*",
     "@hcaptcha/react-hcaptcha": "^1.11.2",
     "@lingui/cli": "^5.2.0",

@@ -1,4 +1,4 @@
-import { AuthScope } from '../../../../auth-verifier'
+import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { resultPassthru } from '../../../proxy'

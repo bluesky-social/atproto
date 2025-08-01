@@ -1,13 +1,12 @@
-import { AuthScope } from '../../auth-verifier'
 import { ActorDb } from '../db'
-import { prefInScope } from './util'
+import { PrefAllowedOptions, prefAllowed } from './util'
 
 export class PreferenceReader {
   constructor(public db: ActorDb) {}
 
   async getPreferences(
     namespace: string,
-    scope: AuthScope,
+    opts: PrefAllowedOptions,
   ): Promise<AccountPreference[]> {
     const prefsRes = await this.db.db
       .selectFrom('account_pref')
@@ -16,7 +15,7 @@ export class PreferenceReader {
       .execute()
     return prefsRes
       .filter((pref) => !namespace || prefMatchNamespace(namespace, pref.name))
-      .filter((pref) => prefInScope(scope, pref.name))
+      .filter((pref) => prefAllowed(pref.name, opts))
       .map((pref) => JSON.parse(pref.valueJson) as AccountPreference)
   }
 }

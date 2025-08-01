@@ -34,6 +34,7 @@ COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
 COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
 COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
 COPY ./packages/oauth/oauth-provider-frontend ./packages/oauth/oauth-provider-frontend
+COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
 COPY ./packages/internal/pipe ./packages/internal/pipe
 COPY ./packages/internal/fetch ./packages/internal/fetch
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node

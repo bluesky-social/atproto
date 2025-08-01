@@ -1,13 +1,17 @@
 import { DAY } from '@atproto/common'
-import { UpstreamTimeoutError } from '@atproto/xrpc-server'
+import { UpstreamTimeoutError, parseReqEncoding } from '@atproto/xrpc-server'
 import { BlobMetadata } from '../../../../actor-store/blob/transactor'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
-    auth: ctx.authVerifier.accessOrUserServiceAuth({
+    auth: ctx.authVerifier.authorizationOrUserServiceAuth({
       checkTakedown: true,
+      authorize: (permissions, { req }) => {
+        const encoding = parseReqEncoding(req)
+        permissions.assertBlob({ mime: encoding })
+      },
     }),
     rateLimit: {
       durationMs: DAY,

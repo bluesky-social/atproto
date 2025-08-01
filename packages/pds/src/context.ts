@@ -344,6 +344,12 @@ export class AppContext {
           // the PDS can use tokenId as access tokens. This allows the PDS to
           // always use up-to-date token data from the token store.
           accessTokenMode: AccessTokenMode.light,
+
+          getClientInfo(clientId) {
+            return {
+              isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
+            }
+          },
         })
       : undefined
 

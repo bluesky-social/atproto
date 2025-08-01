@@ -125,12 +125,12 @@
         requestUri,
         loginHint,
         sessions: [],
-        scopeDetails: [
-          { scope: 'atproto' },
-          { scope: 'transition:generic' },
-          { scope: 'transition:email' },
-          { scope: 'transition:chat.bsky' },
-        ],
+        scope: [
+          'atproto',
+          'transition:generic',
+          'transition:email',
+          'transition:chat.bsky',
+        ].join(' '),
       }
 
       const origFetch = window.fetch

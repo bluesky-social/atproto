@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
+import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import {
   LayoutTitlePage,
@@ -16,7 +16,7 @@ export type AcceptViewProps = Override<
     clientTrusted: boolean
 
     account: Account
-    scopeDetails?: ScopeDetail[]
+    scope?: string
 
     onAccept: () => void
     onReject: () => void
@@ -29,7 +29,7 @@ export function AcceptView({
   clientMetadata,
   clientTrusted,
   account,
-  scopeDetails,
+  scope,
   onAccept,
   onReject,
   onBack,
@@ -60,7 +60,7 @@ export function AcceptView({
         clientMetadata={clientMetadata}
         clientTrusted={clientTrusted}
         account={account}
-        scopeDetails={scopeDetails}
+        scope={scope}
         onBack={onBack}
         onAccept={onAccept}
         onReject={onReject}

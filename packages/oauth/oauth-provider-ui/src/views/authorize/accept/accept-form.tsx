@@ -1,5 +1,15 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
+import { ScopeDescription } from '#/components/utils/scope-description.tsx'
+import type { Account } from '@atproto/oauth-provider-api'
+import {
+  DIDLike,
+  NSID,
+  NeArray,
+  RepoAction,
+  RepoScope,
+  RpcScope,
+  isScopeForResource,
+} from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { Button } from '../../../components/forms/button.tsx'
 import {
@@ -8,7 +18,6 @@ import {
 } from '../../../components/forms/form-card.tsx'
 import { AccountIdentifier } from '../../../components/utils/account-identifier.tsx'
 import { ClientName } from '../../../components/utils/client-name.tsx'
-import { MultiLangString } from '../../../components/utils/multi-lang-string.tsx'
 import { Override } from '../../../lib/util.ts'
 
 export type AcceptFormProps = Override<
@@ -19,7 +28,7 @@ export type AcceptFormProps = Override<
     clientTrusted: boolean
 
     account: Account
-    scopeDetails?: ScopeDetail[]
+    scope?: string
 
     onAccept: () => void
     onReject: () => void
@@ -33,7 +42,7 @@ export function AcceptForm({
   clientTrusted,
 
   account,
-  scopeDetails,
+  scope,
 
   onAccept,
   onReject,
@@ -116,41 +125,74 @@ export function AcceptForm({
         </Trans>
       </p>
 
-      {scopeDetails?.length ? (
-        <ul
-          className="list-inside list-disc"
-          key="scopes"
-          aria-label={t`Requested permissions`}
-        >
-          {scopeDetails.map(({ scope, description }) => (
-            <li key={scope}>
-              {description ? (
-                <MultiLangString value={description} />
-              ) : (
-                <ScopeDescription scope={scope} />
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <ul
+        className="list-inside list-disc"
+        key="scopes"
+        aria-label={t`Requested permissions`}
+      >
+        {aggregateScopes(scope).map((scope) => (
+          <li key={scope}>
+            <ScopeDescription scope={scope} />
+          </li>
+        ))}
+      </ul>
     </FormCard>
   )
 }
 
-type ScopeDescriptionProps = {
-  scope: string
-}
-function ScopeDescription({ scope }: ScopeDescriptionProps) {
-  switch (scope) {
-    case 'atproto':
-      return <Trans>Uniquely identify you</Trans>
-    case 'transition:email':
-      return <Trans>Read your email address</Trans>
-    case 'transition:generic':
-      return <Trans>Access your account data (except chat messages)</Trans>
-    case 'transition:chat.bsky':
-      return <Trans>Access your chat messages</Trans>
-    default:
-      return scope
+function aggregateScopes(scope?: string): string[] {
+  if (!scope) return []
+
+  const scopes = new Set(scope?.split(' '))
+  const result: string[] = []
+
+  const repoScopes = new Map<'*' | NSID, Set<RepoAction>>()
+  const rpcScopes = new Map<'*' | DIDLike, Set<'*' | NSID>>()
+
+  for (const s of scopes) {
+    if (isScopeForResource(s, 'repo')) {
+      const parsed = RepoScope.fromString(s)
+      if (parsed) {
+        for (const nsid of parsed.collection) {
+          let set = repoScopes.get(nsid)
+          if (!set) repoScopes.set(nsid, (set = new Set()))
+          for (const action of parsed.action) set.add(action)
+        }
+        continue
+      }
+    }
+
+    if (isScopeForResource(s, 'rpc')) {
+      const parsed = RpcScope.fromString(s)
+      if (parsed) {
+        let set = rpcScopes.get(parsed.aud)
+        if (!set) rpcScopes.set(parsed.aud, (set = new Set()))
+        for (const lxm of parsed.lxm) set.add(lxm)
+        continue
+      }
+    }
+
+    result.push(s)
   }
+
+  // Create a single "repo:" scope for each unique collection
+  for (const [collection, actions] of repoScopes.entries()) {
+    result.push(
+      new RepoScope([collection], [
+        ...actions,
+      ] as NeArray<RepoAction>).toString(),
+    )
+  }
+
+  // Create a single "rpc:" scope for each unique "aud"
+  for (const [aud, lxms] of rpcScopes.entries()) {
+    result.push(
+      new RpcScope(
+        aud,
+        lxms.has('*') ? ['*'] : ([...lxms] as NeArray<NSID>),
+      ).toString(),
+    )
+  }
+
+  return result
 }

@@ -13,6 +13,7 @@ import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
+import { AuthorizationError } from './errors/authorization-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { OAuthError } from './errors/oauth-error.js'
 import {
@@ -29,6 +30,7 @@ import { RequestId } from './request/request-id.js'
 export {
   AccessDeniedError,
   type Account,
+  AuthorizationError,
   type Awaitable,
   Client,
   type ClientAuth,
@@ -114,6 +116,19 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+  }) => Awaitable<void>
+
+  /**
+   * Allows validating an authorization request (typically the requested scopes)
+   * before it is created. Note that the validity against the client metadata is
+   * already enforced by the OAuth provider.
+   *
+   * @throws {AuthorizationError}
+   */
+  onAuthorizationRequest?: (data: {
+    client: Client
+    clientAuth: null | ClientAuth
+    parameters: Readonly<OAuthAuthorizationRequestParameters>
   }) => Awaitable<void>
 
   /**
