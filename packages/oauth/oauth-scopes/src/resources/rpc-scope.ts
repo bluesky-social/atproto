@@ -3,8 +3,8 @@ import { NeRoArray, ResourceSyntax } from '../syntax.js'
 import { DIDLike, isDIDLike } from './util/did.js'
 import { NSID, isNSID } from './util/nsid.js'
 
-const validateLxm = (value: string) => value === '*' || isNSID(value)
-const validateAud = (value: string) => value === '*' || isDIDLike(value)
+const validateLxmParam = (value: string) => value === '*' || isNSID(value)
+const validateAudParam = (value: string) => value === '*' || isDIDLike(value)
 
 export const rpcParser = new Parser(
   'rpc',
@@ -12,12 +12,12 @@ export const rpcParser = new Parser(
     lxm: {
       multiple: true,
       required: true,
-      validate: validateLxm,
+      validate: validateLxmParam,
     },
     aud: {
       multiple: false,
       required: true,
-      validate: validateAud,
+      validate: validateAudParam,
     },
   },
   'lxm',
@@ -29,20 +29,27 @@ export type RpcScopeMatch = {
 }
 
 export class RpcScope {
-  private constructor(
-    public readonly lxm: NeRoArray<'*' | NSID>,
+  constructor(
     public readonly aud: '*' | DIDLike,
+    public readonly lxm: NeRoArray<'*' | NSID>,
   ) {}
 
   matches(options: RpcScopeMatch): boolean {
+    const { aud, lxm } = this
     return (
-      (this.aud === '*' || this.aud === options.aud) &&
-      (this.lxm as readonly string[]).includes(options.lxm)
+      (aud === '*' || aud === options.aud) &&
+      (lxm.includes('*') || (lxm as readonly string[]).includes(options.lxm))
     )
   }
 
   toString(): string {
-    return rpcParser.format(this)
+    const { lxm, aud } = this
+    return rpcParser.format({
+      aud,
+      lxm: lxm.includes('*')
+        ? ['*']
+        : ([...new Set(lxm)].sort() as [NSID, ...NSID[]]),
+    })
   }
 
   static fromString(scope: string): RpcScope | null {
@@ -57,7 +64,7 @@ export class RpcScope {
     // rpc:*?aud=* is forbidden
     if (result.aud === '*' && result.lxm.includes('*')) return null
 
-    return new RpcScope(result.lxm, result.aud)
+    return new RpcScope(result.aud, result.lxm)
   }
 
   static scopeNeededFor(options: RpcScopeMatch): string {

@@ -30,4 +30,18 @@ describe('ScopesSet', () => {
       set.matches('repo', { action: 'create', collection: 'baz.qux' }),
     ).toBe(false)
   })
+
+  it('should not match missing scopes', () => {
+    const set = new ScopesSet(['repo:foo.bar'])
+    expect(
+      set.matches('repo', { action: 'delete', collection: 'foo.bar' }),
+    ).toBe(false)
+  })
+
+  it('should not match invalid scopes', () => {
+    const set = new ScopesSet(['repo:not-a-valid-nsid'])
+    expect(
+      set.matches('repo', { action: 'create', collection: 'not-a-valid-nsid' }),
+    ).toBe(false)
+  })
 })

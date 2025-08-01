@@ -58,7 +58,32 @@ describe('RepoScope', () => {
     })
 
     describe('scopeNeededFor', () => {
-      // @TODO ?
+      it('should return correct scope string for specific collection and action', () => {
+        const scope = RepoScope.scopeNeededFor({
+          collection: 'foo.bar',
+          action: 'create',
+        })
+        expect(scope).toBe('repo:foo.bar?action=create')
+      })
+
+      it('should return scope that accepts all collections with specific action', () => {
+        const scope = RepoScope.scopeNeededFor({
+          collection: '*',
+          action: 'create',
+        })
+        expect(scope).toBe('repo:*?action=create')
+      })
+
+      it('ignores invalid collection names', () => {
+        // @NOTE the scopeNeededFor assumes valid input, so it does not validate
+        // collection or action.
+        const scope = RepoScope.scopeNeededFor({
+          collection: 'invalid',
+          // @ts-expect-error
+          action: 'not-an-action',
+        })
+        expect(scope).toBe('repo:invalid?action=not-an-action')
+      })
     })
   })
 
@@ -140,7 +165,25 @@ describe('RepoScope', () => {
 
   describe('consistency', () => {
     const testCases: { input: string; expected: string }[] = [
-      //
+      { input: 'repo:foo.bar', expected: 'repo:foo.bar' },
+      {
+        input: 'repo:foo.bar?action=create',
+        expected: 'repo:foo.bar?action=create',
+      },
+      {
+        input: 'repo:foo.bar?action=create&action=update',
+        expected: 'repo:foo.bar?action=create&action=update',
+      },
+      { input: 'repo:*?action=create', expected: 'repo:*?action=create' },
+      { input: 'repo:*?action=update', expected: 'repo:*?action=update' },
+      {
+        input: 'repo?action=create&collection=foo.bar',
+        expected: 'repo:foo.bar?action=create',
+      },
+      {
+        input: 'repo?action=create&collection=foo.bar&collection=baz.qux',
+        expected: 'repo?collection=baz.qux&collection=foo.bar&action=create',
+      },
     ]
 
     for (const { input, expected } of testCases) {

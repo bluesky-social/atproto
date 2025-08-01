@@ -5,22 +5,22 @@ describe('RpcScope', () => {
     describe('fromString', () => {
       it('should parse positional scope', () => {
         const scope = RpcScope.fromString(
-          'rpc:com.example.Service?aud=did:example:123',
+          'rpc:com.example.service?aud=did:example:123',
         )
         expect(scope).not.toBeNull()
         expect(scope!.aud).toBe('did:example:123')
-        expect(scope!.lxm).toEqual(['com.example.Service'])
+        expect(scope!.lxm).toEqual(['com.example.service'])
       })
 
       it('should parse valid rpc scope with multiple lxm', () => {
         const scope = RpcScope.fromString(
-          'rpc?aud=*&lxm=com.example.Method1&lxm=com.example.Method2',
+          'rpc?aud=*&lxm=com.example.method1&lxm=com.example.method2',
         )
         expect(scope).not.toBeNull()
         expect(scope!.aud).toBe('*')
         expect(scope!.lxm).toEqual([
-          'com.example.Method1',
-          'com.example.Method2',
+          'com.example.method1',
+          'com.example.method2',
         ])
       })
 
@@ -30,17 +30,36 @@ describe('RpcScope', () => {
       })
 
       it('should reject rpc scope without aud', () => {
-        const scope = RpcScope.fromString('rpc?lxm=com.example.Method1')
+        const scope = RpcScope.fromString('rpc?lxm=com.example.method1')
         expect(scope).toBeNull()
       })
 
+      it('should reject any aud/any lxm', () => {
+        expect(RpcScope.fromString('rpc?aud=*&lxm=*')).toBeNull()
+        expect(RpcScope.fromString('rpc:*?aud=*')).toBeNull()
+      })
+
+      it('should reject missing aud', () => {
+        expect(RpcScope.fromString('rpc:com.example.service')).toBeNull()
+      })
+
+      it('should reject invalid aud', () => {
+        expect(
+          RpcScope.fromString('rpc:com.example.service?aud=invalid'),
+        ).toBeNull()
+      })
+
+      it('should reject invalid lxm', () => {
+        expect(RpcScope.fromString('rpc:invalid')).toBeNull()
+        expect(RpcScope.fromString('rpc?lxm=invalid')).toBeNull()
+      })
+
       for (const invalid of [
-        'rpc:*?aud=*',
         'rpc:*',
         'invalid',
         'rpc:invalid',
-        'rpc:com.example.Service?aud=invalid',
-        'notrpc:com.example.Service?aud=did:example:123',
+        'rpc:com.example.service?aud=invalid',
+        'notrpc:com.example.service?aud=did:example:123',
         'rpc?lxm=invalid&aud=invalid',
       ]) {
         it(`should return null for invalid rpc scope: ${invalid}`, () => {
@@ -50,23 +69,150 @@ describe('RpcScope', () => {
     })
 
     describe('scopeNeededFor', () => {
-      //
+      it('should return correct scope string for specific lxm and aud', () => {
+        const scope = RpcScope.scopeNeededFor({
+          lxm: 'com.example.service',
+          aud: 'did:example:123',
+        })
+        expect(scope).toBe('rpc:com.example.service?aud=did:example:123')
+      })
+
+      it('should return scope that accepts all aud with specific lxm', () => {
+        const scope = RpcScope.scopeNeededFor({
+          lxm: 'com.example.method1',
+          aud: '*',
+        })
+        expect(scope).toBe('rpc:com.example.method1?aud=*')
+      })
     })
   })
 
   describe('instance', () => {
     describe('matches', () => {
-      //
+      it('should match exact lxm and aud', () => {
+        const scope = RpcScope.fromString(
+          'rpc:com.example.service?aud=did:example:123',
+        )
+        expect(scope).not.toBeNull()
+        expect(
+          scope!.matches({
+            lxm: 'com.example.service',
+            aud: 'did:example:123',
+          }),
+        ).toBe(true)
+      })
+
+      it('should not match different lxm', () => {
+        const scope = RpcScope.fromString(
+          'rpc:com.example.service?aud=did:example:123',
+        )
+        expect(scope).not.toBeNull()
+        expect(
+          scope!.matches({
+            lxm: 'com.example.OtherService',
+            aud: 'did:example:123',
+          }),
+        ).toBe(false)
+      })
+
+      it('should not match different aud', () => {
+        const scope = RpcScope.fromString(
+          'rpc:com.example.service?aud=did:example:123',
+        )
+        expect(scope).not.toBeNull()
+        expect(
+          scope!.matches({
+            lxm: 'com.example.service',
+            aud: 'did:example:456',
+          }),
+        ).toBe(false)
+      })
+
+      it('should match wildcard aud', () => {
+        const scope = RpcScope.fromString('rpc:com.example.method1?aud=*')
+        expect(scope).not.toBeNull()
+        expect(
+          scope!.matches({
+            lxm: 'com.example.method1',
+            aud: 'did:example:123',
+          }),
+        ).toBe(true)
+      })
+
+      it('should match wildcard lxm', () => {
+        const scope = RpcScope.fromString('rpc:*?aud=did:example:123')
+        expect(scope).not.toBeNull()
+        expect(
+          scope!.matches({
+            lxm: 'com.example.method1',
+            aud: 'did:example:123',
+          }),
+        ).toBe(true)
+      })
+
+      it('should not match different lxm with wildcard aud', () => {
+        const scope = RpcScope.fromString('rpc:*?aud=did:example:123')
+        expect(scope).not.toBeNull()
+        expect(
+          scope!.matches({
+            lxm: 'com.example.anyMethod',
+            aud: 'did:example:123',
+          }),
+        ).toBe(true)
+      })
     })
 
     describe('toString', () => {
-      //
+      it('should format scope with lxm and aud', () => {
+        const scope = new RpcScope('did:example:123', ['com.example.service'])
+        expect(scope.toString()).toBe(
+          'rpc:com.example.service?aud=did:example:123',
+        )
+      })
+
+      it('should format scope with wildcard aud', () => {
+        const scope = new RpcScope('*', ['com.example.method1'])
+        expect(scope.toString()).toBe('rpc:com.example.method1?aud=*')
+      })
+
+      it('should format scope with wildcard lxm', () => {
+        const scope = new RpcScope('did:example:123', ['*'])
+        expect(scope.toString()).toBe('rpc:*?aud=did:example:123')
+      })
+
+      it('simplifies lxm if one of them is "*"', () => {
+        const scope = new RpcScope('did:example:123', [
+          '*',
+          'com.example.method1',
+        ])
+        expect(scope.toString()).toBe('rpc:*?aud=did:example:123')
+      })
     })
   })
 
   describe('consistency', () => {
     const testCases: { input: string; expected: string }[] = [
-      //
+      {
+        input: 'rpc:com.example.service?aud=did:example:123',
+        expected: 'rpc:com.example.service?aud=did:example:123',
+      },
+      {
+        input: 'rpc?lxm=com.example.method1&lxm=com.example.method2&aud=*',
+        expected: 'rpc?lxm=com.example.method1&lxm=com.example.method2&aud=*',
+      },
+      {
+        input:
+          'rpc?lxm=com.example.method1&lxm=com.example.method2&lxm=*&aud=did:example:123',
+        expected: 'rpc:*?aud=did:example:123',
+      },
+      {
+        input: 'rpc?aud=did:example:123&lxm=com.example.service',
+        expected: 'rpc:com.example.service?aud=did:example:123',
+      },
+      {
+        input: 'rpc?lxm=com.example.method1&aud=did:example:123',
+        expected: 'rpc:com.example.method1?aud=did:example:123',
+      },
     ]
 
     for (const { input, expected } of testCases) {
