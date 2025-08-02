@@ -44,6 +44,7 @@ import {
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
+  ListItemView,
   ListView,
   ListViewBasic,
   StarterPackView,
@@ -623,6 +624,16 @@ export class Views {
           }
         : undefined,
     }
+  }
+
+  listItemView(
+    uri: string,
+    did: string,
+    state: HydrationState,
+  ): Un$Typed<ListItemView> | undefined {
+    const subject = this.profile(did, state)
+    if (!subject) return
+    return { uri, subject }
   }
 
   starterPackBasic(

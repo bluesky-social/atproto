@@ -22,6 +22,14 @@ export type ListViewerState = {
 
 export type ListViewerStates = HydrationMap<ListViewerState>
 
+export type ListMembershipState = {
+  actorListItemUri?: string
+}
+// list uri => actor did => state
+export type ListMembershipStates = HydrationMap<
+  HydrationMap<ListMembershipState>
+>
+
 export type Follow = RecordInfo<FollowRecord>
 export type Follows = HydrationMap<Follow>
 

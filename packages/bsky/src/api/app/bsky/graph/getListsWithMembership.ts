@@ -7,7 +7,7 @@ import {
   CURATELIST,
   MODLIST,
 } from '../../../../lexicon/types/app/bsky/graph/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListsWithMembership'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -19,23 +19,25 @@ import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getLists = createPipeline(
+  const getListsWithMembership = createPipeline(
     skeleton,
     hydration,
     filterPurposes,
     presentation,
   )
-  server.app.bsky.graph.getLists({
-    auth: ctx.authVerifier.optionalStandardOrRole,
+  server.app.bsky.graph.getListsWithMembership({
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
+      const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        includeTakedowns,
       })
-      const result = await getLists({ ...params, hydrateCtx }, ctx)
+      const result = await getListsWithMembership(
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        ctx,
+      )
 
       return {
         encoding: 'application/json',
@@ -58,7 +60,7 @@ const skeleton = async (
   if (!did) throw new InvalidRequestError('Profile not found')
 
   const { listUris, cursor } = await ctx.hydrator.dataplane.getActorLists({
-    actorDid: did,
+    actorDid: params.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -69,8 +71,9 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
+  const { actor } = params
   const { listUris } = skeleton
-  return ctx.hydrator.hydrateLists(listUris, params.hydrateCtx)
+  return ctx.hydrator.hydrateListsMembership(listUris, actor, params.hydrateCtx)
 }
 
 const filterPurposes = (
@@ -95,12 +98,24 @@ const filterPurposes = (
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, skeleton, hydration } = input
+  const { ctx, params, skeleton, hydration } = input
   const { listUris, cursor } = skeleton
-  const lists = mapDefined(listUris, (uri) => {
-    return ctx.views.list(uri, hydration)
+  const listsWithMembership = mapDefined(listUris, (uri) => {
+    const list = ctx.views.list(uri, hydration)
+    if (!list) return
+
+    const listItemUri = hydration.listMemberships
+      ?.get(uri)
+      ?.get(params.actor)?.actorListItemUri
+
+    return {
+      list,
+      listItem: listItemUri
+        ? ctx.views.listItemView(listItemUri, params.actor, hydration)
+        : undefined,
+    }
   })
-  return { lists, cursor }
+  return { listsWithMembership, cursor }
 }
 
 type Context = {
@@ -109,7 +124,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  hydrateCtx: HydrateCtx
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {

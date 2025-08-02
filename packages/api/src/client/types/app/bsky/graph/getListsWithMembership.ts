@@ -14,10 +14,10 @@ import type * as AppBskyGraphDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.graph.getLists'
+const id = 'app.bsky.graph.getListsWithMembership'
 
 export type QueryParams = {
-  /** The account (actor) to enumerate lists from. */
+  /** The account (actor) to check for membership. */
   actor: string
   limit?: number
   cursor?: string
@@ -28,7 +28,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  lists: AppBskyGraphDefs.ListView[]
+  listsWithMembership: ListWithMembership[]
 }
 
 export interface CallOptions {
@@ -44,4 +44,21 @@ export interface Response {
 
 export function toKnownErr(e: any) {
   return e
+}
+
+/** A list and an optional list item indicating membership of a target user to that list. */
+export interface ListWithMembership {
+  $type?: 'app.bsky.graph.getListsWithMembership#listWithMembership'
+  list: AppBskyGraphDefs.ListView
+  listItem?: AppBskyGraphDefs.ListItemView
+}
+
+const hashListWithMembership = 'listWithMembership'
+
+export function isListWithMembership<V>(v: V) {
+  return is$typed(v, id, hashListWithMembership)
+}
+
+export function validateListWithMembership<V>(v: V) {
+  return validate<ListWithMembership & V>(v, id, hashListWithMembership)
 }
