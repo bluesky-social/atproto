@@ -100,6 +100,23 @@ describe('General validation', () => {
       parseLexiconDoc(schema)
     }).toThrow('Required field \\"foo\\" not defined')
   })
+  it('passes when unknown fields are present only at the root level', () => {
+    const schema = {
+      $schema: 'https://example.com/schema.json',
+      lexicon: 1,
+      id: 'com.example.unknownFields',
+      defs: {
+        test: {
+          type: 'object',
+          properties: {
+            test: { type: 'string' },
+          },
+        },
+      },
+    }
+
+    expect(() => parseLexiconDoc(schema)).not.toThrow()
+  })
   it('fails when unknown fields are present', () => {
     const schema = {
       lexicon: 1,
