@@ -1,3 +1,5 @@
+import { minIdx, toRecord } from './lib/util'
+
 export type NeArray<T> = [T, ...T[]]
 
 /**
@@ -137,18 +139,8 @@ export class ResourceSyntax<R extends string = string> {
     return values
   }
 
-  toString(): string {
-    let scope: string = this.resource
-
-    if (this.positional !== undefined) {
-      scope += `:${encodeURIComponent(this.positional)}`
-    }
-
-    if (this.params?.size) {
-      scope += `?${this.params.toString()}`
-    }
-
-    return scope
+  toString(): ScopeForResource<R> {
+    return encodeScope(this.resource, this.positional, this.params)
   }
 
   toJSON(): ResourceSyntaxJson<R> {
@@ -170,41 +162,164 @@ export class ResourceSyntax<R extends string = string> {
     const resource = (
       resourceEnd !== -1 ? scope.slice(0, resourceEnd) : scope
     ) as R
+
     const positional =
-      colonIdx !== -1 && (paramIdx === -1 || colonIdx < paramIdx)
+      colonIdx !== -1
         ? // There is a positional parameter, extract it
-          decodeURIComponent(
-            paramIdx === -1
-              ? scope.slice(colonIdx + 1)
-              : scope.slice(colonIdx + 1, paramIdx),
-          )
+          paramIdx === -1
+          ? decodeURIComponent(scope.slice(colonIdx + 1))
+          : colonIdx < paramIdx
+            ? decodeURIComponent(scope.slice(colonIdx + 1, paramIdx))
+            : undefined
         : undefined
+
     const params =
-      paramIdx !== -1 && paramIdx < scope.length - 1
-        ? // There is a (non-empty) query string, parse it
-          new URLSearchParams(scope.slice(paramIdx + 1))
+      paramIdx !== -1 // There is a query string
+        ? paramIdx === scope.length - 1
+          ? undefined // The query string is empty
+          : new URLSearchParams(scope.slice(paramIdx + 1))
         : undefined
 
     return new ResourceSyntax(resource, positional, params)
   }
 }
 
-const minIdx = (a: number, b: number): number => {
-  if (a === -1) return b
-  if (b === -1) return a
-  return Math.min(a, b)
-}
+/**
+ * Format a scope string for a resource with parameters
+ * as a positional parameter, if possible (if it has only one value).
+ * @param resource - The resource name (e.g. `rpc`, `repo`, etc.)
+ * @param inputParams - The list of parameters.
+ * @param positionalName - The name of the parameter that should be used as
+ * positional parameter.
+ */
+export function formatScope<R extends string>(
+  resource: R,
+  inputParams: Iterable<
+    [name: string, value: undefined | string | NeRoArray<string>]
+  >,
+  positionalName?: string,
+): ScopeForResource<R> {
+  const queryParams = new URLSearchParams()
 
-function toRecord(
-  iterable: Iterable<[key: string, value: string]>,
-): Record<string, string | [string, ...string[]]> {
-  const record: Record<string, [string, ...string[]]> = Object.create(null)
-  for (const [key, value] of iterable) {
-    if (Object.hasOwn(record, key)) {
-      record[key]!.push(value)
+  let positionalValue: string | undefined = undefined
+
+  for (const [name, value] of inputParams) {
+    if (value === undefined) continue
+
+    const setPositional =
+      name === positionalName && positionalValue === undefined
+
+    if (typeof value === 'string') {
+      if (setPositional) {
+        positionalValue = value
+      } else {
+        queryParams.append(name, value)
+      }
     } else {
-      record[key] = [value]
+      // value is "readonly [string, ...string[]]"
+      if (value.length === 0) {
+        // This should never happen (because "value" is supposed to be a
+        // non-empty array). Because some scope default to "*" (allow
+        // everything) when a parameter is not specified, we'd rather be safe
+        // here.
+        throw new Error(
+          `Invalid scope: parameter "${name}" cannot be an empty array`,
+        )
+      } else if (setPositional && value.length === 1) {
+        positionalValue = value[0]!
+      } else {
+        for (const v of value) {
+          queryParams.append(name, v)
+        }
+      }
     }
   }
-  return record
+
+  // Fool-proof: If the input iterable defines multiple times the same
+  // positional parameter (name), and it ended up being used as both positional
+  // and query param, move the positional value to the query params.
+  if (positionalValue !== undefined && queryParams.has(positionalName!)) {
+    queryParams.append(positionalName!, positionalValue)
+    positionalValue = undefined
+  }
+
+  return encodeScope(resource, positionalValue, queryParams)
+}
+
+export function encodeScope<R extends string>(
+  resource: R,
+  positional?: string,
+  params?: Readonly<URLSearchParams>,
+): ScopeForResource<R> {
+  let scope: string = resource
+
+  if (positional !== undefined) {
+    scope += `:${encodeScopeComponent(positional)}`
+  }
+
+  if (params?.size) {
+    scope += `?${normalizeScopeComponent(params.toString())}`
+  }
+
+  return scope as ScopeForResource<R>
+}
+
+/**
+ * Set of characters that are allowed in scope components without encoding. This
+ * is used to normalize scope components.
+ */
+export const ALLOWED_SCOPE_CHARS = new Set(
+  // @NOTE This list must not contain "?" or "&" as it would interfere with
+  // query string parsing.
+  [':', '/', '+', ',', '@', '%'],
+)
+
+export function encodeScopeComponent(value: string): string {
+  return normalizeScopeComponent(encodeURIComponent(value))
+}
+
+const NORMALIZABLE_CHARS_MAP = new Map(
+  Array.from(
+    ALLOWED_SCOPE_CHARS,
+    (c) => [encodeURIComponent(c), c] as const,
+  ).filter(
+    ([encoded, c]) =>
+      // Make sure that any char added to ALLOWED_SCOPE_CHARS that is a char
+      // that indeed needs encoding. Also, the normalizeScopeComponent only
+      // supports three-character percent-encoded sequences.
+      encoded !== c && encoded.length === 3 && encoded.startsWith('%'),
+  ),
+)
+
+/**
+ * Assumes a properly url-encoded string.
+ */
+export function normalizeScopeComponent(value: string): string {
+  // No need to read the last two characters since percent encoded characters
+  // are always three characters long.
+  let end = value.length - 2
+
+  for (let i = 0; i < end; i++) {
+    // Check if the character is a percent-encoded character
+    if (value.charCodeAt(i) === 0x25 /* % */) {
+      // Read the next encoded char. Current version only supports
+      // three-character percent-encoded sequences.
+      const encodedChar = value.slice(i, i + 3)
+
+      // Check if the encoded character is in the normalization map
+      const normalizedChar = NORMALIZABLE_CHARS_MAP.get(encodedChar)
+      if (normalizedChar) {
+        // Replace the encoded character with its normalized version
+        value = `${value.slice(0, i)}${normalizedChar}${value.slice(i + encodedChar.length)}`
+
+        // Adjust index to account for the length change
+        i += normalizedChar.length - 1
+
+        // Adjust end index since we replaced encoded char with normalized char
+        end -= encodedChar.length - normalizedChar.length
+      }
+    }
+  }
+
+  return value
 }

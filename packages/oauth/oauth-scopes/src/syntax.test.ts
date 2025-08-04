@@ -36,14 +36,7 @@ describe('isScopeForResource', () => {
   })
 })
 
-const TEST_CASES: Array<{
-  scope: string
-  content: {
-    resource: string
-    positional?: string
-    params?: Record<string, string[]>
-  }
-}> = [
+for (const { scope, normalized = scope, content } of [
   {
     scope: 'my-res',
     content: { resource: 'my-res' },
@@ -57,6 +50,14 @@ const TEST_CASES: Array<{
     content: { resource: 'my-res', positional: '' },
   },
   {
+    scope: 'my-res:foo?x=value&y=value-y',
+    content: {
+      resource: 'my-res',
+      positional: 'foo',
+      params: { x: ['value'], y: ['value-y'] },
+    },
+  },
+  {
     scope: 'my-res?x=value&y=value-y',
     content: { resource: 'my-res', params: { x: ['value'], y: ['value-y'] } },
   },
@@ -64,14 +65,43 @@ const TEST_CASES: Array<{
     scope: 'my-res?x=foo&x=bar&x=baz',
     content: { resource: 'my-res', params: { x: ['foo', 'bar', 'baz'] } },
   },
-]
-
-for (const { scope, content } of TEST_CASES) {
-  describe(scope, () => {
+  {
+    scope: 'rpc:foo.bar?aud=did:foo:bar?lxm=bar.baz',
+    normalized: 'rpc:foo.bar?aud=did:foo:bar%3Flxm%3Dbar.baz',
+    content: {
+      resource: 'rpc',
+      positional: 'foo.bar',
+      params: { aud: ['did:foo:bar?lxm=bar.baz'] },
+    },
+  },
+] as Array<{
+  scope: string
+  normalized?: string
+  content: {
+    resource: string
+    positional?: string
+    params?: Record<string, string[]>
+  }
+}>) {
+  describe(`Valid "${scope}"`, () => {
     const syntax = ResourceSyntax.fromString(scope)
 
+    it('should match the expected syntax', () => {
+      expect(syntax).toEqual({
+        resource: content.resource,
+        positional: content.positional,
+        params: content.params
+          ? new URLSearchParams(
+              Object.entries(content.params).flatMap(([k, v]) =>
+                v.map((val) => [k, val]),
+              ),
+            )
+          : undefined,
+      })
+    })
+
     it(`should stringify ${scope} correctly`, () => {
-      expect(syntax.toString()).toBe(scope)
+      expect(syntax.toString()).toBe(normalized)
     })
 
     it(`should parse ${scope} correctly`, () => {
@@ -108,13 +138,11 @@ for (const { scope, content } of TEST_CASES) {
       for (const [key, values] of Object.entries(params)) {
         it(`should get an array when reading "${key}"`, () => {
           expect(syntax.getMulti(key)).toEqual(values)
-          expect(syntax.getMulti(key, true)).toEqual(values)
         })
 
         if (values.length === 1) {
           it(`should allow retrieving single-value params`, () => {
             expect(syntax.getSingle(key)).toEqual(values[0])
-            expect(syntax.getSingle(key, true)).toEqual(values[0])
           })
         } else {
           it(`should return null for multi-value params`, () => {

@@ -1,6 +1,6 @@
+import { NSID, isNSID } from '../lib/nsid.js'
 import { Parser, knownValuesValidator } from '../parser.js'
 import { NeRoArray, ResourceSyntax } from '../syntax.js'
-import { NSID, isNSID } from './util/nsid.js'
 
 const REPO_ACTIONS = Object.freeze(['create', 'update', 'delete'] as const)
 export type RepoAction = (typeof REPO_ACTIONS)[number]

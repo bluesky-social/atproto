@@ -32,7 +32,7 @@ describe('ScopesSet', () => {
   })
 
   it('should not match missing scopes', () => {
-    const set = new ScopesSet(['repo:foo.bar'])
+    const set = new ScopesSet(['repo:foo.bar?action=create'])
     expect(
       set.matches('repo', { action: 'delete', collection: 'foo.bar' }),
     ).toBe(false)

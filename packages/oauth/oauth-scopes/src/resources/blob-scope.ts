@@ -1,6 +1,6 @@
+import { Accept, isAccept, matchesAnyAccept } from '../lib/mime.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ResourceSyntax } from '../syntax.js'
-import { Accept, isAccept, matchesAnyAccept } from './util/accept.js'
 
 export const DEFAULT_ACCEPT = Object.freeze(['*/*'] as const)
 
@@ -13,9 +13,9 @@ export const blobParser = new Parser(
       validate: isAccept,
       normalize: (value) => {
         if (value.includes('*/*')) return DEFAULT_ACCEPT
-        // @TODO remove specific accept values that are covered by partial
-        // accept (e.g. remove "image/png" if "image/*" is present)
         return value
+          .map(toLowerCase)
+          .filter(isWildcardOrHasNoWildcardMatch) as [string, ...string[]]
       },
       default: DEFAULT_ACCEPT,
     },
@@ -55,4 +55,24 @@ export class BlobScope {
       accept: [options.mime as Accept],
     })
   }
+}
+
+function toLowerCase(value: string): string {
+  return value.toLowerCase()
+}
+
+function isWildcardOrHasNoWildcardMatch(
+  value: string,
+  index: number,
+  arr: readonly string[],
+): boolean {
+  if (value.endsWith('/*')) {
+    // keep wildcards
+    return true
+  }
+  if (arr.includes(`${value.split('/')[0]}/*`)) {
+    // skip mimes that have a wildcard match
+    return false
+  }
+  return true
 }

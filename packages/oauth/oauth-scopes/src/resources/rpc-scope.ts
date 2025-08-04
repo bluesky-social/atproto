@@ -1,7 +1,7 @@
+import { DIDLike, isDIDLike } from '../lib/did.js'
+import { NSID, isNSID } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ResourceSyntax } from '../syntax.js'
-import { DIDLike, isDIDLike } from './util/did.js'
-import { NSID, isNSID } from './util/nsid.js'
 
 const validateLxmParam = (value: string) => value === '*' || isNSID(value)
 const validateAudParam = (value: string) => value === '*' || isDIDLike(value)

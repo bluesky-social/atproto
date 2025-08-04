@@ -126,6 +126,14 @@ describe('BlobScope', () => {
         input: 'blob?accept=*/*&accept=image/jpeg',
         expected: 'blob',
       },
+      {
+        input: 'blob?accept=image/*&accept=image/jpeg',
+        expected: 'blob:image/*',
+      },
+      {
+        input: 'blob?accept=*/*&accept=image/*&accept=image/jpeg',
+        expected: 'blob',
+      },
     ]
 
     for (const { input, expected } of testCases) {

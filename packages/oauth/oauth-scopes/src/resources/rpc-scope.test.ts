@@ -12,6 +12,54 @@ describe('RpcScope', () => {
         expect(scope!.lxm).toEqual(['com.example.service'])
       })
 
+      it('should parse strings correctly', () => {
+        expect(
+          RpcScope.fromString('rpc?lxm=com.example.method1&aud=*'),
+        ).toEqual({
+          aud: '*',
+          lxm: ['com.example.method1'],
+        })
+        expect(RpcScope.fromString('rpc:com.example.method1?aud=*')).toEqual({
+          aud: '*',
+          lxm: ['com.example.method1'],
+        })
+      })
+
+      it('should render strings correctly', () => {
+        expect(
+          new RpcScope('did:example:123', ['com.example.service']).toString(),
+        ).toBe('rpc:com.example.service?aud=did:example:123')
+        expect(new RpcScope('*', ['com.example.method1']).toString()).toBe(
+          'rpc:com.example.method1?aud=*',
+        )
+        expect(
+          new RpcScope('did:example:123', [
+            'com.example.method1',
+            'com.example.method2',
+          ]).toString(),
+        ).toBe(
+          'rpc?lxm=com.example.method1&lxm=com.example.method2&aud=did:example:123',
+        )
+      })
+
+      it('should reject scopes without lxm', () => {
+        expect(RpcScope.fromString('rpc?aud=did:example:123')).toBeNull()
+        expect(RpcScope.fromString('rpc:?aud=did:example:123')).toBeNull()
+      })
+
+      it('should reject scopes without aud', () => {
+        expect(RpcScope.fromString('rpc?lxm=com.example.method1')).toBeNull()
+        expect(RpcScope.fromString('rpc:com.example.method1')).toBeNull()
+      })
+
+      it('should reject scopes with lxm in both positional and query form', () => {
+        expect(
+          RpcScope.fromString(
+            'rpc:com.example.method1?aud=did:example:123&lxm=com.example.method2',
+          ),
+        ).toBeNull()
+      })
+
       it('should parse valid rpc scope with multiple lxm', () => {
         const scope = RpcScope.fromString(
           'rpc?aud=*&lxm=com.example.method1&lxm=com.example.method2',
@@ -58,6 +106,10 @@ describe('RpcScope', () => {
         'rpc:*',
         'invalid',
         'rpc:invalid',
+        'rpc:invalid?aud=did:foo:bar',
+        'rpc:foo.bar?aud=did:foo:bar&lxm=bar.baz',
+        'rpc:foo.bar?aud=invalid',
+        'rpc:invalid?aud=did:example:123',
         'rpc:com.example.service?aud=invalid',
         'notrpc:com.example.service?aud=did:example:123',
         'rpc?lxm=invalid&aud=invalid',
@@ -212,6 +264,10 @@ describe('RpcScope', () => {
       {
         input: 'rpc?lxm=com.example.method1&aud=did:example:123',
         expected: 'rpc:com.example.method1?aud=did:example:123',
+      },
+      {
+        input: 'rpc:com.example.method1?&aud=*',
+        expected: 'rpc:com.example.method1?aud=*',
       },
     ]
 

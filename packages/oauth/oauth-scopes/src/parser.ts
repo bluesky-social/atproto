@@ -1,4 +1,9 @@
-import { NeRoArray, ResourceSyntax, ScopeForResource } from './syntax.js'
+import {
+  NeRoArray,
+  ResourceSyntax,
+  ScopeForResource,
+  formatScope,
+} from './syntax.js'
 
 type InferStringPredicate<T extends undefined | ((value: string) => boolean)> =
   T extends ((value: string) => value is infer U extends string) ? U : string
@@ -142,91 +147,4 @@ function arrayParamEquals(
 export function knownValuesValidator<T extends string>(values: Iterable<T>) {
   const set = new Set<string>(values)
   return (value: string): value is T => set.has(value)
-}
-
-/**
- * Format a scope string for a resource with parameters
- * as a positional parameter, if possible (if it has only one value).
- * @param resource - The resource name (e.g. `rpc`, `repo`, etc.)
- * @param params - The list of parameters.
- * @param positionalName - The name of the parameter that should be used as
- * positional parameter.
- */
-export function formatScope<R extends string>(
-  resource: R,
-  params: Iterable<
-    [name: string, value: undefined | string | NeRoArray<string>]
-  >,
-  positionalName?: string,
-): ScopeForResource<R> {
-  const queryParams = new URLSearchParams()
-
-  let positionalValue: string | undefined = undefined
-
-  for (const [name, value] of params) {
-    if (value === undefined) continue
-
-    const setPositional =
-      name === positionalName && positionalValue === undefined
-
-    if (typeof value === 'string') {
-      if (setPositional) {
-        positionalValue = value
-      } else {
-        queryParams.append(name, value)
-      }
-    } else {
-      // value is "readonly [string, ...string[]]"
-      if (value.length === 0) {
-        // This should never happen (because "value" is supposed to be a
-        // non-empty array). Because some scope default to "*" (allow
-        // everything) when a parameter is not specified, we'd rather be safe
-        // here.
-        throw new Error(
-          `Invalid scope: parameter "${name}" cannot be an empty array`,
-        )
-      } else if (setPositional && value.length === 1) {
-        positionalValue = value[0]!
-      } else {
-        for (const v of value) {
-          queryParams.append(name, v)
-        }
-      }
-    }
-  }
-
-  // Fool-proof: If the input iterable defines multiple times the same
-  // positional parameter (name), and it ended up being used as both positional
-  // and query param, move the positional value to the query params.
-  if (positionalValue !== undefined && queryParams.has(positionalName!)) {
-    queryParams.append(positionalName!, positionalValue)
-    positionalValue = undefined
-  }
-
-  let scope: ScopeForResource<R> = resource
-  if (positionalValue !== undefined) {
-    scope = `${scope}:${decodeAllowedChars(encodeURIComponent(positionalValue))}`
-  }
-  if (queryParams.size > 0) {
-    scope = `${scope}?${decodeAllowedChars(queryParams.toString())}`
-  }
-  return scope
-}
-
-const ALLOWED_CHARS = Object.freeze([
-  ':',
-  '/',
-  '+',
-  ',',
-  '@',
-  '%',
-  '?',
-  '&',
-] as const)
-
-function decodeAllowedChars(value: string): string {
-  for (const c of ALLOWED_CHARS) {
-    value = value.replaceAll(encodeURIComponent(c), c)
-  }
-  return value
 }
