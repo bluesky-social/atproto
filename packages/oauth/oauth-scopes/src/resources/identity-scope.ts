@@ -1,5 +1,5 @@
 import { Parser, knownValuesValidator } from '../parser.js'
-import { ResourceSyntax } from '../syntax.js'
+import { ResourceSyntax, isScopeForResource } from '../syntax.js'
 
 const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
 export type IdentityAttribute = (typeof IDENTITY_ATTRIBUTES)[number]
@@ -48,6 +48,7 @@ export class IdentityScope {
   }
 
   static fromString(scope: string) {
+    if (!isScopeForResource(scope, 'identity')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return this.fromSyntax(syntax)
   }

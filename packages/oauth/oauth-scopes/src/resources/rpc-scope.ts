@@ -1,7 +1,7 @@
 import { DIDLike, isDIDLike } from '../lib/did.js'
 import { NSID, isNSID } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ResourceSyntax } from '../syntax.js'
+import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
 
 const validateLxmParam = (value: string) => value === '*' || isNSID(value)
 const validateAudParam = (value: string) => value === '*' || isDIDLike(value)
@@ -53,6 +53,7 @@ export class RpcScope {
   }
 
   static fromString(scope: string): RpcScope | null {
+    if (!isScopeForResource(scope, 'rpc')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return this.fromSyntax(syntax)
   }

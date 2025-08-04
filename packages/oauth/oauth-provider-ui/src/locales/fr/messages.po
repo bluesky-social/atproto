@@ -13,10 +13,6 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/accept/accept-form.tsx:76
-msgid "<0/> is asking for permission to access your account (<1/>)."
-msgstr "<0/> demande la permission d'accéder à votre compte (<1/>)."
-
 #: src/views/authorize/sign-in/sign-in-form.tsx:219
 msgid "2FA Confirmation"
 msgstr "Confirmation 2FA"
@@ -25,13 +21,9 @@ msgstr "Confirmation 2FA"
 msgid "A second authentication factor is required"
 msgstr "Un second facteur d'authentification est requis"
 
-#: src/views/authorize/accept/accept-form.tsx:150
-msgid "Access your account data (except chat messages)"
-msgstr "Accéder aux données de votre compte (sauf les messages de chat)"
-
-#: src/views/authorize/accept/accept-form.tsx:152
-msgid "Access your chat messages"
-msgstr "Accéder à vos messages de chat"
+#: src/components/utils/scope-description.tsx:132
+msgid "Account"
+msgstr "Compte utilisateur"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:71
 msgid "Already have a code?"
@@ -49,12 +41,25 @@ msgstr "Une erreur inconnue s'est produite"
 msgid "Another account"
 msgstr "Un autre compte"
 
+#: src/components/utils/scope-description.tsx:238
+msgid "Any audience"
+msgstr "N'importe quelle audience"
+
+#: src/components/utils/scope-description.tsx:334
+msgid "Any collection"
+msgstr "N'importe quelle collection"
+
+#: src/components/utils/scope-description.tsx:227
+msgid "Audience"
+msgstr "Audience"
+
 #: src/views/authorize/welcome/welcome-view.tsx:28
+#: src/components/utils/scope-description.tsx:221
 msgid "Authenticate"
 msgstr "Authentification"
 
 #: src/views/authorize/accept/accept-view.tsx:55
-#: src/views/authorize/accept/accept-form.tsx:57
+#: src/views/authorize/accept/accept-form.tsx:58
 msgid "Authorize"
 msgstr "Authoriser l'accès"
 
@@ -74,9 +79,9 @@ msgstr "Retour"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
-#: src/views/authorize/accept/accept-form.tsx:89
-msgid "By clicking <0>Authorize</0>, you allow this application to perform the following actions in accordance with their <1>terms of service</1> and <2>privacy policy</2>:"
-msgstr "En cliquant sur <0>Authoriser l'accès</0>, vous autorisez cette application à effectuer les actions suivantes conformément à leurs <1>conditions d'utilisation</1> et leur <2>politique de confidentialité</2> :"
+#: src/views/authorize/accept/accept-form.tsx:98
+msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
+msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et à sa <2>politique de confidentialité</2>."
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
@@ -89,6 +94,10 @@ msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
 #: src/components/forms/form-card-async.tsx:85
 msgid "Cancel"
 msgstr "Annuler"
+
+#: src/components/utils/scope-description.tsx:160
+msgid "Chat"
+msgstr "Discussions"
 
 #. placeholder {0}: secondFactor.hint
 #: src/views/authorize/sign-in/sign-in-form.tsx:232
@@ -103,6 +112,14 @@ msgstr "Choisissez un nom d'utilisateur"
 msgid "Code"
 msgstr "Code"
 
+#: src/components/utils/description-card.tsx:57
+msgid "Collapse details"
+msgstr "Réduire les détails"
+
+#: src/components/utils/scope-description.tsx:321
+msgid "Collection"
+msgstr "Collection"
+
 #: src/views/authorize/sign-in/sign-in-form.tsx:137
 msgid "Confirm"
 msgstr "Confirmer"
@@ -115,6 +132,10 @@ msgstr "Confirmez votre mot de passe pour continuer"
 msgid "Confirmation code"
 msgstr "Code de confirmation"
 
+#: src/components/utils/scope-description.tsx:322
+msgid "Create"
+msgstr "Créer"
+
 #: src/views/authorize/welcome/welcome-view.tsx:35
 msgid "Create a new account"
 msgstr "Créer un nouveau compte"
@@ -123,7 +144,15 @@ msgstr "Créer un nouveau compte"
 msgid "Create Account"
 msgstr "Créer un compte"
 
-#: src/views/authorize/accept/accept-form.tsx:61
+#: src/components/utils/scope-description.tsx:303
+msgid "Create, update, and delete any public record"
+msgstr "Créer, modifier et supprimer tout contenu public"
+
+#: src/components/utils/scope-description.tsx:324
+msgid "Delete"
+msgstr "Supprimer"
+
+#: src/views/authorize/accept/accept-form.tsx:62
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
@@ -132,6 +161,8 @@ msgid "Description"
 msgstr "Description"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
+#: src/components/utils/scope-description.tsx:70
+#: src/components/utils/scope-description.tsx:80
 msgid "Email"
 msgstr "Email"
 
@@ -178,6 +209,10 @@ msgstr "Erreur"
 msgid "example-com-xxxxx-xxxxx"
 msgstr "exemple-com-xxxxx-xxxxx"
 
+#: src/components/utils/description-card.tsx:57
+msgid "Expand details"
+msgstr "Développer les détails"
+
 #: src/components/utils/password-strength-label.tsx:25
 msgid "Extra"
 msgstr "Extra"
@@ -212,6 +247,11 @@ msgstr "Accueil"
 msgid "Identifier"
 msgstr "Identifiant"
 
+#: src/components/utils/scope-description.tsx:179
+#: src/components/utils/scope-description.tsx:189
+msgid "Identity"
+msgstr "Identité"
+
 #: src/locales/locale-selector.tsx:48
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
@@ -237,7 +277,7 @@ msgstr "Connexion terminée"
 msgid "Login to account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
-#: src/components/layouts/layout-welcome.tsx:45
+#: src/components/layouts/layout-welcome.tsx:47
 msgid "Logo"
 msgstr "Logo"
 
@@ -248,6 +288,18 @@ msgstr "Ressemble à {example}"
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
 msgstr "Rendre visible"
+
+#: src/components/utils/scope-description.tsx:133
+msgid "Manage your account status"
+msgstr "Gérer l'état de votre compte"
+
+#: src/components/utils/scope-description.tsx:180
+msgid "Manage your identity"
+msgstr "Gérer votre identité"
+
+#: src/components/utils/scope-description.tsx:228
+msgid "Methods"
+msgstr "Méthodes"
 
 #: src/components/utils/password-strength-label.tsx:33
 msgid "Missing"
@@ -271,6 +323,10 @@ msgstr "Nouveau mot de passe"
 msgid "Next"
 msgstr "Suivant"
 
+#: src/components/utils/scope-description.tsx:245
+msgid "No restrictions"
+msgstr "Aucune restriction"
+
 #: src/views/authorize/reset-password/reset-password-view.tsx:119
 msgid "Okay"
 msgstr "OK"
@@ -278,6 +334,10 @@ msgstr "OK"
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:157
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
+
+#: src/components/utils/scope-description.tsx:289
+msgid "Override the entire public data repository"
+msgstr "Écraser l'ensemble du dépôt de données publiques"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:128
 #: src/views/authorize/sign-in/sign-in-form.tsx:164
@@ -305,6 +365,10 @@ msgstr "Mot de passe mis à jour !"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
+#: src/components/utils/scope-description.tsx:222
+msgid "Perform authenticated actions on your behalf"
+msgstr "Effectuer des actions authentifiées en votre nom"
+
 #: src/views/authorize/sign-in/sign-in-form.tsx:198
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre mot de passe. N'entrez jamais votre mot de passe sur un domaine auquel vous ne faites pas confiance."
@@ -315,18 +379,28 @@ msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre m
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
 
-#: src/views/authorize/accept/accept-form.tsx:148
-msgid "Read your email address"
-msgstr "Lire votre adresse email"
+#: src/components/utils/scope-description.tsx:161
+msgid "Read and send chat messages"
+msgstr "Lire et envoyer des messages de discussion"
+
+#: src/components/utils/scope-description.tsx:71
+msgid "Read and update your account's email address"
+msgstr "Lire et mettre à jour l'adresse e-mail de votre compte"
+
+#: src/components/utils/scope-description.tsx:81
+msgid "Read your account's email address"
+msgstr "Lire l'adresse e-mail de votre compte"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:207
 #: src/views/authorize/sign-in/sign-in-form.tsx:212
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
-#: src/views/authorize/accept/accept-form.tsx:123
-msgid "Requested permissions"
-msgstr "Permissions demandées"
+#: src/components/utils/scope-description.tsx:288
+#: src/components/utils/scope-description.tsx:302
+#: src/components/utils/scope-description.tsx:315
+msgid "Repository"
+msgstr "Données publiques"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:61
 msgid "Reset code"
@@ -347,6 +421,10 @@ msgstr "Sélectionner le domaine"
 #: src/views/authorize/sign-in/sign-in-view.tsx:141
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
+
+#: src/components/utils/description-card.tsx:55
+msgid "Show details"
+msgstr "Afficher les détails"
 
 #: src/views/authorize/welcome/welcome-view.tsx:45
 #: src/views/authorize/sign-in/sign-in-view.tsx:52
@@ -371,6 +449,10 @@ msgstr "S'inscrire"
 #: src/components/forms/wizard-card.tsx:106
 msgid "Step {currentPosition} of {count}"
 msgstr "Étape {currentPosition} sur {count}"
+
+#: src/components/utils/scope-description.tsx:117
+msgid "Storage"
+msgstr "Stockage"
 
 #: src/components/utils/password-strength-label.tsx:27
 msgid "Strong"
@@ -442,9 +524,25 @@ msgstr "Saisissez le nom d'utilisateur souhaité"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/views/authorize/accept/accept-form.tsx:146
-msgid "Uniquely identify you"
-msgstr "Vous identifier de façon unique"
+#: src/components/utils/scope-description.tsx:323
+msgid "Update"
+msgstr "Modifier"
+
+#: src/components/utils/scope-description.tsx:316
+msgid "Update public data"
+msgstr "Modifier les données publiques"
+
+#: src/components/utils/scope-description.tsx:190
+msgid "Update your handle"
+msgstr "Modifier votre pseudonyme"
+
+#: src/components/utils/scope-description.tsx:119
+msgid "Upload and store files"
+msgstr "Télécharger et stocker des fichiers"
+
+#: src/components/utils/scope-description.tsx:119
+msgid "Upload and store images"
+msgstr "Télécharger et stocker des images"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:145
 msgid "Username or email address"
@@ -457,6 +555,10 @@ msgstr "Valide"
 #: src/views/authorize/sign-up/sign-up-view.tsx:138
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
+
+#: src/views/authorize/accept/accept-form.tsx:89
+msgid "wants to access your <0/> account"
+msgstr "veut accéder à votre compte <0/>"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:195
 msgid "Warning"

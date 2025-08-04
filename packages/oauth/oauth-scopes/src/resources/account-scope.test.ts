@@ -136,6 +136,14 @@ describe('AccountScope', () => {
           statusScope!.matches({ action: 'read', attribute: 'status' }),
         ).toBe(true)
       })
+
+      it('should allow read when "manage" action is specified', () => {
+        const scope = AccountScope.fromString('account:email?action=manage')
+        expect(scope).not.toBeNull()
+        expect(scope!.matches({ action: 'read', attribute: 'email' })).toBe(
+          true,
+        )
+      })
     })
 
     describe('toString', () => {

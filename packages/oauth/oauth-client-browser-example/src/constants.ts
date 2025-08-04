@@ -20,5 +20,5 @@ export const SIGN_UP_URL: string =
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ??
   (ENV === 'development'
-    ? 'atproto account:email rpc:did:web:bsky.app#bsky_appview repo:*'
+    ? 'atproto account:email rpc:*?aud=did:web:bsky.app#bsky_appview repo:* identity:* account:status blob:*/*'
     : 'atproto transition:generic')

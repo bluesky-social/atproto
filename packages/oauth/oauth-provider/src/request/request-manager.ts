@@ -172,6 +172,11 @@ export class RequestManager {
 
     // Let's make sure the scopes are unique (to reduce the token & storage
     // size) & are indeed supported.
+
+    // @NOTE An app requesting a not yet supported list of scopes will need to
+    // re-authenticate the user once the scopes are supported. This is due to
+    // the fact that the AS does not know how to properly display those scopes
+    // to the user, so it cannot properly ask for consent.
     const scopes = new Set(
       parameters.scope?.split(' ')?.filter(isValidAtprotoOauthScope),
     )

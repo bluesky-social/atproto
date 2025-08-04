@@ -1,6 +1,6 @@
 import { NSID, isNSID } from '../lib/nsid.js'
 import { Parser, knownValuesValidator } from '../parser.js'
-import { NeRoArray, ResourceSyntax } from '../syntax.js'
+import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
 
 const REPO_ACTIONS = Object.freeze(['create', 'update', 'delete'] as const)
 export type RepoAction = (typeof REPO_ACTIONS)[number]
@@ -60,6 +60,7 @@ export class RepoScope {
   }
 
   static fromString(scope: string): RepoScope | null {
+    if (!isScopeForResource(scope, 'repo')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return this.fromSyntax(syntax)
   }
@@ -67,11 +68,6 @@ export class RepoScope {
   static fromSyntax(syntax: ResourceSyntax): RepoScope | null {
     const result = repoParser.parse(syntax)
     if (!result) return null
-
-    // Containing both a "*" and specific collections is forbidden
-    if (result.collection.includes('*') && result.action.length > 1) {
-      return null
-    }
 
     return new RepoScope(result.collection, result.action)
   }

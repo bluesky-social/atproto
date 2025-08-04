@@ -1,6 +1,6 @@
 import { Accept, isAccept, matchesAnyAccept } from '../lib/mime.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ResourceSyntax } from '../syntax.js'
+import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
 
 export const DEFAULT_ACCEPT = Object.freeze(['*/*'] as const)
 
@@ -39,6 +39,7 @@ export class BlobScope {
   }
 
   static fromString(scope: string) {
+    if (!isScopeForResource(scope, 'blob')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return this.fromSyntax(syntax)
   }

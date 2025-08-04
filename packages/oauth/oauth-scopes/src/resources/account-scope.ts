@@ -1,5 +1,5 @@
 import { Parser, knownValuesValidator } from '../parser.js'
-import { ResourceSyntax } from '../syntax.js'
+import { ResourceSyntax, isScopeForResource } from '../syntax.js'
 
 const ACCOUNT_ATTRIBUTES = Object.freeze(['email', 'repo', 'status'] as const)
 export type AccountAttribute = (typeof ACCOUNT_ATTRIBUTES)[number]
@@ -38,7 +38,8 @@ export class AccountScope {
 
   matches(options: AccountScopeMatch): boolean {
     return (
-      this.attribute === options.attribute && this.action === options.action
+      this.attribute === options.attribute &&
+      (this.action === 'manage' || this.action === options.action)
     )
   }
 
@@ -47,6 +48,7 @@ export class AccountScope {
   }
 
   static fromString(scope: string) {
+    if (!isScopeForResource(scope, 'account')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return this.fromSyntax(syntax)
   }

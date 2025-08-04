@@ -26,11 +26,39 @@ describe('RepoScope', () => {
         expect(scope!.action).toEqual(['create', 'update', 'delete'])
       })
 
+      it('should allow wildcard collection with specific action', () => {
+        const scope = RepoScope.fromString('repo:*?action=create')
+        expect(scope).not.toBeNull()
+        expect(scope!.collection).toEqual(['*'])
+        expect(scope!.action).toEqual(['create'])
+        expect(
+          scope!.matches({ action: 'create', collection: 'any.collection' }),
+        ).toBe(true)
+        expect(
+          scope!.matches({ action: 'update', collection: 'any.collection' }),
+        ).toBe(false)
+      })
+
+      it('should allow wildcard collection without actions', () => {
+        const scope = RepoScope.fromString('repo:*')
+        expect(scope).not.toBeNull()
+        expect(scope!.collection).toEqual(['*'])
+        expect(scope!.action).toEqual(['create', 'update', 'delete'])
+        expect(
+          scope!.matches({ action: 'create', collection: 'any.collection' }),
+        ).toBe(true)
+        expect(
+          scope!.matches({ action: 'update', collection: 'any.collection' }),
+        ).toBe(true)
+        expect(
+          scope!.matches({ action: 'delete', collection: 'any.collection' }),
+        ).toBe(true)
+      })
+
       it('should ignore scopes with invalid collection names', () => {
         expect(RepoScope.fromString('repo:foo bar')).toBeNull()
         expect(RepoScope.fromString('repo:.foo')).toBeNull()
         expect(RepoScope.fromString('repo:bar.')).toBeNull()
-        expect(RepoScope.fromString('repo:*')).toBeNull()
       })
 
       it('should reject invalid action names', () => {
@@ -45,7 +73,6 @@ describe('RepoScope', () => {
 
       for (const invalid of [
         'repo:*?action=*',
-        'repo:*',
         'invalid',
         'repo:invalid',
         'repo:foo.bar?action=invalid',

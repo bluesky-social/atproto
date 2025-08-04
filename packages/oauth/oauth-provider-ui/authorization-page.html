@@ -95,7 +95,7 @@
       const clientName = 'My App'
       const clientPolicyUri = 'https://bsky.app'
       const clientTosUri = 'https://bsky.app'
-      const clientLogoUri = 'https://bsky.app'
+      const clientLogoUri = 'https://picsum.photos/200'
 
       // Mock data
 
@@ -113,6 +113,8 @@
       }
 
       window.__authorizeData = {
+        requestUri,
+
         clientId: clientId,
         clientMetadata: {
           client_id: clientId,
@@ -122,16 +124,40 @@
           logo_uri: clientLogoUri,
         },
         clientTrusted: false,
-        requestUri,
+
         loginHint,
-        sessions: [],
+        uiLocales: undefined, // 'en'
         scope: [
           'atproto',
-          'transition:generic',
+          'identity:*',
+          'blob:image/*',
+          'repo:app.bsky.feed.post',
+          'repo:app.bsky.feed.like?action=create',
+          'repo:*?action=delete',
+          // 'transition:generic',
+          'rpc:*?aud=did:plc:543#bsky_appview',
+          'rpc:app.bsky.feed.getFeed?aud=*',
+          'rpc:app.bsky.feed.getFeedSkeleton?aud=*',
           'transition:email',
           'transition:chat.bsky',
         ].join(' '),
       }
+
+      window.__sessions = [
+        {
+          account: {
+            sub: 'did:plc:543',
+            name: 'Bob',
+            email: 'bob@test.com',
+            email_verified: true,
+            preferred_username: 'bob.test',
+            picture: 'https://cat.com/cat.jpg',
+          },
+          selected: false,
+          loginRequired: false,
+          consentRequired: true,
+        },
+      ]
 
       const origFetch = window.fetch
 
@@ -163,6 +189,17 @@
                 }),
                 {
                   status: 200,
+                  headers: { 'Content-Type': 'application/json' },
+                },
+              )
+            case `POST ${API_ENDPOINT_PREFIX}/accept`:
+              return new Response(
+                JSON.stringify({
+                  error: 'invalid_request',
+                  error_description: 'Noooo',
+                }),
+                {
+                  status: 400,
                   headers: { 'Content-Type': 'application/json' },
                 },
               )
