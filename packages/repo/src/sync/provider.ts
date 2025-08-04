@@ -3,7 +3,7 @@ import { writeCarStream } from '../car'
 import { CidSet } from '../cid-set'
 import { MissingBlocksError } from '../error'
 import { MST } from '../mst'
-import { ReadableBlockstore, RepoStorage } from '../storage'
+import { ReadableBlockstore } from '../storage'
 import { RecordPath, def } from '../types'
 import * as util from '../util'
 
@@ -11,13 +11,13 @@ import * as util from '../util'
 // -------------
 
 export const getFullRepo = (
-  storage: RepoStorage,
+  storage: ReadableBlockstore,
   commitCid: CID,
 ): AsyncIterable<Uint8Array> => {
   return writeCarStream(commitCid, iterateFullRepo(storage, commitCid))
 }
 
-async function* iterateFullRepo(storage: RepoStorage, commitCid: CID) {
+async function* iterateFullRepo(storage: ReadableBlockstore, commitCid: CID) {
   const commit = await storage.readObjAndBytes(commitCid, def.commit)
   yield { cid: commitCid, bytes: commit.bytes }
   const mst = MST.load(storage, commit.obj.data)
