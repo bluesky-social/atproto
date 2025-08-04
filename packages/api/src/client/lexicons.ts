@@ -6595,6 +6595,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.feed.defs#skeletonReasonRepost',
               'lex:app.bsky.feed.defs#skeletonReasonPin',
+              'lex:app.bsky.feed.defs#skeletonReasonPromoted',
             ],
           },
           feedContext: {
@@ -6618,6 +6619,32 @@ export const schemaDict = {
       skeletonReasonPin: {
         type: 'object',
         properties: {},
+      },
+      skeletonReasonPromoted: {
+        type: 'object',
+        description:
+          'The existence of this reason on a skeletonFeedPost indicates the post is being displayed to the user in a promotional capacity (i.e., as sponsored content).',
+        required: ['by', 'on'],
+        properties: {
+          info: {
+            type: 'string',
+            description:
+              'Extended information about sponsored content, provided by the feed generator for transparency purposes.',
+            maxLength: 2000,
+          },
+          by: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+            description:
+              'The account sponsoring or paying for the promotion. This is most likely the author of the post.',
+          },
+          on: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'URI of the feed record responsible for the promotion.',
+          },
+        },
       },
       threadgateView: {
         type: 'object',
