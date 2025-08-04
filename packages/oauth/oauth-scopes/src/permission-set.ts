@@ -20,8 +20,10 @@ export type {
 export class PermissionSet {
   public readonly scopes: ScopesSet
 
-  constructor(scopes?: null | Iterable<string>) {
-    this.scopes = new ScopesSet(scopes)
+  constructor(scopes?: null | string | Iterable<string>) {
+    this.scopes = new ScopesSet(
+      typeof scopes === 'string' ? scopes.split(' ') : scopes,
+    )
   }
 
   public allowsAccount(options: AccountScopeMatch): boolean {

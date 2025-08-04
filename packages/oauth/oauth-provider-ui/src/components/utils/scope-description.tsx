@@ -37,10 +37,7 @@ export function ScopeDescription({
   className = '',
   ...attrs
 }: ScopeDescriptionProps) {
-  const permissions = useMemo(
-    () => new PermissionSetTransition(scope?.split(' ')),
-    [scope],
-  )
+  const permissions = useMemo(() => new PermissionSetTransition(scope), [scope])
 
   if (permissions.scopes.size === 0) return null
   if (permissions.scopes.size === 1 && permissions.scopes.has('atproto')) {
