@@ -4,7 +4,7 @@ export * from './permission-set-transition.js'
 export * from './scopes-set.js'
 export * from './parser.js'
 export * from './syntax.js'
-export * from './validation.js'
+export * from './utilities.js'
 
 export * from './resources/account-scope.js'
 export * from './resources/blob-scope.js'

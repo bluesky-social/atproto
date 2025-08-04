@@ -5,7 +5,7 @@ import {
   IdentityScope,
   RepoScope,
   RpcScope,
-  fromString,
+  parseScope,
 } from '@atproto/oauth-scopes'
 
 export type ScopeDescriptionProps = {
@@ -22,7 +22,7 @@ export function ScopeDescription({ scope }: ScopeDescriptionProps) {
     case 'transition:chat.bsky':
       return <Trans>Access your chat messages</Trans>
     default: {
-      const parsed = fromString(scope)
+      const parsed = parseScope(scope)
       if (parsed instanceof AccountScope) {
         const { attribute, action } = parsed
         if (attribute === 'email') {

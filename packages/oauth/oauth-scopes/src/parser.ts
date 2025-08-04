@@ -33,10 +33,6 @@ type ParsedParams<S extends ParamsSchema> = {
         : InferStringPredicate<S[K]['validate']>)
 } & NonNullable<unknown>
 
-/**
- *
- * @__NO_SIDE_EFFECTS__
- */
 export class Parser<R extends string, S extends ParamsSchema> {
   readonly schemaKeys: ReadonlyArray<keyof S & string>
 
