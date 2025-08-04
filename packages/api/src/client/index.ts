@@ -245,6 +245,7 @@ import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -523,6 +524,7 @@ export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -603,6 +605,12 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+  DefsTimelineEventPlcCreate:
+    'tools.ozone.moderation.defs#timelineEventPlcCreate',
+  DefsTimelineEventPlcOperation:
+    'tools.ozone.moderation.defs#timelineEventPlcOperation',
+  DefsTimelineEventPlcTombstone:
+    'tools.ozone.moderation.defs#timelineEventPlcTombstone',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -4704,6 +4712,22 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.emitEvent', opts?.qp, data, opts)
       .catch((e) => {
         throw ToolsOzoneModerationEmitEvent.toKnownErr(e)
+      })
+  }
+
+  getAccountTimeline(
+    params?: ToolsOzoneModerationGetAccountTimeline.QueryParams,
+    opts?: ToolsOzoneModerationGetAccountTimeline.CallOptions,
+  ): Promise<ToolsOzoneModerationGetAccountTimeline.Response> {
+    return this._client
+      .call(
+        'tools.ozone.moderation.getAccountTimeline',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ToolsOzoneModerationGetAccountTimeline.toKnownErr(e)
       })
   }
 

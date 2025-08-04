@@ -980,3 +980,10 @@ export function isModTool<V>(v: V) {
 export function validateModTool<V>(v: V) {
   return validate<ModTool & V>(v, id, hashModTool)
 }
+
+/** Moderation event timeline event for a PLC create operation */
+export const TIMELINEEVENTPLCCREATE = `${id}#timelineEventPlcCreate`
+/** Moderation event timeline event for generic PLC operation */
+export const TIMELINEEVENTPLCOPERATION = `${id}#timelineEventPlcOperation`
+/** Moderation event timeline event for a PLC tombstone operation */
+export const TIMELINEEVENTPLCTOMBSTONE = `${id}#timelineEventPlcTombstone`
