@@ -18,7 +18,7 @@ export interface RateLimiterContext {
 
 export type CalcKeyFn<C extends RateLimiterContext = RateLimiterContext> = (
   ctx: C,
-) => string | null
+) => string | null | undefined
 export type CalcPointsFn<C extends RateLimiterContext = RateLimiterContext> = (
   ctx: C,
 ) => number
@@ -97,7 +97,7 @@ export class RateLimiter<C extends RateLimiterContext = RateLimiterContext>
   ): Promise<RateLimiterStatus | RateLimitExceededError | null> {
     const calcKey = opts?.calcKey ?? this.calcKey
     const key = calcKey(ctx)
-    if (key === null) {
+    if (key === null || key === undefined) {
       return null
     }
     const calcPoints = opts?.calcPoints ?? this.calcPoints
@@ -133,7 +133,7 @@ export class RateLimiter<C extends RateLimiterContext = RateLimiterContext>
 
   async reset(ctx: C, opts?: RateLimiterResetOptions<C>): Promise<void> {
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
-    if (key === null) {
+    if (key === null || key === undefined) {
       return
     }
 
