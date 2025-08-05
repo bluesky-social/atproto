@@ -46,7 +46,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 /** A starter pack and an optional list item indicating membership of a target user to that starter pack. */
 export interface StarterPackWithMembership {
   $type?: 'app.bsky.graph.getStarterPacksWithMembership#starterPackWithMembership'
-  starterPack: AppBskyGraphDefs.StarterPackViewBasic
+  starterPack: AppBskyGraphDefs.StarterPackView
   listItem?: AppBskyGraphDefs.ListItemView
 }
 

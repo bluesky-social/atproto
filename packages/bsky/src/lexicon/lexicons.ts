@@ -9302,7 +9302,7 @@ export const schemaDict = {
         properties: {
           starterPack: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+            ref: 'lex:app.bsky.graph.defs#starterPackView',
           },
           listItem: {
             type: 'ref',

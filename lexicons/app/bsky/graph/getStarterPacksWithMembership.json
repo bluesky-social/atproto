@@ -45,7 +45,7 @@
       "properties": {
         "starterPack": {
           "type": "ref",
-          "ref": "app.bsky.graph.defs#starterPackViewBasic"
+          "ref": "app.bsky.graph.defs#starterPackView"
         },
         "listItem": {
           "type": "ref",
