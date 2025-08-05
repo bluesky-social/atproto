@@ -23,6 +23,7 @@ import {
   prepareUpdate,
 } from '../../repo'
 import { AccountEvt, CommitEvt, SeqEvt, Sequencer } from '../../sequencer'
+import { recursiveWithRetry } from '../../util/fs'
 import { RecoveryDb } from './recovery-db'
 import { UserQueues } from './user-queues'
 
@@ -181,7 +182,7 @@ const processAccountEvt = async (ctx: RecovererContext, evt: AccountEvt) => {
     return
   }
   const { directory } = await ctx.actorStore.getLocation(evt.did)
-  await rmIfExists(directory, true)
+  await rmIfExists(directory, recursiveWithRetry)
   await ctx.accountManager.deleteAccount(evt.did)
 }
 
