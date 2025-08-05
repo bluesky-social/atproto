@@ -84,11 +84,12 @@ export type CarBlockIterable = AsyncGenerator<CarBlock, void, unknown> & {
 
 export const readCarStream = async (
   car: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  maxSize?: number,
 ): Promise<{
   roots: CID[]
   blocks: CarBlockIterable
 }> => {
-  const reader = new BufferedReader(car)
+  const reader = new BufferedReader(car, maxSize)
   try {
     const headerSize = await reader.readVarint()
     if (headerSize === null) {
@@ -159,8 +160,12 @@ class BufferedReader {
   buffer: Uint8Array = new Uint8Array()
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
+  bytesRead = 0
 
-  constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
+  constructor(
+    stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+    public maxSize?: number,
+  ) {
     this.iterator =
       Symbol.asyncIterator in stream
         ? stream[Symbol.asyncIterator]()
@@ -206,6 +211,10 @@ class BufferedReader {
         return
       }
       this.buffer = ui8.concat([this.buffer, next.value])
+      this.bytesRead += next.value.byteLength
+      if (this.maxSize && this.bytesRead > this.maxSize) {
+        throw new Error('max size exceeded')
+      }
     }
   }
 
