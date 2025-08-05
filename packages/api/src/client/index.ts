@@ -154,10 +154,12 @@ import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+import * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 import * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
@@ -433,10 +435,12 @@ export * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+export * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+export * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 export * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
@@ -2892,6 +2896,18 @@ export class AppBskyGraphNS {
     return this._client.call('app.bsky.graph.getLists', params, undefined, opts)
   }
 
+  getListsWithMembership(
+    params?: AppBskyGraphGetListsWithMembership.QueryParams,
+    opts?: AppBskyGraphGetListsWithMembership.CallOptions,
+  ): Promise<AppBskyGraphGetListsWithMembership.Response> {
+    return this._client.call(
+      'app.bsky.graph.getListsWithMembership',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getMutes(
     params?: AppBskyGraphGetMutes.QueryParams,
     opts?: AppBskyGraphGetMutes.CallOptions,
@@ -2928,6 +2944,18 @@ export class AppBskyGraphNS {
   ): Promise<AppBskyGraphGetStarterPacks.Response> {
     return this._client.call(
       'app.bsky.graph.getStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getStarterPacksWithMembership(
+    params?: AppBskyGraphGetStarterPacksWithMembership.QueryParams,
+    opts?: AppBskyGraphGetStarterPacksWithMembership.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacksWithMembership.Response> {
+    return this._client.call(
+      'app.bsky.graph.getStarterPacksWithMembership',
       params,
       undefined,
       opts,
