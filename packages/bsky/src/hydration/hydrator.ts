@@ -384,27 +384,25 @@ export class Hydrator {
       }),
     ])
 
-    const listMembershipHydrationState: HydrationState = {
-      listMemberships: uris.reduce((acc, cur, i) => {
-        const userMap = new HydrationMap<ListMembershipState>()
-
+    // mapping uri -> did -> { actorListItemUri }
+    const listMemberships = new HydrationMap(
+      uris.map((uri, i) => {
         const listItemUri = listItemUris[i]
-        if (listItemUri) {
-          userMap.set(did, {
-            actorListItemUri: listItemUri,
-          } satisfies ListMembershipState)
-        }
-
-        acc.set(cur, userMap)
-        return acc
-      }, new HydrationMap<HydrationMap<ListMembershipState>>()),
-    }
-
-    return mergeManyStates(
-      actorsHydrationState,
-      listsHydrationState,
-      listMembershipHydrationState,
+        return [
+          uri,
+          new HydrationMap<ListMembershipState>([
+            listItemUri
+              ? [did, { actorListItemUri: listItemUri }]
+              : [did, null],
+          ]),
+        ]
+      }),
     )
+
+    return mergeManyStates(actorsHydrationState, listsHydrationState, {
+      listMemberships,
+      ctx,
+    })
   }
 
   // app.bsky.feed.defs#postView

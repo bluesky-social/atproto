@@ -52,19 +52,19 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
-  if (clearlyBadCursor(params.cursor)) {
-    return { listUris: [] }
-  }
+  const [actorDid] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!actorDid) throw new InvalidRequestError('Profile not found')
 
-  const [did] = await ctx.hydrator.actor.getDids([params.actor])
-  if (!did) throw new InvalidRequestError('Profile not found')
+  if (clearlyBadCursor(params.cursor)) {
+    return { actorDid, listUris: [] }
+  }
 
   const { listUris, cursor } = await ctx.hydrator.dataplane.getActorLists({
     actorDid: params.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
   })
-  return { listUris, cursor: cursor || undefined }
+  return { actorDid, listUris, cursor: cursor || undefined }
 }
 
 const hydration = async (
@@ -84,7 +84,9 @@ const filterPurposes = (
 
   const acceptedPurposes = new Set()
   if (purposes.includes('modlist')) acceptedPurposes.add(MODLIST)
+  if (purposes.includes(MODLIST)) acceptedPurposes.add(MODLIST)
   if (purposes.includes('curatelist')) acceptedPurposes.add(CURATELIST)
+  if (purposes.includes(CURATELIST)) acceptedPurposes.add(CURATELIST)
 
   // @NOTE: While we don't support filtering on the dataplane, this might result in empty pages.
   // Despite the empty pages, the pagination still can enumerate all items for the specified filters.
@@ -98,20 +100,20 @@ const filterPurposes = (
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { ctx, params, skeleton, hydration } = input
-  const { listUris, cursor } = skeleton
+  const { ctx, skeleton, hydration } = input
+  const { actorDid, listUris, cursor } = skeleton
   const listsWithMembership = mapDefined(listUris, (uri) => {
     const list = ctx.views.list(uri, hydration)
     if (!list) return
 
     const listItemUri = hydration.listMemberships
       ?.get(uri)
-      ?.get(params.actor)?.actorListItemUri
+      ?.get(actorDid)?.actorListItemUri
 
     return {
       list,
       listItem: listItemUri
-        ? ctx.views.listItemView(listItemUri, params.actor, hydration)
+        ? ctx.views.listItemView(listItemUri, actorDid, hydration)
         : undefined,
     }
   })
@@ -128,6 +130,7 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
+  actorDid: string
   listUris: string[]
   cursor?: string
 }

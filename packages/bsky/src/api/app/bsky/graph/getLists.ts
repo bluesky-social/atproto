@@ -81,7 +81,9 @@ const filterPurposes = (
 
   const acceptedPurposes = new Set()
   if (purposes.includes('modlist')) acceptedPurposes.add(MODLIST)
+  if (purposes.includes(MODLIST)) acceptedPurposes.add(MODLIST)
   if (purposes.includes('curatelist')) acceptedPurposes.add(CURATELIST)
+  if (purposes.includes(CURATELIST)) acceptedPurposes.add(CURATELIST)
 
   // @NOTE: While we don't support filtering on the dataplane, this might result in empty pages.
   // Despite the empty pages, the pagination still can enumerate all items for the specified filters.

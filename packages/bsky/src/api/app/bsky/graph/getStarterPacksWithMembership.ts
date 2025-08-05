@@ -55,12 +55,12 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
-  if (clearlyBadCursor(params.cursor)) {
-    return { listUris: [], starterPackUris: [] }
-  }
+  const [actorDid] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!actorDid) throw new InvalidRequestError('Profile not found')
 
-  const [did] = await ctx.hydrator.actor.getDids([params.actor])
-  if (!did) throw new InvalidRequestError('Profile not found')
+  if (clearlyBadCursor(params.cursor)) {
+    return { actorDid, starterPackUris: [] }
+  }
 
   const { uris: starterPackUris, cursor } =
     await ctx.hydrator.dataplane.getActorStarterPacks({
@@ -69,49 +69,50 @@ const skeleton = async (
       limit: params.limit,
     })
 
-  const starterPackRecords =
-    await ctx.hydrator.graph.getStarterPacks(starterPackUris)
-  const listUris = mapDefined([...starterPackRecords.values()], (sp) => {
-    if (!sp) return
-    return sp.record.list
-  })
-
-  return { listUris, starterPackUris, cursor: cursor || undefined }
+  return { actorDid, starterPackUris, cursor: cursor || undefined }
 }
 
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { actor } = params
-  const { listUris, starterPackUris } = skeleton
-  const [spHydrationState, listMembershipHydrationState] = await Promise.all([
-    ctx.hydrator.hydrateStarterPacksBasic(starterPackUris, params.hydrateCtx),
-    ctx.hydrator.hydrateListsMembership(listUris, actor, params.hydrateCtx),
-  ])
+  const { actorDid, starterPackUris } = skeleton
+  const spHydrationState = await ctx.hydrator.hydrateStarterPacks(
+    starterPackUris,
+    params.hydrateCtx,
+  )
+  const listUris = mapDefined(
+    starterPackUris,
+    (uri) => spHydrationState.starterPacks?.get(uri)?.record.list,
+  )
+  const listMembershipHydrationState =
+    await ctx.hydrator.hydrateListsMembership(
+      listUris,
+      actorDid,
+      params.hydrateCtx,
+    )
   return mergeManyStates(spHydrationState, listMembershipHydrationState)
 }
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ): OutputSchema => {
-  const { ctx, params, skeleton, hydration } = input
-  const { listUris, starterPackUris: spUri, cursor } = skeleton
+  const { ctx, skeleton, hydration } = input
+  const { actorDid, starterPackUris, cursor } = skeleton
 
-  let i = 0
-  const starterPacksWithMembership = mapDefined(spUri, (starterPackUri) => {
-    const listUri = listUris[i++]
-    const starterPack = ctx.views.starterPackBasic(starterPackUri, hydration)
-    if (!starterPack) return
+  const starterPacksWithMembership = mapDefined(starterPackUris, (spUri) => {
+    const listUri = hydration.starterPacks?.get(spUri)?.record.list
+    const starterPack = ctx.views.starterPack(spUri, hydration)
+    if (!listUri || !starterPack) return
 
     const listItemUri = hydration.listMemberships
       ?.get(listUri)
-      ?.get(params.actor)?.actorListItemUri
+      ?.get(actorDid)?.actorListItemUri
 
     return {
       starterPack,
       listItem: listItemUri
-        ? ctx.views.listItemView(listItemUri, params.actor, hydration)
+        ? ctx.views.listItemView(listItemUri, actorDid, hydration)
         : undefined,
     }
   })
@@ -128,7 +129,7 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  listUris: string[]
+  actorDid: string
   starterPackUris: string[]
   cursor?: string
 }
