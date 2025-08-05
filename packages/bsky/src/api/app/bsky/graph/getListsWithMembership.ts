@@ -71,9 +71,12 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { actor } = params
-  const { listUris } = skeleton
-  return ctx.hydrator.hydrateListsMembership(listUris, actor, params.hydrateCtx)
+  const { actorDid, listUris } = skeleton
+  return ctx.hydrator.hydrateListsMembership(
+    listUris,
+    actorDid,
+    params.hydrateCtx,
+  )
 }
 
 const filterPurposes = (
