@@ -1,12 +1,15 @@
 import { useLingui } from '@lingui/react/macro'
-import { HTMLAttributes, ReactNode, useState } from 'react'
-import { useRandomString } from '#/hooks/use-random-string'
-import { Override } from '#/lib/util'
-import { ChevronRightIcon } from './icons'
+import { HTMLAttributes, ReactNode, useCallback, useRef, useState } from 'react'
+import { Button } from '#/components/forms/button.tsx'
+import { useClickOutside } from '#/hooks/use-click-outside'
+import { useEscapeKey } from '#/hooks/use-escape-key'
+import { useRandomString } from '#/hooks/use-random-string.ts'
+import { Override } from '#/lib/util.ts'
 
 export type DescriptionCardProps = Override<
   HTMLAttributes<HTMLDivElement>,
   {
+    hint?: string
     image: ReactNode
     title?: ReactNode
     description?: ReactNode
@@ -14,6 +17,7 @@ export type DescriptionCardProps = Override<
 >
 
 export function DescriptionCard({
+  hint,
   image,
   title,
   description,
@@ -24,14 +28,18 @@ export function DescriptionCard({
   ...attrs
 }: DescriptionCardProps) {
   const { t } = useLingui()
-  const [showDetails, setShowDetails] = useState(false)
+  const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
+
+  const ref = useRef<HTMLDivElement>(null)
+  useEscapeKey(close)
+  useClickOutside(ref, close)
+
   const hasChildren = children != null
   const detailsDivId = useRandomString('details-card-')
 
-  const toggleShowDetails = () => setShowDetails((prev) => !prev)
-
   return (
-    <div {...attrs}>
+    <div ref={ref} {...attrs}>
       <div className={`flex items-center justify-start gap-4`}>
         <div
           className="flex w-8 flex-grow-0 justify-center align-middle"
@@ -39,40 +47,38 @@ export function DescriptionCard({
         >
           {image}
         </div>
-        <div className={`flex flex-1 flex-col`}>
-          {title && <p>{title}</p>}
+        <div
+          className={`flex flex-1 flex-col`}
+          aria-describedby={hasChildren ? detailsDivId : undefined}
+        >
+          {title && <h3>{title}</h3>}
           {description && <p className="text-sm">{description}</p>}
         </div>
         {hasChildren && (
-          <button
+          <Button
             onClick={(event) => {
               if (!event.defaultPrevented) {
                 event.preventDefault()
-                toggleShowDetails()
+                setOpen((prev) => !prev)
               }
             }}
-            type="button"
-            title={t`Show details`}
-            aria-expanded={showDetails}
-            aria-label={showDetails ? t`Collapse details` : t`Expand details`}
+            shape="circle"
+            title={hint ?? t`Show details`}
+            aria-expanded={open}
+            aria-label={open ? t`Collapse details` : t`Expand details`}
             aria-haspopup="true"
             aria-controls={detailsDivId}
-            className="flex h-8 w-8 flex-grow-0 cursor-pointer items-center justify-center rounded-full hover:bg-slate-300 dark:hover:bg-slate-600"
           >
-            <ChevronRightIcon
-              className={`h-4 transition-transform duration-200 ${
-                showDetails ? 'rotate-90' : ''
-              }`}
-            />
-          </button>
+            ?
+          </Button>
         )}
       </div>
       {hasChildren && (
         <div
-          className="py-4 pl-12"
-          hidden={!showDetails}
+          className="ml-12 pt-4"
+          hidden={!open}
           id={detailsDivId}
-          aria-hidden={!showDetails}
+          aria-hidden={!open}
         >
           {children}
         </div>

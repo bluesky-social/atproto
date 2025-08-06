@@ -11,15 +11,15 @@ import {
  * in place of the generic scopes.
  */
 export class PermissionSetTransition extends PermissionSet {
-  protected get hasTransitionGeneric(): boolean {
+  get hasTransitionGeneric(): boolean {
     return this.scopes.has('transition:generic')
   }
 
-  protected get hasTransitionEmail(): boolean {
+  get hasTransitionEmail(): boolean {
     return this.scopes.has('transition:email')
   }
 
-  protected get hasTransitionChatBsky(): boolean {
+  get hasTransitionChatBsky(): boolean {
     return this.scopes.has('transition:chat.bsky')
   }
 
