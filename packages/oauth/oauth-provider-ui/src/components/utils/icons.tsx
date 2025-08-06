@@ -61,12 +61,6 @@ export const AlertIcon = makeSvgComponent(
   'AlertIcon',
 )
 
-export const CircleInfoIcon = makeSvgComponent(
-  // https://github.com/bluesky-social/social-app/blob/b32568260f98ea879468fd1bdedacf85d1e6ae8c/src/components/icons/CircleInfo.tsx#L3
-  'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm8-1a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-4a1 1 0 0 1-1-1Zm1-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0Z',
-  'CircleInfoIcon',
-)
-
 export const AtSymbolIcon = makeSvgComponent(
   'M12 4a8 8 0 1 0 4.21 14.804 1 1 0 0 1 1.054 1.7A9.958 9.958 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10c0 1.104-.27 2.31-.949 3.243-.716.984-1.849 1.6-3.331 1.465a4.207 4.207 0 0 1-2.93-1.585c-.94 1.21-2.388 1.94-3.985 1.715-2.53-.356-4.04-2.91-3.682-5.458.358-2.547 2.514-4.586 5.044-4.23.905.127 1.68.536 2.286 1.126a1 1 0 0 1 1.964.368l-.515 3.545v.002a2.222 2.222 0 0 0 1.999 2.526c.75.068 1.212-.21 1.533-.65.358-.493.566-1.245.566-2.067a8 8 0 0 0-8-8Zm-.112 5.13c-1.195-.168-2.544.819-2.784 2.529-.24 1.71.784 3.03 1.98 3.198 1.195.168 2.543-.819 2.784-2.529.24-1.71-.784-3.03-1.98-3.198Z',
   'AtSymbolIcon',
@@ -94,6 +88,12 @@ export const CheckMarkIcon = makeSvgComponent(
   // https://github.com/bluesky-social/social-app/blob/b32568260f98ea879468fd1bdedacf85d1e6ae8c/src/components/icons/Check.tsx
   'M21.59 3.193a1 1 0 0 1 .217 1.397l-11.706 16a1 1 0 0 1-1.429.193l-6.294-5a1 1 0 1 1 1.244-1.566l5.48 4.353 11.09-15.16a1 1 0 0 1 1.398-.217Z',
   'CheckMarkIcon',
+)
+
+export const CircleInfoIcon = makeSvgComponent(
+  // https://github.com/bluesky-social/social-app/blob/b32568260f98ea879468fd1bdedacf85d1e6ae8c/src/components/icons/CircleInfo.tsx#L3
+  'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm8-1a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-4a1 1 0 0 1-1-1Zm1-3a1 1 0 1 0 2 0 1 1 0 0 0-2 0Z',
+  'CircleInfoIcon',
 )
 
 export const EmailIcon = makeSvgComponent(
