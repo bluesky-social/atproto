@@ -47,7 +47,7 @@ msgstr "N'importe quelle collection"
 
 #: src/components/utils/scope-description.tsx:379
 msgid "Any service"
-msgstr ""
+msgstr "N'importe quel service"
 
 #: src/views/authorize/welcome/welcome-view.tsx:28
 #: src/components/utils/scope-description.tsx:305
@@ -229,7 +229,7 @@ msgstr "Accorder l'accès à votre compte <0>{0}</0>"
 
 #: src/components/utils/scope-description.tsx:284
 msgid "Handle"
-msgstr ""
+msgstr "Pseudo"
 
 #: src/components/utils/help-card.tsx:32
 msgid "Having trouble? <0>Contact support</0>"
@@ -295,7 +295,7 @@ msgstr "Gérer l'état de votre compte"
 
 #: src/components/utils/scope-description.tsx:274
 msgid "Manage your full identity (including your @handle)"
-msgstr ""
+msgstr "Gérer l'intégralité de votre identité (y compris votre @pseudo)"
 
 #: src/components/utils/scope-description.tsx:372
 msgid "Methods"
@@ -367,7 +367,7 @@ msgstr "Effectuer des actions authentifiées en votre nom"
 
 #: src/components/utils/scope-description.tsx:306
 msgid "Perform authenticated actions towards any service on your behalf"
-msgstr ""
+msgstr "Effectuer des actions authentifiées vers n'importe quel service en votre nom"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:195
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
@@ -381,7 +381,7 @@ msgstr "Politique de Confidentialité"
 
 #: src/components/utils/scope-description.tsx:250
 msgid "Read and send messages"
-msgstr ""
+msgstr "Lire et envoyer des messages"
 
 #: src/components/utils/scope-description.tsx:110
 msgid "Read and update your account's email address"
@@ -398,7 +398,7 @@ msgstr "Se souvenir de ce compte sur cet appareil"
 
 #: src/components/utils/scope-description.tsx:412
 msgid "Replace your entire public data repository with new data"
-msgstr ""
+msgstr "Remplacer l'intégralité de vos données publiques par de nouvelles données"
 
 #: src/components/utils/scope-description.tsx:411
 #: src/components/utils/scope-description.tsx:427
@@ -428,7 +428,7 @@ msgstr "Sélectionner un compte"
 
 #: src/components/utils/scope-description.tsx:371
 msgid "Service"
-msgstr ""
+msgstr "Service"
 
 #: src/components/utils/description-card.tsx:67
 msgid "Show details"
@@ -488,11 +488,11 @@ msgstr "Ce pseudonyme ne peut pas être utilisé"
 
 #: src/components/utils/scope-description.tsx:78
 msgid "The application will gain full access over your identity on the network, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you trust."
-msgstr ""
+msgstr "L'application aura un accès complet à votre identité sur le réseau, ce qui signifie qu'elle pourrait <0>permanently break</0>, ou même <1>steal</1>, votre compte. Accordez cette autorisation uniquement aux applications auxquelles vous faites confiance."
 
 #: src/components/utils/scope-description.tsx:319
 msgid "The ATproto network uses authenticated inter service calls to perform actions on your behalf. This is typically used to retrieve or update data linked to your account, such as posts, likes, follows, and messages. The application is asking for permissions to perform the following actions:"
-msgstr ""
+msgstr "Le réseau ATproto utilise des appels inter-services authentifiés pour effectuer des actions en votre nom. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que des publications, des likes, des abonnements et des messages. L'application demande des autorisations pour effectuer les actions suivantes :"
 
 #: src/components/utils/error-message.tsx:69
 msgid "The data you submitted is invalid. Please check the form and try again."
@@ -552,19 +552,19 @@ msgstr "Modifier les données publiques"
 
 #: src/components/utils/scope-description.tsx:285
 msgid "Update your network @handle"
-msgstr ""
+msgstr "Mettre à jour votre @pseudonyme sur le réseau"
 
 #: src/components/utils/scope-description.tsx:199
 msgid "Upload files"
-msgstr ""
+msgstr "Télécharger des fichiers"
 
 #: src/components/utils/scope-description.tsx:177
 msgid "Upload images"
-msgstr ""
+msgstr "Télécharger des images"
 
 #: src/components/utils/scope-description.tsx:189
 msgid "Upload videos"
-msgstr ""
+msgstr "Télécharger des vidéos"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:145
 msgid "Username or email address"
@@ -630,4 +630,4 @@ msgstr "Votre mot de passe a été mis à jour !"
 
 #: src/components/utils/scope-description.tsx:441
 msgid "Your repository contains all the public data you have created on the network, such as posts, likes, and follows. The application is asking for permissions to update the data from the following collections:"
-msgstr ""
+msgstr "Votre dépôt contient toutes les données publiques que vous avez créées sur le réseau, telles que des publications, des likes et des abonnements. L'application demande des autorisations pour mettre à jour les données des collections suivantes :"
