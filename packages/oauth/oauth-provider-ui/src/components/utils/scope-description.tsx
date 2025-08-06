@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { useMemo } from 'react'
+import { HTMLAttributes, useMemo } from 'react'
 import { Override } from '#/lib/util'
 import {
   BlobScope,
@@ -76,10 +76,9 @@ export function IdentityWarning({
     return (
       <Admonition type="alert" prominent title={<Trans>Warning</Trans>}>
         <Trans>
-          The application will gain full access over your identity on the
-          network, meaning that it could <b>permanently break</b>, or even{' '}
-          <b>steal</b>, your account. Only grant this permission to applications
-          you trust.
+          The application is asking for full control over your network identity,
+          meaning that it could <b>permanently break</b>, or even <b>steal</b>,
+          your account. Only grant this permission to applications you trust.
         </Trans>
       </Admonition>
     )
@@ -316,7 +315,13 @@ function RpcMethodsDetails({
         title={t`Authenticate`}
         description={t`Perform authenticated actions on your behalf`}
       >
-        <RpcMethodsTable permissions={permissions} />
+        <Trans>
+          The ATproto network uses authenticated inter service communications to
+          perform actions on your behalf. This is typically used to retrieve or
+          update data linked to your account, such as messages. The application
+          is asking for permissions to perform the following actions:
+        </Trans>
+        <RpcMethodsTable className="mt-2" permissions={permissions} />
       </DescriptionCard>
     )
   }
@@ -324,11 +329,17 @@ function RpcMethodsDetails({
   return null
 }
 
+type RpcMethodsTableProps = Override<
+  HTMLAttributes<HTMLTableElement>,
+  {
+    permissions: PermissionSetTransition
+  }
+>
 function RpcMethodsTable({
   permissions,
-}: {
-  permissions: PermissionSetTransition
-}) {
+  className = '',
+  ...attrs
+}: RpcMethodsTableProps) {
   const { t } = useLingui()
 
   const audLxmsEntries = useMemo(() => {
@@ -352,7 +363,7 @@ function RpcMethodsTable({
   }, [permissions])
 
   return (
-    <table className="w-full table-auto">
+    <table className={`w-full table-auto ${className}`} {...attrs}>
       <thead>
         <tr className="text-sm">
           <th className="text-left font-normal">{t`Service`}</th>
@@ -363,11 +374,11 @@ function RpcMethodsTable({
         {audLxmsEntries.map(([aud, lxms]) => (
           <tr key={aud} className="text-sm">
             <td className="align-top text-slate-500">
-              {aud === '*' ? <em>{t`Any audience`}</em> : <code>{aud}</code>}
+              {aud === '*' ? <em>{t`Any service`}</em> : <code>{aud}</code>}
             </td>
             <td className="text-slate-500">
               {lxms.includes('*') ? (
-                <em>{t`No restrictions`}</em>
+                <em>{t`Any method`}</em>
               ) : (
                 lxms.map((lxm) => (
                   <code className="block" key={lxm}>
@@ -390,19 +401,9 @@ function RepoPermissions({
 }) {
   const { t } = useLingui()
 
-  if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
-    return (
-      <DescriptionCard
-        role="listitem"
-        image={<NewspaperIcon className="size-6" />}
-        title={t`Repository`}
-        description={t`Replace your entire public data repository with new data`}
-      />
-    )
-  }
-
   if (
     permissions.hasTransitionGeneric ||
+    permissions.allowsAccount({ attr: 'repo', action: 'manage' }) ||
     (permissions.allowsRepo({ collection: '*', action: 'create' }) &&
       permissions.allowsRepo({ collection: '*', action: 'delete' }) &&
       permissions.allowsRepo({ collection: '*', action: 'update' }))
@@ -413,7 +414,14 @@ function RepoPermissions({
         image={<NewspaperIcon className="size-6" />}
         title={t`Repository`}
         description={t`Create, update, and delete any public record`}
-      />
+      >
+        <Trans>
+          Your repository contains all the public data you have created on the
+          network, such as posts, likes, and follows. The application is asking
+          for permissions to create, update, and delete data from any
+          collection.
+        </Trans>
+      </DescriptionCard>
     )
   }
 
@@ -423,9 +431,14 @@ function RepoPermissions({
         role="listitem"
         image={<NewspaperIcon className="size-6" />}
         title={t`Repository`}
-        description={t`Update public data`}
+        description={t`Publish changes`}
       >
-        <RepoTable permissions={permissions} />
+        <Trans>
+          Your repository contains all the public data you have created on the
+          network, such as posts, likes, and follows. The application is asking
+          for permissions to update the data from the following collections:
+        </Trans>
+        <RepoTable className="mt-2" permissions={permissions} />
       </DescriptionCard>
     )
   }
@@ -433,7 +446,13 @@ function RepoPermissions({
   return null
 }
 
-function RepoTable({ permissions }: { permissions: PermissionSetTransition }) {
+type RepoTableProps = Override<
+  HTMLAttributes<HTMLTableElement>,
+  {
+    permissions: PermissionSetTransition
+  }
+>
+function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
   const { t } = useLingui()
 
   const nsidActionsEntries = useMemo(() => {
@@ -468,7 +487,7 @@ function RepoTable({ permissions }: { permissions: PermissionSetTransition }) {
   }, [permissions])
 
   return (
-    <table className="w-full table-auto text-left">
+    <table className={`w-full table-auto text-left ${className}`} {...attrs}>
       <thead>
         <tr className="text-sm">
           <th className="font-normal">{t`Collection`}</th>

@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
+import { ClientImage } from '#/components/utils/client-image.tsx'
 import { DescriptionCard } from '#/components/utils/description-card.tsx'
-import { GlobeIcon } from '#/components/utils/icons.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
 import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
@@ -66,17 +66,11 @@ export function AcceptForm({
     >
       <DescriptionCard
         image={
-          clientTrusted && clientMetadata.logo_uri ? (
-            <div key="logo" className="flex items-center justify-center">
-              <img
-                src={clientMetadata.logo_uri}
-                alt={clientMetadata.client_name}
-                className="rounded-full"
-              />
-            </div>
-          ) : (
-            <GlobeIcon className="h-6" />
-          )
+          <ClientImage
+            clientId={clientId}
+            clientMetadata={clientMetadata}
+            clientTrusted={clientTrusted}
+          />
         }
         title={
           <ClientName

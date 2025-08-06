@@ -5,6 +5,7 @@ import { useClickOutside } from '#/hooks/use-click-outside'
 import { useEscapeKey } from '#/hooks/use-escape-key'
 import { useRandomString } from '#/hooks/use-random-string.ts'
 import { Override } from '#/lib/util.ts'
+import { Admonition } from './admonition'
 
 export type DescriptionCardProps = Override<
   HTMLAttributes<HTMLDivElement>,
@@ -23,7 +24,7 @@ export function DescriptionCard({
   description,
 
   // HTMLDivElement
-  // className,
+  className,
   children,
   ...attrs
 }: DescriptionCardProps) {
@@ -39,7 +40,7 @@ export function DescriptionCard({
   const detailsDivId = useRandomString('details-card-')
 
   return (
-    <div ref={ref} {...attrs}>
+    <div ref={ref} className={className} {...attrs}>
       <div className={`flex items-center justify-start gap-4`}>
         <div
           className="flex w-8 flex-grow-0 justify-center align-middle"
@@ -74,14 +75,14 @@ export function DescriptionCard({
         )}
       </div>
       {hasChildren && (
-        <div
-          className="ml-12 pt-4"
+        <Admonition
+          className="mt-4"
           hidden={!open}
           id={detailsDivId}
           aria-hidden={!open}
         >
           {children}
-        </div>
+        </Admonition>
       )}
     </div>
   )

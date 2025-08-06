@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:219
+#: src/views/authorize/sign-in/sign-in-form.tsx:215
 msgid "2FA Confirmation"
 msgstr ""
 
@@ -21,7 +21,7 @@ msgstr ""
 msgid "A second authentication factor is required"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:132
+#: src/components/utils/scope-description.tsx:216
 msgid "Account"
 msgstr ""
 
@@ -41,20 +41,17 @@ msgstr ""
 msgid "Another account"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:238
-msgid "Any audience"
-msgstr ""
-
-#: src/components/utils/scope-description.tsx:334
+#: src/components/utils/scope-description.tsx:509
 msgid "Any collection"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:227
-msgid "Audience"
+#: src/components/utils/scope-description.tsx:379
+msgid "Any service"
 msgstr ""
 
 #: src/views/authorize/welcome/welcome-view.tsx:28
-#: src/components/utils/scope-description.tsx:221
+#: src/components/utils/scope-description.tsx:305
+#: src/components/utils/scope-description.tsx:316
 msgid "Authenticate"
 msgstr ""
 
@@ -79,7 +76,7 @@ msgstr ""
 msgid "Between {minLength} and {maxLength} characters"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:98
+#: src/views/authorize/accept/accept-form.tsx:92
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
 
@@ -95,12 +92,12 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:160
+#: src/components/utils/scope-description.tsx:249
 msgid "Chat"
 msgstr ""
 
 #. placeholder {0}: secondFactor.hint
-#: src/views/authorize/sign-in/sign-in-form.tsx:232
+#: src/views/authorize/sign-in/sign-in-form.tsx:228
 msgid "Check your {0} email for a login code and enter it here."
 msgstr ""
 
@@ -112,11 +109,11 @@ msgstr ""
 msgid "Code"
 msgstr ""
 
-#: src/components/utils/description-card.tsx:57
+#: src/components/utils/description-card.tsx:69
 msgid "Collapse details"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:321
+#: src/components/utils/scope-description.tsx:498
 msgid "Collection"
 msgstr ""
 
@@ -128,11 +125,11 @@ msgstr ""
 msgid "Confirm your password to continue"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:223
+#: src/views/authorize/sign-in/sign-in-form.tsx:219
 msgid "Confirmation code"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:322
+#: src/components/utils/scope-description.tsx:499
 msgid "Create"
 msgstr ""
 
@@ -144,11 +141,11 @@ msgstr ""
 msgid "Create Account"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:303
+#: src/components/utils/scope-description.tsx:428
 msgid "Create, update, and delete any public record"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:324
+#: src/components/utils/scope-description.tsx:501
 msgid "Delete"
 msgstr ""
 
@@ -161,8 +158,8 @@ msgid "Description"
 msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
-#: src/components/utils/scope-description.tsx:70
-#: src/components/utils/scope-description.tsx:80
+#: src/components/utils/scope-description.tsx:109
+#: src/components/utils/scope-description.tsx:120
 msgid "Email"
 msgstr ""
 
@@ -180,7 +177,7 @@ msgstr ""
 msgid "Enter the code you received to reset your password."
 msgstr ""
 
-#: src/views/authorize/reset-password/reset-password-request-form.tsx:71
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:70
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr ""
 
@@ -209,7 +206,7 @@ msgstr ""
 msgid "example-com-xxxxx-xxxxx"
 msgstr ""
 
-#: src/components/utils/description-card.tsx:57
+#: src/components/utils/description-card.tsx:69
 msgid "Expand details"
 msgstr ""
 
@@ -230,6 +227,10 @@ msgstr ""
 msgid "Grant access to your <0>{0}</0> account"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx:284
+msgid "Handle"
+msgstr ""
+
 #: src/components/utils/help-card.tsx:32
 msgid "Having trouble? <0>Contact support</0>"
 msgstr ""
@@ -247,8 +248,7 @@ msgstr ""
 msgid "Identifier"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:179
-#: src/components/utils/scope-description.tsx:189
+#: src/components/utils/scope-description.tsx:273
 msgid "Identity"
 msgstr ""
 
@@ -256,7 +256,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:275
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:273
 msgid "Invalid"
 msgstr ""
 
@@ -289,15 +289,15 @@ msgstr ""
 msgid "Make visible"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:133
+#: src/components/utils/scope-description.tsx:217
 msgid "Manage your account status"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:180
-msgid "Manage your identity"
+#: src/components/utils/scope-description.tsx:274
+msgid "Manage your full identity (including your @handle)"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:228
+#: src/components/utils/scope-description.tsx:372
 msgid "Methods"
 msgstr ""
 
@@ -313,7 +313,7 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:76
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:74
 msgid "New password"
 msgstr ""
 
@@ -323,7 +323,7 @@ msgstr ""
 msgid "Next"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:245
+#: src/components/utils/scope-description.tsx:383
 msgid "No restrictions"
 msgstr ""
 
@@ -333,10 +333,6 @@ msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:157
 msgid "Only letters, numbers, and hyphens"
-msgstr ""
-
-#: src/components/utils/scope-description.tsx:289
-msgid "Override the entire public data repository"
 msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:128
@@ -365,11 +361,15 @@ msgstr ""
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:222
+#: src/components/utils/scope-description.tsx:317
 msgid "Perform authenticated actions on your behalf"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:198
+#: src/components/utils/scope-description.tsx:306
+msgid "Perform authenticated actions towards any service on your behalf"
+msgstr ""
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:195
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr ""
 
@@ -379,30 +379,34 @@ msgstr ""
 msgid "Privacy Policy"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:161
-msgid "Read and send chat messages"
+#: src/components/utils/scope-description.tsx:250
+msgid "Read and send messages"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:71
+#: src/components/utils/scope-description.tsx:110
 msgid "Read and update your account's email address"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:81
+#: src/components/utils/scope-description.tsx:121
 msgid "Read your account's email address"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:207
-#: src/views/authorize/sign-in/sign-in-form.tsx:212
+#: src/views/authorize/sign-in/sign-in-form.tsx:203
+#: src/views/authorize/sign-in/sign-in-form.tsx:208
 msgid "Remember this account on this device"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:288
-#: src/components/utils/scope-description.tsx:302
-#: src/components/utils/scope-description.tsx:315
+#: src/components/utils/scope-description.tsx:412
+msgid "Replace your entire public data repository with new data"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:411
+#: src/components/utils/scope-description.tsx:427
+#: src/components/utils/scope-description.tsx:438
 msgid "Repository"
 msgstr ""
 
-#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:61
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:59
 msgid "Reset code"
 msgstr ""
 
@@ -422,7 +426,11 @@ msgstr ""
 msgid "Select from an existing account"
 msgstr ""
 
-#: src/components/utils/description-card.tsx:55
+#: src/components/utils/scope-description.tsx:371
+msgid "Service"
+msgstr ""
+
+#: src/components/utils/description-card.tsx:67
 msgid "Show details"
 msgstr ""
 
@@ -450,7 +458,9 @@ msgstr ""
 msgid "Step {currentPosition} of {count}"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:117
+#: src/components/utils/scope-description.tsx:176
+#: src/components/utils/scope-description.tsx:188
+#: src/components/utils/scope-description.tsx:198
 msgid "Storage"
 msgstr ""
 
@@ -474,6 +484,14 @@ msgstr ""
 
 #: src/components/utils/error-message.tsx:52
 msgid "That handle cannot be used"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:78
+msgid "The application will gain full access over your identity on the network, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you trust."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:319
+msgid "The ATproto network uses authenticated inter service calls to perform actions on your behalf. This is typically used to retrieve or update data linked to your account, such as posts, likes, follows, and messages. The application is asking for permissions to perform the following actions:"
 msgstr ""
 
 #: src/components/utils/error-message.tsx:69
@@ -524,31 +542,35 @@ msgstr ""
 msgid "Unexpected server response"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:323
+#: src/components/utils/scope-description.tsx:500
 msgid "Update"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:316
+#: src/components/utils/scope-description.tsx:439
 msgid "Update public data"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:190
-msgid "Update your handle"
+#: src/components/utils/scope-description.tsx:285
+msgid "Update your network @handle"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:119
-msgid "Upload and store files"
+#: src/components/utils/scope-description.tsx:199
+msgid "Upload files"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:119
-msgid "Upload and store images"
+#: src/components/utils/scope-description.tsx:177
+msgid "Upload images"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:189
+msgid "Upload videos"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:145
 msgid "Username or email address"
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:270
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:268
 msgid "Valid"
 msgstr ""
 
@@ -556,11 +578,12 @@ msgstr ""
 msgid "Verify you are human"
 msgstr ""
 
-#: src/views/authorize/accept/accept-form.tsx:89
+#: src/views/authorize/accept/accept-form.tsx:83
 msgid "wants to access your <0/> account"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:195
+#: src/views/authorize/sign-in/sign-in-form.tsx:194
+#: src/components/utils/scope-description.tsx:77
 msgid "Warning"
 msgstr ""
 
@@ -580,7 +603,7 @@ msgstr ""
 msgid "You are being redirected..."
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:235
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:234
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr ""
 
@@ -588,7 +611,7 @@ msgstr ""
 msgid "You can now sign in with your new password."
 msgstr ""
 
-#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:54
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:53
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr ""
 
@@ -603,4 +626,8 @@ msgstr ""
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:108
 msgid "Your password has been updated!"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:441
+msgid "Your repository contains all the public data you have created on the network, such as posts, likes, and follows. The application is asking for permissions to update the data from the following collections:"
 msgstr ""

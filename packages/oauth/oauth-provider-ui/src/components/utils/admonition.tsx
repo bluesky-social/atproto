@@ -8,6 +8,7 @@ export type AdmonitionProps = Override<
   {
     prominent?: boolean
     title?: ReactNode
+    append?: ReactNode
     type?: 'alert' | 'status'
   }
 >
@@ -16,6 +17,7 @@ export const Admonition = memo(function Admonition({
   prominent,
   title,
   type = 'status',
+  append,
 
   // div
   children,
@@ -51,7 +53,8 @@ export const Admonition = memo(function Admonition({
         {title && (
           <h3 className={`text-md font-bold ${titleColor}`}>{title}</h3>
         )}
-        {children && <p className="text-sm">{children}</p>}
+        {children && <div className="text-sm">{children}</div>}
+        {append}
       </div>
     </div>
   )
