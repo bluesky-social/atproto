@@ -201,11 +201,44 @@ describe('RepoScope', () => {
         input: 'repo:foo.bar?action=create&action=update',
         expected: 'repo:foo.bar?action=create&action=update',
       },
+      {
+        input: 'repo:*?action=create&action=update&action=delete',
+        expected: 'repo:*',
+      },
+      {
+        input: 'repo:foo.bar?action=create&action=update&action=delete',
+        expected: 'repo:foo.bar',
+      },
       { input: 'repo:*?action=create', expected: 'repo:*?action=create' },
       { input: 'repo:*?action=update', expected: 'repo:*?action=update' },
       {
+        input: 'repo?collection=*&action=update',
+        expected: 'repo:*?action=update',
+      },
+      {
+        input: 'repo?collection=*&collection=foo.bar&action=update',
+        expected: 'repo:*?action=update',
+      },
+      {
+        input: 'repo?collection=*',
+        expected: 'repo:*',
+      },
+      {
+        input: 'repo?collection=*&action=create&action=update&action=delete',
+        expected: 'repo:*',
+      },
+      {
+        input: 'repo?collection=*&collection=foo.bar',
+        expected: 'repo:*',
+      },
+      {
         input: 'repo?action=create&collection=foo.bar',
         expected: 'repo:foo.bar?action=create',
+      },
+      {
+        input:
+          'repo?collection=foo.bar&action=create&action=update&action=delete',
+        expected: 'repo:foo.bar',
       },
       {
         input: 'repo?action=create&collection=foo.bar&collection=baz.qux',

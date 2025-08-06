@@ -10,7 +10,7 @@ export type AccountAction = (typeof ACCOUNT_ACTIONS)[number]
 export const accountParser = new Parser(
   'account',
   {
-    attribute: {
+    attr: {
       multiple: false,
       required: true,
       validate: knownValuesValidator(ACCOUNT_ATTRIBUTES),
@@ -22,23 +22,23 @@ export const accountParser = new Parser(
       default: 'read' as const,
     },
   },
-  'attribute',
+  'attr',
 )
 
 export type AccountScopeMatch = {
-  attribute: AccountAttribute
+  attr: AccountAttribute
   action: AccountAction
 }
 
 export class AccountScope {
   constructor(
-    public readonly attribute: AccountAttribute,
+    public readonly attr: AccountAttribute,
     public readonly action: AccountAction,
   ) {}
 
   matches(options: AccountScopeMatch): boolean {
     return (
-      this.attribute === options.attribute &&
+      this.attr === options.attr &&
       (this.action === 'manage' || this.action === options.action)
     )
   }
@@ -57,7 +57,7 @@ export class AccountScope {
     const result = accountParser.parse(syntax)
     if (!result) return null
 
-    return new AccountScope(result.attribute, result.action)
+    return new AccountScope(result.attr, result.action)
   }
 
   static scopeNeededFor(options: AccountScopeMatch): string {

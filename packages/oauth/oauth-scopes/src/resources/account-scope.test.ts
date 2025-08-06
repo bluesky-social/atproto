@@ -6,19 +6,19 @@ describe('AccountScope', () => {
       it('should parse valid scope strings', () => {
         const scope1 = AccountScope.fromString('account:email?action=read')
         expect(scope1).not.toBeNull()
-        expect(scope1!.attribute).toBe('email')
+        expect(scope1!.attr).toBe('email')
         expect(scope1!.action).toBe('read')
 
         const scope2 = AccountScope.fromString('account:repo?action=manage')
         expect(scope2).not.toBeNull()
-        expect(scope2!.attribute).toBe('repo')
+        expect(scope2!.attr).toBe('repo')
         expect(scope2!.action).toBe('manage')
       })
 
       it('should parse scope without action (defaults to read)', () => {
         const scope = AccountScope.fromString('account:status')
         expect(scope).not.toBeNull()
-        expect(scope!.attribute).toBe('status')
+        expect(scope!.attr).toBe('status')
         expect(scope!.action).toBe('read')
       })
 
@@ -43,26 +43,26 @@ describe('AccountScope', () => {
     describe('scopeNeededFor', () => {
       it('should return correct scope string for read actions', () => {
         expect(
-          AccountScope.scopeNeededFor({ attribute: 'email', action: 'read' }),
+          AccountScope.scopeNeededFor({ attr: 'email', action: 'read' }),
         ).toBe('account:email')
         expect(
-          AccountScope.scopeNeededFor({ attribute: 'repo', action: 'read' }),
+          AccountScope.scopeNeededFor({ attr: 'repo', action: 'read' }),
         ).toBe('account:repo')
         expect(
-          AccountScope.scopeNeededFor({ attribute: 'status', action: 'read' }),
+          AccountScope.scopeNeededFor({ attr: 'status', action: 'read' }),
         ).toBe('account:status')
       })
 
       it('should return correct scope string for manage actions', () => {
         expect(
-          AccountScope.scopeNeededFor({ attribute: 'email', action: 'manage' }),
+          AccountScope.scopeNeededFor({ attr: 'email', action: 'manage' }),
         ).toBe('account:email?action=manage')
         expect(
-          AccountScope.scopeNeededFor({ attribute: 'repo', action: 'manage' }),
+          AccountScope.scopeNeededFor({ attr: 'repo', action: 'manage' }),
         ).toBe('account:repo?action=manage')
         expect(
           AccountScope.scopeNeededFor({
-            attribute: 'status',
+            attr: 'status',
             action: 'manage',
           }),
         ).toBe('account:status?action=manage')
@@ -75,44 +75,32 @@ describe('AccountScope', () => {
       it('should match read action', () => {
         const scope = AccountScope.fromString('account:email?action=read')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ action: 'read', attribute: 'email' })).toBe(
-          true,
-        )
+        expect(scope!.matches({ attr: 'email', action: 'read' })).toBe(true)
       })
 
       it('should match manage action', () => {
         const scope = AccountScope.fromString('account:repo?action=manage')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ action: 'manage', attribute: 'repo' })).toBe(
-          true,
-        )
+        expect(scope!.matches({ attr: 'repo', action: 'manage' })).toBe(true)
       })
 
       it('should not match unspecified action', () => {
         const scope = AccountScope.fromString('account:email?action=read')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ action: 'manage', attribute: 'email' })).toBe(
-          false,
-        )
+        expect(scope!.matches({ attr: 'email', action: 'manage' })).toBe(false)
       })
 
       it('should not match different attribute', () => {
         const scope = AccountScope.fromString('account:email?action=read')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ action: 'read', attribute: 'repo' })).toBe(
-          false,
-        )
+        expect(scope!.matches({ attr: 'repo', action: 'read' })).toBe(false)
       })
 
       it('should default to "read" action', () => {
         const scope = AccountScope.fromString('account:email')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ action: 'read', attribute: 'email' })).toBe(
-          true,
-        )
-        expect(scope!.matches({ action: 'manage', attribute: 'email' })).toBe(
-          false,
-        )
+        expect(scope!.matches({ attr: 'email', action: 'read' })).toBe(true)
+        expect(scope!.matches({ attr: 'email', action: 'manage' })).toBe(false)
       })
 
       it('should work with all valid attributes', () => {
@@ -126,23 +114,21 @@ describe('AccountScope', () => {
         expect(repoScope).not.toBeNull()
         expect(statusScope).not.toBeNull()
 
-        expect(
-          emailScope!.matches({ action: 'read', attribute: 'email' }),
-        ).toBe(true)
-        expect(
-          repoScope!.matches({ action: 'manage', attribute: 'repo' }),
-        ).toBe(true)
-        expect(
-          statusScope!.matches({ action: 'read', attribute: 'status' }),
-        ).toBe(true)
+        expect(emailScope!.matches({ attr: 'email', action: 'read' })).toBe(
+          true,
+        )
+        expect(repoScope!.matches({ attr: 'repo', action: 'manage' })).toBe(
+          true,
+        )
+        expect(statusScope!.matches({ attr: 'status', action: 'read' })).toBe(
+          true,
+        )
       })
 
       it('should allow read when "manage" action is specified', () => {
         const scope = AccountScope.fromString('account:email?action=manage')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ action: 'read', attribute: 'email' })).toBe(
-          true,
-        )
+        expect(scope!.matches({ attr: 'email', action: 'read' })).toBe(true)
       })
     })
 

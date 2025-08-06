@@ -17,10 +17,9 @@ describe('BlobScope', () => {
         expect(scope!.accept).toEqual(['image/png', 'image/jpeg'])
       })
 
-      it('should parse valid blob scope without accept', () => {
+      it('should reject blob scope without accept', () => {
         const scope = BlobScope.fromString('blob')
-        expect(scope).not.toBeNull()
-        expect(scope!.accept).toEqual(['*/*'])
+        expect(scope).toBeNull()
       })
 
       for (const invalid of [
@@ -63,6 +62,7 @@ describe('BlobScope', () => {
         const scope = BlobScope.fromString('blob:*/*')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ mime: 'image/jpeg' })).toBe(true)
+        expect(scope!.matches({ mime: 'application/json' })).toBe(true)
       })
 
       it('should match subtype wildcard MIME type', () => {
@@ -75,13 +75,6 @@ describe('BlobScope', () => {
         const scope = BlobScope.fromString('blob:image/png')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ mime: 'image/jpeg' })).toBe(false)
-      })
-
-      it('should match any mime if no accept parameter is specified', () => {
-        const scope = BlobScope.fromString('blob')
-        expect(scope).not.toBeNull()
-        expect(scope!.matches({ mime: 'image/png' })).toBe(true)
-        expect(scope!.matches({ mime: 'application/json' })).toBe(true)
       })
 
       it('should match multiple accept values', () => {
@@ -101,45 +94,25 @@ describe('BlobScope', () => {
         expect(scope.toString()).toBe('blob?accept=image/png&accept=image/jpeg')
       })
 
-      it('should format scope without default accept', () => {
-        const scope = new BlobScope(['*/*'])
-        expect(scope.toString()).toBe('blob')
+      it('should strip redundant accept parameters', () => {
+        expect(new BlobScope(['*/*', 'image/*']).toString()).toBe('blob:*/*')
+        expect(new BlobScope(['*/*', 'image/png']).toString()).toBe('blob:*/*')
+        expect(new BlobScope(['image/*', 'image/png']).toString()).toBe(
+          'blob:image/*',
+        )
+      })
+
+      it('should use positional format for single accept', () => {
+        expect(new BlobScope(['image/png']).toString()).toBe('blob:image/png')
+        expect(new BlobScope(['image/*']).toString()).toBe('blob:image/*')
+        expect(new BlobScope(['*/*']).toString()).toBe('blob:*/*')
+      })
+
+      it('should use query format for multiple accepts', () => {
+        expect(new BlobScope(['image/png', 'image/jpeg']).toString()).toBe(
+          'blob?accept=image/png&accept=image/jpeg',
+        )
       })
     })
-  })
-
-  describe('normalization', () => {
-    const testCases = [
-      { input: 'blob', expected: 'blob' },
-      { input: 'blob:*/*', expected: 'blob' },
-      { input: 'blob?accept=*/*', expected: 'blob' },
-
-      { input: 'blob:image/png', expected: 'blob:image/png' },
-      { input: 'blob?accept=image/png', expected: 'blob:image/png' },
-
-      {
-        input: 'blob?accept=image/png&accept=image/jpeg',
-        expected: 'blob?accept=image/png&accept=image/jpeg',
-      },
-
-      {
-        input: 'blob?accept=*/*&accept=image/jpeg',
-        expected: 'blob',
-      },
-      {
-        input: 'blob?accept=image/*&accept=image/jpeg',
-        expected: 'blob:image/*',
-      },
-      {
-        input: 'blob?accept=*/*&accept=image/*&accept=image/jpeg',
-        expected: 'blob',
-      },
-    ]
-
-    for (const { input, expected } of testCases) {
-      it(`should properly re-format ${input}`, () => {
-        expect(BlobScope.fromString(input)?.toString()).toBe(expected)
-      })
-    }
   })
 })

@@ -24,24 +24,7 @@ export class PermissionSetTransition extends PermissionSet {
   }
 
   override allowsAccount(options: AccountScopeMatch): boolean {
-    if (this.hasTransitionGeneric && options.attribute !== 'email') {
-      return true
-    }
-
-    if (
-      this.hasTransitionEmail &&
-      options.attribute === 'email' &&
-      options.action === 'read'
-    ) {
-      return true
-    }
-
-    if (
-      this.hasTransitionEmail &&
-      this.hasTransitionGeneric &&
-      options.attribute === 'email' &&
-      options.action === 'manage'
-    ) {
+    if (options.attr === 'email' && this.hasTransitionEmail) {
       return true
     }
 
@@ -68,6 +51,10 @@ export class PermissionSetTransition extends PermissionSet {
     const { lxm } = options
 
     if (this.hasTransitionGeneric && lxm === '*') {
+      return true
+    }
+
+    if (this.hasTransitionGeneric && !lxm.startsWith('chat.bsky.')) {
       return true
     }
 

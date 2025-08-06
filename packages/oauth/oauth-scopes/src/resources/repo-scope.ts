@@ -13,6 +13,10 @@ export const repoParser = new Parser(
       multiple: true,
       required: true,
       validate: (value) => value === '*' || isNSID(value),
+      normalize: (value) => {
+        if (value.length > 1 && value.includes('*')) return ['*'] as const
+        return value
+      },
     },
     action: {
       multiple: true,

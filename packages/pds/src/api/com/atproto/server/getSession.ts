@@ -70,10 +70,7 @@ function output(
 ): ComAtprotoServerGetSession.OutputSchema {
   if (
     credentials.type === 'permissions' &&
-    !credentials.permissions.allowsAccount({
-      attribute: 'email',
-      action: 'read',
-    })
+    !credentials.permissions.allowsAccount({ attr: 'email', action: 'read' })
   ) {
     const { email, emailAuthFactor, emailConfirmed, ...rest } = data
     return rest

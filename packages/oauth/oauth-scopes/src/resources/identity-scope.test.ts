@@ -6,21 +6,28 @@ describe('IdentityScope', () => {
       it('should parse positional scope', () => {
         const scope = IdentityScope.fromString('identity:handle')
         expect(scope).not.toBeNull()
-        expect(scope!.attribute).toBe('handle')
+        expect(scope!.attr).toBe('handle')
         expect(scope!.action).toBe('manage')
       })
 
-      it('should parse valid identity scope with action', () => {
+      it('properly parse "identity:handle?action=manage"', () => {
         const scope = IdentityScope.fromString('identity:handle?action=manage')
         expect(scope).not.toBeNull()
-        expect(scope!.attribute).toBe('handle')
+        expect(scope!.attr).toBe('handle')
         expect(scope!.action).toBe('manage')
+      })
+
+      it('properly parse "identity:handle?action=submit"', () => {
+        const scope = IdentityScope.fromString('identity:handle?action=submit')
+        expect(scope).not.toBeNull()
+        expect(scope!.attr).toBe('handle')
+        expect(scope!.action).toBe('submit')
       })
 
       it('should parse valid identity scope with wildcard attribute', () => {
         const scope = IdentityScope.fromString('identity:*')
         expect(scope).not.toBeNull()
-        expect(scope!.attribute).toBe('*')
+        expect(scope!.attr).toBe('*')
         expect(scope!.action).toBe('manage')
       })
 
@@ -45,7 +52,7 @@ describe('IdentityScope', () => {
     describe('scopeNeededFor', () => {
       it('should return correct scope string for specific attribute and action', () => {
         const scope = IdentityScope.scopeNeededFor({
-          attribute: 'handle',
+          attr: 'handle',
           action: 'manage',
         })
         expect(scope).toBe('identity:handle')
@@ -53,7 +60,7 @@ describe('IdentityScope', () => {
 
       it('should return scope that accepts all attributes with specific action', () => {
         const scope = IdentityScope.scopeNeededFor({
-          attribute: '*',
+          attr: '*',
           action: 'manage',
         })
         expect(scope).toBe('identity:*')
@@ -61,7 +68,7 @@ describe('IdentityScope', () => {
 
       it('should return scope that accepts all attributes with manage action', () => {
         const scope = IdentityScope.scopeNeededFor({
-          attribute: '*',
+          attr: '*',
           action: 'manage',
         })
         expect(scope).toBe('identity:*')
@@ -74,56 +81,42 @@ describe('IdentityScope', () => {
       it('should match default attribute and action', () => {
         const scope = IdentityScope.fromString('identity:handle')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ attribute: 'handle', action: 'manage' })).toBe(
-          true,
-        )
-        expect(scope!.matches({ attribute: 'handle', action: 'submit' })).toBe(
-          false,
-        )
+        expect(scope!.matches({ attr: 'handle', action: 'manage' })).toBe(true)
+        expect(scope!.matches({ attr: 'handle', action: 'submit' })).toBe(false)
       })
 
       it('should match specific attribute and action', () => {
         const scope = IdentityScope.fromString('identity:handle?action=manage')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ attribute: 'handle', action: 'manage' })).toBe(
-          true,
-        )
-        expect(scope!.matches({ attribute: 'handle', action: 'submit' })).toBe(
-          false,
-        )
+        expect(scope!.matches({ attr: 'handle', action: 'manage' })).toBe(true)
+        expect(scope!.matches({ attr: 'handle', action: 'submit' })).toBe(false)
       })
 
       it('should match wildcard attribute with specific action', () => {
         const scope = IdentityScope.fromString('identity:*')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ attribute: '*', action: 'manage' })).toBe(true)
-        expect(scope!.matches({ attribute: 'handle', action: 'manage' })).toBe(
-          true,
-        )
-        expect(scope!.matches({ attribute: 'handle', action: 'submit' })).toBe(
-          false,
-        )
+        expect(scope!.matches({ attr: '*', action: 'manage' })).toBe(true)
+        expect(scope!.matches({ attr: 'handle', action: 'manage' })).toBe(true)
+        expect(scope!.matches({ attr: 'handle', action: 'submit' })).toBe(false)
       })
 
       it('should not match different attribute', () => {
         const scope = IdentityScope.fromString('identity:handle')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ attribute: '*', action: 'manage' })).toBe(false)
+        expect(scope!.matches({ attr: '*', action: 'manage' })).toBe(false)
       })
 
       it('should not match different action', () => {
         const scope = IdentityScope.fromString('identity:handle?action=manage')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ attribute: 'handle', action: 'submit' })).toBe(
-          false,
-        )
+        expect(scope!.matches({ attr: 'handle', action: 'submit' })).toBe(false)
       })
 
       it('should match wildcard attribute and default action', () => {
         const scope = IdentityScope.fromString('identity:*')
         expect(scope).not.toBeNull()
-        expect(scope!.matches({ attribute: '*', action: 'manage' })).toBe(true)
-        expect(scope!.matches({ attribute: '*', action: 'submit' })).toBe(false)
+        expect(scope!.matches({ attr: '*', action: 'manage' })).toBe(true)
+        expect(scope!.matches({ attr: '*', action: 'submit' })).toBe(false)
       })
     })
 
@@ -148,34 +141,5 @@ describe('IdentityScope', () => {
         expect(scope.toString()).toBe('identity:*?action=submit')
       })
     })
-  })
-
-  describe('normalization', () => {
-    const testCases: { input: string; expected: string }[] = [
-      { input: 'identity:handle', expected: 'identity:handle' },
-      { input: 'identity?attribute=handle', expected: 'identity:handle' },
-      {
-        input: 'identity?attribute=handle&action=manage',
-        expected: 'identity:handle',
-      },
-      { input: 'identity:handle?action=manage', expected: 'identity:handle' },
-
-      {
-        input: 'identity:handle?action=submit',
-        expected: 'identity:handle?action=submit',
-      },
-      {
-        input: 'identity?action=submit&attribute=handle',
-        expected: 'identity:handle?action=submit',
-      },
-
-      { input: 'identity:*', expected: 'identity:*' },
-    ]
-
-    for (const { input, expected } of testCases) {
-      it(`should properly re-format ${input}`, () => {
-        expect(IdentityScope.fromString(input)?.toString()).toBe(expected)
-      })
-    }
   })
 })

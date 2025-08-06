@@ -9,15 +9,17 @@ export const blobParser = new Parser(
   {
     accept: {
       multiple: true,
-      required: false,
+      required: true,
       validate: isAccept,
       normalize: (value) => {
+        // Returns a more concise representation of the accept values.
         if (value.includes('*/*')) return DEFAULT_ACCEPT
-        return value
-          .map(toLowerCase)
-          .filter(isWildcardOrHasNoWildcardMatch) as [string, ...string[]]
+
+        return value.map(toLowerCase).filter(isNonRedundant) as [
+          Accept,
+          ...Accept[],
+        ]
       },
-      default: DEFAULT_ACCEPT,
     },
   },
   'accept',
@@ -62,17 +64,22 @@ function toLowerCase(value: string): string {
   return value.toLowerCase()
 }
 
-function isWildcardOrHasNoWildcardMatch(
+function isNonRedundant(
   value: string,
   index: number,
   arr: readonly string[],
 ): boolean {
   if (value.endsWith('/*')) {
-    // keep wildcards
+    // assuming the array contains unique element, wildcards cannot be redundant
+    // with one another ('image/*' is not redundant with 'text/*')
     return true
   }
-  if (arr.includes(`${value.split('/')[0]}/*`)) {
-    // skip mimes that have a wildcard match
+  const base = value.split('/', 1)[0]
+  if (arr.includes(`${base}/*`)) {
+    // If another value in the array is a wildcard for the same base, we can
+    // skip this one as it is redundant. e.g. if the array contains 'image/png'
+    // and 'image/*', we can skip 'image/png' because 'image/*' already covers
+    // it.
     return false
   }
   return true

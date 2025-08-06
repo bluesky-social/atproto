@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       scopes: ACCESS_FULL,
       additional: [AuthScope.Takendown],
       authorize: (permissions) => {
-        permissions.assertIdentity({ attribute: '*', action: 'manage' })
+        permissions.assertIdentity({ attr: '*', action: 'manage' })
       },
     }),
     handler: async ({ auth, input, req }) => {
