@@ -254,7 +254,7 @@
           ]
         },
         "duration": {
-          "type": "number",
+          "type": "integer",
           "description": "Duration of the interaction in milliseconds. Only intended for use with #clickthroughSeen.",
           "minimum": 0
         },
