@@ -14,21 +14,19 @@ import type * as AppBskyGraphDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'app.bsky.graph.getLists'
+const id = 'app.bsky.graph.getStarterPacksWithMembership'
 
 export type QueryParams = {
-  /** The account (actor) to enumerate lists from. */
+  /** The account (actor) to check for membership. */
   actor: string
   limit?: number
   cursor?: string
-  /** Optional filter by list purpose. If not specified, all supported types are returned. */
-  purposes?: 'modlist' | 'curatelist' | (string & {})[]
 }
 export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  lists: AppBskyGraphDefs.ListView[]
+  starterPacksWithMembership: StarterPackWithMembership[]
 }
 
 export interface CallOptions {
@@ -44,4 +42,25 @@ export interface Response {
 
 export function toKnownErr(e: any) {
   return e
+}
+
+/** A starter pack and an optional list item indicating membership of a target user to that starter pack. */
+export interface StarterPackWithMembership {
+  $type?: 'app.bsky.graph.getStarterPacksWithMembership#starterPackWithMembership'
+  starterPack: AppBskyGraphDefs.StarterPackView
+  listItem?: AppBskyGraphDefs.ListItemView
+}
+
+const hashStarterPackWithMembership = 'starterPackWithMembership'
+
+export function isStarterPackWithMembership<V>(v: V) {
+  return is$typed(v, id, hashStarterPackWithMembership)
+}
+
+export function validateStarterPackWithMembership<V>(v: V) {
+  return validate<StarterPackWithMembership & V>(
+    v,
+    id,
+    hashStarterPackWithMembership,
+  )
 }

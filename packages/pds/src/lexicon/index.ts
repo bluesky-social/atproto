@@ -127,10 +127,12 @@ import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+import * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
@@ -201,6 +203,7 @@ import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/commu
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -275,6 +278,12 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+  DefsTimelineEventPlcCreate:
+    'tools.ozone.moderation.defs#timelineEventPlcCreate',
+  DefsTimelineEventPlcOperation:
+    'tools.ozone.moderation.defs#timelineEventPlcOperation',
+  DefsTimelineEventPlcTombstone:
+    'tools.ozone.moderation.defs#timelineEventPlcTombstone',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -1880,6 +1889,18 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getListsWithMembership<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetListsWithMembership.QueryParams,
+      AppBskyGraphGetListsWithMembership.HandlerInput,
+      AppBskyGraphGetListsWithMembership.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getListsWithMembership' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getMutes<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1925,6 +1946,18 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacksWithMembership<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetStarterPacksWithMembership.QueryParams,
+      AppBskyGraphGetStarterPacksWithMembership.HandlerInput,
+      AppBskyGraphGetStarterPacksWithMembership.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacksWithMembership' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2915,6 +2948,18 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.emitEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAccountTimeline<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneModerationGetAccountTimeline.QueryParams,
+      ToolsOzoneModerationGetAccountTimeline.HandlerInput,
+      ToolsOzoneModerationGetAccountTimeline.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getAccountTimeline' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -333,6 +333,46 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
+  const fg3Uri = AtUri.make(
+    carla.accountDid,
+    'app.bsky.feed.generator',
+    'carla-intr-algo',
+  )
+  const fg3 = await env.createFeedGen({
+    [fg3Uri.toString()]: async () => {
+      const feed = posts
+        .filter(() => rand(2) === 0)
+        .map((post) => ({ post: post.uri }))
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+        },
+      }
+    },
+  })
+  const fgCarlaRes = await carla.app.bsky.feed.generator.create(
+    { repo: carla.accountDid, rkey: fg3Uri.rkey },
+    {
+      did: fg3.did,
+      displayName: `Acceptin' Generator`,
+      acceptsInteractions: true,
+      createdAt: date.next().value,
+    },
+  )
+
+  await alice.app.bsky.feed.post.create(
+    { repo: alice.accountDid },
+    {
+      text: `carla accepts interactions on her feed`,
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: fgCarlaRes,
+      },
+      createdAt: date.next().value,
+    },
+  )
+
   // create a labeler account
   {
     const labeler = env.pds.getClient()

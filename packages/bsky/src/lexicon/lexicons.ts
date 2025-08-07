@@ -8958,6 +8958,15 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            purposes: {
+              type: 'array',
+              description:
+                'Optional filter by list purpose. If not specified, all supported types are returned.',
+              items: {
+                type: 'string',
+                knownValues: ['modlist', 'curatelist'],
+              },
+            },
           },
         },
         output: {
@@ -8977,6 +8986,81 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetListsWithMembership: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListsWithMembership',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates the lists created by the session user, and includes membership information about `actor` in those lists. Only supports curation and moderation lists (no reference lists, used in starter packs). Requires auth.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The account (actor) to check for membership.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            purposes: {
+              type: 'array',
+              description:
+                'Optional filter by list purpose. If not specified, all supported types are returned.',
+              items: {
+                type: 'string',
+                knownValues: ['modlist', 'curatelist'],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['listsWithMembership'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              listsWithMembership: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getListsWithMembership#listWithMembership',
+                },
+              },
+            },
+          },
+        },
+      },
+      listWithMembership: {
+        description:
+          'A list and an optional list item indicating membership of a target user to that list.',
+        type: 'object',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listView',
+          },
+          listItem: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listItemView',
           },
         },
       },
@@ -9157,6 +9241,72 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetStarterPacksWithMembership: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getStarterPacksWithMembership',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates the starter packs created by the session user, and includes membership information about `actor` in those starter packs. Requires auth.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The account (actor) to check for membership.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacksWithMembership'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              starterPacksWithMembership: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getStarterPacksWithMembership#starterPackWithMembership',
+                },
+              },
+            },
+          },
+        },
+      },
+      starterPackWithMembership: {
+        description:
+          'A starter pack and an optional list item indicating membership of a target user to that starter pack.',
+        type: 'object',
+        required: ['starterPack'],
+        properties: {
+          starterPack: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#starterPackView',
+          },
+          listItem: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listItemView',
           },
         },
       },
@@ -13596,10 +13746,13 @@ export const ids = {
   AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
+  AppBskyGraphGetListsWithMembership: 'app.bsky.graph.getListsWithMembership',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
   AppBskyGraphGetStarterPack: 'app.bsky.graph.getStarterPack',
   AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
+  AppBskyGraphGetStarterPacksWithMembership:
+    'app.bsky.graph.getStarterPacksWithMembership',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',

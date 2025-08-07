@@ -1,5 +1,19 @@
 # @atproto/api
 
+## 0.16.2
+
+### Patch Changes
+
+- [#4081](https://github.com/bluesky-social/atproto/pull/4081) [`c370d933b`](https://github.com/bluesky-social/atproto/commit/c370d933b76b4e15b83a82b40d1b6a32bd54add6) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Adds `purpose` filtering to `app.bsky.graph.getLists`.
+  Adds `app.bsky.graph.getListsWithMembership`.
+  Adds `app.bsky.graph.getStarterPacksWithMembership`.
+
+## 0.16.1
+
+### Patch Changes
+
+- [#3927](https://github.com/bluesky-social/atproto/pull/3927) [`171efadb4`](https://github.com/bluesky-social/atproto/commit/171efadb49f842aa8ff3bf9d790caa6e0e0456ef) Thanks [@foysalit](https://github.com/foysalit)! - Introduces ozone event timeline lexicons
+
 ## 0.16.0
 
 ### Minor Changes

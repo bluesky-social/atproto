@@ -154,10 +154,12 @@ import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+import * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 import * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
@@ -245,6 +247,7 @@ import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -432,10 +435,12 @@ export * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+export * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
 export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+export * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
 export * as AppBskyGraphList from './types/app/bsky/graph/list.js'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
@@ -523,6 +528,7 @@ export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -603,6 +609,12 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+  DefsTimelineEventPlcCreate:
+    'tools.ozone.moderation.defs#timelineEventPlcCreate',
+  DefsTimelineEventPlcOperation:
+    'tools.ozone.moderation.defs#timelineEventPlcOperation',
+  DefsTimelineEventPlcTombstone:
+    'tools.ozone.moderation.defs#timelineEventPlcTombstone',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -2884,6 +2896,18 @@ export class AppBskyGraphNS {
     return this._client.call('app.bsky.graph.getLists', params, undefined, opts)
   }
 
+  getListsWithMembership(
+    params?: AppBskyGraphGetListsWithMembership.QueryParams,
+    opts?: AppBskyGraphGetListsWithMembership.CallOptions,
+  ): Promise<AppBskyGraphGetListsWithMembership.Response> {
+    return this._client.call(
+      'app.bsky.graph.getListsWithMembership',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getMutes(
     params?: AppBskyGraphGetMutes.QueryParams,
     opts?: AppBskyGraphGetMutes.CallOptions,
@@ -2920,6 +2944,18 @@ export class AppBskyGraphNS {
   ): Promise<AppBskyGraphGetStarterPacks.Response> {
     return this._client.call(
       'app.bsky.graph.getStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getStarterPacksWithMembership(
+    params?: AppBskyGraphGetStarterPacksWithMembership.QueryParams,
+    opts?: AppBskyGraphGetStarterPacksWithMembership.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacksWithMembership.Response> {
+    return this._client.call(
+      'app.bsky.graph.getStarterPacksWithMembership',
       params,
       undefined,
       opts,
@@ -4704,6 +4740,22 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.emitEvent', opts?.qp, data, opts)
       .catch((e) => {
         throw ToolsOzoneModerationEmitEvent.toKnownErr(e)
+      })
+  }
+
+  getAccountTimeline(
+    params?: ToolsOzoneModerationGetAccountTimeline.QueryParams,
+    opts?: ToolsOzoneModerationGetAccountTimeline.CallOptions,
+  ): Promise<ToolsOzoneModerationGetAccountTimeline.Response> {
+    return this._client
+      .call(
+        'tools.ozone.moderation.getAccountTimeline',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ToolsOzoneModerationGetAccountTimeline.toKnownErr(e)
       })
   }
 
