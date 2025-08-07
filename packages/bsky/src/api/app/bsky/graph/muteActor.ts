@@ -9,6 +9,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const { actor } = input.body
       const requester = auth.credentials.iss
+      if (requester === actor) {
+        throw new InvalidRequestError('Actor cannot mute themselves')
+      }
       const [did] = await ctx.hydrator.actor.getDids([actor])
       if (!did) throw new InvalidRequestError('Actor not found')
       await ctx.bsyncClient.addMuteOperation({
