@@ -5,6 +5,9 @@ import createTemplate from './communication/createTemplate'
 import deleteTemplate from './communication/deleteTemplate'
 import listTemplates from './communication/listTemplates'
 import updateTemplate from './communication/updateTemplate'
+import getAccountActions from './history/getAccountActions'
+import getReportedSubjects from './history/getReportedSubjects'
+import getSubjectHistory from './history/getSubjectHistory'
 import fetchLabels from './label/fetchLabels'
 import queryLabels from './label/queryLabels'
 import subscribeLabels from './label/subscribeLabels'
@@ -83,6 +86,9 @@ export default function (server: Server, ctx: AppContext) {
   upsertOption(server, ctx)
   listOptions(server, ctx)
   removeOptions(server, ctx)
+  getReportedSubjects(server, ctx)
+  getAccountActions(server, ctx)
+  getSubjectHistory(server, ctx)
   getReporterStats(server, ctx)
   getSubjects(server, ctx)
   grantVerifications(server, ctx)

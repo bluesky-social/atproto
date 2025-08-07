@@ -1,0 +1,166 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.history.defs",
+  "defs": {
+    "subjectBasicView": {
+      "type": "object",
+      "required": ["subject", "status", "modAction"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "format": "uri"
+        },
+        "status": {
+          "type": "string",
+          "knownValues": ["deactivated", "active", "deleted"]
+        },
+        "modAction": {
+          "type": "string",
+          "knownValues": [
+            "tools.ozone.history.defs#modActionPending",
+            "tools.ozone.history.defs#modActionLabel",
+            "tools.ozone.history.defs#modActionResolve",
+            "tools.ozone.history.defs#modActionSuspend",
+            "tools.ozone.history.defs#modActionTakedown"
+          ]
+        },
+        "subjectProfile": {
+          "type": "union",
+          "refs": []
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.label.defs#label"
+          }
+        }
+      }
+    },
+    "eventView": {
+      "type": "object",
+      "required": ["subject", "createdAt", "event", "isAutomated"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "isAutomated": {
+          "type": "boolean"
+        },
+        "event": {
+          "type": "union",
+          "refs": [
+            "tools.ozone.history.defs#eventTakedown",
+            "tools.ozone.history.defs#eventLabel",
+            "tools.ozone.history.defs#eventReport",
+            "tools.ozone.history.defs#eventEmail",
+            "tools.ozone.history.defs#eventResolve"
+          ]
+        }
+      }
+    },
+    "eventTakedown": {
+      "type": "object",
+      "description": "Permanently or temporarily taken down",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the takedown should be in effect before automatically expiring."
+        }
+      }
+    },
+    "eventLabel": {
+      "type": "object",
+      "description": "Label(s) applied/negated",
+      "required": ["createLabelVals", "negateLabelVals"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "createLabelVals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "negateLabelVals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "eventReport": {
+      "type": "object",
+      "description": "Subject reported",
+      "required": ["reportType"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "reportType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType"
+        }
+      }
+    },
+    "eventEmail": {
+      "type": "object",
+      "description": "Moderation email sent to the author of the subject",
+      "required": ["subjectLine"],
+      "properties": {
+        "subjectLine": {
+          "type": "string",
+          "description": "The subject line of the email sent to the user."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the email sent to the user."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Additional comment about the outgoing comm."
+        }
+      }
+    },
+    "eventResolve": {
+      "type": "object",
+      "description": "Reports on the subject acknowledged by a moderator",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "description": "Describe the resolution or acknowledgment."
+        }
+      }
+    },
+    "modActionPending": {
+      "type": "token",
+      "description": "Awaiting moderator review on the reported subject"
+    },
+    "modActionResolve": {
+      "type": "token",
+      "description": "Moderator acknowledged report and marked as resolved the subject without action"
+    },
+    "modActionLabel": {
+      "type": "token",
+      "description": "Moderator added or removed label(s) on the reported subject"
+    },
+    "modActionTakedown": {
+      "type": "token",
+      "description": "Moderator permanently took down the reported subject"
+    },
+    "modActionSuspend": {
+      "type": "token",
+      "description": "Moderator temporarily took down the reported subject"
+    }
+  }
+}

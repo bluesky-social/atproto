@@ -244,6 +244,10 @@ import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+import * as ToolsOzoneHistoryDefs from './types/tools/ozone/history/defs.js'
+import * as ToolsOzoneHistoryGetAccountActions from './types/tools/ozone/history/getAccountActions.js'
+import * as ToolsOzoneHistoryGetReportedSubjects from './types/tools/ozone/history/getReportedSubjects.js'
+import * as ToolsOzoneHistoryGetSubjectHistory from './types/tools/ozone/history/getSubjectHistory.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
@@ -525,6 +529,10 @@ export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+export * as ToolsOzoneHistoryDefs from './types/tools/ozone/history/defs.js'
+export * as ToolsOzoneHistoryGetAccountActions from './types/tools/ozone/history/getAccountActions.js'
+export * as ToolsOzoneHistoryGetReportedSubjects from './types/tools/ozone/history/getReportedSubjects.js'
+export * as ToolsOzoneHistoryGetSubjectHistory from './types/tools/ozone/history/getSubjectHistory.js'
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
@@ -603,6 +611,13 @@ export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
+}
+export const TOOLS_OZONE_HISTORY = {
+  DefsModActionPending: 'tools.ozone.history.defs#modActionPending',
+  DefsModActionResolve: 'tools.ozone.history.defs#modActionResolve',
+  DefsModActionLabel: 'tools.ozone.history.defs#modActionLabel',
+  DefsModActionTakedown: 'tools.ozone.history.defs#modActionTakedown',
+  DefsModActionSuspend: 'tools.ozone.history.defs#modActionSuspend',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
@@ -4626,6 +4641,7 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _client: XrpcClient
   communication: ToolsOzoneCommunicationNS
+  history: ToolsOzoneHistoryNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
   safelink: ToolsOzoneSafelinkNS
@@ -4639,6 +4655,7 @@ export class ToolsOzoneNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.communication = new ToolsOzoneCommunicationNS(client)
+    this.history = new ToolsOzoneHistoryNS(client)
     this.hosting = new ToolsOzoneHostingNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
     this.safelink = new ToolsOzoneSafelinkNS(client)
@@ -4702,6 +4719,50 @@ export class ToolsOzoneCommunicationNS {
       .catch((e) => {
         throw ToolsOzoneCommunicationUpdateTemplate.toKnownErr(e)
       })
+  }
+}
+
+export class ToolsOzoneHistoryNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getAccountActions(
+    params?: ToolsOzoneHistoryGetAccountActions.QueryParams,
+    opts?: ToolsOzoneHistoryGetAccountActions.CallOptions,
+  ): Promise<ToolsOzoneHistoryGetAccountActions.Response> {
+    return this._client.call(
+      'tools.ozone.history.getAccountActions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getReportedSubjects(
+    params?: ToolsOzoneHistoryGetReportedSubjects.QueryParams,
+    opts?: ToolsOzoneHistoryGetReportedSubjects.CallOptions,
+  ): Promise<ToolsOzoneHistoryGetReportedSubjects.Response> {
+    return this._client.call(
+      'tools.ozone.history.getReportedSubjects',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubjectHistory(
+    params?: ToolsOzoneHistoryGetSubjectHistory.QueryParams,
+    opts?: ToolsOzoneHistoryGetSubjectHistory.CallOptions,
+  ): Promise<ToolsOzoneHistoryGetSubjectHistory.Response> {
+    return this._client.call(
+      'tools.ozone.history.getSubjectHistory',
+      params,
+      undefined,
+      opts,
+    )
   }
 }
 
