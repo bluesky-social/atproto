@@ -20,13 +20,22 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessFull({
       checkTakedown: true,
     }),
-    handler: async ({ input, auth }) => {
+    handler: async ({ input, auth, req }) => {
       const did = auth.credentials.did
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
       }
+      const contentLength = Number(req.header('content-length'))
+      const size = isNaN(contentLength) ? 0 : contentLength
+      if (
+        ctx.cfg.service.maxImportSize &&
+        size > ctx.cfg.service.maxImportSize
+      ) {
+        throw new InvalidRequestError('Import size exceeds maximum allowed')
+      }
+
       await ctx.actorStore.transact(did, (store) =>
-        importRepo(store, input.body),
+        importRepo(store, input.body, size),
       )
     },
   })
@@ -35,12 +44,13 @@ export default function (server: Server, ctx: AppContext) {
 const importRepo = async (
   actorStore: ActorStoreTransactor,
   incomingCar: AsyncIterable<Uint8Array>,
+  maxCarSize: number,
 ) => {
   const now = new Date().toISOString()
   const rev = TID.nextStr()
   const did = actorStore.repo.did
 
-  const { roots, blocks } = await readCarStream(incomingCar)
+  const { roots, blocks } = await readCarStream(incomingCar, maxCarSize)
   if (roots.length !== 1) {
     await blocks.dump()
     throw new InvalidRequestError('expected one root')
