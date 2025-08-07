@@ -378,8 +378,8 @@ export interface Interaction {
     | 'app.bsky.feed.defs#interactionQuote'
     | 'app.bsky.feed.defs#interactionShare'
     | (string & {})
-  /** Duration of the interaction in milliseconds. Only intended for use with #interactionSeen. */
-  duration?: number
+  /** Duration of the interaction in milliseconds. Intended for use with #interactionSeen. */
+  durationMs?: number
   /** Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton. */
   feedContext?: string
   /** Unique identifier per request that may be passed back alongside interactions. */

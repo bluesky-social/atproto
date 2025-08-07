@@ -6666,10 +6666,10 @@ export const schemaDict = {
               'app.bsky.feed.defs#interactionShare',
             ],
           },
-          duration: {
+          durationMs: {
             type: 'integer',
             description:
-              'Duration of the interaction in milliseconds. Only intended for use with #interactionSeen.',
+              'Duration of the interaction in milliseconds. Intended for use with #interactionSeen.',
             minimum: 0,
           },
           feedContext: {
