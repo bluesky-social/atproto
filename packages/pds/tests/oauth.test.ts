@@ -255,7 +255,7 @@ describe('oauth', () => {
     await page.typeIn('input[type="password"]', 'alice-new-pass')
 
     // Make sure the warning is visible
-    await page.ensureTextVisibility('Avertissement')
+    await page.ensureTextVisibility('Avertissement', 'h3')
 
     await page.clickOn(
       'label::-p-text(Se souvenir de ce compte sur cet appareil)',
