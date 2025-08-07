@@ -6669,7 +6669,7 @@ export const schemaDict = {
           duration: {
             type: 'integer',
             description:
-              'Duration of the interaction in milliseconds. Only intended for use with #clickthroughSeen.',
+              'Duration of the interaction in milliseconds. Only intended for use with #interactionSeen.',
             minimum: 0,
           },
           feedContext: {
