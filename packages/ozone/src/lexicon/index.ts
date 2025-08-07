@@ -83,8 +83,8 @@ import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo.js'
 import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus.js'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs.js'
 import * as ComAtprotoSyncListHosts from './types/com/atproto/sync/listHosts.js'
-import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
 import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/listReposByCollection.js'
+import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos.js'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
@@ -104,9 +104,9 @@ import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describ
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
@@ -123,8 +123,8 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
 import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
-import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
 import * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
@@ -180,17 +180,17 @@ import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportA
 import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
 import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
-import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
 import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
 import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
-import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
 import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
@@ -225,10 +225,10 @@ import * as ToolsOzoneSetDeleteSet from './types/tools/ozone/set/deleteSet.js'
 import * as ToolsOzoneSetDeleteValues from './types/tools/ozone/set/deleteValues.js'
 import * as ToolsOzoneSetGetValues from './types/tools/ozone/set/getValues.js'
 import * as ToolsOzoneSetQuerySets from './types/tools/ozone/set/querySets.js'
-import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet.js'
 import * as ToolsOzoneSettingListOptions from './types/tools/ozone/setting/listOptions.js'
 import * as ToolsOzoneSettingRemoveOptions from './types/tools/ozone/setting/removeOptions.js'
 import * as ToolsOzoneSettingUpsertOption from './types/tools/ozone/setting/upsertOption.js'
+import * as ToolsOzoneSetUpsertSet from './types/tools/ozone/set/upsertSet.js'
 import * as ToolsOzoneSignatureFindCorrelation from './types/tools/ozone/signature/findCorrelation.js'
 import * as ToolsOzoneSignatureFindRelatedAccounts from './types/tools/ozone/signature/findRelatedAccounts.js'
 import * as ToolsOzoneSignatureSearchAccounts from './types/tools/ozone/signature/searchAccounts.js'
@@ -1286,18 +1286,6 @@ export class ComAtprotoSyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  listRepos<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ComAtprotoSyncListRepos.QueryParams,
-      ComAtprotoSyncListRepos.HandlerInput,
-      ComAtprotoSyncListRepos.HandlerOutput
-    >,
-  ) {
-    const nsid = 'com.atproto.sync.listRepos' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   listReposByCollection<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1307,6 +1295,18 @@ export class ComAtprotoSyncNS {
     >,
   ) {
     const nsid = 'com.atproto.sync.listReposByCollection' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listRepos<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSyncListRepos.QueryParams,
+      ComAtprotoSyncListRepos.HandlerInput,
+      ComAtprotoSyncListRepos.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.listRepos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1605,18 +1605,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getFeed<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetFeed.QueryParams,
-      AppBskyFeedGetFeed.HandlerInput,
-      AppBskyFeedGetFeed.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getFeedGenerator<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1638,6 +1626,18 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeed<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetFeed.QueryParams,
+      AppBskyFeedGetFeed.HandlerInput,
+      AppBskyFeedGetFeed.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1841,18 +1841,6 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getList<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetList.QueryParams,
-      AppBskyGraphGetList.HandlerInput,
-      AppBskyGraphGetList.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getList' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getListBlocks<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1862,6 +1850,18 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getList<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetList.QueryParams,
+      AppBskyGraphGetList.HandlerInput,
+      AppBskyGraphGetList.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getList' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2605,18 +2605,6 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getConvo<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoGetConvo.QueryParams,
-      ChatBskyConvoGetConvo.HandlerInput,
-      ChatBskyConvoGetConvo.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getConvoAvailability<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2638,6 +2626,18 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetConvo.QueryParams,
+      ChatBskyConvoGetConvo.HandlerInput,
+      ChatBskyConvoGetConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2713,18 +2713,6 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  sendMessage<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoSendMessage.QueryParams,
-      ChatBskyConvoSendMessage.HandlerInput,
-      ChatBskyConvoSendMessage.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   sendMessageBatch<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2734,6 +2722,18 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessage<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoSendMessage.QueryParams,
+      ChatBskyConvoSendMessage.HandlerInput,
+      ChatBskyConvoSendMessage.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
