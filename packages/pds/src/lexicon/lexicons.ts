@@ -6666,6 +6666,12 @@ export const schemaDict = {
               'app.bsky.feed.defs#interactionShare',
             ],
           },
+          duration: {
+            type: 'integer',
+            description:
+              'Duration of the interaction in milliseconds. Only intended for use with #clickthroughSeen.',
+            minimum: 0,
+          },
           feedContext: {
             type: 'string',
             description:
