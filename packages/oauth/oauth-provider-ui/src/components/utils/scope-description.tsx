@@ -9,12 +9,13 @@ import {
   RepoScope,
   RpcScope,
 } from '@atproto/oauth-scopes'
-import { Admonition } from './admonition'
+import { Admonition, AdmonitionProps } from './admonition'
 import { DescriptionCard } from './description-card'
 import {
   AccountOutlinedIcon,
   AtSymbolIcon,
   AuthenticateIcon,
+  ButterflyIcon,
   ChatIcon,
   CheckMarkIcon,
   EmailIcon,
@@ -27,18 +28,24 @@ import {
 export type ScopeDescriptionProps = Override<
   React.HTMLAttributes<HTMLDivElement>,
   {
+    clientTrusted?: boolean
+    clientFirstParty?: boolean
     scope?: string
   }
 >
 
 export function ScopeDescription({
   scope,
+  clientTrusted = false,
+  clientFirstParty = false,
 
   // div
   className = '',
   ...attrs
 }: ScopeDescriptionProps) {
   const permissions = useMemo(() => new PermissionSetTransition(scope), [scope])
+  const showFineGrainedPermissions =
+    !useHasOnlyBlueskySpecificScopes(permissions)
 
   if (permissions.scopes.size === 0) return null
   if (permissions.scopes.size === 1 && permissions.scopes.has('atproto')) {
@@ -50,21 +57,36 @@ export function ScopeDescription({
       <EmailPermissions permissions={permissions} />
       <IdentityPermissions permissions={permissions} />
       <AccountPermissions permissions={permissions} />
-      <ChatPermissions permissions={permissions} />
-      <BlobPermissions permissions={permissions} />
-      <RepoPermissions permissions={permissions} />
-      <RpcMethodsDetails permissions={permissions} />
 
-      <IdentityWarning permissions={permissions} />
+      {/* Bluesky business logic specific scopes */}
+      <BlueskyAppviewPermissions permissions={permissions} />
+      <BlueskyChatPermissions permissions={permissions} />
+
+      {showFineGrainedPermissions && (
+        <>
+          <BlobPermissions permissions={permissions} />
+          <RepoPermissions permissions={permissions} />
+          <RpcMethodsDetails permissions={permissions} />
+        </>
+      )}
+
+      {(!clientFirstParty || !clientTrusted) && (
+        <IdentityWarning className="mt-2" permissions={permissions} />
+      )}
     </div>
   )
 }
 
-export function IdentityWarning({
+function IdentityWarning({
   permissions,
+
+  // Admonition
+  type = 'alert',
+  prominent = true,
+  ...props
 }: {
   permissions: PermissionSetTransition
-}) {
+} & AdmonitionProps) {
   const hasFullIdentityAccess = useMemo(() => {
     return (
       permissions.allowsIdentity({ attr: '*', action: 'manage' }) ||
@@ -74,11 +96,12 @@ export function IdentityWarning({
 
   if (hasFullIdentityAccess) {
     return (
-      <Admonition type="alert" prominent title={<Trans>Warning</Trans>}>
+      <Admonition {...props} type={type} prominent={prominent}>
         <Trans>
           The application is asking for full control over your network identity,
           meaning that it could <b>permanently break</b>, or even <b>steal</b>,
-          your account. Only grant this permission to applications you trust.
+          your account. Only grant this permission to applications you really
+          trust.
         </Trans>
       </Admonition>
     )
@@ -213,7 +236,7 @@ function AccountPermissions({
         role="listitem"
         image={<AccountOutlinedIcon className="size-6" />}
         title={t`Account`}
-        description={t`Manage your account status`}
+        description={t`Manage the status of your account, such as temporarily deactivating it`}
       />
     )
   }
@@ -221,26 +244,97 @@ function AccountPermissions({
   return null
 }
 
-const isChatNsid = (nsid: NSID | '*'): nsid is '*' | `chat.bsky.${string}` =>
-  nsid === '*' || nsid.startsWith('chat.bsky.')
-const isChatRpcScope = (s: string): boolean =>
-  RpcScope.fromString(s)?.lxm.some(isChatNsid) || false
+/**
+ * A hook that returns true if, and only if, there is at least one repo or rpc
+ * scope that is used by the Bluesky app, and if every repo and rpc scope are
+ * used by the Bluesky app.
+ */
+function useHasOnlyBlueskySpecificScopes(permissions: PermissionSetTransition) {
+  return useMemo(() => {
+    if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
+      return false
+    }
 
-function ChatPermissions({
+    let foundOne = false
+
+    for (const s of permissions.scopes) {
+      const rpc = RpcScope.fromString(s)
+      if (rpc) {
+        foundOne = true
+        if (isOfficialBlueskyAppviewServiceId(rpc.aud)) continue
+        if (rpc.lxm.every(isBlueskySpecificNsid)) continue
+        return false
+      }
+
+      const repo = RepoScope.fromString(s)
+      if (repo) {
+        foundOne = true
+        if (repo.collection.every(isBlueskySpecificNsid)) continue
+        return false
+      }
+    }
+
+    return foundOne
+  }, [permissions])
+}
+
+function BlueskyAppviewPermissions({
   permissions,
 }: {
   permissions: PermissionSetTransition
 }) {
   const { t } = useLingui()
 
-  const canChat = useMemo(() => {
+  const hasBskyAppRepo = useMemo(() => {
+    return permissions.scopes.some(scopeEnablesBskyAppRepo)
+  }, [permissions])
+
+  const hasBskyAppRpc = useMemo(() => {
+    return permissions.scopes.some(scopeEnablesBskyAppRpc)
+  }, [permissions])
+
+  if (hasBskyAppRepo || hasBskyAppRpc) {
+    return (
+      <DescriptionCard
+        role="listitem"
+        image={<ButterflyIcon className="size-6" />}
+        title={t`Bluesky`}
+        description={
+          <ul>
+            {hasBskyAppRepo && (
+              <li key="repo">
+                <Trans>Manage your profile, posts, likes and follows</Trans>
+              </li>
+            )}
+            {hasBskyAppRpc && (
+              <li key="rpc">
+                <Trans>Read your blocks and private preferences</Trans>
+              </li>
+            )}
+          </ul>
+        }
+      />
+    )
+  }
+
+  return null
+}
+
+function BlueskyChatPermissions({
+  permissions,
+}: {
+  permissions: PermissionSetTransition
+}) {
+  const { t } = useLingui()
+
+  const enablesChat = useMemo(() => {
     return (
       permissions.hasTransitionChatBsky ||
-      permissions.scopes.some(isChatRpcScope)
+      permissions.scopes.some(scopeEnablesChat)
     )
   }, [permissions])
 
-  if (canChat) {
+  if (enablesChat) {
     return (
       <DescriptionCard
         role="listitem"
@@ -261,27 +355,38 @@ function IdentityPermissions({
 }) {
   const { t } = useLingui()
 
-  if (
-    permissions.allowsIdentity({ attr: '*', action: 'manage' }) ||
-    permissions.allowsIdentity({ attr: '*', action: 'submit' })
-  ) {
+  const attr = useMemo(() => {
+    if (
+      permissions.allowsIdentity({ attr: '*', action: 'manage' }) ||
+      permissions.allowsIdentity({ attr: '*', action: 'submit' })
+    ) {
+      return '*' as const
+    }
+
+    if (permissions.allowsIdentity({ attr: 'handle', action: 'manage' })) {
+      return 'handle' as const
+    }
+
+    return null
+  }, [permissions])
+
+  if (attr) {
     return (
       <DescriptionCard
         role="listitem"
         image={<AtSymbolIcon className="h-6" />}
         title={t`Identity`}
-        description={t`Manage your full identity (including your @handle)`}
-      />
-    )
-  }
-
-  if (permissions.allowsIdentity({ attr: 'handle', action: 'manage' })) {
-    return (
-      <DescriptionCard
-        role="listitem"
-        image={<AtSymbolIcon className="size-6" />}
-        title={t`Handle`}
-        description={t`Update your network @handle`}
+        description={
+          attr === '*' ? (
+            <Trans>
+              Manage your <b>full identity</b> including your <b>@handle</b>
+            </Trans>
+          ) : (
+            <Trans>
+              Change your <b>@handle</b>
+            </Trans>
+          )
+        }
       />
     )
   }
@@ -302,8 +407,17 @@ function RpcMethodsDetails({
         role="listitem"
         image={<AuthenticateIcon className="size-6" />}
         title={t`Authenticate`}
-        description={t`Perform authenticated actions towards any service on your behalf`}
-      />
+        description={
+          <Trans>
+            Perform authenticated actions towards <b>any service</b> on your
+            behalf
+          </Trans>
+        }
+      >
+        <p>
+          <RpcDescription />
+        </p>
+      </DescriptionCard>
     )
   }
 
@@ -313,14 +427,17 @@ function RpcMethodsDetails({
         role="listitem"
         image={<AuthenticateIcon className="size-6" />}
         title={t`Authenticate`}
-        description={t`Perform authenticated actions on your behalf`}
+        description={t`Perform actions on your behalf`}
       >
-        <Trans>
-          The ATproto network uses authenticated inter service communications to
-          perform actions on your behalf. This is typically used to retrieve or
-          update data linked to your account, such as messages. The application
-          is asking for permissions to perform the following actions:
-        </Trans>
+        <p>
+          <RpcDescription />
+        </p>
+        <p className="mt-1">
+          <Trans>
+            The application is asking for permissions to uniquely identify you
+            when performing the following actions on your behalf:
+          </Trans>
+        </p>
         <RpcMethodsTable className="mt-2" permissions={permissions} />
       </DescriptionCard>
     )
@@ -329,10 +446,22 @@ function RpcMethodsDetails({
   return null
 }
 
+function RpcDescription() {
+  return (
+    <Trans>
+      The ATProto network uses an authentication mechanism that allows to
+      uniquely identify users when communicating with external services. This is
+      typically used to retrieve or update data linked to your account, such as
+      messages.
+    </Trans>
+  )
+}
+
 type RpcMethodsTableProps = Override<
   HTMLAttributes<HTMLTableElement>,
   {
     permissions: PermissionSetTransition
+    children?: never
   }
 >
 function RpcMethodsTable({
@@ -415,12 +544,15 @@ function RepoPermissions({
         title={t`Repository`}
         description={t`Create, update, and delete any public record`}
       >
-        <Trans>
-          Your repository contains all the public data you have created on the
-          network, such as posts, likes, and follows. The application is asking
-          for permissions to create, update, and delete data from any
-          collection.
-        </Trans>
+        <p>
+          <RepoDescription />
+        </p>
+        <p className="mt-1">
+          <Trans>
+            The application is asking to be able to create, update, and delete
+            any data from your repository.
+          </Trans>
+        </p>
       </DescriptionCard>
     )
   }
@@ -433,11 +565,15 @@ function RepoPermissions({
         title={t`Repository`}
         description={t`Publish changes`}
       >
-        <Trans>
-          Your repository contains all the public data you have created on the
-          network, such as posts, likes, and follows. The application is asking
-          for permissions to update the data from the following collections:
-        </Trans>
+        <p>
+          <RepoDescription />
+        </p>
+        <p className="mt-1">
+          <Trans>
+            The application wants to be able to perform the following actions on
+            your repository:
+          </Trans>
+        </p>
         <RepoTable className="mt-2" permissions={permissions} />
       </DescriptionCard>
     )
@@ -446,16 +582,28 @@ function RepoPermissions({
   return null
 }
 
+function RepoDescription() {
+  return (
+    <Trans>
+      Your repository contains all the public data you have created on the
+      ATProto network. This includes data created through the Bluesky app such
+      as posts, likes, and follows. It also includes data created through other
+      applications or websites using the ATProto network.
+    </Trans>
+  )
+}
+
 type RepoTableProps = Override<
   HTMLAttributes<HTMLTableElement>,
   {
     permissions: PermissionSetTransition
+    children?: never
   }
 >
 function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
   const { t } = useLingui()
 
-  const nsidActionsEntries = useMemo(() => {
+  const nsidActions = useMemo(() => {
     const map = new Map<
       '*' | NSID,
       {
@@ -483,8 +631,16 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
       }
     }
 
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b))
+    return map
   }, [permissions])
+
+  const starActions = nsidActions.get('*')
+
+  const nsidActionsEntries = useMemo(() => {
+    return Array.from(nsidActions.entries()).sort(([a], [b]) =>
+      a.localeCompare(b),
+    )
+  }, [nsidActions])
 
   return (
     <table className={`w-full table-auto text-left ${className}`} {...attrs}>
@@ -507,18 +663,18 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
               )}
             </td>
             <td className="text-center">
-              {actions.create ? (
-                <CheckMarkIcon className="inline-block w-4" />
+              {starActions?.create || actions.create ? (
+                <CheckMarkIcon className="inline-block size-4" />
               ) : null}
             </td>
             <td className="text-center">
-              {actions.update ? (
-                <CheckMarkIcon className="inline-block w-4" />
+              {starActions?.update || actions.update ? (
+                <CheckMarkIcon className="inline-block size-4" />
               ) : null}
             </td>
             <td className="text-center">
-              {actions.delete ? (
-                <CheckMarkIcon className="inline-block w-4" />
+              {starActions?.delete || actions.delete ? (
+                <CheckMarkIcon className="inline-block size-4" />
               ) : null}
             </td>
           </tr>
@@ -526,4 +682,50 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
       </tbody>
     </table>
   )
+}
+
+// UTILS
+
+function isOfficialBlueskyAppviewServiceId(aud: string): boolean {
+  return aud === 'did:web:bsky.app#bsky_appview'
+}
+
+function isBskyAppNsid(nsid: string): nsid is `app.bsky.${string}` {
+  return nsid.startsWith('app.bsky.')
+}
+function isBskyChatNsid(nsid: string): nsid is `chat.bsky.${string}` {
+  return nsid.startsWith('chat.bsky.')
+}
+
+function scopeEnablesChat(scope: string): boolean {
+  if (scope === 'transition:chat.bsky') return true
+  const rpc = RpcScope.fromString(scope)
+  if (!rpc) return false
+  // Official Bluesky chat is not hosted by the appview service
+  if (isOfficialBlueskyAppviewServiceId(rpc.aud)) return false
+  return rpc.lxm.includes('*') || rpc.lxm.some(isBskyChatNsid)
+}
+
+function isBlueskySpecificNsid(nsid: NSID | '*'): boolean {
+  return nsid === '*'
+    ? false
+    : nsid === 'com.atproto.moderation.createReport' ||
+        isBskyAppNsid(nsid) ||
+        isBskyChatNsid(nsid)
+}
+
+function scopeEnablesBskyAppRepo(scope: string): boolean {
+  if (scope === 'transition:generic') return true
+  const repo = RepoScope.fromString(scope)
+  if (!repo) return false
+  return (
+    repo.collection.includes('*') || repo.collection.some(isBlueskySpecificNsid)
+  )
+}
+
+function scopeEnablesBskyAppRpc(scope: string): boolean {
+  if (scope === 'transition:generic') return true
+  const rpc = RpcScope.fromString(scope)
+  if (!rpc) return false
+  return rpc.lxm.includes('*') || rpc.lxm.some(isBlueskySpecificNsid)
 }

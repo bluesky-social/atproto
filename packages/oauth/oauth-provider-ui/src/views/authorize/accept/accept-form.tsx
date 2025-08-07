@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { ClientImage } from '#/components/utils/client-image.tsx'
 import { DescriptionCard } from '#/components/utils/description-card.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
@@ -19,6 +19,7 @@ export type AcceptFormProps = Override<
     clientId: string
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
+    clientFirstParty: boolean
 
     account: Account
     scope?: string
@@ -33,6 +34,7 @@ export function AcceptForm({
   clientId,
   clientMetadata,
   clientTrusted,
+  clientFirstParty,
 
   account,
   scope,
@@ -44,6 +46,7 @@ export function AcceptForm({
   // FormCardProps
   ...props
 }: AcceptFormProps) {
+  const { t } = useLingui()
   return (
     <FormCard
       {...props}
@@ -80,13 +83,44 @@ export function AcceptForm({
           />
         }
         description={
-          <Trans>
-            wants to access your <AccountIdentifier account={account} /> account
-          </Trans>
+          !scope || scope === 'atproto' ? (
+            <Trans>
+              wants to uniquely identify you through your{' '}
+              <AccountIdentifier account={account} /> account
+            </Trans>
+          ) : (
+            <Trans>
+              wants to access your <AccountIdentifier account={account} />{' '}
+              account
+            </Trans>
+          )
         }
-      />
+        hint={t`Detailed list of permissions`}
+      >
+        {scope ? (
+          <>
+            <p>
+              <Trans>
+                This application is requesting the following list of technical
+                permissions, summarized hereafter:
+              </Trans>
+            </p>
+            <ul className="mt-2">
+              {scope.split(' ').map((scope) => (
+                <li key={scope}>
+                  <code>{scope}</code>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </DescriptionCard>
 
-      <ScopeDescription scope={scope} />
+      <ScopeDescription
+        scope={scope}
+        clientTrusted={clientTrusted}
+        clientFirstParty={clientFirstParty}
+      />
 
       <p>
         <Trans>

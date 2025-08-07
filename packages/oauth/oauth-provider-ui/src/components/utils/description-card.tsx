@@ -43,7 +43,7 @@ export function DescriptionCard({
     <div ref={ref} className={className} {...attrs}>
       <div className={`flex items-center justify-start gap-2`}>
         <div
-          className="ml-2 flex w-8 flex-grow-0 justify-center align-middle"
+          className="ml-2 flex w-8 flex-grow-0 items-center justify-center"
           aria-hidden
         >
           {image}

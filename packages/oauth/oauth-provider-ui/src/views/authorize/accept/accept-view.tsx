@@ -14,6 +14,7 @@ export type AcceptViewProps = Override<
     clientId: string
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
+    clientFirstParty: boolean
 
     account: Account
     scope?: string
@@ -28,6 +29,7 @@ export function AcceptView({
   clientId,
   clientMetadata,
   clientTrusted,
+  clientFirstParty,
   account,
   scope,
   onAccept,
@@ -59,6 +61,7 @@ export function AcceptView({
         clientId={clientId}
         clientMetadata={clientMetadata}
         clientTrusted={clientTrusted}
+        clientFirstParty={clientFirstParty}
         account={account}
         scope={scope}
         onBack={onBack}

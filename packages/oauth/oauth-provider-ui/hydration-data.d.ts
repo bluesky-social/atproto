@@ -7,6 +7,7 @@ export type AuthorizeData = {
   clientId: string
   clientMetadata: OAuthClientMetadata
   clientTrusted: boolean
+  clientFirstParty: boolean
 
   scope?: string
   loginHint?: string
