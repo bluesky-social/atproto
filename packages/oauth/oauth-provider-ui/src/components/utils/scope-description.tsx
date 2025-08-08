@@ -148,6 +148,7 @@ function EmailPermissions({
   return null
 }
 
+// @TODO This could be displayed as a "detail" of the repo scope (if present)
 function BlobPermissions({
   permissions,
 }: {
@@ -155,7 +156,17 @@ function BlobPermissions({
 }) {
   const { t } = useLingui()
 
+  const hasRepoScope = useMemo(() => {
+    return (
+      permissions.hasTransitionGeneric ||
+      permissions.scopes.some((s) => RepoScope.fromString(s) != null)
+    )
+  }, [permissions])
+
   const blobScopes = useMemo(() => {
+    if (permissions.hasTransitionGeneric) {
+      return [new BlobScope(['*/*'])]
+    }
     return Array.from(
       permissions.scopes.map((v) => BlobScope.fromString(v)),
     ).filter((v) => v != null)
@@ -187,6 +198,7 @@ function BlobPermissions({
     return types
   }, [blobScopes])
 
+  if (!hasRepoScope) return null
   if (blobScopes.length === 0) return null
 
   if (types.images && !types.videos && !types.audio && !types.other) {
