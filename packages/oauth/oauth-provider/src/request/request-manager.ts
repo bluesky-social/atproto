@@ -362,32 +362,30 @@ export class RequestManager {
     const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
+    let { parameters } = data
+
     try {
       if (data.expiresAt < new Date()) {
-        throw new AccessDeniedError(data.parameters, 'This request has expired')
+        throw new AccessDeniedError(parameters, 'This request has expired')
       }
       if (!data.deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was not initiated',
         )
       }
       if (data.deviceId !== deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was initiated from another device',
         )
       }
       if (data.sub || data.code) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was already authorized',
         )
       }
-
-      // Only response_type=code is supported
-      const code = await generateCode()
-      let parameters = data.parameters
 
       // If a new scope value is provided, update the parameters by ensuring
       // that every scope in the parameters was provided in the new scope.
@@ -405,13 +403,16 @@ export class RequestManager {
         // Validate: make sure the new scopes are valid
         if (!newScopes?.includes('atproto')) {
           throw new AccessDeniedError(
-            data.parameters,
+            parameters,
             'The "atproto" scope is required',
           )
         }
 
         parameters = { ...parameters, scope: newScopes.join(' ') }
       }
+
+      // Only response_type=code is supported
+      const code = await generateCode()
 
       // Bind the request to the account, preventing it from being used again.
       await this.store.updateRequest(requestId, {
