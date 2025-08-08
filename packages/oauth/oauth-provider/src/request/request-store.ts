@@ -12,7 +12,7 @@ export type { Awaitable }
 
 export type UpdateRequestData = Pick<
   Partial<RequestData>,
-  'sub' | 'code' | 'deviceId' | 'expiresAt'
+  'sub' | 'code' | 'deviceId' | 'expiresAt' | 'parameters'
 >
 
 export type FoundRequestResult = {

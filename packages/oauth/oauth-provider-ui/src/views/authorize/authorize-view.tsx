@@ -170,7 +170,7 @@ export function AuthorizeView({
         clientFirstParty={authorizeData.clientFirstParty}
         account={session.account}
         scope={authorizeData.scope}
-        onAccept={() => doAccept(session.account.sub)}
+        onAccept={(scope) => doAccept(session.account.sub, scope)}
         onReject={doReject}
         onBack={
           forceSignIn

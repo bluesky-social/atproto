@@ -1,8 +1,10 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { useState } from 'react'
 import { ClientImage } from '#/components/utils/client-image.tsx'
 import { DescriptionCard } from '#/components/utils/description-card.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
 import type { Account } from '@atproto/oauth-provider-api'
+import { AccountScope } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { Button } from '../../../components/forms/button.tsx'
 import {
@@ -24,11 +26,28 @@ export type AcceptFormProps = Override<
     account: Account
     scope?: string
 
-    onAccept: () => void
+    onAccept: (scope?: string) => void
     onReject: () => void
     onBack?: () => void
   }
 >
+
+function isTransitionScope(scope: string): scope is `transition:${string}` {
+  return scope.startsWith('transition:')
+}
+
+function isAccountEmailScope(scope: string): boolean {
+  const parsed = AccountScope.fromString(scope)
+  if (!parsed) return false
+  return parsed.matches({ attr: 'email', action: 'read' })
+}
+
+function stripAccountEmailScope(scope?: string): string | undefined {
+  return scope
+    ?.split(' ')
+    .filter((s) => !isAccountEmailScope(s))
+    .join(' ')
+}
 
 export function AcceptForm({
   clientId,
@@ -47,12 +66,20 @@ export function AcceptForm({
   ...props
 }: AcceptFormProps) {
   const { t } = useLingui()
+  const [allowEmail, setAllowEmail] = useState(true)
+
+  // Require the granular scope system to be able to unset the `account:email`
+  // scope.
+  const canUnsetEmail = !scope?.split(' ').some(isTransitionScope)
+
   return (
     <FormCard
       {...props}
       onSubmit={(event) => {
         event.preventDefault()
-        onAccept()
+        const acceptedScope =
+          canUnsetEmail && !allowEmail ? stripAccountEmailScope(scope) : scope
+        onAccept(acceptedScope)
       }}
       cancel={onBack && <Button onClick={onBack}>Back</Button>}
       actions={
@@ -120,6 +147,8 @@ export function AcceptForm({
         scope={scope}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
+        allowEmail={canUnsetEmail ? allowEmail : true}
+        onAllowEmail={canUnsetEmail ? setAllowEmail : undefined}
       />
 
       <p>

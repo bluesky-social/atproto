@@ -355,6 +355,7 @@ export class RequestManager {
     account: Account,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    scope?: string,
   ): Promise<Code> {
     const requestId = decodeRequestUri(requestUri)
 
@@ -386,6 +387,29 @@ export class RequestManager {
 
       // Only response_type=code is supported
       const code = await generateCode()
+      let parameters = data.parameters
+
+      const newScopes = scope ? new Set(scope.split(' ')) : undefined
+      if (newScopes) {
+        const newScopesArray = parameters.scope
+          ?.split(' ')
+          // Fool proofing: Remove invalid scopes (already done when creating the request)
+          .filter(isValidAtprotoOauthScope)
+          // The "scope" argument, if provided, only allows to remove scopes
+          // from the existing list, not to add new ones.
+          .filter((s) => newScopes.has(s))
+
+        // Validate: only allow edit scopes if they are already present in the
+        // request, and the "atproto" scope is always required.
+        if (!newScopesArray?.includes('atproto')) {
+          throw new AccessDeniedError(
+            data.parameters,
+            'The "atproto" scope is required',
+          )
+        }
+
+        parameters = { ...parameters, scope: newScopesArray.join(' ') }
+      }
 
       // Bind the request to the account, preventing it from being used again.
       await this.store.updateRequest(requestId, {
@@ -393,12 +417,13 @@ export class RequestManager {
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),
+        parameters,
       })
 
       await callAsync(this.hooks.onAuthorized, {
         client,
         account,
-        parameters: data.parameters,
+        parameters,
         deviceId,
         deviceMetadata,
         requestId,
