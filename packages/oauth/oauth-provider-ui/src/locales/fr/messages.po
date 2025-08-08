@@ -41,7 +41,7 @@ msgstr "Une erreur inconnue s'est produite"
 msgid "Another account"
 msgstr "Un autre compte"
 
-#: src/components/utils/scope-description.tsx:660
+#: src/components/utils/scope-description.tsx:659
 msgid "Any collection"
 msgstr "N'importe quelle collection"
 
@@ -121,7 +121,7 @@ msgstr "Code"
 msgid "Collapse details"
 msgstr "Réduire les détails"
 
-#: src/components/utils/scope-description.tsx:649
+#: src/components/utils/scope-description.tsx:648
 msgid "Collection"
 msgstr "Collection"
 
@@ -137,7 +137,7 @@ msgstr "Confirmez votre mot de passe pour continuer"
 msgid "Confirmation code"
 msgstr "Code de confirmation"
 
-#: src/components/utils/scope-description.tsx:650
+#: src/components/utils/scope-description.tsx:649
 msgid "Create"
 msgstr "Créer"
 
@@ -153,7 +153,7 @@ msgstr "Créer un compte"
 msgid "Create, update, and delete any public record"
 msgstr "Créer, modifier et supprimer tout contenu public"
 
-#: src/components/utils/scope-description.tsx:652
+#: src/components/utils/scope-description.tsx:651
 msgid "Delete"
 msgstr "Supprimer"
 
@@ -514,8 +514,8 @@ msgid "The application wants to be able to perform the following actions on your
 msgstr "L'application souhaite pouvoir effectuer les actions suivantes sur votre dépôt :"
 
 #: src/components/utils/scope-description.tsx:451
-msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as messages."
-msgstr "Le réseau ATProto utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que des messages."
+msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
+msgstr "Le réseau ATProto utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que le contenu du fil d'actualité ou de modération."
 
 #: src/components/utils/error-message.tsx:69
 msgid "The data you submitted is invalid. Please check the form and try again."
@@ -569,7 +569,7 @@ msgstr "Saisissez le nom d'utilisateur souhaité"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/components/utils/scope-description.tsx:651
+#: src/components/utils/scope-description.tsx:650
 msgid "Update"
 msgstr "Modifier"
 
@@ -651,5 +651,5 @@ msgid "Your password has been updated!"
 msgstr "Votre mot de passe a été mis à jour !"
 
 #: src/components/utils/scope-description.tsx:587
-msgid "Your repository contains all the public data you have created on the ATProto network. This includes data created through the Bluesky app such as posts, likes, and follows. It also includes data created through other applications or websites using the ATProto network."
-msgstr "Votre dépôt contient toutes les données publiques que vous avez créées sur le réseau ATProto. Cela inclut les données créées via l'application Bluesky telles que les publications, les likes et les abonnements. Il inclut également les données créées via d'autres applications ou sites web basées le réseau ATProto."
+msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
+msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau ATProto, telles que les publications, les likes et les abonnements Bluesky. Il contient également des données créées via d'autres applications auxquelles vous vous êtes connecté avec ce compte."

@@ -452,7 +452,7 @@ function RpcDescription() {
       The ATProto network uses an authentication mechanism that allows to
       uniquely identify users when communicating with external services. This is
       typically used to retrieve or update data linked to your account, such as
-      messages.
+      feed or moderation content.
     </Trans>
   )
 }
@@ -585,10 +585,9 @@ function RepoPermissions({
 function RepoDescription() {
   return (
     <Trans>
-      Your repository contains all the public data you have created on the
-      ATProto network. This includes data created through the Bluesky app such
-      as posts, likes, and follows. It also includes data created through other
-      applications or websites using the ATProto network.
+      Your repository contains all the data publicly available on the ATProto
+      network, such as Bluesky posts, likes, and follows. It also contains data
+      created through other apps you've signed into using this account.
     </Trans>
   )
 }

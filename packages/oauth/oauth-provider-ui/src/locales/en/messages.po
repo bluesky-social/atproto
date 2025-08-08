@@ -41,7 +41,7 @@ msgstr "An unknown error occurred"
 msgid "Another account"
 msgstr "Another account"
 
-#: src/components/utils/scope-description.tsx:660
+#: src/components/utils/scope-description.tsx:659
 msgid "Any collection"
 msgstr "Any collection"
 
@@ -121,7 +121,7 @@ msgstr "Code"
 msgid "Collapse details"
 msgstr "Collapse details"
 
-#: src/components/utils/scope-description.tsx:649
+#: src/components/utils/scope-description.tsx:648
 msgid "Collection"
 msgstr "Collection"
 
@@ -137,7 +137,7 @@ msgstr "Confirm your password to continue"
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
-#: src/components/utils/scope-description.tsx:650
+#: src/components/utils/scope-description.tsx:649
 msgid "Create"
 msgstr "Create"
 
@@ -153,7 +153,7 @@ msgstr "Create Account"
 msgid "Create, update, and delete any public record"
 msgstr "Create, update, and delete any public record"
 
-#: src/components/utils/scope-description.tsx:652
+#: src/components/utils/scope-description.tsx:651
 msgid "Delete"
 msgstr "Delete"
 
@@ -514,8 +514,8 @@ msgid "The application wants to be able to perform the following actions on your
 msgstr "The application wants to be able to perform the following actions on your repository:"
 
 #: src/components/utils/scope-description.tsx:451
-msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as messages."
-msgstr "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as messages."
+msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
+msgstr "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
 
 #: src/components/utils/error-message.tsx:69
 msgid "The data you submitted is invalid. Please check the form and try again."
@@ -569,7 +569,7 @@ msgstr "Type your desired username"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/components/utils/scope-description.tsx:651
+#: src/components/utils/scope-description.tsx:650
 msgid "Update"
 msgstr "Update"
 
@@ -651,5 +651,5 @@ msgid "Your password has been updated!"
 msgstr "Your password has been updated!"
 
 #: src/components/utils/scope-description.tsx:587
-msgid "Your repository contains all the public data you have created on the ATProto network. This includes data created through the Bluesky app such as posts, likes, and follows. It also includes data created through other applications or websites using the ATProto network."
-msgstr "Your repository contains all the public data you have created on the ATProto network. This includes data created through the Bluesky app such as posts, likes, and follows. It also includes data created through other applications or websites using the ATProto network."
+msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
+msgstr "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."

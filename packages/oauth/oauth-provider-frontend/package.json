@@ -66,7 +66,6 @@
     "prebuild": "pnpm run i18n:compile",
     "build": "vite build --emptyOutDir -- ignore additional npm args",
     "dev:ui": "vite --port 5173",
-    "dev:src": "vite build --watch",
-    "dev:messages": "pnpm run i18n:compile --watch"
+    "dev:src": "vite build --watch"
   }
 }
