@@ -281,7 +281,7 @@ const nsIndexTs = (
         .addNamedImport('Server')
 
       // recurse
-      for (let child of genNamespaceCls(file, ns)) {
+      for (const child of genNamespaceCls(file, ns)) {
         api.files.push(
           await nsIndexTs(
             api,
@@ -301,7 +301,7 @@ const nsIndexTs = (
   )
 
 function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
-  let children: DefTreeNode[] = []
+  const children: DefTreeNode[] = []
 
   //= export class {ns}NS {...}
   const cls = file.addClass({

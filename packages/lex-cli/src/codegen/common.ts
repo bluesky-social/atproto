@@ -1,9 +1,9 @@
+import { relative } from 'node:path'
 import { Options as PrettierOptions, format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
 import { type LexiconDoc } from '@atproto/lexicon'
-import { ModificationTimes, type GeneratedFile } from '../types'
+import { type GeneratedFile, ModificationTimes } from '../types'
 import { toTitleCase } from './util'
-import { relative } from 'node:path'
 
 const PRETTIER_OPTS: PrettierOptions = {
   parser: 'typescript',

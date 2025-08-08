@@ -45,7 +45,7 @@ function walk(dir: string): Promise<[string, fs.Stats][]> {
       }
       Promise.all(
         files.map((file) => {
-          return new Promise<[string, fs.Stats][]>(async (resolve, reject) => {
+          return new Promise<[string, fs.Stats][]>((resolve, reject) => {
             const filepath = join(dir, file)
             fs.stat(filepath, async (error, stats) => {
               if (error) {

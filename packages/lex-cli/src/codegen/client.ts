@@ -260,7 +260,7 @@ const nsIndexTs = (
         ])
 
       // necessary imports only
-      let importNsids = [
+      const importNsids = [
         ...new Set(
           ns.userTypes.map((ut) => ut.nsid).concat(Object.values(ATP_METHODS)),
         ),
@@ -277,7 +277,7 @@ const nsIndexTs = (
       }
 
       // recurse
-      for (let child of genNamespaceCls(file, ns)) {
+      for (const child of genNamespaceCls(file, ns)) {
         api.files.push(
           await nsIndexTs(
             api,
@@ -296,7 +296,7 @@ const nsIndexTs = (
   )
 
 function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
-  let children: DefTreeNode[] = []
+  const children: DefTreeNode[] = []
 
   //= export class {ns}NS {...}
   const cls = file.addClass({

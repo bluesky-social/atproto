@@ -10,9 +10,9 @@ import {
   applyFileDiff,
   genFileDiff,
   genTsObj,
+  getTSTimestamps,
   printFileDiff,
   readAllLexicons,
-  getTSTimestamps,
 } from './util'
 
 const program = new Command()
