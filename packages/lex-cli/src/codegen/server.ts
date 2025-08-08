@@ -42,11 +42,12 @@ export async function genServerApi(
   }
   api.files.push(await utilTs(project))
   api.files.push(await lexiconsTs(project, lexiconDocs))
-  api.files.push(await indexTs(project, lexiconDocs, nsidTree, nsidTokens))
+  api.files.push(await indexTs(api, project, lexiconDocs, nsidTree, nsidTokens))
   return api
 }
 
 const indexTs = (
+  api: GeneratedAPI,
   project: Project,
   lexiconDocs: LexiconDoc[],
   nsidTree: DefTreeNode[],
@@ -75,7 +76,7 @@ const indexTs = (
       })
 
     // generate type imports
-    for (const lexiconDoc of lexiconDocs) {
+    /*for (const lexiconDoc of lexiconDocs) {
       if (
         lexiconDoc.defs.main?.type !== 'query' &&
         lexiconDoc.defs.main?.type !== 'subscription' &&
@@ -88,7 +89,7 @@ const indexTs = (
           moduleSpecifier: `./types/${lexiconDoc.id.split('.').join('/')}.js`,
         })
         .setNamespaceImport(toTitleCase(lexiconDoc.id))
-    }
+    }*/
 
     // generate token enums
     for (const nsidAuthority in nsidTokens) {
@@ -144,8 +145,11 @@ const indexTs = (
         type: ns.className,
       })
 
-      // class...
-      genNamespaceCls(file, ns)
+      file.addImportDeclaration({
+        moduleSpecifier: `./ns/${ns.propName}/index.js`,
+      }).addNamedImport(ns.className)
+
+      api.files.push(await nsIndexTs(api, project, lexiconDocs, ns, './ns', 2))
     }
 
     //= constructor (options?: XrpcOptions) {
@@ -168,7 +172,69 @@ const indexTs = (
       )
   })
 
-function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
+const nsIndexTs = (
+  api: GeneratedAPI,
+  project: Project,
+  lexiconDocs: LexiconDoc[],
+  ns: DefTreeNode,
+  importPrefix: string,
+  importDepth: number
+) =>
+  gen(project, `${importPrefix}/${ns.propName}/index.ts`, async (file) => {
+    //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
+    // TODO: strip unused
+    file.addImportDeclaration({
+      moduleSpecifier: '@atproto/xrpc-server',
+      namedImports: [
+        { name: 'Auth', isTypeOnly: true },
+        { name: 'Options', alias: 'XrpcOptions', isTypeOnly: true },
+        { name: 'Server', alias: 'XrpcServer' },
+        { name: 'StreamConfigOrHandler', isTypeOnly: true },
+        { name: 'MethodConfigOrHandler', isTypeOnly: true },
+        { name: 'createServer', alias: 'createXrpcServer' },
+      ],
+    })
+
+    // generate type imports
+    // TODO: only do necessary imports
+    /*for (const lexiconDoc of lexiconDocs) {
+      if (
+        lexiconDoc.defs.main?.type !== 'query' &&
+        lexiconDoc.defs.main?.type !== 'subscription' &&
+        lexiconDoc.defs.main?.type !== 'procedure'
+      ) {
+        continue
+      }
+      file
+        .addImportDeclaration({
+          moduleSpecifier: '../'.repeat(importDepth) + `types/${lexiconDoc.id.split('.').join('/')}.js`,
+        })
+        .setNamespaceImport(toTitleCase(lexiconDoc.id))
+    }*/
+
+    // necessary imports only?
+    for (const userType of ns.userTypes) {
+      file
+        .addImportDeclaration({
+          moduleSpecifier: '../'.repeat(importDepth) + `types/${userType.nsid.split('.').join('/')}.js`,
+        })
+        .setNamespaceImport(toTitleCase(userType.nsid))
+    }
+
+    //= import {Server} from '../../index.js'
+    file.addImportDeclaration({
+        moduleSpecifier: '../'.repeat(importDepth) + 'index.js',
+    }).addNamedImport('Server')
+
+    // recurse
+    for (let child of genNamespaceCls(file, ns)) {
+      api.files.push(await nsIndexTs(api, project, lexiconDocs, child, `${importPrefix}/${ns.propName}`, importDepth+1))
+    }
+  })
+
+function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
+  let children: DefTreeNode[] = [];
+
   //= export class {ns}NS {...}
   const cls = file.addClass({
     name: ns.className,
@@ -188,7 +254,12 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     })
 
     // recurse
-    genNamespaceCls(file, child)
+    //genNamespaceCls(file, child)
+    file.addImportDeclaration({
+        moduleSpecifier: `./${child.propName}/index.js`,
+    }).addNamedImport(child.className)
+
+    children.push(child)
   }
 
   //= constructor(server: Server) {
@@ -256,6 +327,8 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
       ].join('\n'),
     )
   }
+
+  return children
 }
 
 const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
