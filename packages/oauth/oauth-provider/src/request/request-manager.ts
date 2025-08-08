@@ -398,7 +398,7 @@ export class RequestManager {
           .filter(isValidAtprotoOauthScope)
           // The "scopeOverride" argument, if provided, only allows to remove
           // scopes from the existing list, not to add new ones.
-          .filter(Array.prototype.includes, scopeOverride.split(' '))
+          .filter(Set.prototype.has, new Set(scopeOverride.split(' ')))
 
         // Validate: make sure the new scopes are valid
         if (!newScopes?.includes('atproto')) {
