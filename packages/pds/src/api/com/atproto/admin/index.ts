@@ -1,5 +1,6 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import createIdentityProvider from './createIdentityProvider'
 import deleteAccount from './deleteAccount'
 import disableAccountInvites from './disableAccountInvites'
 import disableInviteCodes from './disableInviteCodes'
@@ -28,4 +29,5 @@ export default function (server: Server, ctx: AppContext) {
   updateAccountPassword(server, ctx)
   sendEmail(server, ctx)
   deleteAccount(server, ctx)
+  createIdentityProvider(server, ctx)
 }

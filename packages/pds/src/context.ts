@@ -49,6 +49,7 @@ import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
+import { SSOManager } from './sso/sso'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -60,6 +61,7 @@ export type AppContextOptions = {
   idResolver: IdResolver
   plcClient: plc.Client
   accountManager: AccountManager
+  ssoManager: SSOManager
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
@@ -87,6 +89,7 @@ export class AppContext {
   public idResolver: IdResolver
   public plcClient: plc.Client
   public accountManager: AccountManager
+  public ssoManager: SSOManager
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
@@ -113,6 +116,7 @@ export class AppContext {
     this.idResolver = opts.idResolver
     this.plcClient = opts.plcClient
     this.accountManager = opts.accountManager
+    this.ssoManager = opts.ssoManager
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
@@ -137,14 +141,14 @@ export class AppContext {
   ): Promise<AppContext> {
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? S3BlobStore.creator({
-            bucket: cfg.blobstore.bucket,
-            region: cfg.blobstore.region,
-            endpoint: cfg.blobstore.endpoint,
-            forcePathStyle: cfg.blobstore.forcePathStyle,
-            credentials: cfg.blobstore.credentials,
-            uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
-          })
+          ? S3BlobStore.creator({
+          bucket: cfg.blobstore.bucket,
+          region: cfg.blobstore.region,
+          endpoint: cfg.blobstore.endpoint,
+          forcePathStyle: cfg.blobstore.forcePathStyle,
+          credentials: cfg.blobstore.credentials,
+          uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
+        })
         : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
@@ -242,6 +246,13 @@ export class AppContext {
     )
     await accountManager.migrateOrThrow()
 
+    const ssoManager = new SSOManager(
+      cfg.db.ssoDbLoc,
+      cfg.db.disableWalAutoCheckpoint
+    )
+
+    await ssoManager.migrateOrThrow()
+
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
@@ -286,7 +297,7 @@ export class AppContext {
             statusCodes: [], // Only retry on socket errors
             methods: ['GET', 'HEAD'],
             maxRetries: cfg.proxy.maxRetries,
-          })
+        })
         : proxyAgentBase
 
     // A fetch() function that protects against SSRF attacks, large responses &
@@ -344,7 +355,7 @@ export class AppContext {
           // the PDS can use tokenId as access tokens. This allows the PDS to
           // always use up-to-date token data from the token store.
           accessTokenMode: AccessTokenMode.light,
-        })
+      })
       : undefined
 
     const oauthVerifier: OAuthVerifier =
@@ -382,6 +393,7 @@ export class AppContext {
       idResolver,
       plcClient,
       accountManager,
+      ssoManager,
       sequencer,
       backgroundQueue,
       redisScratch,
