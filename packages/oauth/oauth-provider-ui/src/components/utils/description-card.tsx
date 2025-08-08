@@ -14,6 +14,7 @@ export type DescriptionCardProps = Override<
     image: ReactNode
     title?: ReactNode
     description?: ReactNode
+    append?: ReactNode
   }
 >
 
@@ -22,6 +23,7 @@ export function DescriptionCard({
   image,
   title,
   description,
+  append,
 
   // HTMLDivElement
   className,
@@ -55,6 +57,11 @@ export function DescriptionCard({
           {title && <h3>{title}</h3>}
           {description && <p className="text-sm">{description}</p>}
         </div>
+        {append && (
+          <div className="flex shrink-0 grow-0 items-center justify-center">
+            {append}
+          </div>
+        )}
         {hasChildren && (
           <Button
             onClick={(event) => {

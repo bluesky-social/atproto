@@ -399,7 +399,12 @@ export function createApiMiddleware<
     apiRoute({
       method: 'POST',
       endpoint: '/accept',
-      schema: z.object({ sub: z.union([subSchema, signedJwtSchema]) }).strict(),
+      schema: z
+        .object({
+          sub: z.union([subSchema, signedJwtSchema]),
+          scope: z.string().optional(),
+        })
+        .strict(),
       async handler(req, res) {
         if (!this.requestUri) {
           throw new InvalidRequestError(
@@ -432,6 +437,7 @@ export function createApiMiddleware<
               account,
               this.deviceId,
               this.deviceMetadata,
+              this.input.scope,
             )
 
             const clientData = authorizedClients.get(clientId)

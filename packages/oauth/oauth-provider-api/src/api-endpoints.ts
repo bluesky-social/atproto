@@ -162,6 +162,7 @@ export type RevokeOAuthSessionInput = {
 
 export type AcceptInput = {
   sub: string
+  scope?: string
 }
 
 export type RejectInput = Record<string, never>
