@@ -146,6 +146,9 @@ const indexTs = (
       file.addImportDeclaration({
         moduleSpecifier: `./ns/${ns.propName}/index.js`,
       }).addNamedImport(ns.className)
+      file.addExportDeclaration({
+        moduleSpecifier: `./ns/${ns.propName}/index.js`,
+      })
 
       api.files.push(await nsIndexTs(api, project, lexiconDocs, ns, [], tsLastModified, lexLastModified))
     }
@@ -270,6 +273,9 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
     file.addImportDeclaration({
         moduleSpecifier: `./${child.propName}/index.js`,
     }).addNamedImport(child.className)
+    file.addExportDeclaration({
+        moduleSpecifier: `./${child.propName}/index.js`,
+    })//.addNamedExport(child.className)
 
     children.push(child)
   }
