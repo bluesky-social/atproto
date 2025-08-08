@@ -1064,6 +1064,9 @@ importers:
       '@atproto/oauth-provider-ui':
         specifier: workspace:*
         version: link:../oauth-provider-ui
+      '@atproto/oauth-scopes':
+        specifier: workspace:*
+        version: link:../oauth-scopes
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
@@ -1239,6 +1242,9 @@ importers:
       '@atproto-labs/rollup-plugin-bundle-manifest':
         specifier: workspace:*
         version: link:../../internal/rollup-plugin-bundle-manifest
+      '@atproto/oauth-scopes':
+        specifier: workspace:*
+        version: link:../oauth-scopes
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
@@ -1296,6 +1302,15 @@ importers:
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
+
+  packages/oauth/oauth-scopes:
+    devDependencies:
+      jest:
+        specifier: ^28.1.2
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.8.3
 
   packages/oauth/oauth-types:
     dependencies:
@@ -1448,6 +1463,9 @@ importers:
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider
+      '@atproto/oauth-scopes':
+        specifier: workspace:^
+        version: link:../oauth/oauth-scopes
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo

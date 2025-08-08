@@ -19,7 +19,12 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ auth }) => auth.credentials.did,
       },
     ],
-    auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
+    auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+      authorize: (permissions) => {
+        permissions.assertAccount({ attr: 'email', action: 'manage' })
+      },
+    }),
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did, {

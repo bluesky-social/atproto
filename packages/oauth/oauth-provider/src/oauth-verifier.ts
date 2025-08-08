@@ -26,6 +26,8 @@ import {
   verifyTokenClaims,
 } from './token/verify-token-claims.js'
 
+export type * from './token/verify-token-claims.js'
+
 export type OAuthVerifierOptions = Override<
   DpopManagerOptions,
   {
@@ -51,7 +53,7 @@ export type OAuthVerifierOptions = Override<
 >
 
 export { DpopNonce, Key, Keyset }
-export type { DpopProof, RedisOptions, ReplayStore, VerifyTokenClaimsOptions }
+export type { DpopProof, RedisOptions, ReplayStore }
 
 export class OAuthVerifier {
   public readonly issuer: OAuthIssuerIdentifier

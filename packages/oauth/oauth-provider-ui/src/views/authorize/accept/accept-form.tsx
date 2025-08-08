@@ -1,5 +1,8 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
+import { ClientImage } from '#/components/utils/client-image.tsx'
+import { DescriptionCard } from '#/components/utils/description-card.tsx'
+import { ScopeDescription } from '#/components/utils/scope-description.tsx'
+import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { Button } from '../../../components/forms/button.tsx'
 import {
@@ -8,7 +11,6 @@ import {
 } from '../../../components/forms/form-card.tsx'
 import { AccountIdentifier } from '../../../components/utils/account-identifier.tsx'
 import { ClientName } from '../../../components/utils/client-name.tsx'
-import { MultiLangString } from '../../../components/utils/multi-lang-string.tsx'
 import { Override } from '../../../lib/util.ts'
 
 export type AcceptFormProps = Override<
@@ -17,9 +19,10 @@ export type AcceptFormProps = Override<
     clientId: string
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
+    clientFirstParty: boolean
 
     account: Account
-    scopeDetails?: ScopeDetail[]
+    scope?: string
 
     onAccept: () => void
     onReject: () => void
@@ -31,9 +34,10 @@ export function AcceptForm({
   clientId,
   clientMetadata,
   clientTrusted,
+  clientFirstParty,
 
   account,
-  scopeDetails,
+  scope,
 
   onAccept,
   onReject,
@@ -63,27 +67,60 @@ export function AcceptForm({
         </>
       }
     >
-      {clientTrusted && clientMetadata.logo_uri && (
-        <div key="logo" className="flex items-center justify-center">
-          <img
-            src={clientMetadata.logo_uri}
-            alt={clientMetadata.client_name}
-            className="h-16 w-16 rounded-full"
+      <DescriptionCard
+        image={
+          <ClientImage
+            clientId={clientId}
+            clientMetadata={clientMetadata}
+            clientTrusted={clientTrusted}
           />
-        </div>
-      )}
-      <p>
-        <Trans>
+        }
+        title={
           <ClientName
             clientId={clientId}
             clientMetadata={clientMetadata}
             clientTrusted={clientTrusted}
-          />{' '}
-          is asking for permission to access your account (
-          <AccountIdentifier account={account} />
-          ).
-        </Trans>
-      </p>
+          />
+        }
+        description={
+          !scope || scope === 'atproto' ? (
+            <Trans>
+              wants to uniquely identify you through your{' '}
+              <AccountIdentifier account={account} /> account
+            </Trans>
+          ) : (
+            <Trans>
+              wants to access your <AccountIdentifier account={account} />{' '}
+              account
+            </Trans>
+          )
+        }
+        hint={t`Detailed list of permissions`}
+      >
+        {scope ? (
+          <>
+            <p>
+              <Trans>
+                This application is requesting the following list of technical
+                permissions, summarized hereafter:
+              </Trans>
+            </p>
+            <ul className="mt-2">
+              {scope.split(' ').map((scope) => (
+                <li key={scope}>
+                  <code>{scope}</code>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </DescriptionCard>
+
+      <ScopeDescription
+        scope={scope}
+        clientTrusted={clientTrusted}
+        clientFirstParty={clientFirstParty}
+      />
 
       <p>
         <Trans>
@@ -91,8 +128,8 @@ export function AcceptForm({
           <b>
             <Trans>Authorize</Trans>
           </b>
-          , you allow this application to perform the following actions in
-          accordance with their{' '}
+          , you will grant this application access to your account in accordance
+          with its{' '}
           <a
             role="link"
             href={clientMetadata.tos_uri}
@@ -112,45 +149,9 @@ export function AcceptForm({
           >
             <Trans>privacy policy</Trans>
           </a>
-          :
+          .
         </Trans>
       </p>
-
-      {scopeDetails?.length ? (
-        <ul
-          className="list-inside list-disc"
-          key="scopes"
-          aria-label={t`Requested permissions`}
-        >
-          {scopeDetails.map(({ scope, description }) => (
-            <li key={scope}>
-              {description ? (
-                <MultiLangString value={description} />
-              ) : (
-                <ScopeDescription scope={scope} />
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </FormCard>
   )
-}
-
-type ScopeDescriptionProps = {
-  scope: string
-}
-function ScopeDescription({ scope }: ScopeDescriptionProps) {
-  switch (scope) {
-    case 'atproto':
-      return <Trans>Uniquely identify you</Trans>
-    case 'transition:email':
-      return <Trans>Read your email address</Trans>
-    case 'transition:generic':
-      return <Trans>Access your account data (except chat messages)</Trans>
-    case 'transition:chat.bsky':
-      return <Trans>Access your chat messages</Trans>
-    default:
-      return scope
-  }
 }

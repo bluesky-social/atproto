@@ -4,7 +4,11 @@ import { isValidDidDocForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.checkAccountStatus({
-    auth: ctx.authVerifier.accessStandard(),
+    auth: ctx.authVerifier.authorization({
+      authorize: () => {
+        // always allow
+      },
+    }),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
       const [

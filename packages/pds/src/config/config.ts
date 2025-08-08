@@ -255,7 +255,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
         issuer: entrywayCfg.url,
-        provider: false,
+        provider: undefined,
       }
     : {
         issuer: serviceCfg.publicUrl,
@@ -315,6 +315,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                 f.href != null && f.href !== '',
             ),
           },
+          trustedClients: env.trustedOAuthClients,
         },
       }
 
@@ -452,12 +453,11 @@ export type ProxyConfig = {
 
 export type OAuthConfig = {
   issuer: string
-  provider:
-    | false
-    | {
-        hcaptcha?: HcaptchaConfig
-        branding: BrandingInput
-      }
+  provider?: {
+    hcaptcha?: HcaptchaConfig
+    branding: BrandingInput
+    trustedClients?: string[]
+  }
 }
 
 export type InvitesConfig =

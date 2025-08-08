@@ -8,7 +8,6 @@ import { Client } from '../client/client.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
 
 export type CustomMetadata = {
-  scopes_supported?: string[]
   authorization_details_types_supported?: string[]
   protected_resources?: string[]
 }
@@ -25,11 +24,7 @@ export function buildMetadata(
   return oauthAuthorizationServerMetadataValidator.parse({
     issuer,
 
-    scopes_supported: [
-      'atproto',
-      //
-      ...(customMetadata?.scopes_supported ?? []),
-    ],
+    scopes_supported: ['atproto'],
     subject_types_supported: [
       //
       'public', // The same "sub" is returned for all clients

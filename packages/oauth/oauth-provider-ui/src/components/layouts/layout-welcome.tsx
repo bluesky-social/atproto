@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX } from 'react'
+import { JSX, ReactNode } from 'react'
 import type { CustomizationData } from '@atproto/oauth-provider-api'
 import { Override } from '../../lib/util.ts'
 import { LocaleSelector } from '../../locales/locale-selector.tsx'
@@ -10,13 +10,15 @@ export type LayoutWelcomeProps = Override<
   JSX.IntrinsicElements['div'],
   {
     customizationData: CustomizationData | undefined
-    title?: string
+    title?: ReactNode
+    htmlTitle?: string
   }
 >
 
 export function LayoutWelcome({
   customizationData: { logo, name, links } = {},
   title = name,
+  htmlTitle = typeof title === 'string' ? title : name,
 
   // div
   className,
@@ -36,7 +38,7 @@ export function LayoutWelcome({
         className,
       )}
     >
-      {title && <title>{title}</title>}
+      {htmlTitle && <title>{htmlTitle}</title>}
 
       <main className="flex w-full grow flex-col items-center justify-center overflow-hidden p-6">
         {logo && (
@@ -48,9 +50,9 @@ export function LayoutWelcome({
           />
         )}
 
-        {name && (
+        {title && (
           <h1 className="mx-4 mb-4 text-center text-2xl font-bold md:mb-8 md:text-4xl">
-            {name}
+            {title}
           </h1>
         )}
 

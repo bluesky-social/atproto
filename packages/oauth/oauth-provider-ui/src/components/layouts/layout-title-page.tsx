@@ -6,7 +6,8 @@ import { LocaleSelector } from '../../locales/locale-selector.tsx'
 export type LayoutTitlePageProps = Override<
   JSX.IntrinsicElements['div'],
   {
-    title?: string
+    title?: ReactNode
+    htmlTitle?: string
     subtitle?: ReactNode
     children?: ReactNode
   }
@@ -16,6 +17,7 @@ export function LayoutTitlePage({
   children,
   title,
   subtitle,
+  htmlTitle = typeof title === 'string' ? title : undefined,
 
   // HTMLDivElement
   className,
@@ -33,7 +35,7 @@ export function LayoutTitlePage({
         'dark:bg-slate-900 dark:text-slate-100',
       )}
     >
-      {title && <title>{title}</title>}
+      {htmlTitle && <title>{htmlTitle}</title>}
 
       <div
         className={clsx(

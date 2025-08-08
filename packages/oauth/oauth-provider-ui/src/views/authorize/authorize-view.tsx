@@ -167,8 +167,9 @@ export function AuthorizeView({
         clientId={authorizeData.clientId}
         clientMetadata={authorizeData.clientMetadata}
         clientTrusted={authorizeData.clientTrusted}
+        clientFirstParty={authorizeData.clientFirstParty}
         account={session.account}
-        scopeDetails={authorizeData.scopeDetails}
+        scope={authorizeData.scope}
         onAccept={() => doAccept(session.account.sub)}
         onReject={doReject}
         onBack={
