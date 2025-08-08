@@ -6,7 +6,7 @@ import {
 } from 'ts-morph'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { type GeneratedAPI } from '../types'
+import { type GeneratedAPI, type ModificationTimes } from '../types'
 import { gen, lexiconsTs, utilTs } from './common'
 import {
   genCommonImports,
@@ -28,6 +28,8 @@ import {
 
 export async function genServerApi(
   lexiconDocs: LexiconDoc[],
+  tsLastModified: ModificationTimes,
+  lexLastModified: ModificationTimes,
 ): Promise<GeneratedAPI> {
   const project = new Project({
     useInMemoryFileSystem: true,
@@ -38,11 +40,12 @@ export async function genServerApi(
   const nsidTree = lexiconsToDefTree(lexiconDocs)
   const nsidTokens = schemasToNsidTokens(lexiconDocs)
   for (const lexiconDoc of lexiconDocs) {
-    api.files.push(await lexiconTs(project, lexicons, lexiconDoc))
+    //console.log(lexiconDoc.id, lexLastModified[lexiconDoc.id])
+    api.files.push(await lexiconTs(project, lexicons, lexiconDoc, tsLastModified, lexLastModified[lexiconDoc.id]))
   }
   api.files.push(await utilTs(project))
   api.files.push(await lexiconsTs(project, lexiconDocs))
-  api.files.push(await indexTs(api, project, lexiconDocs, nsidTree, nsidTokens))
+  api.files.push(await indexTs(api, project, lexiconDocs, nsidTree, nsidTokens, tsLastModified, lexLastModified))
   return api
 }
 
@@ -52,6 +55,8 @@ const indexTs = (
   lexiconDocs: LexiconDoc[],
   nsidTree: DefTreeNode[],
   nsidTokens: Record<string, string[]>,
+  tsLastModified: ModificationTimes,
+  lexLastModified: ModificationTimes,
 ) =>
   gen(project, '/index.ts', async (file) => {
     //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
@@ -149,7 +154,7 @@ const indexTs = (
         moduleSpecifier: `./ns/${ns.propName}/index.js`,
       }).addNamedImport(ns.className)
 
-      api.files.push(await nsIndexTs(api, project, lexiconDocs, ns, './ns', 2))
+      api.files.push(await nsIndexTs(api, project, lexiconDocs, ns, [], tsLastModified, lexLastModified))
     }
 
     //= constructor (options?: XrpcOptions) {
@@ -170,17 +175,20 @@ const indexTs = (
           ),
         ].join('\n'),
       )
-  })
+  },
+  // tsLastModified, lexLastModified[""]
+)
 
 const nsIndexTs = (
   api: GeneratedAPI,
   project: Project,
   lexiconDocs: LexiconDoc[],
   ns: DefTreeNode,
-  importPrefix: string,
-  importDepth: number
+  partialPath: string[],
+  tsLastModified: ModificationTimes,
+  lexLastModified: ModificationTimes,
 ) =>
-  gen(project, `${importPrefix}/${ns.propName}/index.ts`, async (file) => {
+  gen(project, `/${['ns'].concat(partialPath).join('/')}/${ns.propName}/index.ts`, async (file) => {
     //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
     // TODO: strip unused
     file.addImportDeclaration({
@@ -216,21 +224,24 @@ const nsIndexTs = (
     for (const userType of ns.userTypes) {
       file
         .addImportDeclaration({
-          moduleSpecifier: '../'.repeat(importDepth) + `types/${userType.nsid.split('.').join('/')}.js`,
+          moduleSpecifier: '../'.repeat(partialPath.length+2) + `types/${userType.nsid.split('.').join('/')}.js`,
         })
         .setNamespaceImport(toTitleCase(userType.nsid))
     }
 
     //= import {Server} from '../../index.js'
     file.addImportDeclaration({
-        moduleSpecifier: '../'.repeat(importDepth) + 'index.js',
+        moduleSpecifier: '../'.repeat(partialPath.length+2) + 'index.js',
     }).addNamedImport('Server')
 
     // recurse
     for (let child of genNamespaceCls(file, ns)) {
-      api.files.push(await nsIndexTs(api, project, lexiconDocs, child, `${importPrefix}/${ns.propName}`, importDepth+1))
+      api.files.push(await nsIndexTs(api, project, lexiconDocs, child, partialPath.concat([ns.propName]), tsLastModified, lexLastModified))
     }
-  })
+    //console.log("partialpath", partialPath.concat(ns.propName).join('.'), lexLastModified[partialPath.concat(ns.propName).join('.')])
+  },
+  tsLastModified, lexLastModified[partialPath.concat(ns.propName).join('.')]
+)
 
 function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
   let children: DefTreeNode[] = [];
@@ -331,7 +342,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
   return children
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
+const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc, tsLastModified: ModificationTimes, lexLastModified: number) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
@@ -379,6 +390,8 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
       }
       genImports(file, imports, lexiconDoc.id)
     },
+    tsLastModified,
+    lexLastModified,
   )
 
 function genServerXrpcMethod(

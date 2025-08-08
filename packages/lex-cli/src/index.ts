@@ -12,6 +12,7 @@ import {
   genTsObj,
   printFileDiff,
   readAllLexicons,
+  getTSTimestamps,
 } from './util'
 
 const program = new Command()
@@ -33,7 +34,7 @@ program
       }
       if (!o?.yes) await confirmOrExit()
       console.log('Writing', outFile)
-      const lexicons = readAllLexicons(lexiconPaths)
+      const [lexicons, _] = readAllLexicons(lexiconPaths)
       await mdGen.process(outFile, lexicons)
     },
   )
@@ -43,7 +44,7 @@ program
   .description('Generate a TS file that exports an array of lexicons')
   .argument('<lexicons...>', 'paths of the lexicon files to include', toPaths)
   .action((lexiconPaths: string[]) => {
-    const lexicons = readAllLexicons(lexiconPaths)
+    const [lexicons, _] = readAllLexicons(lexiconPaths)
     console.log(genTsObj(lexicons))
   })
 
@@ -54,7 +55,7 @@ program
   .argument('<outdir>', 'path of the directory to write to', toPath)
   .argument('<lexicons...>', 'paths of the lexicon files to include', toPaths)
   .action(async (outDir: string, lexiconPaths: string[], o: { yes?: true }) => {
-    const lexicons = readAllLexicons(lexiconPaths)
+    const [lexicons, _] = readAllLexicons(lexiconPaths)
     const api = await genClientApi(lexicons)
     const diff = genFileDiff(outDir, api)
     console.log('This will write the following files:')
@@ -68,12 +69,14 @@ program
   .command('gen-server')
   .description('Generate a TS server API')
   .option('--yes', 'skip confirmation')
+  .option('--rebuild', 'force full rebuild')
   .argument('<outdir>', 'path of the directory to write to', toPath)
   .argument('<lexicons...>', 'paths of the lexicon files to include', toPaths)
-  .action(async (outDir: string, lexiconPaths: string[], o: { yes?: true }) => {
-    const lexicons = readAllLexicons(lexiconPaths)
-    const api = await genServerApi(lexicons)
-    const diff = genFileDiff(outDir, api)
+  .action(async (outDir: string, lexiconPaths: string[], o: { yes?: true, rebuild?: true }) => {
+    const [lexicons, lexLastModified] = readAllLexicons(lexiconPaths)
+    const tsLastModified = await getTSTimestamps(outDir)
+    const api = await genServerApi(lexicons, o.rebuild ? {} : tsLastModified, lexLastModified)
+    const diff = genFileDiff(outDir, api, o.rebuild)
     console.log('This will write the following files:')
     printFileDiff(diff)
     if (!o?.yes) await confirmOrExit()

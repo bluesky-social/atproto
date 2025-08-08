@@ -1,24 +1,86 @@
 import fs from 'node:fs'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 import chalk from 'chalk'
 import { ZodError, type ZodFormattedError } from 'zod'
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
-import { type FileDiff, type GeneratedAPI } from './types'
+import { type FileDiff, type GeneratedAPI, type ModificationTimes } from './types'
 
-export function readAllLexicons(paths: string[]): LexiconDoc[] {
+export function readAllLexicons(paths: string[]): [LexiconDoc[], ModificationTimes] {
   paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
+  const lastModified: ModificationTimes = {}
   const docs: LexiconDoc[] = []
   for (const path of paths) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
       continue
     }
     try {
-      docs.push(readLexicon(path))
+      const ts = fs.statSync(path).mtime.getTime()
+      const doc = readLexicon(path)
+      docs.push(doc)
+
+      // update last-modified time for each namespace level (including "" = root)
+      const nsidParts = doc.id.split(".")
+      for (let i=0; i<=nsidParts.length; i++) {
+        const nsidPath = nsidParts.slice(0, i).join(".")
+        lastModified[nsidPath] = Math.max(lastModified[nsidPath] ?? 0, ts)
+      }
+
     } catch (e) {
       // skip
     }
   }
-  return docs
+  return [docs, lastModified]
+}
+
+function walk(dir: string): Promise<[string, fs.Stats][]> {
+  return new Promise((resolve, reject) => {
+    fs.readdir(dir, (error, files) => {
+      if (error) {
+        return reject(error);
+      }
+      Promise.all(files.map((file) => {
+        return new Promise<[string, fs.Stats][]>(async (resolve, reject) => {
+          const filepath = join(dir, file);
+          fs.stat(filepath, async (error, stats) => {
+            if (error) {
+              return reject(error);
+            }
+            if (stats.isDirectory()) {
+              try {
+                const subFiles = await walk(filepath);
+                resolve(subFiles);
+              } catch (err) {
+                reject(err);
+              }
+            } else if (stats.isFile()) {
+              resolve([[filepath, stats]]);
+            } else {
+              resolve([]);
+            }
+          });
+        });
+      }))
+      .then((foldersContents) => {
+        resolve(
+          foldersContents.reduce(
+            (all: [string, fs.Stats][], folderContents: [string, fs.Stats][]) =>
+              all.concat(folderContents),
+            []
+          )
+        );
+      })
+      .catch(reject);
+    });
+  });
+}
+
+export async function getTSTimestamps(dir: string): Promise<ModificationTimes> {
+  const lastModified: ModificationTimes = {}
+  for (const [path, stat] of await walk(dir)) {
+    //console.log("getTSTimestamps", relative(dir, path), stat.mtime.getTime())
+    lastModified[relative(dir, path)] = stat.mtime.getTime()
+  }
+  return lastModified
 }
 
 export function readLexicon(path: string): LexiconDoc {
@@ -60,13 +122,15 @@ export function genTsObj(lexicons: LexiconDoc[]): string {
   return `export const lexicons = ${JSON.stringify(lexicons, null, 2)}`
 }
 
-export function genFileDiff(outDir: string, api: GeneratedAPI) {
+export function genFileDiff(outDir: string, api: GeneratedAPI, rebuild?: boolean) {
   const diffs: FileDiff[] = []
   const existingFiles = readdirRecursiveSync(outDir)
 
   for (const file of api.files) {
     file.path = join(outDir, file.path)
-    if (existingFiles.includes(file.path)) {
+    if (file.content === undefined) {
+      diffs.push({ act: 'leave', path: file.path })
+    }else if (existingFiles.includes(file.path)) {
       diffs.push({ act: 'mod', path: file.path, content: file.content })
     } else {
       diffs.push({ act: 'add', path: file.path, content: file.content })
@@ -76,7 +140,9 @@ export function genFileDiff(outDir: string, api: GeneratedAPI) {
     if (api.files.find((f) => f.path === filepath)) {
       // do nothing
     } else {
-      diffs.push({ act: 'del', path: filepath })
+      if (rebuild) { // don't delete things on incremental rebuilds
+        diffs.push({ act: 'del', path: filepath })
+      }
     }
   }
 

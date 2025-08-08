@@ -1,6 +1,6 @@
 export interface GeneratedFile {
   path: string
-  content: string
+  content?: string
 }
 
 export interface GeneratedAPI {
@@ -8,7 +8,9 @@ export interface GeneratedAPI {
 }
 
 export interface FileDiff {
-  act: 'add' | 'mod' | 'del'
+  act: 'add' | 'mod' | 'del' | 'leave'
   path: string
   content?: string
 }
+
+export type ModificationTimes = Record<string, number>

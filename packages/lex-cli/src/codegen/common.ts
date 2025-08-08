@@ -1,8 +1,9 @@
 import { Options as PrettierOptions, format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
 import { type LexiconDoc } from '@atproto/lexicon'
-import { type GeneratedFile } from '../types'
+import { ModificationTimes, type GeneratedFile } from '../types'
 import { toTitleCase } from './util'
+import { relative } from 'node:path'
 
 const PRETTIER_OPTS: PrettierOptions = {
   parser: 'typescript',
@@ -265,7 +266,20 @@ export async function gen(
   project: Project,
   path: string,
   gen: (file: SourceFile) => Promise<void>,
+  tsLastModified?: ModificationTimes,
+  lexLastModified?: number
 ): Promise<GeneratedFile> {
+  if (tsLastModified) {
+    const sourceTime = tsLastModified[relative("/", path)]
+    //console.log("in gen", relative("/", path), sourceTime)
+    if (sourceTime && lexLastModified) {
+      if (sourceTime > lexLastModified) {
+        //console.log("skipping", path)
+        return { path }
+      }
+    }
+  }
+  //console.log("genning", path)
   const file = project.createSourceFile(path)
   await gen(file)
   await file.save() // Save in the "in memory" file system
