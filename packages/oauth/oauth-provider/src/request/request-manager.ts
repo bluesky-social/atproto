@@ -396,8 +396,8 @@ export class RequestManager {
           ?.split(' ')
           // Fool proofing: Remove invalid scopes (already done when creating the request)
           .filter(isValidAtprotoOauthScope)
-          // The "scope" argument, if provided, only allows to remove scopes
-          // from the existing list, not to add new ones.
+          // The "scopeOverride" argument, if provided, only allows to remove
+          // scopes from the existing list, not to add new ones.
           .filter(Array.prototype.includes, scopeOverride.split(' '))
 
         // Validate: make sure the new scopes are valid
