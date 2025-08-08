@@ -41,11 +41,31 @@ export async function genServerApi(
   const nsidTokens = schemasToNsidTokens(lexiconDocs)
   for (const lexiconDoc of lexiconDocs) {
     //console.log(lexiconDoc.id, lexLastModified[lexiconDoc.id])
-    api.files.push(await lexiconTs(project, lexicons, lexiconDoc, tsLastModified, lexLastModified))
+    api.files.push(
+      await lexiconTs(
+        project,
+        lexicons,
+        lexiconDoc,
+        tsLastModified,
+        lexLastModified,
+      ),
+    )
   }
   api.files.push(await utilTs(project, tsLastModified, lexLastModified))
-  api.files.push(await lexiconsTs(project, lexiconDocs, tsLastModified, lexLastModified))
-  api.files.push(await indexTs(api, project, lexiconDocs, nsidTree, nsidTokens, tsLastModified, lexLastModified))
+  api.files.push(
+    await lexiconsTs(project, lexiconDocs, tsLastModified, lexLastModified),
+  )
+  api.files.push(
+    await indexTs(
+      api,
+      project,
+      lexiconDocs,
+      nsidTree,
+      nsidTokens,
+      tsLastModified,
+      lexLastModified,
+    ),
+  )
   return api
 }
 
@@ -58,30 +78,33 @@ const indexTs = (
   tsLastModified: ModificationTimes,
   lexLastModified: ModificationTimes,
 ) =>
-  gen(project, '/index.ts', async (file) => {
-    //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
-    file.addImportDeclaration({
-      moduleSpecifier: '@atproto/xrpc-server',
-      namedImports: [
-        { name: 'Auth', isTypeOnly: true },
-        { name: 'Options', alias: 'XrpcOptions', isTypeOnly: true },
-        { name: 'Server', alias: 'XrpcServer' },
-        { name: 'StreamConfigOrHandler', isTypeOnly: true },
-        { name: 'MethodConfigOrHandler', isTypeOnly: true },
-        { name: 'createServer', alias: 'createXrpcServer' },
-      ],
-    })
-    //= import {schemas} from './lexicons.js'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: './lexicons.js',
+  gen(
+    project,
+    '/index.ts',
+    async (file) => {
+      //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
+      file.addImportDeclaration({
+        moduleSpecifier: '@atproto/xrpc-server',
+        namedImports: [
+          { name: 'Auth', isTypeOnly: true },
+          { name: 'Options', alias: 'XrpcOptions', isTypeOnly: true },
+          { name: 'Server', alias: 'XrpcServer' },
+          { name: 'StreamConfigOrHandler', isTypeOnly: true },
+          { name: 'MethodConfigOrHandler', isTypeOnly: true },
+          { name: 'createServer', alias: 'createXrpcServer' },
+        ],
       })
-      .addNamedImport({
-        name: 'schemas',
-      })
+      //= import {schemas} from './lexicons.js'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: './lexicons.js',
+        })
+        .addNamedImport({
+          name: 'schemas',
+        })
 
-    // generate type imports
-    /*for (const lexiconDoc of lexiconDocs) {
+      // generate type imports
+      /*for (const lexiconDoc of lexiconDocs) {
       if (
         lexiconDoc.defs.main?.type !== 'query' &&
         lexiconDoc.defs.main?.type !== 'subscription' &&
@@ -96,91 +119,104 @@ const indexTs = (
         .setNamespaceImport(toTitleCase(lexiconDoc.id))
     }*/
 
-    // generate token enums
-    for (const nsidAuthority in nsidTokens) {
-      // export const {THE_AUTHORITY} = {
-      //  {Name}: "{authority.the.name}"
-      // }
-      file.addVariableStatement({
-        isExported: true,
-        declarationKind: VariableDeclarationKind.Const,
-        declarations: [
-          {
-            name: toScreamingSnakeCase(nsidAuthority),
-            initializer: [
-              '{',
-              ...nsidTokens[nsidAuthority].map(
-                (nsidName) =>
-                  `${toTitleCase(nsidName)}: "${nsidAuthority}.${nsidName}",`,
-              ),
-              '}',
-            ].join('\n'),
-          },
-        ],
-      })
-    }
+      // generate token enums
+      for (const nsidAuthority in nsidTokens) {
+        // export const {THE_AUTHORITY} = {
+        //  {Name}: "{authority.the.name}"
+        // }
+        file.addVariableStatement({
+          isExported: true,
+          declarationKind: VariableDeclarationKind.Const,
+          declarations: [
+            {
+              name: toScreamingSnakeCase(nsidAuthority),
+              initializer: [
+                '{',
+                ...nsidTokens[nsidAuthority].map(
+                  (nsidName) =>
+                    `${toTitleCase(nsidName)}: "${nsidAuthority}.${nsidName}",`,
+                ),
+                '}',
+              ].join('\n'),
+            },
+          ],
+        })
+      }
 
-    //= export function createServer(options?: XrpcOptions) { ... }
-    const createServerFn = file.addFunction({
-      name: 'createServer',
-      returnType: 'Server',
-      parameters: [
-        { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
-      ],
-      isExported: true,
-    })
-    createServerFn.setBodyText(`return new Server(options)`)
-
-    //= export class Server {...}
-    const serverCls = file.addClass({
-      name: 'Server',
-      isExported: true,
-    })
-    //= xrpc: XrpcServer = createXrpcServer(methodSchemas)
-    serverCls.addProperty({
-      name: 'xrpc',
-      type: 'XrpcServer',
-    })
-
-    // generate classes for the schemas
-    for (const ns of nsidTree) {
-      //= ns: NS
-      serverCls.addProperty({
-        name: ns.propName,
-        type: ns.className,
-      })
-
-      file.addImportDeclaration({
-        moduleSpecifier: `./ns/${ns.propName}/index.js`,
-      }).addNamedImport(ns.className)
-      file.addExportDeclaration({
-        moduleSpecifier: `./ns/${ns.propName}/index.js`,
-      })
-
-      api.files.push(await nsIndexTs(api, project, lexiconDocs, ns, [], tsLastModified, lexLastModified))
-    }
-
-    //= constructor (options?: XrpcOptions) {
-    //=  this.xrpc = createXrpcServer(schemas, options)
-    //=  {namespace declarations}
-    //= }
-    serverCls
-      .addConstructor({
+      //= export function createServer(options?: XrpcOptions) { ... }
+      const createServerFn = file.addFunction({
+        name: 'createServer',
+        returnType: 'Server',
         parameters: [
           { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
         ],
+        isExported: true,
       })
-      .setBodyText(
-        [
-          'this.xrpc = createXrpcServer(schemas, options)',
-          ...nsidTree.map(
-            (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
+      createServerFn.setBodyText(`return new Server(options)`)
+
+      //= export class Server {...}
+      const serverCls = file.addClass({
+        name: 'Server',
+        isExported: true,
+      })
+      //= xrpc: XrpcServer = createXrpcServer(methodSchemas)
+      serverCls.addProperty({
+        name: 'xrpc',
+        type: 'XrpcServer',
+      })
+
+      // generate classes for the schemas
+      for (const ns of nsidTree) {
+        //= ns: NS
+        serverCls.addProperty({
+          name: ns.propName,
+          type: ns.className,
+        })
+
+        file
+          .addImportDeclaration({
+            moduleSpecifier: `./ns/${ns.propName}/index.js`,
+          })
+          .addNamedImport(ns.className)
+        file.addExportDeclaration({
+          moduleSpecifier: `./ns/${ns.propName}/index.js`,
+        })
+
+        api.files.push(
+          await nsIndexTs(
+            api,
+            project,
+            lexiconDocs,
+            ns,
+            [],
+            tsLastModified,
+            lexLastModified,
           ),
-        ].join('\n'),
-      )
-  },
-  tsLastModified, lexLastModified[""]
-)
+        )
+      }
+
+      //= constructor (options?: XrpcOptions) {
+      //=  this.xrpc = createXrpcServer(schemas, options)
+      //=  {namespace declarations}
+      //= }
+      serverCls
+        .addConstructor({
+          parameters: [
+            { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
+          ],
+        })
+        .setBodyText(
+          [
+            'this.xrpc = createXrpcServer(schemas, options)',
+            ...nsidTree.map(
+              (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
+            ),
+          ].join('\n'),
+        )
+    },
+    tsLastModified,
+    lexLastModified[''],
+  )
 
 const nsIndexTs = (
   api: GeneratedAPI,
@@ -191,24 +227,27 @@ const nsIndexTs = (
   tsLastModified: ModificationTimes,
   lexLastModified: ModificationTimes,
 ) =>
-  gen(project, `/${['ns'].concat(partialPath).join('/')}/${ns.propName}/index.ts`, async (file) => {
-    //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
-    // TODO: strip unused
-    file.addImportDeclaration({
-      moduleSpecifier: '@atproto/xrpc-server',
-      namedImports: [
-        { name: 'Auth', isTypeOnly: true },
-        { name: 'Options', alias: 'XrpcOptions', isTypeOnly: true },
-        { name: 'Server', alias: 'XrpcServer' },
-        { name: 'StreamConfigOrHandler', isTypeOnly: true },
-        { name: 'MethodConfigOrHandler', isTypeOnly: true },
-        { name: 'createServer', alias: 'createXrpcServer' },
-      ],
-    })
+  gen(
+    project,
+    `/${['ns'].concat(partialPath).join('/')}/${ns.propName}/index.ts`,
+    async (file) => {
+      //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
+      // TODO: strip unused
+      file.addImportDeclaration({
+        moduleSpecifier: '@atproto/xrpc-server',
+        namedImports: [
+          { name: 'Auth', isTypeOnly: true },
+          { name: 'Options', alias: 'XrpcOptions', isTypeOnly: true },
+          { name: 'Server', alias: 'XrpcServer' },
+          { name: 'StreamConfigOrHandler', isTypeOnly: true },
+          { name: 'MethodConfigOrHandler', isTypeOnly: true },
+          { name: 'createServer', alias: 'createXrpcServer' },
+        ],
+      })
 
-    // generate type imports
-    // TODO: only do necessary imports
-    /*for (const lexiconDoc of lexiconDocs) {
+      // generate type imports
+      // TODO: only do necessary imports
+      /*for (const lexiconDoc of lexiconDocs) {
       if (
         lexiconDoc.defs.main?.type !== 'query' &&
         lexiconDoc.defs.main?.type !== 'subscription' &&
@@ -223,31 +262,46 @@ const nsIndexTs = (
         .setNamespaceImport(toTitleCase(lexiconDoc.id))
     }*/
 
-    // necessary imports only?
-    for (const userType of ns.userTypes) {
+      // necessary imports only?
+      for (const userType of ns.userTypes) {
+        file
+          .addImportDeclaration({
+            moduleSpecifier:
+              '../'.repeat(partialPath.length + 2) +
+              `types/${userType.nsid.split('.').join('/')}.js`,
+          })
+          .setNamespaceImport(toTitleCase(userType.nsid))
+      }
+
+      //= import {Server} from '../../index.js'
       file
         .addImportDeclaration({
-          moduleSpecifier: '../'.repeat(partialPath.length+2) + `types/${userType.nsid.split('.').join('/')}.js`,
+          moduleSpecifier: '../'.repeat(partialPath.length + 2) + 'index.js',
         })
-        .setNamespaceImport(toTitleCase(userType.nsid))
-    }
+        .addNamedImport('Server')
 
-    //= import {Server} from '../../index.js'
-    file.addImportDeclaration({
-        moduleSpecifier: '../'.repeat(partialPath.length+2) + 'index.js',
-    }).addNamedImport('Server')
-
-    // recurse
-    for (let child of genNamespaceCls(file, ns)) {
-      api.files.push(await nsIndexTs(api, project, lexiconDocs, child, partialPath.concat([ns.propName]), tsLastModified, lexLastModified))
-    }
-    //console.log("partialpath", partialPath.concat(ns.propName).join('.'), lexLastModified[partialPath.concat(ns.propName).join('.')])
-  },
-  tsLastModified, lexLastModified[partialPath.concat(ns.propName).join('.')]
-)
+      // recurse
+      for (let child of genNamespaceCls(file, ns)) {
+        api.files.push(
+          await nsIndexTs(
+            api,
+            project,
+            lexiconDocs,
+            child,
+            partialPath.concat([ns.propName]),
+            tsLastModified,
+            lexLastModified,
+          ),
+        )
+      }
+      //console.log("partialpath", partialPath.concat(ns.propName).join('.'), lexLastModified[partialPath.concat(ns.propName).join('.')])
+    },
+    tsLastModified,
+    lexLastModified[partialPath.concat(ns.propName).join('.')],
+  )
 
 function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
-  let children: DefTreeNode[] = [];
+  let children: DefTreeNode[] = []
 
   //= export class {ns}NS {...}
   const cls = file.addClass({
@@ -269,11 +323,13 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
 
     // recurse
     //genNamespaceCls(file, child)
-    file.addImportDeclaration({
+    file
+      .addImportDeclaration({
         moduleSpecifier: `./${child.propName}/index.js`,
-    }).addNamedImport(child.className)
+      })
+      .addNamedImport(child.className)
     file.addExportDeclaration({
-        moduleSpecifier: `./${child.propName}/index.js`,
+      moduleSpecifier: `./${child.propName}/index.js`,
     })
 
     children.push(child)
@@ -348,7 +404,13 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
   return children
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc, tsLastModified: ModificationTimes, lexLastModified: ModificationTimes) =>
+const lexiconTs = (
+  project,
+  lexicons: Lexicons,
+  lexiconDoc: LexiconDoc,
+  tsLastModified: ModificationTimes,
+  lexLastModified: ModificationTimes,
+) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,

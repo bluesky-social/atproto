@@ -55,17 +55,27 @@ program
   .option('--rebuild', 'force full rebuild')
   .argument('<outdir>', 'path of the directory to write to', toPath)
   .argument('<lexicons...>', 'paths of the lexicon files to include', toPaths)
-  .action(async (outDir: string, lexiconPaths: string[], o: { yes?: true, rebuild?: true }) => {
-    const [lexicons, lexLastModified] = readAllLexicons(lexiconPaths)
-    const tsLastModified = await getTSTimestamps(outDir)
-    const api = await genClientApi(lexicons, o.rebuild ? {} : tsLastModified, lexLastModified)
-    const diff = genFileDiff(outDir, api, o.rebuild)
-    console.log('This will write the following files:')
-    printFileDiff(diff)
-    if (!o?.yes) await confirmOrExit()
-    applyFileDiff(diff)
-    console.log('API generated.')
-  })
+  .action(
+    async (
+      outDir: string,
+      lexiconPaths: string[],
+      o: { yes?: true; rebuild?: true },
+    ) => {
+      const [lexicons, lexLastModified] = readAllLexicons(lexiconPaths)
+      const tsLastModified = await getTSTimestamps(outDir)
+      const api = await genClientApi(
+        lexicons,
+        o.rebuild ? {} : tsLastModified,
+        lexLastModified,
+      )
+      const diff = genFileDiff(outDir, api, o.rebuild)
+      console.log('This will write the following files:')
+      printFileDiff(diff)
+      if (!o?.yes) await confirmOrExit()
+      applyFileDiff(diff)
+      console.log('API generated.')
+    },
+  )
 
 program
   .command('gen-server')
@@ -74,17 +84,27 @@ program
   .option('--rebuild', 'force full rebuild')
   .argument('<outdir>', 'path of the directory to write to', toPath)
   .argument('<lexicons...>', 'paths of the lexicon files to include', toPaths)
-  .action(async (outDir: string, lexiconPaths: string[], o: { yes?: true, rebuild?: true }) => {
-    const [lexicons, lexLastModified] = readAllLexicons(lexiconPaths)
-    const tsLastModified = await getTSTimestamps(outDir)
-    const api = await genServerApi(lexicons, o.rebuild ? {} : tsLastModified, lexLastModified)
-    const diff = genFileDiff(outDir, api, o.rebuild)
-    console.log('This will write the following files:')
-    printFileDiff(diff)
-    if (!o?.yes) await confirmOrExit()
-    applyFileDiff(diff)
-    console.log('API generated.')
-  })
+  .action(
+    async (
+      outDir: string,
+      lexiconPaths: string[],
+      o: { yes?: true; rebuild?: true },
+    ) => {
+      const [lexicons, lexLastModified] = readAllLexicons(lexiconPaths)
+      const tsLastModified = await getTSTimestamps(outDir)
+      const api = await genServerApi(
+        lexicons,
+        o.rebuild ? {} : tsLastModified,
+        lexLastModified,
+      )
+      const diff = genFileDiff(outDir, api, o.rebuild)
+      console.log('This will write the following files:')
+      printFileDiff(diff)
+      if (!o?.yes) await confirmOrExit()
+      applyFileDiff(diff)
+      console.log('API generated.')
+    },
+  )
 
 program.parse()
 

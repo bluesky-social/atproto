@@ -13,9 +13,16 @@ const PRETTIER_OPTS: PrettierOptions = {
   trailingComma: 'all',
 }
 
-export const utilTs = (project, tsLastModified: ModificationTimes, lexLastModified: ModificationTimes) =>
-  gen(project, '/util.ts', async (file) => {
-    file.replaceWithText(`
+export const utilTs = (
+  project,
+  tsLastModified: ModificationTimes,
+  lexLastModified: ModificationTimes,
+) =>
+  gen(
+    project,
+    '/util.ts',
+    async (file) => {
+      file.replaceWithText(`
 import { type ValidationResult } from '@atproto/lexicon'
 
 export type OmitKey<T, K extends keyof T> = {
@@ -132,145 +139,160 @@ export function asPredicate<V extends Validator>(validate: V) {
   }
 }
 `)
-  }, tsLastModified, lexLastModified[""])
+    },
+    tsLastModified,
+    lexLastModified[''],
+  )
 
-export const lexiconsTs = (project, lexicons: LexiconDoc[], tsLastModified: ModificationTimes, lexLastModified: ModificationTimes) =>
-  gen(project, '/lexicons.ts', async (file) => {
-    //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: '@atproto/lexicon',
+export const lexiconsTs = (
+  project,
+  lexicons: LexiconDoc[],
+  tsLastModified: ModificationTimes,
+  lexLastModified: ModificationTimes,
+) =>
+  gen(
+    project,
+    '/lexicons.ts',
+    async (file) => {
+      //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: '@atproto/lexicon',
+        })
+        .addNamedImports([
+          { name: 'LexiconDoc', isTypeOnly: true },
+          { name: 'Lexicons' },
+          { name: 'ValidationError' },
+          { name: 'ValidationResult', isTypeOnly: true },
+        ])
+
+      //= import { is$typed, maybe$typed, type $Typed } from './util'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: './util.js',
+        })
+        .addNamedImports([
+          { name: '$Typed', isTypeOnly: true },
+          { name: 'is$typed' },
+          { name: 'maybe$typed' },
+        ])
+
+      //= export const schemaDict = {...} as const satisfies Record<string, LexiconDoc>
+      file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: 'schemaDict',
+            initializer:
+              JSON.stringify(
+                lexicons.reduce(
+                  (acc, cur) => ({
+                    ...acc,
+                    [toTitleCase(cur.id)]: cur,
+                  }),
+                  {},
+                ),
+                null,
+                2,
+              ) + ' as const satisfies Record<string, LexiconDoc>',
+          },
+        ],
       })
-      .addNamedImports([
-        { name: 'LexiconDoc', isTypeOnly: true },
-        { name: 'Lexicons' },
-        { name: 'ValidationError' },
-        { name: 'ValidationResult', isTypeOnly: true },
-      ])
 
-    //= import { is$typed, maybe$typed, type $Typed } from './util'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: './util.js',
+      //= export const schemas = Object.values(schemaDict) satisfies LexiconDoc[]
+      file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: 'schemas',
+            initializer: 'Object.values(schemaDict) satisfies LexiconDoc[]',
+          },
+        ],
       })
-      .addNamedImports([
-        { name: '$Typed', isTypeOnly: true },
-        { name: 'is$typed' },
-        { name: 'maybe$typed' },
-      ])
 
-    //= export const schemaDict = {...} as const satisfies Record<string, LexiconDoc>
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'schemaDict',
-          initializer:
-            JSON.stringify(
-              lexicons.reduce(
-                (acc, cur) => ({
-                  ...acc,
-                  [toTitleCase(cur.id)]: cur,
-                }),
-                {},
-              ),
-              null,
-              2,
-            ) + ' as const satisfies Record<string, LexiconDoc>',
-        },
-      ],
-    })
+      //= export const lexicons: Lexicons = new Lexicons(schemas)
+      file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: 'lexicons',
+            type: 'Lexicons',
+            initializer: 'new Lexicons(schemas)',
+          },
+        ],
+      })
 
-    //= export const schemas = Object.values(schemaDict) satisfies LexiconDoc[]
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'schemas',
-          initializer: 'Object.values(schemaDict) satisfies LexiconDoc[]',
-        },
-      ],
-    })
+      file.addFunction({
+        isExported: true,
+        name: 'validate',
+        overloads: [
+          {
+            typeParameters: ['T extends { $type: string }'],
+            parameters: [
+              { name: 'v', type: 'unknown' },
+              { name: 'id', type: 'string' },
+              { name: 'hash', type: 'string' },
+              { name: 'requiredType', type: 'true' },
+            ],
+            returnType: 'ValidationResult<T>',
+          },
+          {
+            typeParameters: ['T extends { $type?: string }'],
+            parameters: [
+              { name: 'v', type: 'unknown' },
+              { name: 'id', type: 'string' },
+              { name: 'hash', type: 'string' },
+              { name: 'requiredType', type: 'false', hasQuestionToken: true },
+            ],
+            returnType: 'ValidationResult<T>',
+          },
+        ],
+        parameters: [
+          { name: 'v', type: 'unknown' },
+          { name: 'id', type: 'string' },
+          { name: 'hash', type: 'string' },
+          { name: 'requiredType', type: 'boolean', hasQuestionToken: true },
+        ],
+        statements: [
+          // If $type is present, make sure it is valid before validating the rest of the object
+          'return (requiredType ? is$typed : maybe$typed)(v, id, hash) ? lexicons.validate(`${id}#${hash}`, v) : { success: false, error: new ValidationError(`Must be an object with "${hash === \'main\' ? id : `${id}#${hash}`}" $type property`) }',
+        ],
+        returnType: 'ValidationResult',
+      })
 
-    //= export const lexicons: Lexicons = new Lexicons(schemas)
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'lexicons',
-          type: 'Lexicons',
-          initializer: 'new Lexicons(schemas)',
-        },
-      ],
-    })
-
-    file.addFunction({
-      isExported: true,
-      name: 'validate',
-      overloads: [
-        {
-          typeParameters: ['T extends { $type: string }'],
-          parameters: [
-            { name: 'v', type: 'unknown' },
-            { name: 'id', type: 'string' },
-            { name: 'hash', type: 'string' },
-            { name: 'requiredType', type: 'true' },
-          ],
-          returnType: 'ValidationResult<T>',
-        },
-        {
-          typeParameters: ['T extends { $type?: string }'],
-          parameters: [
-            { name: 'v', type: 'unknown' },
-            { name: 'id', type: 'string' },
-            { name: 'hash', type: 'string' },
-            { name: 'requiredType', type: 'false', hasQuestionToken: true },
-          ],
-          returnType: 'ValidationResult<T>',
-        },
-      ],
-      parameters: [
-        { name: 'v', type: 'unknown' },
-        { name: 'id', type: 'string' },
-        { name: 'hash', type: 'string' },
-        { name: 'requiredType', type: 'boolean', hasQuestionToken: true },
-      ],
-      statements: [
-        // If $type is present, make sure it is valid before validating the rest of the object
-        'return (requiredType ? is$typed : maybe$typed)(v, id, hash) ? lexicons.validate(`${id}#${hash}`, v) : { success: false, error: new ValidationError(`Must be an object with "${hash === \'main\' ? id : `${id}#${hash}`}" $type property`) }',
-      ],
-      returnType: 'ValidationResult',
-    })
-
-    //= export const ids = {...}
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'ids',
-          initializer: `{${lexicons
-            .map(
-              (lex) => `\n  ${toTitleCase(lex.id)}: ${JSON.stringify(lex.id)},`,
-            )
-            .join('')}\n} as const`,
-        },
-      ],
-    })
-  }, tsLastModified, lexLastModified[""])
+      //= export const ids = {...}
+      file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: 'ids',
+            initializer: `{${lexicons
+              .map(
+                (lex) =>
+                  `\n  ${toTitleCase(lex.id)}: ${JSON.stringify(lex.id)},`,
+              )
+              .join('')}\n} as const`,
+          },
+        ],
+      })
+    },
+    tsLastModified,
+    lexLastModified[''],
+  )
 
 export async function gen(
   project: Project,
   path: string,
   gen: (file: SourceFile) => Promise<void>,
   tsLastModified?: ModificationTimes,
-  lexLastModified?: number
+  lexLastModified?: number,
 ): Promise<GeneratedFile> {
   if (tsLastModified) {
-    const sourceTime = tsLastModified[relative("/", path)]
+    const sourceTime = tsLastModified[relative('/', path)]
     //console.log("in gen", relative("/", path), sourceTime)
     if (sourceTime && lexLastModified) {
       if (sourceTime > lexLastModified) {

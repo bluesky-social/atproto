@@ -3,9 +3,15 @@ import { join, relative } from 'node:path'
 import chalk from 'chalk'
 import { ZodError, type ZodFormattedError } from 'zod'
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
-import { type FileDiff, type GeneratedAPI, type ModificationTimes } from './types'
+import {
+  type FileDiff,
+  type GeneratedAPI,
+  type ModificationTimes,
+} from './types'
 
-export function readAllLexicons(paths: string[]): [LexiconDoc[], ModificationTimes] {
+export function readAllLexicons(
+  paths: string[],
+): [LexiconDoc[], ModificationTimes] {
   paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
   const lastModified: ModificationTimes = {}
   const docs: LexiconDoc[] = []
@@ -19,12 +25,11 @@ export function readAllLexicons(paths: string[]): [LexiconDoc[], ModificationTim
       docs.push(doc)
 
       // update last-modified time for each namespace level (including "" = root)
-      const nsidParts = doc.id.split(".")
-      for (let i=0; i<=nsidParts.length; i++) {
-        const nsidPath = nsidParts.slice(0, i).join(".")
+      const nsidParts = doc.id.split('.')
+      for (let i = 0; i <= nsidParts.length; i++) {
+        const nsidPath = nsidParts.slice(0, i).join('.')
         lastModified[nsidPath] = Math.max(lastModified[nsidPath] ?? 0, ts)
       }
-
     } catch (e) {
       // skip
     }
@@ -36,42 +41,46 @@ function walk(dir: string): Promise<[string, fs.Stats][]> {
   return new Promise((resolve, reject) => {
     fs.readdir(dir, (error, files) => {
       if (error) {
-        return reject(error);
+        return reject(error)
       }
-      Promise.all(files.map((file) => {
-        return new Promise<[string, fs.Stats][]>(async (resolve, reject) => {
-          const filepath = join(dir, file);
-          fs.stat(filepath, async (error, stats) => {
-            if (error) {
-              return reject(error);
-            }
-            if (stats.isDirectory()) {
-              try {
-                const subFiles = await walk(filepath);
-                resolve(subFiles);
-              } catch (err) {
-                reject(err);
+      Promise.all(
+        files.map((file) => {
+          return new Promise<[string, fs.Stats][]>(async (resolve, reject) => {
+            const filepath = join(dir, file)
+            fs.stat(filepath, async (error, stats) => {
+              if (error) {
+                return reject(error)
               }
-            } else if (stats.isFile()) {
-              resolve([[filepath, stats]]);
-            } else {
-              resolve([]);
-            }
-          });
-        });
-      }))
-      .then((foldersContents) => {
-        resolve(
-          foldersContents.reduce(
-            (all: [string, fs.Stats][], folderContents: [string, fs.Stats][]) =>
-              all.concat(folderContents),
-            []
+              if (stats.isDirectory()) {
+                try {
+                  const subFiles = await walk(filepath)
+                  resolve(subFiles)
+                } catch (err) {
+                  reject(err)
+                }
+              } else if (stats.isFile()) {
+                resolve([[filepath, stats]])
+              } else {
+                resolve([])
+              }
+            })
+          })
+        }),
+      )
+        .then((foldersContents) => {
+          resolve(
+            foldersContents.reduce(
+              (
+                all: [string, fs.Stats][],
+                folderContents: [string, fs.Stats][],
+              ) => all.concat(folderContents),
+              [],
+            ),
           )
-        );
-      })
-      .catch(reject);
-    });
-  });
+        })
+        .catch(reject)
+    })
+  })
 }
 
 export async function getTSTimestamps(dir: string): Promise<ModificationTimes> {
@@ -122,7 +131,11 @@ export function genTsObj(lexicons: LexiconDoc[]): string {
   return `export const lexicons = ${JSON.stringify(lexicons, null, 2)}`
 }
 
-export function genFileDiff(outDir: string, api: GeneratedAPI, rebuild?: boolean) {
+export function genFileDiff(
+  outDir: string,
+  api: GeneratedAPI,
+  rebuild?: boolean,
+) {
   const diffs: FileDiff[] = []
   const existingFiles = readdirRecursiveSync(outDir)
 
@@ -130,7 +143,7 @@ export function genFileDiff(outDir: string, api: GeneratedAPI, rebuild?: boolean
     file.path = join(outDir, file.path)
     if (file.content === undefined) {
       diffs.push({ act: 'leave', path: file.path })
-    }else if (existingFiles.includes(file.path)) {
+    } else if (existingFiles.includes(file.path)) {
       diffs.push({ act: 'mod', path: file.path, content: file.content })
     } else {
       diffs.push({ act: 'add', path: file.path, content: file.content })
@@ -140,7 +153,8 @@ export function genFileDiff(outDir: string, api: GeneratedAPI, rebuild?: boolean
     if (api.files.find((f) => f.path === filepath)) {
       // do nothing
     } else {
-      if (rebuild) { // don't delete things on incremental rebuilds
+      if (rebuild) {
+        // don't delete things on incremental rebuilds
         diffs.push({ act: 'del', path: filepath })
       }
     }

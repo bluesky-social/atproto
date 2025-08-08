@@ -48,11 +48,31 @@ export async function genClientApi(
   const nsidTree = lexiconsToDefTree(lexiconDocs)
   const nsidTokens = schemasToNsidTokens(lexiconDocs)
   for (const lexiconDoc of lexiconDocs) {
-    api.files.push(await lexiconTs(project, lexicons, lexiconDoc, tsLastModified, lexLastModified[lexiconDoc.id]))
+    api.files.push(
+      await lexiconTs(
+        project,
+        lexicons,
+        lexiconDoc,
+        tsLastModified,
+        lexLastModified[lexiconDoc.id],
+      ),
+    )
   }
   api.files.push(await utilTs(project, tsLastModified, lexLastModified))
-  api.files.push(await lexiconsTs(project, lexiconDocs, tsLastModified, lexLastModified))
-  api.files.push(await indexTs(api, project, lexiconDocs, nsidTree, nsidTokens, tsLastModified, lexLastModified))
+  api.files.push(
+    await lexiconsTs(project, lexiconDocs, tsLastModified, lexLastModified),
+  )
+  api.files.push(
+    await indexTs(
+      api,
+      project,
+      lexiconDocs,
+      nsidTree,
+      nsidTokens,
+      tsLastModified,
+      lexLastModified,
+    ),
+  )
   return api
 }
 
@@ -143,14 +163,26 @@ const indexTs = (
         type: ns.className,
       })
 
-      file.addImportDeclaration({
-        moduleSpecifier: `./ns/${ns.propName}/index.js`,
-      }).addNamedImport(ns.className)
+      file
+        .addImportDeclaration({
+          moduleSpecifier: `./ns/${ns.propName}/index.js`,
+        })
+        .addNamedImport(ns.className)
       file.addExportDeclaration({
         moduleSpecifier: `./ns/${ns.propName}/index.js`,
       })
 
-      api.files.push(await nsIndexTs(api, project, lexiconDocs, ns, [], tsLastModified, lexLastModified))
+      api.files.push(
+        await nsIndexTs(
+          api,
+          project,
+          lexiconDocs,
+          ns,
+          [],
+          tsLastModified,
+          lexLastModified,
+        ),
+      )
     }
 
     //= constructor (options: FetchHandler | FetchHandlerOptions) {
@@ -191,54 +223,80 @@ const nsIndexTs = (
   tsLastModified: ModificationTimes,
   lexLastModified: ModificationTimes,
 ) =>
-  gen(project, `/${['ns'].concat(partialPath).join('/')}/${ns.propName}/index.ts`, async (file) => {
-    //= import { XrpcClient, type FetchHandler, type FetchHandlerOptions } from '@atproto/xrpc'
-    const xrpcImport = file.addImportDeclaration({
-      moduleSpecifier: '@atproto/xrpc',
-    })
-    xrpcImport.addNamedImports([
-      { name: 'XrpcClient' },
-      { name: 'FetchHandler', isTypeOnly: true },
-      { name: 'FetchHandlerOptions', isTypeOnly: true },
-    ])
-    //= import {schemas} from './lexicons.js'
-    file
-      .addImportDeclaration({ moduleSpecifier: '../'.repeat(partialPath.length+2) + 'lexicons.js' })
-      .addNamedImports([{ name: 'schemas' }])
-    //= import {CID} from 'multiformats/cid'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: 'multiformats/cid',
+  gen(
+    project,
+    `/${['ns'].concat(partialPath).join('/')}/${ns.propName}/index.ts`,
+    async (file) => {
+      //= import { XrpcClient, type FetchHandler, type FetchHandlerOptions } from '@atproto/xrpc'
+      const xrpcImport = file.addImportDeclaration({
+        moduleSpecifier: '@atproto/xrpc',
       })
-      .addNamedImports([{ name: 'CID' }])
-
-    //= import { type OmitKey, type Un$Typed } from './util.js'
-    file
-      .addImportDeclaration({ moduleSpecifier: '../'.repeat(partialPath.length+2) + `util.js` })
-      .addNamedImports([
-        { name: 'OmitKey', isTypeOnly: true },
-        { name: 'Un$Typed', isTypeOnly: true },
+      xrpcImport.addNamedImports([
+        { name: 'XrpcClient' },
+        { name: 'FetchHandler', isTypeOnly: true },
+        { name: 'FetchHandlerOptions', isTypeOnly: true },
       ])
-
-    // necessary imports only
-    let importNsids = [...new Set(ns.userTypes.map(ut => ut.nsid).concat(Object.values(ATP_METHODS)))]
-    importNsids.sort()
-    for (const nsid of importNsids) {
+      //= import {schemas} from './lexicons.js'
       file
         .addImportDeclaration({
-          moduleSpecifier: '../'.repeat(partialPath.length+2) + `types/${nsid.split('.').join('/')}.js`,
+          moduleSpecifier: '../'.repeat(partialPath.length + 2) + 'lexicons.js',
         })
-        .setNamespaceImport(toTitleCase(nsid))
-    }
+        .addNamedImports([{ name: 'schemas' }])
+      //= import {CID} from 'multiformats/cid'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: 'multiformats/cid',
+        })
+        .addNamedImports([{ name: 'CID' }])
 
-    // recurse
-    for (let child of genNamespaceCls(file, ns)) {
-      api.files.push(await nsIndexTs(api, project, lexiconDocs, child, partialPath.concat([ns.propName]), tsLastModified, lexLastModified))
-    }
-  }, tsLastModified, lexLastModified[partialPath.concat(ns.propName).join('.')])
+      //= import { type OmitKey, type Un$Typed } from './util.js'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: '../'.repeat(partialPath.length + 2) + `util.js`,
+        })
+        .addNamedImports([
+          { name: 'OmitKey', isTypeOnly: true },
+          { name: 'Un$Typed', isTypeOnly: true },
+        ])
+
+      // necessary imports only
+      let importNsids = [
+        ...new Set(
+          ns.userTypes.map((ut) => ut.nsid).concat(Object.values(ATP_METHODS)),
+        ),
+      ]
+      importNsids.sort()
+      for (const nsid of importNsids) {
+        file
+          .addImportDeclaration({
+            moduleSpecifier:
+              '../'.repeat(partialPath.length + 2) +
+              `types/${nsid.split('.').join('/')}.js`,
+          })
+          .setNamespaceImport(toTitleCase(nsid))
+      }
+
+      // recurse
+      for (let child of genNamespaceCls(file, ns)) {
+        api.files.push(
+          await nsIndexTs(
+            api,
+            project,
+            lexiconDocs,
+            child,
+            partialPath.concat([ns.propName]),
+            tsLastModified,
+            lexLastModified,
+          ),
+        )
+      }
+    },
+    tsLastModified,
+    lexLastModified[partialPath.concat(ns.propName).join('.')],
+  )
 
 function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
-  let children: DefTreeNode[] = [];
+  let children: DefTreeNode[] = []
 
   //= export class {ns}NS {...}
   const cls = file.addClass({
@@ -270,12 +328,14 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
       type: child.className,
     })
 
-    file.addImportDeclaration({
+    file
+      .addImportDeclaration({
         moduleSpecifier: `./${child.propName}/index.js`,
-    }).addNamedImport(child.className)
+      })
+      .addNamedImport(child.className)
     file.addExportDeclaration({
-        moduleSpecifier: `./${child.propName}/index.js`,
-    })//.addNamedExport(child.className)
+      moduleSpecifier: `./${child.propName}/index.js`,
+    }) //.addNamedExport(child.className)
 
     children.push(child)
   }
@@ -505,7 +565,13 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   }
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc, tsLastModified: ModificationTimes, lexLastModified: number) =>
+const lexiconTs = (
+  project,
+  lexicons: Lexicons,
+  lexiconDoc: LexiconDoc,
+  tsLastModified: ModificationTimes,
+  lexLastModified: number,
+) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
