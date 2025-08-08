@@ -389,26 +389,28 @@ export class RequestManager {
       const code = await generateCode()
       let parameters = data.parameters
 
-      const newScopes = scope ? new Set(scope.split(' ')) : undefined
-      if (newScopes) {
-        const newScopesArray = parameters.scope
+      // If a new scope value is provided, update the parameters by ensuring
+      // that every scope in the parameters was provided in the new scope.
+      // This allows the user to remove scopes from the request, but not to add
+      // new ones.
+      if (scope) {
+        const newScopes = parameters.scope
           ?.split(' ')
           // Fool proofing: Remove invalid scopes (already done when creating the request)
           .filter(isValidAtprotoOauthScope)
           // The "scope" argument, if provided, only allows to remove scopes
           // from the existing list, not to add new ones.
-          .filter((s) => newScopes.has(s))
+          .filter(Array.prototype.includes, scope.split(' '))
 
-        // Validate: only allow edit scopes if they are already present in the
-        // request, and the "atproto" scope is always required.
-        if (!newScopesArray?.includes('atproto')) {
+        // Validate: make sure the new scopes are valid
+        if (!newScopes?.includes('atproto')) {
           throw new AccessDeniedError(
             data.parameters,
             'The "atproto" scope is required',
           )
         }
 
-        parameters = { ...parameters, scope: newScopesArray.join(' ') }
+        parameters = { ...parameters, scope: newScopes.join(' ') }
       }
 
       // Bind the request to the account, preventing it from being used again.
