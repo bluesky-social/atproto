@@ -50,8 +50,8 @@ export async function genClientApi(
   for (const lexiconDoc of lexiconDocs) {
     api.files.push(await lexiconTs(project, lexicons, lexiconDoc, tsLastModified, lexLastModified[lexiconDoc.id]))
   }
-  api.files.push(await utilTs(project))
-  api.files.push(await lexiconsTs(project, lexiconDocs))
+  api.files.push(await utilTs(project, tsLastModified, lexLastModified))
+  api.files.push(await lexiconsTs(project, lexiconDocs, tsLastModified, lexLastModified))
   api.files.push(await indexTs(api, project, lexiconDocs, nsidTree, nsidTokens, tsLastModified, lexLastModified))
   return api
 }

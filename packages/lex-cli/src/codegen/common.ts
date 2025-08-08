@@ -13,7 +13,7 @@ const PRETTIER_OPTS: PrettierOptions = {
   trailingComma: 'all',
 }
 
-export const utilTs = (project) =>
+export const utilTs = (project, tsLastModified: ModificationTimes, lexLastModified: ModificationTimes) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
 import { type ValidationResult } from '@atproto/lexicon'
@@ -132,9 +132,9 @@ export function asPredicate<V extends Validator>(validate: V) {
   }
 }
 `)
-  })
+  }, tsLastModified, lexLastModified[""])
 
-export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
+export const lexiconsTs = (project, lexicons: LexiconDoc[], tsLastModified: ModificationTimes, lexLastModified: ModificationTimes) =>
   gen(project, '/lexicons.ts', async (file) => {
     //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
     file
@@ -260,7 +260,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
         },
       ],
     })
-  })
+  }, tsLastModified, lexLastModified[""])
 
 export async function gen(
   project: Project,

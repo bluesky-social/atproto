@@ -41,10 +41,10 @@ export async function genServerApi(
   const nsidTokens = schemasToNsidTokens(lexiconDocs)
   for (const lexiconDoc of lexiconDocs) {
     //console.log(lexiconDoc.id, lexLastModified[lexiconDoc.id])
-    api.files.push(await lexiconTs(project, lexicons, lexiconDoc, tsLastModified, lexLastModified[lexiconDoc.id]))
+    api.files.push(await lexiconTs(project, lexicons, lexiconDoc, tsLastModified, lexLastModified))
   }
-  api.files.push(await utilTs(project))
-  api.files.push(await lexiconsTs(project, lexiconDocs))
+  api.files.push(await utilTs(project, tsLastModified, lexLastModified))
+  api.files.push(await lexiconsTs(project, lexiconDocs, tsLastModified, lexLastModified))
   api.files.push(await indexTs(api, project, lexiconDocs, nsidTree, nsidTokens, tsLastModified, lexLastModified))
   return api
 }
@@ -179,7 +179,7 @@ const indexTs = (
         ].join('\n'),
       )
   },
-  // tsLastModified, lexLastModified[""]
+  tsLastModified, lexLastModified[""]
 )
 
 const nsIndexTs = (
@@ -348,7 +348,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode): DefTreeNode[] {
   return children
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc, tsLastModified: ModificationTimes, lexLastModified: number) =>
+const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc, tsLastModified: ModificationTimes, lexLastModified: ModificationTimes) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
@@ -397,7 +397,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc, tsLastMo
       genImports(file, imports, lexiconDoc.id)
     },
     tsLastModified,
-    lexLastModified,
+    lexLastModified[lexiconDoc.id],
   )
 
 function genServerXrpcMethod(
