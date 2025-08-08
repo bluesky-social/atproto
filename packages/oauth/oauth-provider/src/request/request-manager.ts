@@ -355,7 +355,7 @@ export class RequestManager {
     account: Account,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
-    scope?: string,
+    scopeOverride?: string,
   ): Promise<Code> {
     const requestId = decodeRequestUri(requestUri)
 
@@ -391,14 +391,14 @@ export class RequestManager {
       // that every scope in the parameters was provided in the new scope.
       // This allows the user to remove scopes from the request, but not to add
       // new ones.
-      if (scope) {
+      if (scopeOverride) {
         const newScopes = parameters.scope
           ?.split(' ')
           // Fool proofing: Remove invalid scopes (already done when creating the request)
           .filter(isValidAtprotoOauthScope)
           // The "scope" argument, if provided, only allows to remove scopes
           // from the existing list, not to add new ones.
-          .filter(Array.prototype.includes, scope.split(' '))
+          .filter(Array.prototype.includes, scopeOverride.split(' '))
 
         // Validate: make sure the new scopes are valid
         if (!newScopes?.includes('atproto')) {
