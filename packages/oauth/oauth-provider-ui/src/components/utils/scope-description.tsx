@@ -88,10 +88,7 @@ function IdentityWarning({
   permissions: PermissionSetTransition
 } & AdmonitionProps) {
   const hasFullIdentityAccess = useMemo(() => {
-    return (
-      permissions.allowsIdentity({ attr: '*', action: 'manage' }) ||
-      permissions.allowsIdentity({ attr: '*', action: 'submit' })
-    )
+    return permissions.allowsIdentity({ attr: '*' })
   }, [permissions])
 
   if (hasFullIdentityAccess) {
@@ -368,14 +365,11 @@ function IdentityPermissions({
   const { t } = useLingui()
 
   const attr = useMemo(() => {
-    if (
-      permissions.allowsIdentity({ attr: '*', action: 'manage' }) ||
-      permissions.allowsIdentity({ attr: '*', action: 'submit' })
-    ) {
+    if (permissions.allowsIdentity({ attr: '*' })) {
       return '*' as const
     }
 
-    if (permissions.allowsIdentity({ attr: 'handle', action: 'manage' })) {
+    if (permissions.allowsIdentity({ attr: 'handle' })) {
       return 'handle' as const
     }
 

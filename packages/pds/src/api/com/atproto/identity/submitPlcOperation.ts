@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.submitPlcOperation({
     auth: ctx.authVerifier.authorization({
       authorize: (permissions) => {
-        permissions.assertIdentity({ attr: '*', action: 'submit' })
+        permissions.assertIdentity({ attr: '*' })
       },
     }),
     handler: async ({ auth, input }) => {

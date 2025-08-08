@@ -15,32 +15,19 @@ export const identityParser = new Parser(
       required: true,
       validate: knownValuesValidator(IDENTITY_ATTRIBUTES),
     },
-    action: {
-      multiple: false,
-      required: false,
-      validate: knownValuesValidator(IDENTITY_ACTIONS),
-      default: 'manage' as const,
-    },
   },
   'attr',
 )
 
 export type IdentityScopeMatch = {
   attr: IdentityAttribute
-  action: IdentityAction
 }
 
 export class IdentityScope {
-  constructor(
-    public readonly attr: IdentityAttribute,
-    public readonly action: IdentityAction,
-  ) {}
+  constructor(public readonly attr: IdentityAttribute) {}
 
   matches(options: IdentityScopeMatch): boolean {
-    return (
-      (this.attr === '*' || this.attr === options.attr) &&
-      this.action === options.action
-    )
+    return this.attr === '*' || this.attr === options.attr
   }
 
   toString() {
@@ -56,7 +43,7 @@ export class IdentityScope {
   static fromSyntax(syntax: ResourceSyntax) {
     const result = identityParser.parse(syntax)
     if (!result) return null
-    return new IdentityScope(result.attr, result.action)
+    return new IdentityScope(result.attr)
   }
 
   static scopeNeededFor(options: IdentityScopeMatch): string {

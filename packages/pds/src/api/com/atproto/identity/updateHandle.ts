@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       authorize: (permissions) => {
-        permissions.assertIdentity({ attr: 'handle', action: 'manage' })
+        permissions.assertIdentity({ attr: 'handle' })
       },
     }),
     rateLimit: [
