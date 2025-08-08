@@ -21,7 +21,7 @@ msgstr ""
 msgid "A second authentication factor is required"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:238
+#: src/components/utils/scope-description.tsx:247
 msgid "Account"
 msgstr ""
 
@@ -80,10 +80,6 @@ msgstr ""
 msgid "Between {minLength} and {maxLength} characters"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:301
-msgid "Bluesky"
-msgstr ""
-
 #: src/views/authorize/accept/accept-form.tsx:126
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
@@ -104,7 +100,7 @@ msgstr ""
 msgid "Change your <0>@handle</0>"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:342
+#: src/components/utils/scope-description.tsx:345
 msgid "Chat"
 msgstr ""
 
@@ -174,8 +170,8 @@ msgid "Detailed list of permissions"
 msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
-#: src/components/utils/scope-description.tsx:131
-#: src/components/utils/scope-description.tsx:142
+#: src/components/utils/scope-description.tsx:128
+#: src/components/utils/scope-description.tsx:139
 msgid "Email"
 msgstr ""
 
@@ -301,7 +297,7 @@ msgstr ""
 msgid "Make visible"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:239
+#: src/components/utils/scope-description.tsx:248
 msgid "Manage the status of your account, such as temporarily deactivating it"
 msgstr ""
 
@@ -309,8 +305,12 @@ msgstr ""
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:306
+#: src/components/utils/scope-description.tsx:316
 msgid "Manage your profile, posts, likes and follows"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:311
+msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx:499
@@ -395,20 +395,16 @@ msgstr ""
 msgid "Publish changes"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:343
+#: src/components/utils/scope-description.tsx:346
 msgid "Read and send messages"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:132
+#: src/components/utils/scope-description.tsx:129
 msgid "Read and update your account's email address"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:143
+#: src/components/utils/scope-description.tsx:140
 msgid "Read your account's email address"
-msgstr ""
-
-#: src/components/utils/scope-description.tsx:311
-msgid "Read your blocks and private preferences"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:203
@@ -473,9 +469,9 @@ msgstr ""
 msgid "Step {currentPosition} of {count}"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:198
-#: src/components/utils/scope-description.tsx:210
-#: src/components/utils/scope-description.tsx:220
+#: src/components/utils/scope-description.tsx:207
+#: src/components/utils/scope-description.tsx:219
+#: src/components/utils/scope-description.tsx:229
 msgid "Storage"
 msgstr ""
 
@@ -501,7 +497,7 @@ msgstr ""
 msgid "That handle cannot be used"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:100
+#: src/components/utils/scope-description.tsx:97
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr ""
 
@@ -577,15 +573,15 @@ msgstr ""
 msgid "Update"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:221
+#: src/components/utils/scope-description.tsx:230
 msgid "Upload files"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:199
+#: src/components/utils/scope-description.tsx:208
 msgid "Upload images"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:211
+#: src/components/utils/scope-description.tsx:220
 msgid "Upload videos"
 msgstr ""
 

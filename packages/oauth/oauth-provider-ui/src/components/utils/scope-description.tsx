@@ -292,14 +292,12 @@ function BlueskyAppviewPermissions({
 }: {
   permissions: PermissionSetTransition
 }) {
-  const { t } = useLingui()
-
   const hasBskyAppRepo = useMemo(() => {
     return permissions.scopes.some(scopeEnablesBskyAppRepo)
   }, [permissions])
 
   const hasBskyAppRpc = useMemo(() => {
-    return permissions.scopes.some(scopeEnablesBskyAppRpc)
+    return permissions.scopes.some(scopeEnablesPrivateBskyAppMethods)
   }, [permissions])
 
   if (hasBskyAppRepo || hasBskyAppRpc) {
@@ -307,20 +305,16 @@ function BlueskyAppviewPermissions({
       <DescriptionCard
         role="listitem"
         image={<ButterflyIcon className="size-6" />}
-        title={t`Bluesky`}
+        title={'Bluesky'}
         description={
-          <ul>
-            {hasBskyAppRepo && (
-              <li key="repo">
-                <Trans>Manage your profile, posts, likes and follows</Trans>
-              </li>
-            )}
-            {hasBskyAppRpc && (
-              <li key="rpc">
-                <Trans>Read your blocks and private preferences</Trans>
-              </li>
-            )}
-          </ul>
+          hasBskyAppRepo && hasBskyAppRpc ? (
+            <Trans>
+              Manage your profile, posts, likes and follows as well as read your
+              private preferences
+            </Trans>
+          ) : (
+            <Trans>Manage your profile, posts, likes and follows</Trans>
+          )
         }
       />
     )
@@ -729,9 +723,20 @@ function scopeEnablesBskyAppRepo(scope: string): boolean {
   )
 }
 
-function scopeEnablesBskyAppRpc(scope: string): boolean {
+function scopeEnablesPrivateBskyAppMethods(scope: string): boolean {
   if (scope === 'transition:generic') return true
   const rpc = RpcScope.fromString(scope)
   if (!rpc) return false
-  return rpc.lxm.includes('*') || rpc.lxm.some(isBlueskySpecificNsid)
+  return (
+    rpc.lxm.includes('app.bsky.actor.getPreferences') ||
+    rpc.lxm.includes('app.bsky.graph.block') ||
+    rpc.lxm.includes('app.bsky.graph.muteActor') ||
+    rpc.lxm.includes('app.bsky.graph.muteActorList') ||
+    rpc.lxm.includes('app.bsky.graph.muteThread') ||
+    rpc.lxm.includes('app.bsky.graph.unmuteActor') ||
+    rpc.lxm.includes('app.bsky.graph.unmuteActorList') ||
+    rpc.lxm.includes('app.bsky.graph.unmuteThread') ||
+    rpc.lxm.includes('app.bsky.graph.getMutes') ||
+    rpc.lxm.includes('*')
+  )
 }

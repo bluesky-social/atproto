@@ -21,7 +21,7 @@ msgstr "Confirmation 2FA"
 msgid "A second authentication factor is required"
 msgstr "Un second facteur d'authentification est requis"
 
-#: src/components/utils/scope-description.tsx:238
+#: src/components/utils/scope-description.tsx:247
 msgid "Account"
 msgstr "Compte utilisateur"
 
@@ -80,10 +80,6 @@ msgstr "Retour"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
-#: src/components/utils/scope-description.tsx:301
-msgid "Bluesky"
-msgstr ""
-
 #: src/views/authorize/accept/accept-form.tsx:126
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et à sa <2>politique de confidentialité</2>."
@@ -104,7 +100,7 @@ msgstr "Annuler"
 msgid "Change your <0>@handle</0>"
 msgstr "Modifier votre <0>@pseudo</0>"
 
-#: src/components/utils/scope-description.tsx:342
+#: src/components/utils/scope-description.tsx:345
 msgid "Chat"
 msgstr "Discussions"
 
@@ -174,8 +170,8 @@ msgid "Detailed list of permissions"
 msgstr "Liste détaillée des permissions"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
-#: src/components/utils/scope-description.tsx:131
-#: src/components/utils/scope-description.tsx:142
+#: src/components/utils/scope-description.tsx:128
+#: src/components/utils/scope-description.tsx:139
 msgid "Email"
 msgstr "Email"
 
@@ -301,7 +297,7 @@ msgstr "Ressemble à {example}"
 msgid "Make visible"
 msgstr "Rendre visible"
 
-#: src/components/utils/scope-description.tsx:239
+#: src/components/utils/scope-description.tsx:248
 msgid "Manage the status of your account, such as temporarily deactivating it"
 msgstr "Gérer le statut de votre compte, comme le désactiver temporairement"
 
@@ -309,9 +305,13 @@ msgstr "Gérer le statut de votre compte, comme le désactiver temporairement"
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Gérer votre <0>identité complète</0> y compris votre <1>@pseudo</1>"
 
-#: src/components/utils/scope-description.tsx:306
+#: src/components/utils/scope-description.tsx:316
 msgid "Manage your profile, posts, likes and follows"
 msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements"
+
+#: src/components/utils/scope-description.tsx:311
+msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
+msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements ainsi que lire vos préférences privées"
 
 #: src/components/utils/scope-description.tsx:499
 msgid "Methods"
@@ -375,7 +375,7 @@ msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
 #: src/components/utils/scope-description.tsx:430
 msgid "Perform actions on your behalf"
-msgstr ""
+msgstr "Effectuer des actions en votre nom"
 
 #: src/components/utils/scope-description.tsx:411
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
@@ -395,21 +395,17 @@ msgstr "Politique de Confidentialité"
 msgid "Publish changes"
 msgstr "Publier des modifications"
 
-#: src/components/utils/scope-description.tsx:343
+#: src/components/utils/scope-description.tsx:346
 msgid "Read and send messages"
 msgstr "Lire et envoyer des messages"
 
-#: src/components/utils/scope-description.tsx:132
+#: src/components/utils/scope-description.tsx:129
 msgid "Read and update your account's email address"
 msgstr "Lire et mettre à jour l'adresse e-mail de votre compte"
 
-#: src/components/utils/scope-description.tsx:143
+#: src/components/utils/scope-description.tsx:140
 msgid "Read your account's email address"
 msgstr "Lire l'adresse e-mail de votre compte"
-
-#: src/components/utils/scope-description.tsx:311
-msgid "Read your blocks and private preferences"
-msgstr "Lire vos blocages et préférences privées"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:203
 #: src/views/authorize/sign-in/sign-in-form.tsx:208
@@ -473,9 +469,9 @@ msgstr "S'inscrire"
 msgid "Step {currentPosition} of {count}"
 msgstr "Étape {currentPosition} sur {count}"
 
-#: src/components/utils/scope-description.tsx:198
-#: src/components/utils/scope-description.tsx:210
-#: src/components/utils/scope-description.tsx:220
+#: src/components/utils/scope-description.tsx:207
+#: src/components/utils/scope-description.tsx:219
+#: src/components/utils/scope-description.tsx:229
 msgid "Storage"
 msgstr "Stockage"
 
@@ -501,13 +497,13 @@ msgstr "Conditions d'Utilisation"
 msgid "That handle cannot be used"
 msgstr "Ce pseudonyme ne peut pas être utilisé"
 
-#: src/components/utils/scope-description.tsx:100
+#: src/components/utils/scope-description.tsx:97
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "L'application demande un contrôle total sur votre identité réseau, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>voler</1>, votre compte. Accordez cette permission uniquement aux applications auxquelles vous faites vraiment confiance."
 
 #: src/components/utils/scope-description.tsx:436
 msgid "The application is asking for permissions to uniquely identify you when performing the following actions on your behalf:"
-msgstr ""L'application demande des permissions pour vous identifier de manière unique lors des actions suivantes effectuées en votre nom :"
+msgstr "\"L'application demande des permissions pour vous identifier de manière unique lors des actions suivantes effectuées en votre nom :"
 
 #: src/components/utils/scope-description.tsx:551
 msgid "The application is asking to be able to create, update, and delete any data from your repository."
@@ -577,15 +573,15 @@ msgstr "Réponse inattendue du serveur"
 msgid "Update"
 msgstr "Modifier"
 
-#: src/components/utils/scope-description.tsx:221
+#: src/components/utils/scope-description.tsx:230
 msgid "Upload files"
 msgstr "Télécharger des fichiers"
 
-#: src/components/utils/scope-description.tsx:199
+#: src/components/utils/scope-description.tsx:208
 msgid "Upload images"
 msgstr "Télécharger des images"
 
-#: src/components/utils/scope-description.tsx:211
+#: src/components/utils/scope-description.tsx:220
 msgid "Upload videos"
 msgstr "Télécharger des vidéos"
 
