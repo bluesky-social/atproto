@@ -391,11 +391,9 @@ export class RequestManager {
       // that every scope in the parameters was provided in the new scope.
       // This allows the user to remove scopes from the request, but not to add
       // new ones.
-      if (scopeOverride) {
+      if (scopeOverride != null) {
         const newScopes = parameters.scope
           ?.split(' ')
-          // Fool proofing: Remove invalid scopes (already done when creating the request)
-          .filter(isValidAtprotoOauthScope)
           // The "scopeOverride" argument, if provided, only allows to remove
           // scopes from the existing list, not to add new ones.
           .filter(Set.prototype.has, new Set(scopeOverride.split(' ')))
