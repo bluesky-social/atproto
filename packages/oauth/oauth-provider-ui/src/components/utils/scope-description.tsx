@@ -136,7 +136,7 @@ function EmailPermissions({
 
   if (allowedAction) {
     return (
-      <label className={onAllowEmail && 'cursor-pointer'}>
+      <label className={onAllowEmail ? 'cursor-pointer' : undefined}>
         <DescriptionCard
           role="listitem"
           image={<EmailIcon className="size-6" />}

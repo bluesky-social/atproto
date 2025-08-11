@@ -392,11 +392,11 @@ export class RequestManager {
       // This allows the user to remove scopes from the request, but not to add
       // new ones.
       if (scopeOverride != null) {
-        const newScopes = parameters.scope
-          ?.split(' ')
-          // The "scopeOverride" argument, if provided, only allows to remove
-          // scopes from the existing list, not to add new ones.
-          .filter(Set.prototype.has, new Set(scopeOverride.split(' ')))
+        const allowedScopes = new Set(scopeOverride.split(' '))
+        const existingScopes = parameters.scope?.split(' ')
+
+        // Compute the intersection of the existing scopes and the overrides.
+        const newScopes = existingScopes?.filter((s) => allowedScopes.has(s))
 
         // Validate: make sure the new scopes are valid
         if (!newScopes?.includes('atproto')) {
