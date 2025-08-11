@@ -51,9 +51,9 @@ export type AuthResult = {
   artifacts?: unknown
 }
 
-export const headersSchema = z.record(z.string())
+export const headersSchema = z.record(z.string(), z.string())
 
-export type Headers = z.infer<typeof headersSchema>
+export type Headers = z.output<typeof headersSchema>
 
 export const handlerSuccess = z.object({
   encoding: z.string(),
@@ -61,7 +61,7 @@ export const handlerSuccess = z.object({
   headers: headersSchema.optional(),
 })
 
-export type HandlerSuccess = z.infer<typeof handlerSuccess>
+export type HandlerSuccess = z.output<typeof handlerSuccess>
 
 export const handlerPipeThroughBuffer = z.object({
   encoding: z.string(),
@@ -69,7 +69,7 @@ export const handlerPipeThroughBuffer = z.object({
   headers: headersSchema.optional(),
 })
 
-export type HandlerPipeThroughBuffer = z.infer<typeof handlerPipeThroughBuffer>
+export type HandlerPipeThroughBuffer = z.output<typeof handlerPipeThroughBuffer>
 
 export const handlerPipeThroughStream = z.object({
   encoding: z.string(),
@@ -77,18 +77,18 @@ export const handlerPipeThroughStream = z.object({
   headers: headersSchema.optional(),
 })
 
-export type HandlerPipeThroughStream = z.infer<typeof handlerPipeThroughStream>
+export type HandlerPipeThroughStream = z.output<typeof handlerPipeThroughStream>
 
 export const handlerPipeThrough = z.union([
   handlerPipeThroughBuffer,
   handlerPipeThroughStream,
 ])
 
-export type HandlerPipeThrough = z.infer<typeof handlerPipeThrough>
+export type HandlerPipeThrough = z.output<typeof handlerPipeThrough>
 
 export type Auth = void | AuthResult
 export type Input = void | HandlerInput
-export type Output = void | HandlerSuccess | ErrorResult
+export type Output = void | HandlerSuccess | ErrorResult | HandlerPipeThrough
 
 export type AuthVerifier<C, A extends AuthResult = AuthResult> =
   | ((ctx: C) => Awaitable<A | ErrorResult>)

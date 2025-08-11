@@ -29,7 +29,7 @@
     "await-lock": "^2.2.2",
     "multiformats": "^9.9.0",
     "tlds": "^1.234.0",
-    "zod": "^3.23.8"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",

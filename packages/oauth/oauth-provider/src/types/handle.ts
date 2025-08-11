@@ -10,7 +10,7 @@ export const handleSchema = z
       ensureValidHandle(value)
     } catch (err) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: err instanceof Error ? err.message : 'Invalid handle',
       })
     }

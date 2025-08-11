@@ -1,4 +1,4 @@
-import { TypeOf, ZodIssueCode, z } from 'zod'
+import { z } from 'zod'
 import { isHostnameIP, isLoopbackHost } from './util.js'
 
 const canParseUrl =
@@ -16,169 +16,136 @@ const canParseUrl =
 
 /**
  * Valid, but potentially dangerous URL (`data:`, `file:`, `javascript:`, etc.).
- *
- * Any value that matches this schema is safe to parse using `new URL()`.
  */
-export const dangerousUriSchema = z
-  .string()
-  .refine(
-    (data): data is `${string}:${string}` =>
-      data.includes(':') && canParseUrl(data),
-    {
-      message: 'Invalid URL',
-    },
-  )
+export type DangerousUri = `${string}:${string}`
+
+const isDangerousUri = (input: unknown): input is DangerousUri => {
+  return typeof input === 'string' && input.includes(':') && canParseUrl(input)
+}
 
 /**
  * Valid, but potentially dangerous URL (`data:`, `file:`, `javascript:`, etc.).
+ *
+ * Any value that matches this schema is safe to parse using `new URL()`.
  */
-export type DangerousUrl = TypeOf<typeof dangerousUriSchema>
+export const dangerousUriSchema = z.custom<DangerousUri>(isDangerousUri, {
+  error: 'Invalid URL',
+})
 
-export const loopbackUriSchema = dangerousUriSchema.superRefine(
-  (
-    value,
-    ctx,
-  ): value is
+export const loopbackUriSchema = dangerousUriSchema.transform((input, ctx) => {
+  // Loopback url must use the "http:" protocol
+  if (!input.startsWith('http://')) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'URL must use the "http:" protocol',
+    })
+    return z.NEVER
+  }
+
+  const url = new URL(input)
+
+  if (!isLoopbackHost(url.hostname)) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'URL must use "localhost", "127.0.0.1" or "[::1]" as hostname',
+    })
+    return z.NEVER
+  }
+
+  return input as
     | `http://[::1]${string}`
     | `http://localhost${'' | `${':' | '/' | '?' | '#'}${string}`}`
-    | `http://127.0.0.1${'' | `${':' | '/' | '?' | '#'}${string}`}` => {
-    // Loopback url must use the "http:" protocol
-    if (!value.startsWith('http://')) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message: 'URL must use the "http:" protocol',
-      })
-      return false
-    }
+    | `http://127.0.0.1${'' | `${':' | '/' | '?' | '#'}${string}`}`
+})
 
-    const url = new URL(value)
+export type LoopbackUri = z.output<typeof loopbackUriSchema>
 
-    if (!isLoopbackHost(url.hostname)) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message: 'URL must use "localhost", "127.0.0.1" or "[::1]" as hostname',
-      })
-      return false
-    }
-
-    return true
-  },
-)
-
-export type LoopbackUri = TypeOf<typeof loopbackUriSchema>
-
-export const httpsUriSchema = dangerousUriSchema.superRefine(
-  (value, ctx): value is `https://${string}` => {
-    if (!value.startsWith('https://')) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message: 'URL must use the "https:" protocol',
-      })
-      return false
-    }
-
-    const url = new URL(value)
-
-    // Disallow loopback URLs with the `https:` protocol
-    if (isLoopbackHost(url.hostname)) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message: 'https: URL must not use a loopback host',
-      })
-      return false
-    }
-
-    if (isHostnameIP(url.hostname)) {
-      // Hostname is an IP address
-    } else {
-      // Hostname is a domain name
-      if (!url.hostname.includes('.')) {
-        // we don't depend on PSL here, so we only check for a dot
-        ctx.addIssue({
-          code: ZodIssueCode.custom,
-          message: 'Domain name must contain at least two segments',
-        })
-        return false
-      }
-
-      if (url.hostname.endsWith('.local')) {
-        ctx.addIssue({
-          code: ZodIssueCode.custom,
-          message: 'Domain name must not end with ".local"',
-        })
-        return false
-      }
-    }
-
-    return true
-  },
-)
-
-export type HttpsUri = TypeOf<typeof httpsUriSchema>
-
-export const webUriSchema = z
-  .string()
-  .superRefine((value, ctx): value is LoopbackUri | HttpsUri => {
-    // discriminated union of `loopbackUriSchema` and `httpsUriSchema`
-    if (value.startsWith('http://')) {
-      const result = loopbackUriSchema.safeParse(value)
-      if (!result.success) result.error.issues.forEach(ctx.addIssue, ctx)
-      return result.success
-    }
-
-    if (value.startsWith('https://')) {
-      const result = httpsUriSchema.safeParse(value)
-      if (!result.success) result.error.issues.forEach(ctx.addIssue, ctx)
-      return result.success
-    }
-
+export const httpsUriSchema = dangerousUriSchema.transform((input, ctx) => {
+  if (!input.startsWith('https://')) {
     ctx.addIssue({
-      code: ZodIssueCode.custom,
-      message: 'URL must use the "http:" or "https:" protocol',
+      code: 'custom',
+      message: 'URL must use the "https:" protocol',
     })
-    return false
-  })
+    return z.NEVER
+  }
 
-export type WebUri = TypeOf<typeof webUriSchema>
+  const url = new URL(input)
 
-export const privateUseUriSchema = dangerousUriSchema.superRefine(
-  (value, ctx): value is `${string}.${string}:/${string}` => {
-    const dotIdx = value.indexOf('.')
-    const colonIdx = value.indexOf(':')
+  // Disallow loopback URLs with the `https:` protocol
+  if (isLoopbackHost(url.hostname)) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'https: URL must not use a loopback host',
+    })
+    return z.NEVER
+  }
+
+  if (isHostnameIP(url.hostname)) {
+    // Hostname is an IP address
+  } else {
+    // Hostname is a domain name
+    if (!url.hostname.includes('.')) {
+      // we don't depend on PSL here, so we only check for a dot
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Domain name must contain at least two segments',
+      })
+      return z.NEVER
+    }
+
+    if (url.hostname.endsWith('.local')) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Domain name must not end with ".local"',
+      })
+      return z.NEVER
+    }
+  }
+
+  return input as `https://${string}`
+})
+
+export type HttpsUri = z.output<typeof httpsUriSchema>
+
+export const webUriSchema = z.union([loopbackUriSchema, httpsUriSchema], {
+  error: 'URL must use the "http:" or "https:" protocol',
+})
+
+export type WebUri = z.output<typeof webUriSchema>
+
+export type PrivateUseUri = `${string}.${string}:/${string}`
+export const privateUseUriSchema = z.custom<PrivateUseUri>(
+  (input) => {
+    if (typeof input !== 'string') {
+      return false
+    }
 
     // Optimization: avoid parsing the URL if the protocol does not contain a "."
+    const dotIdx = input.indexOf('.')
+    const colonIdx = input.indexOf(':')
     if (dotIdx === -1 || colonIdx === -1 || dotIdx > colonIdx) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message:
-          'Private-use URI scheme requires a "." as part of the protocol',
-      })
       return false
     }
 
-    const url = new URL(value)
+    try {
+      const url = new URL(input)
 
-    // Should be covered by the check before, but let's be extra sure
-    if (!url.protocol.includes('.')) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message: 'Invalid private-use URI scheme',
-      })
+      // Should be covered by the check before, but let's be extra sure
+      if (!url.protocol.includes('.')) {
+        return false
+      }
+
+      if (url.hostname) {
+        // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
+        return false
+      }
+
+      return true
+    } catch {
       return false
     }
-
-    if (url.hostname) {
-      // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message:
-          'Private-use URI schemes must not include a hostname (only one "/" is allowed after the protocol, as per RFC 8252)',
-      })
-      return false
-    }
-
-    return true
+  },
+  {
+    error: 'Invalid private-use URI scheme (RFC 8252)',
   },
 )
-
-export type PrivateUseUri = TypeOf<typeof privateUseUriSchema>

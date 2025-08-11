@@ -34,7 +34,7 @@
     "rate-limiter-flexible": "^2.4.1",
     "uint8arrays": "3.0.0",
     "ws": "^8.12.0",
-    "zod": "^3.23.8"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@atproto/crypto": "workspace:^",

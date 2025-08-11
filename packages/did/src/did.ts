@@ -249,17 +249,14 @@ export function asDid(input: unknown): Did {
   return input
 }
 
-export const didSchema = z
-  .string()
-  .superRefine((value: string, ctx: z.RefinementCtx): value is Did => {
-    try {
-      assertDid(value)
-      return true
-    } catch (err) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: err instanceof Error ? err.message : 'Unexpected error',
-      })
-      return false
-    }
-  })
+export const didSchema = z.string().transform((value, ctx) => {
+  try {
+    return asDid(value)
+  } catch (err) {
+    ctx.addIssue({
+      code: 'custom',
+      message: err instanceof Error ? err.message : 'Unexpected error',
+    })
+    return z.NEVER
+  }
+})

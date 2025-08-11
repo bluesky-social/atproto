@@ -177,7 +177,7 @@ const verificationMethod = z.object({
 const service = z.object({
   id: z.string(),
   type: z.string(),
-  serviceEndpoint: z.union([z.string(), z.record(z.unknown())]),
+  serviceEndpoint: z.union([z.string(), z.record(z.string(), z.unknown())]),
 })
 
 export const didDocument = z.object({

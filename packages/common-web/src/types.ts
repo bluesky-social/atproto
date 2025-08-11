@@ -2,17 +2,16 @@ import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { Def } from './check'
 
-const cidSchema = z.unknown().transform((obj, ctx): CID => {
-  const cid = CID.asCID(obj)
-
+const cidSchema = z.transform<unknown, CID>((input, ctx) => {
+  const cid = CID.asCID(input)
   if (cid == null) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+    ctx.issues.push({
+      code: 'custom',
       message: 'Not a valid CID',
+      input,
     })
     return z.NEVER
   }
-
   return cid
 })
 

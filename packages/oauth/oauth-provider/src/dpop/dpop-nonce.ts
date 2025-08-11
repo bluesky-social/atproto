@@ -6,7 +6,6 @@ const MAX_ROTATION_INTERVAL = DPOP_NONCE_MAX_AGE / 3
 const MIN_ROTATION_INTERVAL = Math.min(1000, MAX_ROTATION_INTERVAL)
 
 export const rotationIntervalSchema = z
-  .number()
   .int()
   .min(MIN_ROTATION_INTERVAL)
   .max(MAX_ROTATION_INTERVAL)

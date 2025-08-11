@@ -9,7 +9,7 @@ export class OAuthResolverError extends Error {
     if (cause instanceof OAuthResolverError) return cause
     const validationReason =
       cause instanceof ZodError
-        ? `${cause.errors[0].path} ${cause.errors[0].message}`
+        ? `${cause.issues[0].path} ${cause.issues[0].message}`
         : null
     const fullMessage =
       (message ?? `Unable to resolve identity`) +

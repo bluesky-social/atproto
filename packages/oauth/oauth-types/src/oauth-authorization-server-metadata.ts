@@ -86,7 +86,7 @@ export const oauthAuthorizationServerMetadataValidator =
         !data.pushed_authorization_request_endpoint
       ) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message:
             '"pushed_authorization_request_endpoint" required when "require_pushed_authorization_requests" is true',
         })
@@ -96,7 +96,7 @@ export const oauthAuthorizationServerMetadataValidator =
       if (data.response_types_supported) {
         if (!data.response_types_supported.includes('code')) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             message: 'Response type "code" is required',
           })
         }
@@ -109,7 +109,7 @@ export const oauthAuthorizationServerMetadataValidator =
         // https://openid.net/specs/openid-connect-discovery-1_0.html#rfc.section.3
         // > The value `none` MUST NOT be used.
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message: 'Client authentication method "none" is not allowed',
         })
       }

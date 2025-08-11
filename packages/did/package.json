@@ -25,7 +25,7 @@
     }
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@swc/jest": "^0.2.24",

@@ -8,62 +8,62 @@ import { extractUrlPath, isHostnameIP } from './util.js'
  */
 export const oauthClientIdDiscoverableSchema = z
   .intersection(oauthClientIdSchema, httpsUriSchema)
-  .superRefine((value, ctx): value is `https://${string}/${string}` => {
-    const url = new URL(value)
+  .transform((input, ctx) => {
+    const url = new URL(input)
 
     if (url.username || url.password) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'ClientID must not contain credentials',
       })
-      return false
+      return z.NEVER
     }
 
     if (url.hash) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'ClientID must not contain a fragment',
       })
-      return false
+      return z.NEVER
     }
 
     if (url.pathname === '/') {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'ClientID must contain a path component (e.g. "/client-metadata.json")',
       })
-      return false
+      return z.NEVER
     }
 
     if (url.pathname.endsWith('/')) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'ClientID path must not end with a trailing slash',
       })
-      return false
+      return z.NEVER
     }
 
     if (isHostnameIP(url.hostname)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'ClientID hostname must not be an IP address',
       })
-      return false
+      return z.NEVER
     }
 
     // URL constructor normalizes the URL, so we extract the path manually to
     // avoid normalization, then compare it to the normalized path to ensure
     // that the URL does not contain path traversal or other unexpected characters
-    if (extractUrlPath(value) !== url.pathname) {
+    if (extractUrlPath(input) !== url.pathname) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `ClientID must be in canonical form ("${url.href}", got "${value}")`,
+        code: 'custom',
+        message: `ClientID must be in canonical form ("${url.href}", got "${input}")`,
       })
-      return false
+      return z.NEVER
     }
 
-    return true
+    return input as `https://${string}/${string}`
   })
 
 export type OAuthClientIdDiscoverable = TypeOf<
@@ -77,37 +77,35 @@ export function isOAuthClientIdDiscoverable(
 }
 
 export const conventionalOAuthClientIdSchema =
-  oauthClientIdDiscoverableSchema.superRefine(
-    (value, ctx): value is `https://${string}/oauth-client-metadata.json` => {
-      const url = new URL(value)
+  oauthClientIdDiscoverableSchema.transform((input, ctx) => {
+    const url = new URL(input)
 
-      if (url.port) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'ClientID must not contain a port',
-        })
-        return false
-      }
+    if (url.port) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'ClientID must not contain a port',
+      })
+      return z.NEVER
+    }
 
-      if (url.search) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'ClientID must not contain a query string',
-        })
-        return false
-      }
+    if (url.search) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'ClientID must not contain a query string',
+      })
+      return z.NEVER
+    }
 
-      if (url.pathname !== '/oauth-client-metadata.json') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'ClientID must be "/oauth-client-metadata.json"',
-        })
-        return false
-      }
+    if (url.pathname !== '/oauth-client-metadata.json') {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'ClientID must be "/oauth-client-metadata.json"',
+      })
+      return z.NEVER
+    }
 
-      return true
-    },
-  )
+    return input as `https://${string}/oauth-client-metadata.json`
+  })
 
 export type ConventionalOAuthClientId = TypeOf<
   typeof conventionalOAuthClientIdSchema

@@ -102,8 +102,8 @@ importers:
         specifier: ^1.234.0
         version: 1.234.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^
@@ -290,8 +290,8 @@ importers:
         specifier: ^6.19.8
         version: 6.19.8
       zod:
-        specifier: 3.23.8
-        version: 3.23.8
+        specifier: 4.0.17
+        version: 4.0.17
     devDependencies:
       '@atproto/lex-cli':
         specifier: workspace:^
@@ -440,8 +440,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -545,8 +545,8 @@ importers:
   packages/did:
     dependencies:
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@swc/jest':
         specifier: ^0.2.24
@@ -607,8 +607,8 @@ importers:
         specifier: workspace:*
         version: link:../../did
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -655,8 +655,8 @@ importers:
         specifier: workspace:*
         version: link:../../did
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -766,8 +766,8 @@ importers:
         specifier: ^0.4.0
         version: 0.4.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -788,8 +788,8 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -804,8 +804,8 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -833,8 +833,8 @@ importers:
         specifier: workspace:*
         version: link:../jwk-jose
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -876,8 +876,8 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -1101,8 +1101,8 @@ importers:
         specifier: ^5.2.0
         version: 5.3.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@atproto-labs/rollup-plugin-bundle-manifest':
         specifier: workspace:*
@@ -1224,8 +1224,8 @@ importers:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
       zod:
-        specifier: ^3.24.2
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
 
   packages/oauth/oauth-provider-ui:
     optionalDependencies:
@@ -1303,8 +1303,8 @@ importers:
         specifier: workspace:*
         version: link:../jwk
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -1542,8 +1542,8 @@ importers:
         specifier: ^6.19.8
         version: 6.19.8
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@atproto/bsky':
         specifier: workspace:^
@@ -1630,8 +1630,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -1695,8 +1695,8 @@ importers:
         specifier: workspace:^
         version: link:../lexicon
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       typescript:
         specifier: ^5.6.3
@@ -1738,8 +1738,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       zod:
-        specifier: ^3.23.8
-        version: 3.24.2
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@types/express':
         specifier: ^4.17.13
@@ -9824,7 +9824,7 @@ packages:
       devtools-protocol: 0.0.1342118
       mitt: 3.0.1
       urlpattern-polyfill: 10.0.0
-      zod: 3.23.8
+      zod: 3.25.67
     dev: true
 
   /ci-info@3.8.0:
@@ -18275,9 +18275,10 @@ packages:
 
   /zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
-
-  /zod@3.24.2:
-    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+    dev: true
 
   /zod@3.25.67:
     resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
+
+  /zod@4.0.17:
+    resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}

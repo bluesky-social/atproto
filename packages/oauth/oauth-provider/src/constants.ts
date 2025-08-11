@@ -75,3 +75,9 @@ export const SESSION_FIXATION_MAX_AGE = 5 * SECOND
 export const CODE_CHALLENGE_REPLAY_TIMEFRAME = 1 * DAY
 
 export const NODE_ENV = process.env.NODE_ENV || 'production'
+
+/** 5 minutes */
+export const DEFAULT_COOKIE_ROTATION_RATE = 5 * MINUTE
+
+/** 10 years */
+export const DEFAULT_COOKIE_AGE = 10 * YEAR

@@ -74,7 +74,7 @@ export const hcaptchaVerifyResultSchema = z.object({
   /**
    * obj of form: {'ip_device': 1, .. etc}
    */
-  behavior_counts: z.record(z.unknown()).optional(),
+  behavior_counts: z.record(z.string(), z.unknown()).optional(),
   /**
    * how similar is this? (0.0 - 1.0, -1 on err)
    */
@@ -102,11 +102,11 @@ export const hcaptchaVerifyResultSchema = z.object({
   /**
    * Risk Insights (APT + RI)
    */
-  risk_insights: z.record(z.unknown()).optional(),
+  risk_insights: z.record(z.string(), z.unknown()).optional(),
   /**
    * Advanced Threat Signatures (APT)
    */
-  sigs: z.record(z.unknown()).optional(),
+  sigs: z.record(z.string(), z.unknown()).optional(),
   /**
    * tags added via Rules
    */

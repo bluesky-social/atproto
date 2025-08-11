@@ -66,7 +66,7 @@ export const oauthClientMetadataSchema = z.object({
    */
   default_max_age: z.number().optional(),
   require_auth_time: z.boolean().optional(),
-  contacts: z.array(z.string().email()).optional(),
+  contacts: z.array(z.email()).optional(),
   tls_client_certificate_bound_access_tokens: z.boolean().optional(),
 
   // https://datatracker.ietf.org/doc/html/rfc9449#section-5.2

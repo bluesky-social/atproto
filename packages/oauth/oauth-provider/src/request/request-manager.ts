@@ -35,7 +35,7 @@ import { generateRequestId } from './request-id.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
 import {
   RequestUri,
-  decodeRequestUri,
+  decodeRequestUriUnsafe,
   encodeRequestUri,
 } from './request-uri.js'
 
@@ -291,7 +291,7 @@ export class RequestManager {
   }
 
   async get(uri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
-    const id = decodeRequestUri(uri)
+    const id = decodeRequestUriUnsafe(uri)
 
     const data = await this.store.readRequest(id)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
@@ -355,7 +355,7 @@ export class RequestManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
   ): Promise<Code> {
-    const requestId = decodeRequestUri(uri)
+    const requestId = decodeRequestUriUnsafe(uri)
 
     const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
@@ -442,7 +442,7 @@ export class RequestManager {
   }
 
   async delete(uri: RequestUri): Promise<void> {
-    const id = decodeRequestUri(uri)
+    const id = decodeRequestUriUnsafe(uri)
     await this.store.deleteRequest(id)
   }
 }

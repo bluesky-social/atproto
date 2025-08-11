@@ -1,4 +1,4 @@
-import { ZodError, ZodIssue, ZodIssueCode } from 'zod'
+import { ZodError, z } from 'zod'
 
 export function formatZodError(err: ZodError, prefix?: string): string {
   const message = err.issues.length
@@ -7,10 +7,10 @@ export function formatZodError(err: ZodError, prefix?: string): string {
   return prefix ? `${prefix}: ${message}` : message
 }
 
-export function formatZodIssue(issue: ZodIssue): string {
-  if (issue.code === ZodIssueCode.invalid_union) {
-    return issue.unionErrors
-      .map((err) => err.issues.map(formatZodIssue).join('; '))
+function formatZodIssue(issue: z.core.$ZodIssue): string {
+  if (issue.code === 'invalid_union') {
+    return issue.errors
+      .map((issues) => issues.map(formatZodIssue).join('; '))
       .join(', or ')
   }
 

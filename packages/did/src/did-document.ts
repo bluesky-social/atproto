@@ -6,14 +6,7 @@ import { Did, didSchema } from './did.js'
  *
  * @see {@link https://www.rfc-editor.org/rfc/rfc3986}
  */
-const rfc3968UriSchema = z.string().refine((data) => {
-  try {
-    new URL(data)
-    return true
-  } catch {
-    return false
-  }
-}, 'RFC3968 compliant URI')
+const rfc3968UriSchema = z.url({ error: 'RFC3968 compliant URI' })
 
 const didControllerSchema = z.union([didSchema, z.array(didSchema)])
 
@@ -53,6 +46,11 @@ const didServiceIdSchema = didRelativeUriSchema
  */
 const didServiceTypeSchema = z.union([z.string(), z.array(z.string())])
 
+const didServiceEndpointUriSchema = z.union([
+  rfc3968UriSchema,
+  z.record(z.string(), rfc3968UriSchema),
+])
+
 /**
  * The value of the serviceEndpoint property MUST be a string, a map, or a set
  * composed of one or more strings and/or maps. All string values MUST be valid
@@ -61,12 +59,11 @@ const didServiceTypeSchema = z.union([z.string(), z.array(z.string())])
  * applicable URI scheme specification.
  */
 const didServiceEndpointSchema = z.union([
-  rfc3968UriSchema,
-  z.record(z.string(), rfc3968UriSchema),
-  z
-    .array(z.union([rfc3968UriSchema, z.record(z.string(), rfc3968UriSchema)]))
-    .nonempty(),
+  didServiceEndpointUriSchema,
+  z.tuple([didServiceEndpointUriSchema], didServiceEndpointUriSchema),
 ])
+
+export type DidServiceEndpoint = z.infer<typeof didServiceEndpointSchema>
 
 /**
  * Each service map MUST contain id, type, and serviceEndpoint properties.
@@ -94,10 +91,9 @@ export const didDocumentSchema = z.object({
   '@context': z.union([
     z.literal('https://www.w3.org/ns/did/v1'),
     z
-      .array(z.string().url())
-      .nonempty()
+      .tuple([z.url()], z.url())
       .refine((data) => data[0] === 'https://www.w3.org/ns/did/v1', {
-        message: 'First @context must be https://www.w3.org/ns/did/v1',
+        error: 'First @context must be https://www.w3.org/ns/did/v1',
       }),
   ]),
   id: didSchema,
@@ -131,10 +127,11 @@ export const didDocumentValidator = didDocumentSchema
         if (!visited.has(serviceId)) {
           visited.add(serviceId)
         } else {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+          ctx.issues.push({
+            code: 'custom',
             message: `Duplicate service id (${current.id}) found in the document`,
             path: ['service', i, 'id'],
+            input: '',
           })
         }
       }
