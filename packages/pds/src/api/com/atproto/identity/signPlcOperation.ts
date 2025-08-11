@@ -8,7 +8,9 @@ import { resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.signPlcOperation({
-    auth: ctx.authVerifier.accessFull(),
+    auth: ctx.authVerifier.accessFull({
+      additionalOauthScopes: ['transition:identity'],
+    }),
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(
