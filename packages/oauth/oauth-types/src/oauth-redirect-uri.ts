@@ -1,4 +1,4 @@
-import { TypeOf, ZodIssueCode, z } from 'zod'
+import { z } from 'zod'
 import {
   LoopbackUri,
   httpsUriSchema,
@@ -6,8 +6,8 @@ import {
   privateUseUriSchema,
 } from './uri.js'
 
-export const oauthLoopbackRedirectURISchema = loopbackUriSchema.superRefine(
-  (value, ctx): value is Exclude<LoopbackUri, `http://localhost${string}`> => {
+export const oauthLoopbackRedirectURISchema = loopbackUriSchema.transform(
+  (value: LoopbackUri, ctx) => {
     if (value.startsWith('http://localhost')) {
       // https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
       //
@@ -20,25 +20,25 @@ export const oauthLoopbackRedirectURISchema = loopbackUriSchema.superRefine(
       // > susceptible to client-side firewalls and misconfigured host name
       // > resolution on the user's device.
       ctx.addIssue({
-        code: ZodIssueCode.custom,
+        code: 'custom',
         message:
           'Use of "localhost" hostname is not allowed (RFC 8252), use a loopback IP such as "127.0.0.1" instead',
       })
-      return false
+      return z.NEVER
     }
 
-    return true
+    return value as Exclude<LoopbackUri, `http://localhost${string}`>
   },
 )
-export type OAuthLoopbackRedirectURI = TypeOf<
+export type OAuthLoopbackRedirectURI = z.output<
   typeof oauthLoopbackRedirectURISchema
 >
 
 export const oauthHttpsRedirectURISchema = httpsUriSchema
-export type OAuthHttpsRedirectURI = TypeOf<typeof oauthHttpsRedirectURISchema>
+export type OAuthHttpsRedirectURI = z.output<typeof oauthHttpsRedirectURISchema>
 
 export const oauthPrivateUseRedirectURISchema = privateUseUriSchema
-export type OAuthPrivateUseRedirectURI = TypeOf<
+export type OAuthPrivateUseRedirectURI = z.output<
   typeof oauthPrivateUseRedirectURISchema
 >
 
@@ -53,4 +53,4 @@ export const oauthRedirectUriSchema = z.union(
   },
 )
 
-export type OAuthRedirectUri = TypeOf<typeof oauthRedirectUriSchema>
+export type OAuthRedirectUri = z.output<typeof oauthRedirectUriSchema>

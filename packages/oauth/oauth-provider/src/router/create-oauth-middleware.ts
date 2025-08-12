@@ -98,11 +98,11 @@ export function createOAuthMiddleware<
       // https://datatracker.ietf.org/doc/html/rfc6749#autoid-56
 
       const credentials = await oauthClientCredentialsSchema
-        .parseAsync(payload, { path: ['body'] })
+        .parseAsync(payload)
         .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
 
       const authorizationRequest = await oauthAuthorizationRequestParSchema
-        .parseAsync(payload, { path: ['body'] })
+        .parseAsync(payload)
         .catch((err) =>
           throwInvalidRequest(err, 'Invalid authorization request'),
         )
@@ -137,11 +137,11 @@ export function createOAuthMiddleware<
       const clientMetadata = await server.deviceManager.getRequestMetadata(req)
 
       const clientCredentials = await oauthClientCredentialsSchema
-        .parseAsync(payload, { path: ['body'] })
+        .parseAsync(payload)
         .catch((err) => throwInvalidGrant(err, 'Client credentials missing'))
 
       const tokenRequest = await oauthTokenRequestSchema
-        .parseAsync(payload, { path: ['body'] })
+        .parseAsync(payload)
         .catch((err) => throwInvalidGrant(err, 'Invalid request payload'))
 
       const dpopProof = await server.checkDpopProof(
@@ -167,11 +167,11 @@ export function createOAuthMiddleware<
       const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
       const credentials = await oauthClientCredentialsSchema
-        .parseAsync(payload, { path: ['body'] })
+        .parseAsync(payload)
         .catch((err) => throwInvalidRequest(err, 'Client credentials missing'))
 
       const tokenIdentification = await oauthTokenIdentificationSchema
-        .parseAsync(payload, { path: ['body'] })
+        .parseAsync(payload)
         .catch((err) => throwInvalidRequest(err, 'Invalid request payload'))
 
       const dpopProof = await server.checkDpopProof(

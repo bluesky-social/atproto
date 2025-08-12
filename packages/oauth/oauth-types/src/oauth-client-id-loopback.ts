@@ -1,4 +1,4 @@
-import { TypeOf, ZodIssueCode } from 'zod'
+import { z } from 'zod'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
   OAuthLoopbackRedirectURI,
@@ -9,25 +9,27 @@ import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 
 const PREFIX = 'http://localhost'
 
-export const oauthClientIdLoopbackSchema = oauthClientIdSchema.superRefine(
-  (value, ctx): value is `${typeof PREFIX}${'' | '/'}${'' | `?${string}`}` => {
+export const oauthClientIdLoopbackSchema = oauthClientIdSchema.transform(
+  (input, ctx) => {
     try {
-      assertOAuthLoopbackClientId(value)
-      return true
+      assertOAuthLoopbackClientId(input)
+      return input as OAuthClientIdLoopback
     } catch (error) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
+      ctx.issues.push({
+        input,
+        code: 'custom',
         message:
           error instanceof TypeError
             ? error.message
             : 'Invalid loopback client ID',
       })
-      return false
+      return z.NEVER
     }
   },
 )
 
-export type OAuthClientIdLoopback = TypeOf<typeof oauthClientIdLoopbackSchema>
+export type OAuthClientIdLoopback =
+  `${typeof PREFIX}${'' | '/'}${'' | `?${string}`}`
 
 export function isOAuthClientIdLoopback(
   clientId: string,

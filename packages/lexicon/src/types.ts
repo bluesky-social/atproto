@@ -190,6 +190,7 @@ export const lexObject = z
     required: z.string().array().optional(),
     nullable: z.string().array().optional(),
     properties: z.record(
+      z.string(),
       z.discriminatedUnion('type', [
         lexArray,
 
@@ -222,6 +223,7 @@ export const lexXrpcParameters = z
     description: z.string().optional(),
     required: z.string().array().optional(),
     properties: z.record(
+      z.string(),
       z.discriminatedUnion('type', [
         lexPrimitiveArray,
 
@@ -316,96 +318,40 @@ export type LexRecord = z.infer<typeof lexRecord>
 // core
 // =
 
-// We need to use `z.custom` here because
-// lexXrpcProperty and lexObject are refined
-// `z.union` would work, but it's too slow
-// see #915 for details
-export const lexUserType = z.custom<
-  | LexRecord
-  | LexXrpcQuery
-  | LexXrpcProcedure
-  | LexXrpcSubscription
-  | LexBlob
-  | LexArray
-  | LexToken
-  | LexObject
-  | LexBoolean
-  | LexInteger
-  | LexString
-  | LexBytes
-  | LexCidLink
-  | LexUnknown
->(
-  (val) => {
-    if (!val || typeof val !== 'object') {
-      return
-    }
-
-    if (val['type'] === undefined) {
-      return
-    }
-
-    switch (val['type']) {
-      case 'record':
-        return lexRecord.parse(val)
-
-      case 'query':
-        return lexXrpcQuery.parse(val)
-      case 'procedure':
-        return lexXrpcProcedure.parse(val)
-      case 'subscription':
-        return lexXrpcSubscription.parse(val)
-
-      case 'blob':
-        return lexBlob.parse(val)
-
-      case 'array':
-        return lexArray.parse(val)
-      case 'token':
-        return lexToken.parse(val)
-      case 'object':
-        return lexObject.parse(val)
-
-      case 'boolean':
-        return lexBoolean.parse(val)
-      case 'integer':
-        return lexInteger.parse(val)
-      case 'string':
-        return lexString.parse(val)
-      case 'bytes':
-        return lexBytes.parse(val)
-      case 'cid-link':
-        return lexCidLink.parse(val)
-      case 'unknown':
-        return lexUnknown.parse(val)
-    }
-  },
-  (val) => {
-    if (!val || typeof val !== 'object') {
-      return {
-        message: 'Must be an object',
-        fatal: true,
+export const lexUserType = z.discriminatedUnion(
+  'type',
+  [
+    lexRecord,
+    lexXrpcQuery,
+    lexXrpcProcedure,
+    lexXrpcSubscription,
+    lexBlob,
+    lexArray,
+    lexToken,
+    lexObject,
+    lexBoolean,
+    lexInteger,
+    lexString,
+    lexBytes,
+    lexCidLink,
+    lexUnknown,
+  ],
+  {
+    error: ({ input }) => {
+      if (!input || typeof input !== 'object') {
+        return 'Must be an object'
       }
-    }
 
-    if (val['type'] === undefined) {
-      return {
-        message: 'Must have a type',
-        fatal: true,
+      if (input['type'] === undefined) {
+        return 'Must have a type'
       }
-    }
 
-    if (typeof val['type'] !== 'string') {
-      return {
-        message: 'Type property must be a string',
-        fatal: true,
+      if (typeof input['type'] !== 'string') {
+        return '"type" property must be a string'
       }
-    }
 
-    return {
-      message: `Invalid type: ${val['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
-      fatal: true,
-    }
+      return `Invalid type: ${input['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`
+    },
   },
 )
 export type LexUserType = z.infer<typeof lexUserType>
@@ -418,7 +364,7 @@ export const lexiconDoc = z
     }),
     revision: z.number().optional(),
     description: z.string().optional(),
-    defs: z.record(lexUserType),
+    defs: z.record(z.string(), lexUserType),
   })
   .strict()
   .superRefine((doc, ctx) => {
@@ -432,7 +378,7 @@ export const lexiconDoc = z
           def.type === 'subscription')
       ) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message: `Records, procedures, queries, and subscriptions must be the main definition.`,
         })
       }

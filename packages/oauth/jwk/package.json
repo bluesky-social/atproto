@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "multiformats": "^9.9.0",
-    "zod": "^3.23.8"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

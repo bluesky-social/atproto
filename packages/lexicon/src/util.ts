@@ -30,7 +30,7 @@ export function requiredPropertiesRefinement<
 
   if (!Array.isArray(object.required)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.invalid_type,
+      code: 'invalid_type',
       received: typeof object.required,
       expected: 'array',
     })
@@ -40,7 +40,7 @@ export function requiredPropertiesRefinement<
   if (object.properties === undefined) {
     if (object.required.length > 0) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: `Required fields defined but no properties defined`,
       })
     }
@@ -50,7 +50,7 @@ export function requiredPropertiesRefinement<
   for (const field of object.required) {
     if (object.properties[field] === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: `Required field "${field}" not defined`,
       })
     }

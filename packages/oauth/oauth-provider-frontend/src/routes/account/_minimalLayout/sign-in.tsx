@@ -72,18 +72,19 @@ function LoginForm() {
     validators: {
       onSubmit: z.object({
         identifier: z.union([
-          z.string().email(),
+          z.email(),
           z
             .string()
             .transform((v) => (v.startsWith('@') ? v.slice(1) : v))
-            .superRefine((v, ctx) => {
+            .transform((v, ctx) => {
               try {
                 return normalizeAndEnsureValidHandle(v)
               } catch (err) {
                 ctx.addIssue({
-                  code: z.ZodIssueCode.custom,
+                  code: 'custom',
                   message: _(msg`Invalid handle`),
                 })
+                return z.NEVER
               }
             }),
         ]),

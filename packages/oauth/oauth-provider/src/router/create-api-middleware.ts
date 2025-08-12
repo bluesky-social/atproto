@@ -628,7 +628,7 @@ export function createApiMiddleware<
   >
 
   type InferValidation<S extends void | z.ZodTypeAny> = S extends z.ZodTypeAny
-    ? z.infer<S>
+    ? z.output<S>
     : void
 
   /**
@@ -671,7 +671,10 @@ export function createApiMiddleware<
     )
   }
 
-  function apiMiddleware<C extends RouterCtx, S extends void | z.ZodTypeAny>({
+  function apiMiddleware<
+    C extends RouterCtx,
+    S extends void | z.ZodTypeAny<any, any>,
+  >({
     method,
     schema,
     rotateDeviceCookies,
@@ -695,12 +698,12 @@ export function createApiMiddleware<
         : method === 'POST'
           ? async function (req) {
               const body = await parseHttpRequest(req, ['json'])
-              return schema.parseAsync(body, { path: ['body'] })
+              return schema.parseAsync(body)
             }
           : async function (req) {
               await flushStream(req)
               const query = Object.fromEntries(this.url.searchParams)
-              return schema.parseAsync(query, { path: ['query'] })
+              return schema.parseAsync(query)
             }
 
     return jsonHandler<C, Req, Res>(async function (req, res) {

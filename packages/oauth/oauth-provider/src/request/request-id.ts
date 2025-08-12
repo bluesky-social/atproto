@@ -8,13 +8,15 @@ export const REQUEST_ID_LENGTH =
 export const requestIdSchema = z
   .string()
   .length(REQUEST_ID_LENGTH)
-  .refine(
-    (v): v is `${typeof REQUEST_ID_PREFIX}${string}` =>
-      v.startsWith(REQUEST_ID_PREFIX),
-    {
-      message: `Invalid request ID format`,
-    },
-  )
+  .transform((input, ctx) => {
+    if (!input.startsWith(REQUEST_ID_PREFIX)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `Request ID must start with "${REQUEST_ID_PREFIX}"`,
+      })
+    }
+    return input as `${typeof REQUEST_ID_PREFIX}${string}`
+  })
 
 export type RequestId = z.infer<typeof requestIdSchema>
 export const generateRequestId = async (): Promise<RequestId> => {

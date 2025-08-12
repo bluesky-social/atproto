@@ -33,7 +33,7 @@ export const jwkBaseSchema = z.object({
   x5c: z.array(z.string()).optional(), // X.509 Certificate Chain
   x5t: z.string().min(1).optional(), // X.509 Certificate SHA-1 Thumbprint
   'x5t#S256': z.string().min(1).optional(), // X.509 Certificate SHA-256 Thumbprint
-  x5u: z.string().url().optional(), // X.509 URL
+  x5u: z.url().optional(), // X.509 URL
 })
 
 /**

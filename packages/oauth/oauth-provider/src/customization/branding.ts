@@ -4,7 +4,7 @@ import { linksSchema } from './links.js'
 
 export const brandingSchema = z.object({
   name: z.string().optional(),
-  logo: z.string().url().optional(),
+  logo: z.url().optional(),
   colors: colorsSchema.optional(),
   links: z.array(linksSchema).optional(),
 })

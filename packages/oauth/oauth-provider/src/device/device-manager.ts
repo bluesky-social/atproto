@@ -1,6 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { z } from 'zod'
-import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
+import {
+  DEFAULT_COOKIE_ROTATION_RATE,
+  SESSION_FIXATION_MAX_AGE,
+} from '../constants.js'
 import { parseHttpCookies } from '../lib/http/index.js'
 import {
   RequestMetadata,
@@ -20,63 +23,54 @@ import { generateSessionId, sessionIdSchema } from './session-id.js'
 /**
  * @see {@link https://www.npmjs.com/package/keygrip | Keygrip}
  */
-export const keygripSchema = z.object({
-  sign: z.function().args(z.any()).returns(z.string()),
-  verify: z.function().args(z.any(), z.string()).returns(z.boolean()),
-  index: z.function().args(z.any(), z.string()).returns(z.number()),
-})
+export type KeygripLike = {
+  sign: (data: unknown) => string
+  verify: (data: unknown, signature: string) => boolean
+  index: (data: unknown, signature: string) => number
+}
 
-export const deviceManagerOptionsSchema = z.object({
+export type DeviceManagerOptions = {
   /**
    * Controls whether the IP address is read from the `X-Forwarded-For` header
    * (if `true`), or from the `req.socket.remoteAddress` property (if `false`).
    */
-  trustProxy: z
-    .function()
-    .args<[addr: z.ZodString, i: z.ZodNumber]>(z.string(), z.number())
-    .returns(z.boolean())
-    .optional(),
+  trustProxy?: (addr: string, i: number) => boolean
 
   /**
    * Amount of time (in ms) after which session IDs will be rotated
    *
    * @default 300e3 // (5 minutes)
    */
-  rotationRate: z.number().default(300e3),
+  rotationRate?: number
+
   /**
    * Cookie options
    */
-  cookie: z
-    .object({
-      keys: keygripSchema.optional(),
-      /**
-       * Amount of time (in ms) after which the session cookie will expire.
-       * If set to `null`, the cookie will be a session cookie (deleted when the
-       * browser is closed).
-       *
-       * @default 10 years
-       */
-      age: z
-        .number()
-        .nullable()
-        .default(10 * 365.2 * 24 * 60 * 60e3),
-      /**
-       * Controls whether the cookie is only sent over HTTPS (if `true`), or also
-       * over HTTP (if `false`). This should **NOT** be set to `false` in
-       * production.
-       */
-      secure: z.boolean().default(true),
-      /**
-       * Controls whether the cookie is sent along with cross-site requests.
-       *
-       * @default 'lax'
-       */
-      sameSite: z.enum(['lax', 'strict']).default('lax'),
-    })
-    .default({}),
-})
-
-export type DeviceManagerOptions = z.input<typeof deviceManagerOptionsSchema>
+  cookie?: {
+    /**
+     * Cookie signing keys
+     */
+    keys?: KeygripLike
+    /**
+     * Amount of time (in ms) after which the session cookie will expire.
+     * If set to `null`, the cookie will be a session cookie (deleted when the
+     * browser is closed).
+     *
+     * @default 10 years
+     */
+    age?: number | null /**
+     * Controls whether the cookie is only sent over HTTPS (if `true`), or also
+     * over HTTP (if `false`). This should **NOT** be set to `false` in
+     * production.
+     */
+    secure?: boolean /**
+     * Controls whether the cookie is sent along with cross-site requests.
+     *
+     * @default 'lax'
+     */
+    sameSite?: 'lax' | 'strict'
+  }
+}
 
 type CookieValue = {
   deviceId: DeviceId
@@ -94,14 +88,10 @@ export type DeviceInfo = {
  * identify the session.
  */
 export class DeviceManager {
-  private readonly options: z.infer<typeof deviceManagerOptionsSchema>
-
   constructor(
     private readonly store: DeviceStore,
-    options: DeviceManagerOptions = {},
-  ) {
-    this.options = deviceManagerOptionsSchema.parse(options)
-  }
+    private readonly options: DeviceManagerOptions = {},
+  ) {}
 
   public async load(
     req: IncomingMessage,
@@ -174,7 +164,7 @@ export class DeviceManager {
       forceRotate ||
       deviceMetadata.ipAddress !== data.ipAddress ||
       deviceMetadata.userAgent !== data.userAgent ||
-      age > this.options.rotationRate
+      age > (this.options.rotationRate ?? DEFAULT_COOKIE_ROTATION_RATE)
     ) {
       await this.rotate(req, res, deviceId, {
         ipAddress: deviceMetadata.ipAddress,
@@ -256,7 +246,7 @@ export class DeviceManager {
   private parseCookie<T>(
     cookies: Record<string, string | undefined>,
     name: string,
-    schema: z.ZodType<T> | z.ZodEffects<z.ZodTypeAny, T, string>,
+    schema: z.ZodType<T>,
   ): null | { value: T; mustRotate: boolean } {
     const rawValue = Object.hasOwn(cookies, name) ? cookies[name] : null
     if (!rawValue) return null
@@ -266,7 +256,7 @@ export class DeviceManager {
 
     const value = result.data
 
-    if (this.options.cookie.keys) {
+    if (this.options.cookie?.keys) {
       const hashName = `${name}:hash`
 
       const hash = Object.hasOwn(cookies, hashName) ? cookies[hashName] : null
@@ -293,19 +283,19 @@ export class DeviceManager {
   private writeCookie(res: ServerResponse, name: string, value?: string) {
     const cookieOptions = {
       maxAge: value
-        ? this.options.cookie.age == null
+        ? this.options.cookie?.age == null
           ? undefined
           : this.options.cookie.age / 1000
         : 0,
       httpOnly: true,
       path: '/',
-      secure: this.options.cookie.secure !== false,
-      sameSite: this.options.cookie.sameSite,
+      secure: this.options.cookie?.secure !== false,
+      sameSite: this.options.cookie?.sameSite,
     } as const
 
     setCookie(res, name, value || '', cookieOptions)
 
-    if (this.options.cookie.keys) {
+    if (this.options.cookie?.keys) {
       const hash = value ? this.options.cookie.keys.sign(value) : ''
       setCookie(res, `${name}:hash`, hash, cookieOptions)
     }

@@ -3,7 +3,6 @@ import { isDisposableEmail } from 'disposable-email-domains-js'
 import { z } from 'zod'
 
 export const emailSchema = z
-  .string()
   .email()
   // @NOTE Internally, `zod` uses a regexp for validating emails.. This
   // validation strategy *could* be less permissive in some (edge) cases than
@@ -18,9 +17,9 @@ export const emailSchema = z
   // an email allowed here is in a format that would be rejected by other parts
   // of our systems.
   .refine(isEmailValid, {
-    message: 'Invalid email address',
+    error: 'Invalid email address',
   })
   .refine((email) => !isDisposableEmail(email), {
-    message: 'Disposable email addresses are not allowed',
+    error: 'Disposable email addresses are not allowed',
   })
   .transform((value) => value.toLowerCase())

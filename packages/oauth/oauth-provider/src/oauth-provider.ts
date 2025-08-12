@@ -57,11 +57,7 @@ import {
   customizationSchema,
 } from './customization/customization.js'
 import { DeviceId } from './device/device-id.js'
-import {
-  DeviceManager,
-  DeviceManagerOptions,
-  deviceManagerOptionsSchema,
-} from './device/device-manager.js'
+import { DeviceManager, DeviceManagerOptions } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
@@ -283,8 +279,7 @@ export class OAuthProvider extends OAuthVerifier {
     // Customization
     ...rest
   }: OAuthProviderOptions) {
-    const deviceManagerOptions: DeviceManagerOptions =
-      deviceManagerOptionsSchema.parse(rest)
+    const deviceManagerOptions: DeviceManagerOptions = rest
 
     // @NOTE: hooks don't really need a type parser, as all zod can actually
     // check at runtime is the fact that the values are functions. The only way
@@ -534,7 +529,7 @@ export class OAuthProvider extends OAuthVerifier {
     // PAR
     if ('request_uri' in query) {
       const requestUri = await requestUriSchema
-        .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
+        .parseAsync(query.request_uri)
         .catch((err) => {
           const msg = formatError(err, 'Invalid "request_uri" query parameter')
           throw new InvalidRequestError(msg, err)
@@ -862,12 +857,10 @@ export class OAuthProvider extends OAuthVerifier {
     input: OAuthAuthorizationCodeGrantTokenRequest,
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
-    const code = await codeSchema
-      .parseAsync(input.code, { path: ['code'] })
-      .catch((err) => {
-        const msg = formatError(err, 'Invalid code')
-        throw new InvalidGrantError(msg, err)
-      })
+    const code = await codeSchema.parseAsync(input.code).catch((err) => {
+      const msg = formatError(err, 'Invalid code')
+      throw new InvalidGrantError(msg, err)
+    })
 
     const data = await this.requestManager
       .consumeCode(code)
@@ -986,7 +979,7 @@ export class OAuthProvider extends OAuthVerifier {
     dpopProof: null | DpopProof,
   ): Promise<OAuthTokenResponse> {
     const refreshToken = await refreshTokenSchema
-      .parseAsync(input.refresh_token, { path: ['refresh_token'] })
+      .parseAsync(input.refresh_token)
       .catch((err) => {
         const msg = formatError(err, 'Invalid refresh token')
         throw new InvalidGrantError(msg, err)

@@ -6,14 +6,14 @@ export const rgbColorSchema = z.string().transform((value, ctx): RgbColor => {
     const parsed = parseColor(value)
     if ('a' in parsed && parsed.a !== undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Alpha values are not supported',
       })
     }
     return parsed
   } catch (e) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: e instanceof Error ? e.message : 'Invalid color value',
     })
     return z.NEVER
