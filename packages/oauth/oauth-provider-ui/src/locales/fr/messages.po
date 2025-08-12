@@ -499,7 +499,7 @@ msgstr "Ce pseudonyme ne peut pas être utilisé"
 
 #: src/components/utils/scope-description.tsx:97
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
-msgstr "L'application demande un contrôle total sur votre identité réseau, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>voler</1>, votre compte. Accordez cette permission uniquement aux applications auxquelles vous faites vraiment confiance."
+msgstr "L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>usurper</1>, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance."
 
 #: src/components/utils/scope-description.tsx:436
 msgid "The application is asking for permissions to uniquely identify you when performing the following actions on your behalf:"

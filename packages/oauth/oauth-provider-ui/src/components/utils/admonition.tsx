@@ -50,9 +50,7 @@ export const Admonition = memo(function Admonition({
       <Icon aria-hidden className={clsx('size-6 fill-current', titleColor)} />
 
       <div className="flex flex-1 flex-col justify-center space-y-1">
-        {title && (
-          <h3 className={`text-md font-bold ${titleColor}`}>{title}</h3>
-        )}
+        {title && <h3 className={`text-md ${titleColor}`}>{title}</h3>}
         {children && <div className="text-sm">{children}</div>}
         {append}
       </div>
