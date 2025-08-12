@@ -17,6 +17,9 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
+import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
+import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
@@ -326,6 +329,7 @@ export class AppNS {
 export class AppBskyNS {
   _server: Server
   actor: AppBskyActorNS
+  bookmark: AppBskyBookmarkNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -338,6 +342,7 @@ export class AppBskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new AppBskyActorNS(server)
+    this.bookmark = new AppBskyBookmarkNS(server)
     this.embed = new AppBskyEmbedNS(server)
     this.feed = new AppBskyFeedNS(server)
     this.graph = new AppBskyGraphNS(server)
@@ -437,6 +442,50 @@ export class AppBskyActorNS {
     >,
   ) {
     const nsid = 'app.bsky.actor.searchActorsTypeahead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyBookmarkNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createBookmark<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyBookmarkCreateBookmark.QueryParams,
+      AppBskyBookmarkCreateBookmark.HandlerInput,
+      AppBskyBookmarkCreateBookmark.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.bookmark.createBookmark' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteBookmark<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyBookmarkDeleteBookmark.QueryParams,
+      AppBskyBookmarkDeleteBookmark.HandlerInput,
+      AppBskyBookmarkDeleteBookmark.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.bookmark.deleteBookmark' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getBookmarks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyBookmarkGetBookmarks.QueryParams,
+      AppBskyBookmarkGetBookmarks.HandlerInput,
+      AppBskyBookmarkGetBookmarks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.bookmark.getBookmarks' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

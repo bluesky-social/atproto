@@ -1251,6 +1251,40 @@ message GetRecordTakedownResponse {
 }
 
 
+//
+// Bookmarks
+//
+
+message GetBookmarkUrisRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetBookmarkUrisResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+message GetBookmarksByActorAndUrisRequest {
+  string actor_did = 1;
+  repeated string uris = 2;
+}
+
+message Bookmark {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  // uri of the bookmarked record.
+  string uri = 4;
+  google.protobuf.Timestamp indexed_at = 5;
+}
+
+message GetBookmarksByActorAndUrisResponse {
+  repeated Bookmark bookmarks = 1;
+}
+
+
 // Polo-backed Graph Endpoints
 
 
@@ -1273,7 +1307,6 @@ message GetFollowsFollowingResponse {
 // Ping
 message PingRequest {}
 message PingResponse {}
-
 
 
 
@@ -1413,6 +1446,10 @@ service Service {
   rpc GetBlobTakedown(GetBlobTakedownRequest) returns (GetBlobTakedownResponse);
   rpc GetRecordTakedown(GetRecordTakedownRequest) returns (GetRecordTakedownResponse);
   rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
+
+  // Bookmarks
+  rpc GetBookmarkUris(GetBookmarkUrisRequest) returns (GetBookmarkUrisResponse);
+  rpc GetBookmarksByActorAndUris(GetBookmarksByActorAndUrisRequest) returns (GetBookmarksByActorAndUrisResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);

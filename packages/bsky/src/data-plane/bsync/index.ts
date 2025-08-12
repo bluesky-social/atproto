@@ -8,6 +8,7 @@ import { TID } from '@atproto/common'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
+import { Bookmark } from '../../lexicon/types/app/bsky/bookmark/defs'
 import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
 import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
 import { httpLogger } from '../../logger'
@@ -164,27 +165,21 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       await handleGenericOperation(db, req, now)
 
       // Maintain bespoke indexes for certain namespaces.
-      if (
-        namespace ===
-        Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
-      ) {
-        await handleSubjectActivitySubscriptionOperation(db, req, now).catch(
-          (err: unknown) =>
-            httpLogger.warn(
-              { err, namespace },
-              'mock bsync put operation failed',
-            ),
-        )
-      } else if (
-        namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
-      ) {
-        await handleAgeAssuranceEventOperation(db, req, now).catch(
-          (err: unknown) =>
-            httpLogger.warn(
-              { err, namespace },
-              'mock bsync put operation failed',
-            ),
-        )
+      try {
+        if (
+          namespace ===
+          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
+        ) {
+          await handleSubjectActivitySubscriptionOperation(db, req, now)
+        } else if (
+          namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
+        ) {
+          await handleAgeAssuranceEventOperation(db, req, now)
+        } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark) {
+          await handleBookmarkOperation(db, req, now)
+        }
+      } catch (err) {
+        httpLogger.warn({ err, namespace }, 'mock bsync put operation failed')
       }
 
       return {
@@ -317,4 +312,36 @@ const handleAgeAssuranceEventOperation = async (
     .set(update)
     .where('did', '=', actorDid)
     .execute()
+}
+
+const handleBookmarkOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, key, method, payload } = req
+
+  if (method === Method.CREATE) {
+    const parsed = jsonStringToLex(
+      Buffer.from(payload).toString('utf8'),
+    ) as Bookmark
+    const { uri } = parsed
+    return db.db
+      .insertInto('bookmark')
+      .values({
+        creator: actorDid,
+        key,
+        indexedAt: now,
+        uri,
+      })
+      .execute()
+  }
+
+  if (method === Method.DELETE) {
+    return db.db
+      .deleteFrom('bookmark')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
+      .execute()
+  }
 }

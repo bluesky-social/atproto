@@ -1,6 +1,7 @@
 import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
+import { Bookmark } from './lexicon/types/app/bsky/bookmark/defs'
 import {
   Preferences,
   SubjectActivitySubscription,
@@ -11,6 +12,8 @@ import { Method } from './proto/bsync_pb'
 type PickNSID<T extends { $type?: string }> = Exclude<T['$type'], undefined>
 
 export const Namespaces = {
+  AppBskyBookmarkDefsBookmark:
+    'app.bsky.bookmark.defs#bookmark' satisfies PickNSID<Bookmark>,
   AppBskyNotificationDefsPreferences:
     'app.bsky.notification.defs#preferences' satisfies PickNSID<Preferences>,
   AppBskyNotificationDefsSubjectActivitySubscription:

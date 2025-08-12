@@ -68,6 +68,10 @@ import {
   GetBlockRecordsResponse,
   GetBlocksRequest,
   GetBlocksResponse,
+  GetBookmarksByActorAndUrisRequest,
+  GetBookmarksByActorAndUrisResponse,
+  GetBookmarkUrisRequest,
+  GetBookmarkUrisResponse,
   GetCountsForUsersRequest,
   GetCountsForUsersResponse,
   GetDidsByHandlesRequest,
@@ -1007,6 +1011,26 @@ export const Service = {
       name: 'GetActorTakedown',
       I: GetActorTakedownRequest,
       O: GetActorTakedownResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Bookmarks
+     *
+     * @generated from rpc bsky.Service.GetBookmarkUris
+     */
+    getBookmarkUris: {
+      name: 'GetBookmarkUris',
+      I: GetBookmarkUrisRequest,
+      O: GetBookmarkUrisResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetBookmarksByActorAndUris
+     */
+    getBookmarksByActorAndUris: {
+      name: 'GetBookmarksByActorAndUris',
+      I: GetBookmarksByActorAndUrisRequest,
+      O: GetBookmarksByActorAndUrisResponse,
       kind: MethodKind.Unary,
     },
     /**

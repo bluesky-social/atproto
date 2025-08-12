@@ -1165,6 +1165,145 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyBookmarkCreateBookmark: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.createBookmark',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Creates a private bookmark for the specified at-uri record. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
+                description:
+                  'The at-uri of the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported.',
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'Duplicated',
+            description:
+              'A bookmark with the specified parameters already exists.',
+          },
+          {
+            name: 'UnsupportedCollection',
+            description:
+              'The URI to be bookmarked is for an unsupported collection.',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyBookmarkDefs: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.defs',
+    defs: {
+      bookmark: {
+        description: 'Object used to store bookmark data in stash.',
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            description:
+              'The at-uri of the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported.',
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyBookmarkDeleteBookmark: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.deleteBookmark',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Deletes a private bookmark for the specified at-uri record. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
+                description:
+                  'The at-uri of the record to be removed from bookmarks. Currently, only `app.bsky.feed.post` records are supported.',
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description:
+              'A bookmark with the specified parameters was not found.',
+          },
+          {
+            name: 'UnsupportedCollection',
+            description:
+              'The URI to be bookmarked is for an unsupported collection.',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyBookmarkGetBookmarks: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.getBookmarks',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Gets views of records bookmarked by the authenticated user. Requires authentication.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['bookmarks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              bookmarks: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: ['lex:app.bsky.feed.defs#postView'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedDefs: {
     lexicon: 1,
     id: 'app.bsky.embed.defs',
@@ -13623,6 +13762,10 @@ export const ids = {
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
   AppBskyActorStatus: 'app.bsky.actor.status',
+  AppBskyBookmarkCreateBookmark: 'app.bsky.bookmark.createBookmark',
+  AppBskyBookmarkDefs: 'app.bsky.bookmark.defs',
+  AppBskyBookmarkDeleteBookmark: 'app.bsky.bookmark.deleteBookmark',
+  AppBskyBookmarkGetBookmarks: 'app.bsky.bookmark.getBookmarks',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
