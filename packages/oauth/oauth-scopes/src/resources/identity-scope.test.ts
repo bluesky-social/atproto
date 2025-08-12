@@ -9,18 +9,6 @@ describe('IdentityScope', () => {
         expect(scope!.attr).toBe('handle')
       })
 
-      it('properly parse "identity:handle?action=manage"', () => {
-        const scope = IdentityScope.fromString('identity:handle?action=manage')
-        expect(scope).not.toBeNull()
-        expect(scope!.attr).toBe('handle')
-      })
-
-      it('properly parse "identity:handle?action=submit"', () => {
-        const scope = IdentityScope.fromString('identity:handle?action=submit')
-        expect(scope).not.toBeNull()
-        expect(scope!.attr).toBe('handle')
-      })
-
       it('should parse valid identity scope with wildcard attribute', () => {
         const scope = IdentityScope.fromString('identity:*')
         expect(scope).not.toBeNull()
@@ -34,6 +22,8 @@ describe('IdentityScope', () => {
 
       for (const invalid of [
         'identity:*?action=*',
+        'identity:*?action=manage',
+        'identity:*?action=submit',
         'invalid',
         'identity:invalid',
         'identity:handle?action=invalid',
@@ -55,11 +45,6 @@ describe('IdentityScope', () => {
         const scope = IdentityScope.scopeNeededFor({ attr: '*' })
         expect(scope).toBe('identity:*')
       })
-
-      it('should return scope that accepts all attributes with manage action', () => {
-        const scope = IdentityScope.scopeNeededFor({ attr: '*' })
-        expect(scope).toBe('identity:*')
-      })
     })
   })
 
@@ -77,7 +62,6 @@ describe('IdentityScope', () => {
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: '*' })).toBe(true)
         expect(scope!.matches({ attr: 'handle' })).toBe(true)
-        expect(scope!.matches({ attr: 'handle' })).toBe(false)
       })
     })
 
