@@ -24,7 +24,17 @@ export function buildMetadata(
   return oauthAuthorizationServerMetadataValidator.parse({
     issuer,
 
-    scopes_supported: ['atproto'],
+    scopes_supported: [
+      'atproto',
+
+      // These serve as hint that this server supports the transitional scopes.
+      // This is not a specced behavior.
+      'transition:email',
+      'transition:generic',
+      'transition:chat.bsky',
+
+      // Other atproto scopes can't be enumerated as they are dynamic.
+    ],
     subject_types_supported: [
       //
       'public', // The same "sub" is returned for all clients

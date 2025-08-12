@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       const { serviceDid } = input.body
       const { did } = auth.credentials
 
-      if (auth.credentials.type === 'permissions') {
+      if (auth.credentials.type === 'oauth') {
         auth.credentials.permissions.assertRpc({
           aud: `${serviceDid}#bsky_notif`,
           lxm: ids.AppBskyNotificationRegisterPush,

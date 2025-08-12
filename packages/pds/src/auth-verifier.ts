@@ -20,7 +20,6 @@ import {
   MethodAuthVerifier,
   Params,
   XRPCError,
-  excludeErrorResult,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
@@ -28,19 +27,13 @@ import { AccountManager } from './account-manager/account-manager'
 import {
   AccessOutput,
   AdminTokenOutput,
-  AuthorizationOutput,
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
 } from './auth-output'
-import {
-  ACCESS_FULL,
-  ACCESS_STANDARD,
-  AuthScope,
-  isAuthScope,
-} from './auth-scope'
+import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
 import { softDeleted } from './db'
 import { oauthLogger } from './logger'
 import { appendVary } from './util/http'
@@ -130,7 +123,7 @@ export class AuthVerifier {
 
   public adminToken: MethodAuthVerifier<AdminTokenOutput> = async (ctx) => {
     setAuthHeaders(ctx.res)
-    const parsed = parseBasicAuth(ctx.req.headers['authorization'])
+    const parsed = parseBasicAuth(ctx.req)
     if (!parsed) {
       throw new AuthRequiredError()
     }
@@ -160,14 +153,15 @@ export class AuthVerifier {
 
   public moderator: MethodAuthVerifier<AdminTokenOutput | ModServiceOutput> =
     async (ctx) => {
-      if (isBearerToken(ctx.req)) {
+      const type = extractAuthType(ctx.req)
+      if (type === AuthType.BEARER) {
         return this.modService(ctx)
       } else {
         return this.adminToken(ctx)
       }
     }
 
-  public access<S extends AuthScope>(
+  protected access<S extends AuthScope>(
     options: VerifiedOptions & Required<ScopedOptions<S>>,
   ): MethodAuthVerifier<AccessOutput<S>> {
     const { scopes, ...statusOptions } = options
@@ -197,22 +191,6 @@ export class AuthVerifier {
         credentials: { type: 'access', did, scope },
       }
     }
-  }
-
-  public accessStandard<S extends AuthScope = never>({
-    additional = [],
-    ...options
-  }: VerifiedOptions & ExtraScopedOptions<S> = {}) {
-    const scopes = [...ACCESS_STANDARD, ...additional]
-    return this.access({ ...options, scopes })
-  }
-
-  public accessFull<S extends AuthScope = never>({
-    additional = [],
-    ...options
-  }: VerifiedOptions & ExtraScopedOptions<S> = {}) {
-    const scopes = [...ACCESS_FULL, ...additional]
-    return this.access({ ...options, scopes })
   }
 
   public refresh(options?: {
@@ -253,15 +231,11 @@ export class AuthVerifier {
   public authorization<P extends Params>({
     scopes = ACCESS_STANDARD,
     additional = [],
-    authorize,
     ...options
   }: VerifiedOptions &
     ScopedOptions &
     ExtraScopedOptions &
-    AuthorizedOptions<P>): MethodAuthVerifier<
-    AccessOutput | AuthorizationOutput,
-    P
-  > {
+    AuthorizedOptions<P>): MethodAuthVerifier<AccessOutput | OAuthOutput, P> {
     const access = this.access({
       ...options,
       scopes: [...scopes, ...additional],
@@ -269,33 +243,14 @@ export class AuthVerifier {
     const oauth = this.oauth(options)
 
     return async (ctx) => {
-      const [type] = parseAuthorizationHeader(ctx.req.headers['authorization'])
+      const type = extractAuthType(ctx.req)
 
-      if (type === AuthType.BEARER) return access(ctx)
+      if (type === AuthType.BEARER) {
+        return access(ctx)
+      }
 
       if (type === AuthType.DPOP) {
-        const { credentials } = excludeErrorResult(await oauth(ctx))
-        const permissions = new PermissionSetTransition(
-          credentials.tokenClaims.scope?.split(' '),
-        )
-
-        // Should never happen
-        if (!permissions.scopes.has('atproto')) {
-          throw new InvalidRequestError(
-            'OAuth token does not have "atproto" scope',
-            'InvalidToken',
-          )
-        }
-
-        await authorize(permissions, ctx)
-
-        return {
-          credentials: {
-            type: 'permissions',
-            did: credentials.did,
-            permissions,
-          },
-        }
+        return oauth(ctx)
       }
 
       // Auth headers are set through the access and oauth methods so we only
@@ -316,17 +271,15 @@ export class AuthVerifier {
   public authorizationOrAdminTokenOptional<P extends Params>(
     opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P>,
   ): MethodAuthVerifier<
-    | AuthorizationOutput
-    | AccessOutput
-    | AdminTokenOutput
-    | UnauthenticatedOutput,
+    OAuthOutput | AccessOutput | AdminTokenOutput | UnauthenticatedOutput,
     P
   > {
     const authorization = this.authorization(opts)
     return async (ctx) => {
-      if (isAccessToken(ctx.req)) {
+      const type = extractAuthType(ctx.req)
+      if (type === AuthType.BEARER || type === AuthType.DPOP) {
         return authorization(ctx)
-      } else if (isBasicToken(ctx.req)) {
+      } else if (type === AuthType.BASIC) {
         return this.adminToken(ctx)
       } else {
         return this.unauthenticated(ctx)
@@ -350,7 +303,8 @@ export class AuthVerifier {
   public userServiceAuthOptional: MethodAuthVerifier<
     UserServiceAuthOutput | UnauthenticatedOutput
   > = async (ctx) => {
-    if (isBearerToken(ctx.req)) {
+    const type = extractAuthType(ctx.req)
+    if (type === AuthType.BEARER) {
       return await this.userServiceAuth(ctx)
     } else {
       return this.unauthenticated(ctx)
@@ -362,10 +316,7 @@ export class AuthVerifier {
       ScopedOptions &
       ExtraScopedOptions &
       AuthorizedOptions<P>,
-  ): MethodAuthVerifier<
-    UserServiceAuthOutput | AuthorizationOutput | AccessOutput,
-    P
-  > {
+  ): MethodAuthVerifier<UserServiceAuthOutput | OAuthOutput | AccessOutput, P> {
     const authorizationVerifier = this.authorization(options)
     return async (ctx) => {
       if (isDefinitelyServiceAuth(ctx.req)) {
@@ -376,9 +327,13 @@ export class AuthVerifier {
     }
   }
 
-  public oauth<P extends Params>(
-    verifyStatusOptions: VerifiedOptions = {},
-  ): MethodAuthVerifier<OAuthOutput, P> {
+  protected oauth<P extends Params>({
+    authorize,
+    ...verifyStatusOptions
+  }: VerifiedOptions & AuthorizedOptions<P>): MethodAuthVerifier<
+    OAuthOutput,
+    P
+  > {
     const verifyTokenOptions: VerifyTokenClaimsOptions = {
       audience: [this.dids.pds],
       scope: ['atproto'],
@@ -443,11 +398,25 @@ export class AuthVerifier {
 
       await this.verifyStatus(did, verifyStatusOptions)
 
+      const permissions = new PermissionSetTransition(
+        tokenClaims.scope?.split(' '),
+      )
+
+      // Should never happen
+      if (!permissions.scopes.has('atproto')) {
+        throw new InvalidRequestError(
+          'OAuth token does not have "atproto" scope',
+          'InvalidToken',
+        )
+      }
+
+      await authorize(permissions, ctx)
+
       return {
         credentials: {
           type: 'oauth',
           did,
-          tokenClaims,
+          permissions,
         },
       }
     }
@@ -601,11 +570,7 @@ export class AuthVerifier {
 // ---------
 
 export function isUserOrAdmin(
-  auth:
-    | AccessOutput
-    | AuthorizationOutput
-    | AdminTokenOutput
-    | UnauthenticatedOutput,
+  auth: AccessOutput | OAuthOutput | AdminTokenOutput | UnauthenticatedOutput,
   did: string,
 ): boolean {
   if (!auth.credentials) {
@@ -624,8 +589,9 @@ enum AuthType {
 }
 
 const parseAuthorizationHeader = (
-  authorization?: string,
+  req: IncomingMessage,
 ): [type: null] | [type: AuthType, token: string] => {
+  const authorization = req.headers['authorization']
   if (!authorization) return [null]
 
   const result = authorization.split(' ')
@@ -648,21 +614,6 @@ const parseAuthorizationHeader = (
   )
 }
 
-const isAccessToken = (req: IncomingMessage): boolean => {
-  const [type] = parseAuthorizationHeader(req.headers['authorization'])
-  return type === AuthType.BEARER || type === AuthType.DPOP
-}
-
-const isBearerToken = (req: IncomingMessage): boolean => {
-  const [type] = parseAuthorizationHeader(req.headers['authorization'])
-  return type === AuthType.BEARER
-}
-
-const isBasicToken = (req: IncomingMessage): boolean => {
-  const [type] = parseAuthorizationHeader(req.headers['authorization'])
-  return type === AuthType.BASIC
-}
-
 /**
  * @note Not all service auth tokens are guaranteed to have "lxm" claim, so this
  * function should not be used to verify service auth tokens. It is only used to
@@ -675,16 +626,21 @@ const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
   return payload['lxm'] != null
 }
 
+const extractAuthType = (req: IncomingMessage): AuthType | null => {
+  const [type] = parseAuthorizationHeader(req)
+  return type
+}
+
 const bearerTokenFromReq = (req: IncomingMessage) => {
-  const [type, token] = parseAuthorizationHeader(req.headers['authorization'])
+  const [type, token] = parseAuthorizationHeader(req)
   return type === AuthType.BEARER ? token : null
 }
 
 const parseBasicAuth = (
-  authorizationHeader?: string,
+  req: IncomingMessage,
 ): { username: string; password: string } | null => {
   try {
-    const [type, b64] = parseAuthorizationHeader(authorizationHeader)
+    const [type, b64] = parseAuthorizationHeader(req)
     if (type !== AuthType.BASIC) return null
     const decoded = Buffer.from(b64, 'base64').toString('utf8')
     // We must not use split(':') because the password can contain colons

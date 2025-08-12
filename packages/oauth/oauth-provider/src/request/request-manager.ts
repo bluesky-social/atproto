@@ -388,9 +388,9 @@ export class RequestManager {
       }
 
       // If a new scope value is provided, update the parameters by ensuring
-      // that every scope in the parameters was provided in the new scope.
-      // This allows the user to remove scopes from the request, but not to add
-      // new ones.
+      // that every existing scope in the parameters is also present in the
+      // override value. This allows the user to remove scopes from the request,
+      // but not to add new ones.
       if (scopeOverride != null) {
         const allowedScopes = new Set(scopeOverride.split(' '))
         const existingScopes = parameters.scope?.split(' ')

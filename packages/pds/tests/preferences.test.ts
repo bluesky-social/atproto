@@ -58,7 +58,7 @@ describe('user preferences', () => {
         [{ $type: 'com.atproto.server.defs#unknown' }],
         'com.atproto',
         {
-          fullAccess: true,
+          hasAccessFull: true,
         },
       ),
     )
@@ -112,7 +112,7 @@ describe('user preferences', () => {
       sc.dids.alice,
       (store) =>
         store.pref.getPreferences('com.atproto', {
-          fullAccess: true,
+          hasAccessFull: true,
         }),
     )
     expect(otherPrefs).toEqual([{ $type: 'com.atproto.server.defs#unknown' }])

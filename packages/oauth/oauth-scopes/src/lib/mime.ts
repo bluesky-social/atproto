@@ -50,12 +50,12 @@ export function matchesAccept(accept: Accept, mime: string): boolean {
  * {@link mime} are actually valid values (and could, therefore, lead to false
  * positives if forged values are used).
  */
-export function matchesAnyAcceptUnsafe(
+function matchesAnyAcceptUnsafe(
   acceptable: Iterable<Accept>,
   mime: Mime,
 ): boolean {
   for (const accept of acceptable) {
-    if (matchesAccept(accept, mime)) {
+    if (matchesAcceptUnsafe(accept, mime)) {
       return true
     }
   }

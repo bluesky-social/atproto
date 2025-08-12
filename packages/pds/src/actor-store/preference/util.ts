@@ -3,16 +3,16 @@ const FULL_ACCESS_ONLY_PREFS = new Set([
 ])
 
 export type PrefAllowedOptions = {
-  fullAccess?: boolean
+  hasAccessFull?: boolean
 }
 
 export function prefAllowed(
   prefType: string,
   options?: PrefAllowedOptions,
 ): boolean {
-  if (FULL_ACCESS_ONLY_PREFS.has(prefType)) {
-    return options?.fullAccess === true
+  if (options?.hasAccessFull === true) {
+    return true
   }
 
-  return true
+  return !FULL_ACCESS_ONLY_PREFS.has(prefType)
 }

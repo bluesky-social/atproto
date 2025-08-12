@@ -25,9 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE "exp" is expressed in seconds since epoch, not milliseconds
       const { aud, exp, lxm = null } = params
 
-      // @NOTE Extra authorization checks not performed during auth as "access"
-      // based authentication doesn't provide a way to run custom authorization
-      // logic. "permissions" based authentication were covered during auth.
+      // Takendown accounts should not be able to generate service auth tokens except for methods necessary for account migration
       if (auth.credentials.type === 'access') {
         // @NOTE We should probably use "ForbiddenError" here. Using
         // "InvalidRequestError" for legacy reasons.
@@ -35,15 +33,15 @@ export default function (server: Server, ctx: AppContext) {
           isTakendown(auth.credentials.scope) &&
           lxm !== ids.ComAtprotoServerCreateAccount
         ) {
-          // Takendown accounts should not be able to generate service auth
-          // tokens except for methods necessary for account migration
           throw new InvalidRequestError('Bad token scope', 'InvalidToken')
         }
 
+        // @NOTE "oauth" based credentials already checked through permission
+        // set in "authorize" method above.
         if (
-          !isAccessPrivileged(auth.credentials.scope) &&
-          lxm &&
-          PRIVILEGED_METHODS.has(lxm)
+          lxm != null &&
+          PRIVILEGED_METHODS.has(lxm) &&
+          !isAccessPrivileged(auth.credentials.scope)
         ) {
           throw new InvalidRequestError(
             `insufficient access to request a service auth token for the following method: ${lxm}`,

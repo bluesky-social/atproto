@@ -2,7 +2,7 @@ import { ComAtprotoServerGetSession } from '@atproto/api'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
-import { AccessOutput, AuthorizationOutput } from '../../../../auth-output'
+import { AccessOutput, OAuthOutput } from '../../../../auth-output'
 import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -65,11 +65,11 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function output(
-  { credentials }: AuthorizationOutput | AccessOutput,
+  { credentials }: OAuthOutput | AccessOutput,
   data: ComAtprotoServerGetSession.OutputSchema,
 ): ComAtprotoServerGetSession.OutputSchema {
   if (
-    credentials.type === 'permissions' &&
+    credentials.type === 'oauth' &&
     !credentials.permissions.allowsAccount({ attr: 'email', action: 'read' })
   ) {
     const { email, emailAuthFactor, emailConfirmed, ...rest } = data

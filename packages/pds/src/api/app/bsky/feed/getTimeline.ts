@@ -10,8 +10,7 @@ import {
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx
-  if (!bskyAppView) return
+  if (!ctx.bskyAppView) return
 
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.authorization({

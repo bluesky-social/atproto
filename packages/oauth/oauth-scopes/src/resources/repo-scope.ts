@@ -39,10 +39,14 @@ export class RepoScope {
     public readonly action: NeRoArray<RepoAction>,
   ) {}
 
+  get allowsAnyCollection() {
+    return this.collection.includes('*')
+  }
+
   matches({ action, collection }: RepoScopeMatch): boolean {
     return (
       this.action.includes(action) &&
-      (this.collection.includes('*') ||
+      (this.allowsAnyCollection ||
         (this.collection as readonly string[]).includes(collection))
     )
   }
@@ -50,9 +54,11 @@ export class RepoScope {
   toString(): string {
     // Normalize (compress, de-dupe, sort)
     return repoParser.format({
-      collection: this.collection.includes('*')
+      collection: this.allowsAnyCollection
         ? ['*']
-        : ([...new Set(this.collection)].sort() as [NSID, ...NSID[]]),
+        : this.collection.length > 1
+          ? ([...new Set(this.collection)].sort() as [NSID, ...NSID[]])
+          : this.collection,
       action:
         this.action === REPO_ACTIONS
           ? REPO_ACTIONS // No need to filter if the default was used

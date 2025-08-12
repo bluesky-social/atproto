@@ -4,9 +4,6 @@ import { ResourceSyntax, isScopeForResource } from '../syntax.js'
 const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
 export type IdentityAttribute = (typeof IDENTITY_ATTRIBUTES)[number]
 
-const IDENTITY_ACTIONS = Object.freeze(['manage', 'submit'] as const)
-export type IdentityAction = (typeof IDENTITY_ACTIONS)[number]
-
 export const identityParser = new Parser(
   'identity',
   {

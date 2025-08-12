@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
 
-      if (auth.credentials.type === 'permissions') {
+      if (auth.credentials.type === 'oauth') {
         auth.credentials.permissions.assertRepo({
           action: 'create',
           collection,

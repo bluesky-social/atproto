@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // We can't compute permissions based on the request payload ("input") in
       // the 'auth' phase, so we do it here.
-      if (auth.credentials.type === 'permissions') {
+      if (auth.credentials.type === 'oauth') {
         auth.credentials.permissions.assertRepo({
           action: 'delete',
           collection,
