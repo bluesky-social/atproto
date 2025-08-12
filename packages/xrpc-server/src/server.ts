@@ -295,83 +295,72 @@ export class Server {
     const routeLimiter = this.createRouteRateLimiter(nsid, cfg)
 
     return async function (req, res, next) {
-      try {
-        // parse & validate params
-        const params: Params = paramsVerifier(req)
+      // parse & validate params
+      const params: Params = paramsVerifier(req)
 
-        // authenticate request
-        const auth: A = authVerifier
-          ? await authVerifier({ req, res, params })
-          : (undefined as A)
+      // authenticate request
+      const auth: A = authVerifier
+        ? await authVerifier({ req, res, params })
+        : (undefined as A)
 
-        // parse & validate input
-        const input: Input = await inputVerifier(req, res)
+      // parse & validate input
+      const input: Input = await inputVerifier(req, res)
 
-        const ctx: HandlerContext<A> = {
-          params,
-          input,
-          auth,
-          req,
-          res,
-          resetRouteRateLimits: async () => routeLimiter?.reset(ctx),
-        }
+      const ctx: HandlerContext<A> = {
+        params,
+        input,
+        auth,
+        req,
+        res,
+        resetRouteRateLimits: async () => routeLimiter?.reset(ctx),
+      }
 
-        // handle rate limits
-        if (routeLimiter) await routeLimiter.handle(ctx)
+      // handle rate limits
+      if (routeLimiter) await routeLimiter.handle(ctx)
 
-        // run the handler
-        const output = await cfg.handler(ctx)
+      // run the handler
+      const output = await cfg.handler(ctx)
 
-        if (!output) {
-          validateResOutput?.(output)
-          res.status(200)
-          res.end()
-        } else if (isHandlerPipeThroughStream(output)) {
-          setHeaders(res, output.headers)
-          res.status(200)
+      if (!output) {
+        validateResOutput?.(output)
+        res.status(200)
+        res.end()
+      } else if (isHandlerPipeThroughStream(output)) {
+        setHeaders(res, output.headers)
+        res.status(200)
+        res.header('Content-Type', output.encoding)
+        await pipeline(output.stream, res)
+      } else if (isHandlerPipeThroughBuffer(output)) {
+        setHeaders(res, output.headers)
+        res.status(200)
+        res.header('Content-Type', output.encoding)
+        res.end(output.buffer)
+      } else if (isErrorResult(output)) {
+        next(XRPCError.fromError(output))
+      } else {
+        validateResOutput?.(output)
+
+        res.status(200)
+        setHeaders(res, output.headers)
+
+        if (
+          output.encoding === 'application/json' ||
+          output.encoding === 'json'
+        ) {
+          const json = lexToJson(output.body)
+          res.json(json)
+        } else if (output.body instanceof Readable) {
           res.header('Content-Type', output.encoding)
-          await pipeline(output.stream, res)
-        } else if (isHandlerPipeThroughBuffer(output)) {
-          setHeaders(res, output.headers)
-          res.status(200)
+          await pipeline(output.body, res)
+        } else {
           res.header('Content-Type', output.encoding)
-          res.end(output.buffer)
-        } else if (isErrorResult(output)) {
-          next(XRPCError.fromError(output))
-        } else {
-          validateResOutput?.(output)
-
-          res.status(200)
-          setHeaders(res, output.headers)
-
-          if (
-            output.encoding === 'application/json' ||
-            output.encoding === 'json'
-          ) {
-            const json = lexToJson(output.body)
-            res.json(json)
-          } else if (output.body instanceof Readable) {
-            res.header('Content-Type', output.encoding)
-            await pipeline(output.body, res)
-          } else {
-            res.header('Content-Type', output.encoding)
-            res.send(
-              Buffer.isBuffer(output.body)
-                ? output.body
-                : output.body instanceof Uint8Array
-                  ? Buffer.from(output.body)
-                  : output.body,
-            )
-          }
-        }
-      } catch (err: unknown) {
-        // Express will not call the next middleware (errorMiddleware in this case)
-        // if the value passed to next is false-y (e.g. null, undefined, 0).
-        // Hence we replace it with an InternalServerError.
-        if (!err) {
-          next(new InternalServerError())
-        } else {
-          next(err)
+          res.send(
+            Buffer.isBuffer(output.body)
+              ? output.body
+              : output.body instanceof Uint8Array
+                ? Buffer.from(output.body)
+                : output.body,
+          )
         }
       }
     }
