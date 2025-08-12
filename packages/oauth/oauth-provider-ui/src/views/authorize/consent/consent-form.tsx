@@ -136,7 +136,7 @@ export function ConsentForm({
             </Trans>
           )
         }
-        hint={t`Detailed list of permissions`}
+        hint={t`Technical details`}
       >
         {scope ? (
           <>
@@ -175,7 +175,9 @@ export function ConsentForm({
             href={clientMetadata.tos_uri}
             rel="nofollow noopener"
             target="_blank"
-            className="text-primary underline"
+            className={
+              clientMetadata.tos_uri ? 'text-primary underline' : undefined
+            }
           >
             <Trans>terms of service</Trans>
           </a>
@@ -185,7 +187,9 @@ export function ConsentForm({
             href={clientMetadata.policy_uri}
             rel="nofollow noopener"
             target="_blank"
-            className="text-primary underline"
+            className={
+              clientMetadata.policy_uri ? 'text-primary underline' : undefined
+            }
           >
             <Trans>privacy policy</Trans>
           </a>

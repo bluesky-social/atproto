@@ -1,26 +1,28 @@
 import { clsx } from 'clsx'
 import { JSX, ReactNode } from 'react'
+import type { CustomizationData } from '@atproto/oauth-provider-api'
 import { Override } from '../../lib/util.ts'
 import { LocaleSelector } from '../../locales/locale-selector.tsx'
 
 export type LayoutTitlePageProps = Override<
   JSX.IntrinsicElements['div'],
   {
+    customizationData?: CustomizationData
     title?: ReactNode
     htmlTitle?: string
     subtitle?: ReactNode
-    children?: ReactNode
   }
 >
 
 export function LayoutTitlePage({
-  children,
+  customizationData,
   title,
   subtitle,
   htmlTitle = typeof title === 'string' ? title : undefined,
 
-  // HTMLDivElement
+  // div
   className,
+  children,
   ...props
 }: LayoutTitlePageProps) {
   return (

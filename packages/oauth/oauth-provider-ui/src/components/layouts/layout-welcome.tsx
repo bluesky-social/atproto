@@ -3,13 +3,12 @@ import { clsx } from 'clsx'
 import { JSX, ReactNode } from 'react'
 import type { CustomizationData } from '@atproto/oauth-provider-api'
 import { Override } from '../../lib/util.ts'
-import { LocaleSelector } from '../../locales/locale-selector.tsx'
-import { LinkAnchor } from '../utils/link-anchor.tsx'
+import { PageFooter } from '../utils/page-footer.tsx'
 
 export type LayoutWelcomeProps = Override<
   JSX.IntrinsicElements['div'],
   {
-    customizationData: CustomizationData | undefined
+    customizationData?: CustomizationData
     title?: ReactNode
     htmlTitle?: string
   }
@@ -17,7 +16,7 @@ export type LayoutWelcomeProps = Override<
 
 export function LayoutWelcome({
   customizationData: { logo, name, links } = {},
-  title = name,
+  title,
   htmlTitle = typeof title === 'string' ? title : name,
 
   // div
@@ -40,9 +39,13 @@ export function LayoutWelcome({
     >
       {htmlTitle && <title>{htmlTitle}</title>}
 
-      <main className="flex w-full grow flex-col items-center justify-center overflow-hidden p-6">
+      <main
+        key="main"
+        className="flex w-full grow flex-col items-center justify-center overflow-hidden p-6"
+      >
         {logo && (
           <img
+            key="logo"
             src={logo}
             alt={name || t`Logo`}
             aria-hidden
@@ -51,7 +54,10 @@ export function LayoutWelcome({
         )}
 
         {title && (
-          <h1 className="mx-4 mb-4 text-center text-2xl font-bold md:mb-8 md:text-4xl">
+          <h1
+            key="title"
+            className="text-primary mx-4 mb-4 text-center text-2xl font-bold md:mb-8 md:text-4xl"
+          >
             {title}
           </h1>
         )}
@@ -59,22 +65,7 @@ export function LayoutWelcome({
         {children}
       </main>
 
-      <footer className="bg-contrast-25 dark:bg-contrast-50 flex w-full flex-wrap items-center justify-between overflow-hidden px-4 md:px-6">
-        <nav className="flex flex-wrap items-center justify-start">
-          {links?.map((link, i) => (
-            <LinkAnchor
-              key={i}
-              link={link}
-              className="text-text-light m-2 text-xs hover:underline md:m-4 md:text-sm"
-            />
-          ))}
-        </nav>
-
-        <LocaleSelector
-          className="m-1 text-xs md:m-2 md:text-sm"
-          key="localeSelector"
-        />
-      </footer>
+      <PageFooter links={links} />
     </div>
   )
 }

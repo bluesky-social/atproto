@@ -71,9 +71,9 @@ export function DescriptionCard({
               }
             }}
             shape="circle"
-            title={hint ?? t`Show details`}
+            title={hint ?? t`Toggle details`}
             aria-expanded={open}
-            aria-label={open ? t`Collapse details` : t`Expand details`}
+            aria-label={open ? t`Collapse details` : hint ?? t`Expand details`}
             aria-haspopup="true"
             aria-controls={detailsDivId}
           >

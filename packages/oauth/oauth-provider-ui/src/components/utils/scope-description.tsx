@@ -259,13 +259,16 @@ function AccountPermissions({
 }) {
   const { t } = useLingui()
 
+  // @NOTE "account:email" already covered by EmailPermissions
+  // @NOTE "account:repo?action=manage" already covered by RepoPermissions
+
   if (permissions.allowsAccount({ attr: 'status', action: 'manage' })) {
     return (
       <DescriptionCard
         role="listitem"
         image={<AccountOutlinedIcon className="size-6" />}
         title={t`Account`}
-        description={t`Manage the status of your account, such as temporarily deactivating it`}
+        description={t`Temporarily activate or deactivate your account`}
       />
     )
   }
@@ -454,8 +457,8 @@ function RpcMethodsDetails({
         </p>
         <p className="mt-1">
           <Trans>
-            The application is asking for permissions to uniquely identify you
-            when performing the following actions on your behalf:
+            The application requests the permissions necessary to perform, on
+            your behalf, the following actions:
           </Trans>
         </p>
         <RpcMethodsTable className="mt-2" permissions={permissions} />
@@ -570,7 +573,7 @@ function RepoPermissions({
         <p className="mt-1">
           <Trans>
             The application is asking to be able to create, update, and delete
-            any data from your repository.
+            <b>any data</b> from your repository.
           </Trans>
         </p>
       </DescriptionCard>

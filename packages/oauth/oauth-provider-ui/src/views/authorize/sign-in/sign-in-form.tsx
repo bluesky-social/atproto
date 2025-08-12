@@ -134,7 +134,13 @@ export function SignInForm({
       invalid={
         invalid || !username || !password || (secondFactor != null && !otp)
       }
-      submitLabel={secondFactor ? t`Confirm` : t`Sign in`}
+      submitLabel={
+        secondFactor ? (
+          <Trans context="verb">Confirm</Trans>
+        ) : (
+          <Trans context="verb">Sign in</Trans>
+        )
+      }
       onSubmit={doSubmit}
     >
       <Fieldset disabled={loading} label={<Trans>Identifier</Trans>}>
