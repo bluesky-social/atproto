@@ -1,5 +1,5 @@
 ---
-"@atproto/oauth-provider-api": patch
+"@atproto/oauth-provider-api": minor
 ---
 
-Add `clientFirstParty` property to backend injected data
+Adapt `AuthorizeData` backend injected data type
