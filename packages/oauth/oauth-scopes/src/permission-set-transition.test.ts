@@ -5,7 +5,7 @@ describe('PermissionSetTransition', () => {
     it('should allow account:email with transition:email', () => {
       const set = new PermissionSetTransition('transition:email account:repo')
       expect(set.allowsAccount({ attr: 'email', action: 'read' })).toBe(true)
-      expect(set.allowsAccount({ attr: 'email', action: 'manage' })).toBe(true)
+      expect(set.allowsAccount({ attr: 'email', action: 'manage' })).toBe(false)
 
       expect(set.allowsAccount({ attr: 'repo', action: 'read' })).toBe(true)
       expect(set.allowsAccount({ attr: 'repo', action: 'manage' })).toBe(false)
