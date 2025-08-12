@@ -1,4 +1,4 @@
-import type { ScopeDetail, Session } from '@atproto/oauth-provider-api'
+import type { Session } from '@atproto/oauth-provider-api'
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
 import { RequestUri } from '../request/request-uri.js'
@@ -8,7 +8,6 @@ export type AuthorizationResultAuthorizePage = {
   client: Client
   parameters: OAuthAuthorizationRequestParameters
 
-  uri: RequestUri
-  scopeDetails?: ScopeDetail[]
+  requestUri: RequestUri
   sessions: readonly Session[]
 }

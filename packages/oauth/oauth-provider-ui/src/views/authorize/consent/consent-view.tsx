@@ -1,36 +1,38 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import type { Account, ScopeDetail } from '@atproto/oauth-provider-api'
+import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import {
   LayoutTitlePage,
   LayoutTitlePageProps,
 } from '../../../components/layouts/layout-title-page.tsx'
 import { Override } from '../../../lib/util.ts'
-import { AcceptForm } from './accept-form.tsx'
+import { ConsentForm } from './consent-form.tsx'
 
-export type AcceptViewProps = Override<
+export type ConsentViewProps = Override<
   LayoutTitlePageProps,
   {
     clientId: string
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
+    clientFirstParty: boolean
 
     account: Account
-    scopeDetails?: ScopeDetail[]
+    scope?: string
 
-    onAccept: () => void
+    onConsent: (scope?: string) => void
     onReject: () => void
     onBack?: () => void
   }
 >
 
-export function AcceptView({
+export function ConsentView({
   clientId,
   clientMetadata,
   clientTrusted,
+  clientFirstParty,
   account,
-  scopeDetails,
-  onAccept,
+  scope,
+  onConsent,
   onReject,
   onBack,
 
@@ -46,7 +48,7 @@ export function AcceptView({
     </Trans>
   ),
   ...props
-}: AcceptViewProps) {
+}: ConsentViewProps) {
   const { t } = useLingui()
 
   return (
@@ -55,14 +57,15 @@ export function AcceptView({
       title={title ?? t`Authorize`}
       subtitle={subtitle}
     >
-      <AcceptForm
+      <ConsentForm
         clientId={clientId}
         clientMetadata={clientMetadata}
         clientTrusted={clientTrusted}
+        clientFirstParty={clientFirstParty}
         account={account}
-        scopeDetails={scopeDetails}
+        scope={scope}
         onBack={onBack}
-        onAccept={onAccept}
+        onConsent={onConsent}
         onReject={onReject}
       />
     </LayoutTitlePage>

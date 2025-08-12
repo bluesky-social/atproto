@@ -20,9 +20,12 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
     }),
     rateLimit: [
       {
@@ -46,17 +49,22 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
-      const account = await ctx.accountManager.getAccount(repo, {
-        includeDeactivated: true,
-      })
 
-      if (!account) {
-        throw new InvalidRequestError(`Could not find repo: ${repo}`)
-      } else if (account.deactivatedAt) {
-        throw new InvalidRequestError('Account is deactivated')
+      // We can't compute permissions based on the request payload ("input") in
+      // the 'auth' phase, so we do it here.
+      if (auth.credentials.type === 'oauth') {
+        auth.credentials.permissions.assertRepo({
+          action: 'create',
+          collection,
+        })
+        auth.credentials.permissions.assertRepo({
+          action: 'update',
+          collection,
+        })
       }
-      const did = account.did
-      if (did !== auth.credentials.did) {
+
+      const { did } = auth.credentials
+      if (did !== repo) {
         throw new AuthRequiredError()
       }
 

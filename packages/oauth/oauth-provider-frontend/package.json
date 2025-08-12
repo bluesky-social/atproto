@@ -64,9 +64,8 @@
     "i18n:compile": "lingui compile --typescript",
     "i18n": "pnpm i18n:extract && pnpm i18n:compile",
     "prebuild": "pnpm run i18n:compile",
-    "build": "vite build -- ignore additional npm args",
+    "build": "vite build --emptyOutDir -- ignore additional npm args",
     "dev:ui": "vite --port 5173",
-    "dev:src": "vite build --watch",
-    "dev:messages": "pnpm run i18n:compile --debounce 500 --watch"
+    "dev:src": "vite build --watch"
   }
 }

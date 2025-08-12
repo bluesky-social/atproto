@@ -32,11 +32,6 @@ export type LinkDefinition = {
   rel?: string
 }
 
-export type ScopeDetail = {
-  scope: string
-  description?: LocalizedString
-}
-
 export type DeviceMetadata = {
   userAgent: string | null
   ipAddress: string

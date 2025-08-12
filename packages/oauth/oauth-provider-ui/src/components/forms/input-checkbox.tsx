@@ -3,6 +3,7 @@ import { JSX, ReactNode, useContext, useRef } from 'react'
 import { useRandomString } from '../../hooks/use-random-string.ts'
 import { mergeRefs } from '../../lib/ref.ts'
 import { Override } from '../../lib/util.ts'
+import { Checkbox } from './checkbox.tsx'
 import { FieldsetContext } from './fieldset.tsx'
 import { InputContainer } from './input-container.tsx'
 
@@ -38,7 +39,7 @@ export function InputCheckbox({
     <InputContainer
       className={clsx('cursor-pointer', className)}
       icon={
-        <input
+        <Checkbox
           {...props}
           disabled={disabled ?? ctx.disabled}
           title={title}
@@ -52,7 +53,6 @@ export function InputCheckbox({
           ref={mergeRefs([ref, inputRef])}
           id={inputId}
           className="accent-primary outline-hidden"
-          type="checkbox"
         />
       }
       tabIndex={-1}

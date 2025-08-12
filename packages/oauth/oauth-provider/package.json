@@ -44,6 +44,7 @@
     "@atproto/oauth-provider-api": "workspace:*",
     "@atproto/oauth-provider-frontend": "workspace:*",
     "@atproto/oauth-provider-ui": "workspace:*",
+    "@atproto/oauth-scopes": "workspace:*",
     "@atproto/syntax": "workspace:*",
     "@hapi/accept": "^6.0.3",
     "@hapi/address": "^5.1.1",

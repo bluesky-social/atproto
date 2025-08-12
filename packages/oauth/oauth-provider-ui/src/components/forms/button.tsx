@@ -8,7 +8,7 @@ export type ButtonProps = Override<
     color?: 'primary' | 'grey'
     loading?: boolean
     transparent?: boolean
-    square?: boolean
+    shape?: 'padded' | 'rounded' | 'circle'
   }
 >
 
@@ -16,7 +16,7 @@ export function Button({
   color = 'grey',
   transparent = false,
   loading = undefined,
-  square = false,
+  shape = 'rounded',
 
   // button
   children,
@@ -26,18 +26,32 @@ export function Button({
   disabled = false,
   ...props
 }: ButtonProps) {
+  const actionable = type === 'submit' || props.onClick != null
+
   return (
     <button
       role={role}
       type={type}
       disabled={disabled || loading === true}
+      tabIndex={props?.tabIndex ?? (actionable ? 0 : -1)}
       {...props}
       className={clsx(
-        'cursor-pointer touch-manipulation overflow-hidden truncate rounded-md tracking-wide',
-        square ? 'p-2' : 'px-6 py-2',
+        'touch-manipulation overflow-hidden',
+        'truncate tracking-wide',
+        actionable ? 'cursor-pointer' : null,
+        shape === 'circle' ? 'rounded-full' : 'rounded-md',
+        shape === 'circle' ? 'size-8' : null,
+        shape === 'rounded'
+          ? 'px-6 py-2'
+          : shape === 'padded'
+            ? 'p-2'
+            : undefined,
+        'focus:outline-none focus:ring-2',
+        'transition duration-300 ease-in-out',
         color === 'primary'
           ? clsx(
               'accent-slate-100',
+              'focus:ring-primary focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
               transparent
                 ? 'text-primary bg-transparent'
                 : 'bg-primary text-primary-contrast',
@@ -45,6 +59,7 @@ export function Button({
           : color === 'grey'
             ? clsx(
                 'accent-primary',
+                'focus:ring-slate-300 dark:focus:ring-slate-500',
                 'text-slate-600 dark:text-slate-300',
                 'hover:bg-gray-200 dark:hover:bg-gray-700',
                 transparent ? 'bg-transparent' : 'bg-gray-100 dark:bg-gray-800',
