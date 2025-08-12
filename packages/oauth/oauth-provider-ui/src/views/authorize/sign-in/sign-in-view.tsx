@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
 import {
@@ -43,12 +43,13 @@ export function SignInView({
   subtitle,
   ...props
 }: SignInViewProps) {
+  const { t } = useLingui()
   const session = useMemo(() => sessions.find((s) => s.selected), [sessions])
   const clearSession = useCallback(() => selectSub(null), [selectSub])
   const accounts = useMemo(() => sessions.map((s) => s.account), [sessions])
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
 
-  title ??= <Trans context="noun">Sign in</Trans>
+  title ??= t({ message: 'Sign in', context: 'noun' })
 
   useEffect(() => {
     // Make sure the "back" action shows the account picker instead of the

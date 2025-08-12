@@ -112,7 +112,7 @@ msgstr "Discussions"
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:97
+#: src/views/authorize/sign-up/sign-up-view.tsx:99
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
@@ -133,7 +133,7 @@ msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirmer"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:68
+#: src/views/authorize/sign-in/sign-in-view.tsx:69
 msgid "Confirm your password to continue"
 msgstr "Confirmez votre mot de passe pour continuer"
 
@@ -149,7 +149,7 @@ msgstr "Créer"
 msgid "Create a new account"
 msgstr "Créer un nouveau compte"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:80
+#: src/views/authorize/sign-up/sign-up-view.tsx:82
 msgid "Create Account"
 msgstr "Créer un compte"
 
@@ -200,12 +200,12 @@ msgstr "Saisissez votre adresse email"
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:89
+#: src/views/authorize/sign-in/sign-in-view.tsx:90
 msgid "Enter your password"
 msgstr "Saisissez votre mot de passe"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:108
-#: src/views/authorize/sign-in/sign-in-view.tsx:125
+#: src/views/authorize/sign-in/sign-in-view.tsx:109
+#: src/views/authorize/sign-in/sign-in-view.tsx:126
 msgid "Enter your username and password"
 msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
 
@@ -284,7 +284,7 @@ msgstr "Connexion terminée"
 msgid "Login to account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
-#: src/components/layouts/layout-welcome.tsx:47
+#: src/components/layouts/layout-welcome.tsx:50
 msgid "Logo"
 msgstr "Logo"
 
@@ -428,7 +428,7 @@ msgstr "Réinitialisez votre mot de passe"
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:140
+#: src/views/authorize/sign-in/sign-in-view.tsx:141
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
 
@@ -442,7 +442,7 @@ msgctxt "verb"
 msgid "Sign in"
 msgstr "Se connecter"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:51
+#: src/views/authorize/sign-in/sign-in-view.tsx:52
 msgctxt "noun"
 msgid "Sign in"
 msgstr "Connexion"
@@ -456,7 +456,7 @@ msgstr "Se connecter en tant que {0}"
 msgid "Sign in as..."
 msgstr "Se connecter en tant que..."
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:86
+#: src/views/authorize/sign-up/sign-up-view.tsx:88
 #: src/views/authorize/sign-in/sign-in-picker.tsx:53
 msgid "Sign up"
 msgstr "S'inscrire"
@@ -601,7 +601,7 @@ msgstr "Nom d'utilisateur ou adresse email"
 msgid "Valid"
 msgstr "Valide"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:138
+#: src/views/authorize/sign-up/sign-up-view.tsx:140
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
@@ -617,7 +617,7 @@ msgstr "veut vous identifier de manière unique via votre compte <0/>"
 msgid "Warning"
 msgstr "Avertissement"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:82
+#: src/views/authorize/sign-up/sign-up-view.tsx:84
 msgid "We're so excited to have you join us!"
 msgstr "Nous sommes ravis de vous accueillir parmi nous !"
 
@@ -645,7 +645,7 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:119
+#: src/views/authorize/sign-up/sign-up-view.tsx:121
 msgid "Your account"
 msgstr "Votre compte"
 

@@ -112,7 +112,7 @@ msgstr ""
 msgid "Check your {0} email for a login code and enter it here."
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:97
+#: src/views/authorize/sign-up/sign-up-view.tsx:99
 msgid "Choose a username"
 msgstr ""
 
@@ -133,7 +133,7 @@ msgctxt "verb"
 msgid "Confirm"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:68
+#: src/views/authorize/sign-in/sign-in-view.tsx:69
 msgid "Confirm your password to continue"
 msgstr ""
 
@@ -149,7 +149,7 @@ msgstr ""
 msgid "Create a new account"
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:80
+#: src/views/authorize/sign-up/sign-up-view.tsx:82
 msgid "Create Account"
 msgstr ""
 
@@ -200,12 +200,12 @@ msgstr ""
 msgid "Enter your new password"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:89
+#: src/views/authorize/sign-in/sign-in-view.tsx:90
 msgid "Enter your password"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:108
-#: src/views/authorize/sign-in/sign-in-view.tsx:125
+#: src/views/authorize/sign-in/sign-in-view.tsx:109
+#: src/views/authorize/sign-in/sign-in-view.tsx:126
 msgid "Enter your username and password"
 msgstr ""
 
@@ -284,7 +284,7 @@ msgstr ""
 msgid "Login to account that is not listed"
 msgstr ""
 
-#: src/components/layouts/layout-welcome.tsx:47
+#: src/components/layouts/layout-welcome.tsx:50
 msgid "Logo"
 msgstr ""
 
@@ -428,7 +428,7 @@ msgstr ""
 msgid "Select domain"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:140
+#: src/views/authorize/sign-in/sign-in-view.tsx:141
 msgid "Select from an existing account"
 msgstr ""
 
@@ -442,7 +442,7 @@ msgctxt "verb"
 msgid "Sign in"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:51
+#: src/views/authorize/sign-in/sign-in-view.tsx:52
 msgctxt "noun"
 msgid "Sign in"
 msgstr ""
@@ -456,7 +456,7 @@ msgstr ""
 msgid "Sign in as..."
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:86
+#: src/views/authorize/sign-up/sign-up-view.tsx:88
 #: src/views/authorize/sign-in/sign-in-picker.tsx:53
 msgid "Sign up"
 msgstr ""
@@ -601,7 +601,7 @@ msgstr ""
 msgid "Valid"
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:138
+#: src/views/authorize/sign-up/sign-up-view.tsx:140
 msgid "Verify you are human"
 msgstr ""
 
@@ -617,7 +617,7 @@ msgstr ""
 msgid "Warning"
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:82
+#: src/views/authorize/sign-up/sign-up-view.tsx:84
 msgid "We're so excited to have you join us!"
 msgstr ""
 
@@ -645,7 +645,7 @@ msgstr ""
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:119
+#: src/views/authorize/sign-up/sign-up-view.tsx:121
 msgid "Your account"
 msgstr ""
 

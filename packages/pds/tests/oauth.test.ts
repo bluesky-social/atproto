@@ -198,7 +198,7 @@ describe('oauth', () => {
       await input.press('Enter')
     })
 
-    await page.checkTitle('Se connecter')
+    await page.checkTitle('Connexion')
 
     await page.clickOnButton('Oublié ?')
 
@@ -249,7 +249,7 @@ describe('oauth', () => {
       await input.press('Enter')
     })
 
-    await page.checkTitle('Se connecter')
+    await page.checkTitle('Connexion')
 
     await page.typeIn('input[type="password"]', 'alice-new-pass')
 
