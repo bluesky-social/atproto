@@ -1,5 +1,17 @@
 # @atproto/pds
 
+## 0.4.166
+
+### Patch Changes
+
+- [#3806](https://github.com/bluesky-social/atproto/pull/3806) [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow configuring trusted OAuth clients
+
+- [#3806](https://github.com/bluesky-social/atproto/pull/3806) [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for OAuth ATProto scopes
+
+- Updated dependencies [[`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add), [`1dbc7750d`](https://github.com/bluesky-social/atproto/commit/1dbc7750d2bede009a776a44a170a19120b52fc8), [`43fbeda63`](https://github.com/bluesky-social/atproto/commit/43fbeda63e12134e8ebac73b4c2005b0918fc888), [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add), [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add), [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add)]:
+  - @atproto/oauth-provider@0.10.0
+  - @atproto/oauth-scopes@0.0.1
+
 ## 0.4.165
 
 ### Patch Changes

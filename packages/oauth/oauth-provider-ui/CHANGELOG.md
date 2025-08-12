@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.2.0
+
+### Minor Changes
+
+- [#3806](https://github.com/bluesky-social/atproto/pull/3806) [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Display detailed description of requested permissions
+
 ## 0.1.11
 
 ## 0.1.10
