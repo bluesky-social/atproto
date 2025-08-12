@@ -24,7 +24,11 @@ export class PermissionSetTransition extends PermissionSet {
   }
 
   override allowsAccount(options: AccountScopeMatch): boolean {
-    if (options.attr === 'email' && this.hasTransitionEmail) {
+    if (
+      options.attr === 'email' &&
+      options.action === 'read' &&
+      this.hasTransitionEmail
+    ) {
       return true
     }
 
