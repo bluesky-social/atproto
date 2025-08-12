@@ -9,6 +9,7 @@ import {
   RepoScope,
   RpcScope,
 } from '@atproto/oauth-scopes'
+import { Checkbox } from '../forms/checkbox'
 import { Admonition, AdmonitionProps } from './admonition'
 import { DescriptionCard } from './description-card'
 import {
@@ -31,6 +32,9 @@ export type ScopeDescriptionProps = Override<
     clientTrusted?: boolean
     clientFirstParty?: boolean
     scope?: string
+
+    allowEmail?: boolean
+    onAllowEmail?: (allowed: boolean) => void
   }
 >
 
@@ -38,6 +42,8 @@ export function ScopeDescription({
   scope,
   clientTrusted = false,
   clientFirstParty = false,
+  allowEmail,
+  onAllowEmail,
 
   // div
   className = '',
@@ -54,7 +60,11 @@ export function ScopeDescription({
 
   return (
     <div className={`flex flex-col gap-2 ${className}`} {...attrs} role="list">
-      <EmailPermissions permissions={permissions} />
+      <EmailPermissions
+        permissions={permissions}
+        allowEmail={allowEmail}
+        onAllowEmail={onAllowEmail}
+      />
       <IdentityPermissions permissions={permissions} />
       <AccountPermissions permissions={permissions} />
 
@@ -109,8 +119,12 @@ function IdentityWarning({
 
 function EmailPermissions({
   permissions,
+  allowEmail,
+  onAllowEmail,
 }: {
   permissions: PermissionSetTransition
+  allowEmail?: boolean
+  onAllowEmail?: (allowed: boolean) => void
 }) {
   const { t } = useLingui()
 
@@ -120,25 +134,31 @@ function EmailPermissions({
     )
   }, [permissions])
 
-  if (allowedAction === 'manage') {
+  if (allowedAction) {
     return (
-      <DescriptionCard
-        role="listitem"
-        image={<EmailIcon className="size-6" />}
-        title={t`Email`}
-        description={t`Read and update your account's email address`}
-      />
-    )
-  }
-
-  if (allowedAction === 'read') {
-    return (
-      <DescriptionCard
-        role="listitem"
-        image={<EmailIcon className="size-6" />}
-        title={t`Email`}
-        description={t`Read your account's email address`}
-      />
+      <label className={onAllowEmail ? 'cursor-pointer' : undefined}>
+        <DescriptionCard
+          role="listitem"
+          image={<EmailIcon className="size-6" />}
+          title={t`Email`}
+          description={
+            allowedAction === 'manage' ? (
+              <Trans>Read and update your account's email address</Trans>
+            ) : (
+              <Trans>Read your account's email address</Trans>
+            )
+          }
+          append={
+            onAllowEmail && (
+              <Checkbox
+                className="m-2"
+                checked={allowEmail}
+                onChange={(e) => onAllowEmail(e.target.checked)}
+              />
+            )
+          }
+        />
+      </label>
     )
   }
 

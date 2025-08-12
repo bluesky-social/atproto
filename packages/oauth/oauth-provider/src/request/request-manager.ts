@@ -355,33 +355,58 @@ export class RequestManager {
     account: Account,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    scopeOverride?: string,
   ): Promise<Code> {
     const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
+    let { parameters } = data
+
     try {
       if (data.expiresAt < new Date()) {
-        throw new AccessDeniedError(data.parameters, 'This request has expired')
+        throw new AccessDeniedError(parameters, 'This request has expired')
       }
       if (!data.deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was not initiated',
         )
       }
       if (data.deviceId !== deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was initiated from another device',
         )
       }
       if (data.sub || data.code) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was already authorized',
         )
+      }
+
+      // If a new scope value is provided, update the parameters by ensuring
+      // that every scope in the parameters was provided in the new scope.
+      // This allows the user to remove scopes from the request, but not to add
+      // new ones.
+      if (scopeOverride != null) {
+        const allowedScopes = new Set(scopeOverride.split(' '))
+        const existingScopes = parameters.scope?.split(' ')
+
+        // Compute the intersection of the existing scopes and the overrides.
+        const newScopes = existingScopes?.filter((s) => allowedScopes.has(s))
+
+        // Validate: make sure the new scopes are valid
+        if (!newScopes?.includes('atproto')) {
+          throw new AccessDeniedError(
+            parameters,
+            'The "atproto" scope is required',
+          )
+        }
+
+        parameters = { ...parameters, scope: newScopes.join(' ') }
       }
 
       // Only response_type=code is supported
@@ -393,12 +418,13 @@ export class RequestManager {
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),
+        parameters,
       })
 
       await callAsync(this.hooks.onAuthorized, {
         client,
         account,
-        parameters: data.parameters,
+        parameters,
         deviceId,
         deviceMetadata,
         requestId,

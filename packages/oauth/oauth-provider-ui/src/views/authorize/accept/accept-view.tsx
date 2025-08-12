@@ -19,7 +19,7 @@ export type AcceptViewProps = Override<
     account: Account
     scope?: string
 
-    onAccept: () => void
+    onAccept: (scope?: string) => void
     onReject: () => void
     onBack?: () => void
   }
