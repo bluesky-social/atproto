@@ -6,9 +6,9 @@ import {
   LayoutTitlePageProps,
 } from '../../../components/layouts/layout-title-page.tsx'
 import { Override } from '../../../lib/util.ts'
-import { AcceptForm } from './accept-form.tsx'
+import { ConsentForm } from './consent-form.tsx'
 
-export type AcceptViewProps = Override<
+export type ConsentViewProps = Override<
   LayoutTitlePageProps,
   {
     clientId: string
@@ -19,20 +19,20 @@ export type AcceptViewProps = Override<
     account: Account
     scope?: string
 
-    onAccept: (scope?: string) => void
+    onConsent: (scope?: string) => void
     onReject: () => void
     onBack?: () => void
   }
 >
 
-export function AcceptView({
+export function ConsentView({
   clientId,
   clientMetadata,
   clientTrusted,
   clientFirstParty,
   account,
   scope,
-  onAccept,
+  onConsent,
   onReject,
   onBack,
 
@@ -48,7 +48,7 @@ export function AcceptView({
     </Trans>
   ),
   ...props
-}: AcceptViewProps) {
+}: ConsentViewProps) {
   const { t } = useLingui()
 
   return (
@@ -57,7 +57,7 @@ export function AcceptView({
       title={title ?? t`Authorize`}
       subtitle={subtitle}
     >
-      <AcceptForm
+      <ConsentForm
         clientId={clientId}
         clientMetadata={clientMetadata}
         clientTrusted={clientTrusted}
@@ -65,7 +65,7 @@ export function AcceptView({
         account={account}
         scope={scope}
         onBack={onBack}
-        onAccept={onAccept}
+        onConsent={onConsent}
         onReject={onReject}
       />
     </LayoutTitlePage>

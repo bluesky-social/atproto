@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { ClientImage } from '#/components/utils/client-image.tsx'
 import { DescriptionCard } from '#/components/utils/description-card.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
@@ -15,7 +15,7 @@ import { AccountIdentifier } from '../../../components/utils/account-identifier.
 import { ClientName } from '../../../components/utils/client-name.tsx'
 import { Override } from '../../../lib/util.ts'
 
-export type AcceptFormProps = Override<
+export type ConsentFormProps = Override<
   Omit<FormCardProps, 'onSubmit' | 'cancel' | 'actions' | 'children'>,
   {
     clientId: string
@@ -26,9 +26,14 @@ export type AcceptFormProps = Override<
     account: Account
     scope?: string
 
-    onAccept: (scope?: string) => void
+    onConsent: (scope?: string) => void
+    consentLabel?: ReactNode
+
     onReject: () => void
+    rejectLabel?: ReactNode
+
     onBack?: () => void
+    backLabel?: ReactNode
   }
 >
 
@@ -49,7 +54,7 @@ function stripAccountEmailScope(scope?: string): string | undefined {
     .join(' ')
 }
 
-export function AcceptForm({
+export function ConsentForm({
   clientId,
   clientMetadata,
   clientTrusted,
@@ -58,13 +63,18 @@ export function AcceptForm({
   account,
   scope,
 
-  onAccept,
+  onConsent,
+  consentLabel,
+
   onReject,
+  rejectLabel,
+
   onBack,
+  backLabel,
 
   // FormCardProps
   ...props
-}: AcceptFormProps) {
+}: ConsentFormProps) {
   const { t } = useLingui()
   const [allowEmail, setAllowEmail] = useState(true)
 
@@ -79,17 +89,21 @@ export function AcceptForm({
         event.preventDefault()
         const acceptedScope =
           canUnsetEmail && !allowEmail ? stripAccountEmailScope(scope) : scope
-        onAccept(acceptedScope)
+        onConsent(acceptedScope)
       }}
-      cancel={onBack && <Button onClick={onBack}>Back</Button>}
+      cancel={
+        onBack && (
+          <Button onClick={onBack}>{backLabel || <Trans>Back</Trans>}</Button>
+        )
+      }
       actions={
         <>
           <Button type="submit" color="primary">
-            <Trans>Authorize</Trans>
+            {consentLabel || <Trans>Authorize</Trans>}
           </Button>
 
           <Button onClick={onReject}>
-            <Trans>Deny access</Trans>
+            {rejectLabel || <Trans>Deny access</Trans>}
           </Button>
         </>
       }
@@ -153,12 +167,9 @@ export function AcceptForm({
 
       <p>
         <Trans>
-          By clicking{' '}
-          <b>
-            <Trans>Authorize</Trans>
-          </b>
-          , you will grant this application access to your account in accordance
-          with its{' '}
+          By clicking <b>{consentLabel || <Trans>Authorize</Trans>}</b>, you
+          will grant this application access to your account in accordance with
+          its{' '}
           <a
             role="link"
             href={clientMetadata.tos_uri}

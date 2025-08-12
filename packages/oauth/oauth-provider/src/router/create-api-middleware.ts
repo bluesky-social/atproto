@@ -398,7 +398,7 @@ export function createApiMiddleware<
   router.use(
     apiRoute({
       method: 'POST',
-      endpoint: '/accept',
+      endpoint: '/consent',
       schema: z
         .object({
           sub: z.union([subSchema, signedJwtSchema]),
@@ -465,7 +465,7 @@ export function createApiMiddleware<
             throw AuthorizationError.from(parameters, err)
           }
         } catch (err) {
-          onError?.(req, res, err, 'Failed to accept authorization request')
+          onError?.(req, res, err, 'Failed to consent authorization request')
 
           // If any error happened (unauthenticated, invalid request, etc.),
           // lets make sure the request can no longer be used.
