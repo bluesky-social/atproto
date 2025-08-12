@@ -1,5 +1,27 @@
 # @atproto/oauth-provider
 
+## 0.10.0
+
+### Minor Changes
+
+- [#4095](https://github.com/bluesky-social/atproto/pull/4095) [`1dbc7750d`](https://github.com/bluesky-social/atproto/commit/1dbc7750d2bede009a776a44a170a19120b52fc8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for ATProto OAuth scopes
+
+- [#3806](https://github.com/bluesky-social/atproto/pull/3806) [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `onScopeDetails` hook
+
+### Patch Changes
+
+- [#3806](https://github.com/bluesky-social/atproto/pull/3806) [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `onAuthorizationRequest` hook, triggered right before an authorization request is created.
+
+- [#4092](https://github.com/bluesky-social/atproto/pull/4092) [`43fbeda63`](https://github.com/bluesky-social/atproto/commit/43fbeda63e12134e8ebac73b4c2005b0918fc888) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `cookie` dependency
+
+- [#3806](https://github.com/bluesky-social/atproto/pull/3806) [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add) Thanks [@matthieusieben](https://github.com/matthieusieben)! - The scopes allowed in the client metadata document is no longer constrained by the `scopes_supported` in the server metadata.
+
+- Updated dependencies [[`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add), [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add), [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add)]:
+  - @atproto/oauth-scopes@0.0.1
+  - @atproto/oauth-provider-api@0.2.0
+  - @atproto/oauth-provider-ui@0.2.0
+  - @atproto/oauth-provider-frontend@0.1.11
+
 ## 0.9.3
 
 ### Patch Changes
