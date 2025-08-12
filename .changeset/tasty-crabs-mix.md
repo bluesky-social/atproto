@@ -2,4 +2,4 @@
 "@atproto/oauth-provider-ui": minor
 ---
 
-Add support for granular scopes
+Display detailed description of requested permissions

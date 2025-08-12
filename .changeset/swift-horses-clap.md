@@ -2,4 +2,4 @@
 "@atproto/pds": patch
 ---
 
-Rework authorization to work with permissions
+Add support for OAuth ATProto scopes
