@@ -1,5 +1,5 @@
 ---
-"@atproto/pds": minor
+"@atproto/pds": patch
 ---
 
 Fix putRecord auth check
