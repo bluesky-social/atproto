@@ -137,7 +137,7 @@ export const jwkSchema = z
 
 export type Jwk = z.infer<typeof jwkSchema>
 
-/** @deprecated */
+/** @deprecated use {@link jwkSchema} */
 export const jwkValidator = jwkSchema
 
 export const jwkPubSchema = jwkSchema
