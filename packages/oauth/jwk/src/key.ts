@@ -1,4 +1,5 @@
 import { jwkAlgorithms } from './alg.js'
+import { JwkError } from './errors.js'
 import { Jwk, KeyUsage, jwkSchema } from './jwk.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
@@ -15,15 +16,15 @@ export abstract class Key<J extends Jwk = Jwk> {
     const { use, key_ops } = jwk
 
     if (use && key_ops) {
-      throw new TypeError(`JWK cannot have both "use" and "key_ops"`)
+      throw new JwkError(`JWK cannot have both "use" and "key_ops"`)
     }
 
     if (use && use !== 'sig') {
-      throw new TypeError(`Unsupported JWK use "${use}"`)
+      throw new JwkError(`Unsupported JWK use "${use}"`)
     }
 
     if (key_ops && !key_ops.some((o) => o === 'sign' || o === 'verify')) {
-      throw new TypeError(`Invalid key_ops "${key_ops}" for "sig" use`)
+      throw new JwkError(`Invalid key_ops "${key_ops}" for "sig" use`)
     }
   }
 
