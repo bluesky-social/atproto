@@ -63,8 +63,17 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const { did } = auth.credentials
-      if (did !== repo) {
+      const account = await ctx.accountManager.getAccount(repo, {
+        includeDeactivated: true,
+      })
+
+      if (!account) {
+        throw new InvalidRequestError(`Could not find repo: ${repo}`)
+      } else if (account.deactivatedAt) {
+        throw new InvalidRequestError('Account is deactivated')
+      }
+      const did = account.did
+      if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
 
