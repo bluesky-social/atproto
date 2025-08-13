@@ -1,5 +1,15 @@
 # @atproto/oauth-provider
 
+## 0.10.1
+
+### Patch Changes
+
+- [#4100](https://github.com/bluesky-social/atproto/pull/4100) [`832866c33`](https://github.com/bluesky-social/atproto/commit/832866c33b442443c52bc5891840f7527d81f926) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Enforce stronger validation of jwks loaded through their own uri
+
+- Updated dependencies [[`c274bd1b3`](https://github.com/bluesky-social/atproto/commit/c274bd1b38813abd5b287f1c94dca1fd62854918)]:
+  - @atproto/oauth-scopes@0.0.2
+  - @atproto/oauth-provider-ui@0.2.0
+
 ## 0.10.0
 
 ### Minor Changes
