@@ -457,7 +457,7 @@ describe('crud operations', () => {
 
     it('still works if repo is specified by handle', async () => {
       await bobAgent.api.com.atproto.repo.putRecord({
-        repo: "bob.test",
+        repo: 'bob.test',
         collection: ids.AppBskyGraphFollow,
         rkey: TID.nextStr(),
         record: {
