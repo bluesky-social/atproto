@@ -122,19 +122,20 @@ export const jwkSchema = z.union([
 
 export type Jwk = z.infer<typeof jwkSchema>
 
-export const jwkValidator = jwkSchema
-  .refine((k) => k.use != null || k.key_ops != null, 'use or key_ops required')
-  .refine(
-    (k) =>
-      !k.use ||
-      !k.key_ops ||
-      k.key_ops.every((o) =>
-        k.use === 'sig'
-          ? o === 'sign' || o === 'verify'
-          : o === 'encrypt' || o === 'decrypt',
-      ),
-    'use and key_ops must be consistent',
-  )
+export const jwkValidator = jwkSchema.refine(
+  (k) =>
+    !k.use ||
+    !k.key_ops ||
+    k.key_ops.every(
+      k.use === 'sig'
+        ? (o) => o === 'sign' || o === 'verify'
+        : (o) => o === 'encrypt' || o === 'decrypt',
+    ),
+  {
+    message: 'use and key_ops must be consistent',
+    path: ['key_ops'],
+  },
+)
 
 export const jwkPubSchema = jwkValidator
   .refine((k) => k.kid != null, 'kid is required')
