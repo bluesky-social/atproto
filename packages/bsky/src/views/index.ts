@@ -23,6 +23,7 @@ import {
   Record as ProfileRecord,
   isRecord as isProfileRecord,
 } from '../lexicon/types/app/bsky/actor/profile'
+import { BookmarkView } from '../lexicon/types/app/bsky/bookmark/defs'
 import {
   BlockedPost,
   FeedViewPost,
@@ -1054,6 +1055,25 @@ export class Views {
   reasonPin(): $Typed<ReasonPin> {
     return {
       $type: 'app.bsky.feed.defs#reasonPin',
+    }
+  }
+
+  // Bookmarks
+  // ------------
+  bookmark(
+    uri: string,
+    state: HydrationState,
+  ): Un$Typed<BookmarkView> | undefined {
+    const atUri = new AtUri(uri)
+    if (atUri.collection === ids.AppBskyFeedPost) {
+      return this.bookmarkPost(uri, state)
+    }
+    return undefined
+  }
+
+  bookmarkPost(uri: string, state: HydrationState): Un$Typed<BookmarkView> {
+    return {
+      item: this.maybePost(uri, state),
     }
   }
 

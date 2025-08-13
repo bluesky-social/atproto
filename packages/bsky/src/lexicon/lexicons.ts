@@ -1220,6 +1220,20 @@ export const schemaDict = {
           },
         },
       },
+      bookmarkView: {
+        type: 'object',
+        required: ['item'],
+        properties: {
+          item: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#blockedPost',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#postView',
+            ],
+          },
+        },
+      },
     },
   },
   AppBskyBookmarkDeleteBookmark: {
@@ -1294,8 +1308,8 @@ export const schemaDict = {
               bookmarks: {
                 type: 'array',
                 items: {
-                  type: 'union',
-                  refs: ['lex:app.bsky.feed.defs#postView'],
+                  type: 'ref',
+                  ref: 'lex:app.bsky.bookmark.defs#bookmarkView',
                 },
               },
             },

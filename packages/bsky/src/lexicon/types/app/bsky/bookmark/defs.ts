@@ -9,6 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyFeedDefs from '../feed/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -29,4 +30,23 @@ export function isBookmark<V>(v: V) {
 
 export function validateBookmark<V>(v: V) {
   return validate<Bookmark & V>(v, id, hashBookmark)
+}
+
+export interface BookmarkView {
+  $type?: 'app.bsky.bookmark.defs#bookmarkView'
+  item:
+    | $Typed<AppBskyFeedDefs.BlockedPost>
+    | $Typed<AppBskyFeedDefs.NotFoundPost>
+    | $Typed<AppBskyFeedDefs.PostView>
+    | { $type: string }
+}
+
+const hashBookmarkView = 'bookmarkView'
+
+export function isBookmarkView<V>(v: V) {
+  return is$typed(v, id, hashBookmarkView)
+}
+
+export function validateBookmarkView<V>(v: V) {
+  return validate<BookmarkView & V>(v, id, hashBookmarkView)
 }

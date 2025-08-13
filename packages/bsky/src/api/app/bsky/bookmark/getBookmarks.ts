@@ -17,8 +17,7 @@ export default function (server: Server, ctx: AppContext) {
   const getBookmarks = createPipeline(
     skeleton,
     hydration,
-    // @TODO: apply rules?
-    noRules,
+    noRules, // Blocks are included and handled on views. Mutes are included.
     presentation,
   )
   server.app.bsky.bookmark.getBookmarks({
@@ -77,11 +76,10 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton } = input
   const { uris, cursor } = skeleton
-  const posts = mapDefined(uris, (uri) => ({
-    ...ctx.views.post(uri, hydration),
-    $type: 'app.bsky.feed.defs#postView',
-  }))
-  return { bookmarks: posts, cursor }
+  const bookmarks = mapDefined(uris, (uri) =>
+    ctx.views.bookmark(uri, hydration),
+  )
+  return { bookmarks: bookmarks, cursor }
 }
 
 type Context = {

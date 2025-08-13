@@ -27,8 +27,8 @@
             "bookmarks": {
               "type": "array",
               "items": {
-                "type": "union",
-                "refs": ["app.bsky.feed.defs#postView"]
+                "type": "ref",
+                "ref": "app.bsky.bookmark.defs#bookmarkView"
               }
             }
           }

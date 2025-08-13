@@ -10,7 +10,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyFeedDefs from '../feed/defs.js'
+import type * as AppBskyBookmarkDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -24,7 +24,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  bookmarks: ($Typed<AppBskyFeedDefs.PostView> | { $type: string })[]
+  bookmarks: AppBskyBookmarkDefs.BookmarkView[]
 }
 
 export interface CallOptions {

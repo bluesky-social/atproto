@@ -13,6 +13,20 @@
           "format": "at-uri"
         }
       }
+    },
+    "bookmarkView": {
+      "type": "object",
+      "required": ["item"],
+      "properties": {
+        "item": {
+          "type": "union",
+          "refs": [
+            "app.bsky.feed.defs#blockedPost",
+            "app.bsky.feed.defs#notFoundPost",
+            "app.bsky.feed.defs#postView"
+          ]
+        }
+      }
     }
   }
 }

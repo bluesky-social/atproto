@@ -10,7 +10,7 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { OutputSchema as GetBookmarksOutputSchema } from '../../src/lexicon/types/app/bsky/bookmark/getBookmarks'
 import { PostView } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { paginateAll } from '../_util'
+import { forSnapshot, paginateAll } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -185,9 +185,40 @@ describe('appview bookmarks views', () => {
       const paginated = results(paginatedRes)
       assertPostViews(paginated)
 
-      const sort = (a: $Typed<PostView>, b: $Typed<PostView>) =>
-        a.uri > b.uri ? 1 : -1
+      const sort = (
+        a: { item: $Typed<PostView> },
+        b: { item: $Typed<PostView> },
+      ) => (a.item.uri > b.item.uri ? 1 : -1)
       expect(paginated.sort(sort)).toEqual(full.sort(sort))
+    })
+
+    it('removes entries by blocked users, bidirectionally', async () => {
+      await create(alice, sc.posts[alice][0].ref.uriStr)
+      await create(alice, sc.posts[bob][0].ref.uriStr)
+      await create(alice, sc.posts[carol][0].ref.uriStr)
+
+      await create(bob, sc.posts[alice][0].ref.uriStr)
+      await create(bob, sc.posts[carol][0].ref.uriStr)
+
+      await sc.block(alice, bob)
+      await network.processAll()
+
+      const {
+        data: { bookmarks: bookmarksA },
+      } = await get(alice)
+      expect(bookmarksA).toHaveLength(3)
+      expect(bookmarksA[0].item.$type).toBe('app.bsky.feed.defs#postView')
+      expect(bookmarksA[1].item.$type).toBe('app.bsky.feed.defs#blockedPost')
+      expect(bookmarksA[2].item.$type).toBe('app.bsky.feed.defs#postView')
+      expect(forSnapshot(bookmarksA)).toMatchSnapshot()
+
+      const {
+        data: { bookmarks: bookmarksB },
+      } = await get(bob)
+      expect(bookmarksB).toHaveLength(2)
+      expect(bookmarksB[0].item.$type).toBe('app.bsky.feed.defs#postView')
+      expect(bookmarksB[1].item.$type).toBe('app.bsky.feed.defs#blockedPost')
+      expect(forSnapshot(bookmarksB)).toMatchSnapshot()
     })
   })
 })
@@ -202,8 +233,11 @@ const clearBookmarks = async (db: Database) => {
 
 function assertPostViews(
   bookmarks: GetBookmarksOutputSchema['bookmarks'],
-): asserts bookmarks is $Typed<PostView>[] {
+): asserts bookmarks is { item: $Typed<AppBskyFeedDefs.PostView> }[] {
   bookmarks.forEach((b) => {
-    assert(AppBskyFeedDefs.isPostView(b), `Expected bookmark to be a post view`)
+    assert(
+      AppBskyFeedDefs.isPostView(b.item),
+      `Expected bookmark to be a post view`,
+    )
   })
 }
