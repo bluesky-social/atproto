@@ -455,6 +455,18 @@ describe('crud operations', () => {
       })
     })
 
+    it('still works if repo is specified by handle', async () => {
+      await bobAgent.api.com.atproto.repo.putRecord({
+        repo: 'bob.test',
+        collection: ids.AppBskyGraphFollow,
+        rkey: TID.nextStr(),
+        record: {
+          subject: aliceAgent.accountDid,
+          createdAt: new Date().toISOString(),
+        },
+      })
+    })
+
     it('does not produce commit on no-op update', async () => {
       const { repo } = bobAgent.api.com.atproto
       const rootRes1 = await bobAgent.api.com.atproto.sync.getLatestCommit({
