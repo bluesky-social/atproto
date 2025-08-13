@@ -1,19 +1,23 @@
 import { jwkAlgorithms } from './alg.js'
 import { JwkError } from './errors.js'
-import { Jwk, jwkSchema } from './jwk.js'
+import { Jwk, KeyUsage, jwkSchema } from './jwk.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
 const jwkSchemaReadonly = jwkSchema.readonly()
 
+function isPublicKeyUsage(usage: KeyUsage): boolean {
+  return usage === 'verify' || usage === 'decrypt'
+}
+
 export abstract class Key<J extends Jwk = Jwk> {
   constructor(protected readonly jwk: Readonly<J>) {
-    // @TODO "use" is actually only for public keys. We should allow missing
-    // "use" here and automatically add it to the exposed `publicJwk`
-
-    // A key should always be used either for signing or encryption.
-    if (!jwk.use) throw new JwkError('Missing "use" Parameter value')
+    // https://datatracker.ietf.org/doc/html/rfc7517
+    // > The "use" and "key_ops" JWK members SHOULD NOT be used together
+    if (jwk.key_ops && jwk.use) {
+      throw new JwkError('JWK cannot have both "use" and "key_ops" members')
+    }
   }
 
   get isPrivate(): boolean {
@@ -43,6 +47,7 @@ export abstract class Key<J extends Jwk = Jwk> {
       ...this.jwk,
       d: undefined,
       k: undefined,
+      key_ops: this.jwk.key_ops?.filter(isPublicKeyUsage),
     }) as Exclude<J, { kty: 'oct' }> & { d?: never }
   }
 
