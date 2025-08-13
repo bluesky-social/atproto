@@ -36,6 +36,7 @@ export interface PostView {
     | $Typed<AppBskyEmbedRecord.View>
     | $Typed<AppBskyEmbedRecordWithMedia.View>
     | { $type: string }
+  bookmarkCount?: number
   replyCount?: number
   repostCount?: number
   likeCount?: number
@@ -61,6 +62,7 @@ export interface ViewerState {
   $type?: 'app.bsky.feed.defs#viewerState'
   repost?: string
   like?: string
+  bookmarked?: boolean
   threadMuted?: boolean
   replyDisabled?: boolean
   embeddingDisabled?: boolean

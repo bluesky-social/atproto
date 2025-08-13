@@ -7,8 +7,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('key', 'varchar', (col) => col.notNull())
     .addColumn('uri', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    // Supports paginating over creator's bookmarks sorting by key.
     .addPrimaryKeyConstraint('bookmark_pkey', ['creator', 'key'])
-    .addUniqueConstraint('bookmark_unique_creator_uri', ['creator', 'uri'])
+    // Supports checking for bookmark presence by the creator on specific uris, and supports counting bookmarks by uri.
+    .addUniqueConstraint('bookmark_unique_uri_creator', ['uri', 'creator'])
     .execute()
 }
 

@@ -1790,6 +1790,9 @@ export const schemaDict = {
               'lex:app.bsky.embed.recordWithMedia#view',
             ],
           },
+          bookmarkCount: {
+            type: 'integer',
+          },
           replyCount: {
             type: 'integer',
           },
@@ -1835,6 +1838,9 @@ export const schemaDict = {
           like: {
             type: 'string',
             format: 'at-uri',
+          },
+          bookmarked: {
+            type: 'boolean',
           },
           threadMuted: {
             type: 'boolean',

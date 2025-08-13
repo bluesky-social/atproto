@@ -85,6 +85,17 @@ describe('appview bookmarks views', () => {
       },
     )
 
+  const getPost = async (actor: string, uri: string) => {
+    const { data } = await agent.app.bsky.feed.getPosts(
+      { uris: [uri] },
+      {
+        headers: await network.serviceHeaders(actor, ids.AppBskyFeedGetPosts),
+      },
+    )
+
+    return data.posts[0]
+  }
+
   describe('creation', () => {
     it('creates bookmarks', async () => {
       await create(alice, sc.posts[alice][0].ref.uriStr)
@@ -152,6 +163,45 @@ describe('appview bookmarks views', () => {
     it('gets empty bookmarks', async () => {
       const { data } = await get(alice)
       expect(data.bookmarks).toHaveLength(0)
+    })
+
+    it('includes the bookmarked viewer state', async () => {
+      const uri = sc.posts[bob][0].ref.uriStr
+
+      const postBefore = await getPost(alice, uri)
+      expect(postBefore.viewer?.bookmarked).toBe(false)
+
+      await create(alice, uri)
+      const postAfterCreate = await getPost(alice, uri)
+      expect(postAfterCreate.viewer?.bookmarked).toBe(true)
+      const postAfterCreateForBob = await getPost(bob, uri)
+      expect(postAfterCreateForBob.viewer?.bookmarked).toBe(false)
+
+      await del(alice, uri)
+      const postAfterDel = await getPost(alice, uri)
+      expect(postAfterDel.viewer?.bookmarked).toBe(false)
+    })
+
+    it('includes the bookmark counts', async () => {
+      const uri = sc.posts[bob][0].ref.uriStr
+
+      const postBefore = await getPost(alice, uri)
+      expect(postBefore.bookmarkCount).toBe(0)
+
+      await create(alice, uri)
+      await create(carol, uri)
+      const postAfterCreate = await getPost(alice, uri)
+      expect(postAfterCreate.bookmarkCount).toBe(2)
+      const postAfterCreateForBob = await getPost(bob, uri)
+      expect(postAfterCreateForBob.bookmarkCount).toBe(2)
+
+      await del(alice, uri)
+      const postAfterAliceDel = await getPost(alice, uri)
+      expect(postAfterAliceDel.bookmarkCount).toBe(1)
+
+      await del(carol, uri)
+      const postAfterCarolDel = await getPost(carol, uri)
+      expect(postAfterCarolDel.bookmarkCount).toBe(0)
     })
 
     it('paginates bookmarks', async () => {

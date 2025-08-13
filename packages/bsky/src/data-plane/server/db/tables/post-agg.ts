@@ -8,6 +8,7 @@ export interface PostAgg {
   replyCount: Generated<number>
   repostCount: Generated<number>
   quoteCount: Generated<number>
+  bookmarkCount: Generated<number>
 }
 
 export type PartialDB = {

@@ -20,7 +20,7 @@ import {
 } from '../../proto/bsync_pb'
 import { Namespaces } from '../../stash'
 import { Database } from '../server/db'
-import { excluded } from '../server/db/util'
+import { countAll, excluded } from '../server/db/util'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -321,27 +321,63 @@ const handleBookmarkOperation = async (
 ) => {
   const { actorDid, key, method, payload } = req
 
+  const updateAgg = (uri: string, dbTxn: Database) => {
+    return dbTxn.db
+      .insertInto('post_agg')
+      .values({
+        uri,
+        bookmarkCount: dbTxn.db
+          .selectFrom('bookmark')
+          .where('bookmark.uri', '=', uri)
+          .select(countAll.as('count')),
+      })
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({ bookmarkCount: excluded(dbTxn.db, 'bookmarkCount') }),
+      )
+      .execute()
+  }
+
   if (method === Method.CREATE) {
     const parsed = jsonStringToLex(
       Buffer.from(payload).toString('utf8'),
     ) as Bookmark
     const { uri } = parsed
-    return db.db
-      .insertInto('bookmark')
-      .values({
-        creator: actorDid,
-        key,
-        indexedAt: now,
-        uri,
-      })
-      .execute()
+
+    await db.transaction(async (dbTxn) => {
+      await dbTxn.db
+        .insertInto('bookmark')
+        .values({
+          creator: actorDid,
+          key,
+          indexedAt: now,
+          uri,
+        })
+        .execute()
+
+      await updateAgg(uri, dbTxn)
+    })
   }
 
   if (method === Method.DELETE) {
-    return db.db
-      .deleteFrom('bookmark')
-      .where('creator', '=', actorDid)
-      .where('key', '=', key)
-      .execute()
+    await db.transaction(async (dbTxn) => {
+      const bookmark = await dbTxn.db
+        .selectFrom('bookmark')
+        .selectAll()
+        .where('creator', '=', actorDid)
+        .where('key', '=', key)
+        .executeTakeFirst()
+
+      if (bookmark) {
+        await dbTxn.db
+          .deleteFrom('bookmark')
+          .where('creator', '=', actorDid)
+          .where('key', '=', key)
+          .execute()
+
+        await updateAgg(bookmark.uri, dbTxn)
+      }
+    })
   }
 }

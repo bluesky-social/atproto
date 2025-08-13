@@ -912,6 +912,7 @@ export class Views {
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
+      bookmarkCount: aggs?.bookmarks ?? 0,
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
@@ -921,6 +922,7 @@ export class Views {
         ? {
             repost: viewer.repost,
             like: viewer.like,
+            bookmarked: viewer.bookmarked,
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
             embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),

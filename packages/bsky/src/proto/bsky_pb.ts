@@ -4347,6 +4347,11 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
    */
   quotes: number[] = []
 
+  /**
+   * @generated from field: repeated int32 bookmarks = 5;
+   */
+  bookmarks: number[] = []
+
   constructor(data?: PartialMessage<GetInteractionCountsResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -4379,6 +4384,13 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
     {
       no: 4,
       name: 'quotes',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 5,
+      name: 'bookmarks',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
