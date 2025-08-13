@@ -111,37 +111,40 @@ export const jwkUnknownKeySchema = jwkBaseSchema.extend({
     .refine((v) => v !== 'RSA' && v !== 'EC' && v !== 'OKP' && v !== 'oct'),
 })
 
-export const jwkSchema = z.union([
-  jwkUnknownKeySchema,
-  jwkRsaKeySchema,
-  jwkEcKeySchema,
-  jwkEcSecp256k1KeySchema,
-  jwkOkpKeySchema,
-  jwkSymKeySchema,
-])
+export const jwkSchema = z
+  .union([
+    jwkUnknownKeySchema,
+    jwkRsaKeySchema,
+    jwkEcKeySchema,
+    jwkEcSecp256k1KeySchema,
+    jwkOkpKeySchema,
+    jwkSymKeySchema,
+  ])
+  .refine(
+    (k) =>
+      !k.use ||
+      !k.key_ops ||
+      k.key_ops.every(
+        k.use === 'sig'
+          ? (o) => o === 'sign' || o === 'verify'
+          : (o) => o === 'encrypt' || o === 'decrypt',
+      ),
+    {
+      message: 'use and key_ops must be consistent',
+      path: ['key_ops'],
+    },
+  )
 
 export type Jwk = z.infer<typeof jwkSchema>
 
-export const jwkValidator = jwkSchema.refine(
-  (k) =>
-    !k.use ||
-    !k.key_ops ||
-    k.key_ops.every(
-      k.use === 'sig'
-        ? (o) => o === 'sign' || o === 'verify'
-        : (o) => o === 'encrypt' || o === 'decrypt',
-    ),
-  {
-    message: 'use and key_ops must be consistent',
-    path: ['key_ops'],
-  },
-)
+/** @deprecated */
+export const jwkValidator = jwkSchema
 
-export const jwkPubSchema = jwkValidator
+export const jwkPubSchema = jwkSchema
   .refine((k) => k.kid != null, 'kid is required')
   .refine((k) => !('k' in k) && !('d' in k), 'private key not allowed')
 
-export const jwkPrivateSchema = jwkValidator.refine(
+export const jwkPrivateSchema = jwkSchema.refine(
   (k) => ('k' in k && k.k != null) || ('d' in k && k.d != null),
   'private key required',
 )
