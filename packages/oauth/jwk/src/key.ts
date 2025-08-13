@@ -11,7 +11,21 @@ function isPublicKeyUsage(usage: KeyUsage): boolean {
 }
 
 export abstract class Key<J extends Jwk = Jwk> {
-  constructor(protected readonly jwk: Readonly<J>) {}
+  constructor(protected readonly jwk: Readonly<J>) {
+    const { use, key_ops } = jwk
+
+    if (use && key_ops) {
+      throw new TypeError(`JWK cannot have both "use" and "key_ops"`)
+    }
+
+    if (use && use !== 'sig') {
+      throw new TypeError(`Unsupported JWK use "${use}"`)
+    }
+
+    if (key_ops && !key_ops.some((o) => o === 'sign' || o === 'verify')) {
+      throw new TypeError(`Invalid key_ops "${key_ops}" for "sig" use`)
+    }
+  }
 
   get isPrivate(): boolean {
     const { jwk } = this
