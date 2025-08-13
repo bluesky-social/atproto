@@ -122,12 +122,13 @@ export const jwkSchema = z
   ])
   .refine(
     (k) =>
+      // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
+      // > The "use" parameter is employed to indicate whether a public key is
+      // > used for encrypting data or verifying the signature on data.
       !k.use ||
       !k.key_ops ||
       k.key_ops.every(
-        k.use === 'sig'
-          ? (o) => o === 'sign' || o === 'verify'
-          : (o) => o === 'encrypt' || o === 'decrypt',
+        k.use === 'sig' ? (o) => o === 'verify' : (o) => o === 'decrypt',
       ),
     {
       message: 'use and key_ops must be consistent',
