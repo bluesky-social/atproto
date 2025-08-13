@@ -1,4 +1,4 @@
-import { Jwks, Keyset, jwksSchema } from '@atproto/jwk'
+import { Jwks, Keyset, jwksPubSchema } from '@atproto/jwk'
 import {
   OAuthAuthorizationServerMetadata,
   OAuthClientIdDiscoverable,
@@ -44,7 +44,7 @@ const fetchMetadataHandler = pipe(
 const fetchJwksHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor('application/json', false),
-  fetchJsonZodProcessor(jwksSchema),
+  fetchJsonZodProcessor(jwksPubSchema),
 )
 
 export type LoopbackMetadataGetter = (
