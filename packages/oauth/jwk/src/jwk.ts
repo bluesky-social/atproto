@@ -121,19 +121,9 @@ export const jwkSchema = z
     jwkSymKeySchema,
   ])
   .refine(
-    (k) =>
-      // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
-      // > The "use" parameter is employed to indicate whether a public key is
-      // > used for encrypting data or verifying the signature on data.
-      !k.use ||
-      !k.key_ops ||
-      k.key_ops.every(
-        k.use === 'sig' ? (o) => o === 'verify' : (o) => o === 'decrypt',
-      ),
-    {
-      message: 'use and key_ops must be consistent',
-      path: ['key_ops'],
-    },
+    // https://datatracker.ietf.org/doc/html/rfc7517
+    // > The "use" and "key_ops" JWK members SHOULD NOT be used together
+    (k) => !k.use || !k.key_ops,
   )
 
 export type Jwk = z.infer<typeof jwkSchema>
@@ -143,9 +133,13 @@ export const jwkValidator = jwkSchema
 
 export const jwkPubSchema = jwkSchema
   .refine((k) => k.kid != null, 'kid is required')
-  .refine((k) => !('k' in k) && !('d' in k), 'private key not allowed')
+  .refine((k) => !hasSecretProperty(k), 'private key not allowed')
 
 export const jwkPrivateSchema = jwkSchema.refine(
-  (k) => ('k' in k && k.k != null) || ('d' in k && k.d != null),
+  hasSecretProperty,
   'private key required',
 )
+
+function hasSecretProperty(r: Readonly<Jwk>): boolean {
+  return ('k' in r && r.k != null) || ('d' in r && r.d != null)
+}

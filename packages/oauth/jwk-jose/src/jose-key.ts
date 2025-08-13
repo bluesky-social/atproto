@@ -239,8 +239,7 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     if (!jwk || typeof jwk !== 'object') throw new JwkError('Invalid JWK')
 
     const kid = either(jwk.kid, inputKid)
-    const use = jwk.use || 'sig'
 
-    return new JoseKey(jwkSchema.parse({ ...jwk, kid, use }))
+    return new JoseKey(jwkSchema.parse({ ...jwk, kid }))
   }
 }

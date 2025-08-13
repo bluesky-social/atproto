@@ -1,5 +1,4 @@
 import { jwkAlgorithms } from './alg.js'
-import { JwkError } from './errors.js'
 import { Jwk, KeyUsage, jwkSchema } from './jwk.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
@@ -12,13 +11,7 @@ function isPublicKeyUsage(usage: KeyUsage): boolean {
 }
 
 export abstract class Key<J extends Jwk = Jwk> {
-  constructor(protected readonly jwk: Readonly<J>) {
-    // https://datatracker.ietf.org/doc/html/rfc7517
-    // > The "use" and "key_ops" JWK members SHOULD NOT be used together
-    if (jwk.key_ops && jwk.use) {
-      throw new JwkError('JWK cannot have both "use" and "key_ops" members')
-    }
-  }
+  constructor(protected readonly jwk: Readonly<J>) {}
 
   get isPrivate(): boolean {
     const { jwk } = this
