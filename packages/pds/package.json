@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.167",
+  "version": "0.4.168",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
