@@ -42,6 +42,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
@@ -56,6 +57,7 @@ Object {
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "like": "record(7)",
           "threadMuted": false,
@@ -81,6 +83,7 @@ Object {
           "muted": false,
         },
       },
+      "bookmarkCount": 0,
       "cid": "cids(4)",
       "embed": Object {
         "$type": "app.bsky.embed.images#view",
@@ -146,6 +149,7 @@ Object {
       "repostCount": 0,
       "uri": "record(5)",
       "viewer": Object {
+        "bookmarked": false,
         "embeddingDisabled": false,
         "threadMuted": false,
       },
@@ -189,6 +193,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -213,6 +218,7 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "repost": "record(6)",
       "threadMuted": false,
@@ -263,6 +269,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -277,6 +284,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "like": "record(4)",
       "threadMuted": false,
@@ -301,6 +309,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
@@ -325,6 +334,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -354,6 +364,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(4)",
         "embed": Object {
           "$type": "app.bsky.embed.images#view",
@@ -419,6 +430,7 @@ Object {
         "repostCount": 0,
         "uri": "record(8)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -461,6 +473,7 @@ Object {
                 "muted": false,
               },
             },
+            "bookmarkCount": 0,
             "cid": "cids(6)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
@@ -485,6 +498,7 @@ Object {
             "repostCount": 2,
             "uri": "record(9)",
             "viewer": Object {
+              "bookmarked": false,
               "embeddingDisabled": false,
               "repost": "record(10)",
               "threadMuted": false,
@@ -543,6 +557,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -557,6 +572,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "like": "record(4)",
       "threadMuted": false,
@@ -581,6 +597,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
@@ -605,6 +622,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -633,6 +651,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(4)",
         "embed": Object {
           "$type": "app.bsky.embed.images#view",
@@ -698,6 +717,7 @@ Object {
         "repostCount": 0,
         "uri": "record(8)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -749,6 +769,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -763,6 +784,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "like": "record(4)",
       "threadMuted": false,
@@ -787,6 +809,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
@@ -811,6 +834,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -839,6 +863,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(4)",
         "embed": Object {
           "$type": "app.bsky.embed.images#view",
@@ -904,6 +929,7 @@ Object {
         "repostCount": 0,
         "uri": "record(8)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -955,6 +981,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -969,6 +996,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "threadMuted": false,
     },
@@ -994,6 +1022,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
@@ -1018,6 +1047,7 @@ Object {
         "repostCount": 0,
         "uri": "record(4)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -1060,6 +1090,7 @@ Object {
                 "muted": false,
               },
             },
+            "bookmarkCount": 0,
             "cid": "cids(4)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
@@ -1084,6 +1115,7 @@ Object {
             "repostCount": 0,
             "uri": "record(5)",
             "viewer": Object {
+              "bookmarked": false,
               "embeddingDisabled": false,
               "threadMuted": false,
             },
@@ -1137,6 +1169,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1151,6 +1184,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "threadMuted": false,
     },
@@ -1203,6 +1237,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1227,6 +1262,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "threadMuted": false,
     },
@@ -1270,6 +1306,7 @@ Object {
           "muted": false,
         },
       },
+      "bookmarkCount": 0,
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
@@ -1284,6 +1321,7 @@ Object {
       "repostCount": 0,
       "uri": "record(2)",
       "viewer": Object {
+        "bookmarked": false,
         "embeddingDisabled": false,
         "threadMuted": false,
       },
@@ -1309,6 +1347,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1333,6 +1372,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "threadMuted": false,
     },
@@ -1376,6 +1416,7 @@ Object {
           "muted": false,
         },
       },
+      "bookmarkCount": 0,
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
@@ -1390,6 +1431,7 @@ Object {
       "repostCount": 0,
       "uri": "record(2)",
       "viewer": Object {
+        "bookmarked": false,
         "embeddingDisabled": false,
         "threadMuted": false,
       },
@@ -1415,6 +1457,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1439,6 +1482,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "threadMuted": false,
     },
@@ -1491,6 +1535,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1515,6 +1560,7 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "repost": "record(6)",
       "threadMuted": false,
@@ -1570,6 +1616,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1594,6 +1641,7 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "repost": "record(6)",
       "threadMuted": false,
@@ -1644,6 +1692,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1658,6 +1707,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "like": "record(4)",
       "threadMuted": false,
@@ -1684,6 +1734,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "embed": Object {
           "$type": "app.bsky.embed.images#view",
@@ -1749,6 +1800,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -1791,6 +1843,7 @@ Object {
                 "muted": false,
               },
             },
+            "bookmarkCount": 0,
             "cid": "cids(5)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
@@ -1815,6 +1868,7 @@ Object {
             "repostCount": 2,
             "uri": "record(6)",
             "viewer": Object {
+              "bookmarked": false,
               "embeddingDisabled": false,
               "repost": "record(7)",
               "threadMuted": false,
@@ -1873,6 +1927,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -1887,6 +1942,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "like": "record(4)",
       "threadMuted": false,
@@ -1913,6 +1969,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "embed": Object {
           "$type": "app.bsky.embed.images#view",
@@ -1978,6 +2035,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
