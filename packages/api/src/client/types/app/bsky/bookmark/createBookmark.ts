@@ -10,6 +10,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyBookmarkDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -18,8 +19,7 @@ const id = 'app.bsky.bookmark.createBookmark'
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The at-uri of the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported. */
-  uri: string
+  bookmark: AppBskyBookmarkDefs.Bookmark
 }
 
 export interface CallOptions {

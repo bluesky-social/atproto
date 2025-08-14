@@ -1177,13 +1177,11 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['uri'],
+            required: ['bookmark'],
             properties: {
-              uri: {
-                description:
-                  'The at-uri of the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported.',
-                type: 'string',
-                format: 'at-uri',
+              bookmark: {
+                type: 'ref',
+                ref: 'lex:app.bsky.bookmark.defs#bookmark',
               },
             },
           },
@@ -1208,21 +1206,22 @@ export const schemaDict = {
     id: 'app.bsky.bookmark.defs',
     defs: {
       bookmark: {
-        description: 'Object used to store bookmark data in stash.',
+        description:
+          'Object used to represent a bookmark subject and to store bookmark data in stash.',
         type: 'object',
-        required: ['uri'],
+        required: ['subject'],
         properties: {
-          uri: {
+          subject: {
             description:
-              'The at-uri of the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported.',
-            type: 'string',
-            format: 'at-uri',
+              'A strong ref to the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported.',
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
           },
         },
       },
       bookmarkView: {
         type: 'object',
-        required: ['item'],
+        required: ['item', 'bookmark'],
         properties: {
           item: {
             type: 'union',
@@ -1231,6 +1230,14 @@ export const schemaDict = {
               'lex:app.bsky.feed.defs#notFoundPost',
               'lex:app.bsky.feed.defs#postView',
             ],
+          },
+          bookmark: {
+            type: 'ref',
+            ref: 'lex:app.bsky.bookmark.defs#bookmark',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -1248,18 +1255,21 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['uri'],
+            required: ['bookmark'],
             properties: {
-              uri: {
-                description:
-                  'The at-uri of the record to be removed from bookmarks. Currently, only `app.bsky.feed.post` records are supported.',
-                type: 'string',
-                format: 'at-uri',
+              bookmark: {
+                type: 'ref',
+                ref: 'lex:app.bsky.bookmark.defs#bookmark',
               },
             },
           },
         },
         errors: [
+          {
+            name: 'DifferentCid',
+            description:
+              'A bookmark with the specified URI was found but it has a different CID than the provided one.',
+          },
           {
             name: 'NotFound',
             description:

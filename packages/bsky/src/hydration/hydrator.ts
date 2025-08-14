@@ -8,7 +8,11 @@ import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
-import { Notification } from '../proto/bsky_pb'
+import {
+  Bookmark as BookmarkProto,
+  Notification,
+  RecordRef,
+} from '../proto/bsky_pb'
 import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
@@ -129,6 +133,7 @@ export type HydrationState = {
   activitySubscriptions?: ActivitySubscriptionStates
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
+  bookmarks?: Bookmarks
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -146,6 +151,10 @@ export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
 
 export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
+
+export type Bookmark = BookmarkProto & { subject: RecordRef }
+// record uri => actor did => bookmark
+export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
 
 export class Hydrator {
   actor: ActorHydrator
@@ -990,6 +999,30 @@ export class Hydrator {
     })
   }
 
+  async hydrateBookmarks(
+    bookmarks: Bookmark[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    // @NOTE: The `createBookmark` endpoint limits bookmarks to be of posts,
+    // so we can assume currently all subjects are posts.
+    const postsState = await this.hydratePosts(
+      bookmarks.map((bookmark) => ({ uri: bookmark.subject.uri })),
+      ctx,
+    )
+
+    // mapping uri -> did -> bookmark
+    const bookmarksMap = new HydrationMap(
+      bookmarks.map((bookmark) => {
+        const uri = bookmark.subject.uri
+        const did = bookmark.actorDid
+
+        return [uri, new HydrationMap<Bookmark>([[did, bookmark]])]
+      }),
+    )
+
+    return mergeStates(postsState, { bookmarks: bookmarksMap })
+  }
+
   // provides partial hydration state within getFollows / getFollowers, mainly for applying rules
   async hydrateFollows(
     uris: string[],
@@ -1422,6 +1455,7 @@ export const mergeStates = (
       stateB.bidirectionalBlocks,
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
+    bookmarks: mergeMaps(stateA.bookmarks, stateB.bookmarks),
   }
 }
 

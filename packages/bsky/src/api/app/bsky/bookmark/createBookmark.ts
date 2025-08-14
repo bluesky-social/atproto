@@ -4,18 +4,24 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { Bookmark } from '../../../../lexicon/types/app/bsky/bookmark/defs'
 import { Namespaces } from '../../../../stash'
-import { getExistingKey, validateUri } from './util'
+import { validateUri } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.bookmark.createBookmark({
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
-      const { uri } = input.body
-      validateUri(uri)
+      const {
+        bookmark: { subject },
+      } = input.body
+      validateUri(subject.uri)
 
-      const existingKey = await getExistingKey(ctx, actorDid, uri)
-      if (existingKey) {
+      const res = await ctx.dataplane.getBookmarksByActorAndUris({
+        actorDid,
+        uris: [subject.uri],
+      })
+      const [existing] = res.bookmarks
+      if (existing.key) {
         throw new InvalidRequestError('Bookmark already exists', 'Duplicated')
       }
 
@@ -23,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         actorDid,
         namespace: Namespaces.AppBskyBookmarkDefsBookmark,
         payload: {
-          uri,
+          subject,
         } satisfies Bookmark,
         key: TID.nextStr(),
       })

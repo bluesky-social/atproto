@@ -6,7 +6,7 @@ import {
   AppBskyFeedDefs,
   AtpAgent,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { OutputSchema as GetBookmarksOutputSchema } from '../../src/lexicon/types/app/bsky/bookmark/getBookmarks'
 import { PostView } from '../../src/lexicon/types/app/bsky/feed/defs'
@@ -63,9 +63,9 @@ describe('appview bookmarks views', () => {
       },
     )
 
-  const create = async (actor: string, uri: string) =>
+  const create = async (actor: string, ref: RecordRef) =>
     agent.app.bsky.bookmark.createBookmark(
-      { uri },
+      { bookmark: { subject: { cid: ref.cidStr, uri: ref.uriStr } } },
       {
         headers: await network.serviceHeaders(
           actor,
@@ -74,9 +74,9 @@ describe('appview bookmarks views', () => {
       },
     )
 
-  const del = async (actor: string, uri: string) =>
+  const del = async (actor: string, ref: RecordRef) =>
     agent.app.bsky.bookmark.deleteBookmark(
-      { uri },
+      { bookmark: { subject: { cid: ref.cidStr, uri: ref.uriStr } } },
       {
         headers: await network.serviceHeaders(
           actor,
@@ -85,9 +85,9 @@ describe('appview bookmarks views', () => {
       },
     )
 
-  const getPost = async (actor: string, uri: string) => {
+  const getPost = async (actor: string, ref: RecordRef) => {
     const { data } = await agent.app.bsky.feed.getPosts(
-      { uris: [uri] },
+      { uris: [ref.uriStr] },
       {
         headers: await network.serviceHeaders(actor, ids.AppBskyFeedGetPosts),
       },
@@ -98,12 +98,12 @@ describe('appview bookmarks views', () => {
 
   describe('creation', () => {
     it('creates bookmarks', async () => {
-      await create(alice, sc.posts[alice][0].ref.uriStr)
-      await create(alice, sc.posts[bob][0].ref.uriStr)
-      await create(alice, sc.posts[carol][0].ref.uriStr)
+      await create(alice, sc.posts[alice][0].ref)
+      await create(alice, sc.posts[bob][0].ref)
+      await create(alice, sc.posts[carol][0].ref)
 
-      await create(bob, sc.posts[bob][0].ref.uriStr)
-      await create(bob, sc.posts[carol][0].ref.uriStr)
+      await create(bob, sc.posts[bob][0].ref)
+      await create(bob, sc.posts[carol][0].ref)
 
       const { data: dataAlice } = await get(alice)
       expect(dataAlice.bookmarks).toHaveLength(3)
@@ -113,7 +113,7 @@ describe('appview bookmarks views', () => {
     })
 
     it('fails on dupes', async () => {
-      const uri = sc.posts[alice][0].ref.uriStr
+      const uri = sc.posts[alice][0].ref
       await create(alice, uri)
       await expect(create(alice, uri)).rejects.toThrow(
         AppBskyBookmarkCreateBookmark.DuplicatedError,
@@ -121,8 +121,8 @@ describe('appview bookmarks views', () => {
     })
 
     it('fails on unsupported collections', async () => {
-      const followUri = sc.follows[alice][bob].uriStr
-      await expect(create(alice, followUri)).rejects.toThrow(
+      const followRef = sc.follows[alice][bob]
+      await expect(create(alice, followRef)).rejects.toThrow(
         AppBskyBookmarkCreateBookmark.UnsupportedCollectionError,
       )
     })
@@ -130,30 +130,30 @@ describe('appview bookmarks views', () => {
 
   describe('deletion', () => {
     it('removes bookmarks', async () => {
-      await create(alice, sc.posts[alice][0].ref.uriStr)
-      await create(alice, sc.posts[bob][0].ref.uriStr)
-      await create(alice, sc.posts[carol][0].ref.uriStr)
+      await create(alice, sc.posts[alice][0].ref)
+      await create(alice, sc.posts[bob][0].ref)
+      await create(alice, sc.posts[carol][0].ref)
 
       const { data: dataBefore } = await get(alice)
       expect(dataBefore.bookmarks).toHaveLength(3)
 
-      await del(alice, sc.posts[alice][0].ref.uriStr)
-      await del(alice, sc.posts[carol][0].ref.uriStr)
+      await del(alice, sc.posts[alice][0].ref)
+      await del(alice, sc.posts[carol][0].ref)
 
       const { data: dataAfter } = await get(alice)
       expect(dataAfter.bookmarks).toHaveLength(1)
     })
 
     it('fails on not found', async () => {
-      const uri = sc.posts[alice][0].ref.uriStr
+      const uri = sc.posts[alice][0].ref
       await expect(del(alice, uri)).rejects.toThrow(
         AppBskyBookmarkDeleteBookmark.NotFoundError,
       )
     })
 
     it('fails on unsupported collections', async () => {
-      const followUri = sc.follows[alice][bob].uriStr
-      await expect(del(alice, followUri)).rejects.toThrow(
+      const followRef = sc.follows[alice][bob]
+      await expect(del(alice, followRef)).rejects.toThrow(
         AppBskyBookmarkDeleteBookmark.UnsupportedCollectionError,
       )
     })
@@ -166,24 +166,24 @@ describe('appview bookmarks views', () => {
     })
 
     it('includes the bookmarked viewer state', async () => {
-      const uri = sc.posts[bob][0].ref.uriStr
+      const ref = sc.posts[bob][0].ref
 
-      const postBefore = await getPost(alice, uri)
+      const postBefore = await getPost(alice, ref)
       expect(postBefore.viewer?.bookmarked).toBe(false)
 
-      await create(alice, uri)
-      const postAfterCreate = await getPost(alice, uri)
+      await create(alice, ref)
+      const postAfterCreate = await getPost(alice, ref)
       expect(postAfterCreate.viewer?.bookmarked).toBe(true)
-      const postAfterCreateForBob = await getPost(bob, uri)
+      const postAfterCreateForBob = await getPost(bob, ref)
       expect(postAfterCreateForBob.viewer?.bookmarked).toBe(false)
 
-      await del(alice, uri)
-      const postAfterDel = await getPost(alice, uri)
+      await del(alice, ref)
+      const postAfterDel = await getPost(alice, ref)
       expect(postAfterDel.viewer?.bookmarked).toBe(false)
     })
 
     it('includes the bookmark counts', async () => {
-      const uri = sc.posts[bob][0].ref.uriStr
+      const uri = sc.posts[bob][0].ref
 
       const postBefore = await getPost(alice, uri)
       expect(postBefore.bookmarkCount).toBe(0)
@@ -205,13 +205,13 @@ describe('appview bookmarks views', () => {
     })
 
     it('paginates bookmarks', async () => {
-      await create(alice, sc.posts[alice][0].ref.uriStr)
-      await create(alice, sc.posts[alice][1].ref.uriStr)
-      await create(alice, sc.posts[bob][0].ref.uriStr)
-      await create(alice, sc.posts[bob][1].ref.uriStr)
-      await create(alice, sc.posts[carol][0].ref.uriStr)
-      await create(alice, sc.posts[dan][0].ref.uriStr)
-      await create(alice, sc.posts[dan][1].ref.uriStr)
+      await create(alice, sc.posts[alice][0].ref)
+      await create(alice, sc.posts[alice][1].ref)
+      await create(alice, sc.posts[bob][0].ref)
+      await create(alice, sc.posts[bob][1].ref)
+      await create(alice, sc.posts[carol][0].ref)
+      await create(alice, sc.posts[dan][0].ref)
+      await create(alice, sc.posts[dan][1].ref)
 
       const results = (out: GetBookmarksOutputSchema[]) =>
         out.flatMap((res) => res.bookmarks)
@@ -243,12 +243,12 @@ describe('appview bookmarks views', () => {
     })
 
     it('removes entries by blocked users, bidirectionally', async () => {
-      await create(alice, sc.posts[alice][0].ref.uriStr)
-      await create(alice, sc.posts[bob][0].ref.uriStr)
-      await create(alice, sc.posts[carol][0].ref.uriStr)
+      await create(alice, sc.posts[alice][0].ref)
+      await create(alice, sc.posts[bob][0].ref)
+      await create(alice, sc.posts[carol][0].ref)
 
-      await create(bob, sc.posts[alice][0].ref.uriStr)
-      await create(bob, sc.posts[carol][0].ref.uriStr)
+      await create(bob, sc.posts[alice][0].ref)
+      await create(bob, sc.posts[carol][0].ref)
 
       await sc.block(alice, bob)
       await network.processAll()

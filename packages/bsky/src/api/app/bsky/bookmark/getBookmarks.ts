@@ -10,6 +10,7 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
+import { Bookmark, RecordRef } from '../../../../proto/bsky_pb'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
@@ -44,17 +45,20 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actorDid = params.hydrateCtx.viewer
-  const { uris, cursor } = await ctx.hydrator.dataplane.getBookmarkUris({
-    actorDid: params.hydrateCtx.viewer,
-    limit: params.limit,
-    cursor: params.cursor,
-  })
+  const { bookmarks, cursor } =
+    await ctx.hydrator.dataplane.getBookmarksByActor({
+      actorDid: params.hydrateCtx.viewer,
+      limit: params.limit,
+      cursor: params.cursor,
+    })
   return {
     actorDid,
-    uris,
+    bookmarks: bookmarks.filter((b): b is BookmarkWithSubject => !!b.subject),
     cursor: cursor || undefined,
   }
 }
@@ -63,23 +67,19 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { uris } = skeleton
-  const state = await ctx.hydrator.hydratePosts(
-    uris.map((uri) => ({ uri })),
-    params.hydrateCtx,
-  )
-  return state
+  const { bookmarks } = skeleton
+  return ctx.hydrator.hydrateBookmarks(bookmarks, params.hydrateCtx)
 }
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, hydration, skeleton } = input
-  const { uris, cursor } = skeleton
-  const bookmarks = mapDefined(uris, (uri) =>
-    ctx.views.bookmark(uri, hydration),
+  const { bookmarks, cursor } = skeleton
+  const bookmarkViews = mapDefined(bookmarks, (bookmark) =>
+    ctx.views.bookmark(bookmark.subject.uri, hydration),
   )
-  return { bookmarks: bookmarks, cursor }
+  return { bookmarks: bookmarkViews, cursor }
 }
 
 type Context = {
@@ -91,8 +91,10 @@ type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
+type BookmarkWithSubject = Bookmark & { subject: RecordRef }
+
 type SkeletonState = {
   actorDid: string
-  uris: string[]
+  bookmarks: BookmarkWithSubject[]
   cursor?: string
 }

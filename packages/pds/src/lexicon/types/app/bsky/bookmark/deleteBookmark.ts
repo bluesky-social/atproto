@@ -9,6 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyBookmarkDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -17,8 +18,7 @@ const id = 'app.bsky.bookmark.deleteBookmark'
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The at-uri of the record to be removed from bookmarks. Currently, only `app.bsky.feed.post` records are supported. */
-  uri: string
+  bookmark: AppBskyBookmarkDefs.Bookmark
 }
 
 export interface HandlerInput {
@@ -29,7 +29,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'NotFound' | 'UnsupportedCollection'
+  error?: 'DifferentCid' | 'NotFound' | 'UnsupportedCollection'
 }
 
 export type HandlerOutput = HandlerError | void

@@ -9,17 +9,17 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as AppBskyFeedDefs from '../feed/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.bookmark.defs'
 
-/** Object used to store bookmark data in stash. */
+/** Object used to represent a bookmark subject and to store bookmark data in stash. */
 export interface Bookmark {
   $type?: 'app.bsky.bookmark.defs#bookmark'
-  /** The at-uri of the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported. */
-  uri: string
+  subject: ComAtprotoRepoStrongRef.Main
 }
 
 const hashBookmark = 'bookmark'
@@ -39,6 +39,8 @@ export interface BookmarkView {
     | $Typed<AppBskyFeedDefs.NotFoundPost>
     | $Typed<AppBskyFeedDefs.PostView>
     | { $type: string }
+  bookmark: Bookmark
+  createdAt?: string
 }
 
 const hashBookmarkView = 'bookmarkView'

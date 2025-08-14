@@ -1063,20 +1063,41 @@ export class Views {
   // Bookmarks
   // ------------
   bookmark(
-    uri: string,
+    subjectUri: string,
     state: HydrationState,
   ): Un$Typed<BookmarkView> | undefined {
-    const atUri = new AtUri(uri)
+    const viewer = state.ctx?.viewer
+    if (!viewer) return
+
+    const bookmark = state.bookmarks?.get(subjectUri)?.get(viewer)
+    if (!bookmark) return
+
+    const atUri = new AtUri(subjectUri)
+    let item: BookmarkView['item'] | undefined = undefined
     if (atUri.collection === ids.AppBskyFeedPost) {
-      return this.bookmarkPost(uri, state)
+      item = this.bookmarkItemPost(subjectUri, state)
     }
-    return undefined
+    if (!item) return
+    return {
+      createdAt: bookmark.indexedAt?.toDate().toISOString(),
+      bookmark: {
+        subject: bookmark.subject,
+      },
+      item,
+    }
   }
 
-  bookmarkPost(uri: string, state: HydrationState): Un$Typed<BookmarkView> {
-    return {
-      item: this.maybePost(uri, state),
-    }
+  bookmarkItemPost(
+    uri: string,
+    state: HydrationState,
+  ): $Typed<MaybePostView> | undefined {
+    const viewer = state.ctx?.viewer
+    if (!viewer) return
+
+    const bookmark = state.bookmarks?.get(uri)?.get(viewer)
+    if (!bookmark) return
+
+    return this.maybePost(uri, state)
   }
 
   // Threads

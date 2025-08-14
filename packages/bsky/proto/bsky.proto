@@ -1255,30 +1255,28 @@ message GetRecordTakedownResponse {
 //
 // Bookmarks
 //
+message Bookmark {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  RecordRef subject = 4;
+  google.protobuf.Timestamp indexed_at = 5;
+}
 
-message GetBookmarkUrisRequest {
+message GetBookmarksByActorRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
 }
 
-message GetBookmarkUrisResponse {
-  repeated string uris = 1;
+message GetBookmarksByActorResponse {
+  repeated Bookmark bookmarks = 1;
   string cursor = 2;
 }
 
 message GetBookmarksByActorAndUrisRequest {
   string actor_did = 1;
   repeated string uris = 2;
-}
-
-message Bookmark {
-  string actor_did = 1;
-  string namespace = 2;
-  string key = 3;
-  // uri of the bookmarked record.
-  string uri = 4;
-  google.protobuf.Timestamp indexed_at = 5;
 }
 
 message GetBookmarksByActorAndUrisResponse {
@@ -1449,7 +1447,9 @@ service Service {
   rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
 
   // Bookmarks
-  rpc GetBookmarkUris(GetBookmarkUrisRequest) returns (GetBookmarkUrisResponse);
+  // Returns the bookmarks created by the actor.
+  rpc GetBookmarksByActor(GetBookmarksByActorRequest) returns (GetBookmarksByActorResponse);
+  // Returns bookmarks created by the actor for
   rpc GetBookmarksByActorAndUris(GetBookmarksByActorAndUrisRequest) returns (GetBookmarksByActorAndUrisResponse);
 
   // Identity

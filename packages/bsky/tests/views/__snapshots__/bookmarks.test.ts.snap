@@ -3,6 +3,13 @@
 exports[`appview bookmarks views listing removes entries by blocked users, bidirectionally 1`] = `
 Array [
   Object {
+    "bookmark": Object {
+      "subject": Object {
+        "cid": "cids(0)",
+        "uri": "record(0)",
+      },
+    },
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#postView",
       "author": Object {
@@ -113,6 +120,13 @@ Array [
     },
   },
   Object {
+    "bookmark": Object {
+      "subject": Object {
+        "cid": "cids(3)",
+        "uri": "record(3)",
+      },
+    },
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#blockedPost",
       "author": Object {
@@ -127,6 +141,13 @@ Array [
     },
   },
   Object {
+    "bookmark": Object {
+      "subject": Object {
+        "cid": "cids(4)",
+        "uri": "record(6)",
+      },
+    },
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#postView",
       "author": Object {
@@ -204,6 +225,13 @@ Array [
 exports[`appview bookmarks views listing removes entries by blocked users, bidirectionally 2`] = `
 Array [
   Object {
+    "bookmark": Object {
+      "subject": Object {
+        "cid": "cids(0)",
+        "uri": "record(0)",
+      },
+    },
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#postView",
       "author": Object {
@@ -338,6 +366,13 @@ Array [
     },
   },
   Object {
+    "bookmark": Object {
+      "subject": Object {
+        "cid": "cids(5)",
+        "uri": "record(4)",
+      },
+    },
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#blockedPost",
       "author": Object {

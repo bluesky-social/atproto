@@ -328,7 +328,7 @@ const handleBookmarkOperation = async (
         uri,
         bookmarkCount: dbTxn.db
           .selectFrom('bookmark')
-          .where('bookmark.uri', '=', uri)
+          .where('bookmark.subjectUri', '=', uri)
           .select(countAll.as('count')),
       })
       .onConflict((oc) =>
@@ -343,7 +343,9 @@ const handleBookmarkOperation = async (
     const parsed = jsonStringToLex(
       Buffer.from(payload).toString('utf8'),
     ) as Bookmark
-    const { uri } = parsed
+    const {
+      subject: { uri, cid },
+    } = parsed
 
     await db.transaction(async (dbTxn) => {
       await dbTxn.db
@@ -352,7 +354,8 @@ const handleBookmarkOperation = async (
           creator: actorDid,
           key,
           indexedAt: now,
-          uri,
+          subjectUri: uri,
+          subjectCid: cid,
         })
         .execute()
 
@@ -376,7 +379,7 @@ const handleBookmarkOperation = async (
           .where('key', '=', key)
           .execute()
 
-        await updateAgg(bookmark.uri, dbTxn)
+        await updateAgg(bookmark.subjectUri, dbTxn)
       }
     })
   }

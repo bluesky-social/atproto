@@ -11,52 +11,7 @@ import { Database } from '../db'
 import { StashKeyKey } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getBookmarksByActorAndUris(req) {
-    const { actorDid, uris } = req
-
-    if (uris.length === 0) {
-      return new GetBookmarksByActorAndUrisResponse({
-        bookmarks: [],
-      })
-    }
-
-    const res = await db.db
-      .selectFrom('bookmark')
-      .where('bookmark.creator', '=', actorDid)
-      .where('uri', 'in', uris)
-      .selectAll()
-      .execute()
-
-    const byUri = keyBy(res, 'uri')
-    const bookmarks = uris.map((did): PlainMessage<Bookmark> => {
-      const bookmark = byUri.get(did)
-      if (!bookmark) {
-        return {
-          actorDid,
-          namespace:
-            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
-          key: '',
-          uri: '',
-          indexedAt: undefined,
-        }
-      }
-
-      return {
-        actorDid,
-        namespace:
-          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
-        key: bookmark.key,
-        uri: bookmark.uri,
-        indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
-      }
-    })
-
-    return {
-      bookmarks,
-    }
-  },
-
-  async getBookmarkUris(req) {
+  async getBookmarksByActor(req) {
     const { actorDid, cursor, limit } = req
     const { ref } = db.db.dynamic
 
@@ -73,8 +28,66 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const res = await builder.execute()
     return {
-      uris: res.map((b) => b.uri),
+      bookmarks: res.map(
+        (b): PlainMessage<Bookmark> => ({
+          actorDid: b.creator,
+          indexedAt: Timestamp.fromDate(new Date(b.indexedAt)),
+          key: b.key,
+          namespace: Namespaces.AppBskyBookmarkDefsBookmark,
+          subject: {
+            cid: b.subjectCid,
+            uri: b.subjectUri,
+          },
+        }),
+      ),
       cursor: key.packFromResult(res),
+    }
+  },
+
+  async getBookmarksByActorAndUris(req) {
+    const { actorDid, uris } = req
+
+    if (uris.length === 0) {
+      return new GetBookmarksByActorAndUrisResponse({
+        bookmarks: [],
+      })
+    }
+
+    const res = await db.db
+      .selectFrom('bookmark')
+      .where('bookmark.creator', '=', actorDid)
+      .where('subjectUri', 'in', uris)
+      .selectAll()
+      .execute()
+
+    const byUri = keyBy(res, 'subjectUri')
+    const bookmarks = uris.map((did): PlainMessage<Bookmark> => {
+      const bookmark = byUri.get(did)
+      if (!bookmark) {
+        return {
+          actorDid: '',
+          namespace: '',
+          key: '',
+          subject: undefined,
+          indexedAt: undefined,
+        }
+      }
+
+      return {
+        actorDid,
+        namespace:
+          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+        key: bookmark.key,
+        subject: {
+          uri: bookmark.subjectUri,
+          cid: bookmark.subjectCid,
+        },
+        indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
+      }
+    })
+
+    return {
+      bookmarks,
     }
   },
 })

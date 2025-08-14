@@ -10,6 +10,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as AppBskyBookmarkDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -18,8 +19,7 @@ const id = 'app.bsky.bookmark.deleteBookmark'
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The at-uri of the record to be removed from bookmarks. Currently, only `app.bsky.feed.post` records are supported. */
-  uri: string
+  bookmark: AppBskyBookmarkDefs.Bookmark
 }
 
 export interface CallOptions {
@@ -32,6 +32,12 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+}
+
+export class DifferentCidError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
 }
 
 export class NotFoundError extends XRPCError {
@@ -48,6 +54,7 @@ export class UnsupportedCollectionError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'DifferentCid') return new DifferentCidError(e)
     if (e.error === 'NotFound') return new NotFoundError(e)
     if (e.error === 'UnsupportedCollection')
       return new UnsupportedCollectionError(e)

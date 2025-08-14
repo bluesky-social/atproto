@@ -9,12 +9,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri"],
+          "required": ["bookmark"],
           "properties": {
-            "uri": {
-              "description": "The at-uri of the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported.",
-              "type": "string",
-              "format": "at-uri"
+            "bookmark": {
+              "type": "ref",
+              "ref": "app.bsky.bookmark.defs#bookmark"
             }
           }
         }
