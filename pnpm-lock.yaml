@@ -1098,6 +1098,9 @@ importers:
       '@atproto/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
+      '@atproto/lexicon-resolver':
+        specifier: workspace:*
+        version: link:../../lexicon-resolver
       '@atproto/oauth-provider-api':
         specifier: workspace:*
         version: link:../oauth-provider-api
