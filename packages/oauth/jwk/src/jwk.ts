@@ -120,13 +120,47 @@ export const jwkSchema = z
     jwkOkpKeySchema,
     jwkSymKeySchema,
   ])
+  // https://datatracker.ietf.org/doc/html/rfc7517#section-4.2
+  // > The "use" (public key use) parameter identifies the intended use of the
+  // > public key
+  .refine((k): boolean => !(k.use && isPrivateJwk(k)), {
+    message: 'private key not allowed with "use" parameter',
+    path: ['use'],
+  })
+  // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
+  // > The "use" and "key_ops" JWK members SHOULD NOT be used together;
+  // > however, if both are used, the information they convey MUST be
+  // > consistent.
   .refine(
-    // https://datatracker.ietf.org/doc/html/rfc7517
-    // > The "use" and "key_ops" JWK members SHOULD NOT be used together
-    (k) => !k.use || !k.key_ops,
+    (k): boolean =>
+      !k.use ||
+      !k.key_ops ||
+      k.key_ops.every(
+        k.use === 'sig' ? (o) => o === 'verify' : (o) => o === 'decrypt',
+      ),
+    {
+      message: '"key_ops" must be consistent with "use"',
+      path: ['key_ops'],
+    },
   )
 
 export type Jwk = z.infer<typeof jwkSchema>
+
+export function isSharedSecretJwk<J extends Readonly<Jwk>>(
+  jwk: J,
+): jwk is Extract<J, { k: NonNullable<unknown> }> {
+  return 'k' in jwk && jwk.k != null
+}
+
+export function isPrivateSecretJwk<J extends Readonly<Jwk>>(
+  jwk: J,
+): jwk is Extract<J, { d: NonNullable<unknown> }> {
+  return 'd' in jwk && jwk.d != null
+}
+
+export function isPrivateJwk<J extends Readonly<Jwk>>(jwk: J) {
+  return isPrivateSecretJwk(jwk) || isSharedSecretJwk(jwk)
+}
 
 /** @deprecated use {@link jwkSchema} */
 export const jwkValidator = jwkSchema
@@ -134,20 +168,6 @@ export const jwkValidator = jwkSchema
 export const jwkPubSchema = jwkSchema
   .refine((k) => k.kid != null, 'kid is required')
   .refine((k) => !isPrivateJwk(k), 'private key not allowed')
-
-export function isSharedSecretJwk(jwk: Readonly<Jwk>): boolean {
-  return 'k' in jwk && jwk.k != null
-}
-
-export const jwkSharedSecretSchema = jwkSchema.refine(
-  isSharedSecretJwk,
-  'shared secret required',
-)
-
-export function isPrivateJwk(jwk: Readonly<Jwk>): boolean {
-  if (isSharedSecretJwk(jwk)) return true
-  return 'd' in jwk && jwk.d != null
-}
 
 export const jwkPrivateSchema = jwkSchema.refine(
   isPrivateJwk,

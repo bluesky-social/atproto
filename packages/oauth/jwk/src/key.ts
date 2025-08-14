@@ -27,16 +27,8 @@ export abstract class Key<J extends Jwk = Jwk> {
   constructor(protected readonly jwk: Readonly<J>) {
     const { use, key_ops } = jwk
 
-    if (use && key_ops) {
-      throw new JwkError(`JWK cannot have both "use" and "key_ops"`)
-    }
-
     if (use && use !== 'sig') {
       throw new JwkError(`Unsupported JWK use "${use}"`)
-    }
-
-    if (use && isPrivateJwk(jwk)) {
-      throw new JwkError(`JWK with "use" cannot be a private key`)
     }
 
     if (key_ops && !key_ops.includes('sign') && !key_ops.includes('verify')) {
@@ -64,11 +56,27 @@ export abstract class Key<J extends Jwk = Jwk> {
     | undefined {
     if (this.isSymetric) return undefined
 
+    // Translate private ops into public ops
+    const publicOps = this.jwk.key_ops
+      ? Array.from(
+          new Set(
+            this.jwk.key_ops
+              .map((op) =>
+                op === 'sign' ? 'verify' : op === 'encrypt' ? 'decrypt' : op,
+              )
+              .filter(isPublicKeyUsage),
+          ),
+        )
+      : undefined
+
+    // No possible ops
+    if (publicOps?.length === 0) return undefined
+
     return jwkSchemaReadonly.parse({
       ...this.jwk,
       d: undefined,
       k: undefined,
-      key_ops: this.jwk.key_ops?.filter(isPublicKeyUsage),
+      key_ops: publicOps,
     }) as Exclude<J, { kty: 'oct' }> & { d?: never }
   }
 
@@ -114,45 +122,49 @@ export abstract class Key<J extends Jwk = Jwk> {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
   }
 
-  matches(options: KeyMatchOptions) {
+  matches(opts: KeyMatchOptions) {
     // Optimization: Empty string or empty array will not match any key
-    if (options.alg?.length === 0) return false
-    if (options.kid?.length === 0) return false
+    if (opts.alg?.length === 0) return false
+    if (opts.kid?.length === 0) return false
 
-    if (options.usage) {
-      if (this.ops && !this.ops.includes(options.usage)) {
-        return false
+    if (opts.usage) {
+      if (this.ops) {
+        if (opts.usage === 'verify' && this.ops.includes('sign')) {
+          // allowed
+        } else if (opts.usage === 'decrypt' && this.ops.includes('encrypt')) {
+          // allowed
+        } else if (!this.ops.includes(opts.usage)) {
+          return false // no match
+        }
       }
 
       if (this.use) {
-        // "this" should be a public key
-
-        if (options.usage === 'verify' && this.use === 'sig') {
-          // ok
-        } else if (options.usage === 'encrypt' && this.use === 'enc') {
-          // ok
+        if (opts.usage === 'verify' && this.use === 'sig') {
+          // allowed
+        } else if (opts.usage === 'encrypt' && this.use === 'enc') {
+          // allowed
         } else {
           return false // no match
         }
       }
 
-      if (options.usage === 'sign' || options.usage === 'encrypt') {
+      if (opts.usage === 'sign' || opts.usage === 'encrypt') {
         if (!this.isPrivate) return false
       }
     }
 
-    if (Array.isArray(options.kid)) {
+    if (Array.isArray(opts.kid)) {
       if (!this.kid) return false
-      if (!options.kid.includes(this.kid)) return false
-    } else if (options.kid != null) {
+      if (!opts.kid.includes(this.kid)) return false
+    } else if (opts.kid != null) {
       if (!this.kid) return false
-      if (this.kid !== options.kid) return false
+      if (this.kid !== opts.kid) return false
     }
 
-    if (Array.isArray(options.alg)) {
-      if (!options.alg.some((a) => this.algorithms.includes(a))) return false
-    } else if (typeof options.alg === 'string') {
-      if (!this.algorithms.includes(options.alg)) return false
+    if (Array.isArray(opts.alg)) {
+      if (!opts.alg.some((a) => this.algorithms.includes(a))) return false
+    } else if (typeof opts.alg === 'string') {
+      if (!this.algorithms.includes(opts.alg)) return false
     }
 
     return true
