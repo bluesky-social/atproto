@@ -111,7 +111,7 @@ export abstract class Key<J extends Jwk = Jwk> {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
   }
 
-  matches(opts: KeyMatchOptions) {
+  matches(opts: KeyMatchOptions): boolean {
     // Optimization: Empty string or empty array will not match any key
     if (opts.alg?.length === 0) return false
     if (opts.kid?.length === 0) return false
