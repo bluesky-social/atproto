@@ -168,7 +168,7 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
       ...options,
       extractable: true,
     })
-    return this.fromImportable(kp.privateKey, kid)
+    return this.fromKeyLike(kp.privateKey, kid)
   }
 
   static async fromImportable(

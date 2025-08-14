@@ -133,13 +133,23 @@ export const jwkValidator = jwkSchema
 
 export const jwkPubSchema = jwkSchema
   .refine((k) => k.kid != null, 'kid is required')
-  .refine((k) => !hasSecretProperty(k), 'private key not allowed')
+  .refine((k) => !isPrivateJwk(k), 'private key not allowed')
 
-export const jwkPrivateSchema = jwkSchema.refine(
-  hasSecretProperty,
-  'private key required',
+export function isSharedSecretJwk(jwk: Readonly<Jwk>): boolean {
+  return 'k' in jwk && jwk.k != null
+}
+
+export const jwkSharedSecretSchema = jwkSchema.refine(
+  isSharedSecretJwk,
+  'shared secret required',
 )
 
-function hasSecretProperty(r: Readonly<Jwk>): boolean {
-  return ('k' in r && r.k != null) || ('d' in r && r.d != null)
+export function isPrivateJwk(jwk: Readonly<Jwk>): boolean {
+  if (isSharedSecretJwk(jwk)) return true
+  return 'd' in jwk && jwk.d != null
 }
+
+export const jwkPrivateSchema = jwkSchema.refine(
+  isPrivateJwk,
+  'private key required',
+)

@@ -1,6 +1,12 @@
 import { jwkAlgorithms } from './alg.js'
 import { JwkError } from './errors.js'
-import { Jwk, KeyUsage, jwkSchema } from './jwk.js'
+import {
+  Jwk,
+  KeyUsage,
+  isPrivateJwk,
+  isSharedSecretJwk,
+  jwkSchema,
+} from './jwk.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
@@ -9,6 +15,12 @@ const jwkSchemaReadonly = jwkSchema.readonly()
 
 function isPublicKeyUsage(usage: KeyUsage): boolean {
   return usage === 'verify' || usage === 'decrypt'
+}
+
+export type KeyMatchOptions = {
+  usage?: KeyUsage
+  kid?: string | string[]
+  alg?: string | string[]
 }
 
 export abstract class Key<J extends Jwk = Jwk> {
@@ -23,22 +35,23 @@ export abstract class Key<J extends Jwk = Jwk> {
       throw new JwkError(`Unsupported JWK use "${use}"`)
     }
 
-    if (key_ops && !key_ops.some((o) => o === 'sign' || o === 'verify')) {
+    if (use && isPrivateJwk(jwk)) {
+      throw new JwkError(`JWK with "use" cannot be a private key`)
+    }
+
+    if (key_ops && !key_ops.includes('sign') && !key_ops.includes('verify')) {
       throw new JwkError(`Invalid key_ops "${key_ops}" for "sig" use`)
     }
   }
 
+  @cachedGetter
   get isPrivate(): boolean {
-    const { jwk } = this
-    if ('d' in jwk && jwk.d !== undefined) return true
-    if ('k' in jwk && jwk.k !== undefined) return true
-    return false
+    return isPrivateJwk(this.jwk)
   }
 
+  @cachedGetter
   get isSymetric(): boolean {
-    const { jwk } = this
-    if ('k' in jwk && jwk.k !== undefined) return true
-    return false
+    return isSharedSecretJwk(this.jwk)
   }
 
   get privateJwk(): Readonly<J> | undefined {
@@ -66,8 +79,12 @@ export abstract class Key<J extends Jwk = Jwk> {
     return jwkSchemaReadonly.parse({ crv, e, kty, n, x, y })
   }
 
-  get use() {
-    return this.jwk.use!
+  get use(): 'sig' | 'enc' | undefined {
+    return this.jwk.use
+  }
+
+  get ops(): readonly KeyUsage[] | undefined {
+    return this.jwk.key_ops
   }
 
   /**
@@ -76,11 +93,11 @@ export abstract class Key<J extends Jwk = Jwk> {
    *
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7518#section-3.1 | "alg" (Algorithm) Header Parameter Values for JWS}
    */
-  get alg() {
+  get alg(): string | undefined {
     return this.jwk.alg
   }
 
-  get kid() {
+  get kid(): string | undefined {
     return this.jwk.kid
   }
 
@@ -95,6 +112,50 @@ export abstract class Key<J extends Jwk = Jwk> {
   @cachedGetter
   get algorithms(): readonly string[] {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
+  }
+
+  matches(options: KeyMatchOptions) {
+    // Optimization: Empty string or empty array will not match any key
+    if (options.alg?.length === 0) return false
+    if (options.kid?.length === 0) return false
+
+    if (options.usage) {
+      if (this.ops && !this.ops.includes(options.usage)) {
+        return false
+      }
+
+      if (this.use) {
+        // "this" should be a public key
+
+        if (options.usage === 'verify' && this.use === 'sig') {
+          // ok
+        } else if (options.usage === 'encrypt' && this.use === 'enc') {
+          // ok
+        } else {
+          return false // no match
+        }
+      }
+
+      if (options.usage === 'sign' || options.usage === 'encrypt') {
+        if (!this.isPrivate) return false
+      }
+    }
+
+    if (Array.isArray(options.kid)) {
+      if (!this.kid) return false
+      if (!options.kid.includes(this.kid)) return false
+    } else if (options.kid != null) {
+      if (!this.kid) return false
+      if (this.kid !== options.kid) return false
+    }
+
+    if (Array.isArray(options.alg)) {
+      if (!options.alg.some((a) => this.algorithms.includes(a))) return false
+    } else if (typeof options.alg === 'string') {
+      if (!this.algorithms.includes(options.alg)) return false
+    }
+
+    return true
   }
 
   /**
