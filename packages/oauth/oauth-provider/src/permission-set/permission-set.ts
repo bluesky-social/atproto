@@ -1,44 +1,44 @@
 // @NOTE should this be moved to @atproto/lexicon ?
 
 import { z } from 'zod'
-import {
-  Accept,
-  REPO_ACTIONS,
-  isAccept,
-  isAudParam,
-  isCollectionParam,
-  isLxmParam,
-} from '@atproto/oauth-scopes'
+import { REPO_ACTIONS, isAccept, isAudParam } from '@atproto/oauth-scopes'
+import { NSID } from '@atproto/syntax'
+
+const nsidSchema = z.string().transform((input, ctx) => {
+  try {
+    return new NSID(input)
+  } catch (err) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: err instanceof Error ? err.message : 'Invalid NSID',
+    })
+    return z.NEVER
+  }
+})
 
 const RESOURCE = 'resource'
 
 const permissionBaseSchema = z.object({ type: z.literal('permission') })
 
-const acceptSchema = z.custom<Accept>(isAccept, {
-  message: 'Invalid blob MIME type',
-})
 export const blobPermissionSchema = permissionBaseSchema.extend({
   [RESOURCE]: z.literal('blob'),
-  accept: z.array(acceptSchema).nonempty(),
+  accept: z
+    .array(z.string().refine(isAccept, 'Invalid blob MIME type'))
+    .nonempty(),
 })
 export type BlobPermission = z.infer<typeof blobPermissionSchema>
 
-const collectionSchema = z
-  .string()
-  .refine(isCollectionParam, 'Invalid NSID or "*"')
 export const repoPermissionSchema = permissionBaseSchema.extend({
   [RESOURCE]: z.literal('repo'),
-  collection: z.array(collectionSchema).nonempty(),
+  collection: z.array(nsidSchema).nonempty(),
   action: z.array(z.enum(REPO_ACTIONS)).nonempty(),
 })
 export type RepoPermission = z.infer<typeof repoPermissionSchema>
 
-const audSchema = z.string().refine(isAudParam, 'Invalid DID or "*"')
-const lxmSchema = z.string().refine(isLxmParam, 'Invalid NSID or "*"')
 export const rpcPermissionSchema = permissionBaseSchema.extend({
   [RESOURCE]: z.literal('rpc'),
-  aud: audSchema,
-  lxm: z.array(lxmSchema).nonempty(),
+  aud: z.string().refine(isAudParam, 'Invalid DID or "*"'),
+  lxm: z.array(nsidSchema).nonempty(),
 })
 export type RpcPermission = z.infer<typeof rpcPermissionSchema>
 
