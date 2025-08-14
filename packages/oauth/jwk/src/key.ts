@@ -1,5 +1,4 @@
 import { jwkAlgorithms } from './alg.js'
-import { JwkError } from './errors.js'
 import {
   Jwk,
   KeyUsage,
@@ -24,17 +23,7 @@ export type KeyMatchOptions = {
 }
 
 export abstract class Key<J extends Jwk = Jwk> {
-  constructor(protected readonly jwk: Readonly<J>) {
-    const { use, key_ops } = jwk
-
-    if (use && use !== 'sig') {
-      throw new JwkError(`Unsupported JWK use "${use}"`)
-    }
-
-    if (key_ops && !key_ops.includes('sign') && !key_ops.includes('verify')) {
-      throw new JwkError(`Invalid key_ops "${key_ops}" for "sig" use`)
-    }
-  }
+  constructor(protected readonly jwk: Readonly<J>) {}
 
   @cachedGetter
   get isPrivate(): boolean {
