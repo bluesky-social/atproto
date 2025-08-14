@@ -71,7 +71,7 @@ export function InputContainer({
         {icon && (
           <div
             className={clsx(
-              'shrink-0 grow-0',
+              'flex shrink-0 grow-0 items-center justify-center',
               'mx-1',
               hasFocus ? 'text-primary' : 'text-slate-500',
             )}

@@ -230,13 +230,11 @@ export function SignUpHandleForm({
         }
       />
 
-      <Admonition role="status">
-        <p className="text-md">
-          <Trans>
-            You can change this username to any domain name you control after
-            your account is set up.
-          </Trans>
-        </p>
+      <Admonition type="status">
+        <Trans>
+          You can change this username to any domain name you control after your
+          account is set up.
+        </Trans>
       </Admonition>
     </FormCardAsync>
   )

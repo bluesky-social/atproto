@@ -11,9 +11,12 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
     }),
     rateLimit: [
       {
@@ -29,6 +32,16 @@ export default function (server: Server, ctx: AppContext) {
     ],
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, swapCommit, swapRecord } = input.body
+
+      // We can't compute permissions based on the request payload ("input") in
+      // the 'auth' phase, so we do it here.
+      if (auth.credentials.type === 'oauth') {
+        auth.credentials.permissions.assertRepo({
+          action: 'delete',
+          collection,
+        })
+      }
+
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,
       })

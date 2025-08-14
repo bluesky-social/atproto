@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { AuthScope } from '../dist/auth-verifier'
 import usersSeed from './seeds/users'
 
 describe('user preferences', () => {
@@ -58,7 +57,9 @@ describe('user preferences', () => {
       store.pref.putPreferences(
         [{ $type: 'com.atproto.server.defs#unknown' }],
         'com.atproto',
-        AuthScope.Access,
+        {
+          hasAccessFull: true,
+        },
       ),
     )
     const { data } = await agent.api.app.bsky.actor.getPreferences(
@@ -109,7 +110,10 @@ describe('user preferences', () => {
     // Ensure other prefs were not clobbered
     const otherPrefs = await network.pds.ctx.actorStore.read(
       sc.dids.alice,
-      (store) => store.pref.getPreferences('com.atproto', AuthScope.Access),
+      (store) =>
+        store.pref.getPreferences('com.atproto', {
+          hasAccessFull: true,
+        }),
     )
     expect(otherPrefs).toEqual([{ $type: 'com.atproto.server.defs#unknown' }])
   })

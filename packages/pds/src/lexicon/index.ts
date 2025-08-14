@@ -10,6 +10,110 @@ import {
   createServer as createXrpcServer,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons.js'
+import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences.js'
+import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile.js'
+import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles.js'
+import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions.js'
+import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
+import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
+import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
+import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
+import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
+import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
+import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
+import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
+import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
+import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
+import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
+import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
+import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline.js'
+import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts.js'
+import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions.js'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks.js'
+import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
+import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
+import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
+import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
+import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
+import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
+import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+import * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
+import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
+import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
+import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
+import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
+import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks.js'
+import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
+import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
+import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
+import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
+import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
+import * as AppBskyNotificationListActivitySubscriptions from './types/app/bsky/notification/listActivitySubscriptions.js'
+import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+import * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/notification/putActivitySubscription.js'
+import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
+import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
+import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
+import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
+import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
+import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
+import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
+import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
+import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
+import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
+import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
+import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
+import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
+import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes.js'
@@ -89,118 +193,17 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
-import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences.js'
-import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile.js'
-import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles.js'
-import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions.js'
-import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
-import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
-import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
-import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
-import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
-import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
-import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
-import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
-import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
-import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
-import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
-import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
-import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
-import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
-import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
-import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline.js'
-import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts.js'
-import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions.js'
-import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks.js'
-import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
-import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
-import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
-import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
-import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
-import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
-import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
-import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
-import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
-import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
-import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
-import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
-import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
-import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
-import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
-import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
-import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks.js'
-import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
-import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
-import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
-import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
-import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
-import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
-import * as AppBskyNotificationListActivitySubscriptions from './types/app/bsky/notification/listActivitySubscriptions.js'
-import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
-import * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/notification/putActivitySubscription.js'
-import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
-import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
-import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
-import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
-import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
-import * as AppBskyUnspeccedCheckHandleAvailability from './types/app/bsky/unspecced/checkHandleAvailability.js'
-import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
-import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
-import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
-import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
-import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
-import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
-import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
-import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
-import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
-import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
-import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
-import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
-import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
-import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
-import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
-import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
-import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
-import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
-import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
-import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
-import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
-import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
-import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
-import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
-import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
-import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
-import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
-import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
-import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
-import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
-import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
-import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
-import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
-import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
-import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
-import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
-import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
-import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
-import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
-import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
-import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
-import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
-import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
-import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
-import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -237,15 +240,6 @@ import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/v
 import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
 import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
-export const COM_ATPROTO_MODERATION = {
-  DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
-  DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
-  DefsReasonMisleading: 'com.atproto.moderation.defs#reasonMisleading',
-  DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
-  DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
-  DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
-  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
-}
 export const APP_BSKY_ACTOR = {
   StatusLive: 'app.bsky.actor.status#live',
 }
@@ -270,11 +264,26 @@ export const APP_BSKY_GRAPH = {
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
+export const COM_ATPROTO_MODERATION = {
+  DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
+  DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
+  DefsReasonMisleading: 'com.atproto.moderation.defs#reasonMisleading',
+  DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
+  DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
+  DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+  DefsTimelineEventPlcCreate:
+    'tools.ozone.moderation.defs#timelineEventPlcCreate',
+  DefsTimelineEventPlcOperation:
+    'tools.ozone.moderation.defs#timelineEventPlcOperation',
+  DefsTimelineEventPlcTombstone:
+    'tools.ozone.moderation.defs#timelineEventPlcTombstone',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -289,17 +298,1421 @@ export function createServer(options?: XrpcOptions): Server {
 
 export class Server {
   xrpc: XrpcServer
-  com: ComNS
   app: AppNS
   chat: ChatNS
+  com: ComNS
   tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
-    this.com = new ComNS(this)
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
+    this.com = new ComNS(this)
     this.tools = new ToolsNS(this)
+  }
+}
+
+export class AppNS {
+  _server: Server
+  bsky: AppBskyNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.bsky = new AppBskyNS(server)
+  }
+}
+
+export class AppBskyNS {
+  _server: Server
+  actor: AppBskyActorNS
+  embed: AppBskyEmbedNS
+  feed: AppBskyFeedNS
+  graph: AppBskyGraphNS
+  labeler: AppBskyLabelerNS
+  notification: AppBskyNotificationNS
+  richtext: AppBskyRichtextNS
+  unspecced: AppBskyUnspeccedNS
+  video: AppBskyVideoNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.actor = new AppBskyActorNS(server)
+    this.embed = new AppBskyEmbedNS(server)
+    this.feed = new AppBskyFeedNS(server)
+    this.graph = new AppBskyGraphNS(server)
+    this.labeler = new AppBskyLabelerNS(server)
+    this.notification = new AppBskyNotificationNS(server)
+    this.richtext = new AppBskyRichtextNS(server)
+    this.unspecced = new AppBskyUnspeccedNS(server)
+    this.video = new AppBskyVideoNS(server)
+  }
+}
+
+export class AppBskyActorNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getPreferences<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyActorGetPreferences.QueryParams,
+      AppBskyActorGetPreferences.HandlerInput,
+      AppBskyActorGetPreferences.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.getPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getProfile<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyActorGetProfile.QueryParams,
+      AppBskyActorGetProfile.HandlerInput,
+      AppBskyActorGetProfile.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.getProfile' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getProfiles<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyActorGetProfiles.QueryParams,
+      AppBskyActorGetProfiles.HandlerInput,
+      AppBskyActorGetProfiles.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.getProfiles' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyActorGetSuggestions.QueryParams,
+      AppBskyActorGetSuggestions.HandlerInput,
+      AppBskyActorGetSuggestions.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.getSuggestions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putPreferences<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyActorPutPreferences.QueryParams,
+      AppBskyActorPutPreferences.HandlerInput,
+      AppBskyActorPutPreferences.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.putPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchActors<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyActorSearchActors.QueryParams,
+      AppBskyActorSearchActors.HandlerInput,
+      AppBskyActorSearchActors.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.searchActors' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchActorsTypeahead<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyActorSearchActorsTypeahead.QueryParams,
+      AppBskyActorSearchActorsTypeahead.HandlerInput,
+      AppBskyActorSearchActorsTypeahead.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.searchActorsTypeahead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyEmbedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class AppBskyFeedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  describeFeedGenerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedDescribeFeedGenerator.QueryParams,
+      AppBskyFeedDescribeFeedGenerator.HandlerInput,
+      AppBskyFeedDescribeFeedGenerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.describeFeedGenerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getActorFeeds<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetActorFeeds.QueryParams,
+      AppBskyFeedGetActorFeeds.HandlerInput,
+      AppBskyFeedGetActorFeeds.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getActorFeeds' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getActorLikes<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetActorLikes.QueryParams,
+      AppBskyFeedGetActorLikes.HandlerInput,
+      AppBskyFeedGetActorLikes.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getActorLikes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAuthorFeed<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetAuthorFeed.QueryParams,
+      AppBskyFeedGetAuthorFeed.HandlerInput,
+      AppBskyFeedGetAuthorFeed.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getAuthorFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeed<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetFeed.QueryParams,
+      AppBskyFeedGetFeed.HandlerInput,
+      AppBskyFeedGetFeed.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeedGenerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetFeedGenerator.QueryParams,
+      AppBskyFeedGetFeedGenerator.HandlerInput,
+      AppBskyFeedGetFeedGenerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeedGenerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeedGenerators<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetFeedGenerators.QueryParams,
+      AppBskyFeedGetFeedGenerators.HandlerInput,
+      AppBskyFeedGetFeedGenerators.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeedSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetFeedSkeleton.QueryParams,
+      AppBskyFeedGetFeedSkeleton.HandlerInput,
+      AppBskyFeedGetFeedSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeedSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLikes<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetLikes.QueryParams,
+      AppBskyFeedGetLikes.HandlerInput,
+      AppBskyFeedGetLikes.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getLikes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListFeed<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetListFeed.QueryParams,
+      AppBskyFeedGetListFeed.HandlerInput,
+      AppBskyFeedGetListFeed.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getListFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThread<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetPostThread.QueryParams,
+      AppBskyFeedGetPostThread.HandlerInput,
+      AppBskyFeedGetPostThread.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPosts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetPosts.QueryParams,
+      AppBskyFeedGetPosts.HandlerInput,
+      AppBskyFeedGetPosts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getQuotes<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetQuotes.QueryParams,
+      AppBskyFeedGetQuotes.HandlerInput,
+      AppBskyFeedGetQuotes.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getQuotes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepostedBy<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetRepostedBy.QueryParams,
+      AppBskyFeedGetRepostedBy.HandlerInput,
+      AppBskyFeedGetRepostedBy.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getRepostedBy' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedFeeds<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetSuggestedFeeds.QueryParams,
+      AppBskyFeedGetSuggestedFeeds.HandlerInput,
+      AppBskyFeedGetSuggestedFeeds.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getSuggestedFeeds' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTimeline<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedGetTimeline.QueryParams,
+      AppBskyFeedGetTimeline.HandlerInput,
+      AppBskyFeedGetTimeline.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getTimeline' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchPosts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedSearchPosts.QueryParams,
+      AppBskyFeedSearchPosts.HandlerInput,
+      AppBskyFeedSearchPosts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.searchPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendInteractions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyFeedSendInteractions.QueryParams,
+      AppBskyFeedSendInteractions.HandlerInput,
+      AppBskyFeedSendInteractions.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.sendInteractions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyGraphNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorStarterPacks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetActorStarterPacks.QueryParams,
+      AppBskyGraphGetActorStarterPacks.HandlerInput,
+      AppBskyGraphGetActorStarterPacks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getActorStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getBlocks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetBlocks.QueryParams,
+      AppBskyGraphGetBlocks.HandlerInput,
+      AppBskyGraphGetBlocks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFollowers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetFollowers.QueryParams,
+      AppBskyGraphGetFollowers.HandlerInput,
+      AppBskyGraphGetFollowers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getFollowers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFollows<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetFollows.QueryParams,
+      AppBskyGraphGetFollows.HandlerInput,
+      AppBskyGraphGetFollows.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getFollows' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getKnownFollowers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetKnownFollowers.QueryParams,
+      AppBskyGraphGetKnownFollowers.HandlerInput,
+      AppBskyGraphGetKnownFollowers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getKnownFollowers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getList<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetList.QueryParams,
+      AppBskyGraphGetList.HandlerInput,
+      AppBskyGraphGetList.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListBlocks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetListBlocks.QueryParams,
+      AppBskyGraphGetListBlocks.HandlerInput,
+      AppBskyGraphGetListBlocks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListMutes<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetListMutes.QueryParams,
+      AppBskyGraphGetListMutes.HandlerInput,
+      AppBskyGraphGetListMutes.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getListMutes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLists<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetLists.QueryParams,
+      AppBskyGraphGetLists.HandlerInput,
+      AppBskyGraphGetLists.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getLists' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListsWithMembership<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetListsWithMembership.QueryParams,
+      AppBskyGraphGetListsWithMembership.HandlerInput,
+      AppBskyGraphGetListsWithMembership.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getListsWithMembership' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMutes<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetMutes.QueryParams,
+      AppBskyGraphGetMutes.HandlerInput,
+      AppBskyGraphGetMutes.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getMutes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRelationships<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetRelationships.QueryParams,
+      AppBskyGraphGetRelationships.HandlerInput,
+      AppBskyGraphGetRelationships.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getRelationships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPack<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetStarterPack.QueryParams,
+      AppBskyGraphGetStarterPack.HandlerInput,
+      AppBskyGraphGetStarterPack.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPack' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetStarterPacks.QueryParams,
+      AppBskyGraphGetStarterPacks.HandlerInput,
+      AppBskyGraphGetStarterPacks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacksWithMembership<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetStarterPacksWithMembership.QueryParams,
+      AppBskyGraphGetStarterPacksWithMembership.HandlerInput,
+      AppBskyGraphGetStarterPacksWithMembership.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacksWithMembership' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedFollowsByActor<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
+      AppBskyGraphGetSuggestedFollowsByActor.HandlerInput,
+      AppBskyGraphGetSuggestedFollowsByActor.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getSuggestedFollowsByActor' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  muteActor<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphMuteActor.QueryParams,
+      AppBskyGraphMuteActor.HandlerInput,
+      AppBskyGraphMuteActor.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.muteActor' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  muteActorList<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphMuteActorList.QueryParams,
+      AppBskyGraphMuteActorList.HandlerInput,
+      AppBskyGraphMuteActorList.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.muteActorList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  muteThread<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphMuteThread.QueryParams,
+      AppBskyGraphMuteThread.HandlerInput,
+      AppBskyGraphMuteThread.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.muteThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchStarterPacks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphSearchStarterPacks.QueryParams,
+      AppBskyGraphSearchStarterPacks.HandlerInput,
+      AppBskyGraphSearchStarterPacks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.searchStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteActor<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphUnmuteActor.QueryParams,
+      AppBskyGraphUnmuteActor.HandlerInput,
+      AppBskyGraphUnmuteActor.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.unmuteActor' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteActorList<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphUnmuteActorList.QueryParams,
+      AppBskyGraphUnmuteActorList.HandlerInput,
+      AppBskyGraphUnmuteActorList.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.unmuteActorList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteThread<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyGraphUnmuteThread.QueryParams,
+      AppBskyGraphUnmuteThread.HandlerInput,
+      AppBskyGraphUnmuteThread.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.unmuteThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyLabelerNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getServices<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyLabelerGetServices.QueryParams,
+      AppBskyLabelerGetServices.HandlerInput,
+      AppBskyLabelerGetServices.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.labeler.getServices' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyNotificationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getPreferences<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationGetPreferences.QueryParams,
+      AppBskyNotificationGetPreferences.HandlerInput,
+      AppBskyNotificationGetPreferences.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.getPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getUnreadCount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationGetUnreadCount.QueryParams,
+      AppBskyNotificationGetUnreadCount.HandlerInput,
+      AppBskyNotificationGetUnreadCount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.getUnreadCount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listActivitySubscriptions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationListActivitySubscriptions.QueryParams,
+      AppBskyNotificationListActivitySubscriptions.HandlerInput,
+      AppBskyNotificationListActivitySubscriptions.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.listActivitySubscriptions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listNotifications<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationListNotifications.QueryParams,
+      AppBskyNotificationListNotifications.HandlerInput,
+      AppBskyNotificationListNotifications.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.listNotifications' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putActivitySubscription<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationPutActivitySubscription.QueryParams,
+      AppBskyNotificationPutActivitySubscription.HandlerInput,
+      AppBskyNotificationPutActivitySubscription.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putActivitySubscription' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putPreferences<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationPutPreferences.QueryParams,
+      AppBskyNotificationPutPreferences.HandlerInput,
+      AppBskyNotificationPutPreferences.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putPreferencesV2<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationPutPreferencesV2.QueryParams,
+      AppBskyNotificationPutPreferencesV2.HandlerInput,
+      AppBskyNotificationPutPreferencesV2.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.putPreferencesV2' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  registerPush<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationRegisterPush.QueryParams,
+      AppBskyNotificationRegisterPush.HandlerInput,
+      AppBskyNotificationRegisterPush.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.registerPush' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unregisterPush<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationUnregisterPush.QueryParams,
+      AppBskyNotificationUnregisterPush.HandlerInput,
+      AppBskyNotificationUnregisterPush.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.unregisterPush' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateSeen<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyNotificationUpdateSeen.QueryParams,
+      AppBskyNotificationUpdateSeen.HandlerInput,
+      AppBskyNotificationUpdateSeen.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.updateSeen' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyRichtextNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class AppBskyUnspeccedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAgeAssuranceState<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetAgeAssuranceState.QueryParams,
+      AppBskyUnspeccedGetAgeAssuranceState.HandlerInput,
+      AppBskyUnspeccedGetAgeAssuranceState.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getAgeAssuranceState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConfig<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetConfig.QueryParams,
+      AppBskyUnspeccedGetConfig.HandlerInput,
+      AppBskyUnspeccedGetConfig.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPopularFeedGenerators<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
+      AppBskyUnspeccedGetPopularFeedGenerators.HandlerInput,
+      AppBskyUnspeccedGetPopularFeedGenerators.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPopularFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThreadOtherV2<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetPostThreadOtherV2.QueryParams,
+      AppBskyUnspeccedGetPostThreadOtherV2.HandlerInput,
+      AppBskyUnspeccedGetPostThreadOtherV2.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPostThreadOtherV2' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThreadV2<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetPostThreadV2.QueryParams,
+      AppBskyUnspeccedGetPostThreadV2.HandlerInput,
+      AppBskyUnspeccedGetPostThreadV2.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPostThreadV2' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedFeeds<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedFeeds.QueryParams,
+      AppBskyUnspeccedGetSuggestedFeeds.HandlerInput,
+      AppBskyUnspeccedGetSuggestedFeeds.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedFeeds' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedFeedsSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedFeedsSkeleton.QueryParams,
+      AppBskyUnspeccedGetSuggestedFeedsSkeleton.HandlerInput,
+      AppBskyUnspeccedGetSuggestedFeedsSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedFeedsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedStarterPacks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
+      AppBskyUnspeccedGetSuggestedStarterPacks.HandlerInput,
+      AppBskyUnspeccedGetSuggestedStarterPacks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedStarterPacksSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.QueryParams,
+      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.HandlerInput,
+      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedStarterPacksSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsers.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsers.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsersSkeleton.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsersSkeleton.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsersSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestionsSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
+      AppBskyUnspeccedGetSuggestionsSkeleton.HandlerInput,
+      AppBskyUnspeccedGetSuggestionsSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestionsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTaggedSuggestions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
+      AppBskyUnspeccedGetTaggedSuggestions.HandlerInput,
+      AppBskyUnspeccedGetTaggedSuggestions.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTaggedSuggestions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTrendingTopics<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetTrendingTopics.QueryParams,
+      AppBskyUnspeccedGetTrendingTopics.HandlerInput,
+      AppBskyUnspeccedGetTrendingTopics.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTrendingTopics' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTrends<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetTrends.QueryParams,
+      AppBskyUnspeccedGetTrends.HandlerInput,
+      AppBskyUnspeccedGetTrends.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTrends' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTrendsSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetTrendsSkeleton.QueryParams,
+      AppBskyUnspeccedGetTrendsSkeleton.HandlerInput,
+      AppBskyUnspeccedGetTrendsSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTrendsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  initAgeAssurance<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedInitAgeAssurance.QueryParams,
+      AppBskyUnspeccedInitAgeAssurance.HandlerInput,
+      AppBskyUnspeccedInitAgeAssurance.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.initAgeAssurance' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchActorsSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
+      AppBskyUnspeccedSearchActorsSkeleton.HandlerInput,
+      AppBskyUnspeccedSearchActorsSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.searchActorsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchPostsSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedSearchPostsSkeleton.QueryParams,
+      AppBskyUnspeccedSearchPostsSkeleton.HandlerInput,
+      AppBskyUnspeccedSearchPostsSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchStarterPacksSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedSearchStarterPacksSkeleton.QueryParams,
+      AppBskyUnspeccedSearchStarterPacksSkeleton.HandlerInput,
+      AppBskyUnspeccedSearchStarterPacksSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.searchStarterPacksSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyVideoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getJobStatus<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyVideoGetJobStatus.QueryParams,
+      AppBskyVideoGetJobStatus.HandlerInput,
+      AppBskyVideoGetJobStatus.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getJobStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getUploadLimits<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyVideoGetUploadLimits.QueryParams,
+      AppBskyVideoGetUploadLimits.HandlerInput,
+      AppBskyVideoGetUploadLimits.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getUploadLimits' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  uploadVideo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyVideoUploadVideo.QueryParams,
+      AppBskyVideoUploadVideo.HandlerInput,
+      AppBskyVideoUploadVideo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.video.uploadVideo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatNS {
+  _server: Server
+  bsky: ChatBskyNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.bsky = new ChatBskyNS(server)
+  }
+}
+
+export class ChatBskyNS {
+  _server: Server
+  actor: ChatBskyActorNS
+  convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.actor = new ChatBskyActorNS(server)
+    this.convo = new ChatBskyConvoNS(server)
+    this.moderation = new ChatBskyModerationNS(server)
+  }
+}
+
+export class ChatBskyActorNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteAccount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyActorDeleteAccount.QueryParams,
+      ChatBskyActorDeleteAccount.HandlerInput,
+      ChatBskyActorDeleteAccount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.actor.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  exportAccountData<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyActorExportAccountData.QueryParams,
+      ChatBskyActorExportAccountData.HandlerInput,
+      ChatBskyActorExportAccountData.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.actor.exportAccountData' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatBskyConvoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  acceptConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoAcceptConvo.QueryParams,
+      ChatBskyConvoAcceptConvo.HandlerInput,
+      ChatBskyConvoAcceptConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.acceptConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  addReaction<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoAddReaction.QueryParams,
+      ChatBskyConvoAddReaction.HandlerInput,
+      ChatBskyConvoAddReaction.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.addReaction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteMessageForSelf<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoDeleteMessageForSelf.QueryParams,
+      ChatBskyConvoDeleteMessageForSelf.HandlerInput,
+      ChatBskyConvoDeleteMessageForSelf.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.deleteMessageForSelf' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetConvo.QueryParams,
+      ChatBskyConvoGetConvo.HandlerInput,
+      ChatBskyConvoGetConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoAvailability<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetConvoAvailability.QueryParams,
+      ChatBskyConvoGetConvoAvailability.HandlerInput,
+      ChatBskyConvoGetConvoAvailability.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoAvailability' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoForMembers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetConvoForMembers.QueryParams,
+      ChatBskyConvoGetConvoForMembers.HandlerInput,
+      ChatBskyConvoGetConvoForMembers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLog<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetLog.QueryParams,
+      ChatBskyConvoGetLog.HandlerInput,
+      ChatBskyConvoGetLog.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getLog' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessages<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetMessages.QueryParams,
+      ChatBskyConvoGetMessages.HandlerInput,
+      ChatBskyConvoGetMessages.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getMessages' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  leaveConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoLeaveConvo.QueryParams,
+      ChatBskyConvoLeaveConvo.HandlerInput,
+      ChatBskyConvoLeaveConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.leaveConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listConvos<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoListConvos.QueryParams,
+      ChatBskyConvoListConvos.HandlerInput,
+      ChatBskyConvoListConvos.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.listConvos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  muteConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoMuteConvo.QueryParams,
+      ChatBskyConvoMuteConvo.HandlerInput,
+      ChatBskyConvoMuteConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.muteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeReaction<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoRemoveReaction.QueryParams,
+      ChatBskyConvoRemoveReaction.HandlerInput,
+      ChatBskyConvoRemoveReaction.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.removeReaction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessage<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoSendMessage.QueryParams,
+      ChatBskyConvoSendMessage.HandlerInput,
+      ChatBskyConvoSendMessage.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessageBatch<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoSendMessageBatch.QueryParams,
+      ChatBskyConvoSendMessageBatch.HandlerInput,
+      ChatBskyConvoSendMessageBatch.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoUnmuteConvo.QueryParams,
+      ChatBskyConvoUnmuteConvo.HandlerInput,
+      ChatBskyConvoUnmuteConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.unmuteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateAllRead<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoUpdateAllRead.QueryParams,
+      ChatBskyConvoUpdateAllRead.HandlerInput,
+      ChatBskyConvoUpdateAllRead.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.updateAllRead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateRead<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoUpdateRead.QueryParams,
+      ChatBskyConvoUpdateRead.HandlerInput,
+      ChatBskyConvoUpdateRead.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.updateRead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatBskyModerationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorMetadata<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyModerationGetActorMetadata.QueryParams,
+      ChatBskyModerationGetActorMetadata.HandlerInput,
+      ChatBskyModerationGetActorMetadata.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getActorMetadata' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessageContext<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyModerationGetMessageContext.QueryParams,
+      ChatBskyModerationGetMessageContext.HandlerInput,
+      ChatBskyModerationGetMessageContext.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getMessageContext' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateActorAccess<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyModerationUpdateActorAccess.QueryParams,
+      ChatBskyModerationUpdateActorAccess.HandlerInput,
+      ChatBskyModerationUpdateActorAccess.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.updateActorAccess' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -1356,6 +2769,18 @@ export class ComAtprotoTempNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  checkHandleAvailability<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoTempCheckHandleAvailability.QueryParams,
+      ComAtprotoTempCheckHandleAvailability.HandlerInput,
+      ComAtprotoTempCheckHandleAvailability.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.checkHandleAvailability' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   checkSignupQueue<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1389,1398 +2814,6 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppNS {
-  _server: Server
-  bsky: AppBskyNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.bsky = new AppBskyNS(server)
-  }
-}
-
-export class AppBskyNS {
-  _server: Server
-  actor: AppBskyActorNS
-  embed: AppBskyEmbedNS
-  feed: AppBskyFeedNS
-  graph: AppBskyGraphNS
-  labeler: AppBskyLabelerNS
-  notification: AppBskyNotificationNS
-  richtext: AppBskyRichtextNS
-  unspecced: AppBskyUnspeccedNS
-  video: AppBskyVideoNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.actor = new AppBskyActorNS(server)
-    this.embed = new AppBskyEmbedNS(server)
-    this.feed = new AppBskyFeedNS(server)
-    this.graph = new AppBskyGraphNS(server)
-    this.labeler = new AppBskyLabelerNS(server)
-    this.notification = new AppBskyNotificationNS(server)
-    this.richtext = new AppBskyRichtextNS(server)
-    this.unspecced = new AppBskyUnspeccedNS(server)
-    this.video = new AppBskyVideoNS(server)
-  }
-}
-
-export class AppBskyActorNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  getPreferences<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyActorGetPreferences.QueryParams,
-      AppBskyActorGetPreferences.HandlerInput,
-      AppBskyActorGetPreferences.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.getPreferences' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getProfile<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyActorGetProfile.QueryParams,
-      AppBskyActorGetProfile.HandlerInput,
-      AppBskyActorGetProfile.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.getProfile' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getProfiles<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyActorGetProfiles.QueryParams,
-      AppBskyActorGetProfiles.HandlerInput,
-      AppBskyActorGetProfiles.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.getProfiles' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestions<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyActorGetSuggestions.QueryParams,
-      AppBskyActorGetSuggestions.HandlerInput,
-      AppBskyActorGetSuggestions.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.getSuggestions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  putPreferences<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyActorPutPreferences.QueryParams,
-      AppBskyActorPutPreferences.HandlerInput,
-      AppBskyActorPutPreferences.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.putPreferences' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  searchActors<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyActorSearchActors.QueryParams,
-      AppBskyActorSearchActors.HandlerInput,
-      AppBskyActorSearchActors.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.searchActors' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  searchActorsTypeahead<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyActorSearchActorsTypeahead.QueryParams,
-      AppBskyActorSearchActorsTypeahead.HandlerInput,
-      AppBskyActorSearchActorsTypeahead.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.searchActorsTypeahead' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppBskyEmbedNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-}
-
-export class AppBskyFeedNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  describeFeedGenerator<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedDescribeFeedGenerator.QueryParams,
-      AppBskyFeedDescribeFeedGenerator.HandlerInput,
-      AppBskyFeedDescribeFeedGenerator.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.describeFeedGenerator' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getActorFeeds<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetActorFeeds.QueryParams,
-      AppBskyFeedGetActorFeeds.HandlerInput,
-      AppBskyFeedGetActorFeeds.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getActorFeeds' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getActorLikes<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetActorLikes.QueryParams,
-      AppBskyFeedGetActorLikes.HandlerInput,
-      AppBskyFeedGetActorLikes.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getActorLikes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getAuthorFeed<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetAuthorFeed.QueryParams,
-      AppBskyFeedGetAuthorFeed.HandlerInput,
-      AppBskyFeedGetAuthorFeed.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getAuthorFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFeed<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetFeed.QueryParams,
-      AppBskyFeedGetFeed.HandlerInput,
-      AppBskyFeedGetFeed.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFeedGenerator<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetFeedGenerator.QueryParams,
-      AppBskyFeedGetFeedGenerator.HandlerInput,
-      AppBskyFeedGetFeedGenerator.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getFeedGenerator' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFeedGenerators<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetFeedGenerators.QueryParams,
-      AppBskyFeedGetFeedGenerators.HandlerInput,
-      AppBskyFeedGetFeedGenerators.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getFeedGenerators' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFeedSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetFeedSkeleton.QueryParams,
-      AppBskyFeedGetFeedSkeleton.HandlerInput,
-      AppBskyFeedGetFeedSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getFeedSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getLikes<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetLikes.QueryParams,
-      AppBskyFeedGetLikes.HandlerInput,
-      AppBskyFeedGetLikes.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getLikes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getListFeed<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetListFeed.QueryParams,
-      AppBskyFeedGetListFeed.HandlerInput,
-      AppBskyFeedGetListFeed.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getListFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getPosts<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetPosts.QueryParams,
-      AppBskyFeedGetPosts.HandlerInput,
-      AppBskyFeedGetPosts.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getPostThread<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetPostThread.QueryParams,
-      AppBskyFeedGetPostThread.HandlerInput,
-      AppBskyFeedGetPostThread.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getQuotes<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetQuotes.QueryParams,
-      AppBskyFeedGetQuotes.HandlerInput,
-      AppBskyFeedGetQuotes.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getQuotes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getRepostedBy<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetRepostedBy.QueryParams,
-      AppBskyFeedGetRepostedBy.HandlerInput,
-      AppBskyFeedGetRepostedBy.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getRepostedBy' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedFeeds<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetSuggestedFeeds.QueryParams,
-      AppBskyFeedGetSuggestedFeeds.HandlerInput,
-      AppBskyFeedGetSuggestedFeeds.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getSuggestedFeeds' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getTimeline<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedGetTimeline.QueryParams,
-      AppBskyFeedGetTimeline.HandlerInput,
-      AppBskyFeedGetTimeline.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getTimeline' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  searchPosts<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedSearchPosts.QueryParams,
-      AppBskyFeedSearchPosts.HandlerInput,
-      AppBskyFeedSearchPosts.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.searchPosts' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  sendInteractions<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyFeedSendInteractions.QueryParams,
-      AppBskyFeedSendInteractions.HandlerInput,
-      AppBskyFeedSendInteractions.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.sendInteractions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppBskyGraphNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  getActorStarterPacks<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetActorStarterPacks.QueryParams,
-      AppBskyGraphGetActorStarterPacks.HandlerInput,
-      AppBskyGraphGetActorStarterPacks.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getActorStarterPacks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getBlocks<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetBlocks.QueryParams,
-      AppBskyGraphGetBlocks.HandlerInput,
-      AppBskyGraphGetBlocks.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getBlocks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFollowers<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetFollowers.QueryParams,
-      AppBskyGraphGetFollowers.HandlerInput,
-      AppBskyGraphGetFollowers.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getFollowers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getFollows<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetFollows.QueryParams,
-      AppBskyGraphGetFollows.HandlerInput,
-      AppBskyGraphGetFollows.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getFollows' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getKnownFollowers<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetKnownFollowers.QueryParams,
-      AppBskyGraphGetKnownFollowers.HandlerInput,
-      AppBskyGraphGetKnownFollowers.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getKnownFollowers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getList<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetList.QueryParams,
-      AppBskyGraphGetList.HandlerInput,
-      AppBskyGraphGetList.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getList' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getListBlocks<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetListBlocks.QueryParams,
-      AppBskyGraphGetListBlocks.HandlerInput,
-      AppBskyGraphGetListBlocks.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getListMutes<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetListMutes.QueryParams,
-      AppBskyGraphGetListMutes.HandlerInput,
-      AppBskyGraphGetListMutes.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getListMutes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getLists<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetLists.QueryParams,
-      AppBskyGraphGetLists.HandlerInput,
-      AppBskyGraphGetLists.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getLists' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getMutes<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetMutes.QueryParams,
-      AppBskyGraphGetMutes.HandlerInput,
-      AppBskyGraphGetMutes.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getMutes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getRelationships<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetRelationships.QueryParams,
-      AppBskyGraphGetRelationships.HandlerInput,
-      AppBskyGraphGetRelationships.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getRelationships' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getStarterPack<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetStarterPack.QueryParams,
-      AppBskyGraphGetStarterPack.HandlerInput,
-      AppBskyGraphGetStarterPack.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getStarterPack' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getStarterPacks<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetStarterPacks.QueryParams,
-      AppBskyGraphGetStarterPacks.HandlerInput,
-      AppBskyGraphGetStarterPacks.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedFollowsByActor<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
-      AppBskyGraphGetSuggestedFollowsByActor.HandlerInput,
-      AppBskyGraphGetSuggestedFollowsByActor.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getSuggestedFollowsByActor' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  muteActor<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphMuteActor.QueryParams,
-      AppBskyGraphMuteActor.HandlerInput,
-      AppBskyGraphMuteActor.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.muteActor' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  muteActorList<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphMuteActorList.QueryParams,
-      AppBskyGraphMuteActorList.HandlerInput,
-      AppBskyGraphMuteActorList.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.muteActorList' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  muteThread<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphMuteThread.QueryParams,
-      AppBskyGraphMuteThread.HandlerInput,
-      AppBskyGraphMuteThread.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.muteThread' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  searchStarterPacks<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphSearchStarterPacks.QueryParams,
-      AppBskyGraphSearchStarterPacks.HandlerInput,
-      AppBskyGraphSearchStarterPacks.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.searchStarterPacks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unmuteActor<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphUnmuteActor.QueryParams,
-      AppBskyGraphUnmuteActor.HandlerInput,
-      AppBskyGraphUnmuteActor.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.unmuteActor' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unmuteActorList<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphUnmuteActorList.QueryParams,
-      AppBskyGraphUnmuteActorList.HandlerInput,
-      AppBskyGraphUnmuteActorList.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.unmuteActorList' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unmuteThread<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyGraphUnmuteThread.QueryParams,
-      AppBskyGraphUnmuteThread.HandlerInput,
-      AppBskyGraphUnmuteThread.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.unmuteThread' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppBskyLabelerNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  getServices<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyLabelerGetServices.QueryParams,
-      AppBskyLabelerGetServices.HandlerInput,
-      AppBskyLabelerGetServices.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.labeler.getServices' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppBskyNotificationNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  getPreferences<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationGetPreferences.QueryParams,
-      AppBskyNotificationGetPreferences.HandlerInput,
-      AppBskyNotificationGetPreferences.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.getPreferences' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getUnreadCount<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationGetUnreadCount.QueryParams,
-      AppBskyNotificationGetUnreadCount.HandlerInput,
-      AppBskyNotificationGetUnreadCount.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.getUnreadCount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  listActivitySubscriptions<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationListActivitySubscriptions.QueryParams,
-      AppBskyNotificationListActivitySubscriptions.HandlerInput,
-      AppBskyNotificationListActivitySubscriptions.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.listActivitySubscriptions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  listNotifications<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationListNotifications.QueryParams,
-      AppBskyNotificationListNotifications.HandlerInput,
-      AppBskyNotificationListNotifications.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.listNotifications' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  putActivitySubscription<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationPutActivitySubscription.QueryParams,
-      AppBskyNotificationPutActivitySubscription.HandlerInput,
-      AppBskyNotificationPutActivitySubscription.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.putActivitySubscription' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  putPreferences<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationPutPreferences.QueryParams,
-      AppBskyNotificationPutPreferences.HandlerInput,
-      AppBskyNotificationPutPreferences.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.putPreferences' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  putPreferencesV2<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationPutPreferencesV2.QueryParams,
-      AppBskyNotificationPutPreferencesV2.HandlerInput,
-      AppBskyNotificationPutPreferencesV2.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.putPreferencesV2' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  registerPush<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationRegisterPush.QueryParams,
-      AppBskyNotificationRegisterPush.HandlerInput,
-      AppBskyNotificationRegisterPush.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.registerPush' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unregisterPush<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationUnregisterPush.QueryParams,
-      AppBskyNotificationUnregisterPush.HandlerInput,
-      AppBskyNotificationUnregisterPush.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.unregisterPush' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateSeen<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyNotificationUpdateSeen.QueryParams,
-      AppBskyNotificationUpdateSeen.HandlerInput,
-      AppBskyNotificationUpdateSeen.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.updateSeen' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppBskyRichtextNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-}
-
-export class AppBskyUnspeccedNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  checkHandleAvailability<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedCheckHandleAvailability.QueryParams,
-      AppBskyUnspeccedCheckHandleAvailability.HandlerInput,
-      AppBskyUnspeccedCheckHandleAvailability.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.checkHandleAvailability' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getAgeAssuranceState<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetAgeAssuranceState.QueryParams,
-      AppBskyUnspeccedGetAgeAssuranceState.HandlerInput,
-      AppBskyUnspeccedGetAgeAssuranceState.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getAgeAssuranceState' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getConfig<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetConfig.QueryParams,
-      AppBskyUnspeccedGetConfig.HandlerInput,
-      AppBskyUnspeccedGetConfig.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getConfig' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getPopularFeedGenerators<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
-      AppBskyUnspeccedGetPopularFeedGenerators.HandlerInput,
-      AppBskyUnspeccedGetPopularFeedGenerators.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getPopularFeedGenerators' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getPostThreadOtherV2<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetPostThreadOtherV2.QueryParams,
-      AppBskyUnspeccedGetPostThreadOtherV2.HandlerInput,
-      AppBskyUnspeccedGetPostThreadOtherV2.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getPostThreadOtherV2' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getPostThreadV2<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetPostThreadV2.QueryParams,
-      AppBskyUnspeccedGetPostThreadV2.HandlerInput,
-      AppBskyUnspeccedGetPostThreadV2.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getPostThreadV2' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedFeeds<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestedFeeds.QueryParams,
-      AppBskyUnspeccedGetSuggestedFeeds.HandlerInput,
-      AppBskyUnspeccedGetSuggestedFeeds.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestedFeeds' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedFeedsSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestedFeedsSkeleton.QueryParams,
-      AppBskyUnspeccedGetSuggestedFeedsSkeleton.HandlerInput,
-      AppBskyUnspeccedGetSuggestedFeedsSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestedFeedsSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedStarterPacks<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
-      AppBskyUnspeccedGetSuggestedStarterPacks.HandlerInput,
-      AppBskyUnspeccedGetSuggestedStarterPacks.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestedStarterPacks' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedStarterPacksSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.QueryParams,
-      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.HandlerInput,
-      AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestedStarterPacksSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedUsers<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestedUsers.QueryParams,
-      AppBskyUnspeccedGetSuggestedUsers.HandlerInput,
-      AppBskyUnspeccedGetSuggestedUsers.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestedUsers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedUsersSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestedUsersSkeleton.QueryParams,
-      AppBskyUnspeccedGetSuggestedUsersSkeleton.HandlerInput,
-      AppBskyUnspeccedGetSuggestedUsersSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestedUsersSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestionsSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
-      AppBskyUnspeccedGetSuggestionsSkeleton.HandlerInput,
-      AppBskyUnspeccedGetSuggestionsSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestionsSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getTaggedSuggestions<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
-      AppBskyUnspeccedGetTaggedSuggestions.HandlerInput,
-      AppBskyUnspeccedGetTaggedSuggestions.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getTaggedSuggestions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getTrendingTopics<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetTrendingTopics.QueryParams,
-      AppBskyUnspeccedGetTrendingTopics.HandlerInput,
-      AppBskyUnspeccedGetTrendingTopics.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getTrendingTopics' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getTrends<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetTrends.QueryParams,
-      AppBskyUnspeccedGetTrends.HandlerInput,
-      AppBskyUnspeccedGetTrends.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getTrends' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getTrendsSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetTrendsSkeleton.QueryParams,
-      AppBskyUnspeccedGetTrendsSkeleton.HandlerInput,
-      AppBskyUnspeccedGetTrendsSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getTrendsSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  initAgeAssurance<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedInitAgeAssurance.QueryParams,
-      AppBskyUnspeccedInitAgeAssurance.HandlerInput,
-      AppBskyUnspeccedInitAgeAssurance.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.initAgeAssurance' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  searchActorsSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
-      AppBskyUnspeccedSearchActorsSkeleton.HandlerInput,
-      AppBskyUnspeccedSearchActorsSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.searchActorsSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  searchPostsSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedSearchPostsSkeleton.QueryParams,
-      AppBskyUnspeccedSearchPostsSkeleton.HandlerInput,
-      AppBskyUnspeccedSearchPostsSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  searchStarterPacksSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedSearchStarterPacksSkeleton.QueryParams,
-      AppBskyUnspeccedSearchStarterPacksSkeleton.HandlerInput,
-      AppBskyUnspeccedSearchStarterPacksSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.searchStarterPacksSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppBskyVideoNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  getJobStatus<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyVideoGetJobStatus.QueryParams,
-      AppBskyVideoGetJobStatus.HandlerInput,
-      AppBskyVideoGetJobStatus.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.video.getJobStatus' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getUploadLimits<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyVideoGetUploadLimits.QueryParams,
-      AppBskyVideoGetUploadLimits.HandlerInput,
-      AppBskyVideoGetUploadLimits.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.video.getUploadLimits' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  uploadVideo<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyVideoUploadVideo.QueryParams,
-      AppBskyVideoUploadVideo.HandlerInput,
-      AppBskyVideoUploadVideo.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.video.uploadVideo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class ChatNS {
-  _server: Server
-  bsky: ChatBskyNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.bsky = new ChatBskyNS(server)
-  }
-}
-
-export class ChatBskyNS {
-  _server: Server
-  actor: ChatBskyActorNS
-  convo: ChatBskyConvoNS
-  moderation: ChatBskyModerationNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.actor = new ChatBskyActorNS(server)
-    this.convo = new ChatBskyConvoNS(server)
-    this.moderation = new ChatBskyModerationNS(server)
-  }
-}
-
-export class ChatBskyActorNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  deleteAccount<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyActorDeleteAccount.QueryParams,
-      ChatBskyActorDeleteAccount.HandlerInput,
-      ChatBskyActorDeleteAccount.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.actor.deleteAccount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  exportAccountData<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyActorExportAccountData.QueryParams,
-      ChatBskyActorExportAccountData.HandlerInput,
-      ChatBskyActorExportAccountData.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.actor.exportAccountData' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class ChatBskyConvoNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  acceptConvo<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoAcceptConvo.QueryParams,
-      ChatBskyConvoAcceptConvo.HandlerInput,
-      ChatBskyConvoAcceptConvo.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.acceptConvo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  addReaction<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoAddReaction.QueryParams,
-      ChatBskyConvoAddReaction.HandlerInput,
-      ChatBskyConvoAddReaction.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.addReaction' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  deleteMessageForSelf<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoDeleteMessageForSelf.QueryParams,
-      ChatBskyConvoDeleteMessageForSelf.HandlerInput,
-      ChatBskyConvoDeleteMessageForSelf.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.deleteMessageForSelf' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getConvo<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoGetConvo.QueryParams,
-      ChatBskyConvoGetConvo.HandlerInput,
-      ChatBskyConvoGetConvo.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getConvoAvailability<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoGetConvoAvailability.QueryParams,
-      ChatBskyConvoGetConvoAvailability.HandlerInput,
-      ChatBskyConvoGetConvoAvailability.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.getConvoAvailability' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getConvoForMembers<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoGetConvoForMembers.QueryParams,
-      ChatBskyConvoGetConvoForMembers.HandlerInput,
-      ChatBskyConvoGetConvoForMembers.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getLog<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoGetLog.QueryParams,
-      ChatBskyConvoGetLog.HandlerInput,
-      ChatBskyConvoGetLog.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.getLog' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getMessages<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoGetMessages.QueryParams,
-      ChatBskyConvoGetMessages.HandlerInput,
-      ChatBskyConvoGetMessages.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.getMessages' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  leaveConvo<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoLeaveConvo.QueryParams,
-      ChatBskyConvoLeaveConvo.HandlerInput,
-      ChatBskyConvoLeaveConvo.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.leaveConvo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  listConvos<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoListConvos.QueryParams,
-      ChatBskyConvoListConvos.HandlerInput,
-      ChatBskyConvoListConvos.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.listConvos' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  muteConvo<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoMuteConvo.QueryParams,
-      ChatBskyConvoMuteConvo.HandlerInput,
-      ChatBskyConvoMuteConvo.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.muteConvo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  removeReaction<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoRemoveReaction.QueryParams,
-      ChatBskyConvoRemoveReaction.HandlerInput,
-      ChatBskyConvoRemoveReaction.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.removeReaction' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  sendMessage<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoSendMessage.QueryParams,
-      ChatBskyConvoSendMessage.HandlerInput,
-      ChatBskyConvoSendMessage.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  sendMessageBatch<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoSendMessageBatch.QueryParams,
-      ChatBskyConvoSendMessageBatch.HandlerInput,
-      ChatBskyConvoSendMessageBatch.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unmuteConvo<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoUnmuteConvo.QueryParams,
-      ChatBskyConvoUnmuteConvo.HandlerInput,
-      ChatBskyConvoUnmuteConvo.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.unmuteConvo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateAllRead<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoUpdateAllRead.QueryParams,
-      ChatBskyConvoUpdateAllRead.HandlerInput,
-      ChatBskyConvoUpdateAllRead.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.updateAllRead' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateRead<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyConvoUpdateRead.QueryParams,
-      ChatBskyConvoUpdateRead.HandlerInput,
-      ChatBskyConvoUpdateRead.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.updateRead' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class ChatBskyModerationNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  getActorMetadata<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyModerationGetActorMetadata.QueryParams,
-      ChatBskyModerationGetActorMetadata.HandlerInput,
-      ChatBskyModerationGetActorMetadata.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.moderation.getActorMetadata' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getMessageContext<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyModerationGetMessageContext.QueryParams,
-      ChatBskyModerationGetMessageContext.HandlerInput,
-      ChatBskyModerationGetMessageContext.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.moderation.getMessageContext' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateActorAccess<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ChatBskyModerationUpdateActorAccess.QueryParams,
-      ChatBskyModerationUpdateActorAccess.HandlerInput,
-      ChatBskyModerationUpdateActorAccess.HandlerOutput
-    >,
-  ) {
-    const nsid = 'chat.bsky.moderation.updateActorAccess' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -2915,6 +2948,18 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.emitEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAccountTimeline<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneModerationGetAccountTimeline.QueryParams,
+      ToolsOzoneModerationGetAccountTimeline.HandlerInput,
+      ToolsOzoneModerationGetAccountTimeline.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getAccountTimeline' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

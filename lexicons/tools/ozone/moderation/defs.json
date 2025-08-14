@@ -978,6 +978,18 @@
           "description": "Additional arbitrary metadata about the source"
         }
       }
+    },
+    "timelineEventPlcCreate": {
+      "type": "token",
+      "description": "Moderation event timeline event for a PLC create operation"
+    },
+    "timelineEventPlcOperation": {
+      "type": "token",
+      "description": "Moderation event timeline event for generic PLC operation"
+    },
+    "timelineEventPlcTombstone": {
+      "type": "token",
+      "description": "Moderation event timeline event for a PLC tombstone operation"
     }
   }
 }

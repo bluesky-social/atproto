@@ -14,9 +14,12 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
     }),
     rateLimit: [
       {
@@ -33,6 +36,14 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
+
+      if (auth.credentials.type === 'oauth') {
+        auth.credentials.permissions.assertRepo({
+          action: 'create',
+          collection,
+        })
+      }
+
       const account = await ctx.accountManager.getAccount(repo, {
         includeDeactivated: true,
       })

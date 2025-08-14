@@ -18,10 +18,13 @@ export const readEnv = (): ServerEnvironment => {
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
 
-    // OAuth
+    // hCaptcha
     hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
     hcaptchaSecretKey: envStr('PDS_HCAPTCHA_SECRET_KEY'),
     hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
+
+    // OAuth
+    trustedOAuthClients: envList('PDS_OAUTH_TRUSTED_CLIENTS'),
 
     // branding
     lightColor: envStr('PDS_LIGHT_COLOR'),
@@ -171,6 +174,7 @@ export type ServerEnvironment = {
   hcaptchaSiteKey?: string
   hcaptchaSecretKey?: string
   hcaptchaTokenSalt?: string
+  trustedOAuthClients?: string[]
 
   // branding
   lightColor?: string

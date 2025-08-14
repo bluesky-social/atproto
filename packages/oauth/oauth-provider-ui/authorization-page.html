@@ -95,7 +95,7 @@
       const clientName = 'My App'
       const clientPolicyUri = 'https://bsky.app'
       const clientTosUri = 'https://bsky.app'
-      const clientLogoUri = 'https://bsky.app'
+      const clientLogoUri = 'https://picsum.photos/200'
 
       // Mock data
 
@@ -113,6 +113,8 @@
       }
 
       window.__authorizeData = {
+        requestUri,
+
         clientId: clientId,
         clientMetadata: {
           client_id: clientId,
@@ -122,16 +124,48 @@
           logo_uri: clientLogoUri,
         },
         clientTrusted: false,
-        requestUri,
+        clientFirstParty: false,
+
         loginHint,
-        sessions: [],
-        scopeDetails: [
-          { scope: 'atproto' },
-          { scope: 'transition:generic' },
-          { scope: 'transition:email' },
-          { scope: 'transition:chat.bsky' },
-        ],
+        uiLocales: undefined, // 'en'
+        scope: [
+          'atproto',
+          'account:email',
+          // 'account:status?action=manage',
+          // 'account:repo?action=manage',
+          // 'transition:email',
+          // 'transition:generic',
+          // 'transition:chat.bsky',
+          'identity:*',
+          'identity:handle',
+          'blob:image/*',
+          'blob:video/*',
+          'repo:app.bsky.feed.post?action=create',
+          'repo:app.bsky.feed.like?action=create',
+          'repo:app.bsky.graph.follow?action=create',
+          'repo:*?action=delete',
+          'rpc:*?aud=did:web:bsky.app#bsky_appview',
+          'rpc:app.bsky.feed.getFeed?aud=*',
+          'rpc:app.bsky.feed.getFeedSkeleton?aud=*',
+          'rpc:com.atproto.moderation.createReport?aud=*',
+        ].join(' '),
       }
+
+      window.__sessions = [
+        {
+          account: {
+            sub: 'did:plc:543',
+            name: 'Bob',
+            email: 'bob@test.com',
+            email_verified: true,
+            preferred_username: 'bob.test',
+            picture: 'https://cat.com/cat.jpg',
+          },
+          selected: false,
+          loginRequired: false,
+          consentRequired: true,
+        },
+      ]
 
       const origFetch = window.fetch
 
@@ -163,6 +197,17 @@
                 }),
                 {
                   status: 200,
+                  headers: { 'Content-Type': 'application/json' },
+                },
+              )
+            case `POST ${API_ENDPOINT_PREFIX}/accept`:
+              return new Response(
+                JSON.stringify({
+                  error: 'invalid_request',
+                  error_description: 'Noooo',
+                }),
+                {
+                  status: 400,
                   headers: { 'Content-Type': 'application/json' },
                 },
               )

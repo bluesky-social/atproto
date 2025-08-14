@@ -1,8 +1,4 @@
-import type {
-  CustomizationData,
-  ScopeDetail,
-  Session,
-} from '@atproto/oauth-provider-api'
+import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 
 export type AuthorizeData = {
@@ -11,9 +7,9 @@ export type AuthorizeData = {
   clientId: string
   clientMetadata: OAuthClientMetadata
   clientTrusted: boolean
+  clientFirstParty: boolean
 
-  scopeDetails?: ScopeDetail[]
-
+  scope?: string
   loginHint?: string
   uiLocales?: string
 }

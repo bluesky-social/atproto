@@ -180,7 +180,11 @@ describe('oauth', () => {
   })
 
   it('allows resetting the password', async () => {
-    const sendTemplateMock = await withMokedMailer(network)
+    const sendTemplateMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+      .mockImplementation(async () => {
+        // noop
+      })
 
     const page = await PageHelper.from(browser)
 
@@ -194,7 +198,7 @@ describe('oauth', () => {
       await input.press('Enter')
     })
 
-    await page.checkTitle('Se connecter')
+    await page.checkTitle('Connexion')
 
     await page.clickOnButton('Oublié ?')
 
@@ -210,17 +214,13 @@ describe('oauth', () => {
 
     expect(sendTemplateMock).toHaveBeenCalledTimes(1)
 
-    const [templateName, params] = sendTemplateMock.mock.calls[0]
-
-    expect(templateName).toBe('resetPassword')
+    const [params] = sendTemplateMock.mock.lastCall
     expect(params).toEqual({
       handle: 'alice.test',
       token: expect.any(String),
     })
 
-    const { token } = params as { token: string }
-
-    await page.typeInInput('code', token)
+    await page.typeInInput('code', params.token)
 
     await page.typeInInput('password', 'alice-new-pass')
 
@@ -233,8 +233,7 @@ describe('oauth', () => {
     // TODO: Find out why we can't use "using" here
     await page[Symbol.asyncDispose]()
 
-    // TODO: Find out why we can't use "using" here
-    sendTemplateMock[Symbol.dispose]()
+    sendTemplateMock.mockRestore()
   })
 
   it('Allows to sign-in trough OAuth', async () => {
@@ -250,12 +249,12 @@ describe('oauth', () => {
       await input.press('Enter')
     })
 
-    await page.checkTitle('Se connecter')
+    await page.checkTitle('Connexion')
 
     await page.typeIn('input[type="password"]', 'alice-new-pass')
 
     // Make sure the warning is visible
-    await page.ensureTextVisibility('Avertissement')
+    await page.ensureTextVisibility('Avertissement', 'h3')
 
     await page.clickOn(
       'label::-p-text(Se souvenir de ce compte sur cet appareil)',
@@ -316,31 +315,6 @@ describe('oauth', () => {
     await page[Symbol.asyncDispose]()
   })
 })
-
-async function withMokedMailer(network: TestNetworkNoAppView) {
-  // @ts-expect-error
-  const sendTemplateOrig = network.pds.ctx.mailer.sendTemplate
-  const sendTemplateMock = jest.fn(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (templateName: unknown, params: unknown, mailOpts: unknown) => {
-      //
-    },
-  ) as jest.Mock<
-    Promise<void>,
-    [templateName: unknown, params: unknown, mailOpts: unknown]
-  > &
-    Disposable
-
-  sendTemplateMock[Symbol.dispose] = () => {
-    // @ts-expect-error
-    network.pds.ctx.mailer.sendTemplate = sendTemplateOrig
-  }
-
-  // @ts-expect-error
-  network.pds.ctx.mailer.sendTemplate = sendTemplateMock
-
-  return sendTemplateMock
-}
 
 function clientHandler(
   req: IncomingMessage,

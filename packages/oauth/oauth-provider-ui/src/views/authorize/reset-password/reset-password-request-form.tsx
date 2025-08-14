@@ -66,13 +66,11 @@ export function ResetPasswordRequestForm({
             setEmail(email)
           }}
         />
-        <Admonition role="info">
-          <p id={emailAriaId} className="">
-            <Trans>
-              Enter the email you used to create your account. We'll send you a
-              "reset code" so you can set a new password.
-            </Trans>
-          </p>
+        <Admonition type="status" id={emailAriaId}>
+          <Trans>
+            Enter the email you used to create your account. We'll send you a
+            "reset code" so you can set a new password.
+          </Trans>
         </Admonition>
       </Fieldset>
     </FormCardAsync>

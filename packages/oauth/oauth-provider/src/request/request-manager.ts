@@ -1,5 +1,6 @@
 import { isAtprotoDid } from '@atproto/did'
 import type { Account } from '@atproto/oauth-provider-api'
+import { isValidAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
@@ -60,10 +61,16 @@ export class RequestManager {
   ) {
     const parameters = await this.validate(client, clientAuth, input)
 
-    const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
-    const id = await generateRequestId()
+    await callAsync(this.hooks.onAuthorizationRequest, {
+      client,
+      clientAuth,
+      parameters,
+    })
 
-    await this.store.createRequest(id, {
+    const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
+    const requestId = await generateRequestId()
+
+    await this.store.createRequest(requestId, {
       clientId: client.id,
       clientAuth,
       parameters,
@@ -73,8 +80,8 @@ export class RequestManager {
       code: null,
     })
 
-    const uri = encodeRequestUri(id)
-    return { uri, expiresAt, parameters }
+    const requestUri = encodeRequestUri(requestId)
+    return { requestUri, expiresAt, parameters }
   }
 
   protected async validate(
@@ -124,20 +131,6 @@ export class RequestManager {
       )
     }
 
-    if (parameters.scope) {
-      for (const scope of parameters.scope.split(' ')) {
-        // Currently, the implementation requires all the scopes to be statically
-        // defined in the server metadata. In the future, we might add support
-        // for dynamic scopes.
-        if (!this.metadata.scopes_supported?.includes(scope)) {
-          throw new AuthorizationError(
-            parameters,
-            `Scope "${scope}" is not supported by this server`,
-          )
-        }
-      }
-    }
-
     if (parameters.authorization_details) {
       for (const detail of parameters.authorization_details) {
         if (
@@ -177,8 +170,16 @@ export class RequestManager {
     // > server MUST include the scope response parameter in the token response
     // > (Section 3.2.3) to inform the client of the actual scope granted.
 
-    // Let's make sure the scopes are unique (to reduce the token & storage size)
-    const scopes = new Set(parameters.scope?.split(' '))
+    // Let's make sure the scopes are unique (to reduce the token & storage
+    // size) & are indeed supported.
+
+    // @NOTE An app requesting a not yet supported list of scopes will need to
+    // re-authenticate the user once the scopes are supported. This is due to
+    // the fact that the AS does not know how to properly display those scopes
+    // to the user, so it cannot properly ask for consent.
+    const scopes = new Set(
+      parameters.scope?.split(' ')?.filter(isValidAtprotoOauthScope),
+    )
 
     parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
 
@@ -290,10 +291,10 @@ export class RequestManager {
     return parameters
   }
 
-  async get(uri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
-    const id = decodeRequestUri(uri)
+  async get(requestUri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
+    const requestId = decodeRequestUri(requestUri)
 
-    const data = await this.store.readRequest(id)
+    const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     const updates: UpdateRequestData = {}
@@ -332,16 +333,16 @@ export class RequestManager {
         )
       }
     } catch (err) {
-      await this.store.deleteRequest(id)
+      await this.store.deleteRequest(requestId)
       throw err
     }
 
     if (Object.keys(updates).length > 0) {
-      await this.store.updateRequest(id, updates)
+      await this.store.updateRequest(requestId, updates)
     }
 
     return {
-      uri,
+      requestUri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
       clientId: data.clientId,
@@ -349,38 +350,63 @@ export class RequestManager {
   }
 
   async setAuthorized(
-    uri: RequestUri,
+    requestUri: RequestUri,
     client: Client,
     account: Account,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    scopeOverride?: string,
   ): Promise<Code> {
-    const requestId = decodeRequestUri(uri)
+    const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
+    let { parameters } = data
+
     try {
       if (data.expiresAt < new Date()) {
-        throw new AccessDeniedError(data.parameters, 'This request has expired')
+        throw new AccessDeniedError(parameters, 'This request has expired')
       }
       if (!data.deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was not initiated',
         )
       }
       if (data.deviceId !== deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was initiated from another device',
         )
       }
       if (data.sub || data.code) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was already authorized',
         )
+      }
+
+      // If a new scope value is provided, update the parameters by ensuring
+      // that every existing scope in the parameters is also present in the
+      // override value. This allows the user to remove scopes from the request,
+      // but not to add new ones.
+      if (scopeOverride != null) {
+        const allowedScopes = new Set(scopeOverride.split(' '))
+        const existingScopes = parameters.scope?.split(' ')
+
+        // Compute the intersection of the existing scopes and the overrides.
+        const newScopes = existingScopes?.filter((s) => allowedScopes.has(s))
+
+        // Validate: make sure the new scopes are valid
+        if (!newScopes?.includes('atproto')) {
+          throw new AccessDeniedError(
+            parameters,
+            'The "atproto" scope is required',
+          )
+        }
+
+        parameters = { ...parameters, scope: newScopes.join(' ') }
       }
 
       // Only response_type=code is supported
@@ -392,12 +418,13 @@ export class RequestManager {
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),
+        parameters,
       })
 
       await callAsync(this.hooks.onAuthorized, {
         client,
         account,
-        parameters: data.parameters,
+        parameters,
         deviceId,
         deviceMetadata,
         requestId,
@@ -418,12 +445,12 @@ export class RequestManager {
     const result = await this.store.consumeRequestCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
-    const { id, data } = result
+    const { requestId, data } = result
 
     // Fool-proofing the store implementation against code replay attacks (in
     // case consumeRequestCode() does not delete the request).
     if (NODE_ENV !== 'production') {
-      const result = await this.store.readRequest(id)
+      const result = await this.store.readRequest(requestId)
       if (result) {
         throw new Error('Invalid store implementation: request not deleted')
       }
@@ -441,8 +468,8 @@ export class RequestManager {
     return data
   }
 
-  async delete(uri: RequestUri): Promise<void> {
-    const id = decodeRequestUri(uri)
-    await this.store.deleteRequest(id)
+  async delete(requestUri: RequestUri): Promise<void> {
+    const requestId = decodeRequestUri(requestUri)
+    await this.store.deleteRequest(requestId)
   }
 }

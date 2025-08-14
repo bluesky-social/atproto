@@ -3,20 +3,21 @@ import { byteIterableToStream } from '@atproto/common'
 import * as repo from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
+import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken(),
+    auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
+      authorize: () => {
+        // always allow
+      },
+    }),
     handler: async ({ params, auth }) => {
       const { did, collection, rkey } = params
-      await assertRepoAvailability(
-        ctx,
-        did,
-        ctx.authVerifier.isUserOrAdmin(auth, did),
-      )
+      await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
       // must open up the db outside of store interface so that we can close the file handle after finished streaming
       const actorDb = await ctx.actorStore.openDb(did)

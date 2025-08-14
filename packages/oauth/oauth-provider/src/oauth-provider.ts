@@ -233,6 +233,7 @@ export type OAuthProviderOptions = OAuthProviderConfig &
 
 export class OAuthProvider extends OAuthVerifier {
   protected readonly accessTokenMode: AccessTokenMode
+  protected readonly hooks: OAuthHooks
 
   public readonly metadata: OAuthAuthorizationServerMetadata
   public readonly customization: Customization
@@ -286,20 +287,18 @@ export class OAuthProvider extends OAuthVerifier {
     const deviceManagerOptions: DeviceManagerOptions =
       deviceManagerOptionsSchema.parse(rest)
 
-    // @NOTE: hooks don't really need a type parser, as all zod can actually
-    // check at runtime is the fact that the values are functions. The only way
-    // we would benefit from zod here would be to wrap the functions with a
-    // validator for the provided function's return types, which we do not add
-    // because it would impact runtime performance and we trust the users of
-    // this lib (basically ourselves) to rely on the typing system to ensure the
-    // correct types are returned.
-    const hooks: OAuthHooks = rest
-
     // @NOTE: validation of super params (if we wanted to implement it) should
     // be the responsibility of the super class.
     const superOptions: OAuthVerifierOptions = rest
 
     super({ replayStore, ...superOptions })
+
+    // @NOTE: hooks don't really need a type parser, as all zod can actually
+    // check at runtime is the fact that the values are functions. The only way
+    // we would benefit from zod here would be to wrap the functions with a
+    // validator for the provided function's return types, which we don't
+    // really need if types are respected.
+    this.hooks = rest
 
     this.accessTokenMode = accessTokenMode
     this.authenticationMaxAge = authenticationMaxAge
@@ -310,13 +309,13 @@ export class OAuthProvider extends OAuthVerifier {
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
-      hooks,
+      this.hooks,
       this.customization,
     )
     this.clientManager = new ClientManager(
       this.metadata,
       this.keyset,
-      hooks,
+      this.hooks,
       clientStore || null,
       loopbackMetadata || null,
       safeFetch,
@@ -327,12 +326,12 @@ export class OAuthProvider extends OAuthVerifier {
       requestStore,
       this.signer,
       this.metadata,
-      hooks,
+      this.hooks,
     )
     this.tokenManager = new TokenManager(
       tokenStore,
       this.signer,
-      hooks,
+      this.hooks,
       this.accessTokenMode,
       tokenMaxAge,
     )
@@ -502,7 +501,7 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-      const { uri, expiresAt } =
+      const { requestUri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
           client,
           clientAuth,
@@ -511,7 +510,7 @@ export class OAuthProvider extends OAuthVerifier {
         )
 
       return {
-        request_uri: uri,
+        request_uri: requestUri,
         expires_in: dateToRelativeSeconds(expiresAt),
       }
     } catch (err) {
@@ -600,7 +599,7 @@ export class OAuthProvider extends OAuthVerifier {
       .getClient(clientCredentials.client_id)
       .catch(throwAuthorizationError)
 
-    const { parameters, uri } = await this.processAuthorizationRequest(
+    const { parameters, requestUri } = await this.processAuthorizationRequest(
       client,
       deviceId,
       query,
@@ -627,7 +626,7 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         const code = await this.requestManager.setAuthorized(
-          uri,
+          requestUri,
           client,
           ssoSession.account,
           deviceId,
@@ -644,7 +643,7 @@ export class OAuthProvider extends OAuthVerifier {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
             const code = await this.requestManager.setAuthorized(
-              uri,
+              requestUri,
               client,
               ssoSession.account,
               deviceId,
@@ -660,7 +659,7 @@ export class OAuthProvider extends OAuthVerifier {
         issuer,
         client,
         parameters,
-        uri,
+        requestUri,
         sessions: sessions.map((session) => ({
           // Map to avoid leaking other data that might be present in the session
           account: session.account,
@@ -668,20 +667,10 @@ export class OAuthProvider extends OAuthVerifier {
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
         })),
-        scopeDetails: parameters.scope
-          ?.split(/\s+/)
-          .filter(Boolean)
-          .sort((a, b) => a.localeCompare(b))
-          .map((scope) => ({
-            scope,
-            // @TODO Allow to customize the scope descriptions (e.g.
-            // using a hook)
-            description: undefined,
-          })),
       }
     } catch (err) {
       try {
-        await this.requestManager.delete(uri)
+        await this.requestManager.delete(requestUri)
       } catch {
         // There are two error here. Better keep the outer one.
         //

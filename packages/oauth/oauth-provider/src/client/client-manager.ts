@@ -1,4 +1,4 @@
-import { Jwks, Keyset, jwksSchema } from '@atproto/jwk'
+import { Jwks, Keyset, jwksPubSchema } from '@atproto/jwk'
 import {
   OAuthAuthorizationServerMetadata,
   OAuthClientIdDiscoverable,
@@ -44,7 +44,7 @@ const fetchMetadataHandler = pipe(
 const fetchJwksHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor('application/json', false),
-  fetchJsonZodProcessor(jwksSchema),
+  fetchJsonZodProcessor(jwksPubSchema),
 )
 
 export type LoopbackMetadataGetter = (
@@ -257,14 +257,6 @@ export class ClientManager {
     const dupScope = scopes?.find(isDuplicate)
     if (dupScope) {
       throw new InvalidClientMetadataError(`Duplicate scope "${dupScope}"`)
-    }
-
-    for (const scope of scopes) {
-      // Note, once we have dynamic scopes, this check will need to be
-      // updated to check against the server's supported scopes.
-      if (!this.serverMetadata.scopes_supported?.includes(scope)) {
-        throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
-      }
     }
 
     const dupGrantType = metadata.grant_types.find(isDuplicate)
