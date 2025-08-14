@@ -242,7 +242,7 @@ describe('appview bookmarks views', () => {
       expect(paginated.sort(sort)).toEqual(full.sort(sort))
     })
 
-    it('removes entries by blocked users, bidirectionally', async () => {
+    it('shows posts and blocked posts correctly', async () => {
       await create(alice, sc.posts[alice][0].ref)
       await create(alice, sc.posts[bob][0].ref)
       await create(alice, sc.posts[carol][0].ref)

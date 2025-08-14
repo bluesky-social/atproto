@@ -1172,7 +1172,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Creates a private bookmark for the specified at-uri record. Requires authentication.',
+          'Creates a private bookmark for the specified record. Requires authentication.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -1223,14 +1223,6 @@ export const schemaDict = {
         type: 'object',
         required: ['item', 'bookmark'],
         properties: {
-          item: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.feed.defs#blockedPost',
-              'lex:app.bsky.feed.defs#notFoundPost',
-              'lex:app.bsky.feed.defs#postView',
-            ],
-          },
           bookmark: {
             type: 'ref',
             ref: 'lex:app.bsky.bookmark.defs#bookmark',
@@ -1238,6 +1230,14 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          item: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#blockedPost',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#postView',
+            ],
           },
         },
       },

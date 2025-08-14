@@ -34,13 +34,13 @@ export function validateBookmark<V>(v: V) {
 
 export interface BookmarkView {
   $type?: 'app.bsky.bookmark.defs#bookmarkView'
+  bookmark: Bookmark
+  createdAt?: string
   item:
     | $Typed<AppBskyFeedDefs.BlockedPost>
     | $Typed<AppBskyFeedDefs.NotFoundPost>
     | $Typed<AppBskyFeedDefs.PostView>
     | { $type: string }
-  bookmark: Bookmark
-  createdAt?: string
 }
 
 const hashBookmarkView = 'bookmarkView'

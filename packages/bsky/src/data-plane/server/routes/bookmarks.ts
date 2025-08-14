@@ -11,7 +11,7 @@ import { Database } from '../db'
 import { StashKeyKey } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getBookmarksByActor(req) {
+  async getActorBookmarks(req) {
     const { actorDid, cursor, limit } = req
     const { ref } = db.db.dynamic
 

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`appview bookmarks views listing removes entries by blocked users, bidirectionally 1`] = `
+exports[`appview bookmarks views listing shows posts and blocked posts correctly 1`] = `
 Array [
   Object {
     "bookmark": Object {
@@ -222,7 +222,7 @@ Array [
 ]
 `;
 
-exports[`appview bookmarks views listing removes entries by blocked users, bidirectionally 2`] = `
+exports[`appview bookmarks views listing shows posts and blocked posts correctly 2`] = `
 Array [
   Object {
     "bookmark": Object {

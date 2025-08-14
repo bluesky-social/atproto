@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Creates a private bookmark for the specified at-uri record. Requires authentication.",
+      "description": "Creates a private bookmark for the specified record. Requires authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {

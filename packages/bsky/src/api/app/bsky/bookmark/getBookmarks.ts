@@ -50,12 +50,11 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actorDid = params.hydrateCtx.viewer
-  const { bookmarks, cursor } =
-    await ctx.hydrator.dataplane.getBookmarksByActor({
-      actorDid: params.hydrateCtx.viewer,
-      limit: params.limit,
-      cursor: params.cursor,
-    })
+  const { bookmarks, cursor } = await ctx.hydrator.dataplane.getActorBookmarks({
+    actorDid: params.hydrateCtx.viewer,
+    limit: params.limit,
+    cursor: params.cursor,
+  })
   return {
     actorDid,
     bookmarks: bookmarks.filter((b): b is BookmarkWithSubject => !!b.subject),

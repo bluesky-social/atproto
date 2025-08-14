@@ -26,6 +26,8 @@ import {
   GetActivitySubscriptionDidsResponse,
   GetActivitySubscriptionsByActorAndSubjectsRequest,
   GetActivitySubscriptionsByActorAndSubjectsResponse,
+  GetActorBookmarksRequest,
+  GetActorBookmarksResponse,
   GetActorChatDeclarationRecordsRequest,
   GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
@@ -70,8 +72,6 @@ import {
   GetBlocksResponse,
   GetBookmarksByActorAndUrisRequest,
   GetBookmarksByActorAndUrisResponse,
-  GetBookmarksByActorRequest,
-  GetBookmarksByActorResponse,
   GetCountsForUsersRequest,
   GetCountsForUsersResponse,
   GetDidsByHandlesRequest,
@@ -1015,18 +1015,7 @@ export const Service = {
     },
     /**
      * Bookmarks
-     * Returns the bookmarks created by the actor.
-     *
-     * @generated from rpc bsky.Service.GetBookmarksByActor
-     */
-    getBookmarksByActor: {
-      name: 'GetBookmarksByActor',
-      I: GetBookmarksByActorRequest,
-      O: GetBookmarksByActorResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * Returns bookmarks created by the actor for
+     * Returns bookmarks created by the actor for the specified URIs.
      *
      * @generated from rpc bsky.Service.GetBookmarksByActorAndUris
      */
@@ -1034,6 +1023,17 @@ export const Service = {
       name: 'GetBookmarksByActorAndUris',
       I: GetBookmarksByActorAndUrisRequest,
       O: GetBookmarksByActorAndUrisResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Returns the bookmarks created by the actor.
+     *
+     * @generated from rpc bsky.Service.GetActorBookmarks
+     */
+    getActorBookmarks: {
+      name: 'GetActorBookmarks',
+      I: GetActorBookmarksRequest,
+      O: GetActorBookmarksResponse,
       kind: MethodKind.Unary,
     },
     /**

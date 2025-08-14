@@ -1263,13 +1263,13 @@ message Bookmark {
   google.protobuf.Timestamp indexed_at = 5;
 }
 
-message GetBookmarksByActorRequest {
+message GetActorBookmarksRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
 }
 
-message GetBookmarksByActorResponse {
+message GetActorBookmarksResponse {
   repeated Bookmark bookmarks = 1;
   string cursor = 2;
 }
@@ -1447,10 +1447,10 @@ service Service {
   rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
 
   // Bookmarks
-  // Returns the bookmarks created by the actor.
-  rpc GetBookmarksByActor(GetBookmarksByActorRequest) returns (GetBookmarksByActorResponse);
-  // Returns bookmarks created by the actor for
+  // Returns bookmarks created by the actor for the specified URIs.
   rpc GetBookmarksByActorAndUris(GetBookmarksByActorAndUrisRequest) returns (GetBookmarksByActorAndUrisResponse);
+  // Returns the bookmarks created by the actor.
+  rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
