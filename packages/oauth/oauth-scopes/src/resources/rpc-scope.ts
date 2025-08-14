@@ -1,10 +1,14 @@
 import { DIDLike, isDIDLike } from '../lib/did.js'
-import { NSID, isNSID } from '../lib/nsid.js'
+import { NSIDLike, isNSIDLike } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
 
-const validateLxmParam = (value: string) => value === '*' || isNSID(value)
-const validateAudParam = (value: string) => value === '*' || isDIDLike(value)
+export type LxmParam = '*' | NSIDLike
+export const isLxmParam = (value: string): value is LxmParam =>
+  value === '*' || isNSIDLike(value)
+export type AudParam = '*' | DIDLike
+export const isAudParam = (value: string): value is AudParam =>
+  value === '*' || isDIDLike(value)
 
 export const rpcParser = new Parser(
   'rpc',
@@ -12,12 +16,12 @@ export const rpcParser = new Parser(
     lxm: {
       multiple: true,
       required: true,
-      validate: validateLxmParam,
+      validate: isLxmParam,
     },
     aud: {
       multiple: false,
       required: true,
-      validate: validateAudParam,
+      validate: isAudParam,
     },
   },
   'lxm',
@@ -31,7 +35,7 @@ export type RpcScopeMatch = {
 export class RpcScope {
   constructor(
     public readonly aud: '*' | DIDLike,
-    public readonly lxm: NeRoArray<'*' | NSID>,
+    public readonly lxm: NeRoArray<'*' | NSIDLike>,
   ) {}
 
   matches(options: RpcScopeMatch): boolean {
@@ -48,7 +52,7 @@ export class RpcScope {
       aud,
       lxm: lxm.includes('*')
         ? ['*']
-        : ([...new Set(lxm)].sort() as [NSID, ...NSID[]]),
+        : ([...new Set(lxm)].sort() as [NSIDLike, ...NSIDLike[]]),
     })
   }
 
@@ -71,7 +75,7 @@ export class RpcScope {
   static scopeNeededFor(options: RpcScopeMatch): string {
     return rpcParser.format({
       aud: options.aud as DIDLike,
-      lxm: [options.lxm as NSID],
+      lxm: [options.lxm as NSIDLike],
     })
   }
 }

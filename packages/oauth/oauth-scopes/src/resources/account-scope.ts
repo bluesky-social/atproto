@@ -1,10 +1,14 @@
 import { Parser, knownValuesValidator } from '../parser.js'
 import { ResourceSyntax, isScopeForResource } from '../syntax.js'
 
-const ACCOUNT_ATTRIBUTES = Object.freeze(['email', 'repo', 'status'] as const)
+export const ACCOUNT_ATTRIBUTES = Object.freeze([
+  'email',
+  'repo',
+  'status',
+] as const)
 export type AccountAttribute = (typeof ACCOUNT_ATTRIBUTES)[number]
 
-const ACCOUNT_ACTIONS = Object.freeze(['read', 'manage'] as const)
+export const ACCOUNT_ACTIONS = Object.freeze(['read', 'manage'] as const)
 export type AccountAction = (typeof ACCOUNT_ACTIONS)[number]
 
 export const accountParser = new Parser(
