@@ -1,16 +1,16 @@
 import {
   AccountScopeMatch,
   BlobScopeMatch,
-  PermissionSet,
   RepoScopeMatch,
   RpcScopeMatch,
-} from './permission-set.js'
+  ScopePermissions,
+} from './scope-permissions.js'
 
 /**
  * Overrides the default permission set to allow transitional scopes to be used
  * in place of the generic scopes.
  */
-export class PermissionSetTransition extends PermissionSet {
+export class ScopePermissionsTransition extends ScopePermissions {
   get hasTransitionGeneric(): boolean {
     return this.scopes.has('transition:generic')
   }
