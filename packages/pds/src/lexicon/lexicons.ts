@@ -15760,6 +15760,11 @@ export const schemaDict = {
               description:
                 'If specified, only events where the modTool name matches any of the given values are returned',
             },
+            batchId: {
+              type: 'string',
+              description:
+                'If specified, only events where the batchId matches the given value are returned',
+            },
             ageAssuranceState: {
               type: 'string',
               description:
