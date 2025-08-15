@@ -20,7 +20,8 @@ export default function (server: Server, ctx: AppContext) {
       })
       const [existing] = res.bookmarks
       if (!existing.key) {
-        throw new InvalidRequestError('Bookmark does not exist', 'NotFound')
+        // Idempotent, return without deleting.
+        return
       }
       if (existing.subject?.cid !== subject.cid) {
         throw new InvalidRequestError(

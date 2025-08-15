@@ -20,10 +20,6 @@
       },
       "errors": [
         {
-          "name": "Duplicated",
-          "description": "A bookmark with the specified parameters already exists."
-        },
-        {
           "name": "UnsupportedCollection",
           "description": "The URI to be bookmarked is for an unsupported collection."
         }

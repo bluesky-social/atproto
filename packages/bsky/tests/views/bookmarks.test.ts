@@ -113,12 +113,16 @@ describe('appview bookmarks views', () => {
       expect(dataBob.bookmarks).toHaveLength(2)
     })
 
-    it('fails on dupes', async () => {
+    it('is idempotent', async () => {
       const uri = sc.posts[alice][0].ref
+
       await create(alice, uri)
-      await expect(create(alice, uri)).rejects.toThrow(
-        AppBskyBookmarkCreateBookmark.DuplicatedError,
-      )
+      const { data: data0 } = await get(alice)
+      expect(data0.bookmarks).toHaveLength(1)
+
+      await create(alice, uri)
+      const { data: data1 } = await get(alice)
+      expect(data1.bookmarks).toHaveLength(1)
     })
 
     it('fails on unsupported collections', async () => {
@@ -145,11 +149,17 @@ describe('appview bookmarks views', () => {
       expect(dataAfter.bookmarks).toHaveLength(1)
     })
 
-    it('fails on not found', async () => {
+    it('is idempotent', async () => {
       const uri = sc.posts[alice][0].ref
-      await expect(del(alice, uri)).rejects.toThrow(
-        AppBskyBookmarkDeleteBookmark.NotFoundError,
-      )
+      await create(alice, uri)
+
+      await del(alice, uri)
+      const { data: data0 } = await get(alice)
+      expect(data0.bookmarks).toHaveLength(0)
+
+      await del(alice, uri)
+      const { data: data1 } = await get(alice)
+      expect(data1.bookmarks).toHaveLength(0)
     })
 
     it('fails on unsupported collections', async () => {

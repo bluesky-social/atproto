@@ -34,12 +34,6 @@ export interface Response {
   headers: HeadersMap
 }
 
-export class DuplicatedError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers, { cause: src })
-  }
-}
-
 export class UnsupportedCollectionError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
@@ -48,7 +42,6 @@ export class UnsupportedCollectionError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'Duplicated') return new DuplicatedError(e)
     if (e.error === 'UnsupportedCollection')
       return new UnsupportedCollectionError(e)
   }

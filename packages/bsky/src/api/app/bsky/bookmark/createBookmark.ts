@@ -1,5 +1,4 @@
 import { TID } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { Bookmark } from '../../../../lexicon/types/app/bsky/bookmark/defs'
@@ -22,7 +21,8 @@ export default function (server: Server, ctx: AppContext) {
       })
       const [existing] = res.bookmarks
       if (existing.key) {
-        throw new InvalidRequestError('Bookmark already exists', 'Duplicated')
+        // Idempotent, return without creating.
+        return
       }
 
       await ctx.stashClient.create({

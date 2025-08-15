@@ -29,7 +29,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'Duplicated' | 'UnsupportedCollection'
+  error?: 'UnsupportedCollection'
 }
 
 export type HandlerOutput = HandlerError | void

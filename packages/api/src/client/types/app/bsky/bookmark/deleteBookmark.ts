@@ -40,12 +40,6 @@ export class DifferentCidError extends XRPCError {
   }
 }
 
-export class NotFoundError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers, { cause: src })
-  }
-}
-
 export class UnsupportedCollectionError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
@@ -55,7 +49,6 @@ export class UnsupportedCollectionError extends XRPCError {
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'DifferentCid') return new DifferentCidError(e)
-    if (e.error === 'NotFound') return new NotFoundError(e)
     if (e.error === 'UnsupportedCollection')
       return new UnsupportedCollectionError(e)
   }

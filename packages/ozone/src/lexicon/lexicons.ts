@@ -1188,11 +1188,6 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'Duplicated',
-            description:
-              'A bookmark with the specified parameters already exists.',
-          },
-          {
             name: 'UnsupportedCollection',
             description:
               'The URI to be bookmarked is for an unsupported collection.',
@@ -1269,11 +1264,6 @@ export const schemaDict = {
             name: 'DifferentCid',
             description:
               'A bookmark with the specified URI was found but it has a different CID than the provided one.',
-          },
-          {
-            name: 'NotFound',
-            description:
-              'A bookmark with the specified parameters was not found.',
           },
           {
             name: 'UnsupportedCollection',

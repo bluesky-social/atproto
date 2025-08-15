@@ -29,7 +29,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'DifferentCid' | 'NotFound' | 'UnsupportedCollection'
+  error?: 'DifferentCid' | 'UnsupportedCollection'
 }
 
 export type HandlerOutput = HandlerError | void
