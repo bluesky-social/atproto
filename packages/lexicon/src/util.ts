@@ -1,33 +1,4 @@
 import { z } from 'zod'
-import { ensureValidDid, isValidNsid } from '@atproto/syntax'
-
-export const nsidSchema = z.string().refine(isValidNsid, {
-  message: 'Must be a valid NSID',
-})
-
-export const didSchema = z.string().superRefine((input, ctx) => {
-  try {
-    ensureValidDid(input)
-  } catch (error) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: error instanceof Error ? error.message : 'Invalid DID',
-    })
-  }
-})
-
-export const acceptSchema = z.string().refine(
-  (v): v is '*/*' | `${string}/*` | `${string}/${string}` => {
-    if (v === '*/*') return true
-    const parts = v.split('/')
-    const { length, 0: a, 1: b } = parts
-    if (length !== 2) return false
-    if (a.includes('*')) return false
-    if (b !== '*' && b.includes('*')) return false
-    return true
-  },
-  { message: 'Invalid accept MIME' },
-)
 
 export function toLexUri(str: string, baseUri?: string): string {
   if (str.split('#').length > 2) {

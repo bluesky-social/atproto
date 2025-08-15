@@ -1,10 +1,6 @@
 import { z } from 'zod'
-import {
-  acceptSchema,
-  didSchema,
-  nsidSchema,
-  requiredPropertiesRefinement,
-} from './util'
+import { isValidNsid } from '@atproto/syntax'
+import { requiredPropertiesRefinement } from './util'
 
 // primitives
 // =
@@ -194,6 +190,7 @@ export const lexObject = z
     required: z.string().array().optional(),
     nullable: z.string().array().optional(),
     properties: z.record(
+      z.string(),
       z.discriminatedUnion('type', [
         lexArray,
 
@@ -220,48 +217,34 @@ export type LexObject = z.infer<typeof lexObject>
 // permissions
 // =
 
-const permissionBaseSchema = z.object({ type: z.literal('permission') })
+const lexPermission = z.intersection(
+  z.object({
+    type: z.literal('permission'),
+    resource: z.string().nonempty(),
+  }),
+  z.record(
+    z.string(),
+    z.discriminatedUnion('type', [
+      lexPrimitiveArray,
 
-export const blobPermissionSchema = permissionBaseSchema.extend({
-  resource: z.literal('blob'),
-  accept: z.array(acceptSchema).nonempty(),
-})
-export type BlobPermission = z.infer<typeof blobPermissionSchema>
+      // lexPrimitive
+      lexBoolean,
+      lexInteger,
+      lexString,
+      lexUnknown,
+    ]),
+  ),
+)
 
-export const repoPermissionSchema = permissionBaseSchema.extend({
-  resource: z.literal('repo'),
-  collection: z.array(nsidSchema).nonempty(),
-  action: z.array(z.enum(['create', 'update', 'delete'])).nonempty(),
-})
-export type RepoPermission = z.infer<typeof repoPermissionSchema>
+export type LexPermission = z.infer<typeof lexPermission>
 
-export const rpcPermissionSchema = permissionBaseSchema
-  .extend({
-    resource: z.literal('rpc'),
-    aud: z.union([z.literal('*'), didSchema]).optional(),
-    lxm: z.array(nsidSchema).nonempty(),
-  })
-  .refine((data) => data.aud !== '*' || !data.lxm.includes('*'), {
-    message: "Invalid combination of 'aud' and 'lxm'",
-  })
-
-export type RpcPermission = z.infer<typeof rpcPermissionSchema>
-
-export const permissionSetSchema = z.object({
+export const lexPermissionSet = z.object({
   type: z.literal('permission-set'),
   description: z.string().optional(),
-  permissions: z
-    .array(
-      z.discriminatedUnion('resource', [
-        blobPermissionSchema,
-        repoPermissionSchema,
-        rpcPermissionSchema,
-      ]),
-    )
-    .nonempty(),
+  permissions: z.array(lexPermission).nonempty(),
 })
 
-export type PermissionSet = z.infer<typeof permissionSetSchema>
+export type LexPermissionSet = z.infer<typeof lexPermissionSet>
 
 // xrpc
 // =
@@ -272,6 +255,7 @@ export const lexXrpcParameters = z
     description: z.string().optional(),
     required: z.string().array().optional(),
     properties: z.record(
+      z.string(),
       z.discriminatedUnion('type', [
         lexPrimitiveArray,
 
@@ -372,6 +356,7 @@ export type LexRecord = z.infer<typeof lexRecord>
 // see #915 for details
 export const lexUserType = z.custom<
   | LexRecord
+  | LexPermissionSet
   | LexXrpcQuery
   | LexXrpcProcedure
   | LexXrpcSubscription
@@ -398,6 +383,9 @@ export const lexUserType = z.custom<
     switch (val['type']) {
       case 'record':
         return lexRecord.parse(val)
+
+      case 'permission-set':
+        return lexPermissionSet.parse(val)
 
       case 'query':
         return lexXrpcQuery.parse(val)
@@ -465,29 +453,34 @@ export const lexiconDoc = z
     // Compatibility with lexicon publishing
     $type: z.literal('com.atproto.lexicon.schema').optional(),
     lexicon: z.literal(1),
-    id: nsidSchema,
+    id: z.string().refine(isValidNsid, {
+      message: 'Must be a valid NSID',
+    }),
     revision: z.number().optional(),
     description: z.string().optional(),
-    defs: z.record(lexUserType),
+    defs: z.record(z.string(), lexUserType),
   })
   .strict()
-  .superRefine((doc, ctx) => {
-    for (const defId in doc.defs) {
-      const def = doc.defs[defId]
-      if (
-        defId !== 'main' &&
-        (def.type === 'record' ||
-          def.type === 'procedure' ||
-          def.type === 'query' ||
-          def.type === 'subscription')
-      ) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Records, procedures, queries, and subscriptions must be the main definition.`,
-        })
+  .refine(
+    (doc) => {
+      for (const [defId, def] of Object.entries(doc.defs)) {
+        if (
+          defId !== 'main' &&
+          (def.type === 'record' ||
+            def.type === 'permission-set' ||
+            def.type === 'procedure' ||
+            def.type === 'query' ||
+            def.type === 'subscription')
+        ) {
+          return false
+        }
       }
-    }
-  })
+      return true
+    },
+    {
+      message: `Records, permission sets, procedures, queries, and subscriptions must be the main definition.`,
+    },
+  )
 export type LexiconDoc = z.infer<typeof lexiconDoc>
 
 // helpers
