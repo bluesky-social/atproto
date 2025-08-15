@@ -17,12 +17,16 @@ export type {
   RpcScopeMatch,
 }
 
-export class PermissionSet {
+export class ScopePermissions {
   public readonly scopes: ScopesSet
 
-  constructor(scopes?: null | string | Iterable<string>) {
+  constructor(scope?: null | string | Iterable<string>) {
     this.scopes = new ScopesSet(
-      typeof scopes === 'string' ? scopes.split(' ') : scopes,
+      !scope // "" | null | undefined
+        ? undefined
+        : typeof scope === 'string'
+          ? scope.split(' ')
+          : scope,
     )
   }
 

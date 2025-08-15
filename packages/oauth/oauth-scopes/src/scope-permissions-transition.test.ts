@@ -1,9 +1,11 @@
-import { PermissionSetTransition } from './permission-set-transition.js'
+import { ScopePermissionsTransition } from './scope-permissions-transition.js'
 
-describe('PermissionSetTransition', () => {
+describe('ScopePermissionsTransition', () => {
   describe('allowsAccount', () => {
     it('should allow account:email with transition:email', () => {
-      const set = new PermissionSetTransition('transition:email account:repo')
+      const set = new ScopePermissionsTransition(
+        'transition:email account:repo',
+      )
       expect(set.allowsAccount({ attr: 'email', action: 'read' })).toBe(true)
       expect(set.allowsAccount({ attr: 'email', action: 'manage' })).toBe(false)
 
@@ -19,14 +21,14 @@ describe('PermissionSetTransition', () => {
 
   describe('allowsBlob', () => {
     it('should allow blob with transition:generic', () => {
-      const set = new PermissionSetTransition('transition:generic')
+      const set = new ScopePermissionsTransition('transition:generic')
       expect(set.allowsBlob({ mime: 'foo/bar' })).toBe(true)
     })
   })
 
   describe('allowsRepo', () => {
     it('should allow repo with transition:generic', () => {
-      const set = new PermissionSetTransition('transition:generic')
+      const set = new ScopePermissionsTransition('transition:generic')
       expect(
         set.allowsRepo({ collection: 'app.bsky.feed.post', action: 'create' }),
       ).toBe(true)
@@ -44,7 +46,7 @@ describe('PermissionSetTransition', () => {
 
   describe('allowsRpc', () => {
     it('should allow rpc with transition:generic', () => {
-      const set = new PermissionSetTransition('transition:generic')
+      const set = new ScopePermissionsTransition('transition:generic')
       expect(
         set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.post' }),
       ).toBe(true)
@@ -55,7 +57,7 @@ describe('PermissionSetTransition', () => {
     })
 
     it('should allow chat.bsky.* methods with "transition:chat.bsky"', () => {
-      const set = new PermissionSetTransition('transition:chat.bsky')
+      const set = new ScopePermissionsTransition('transition:chat.bsky')
       expect(
         set.allowsRpc({
           aud: 'did:example:123',
@@ -81,7 +83,7 @@ describe('PermissionSetTransition', () => {
     })
 
     it('should reject chat methods with "transition:generic"', () => {
-      const set = new PermissionSetTransition('transition:generic')
+      const set = new ScopePermissionsTransition('transition:generic')
 
       expect(
         set.allowsRpc({
