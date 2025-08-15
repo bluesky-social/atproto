@@ -23,6 +23,7 @@ import {
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
+import { NSID } from '@atproto/syntax'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
@@ -83,6 +84,11 @@ import {
   OAuthVerifier,
   OAuthVerifierOptions,
 } from './oauth-verifier.js'
+import { PermissionSet } from './permission-set/permission-set.js'
+import {
+  PermissionManager,
+  PermissionSetResolver,
+} from './permission-set/permissions-manager.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
@@ -243,6 +249,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly accountManager: AccountManager
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
+  public readonly permissionManager: PermissionManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
 
@@ -322,6 +329,7 @@ export class OAuthProvider extends OAuthVerifier {
       clientJwksCache,
       clientMetadataCache,
     )
+    this.permissionManager = new PermissionManager(safeFetch)
     this.requestManager = new RequestManager(
       requestStore,
       this.signer,
@@ -667,6 +675,11 @@ export class OAuthProvider extends OAuthVerifier {
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
         })),
+        permissionSets: parameters.scope
+          ? (Object.fromEntries(
+              await this.permissionManager.resolveFromScope(parameters.scope),
+            ) satisfies Record<string, PermissionSet>)
+          : undefined,
       }
     } catch (err) {
       try {

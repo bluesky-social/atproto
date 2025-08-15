@@ -1,3 +1,4 @@
+import { Nsid, isNsid } from './lib/nsid.js'
 import { AccountScope, AccountScopeMatch } from './resources/account-scope.js'
 import { BlobScope, BlobScopeMatch } from './resources/blob-scope.js'
 import {
@@ -16,11 +17,25 @@ export type ScopeMatchingOptionsByResource = {
   blob: BlobScopeMatch
 }
 
-export function isValidAtprotoOauthScope(value: string) {
+type AtprotoOauthScope =
+  | 'atproto'
+  | 'transition:email'
+  | 'transition:generic'
+  | 'transition:chat.bsky'
+  | Nsid
+  | `repo:${string}`
+  | `rpc:${string}`
+  | `account:${string}`
+  | `identity:${string}`
+  | `blob:${string}`
+export function isValidAtprotoOauthScope(
+  value: string,
+): value is AtprotoOauthScope {
   if (value === 'atproto') return true
   if (value === 'transition:email') return true
   if (value === 'transition:generic') return true
   if (value === 'transition:chat.bsky') return true
+  if (isNsid(value)) return true
 
   const syntax = ResourceSyntax.fromString(value)
   if (syntax.resource === 'repo') {

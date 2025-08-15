@@ -1350,6 +1350,10 @@ importers:
         version: 6.2.0(@types/node@18.19.67)
 
   packages/oauth/oauth-scopes:
+    dependencies:
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../../syntax
     devDependencies:
       jest:
         specifier: ^28.1.2

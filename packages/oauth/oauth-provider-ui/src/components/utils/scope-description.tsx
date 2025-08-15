@@ -4,10 +4,10 @@ import { Override } from '#/lib/util'
 import {
   BlobScope,
   DIDLike,
-  NSID,
-  ScopePermissionsTransition,
+  Nsid,
   RepoScope,
   RpcScope,
+  ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import { Checkbox } from '../forms/checkbox'
 import { Admonition, AdmonitionProps } from './admonition'
@@ -500,7 +500,7 @@ function RpcMethodsTable({
   const { t } = useLingui()
 
   const audLxmsEntries = useMemo(() => {
-    const map = new Map<'*' | DIDLike, Set<'*' | NSID>>()
+    const map = new Map<'*' | DIDLike, Set<'*' | Nsid>>()
 
     for (const s of permissions.scopes) {
       const parsed = RpcScope.fromString(s)
@@ -632,7 +632,7 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
 
   const nsidActions = useMemo(() => {
     const map = new Map<
-      '*' | NSID,
+      '*' | Nsid,
       {
         create: boolean
         update: boolean
@@ -733,7 +733,7 @@ function scopeEnablesChat(scope: string): boolean {
   return rpc.lxm.includes('*') || rpc.lxm.some(isBskyChatNsid)
 }
 
-function isBlueskySpecificNsid(nsid: NSID | '*'): boolean {
+function isBlueskySpecificNsid(nsid: Nsid | '*'): boolean {
   return nsid === '*'
     ? false
     : nsid === 'com.atproto.moderation.createReport' ||

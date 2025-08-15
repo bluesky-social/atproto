@@ -1,6 +1,10 @@
 import { z } from 'zod'
-import { NSID } from '@atproto/syntax'
-import { requiredPropertiesRefinement } from './util'
+import {
+  acceptSchema,
+  didSchema,
+  nsidSchema,
+  requiredPropertiesRefinement,
+} from './util'
 
 // primitives
 // =
@@ -213,6 +217,52 @@ export const lexObject = z
   .superRefine(requiredPropertiesRefinement)
 export type LexObject = z.infer<typeof lexObject>
 
+// permissions
+// =
+
+const permissionBaseSchema = z.object({ type: z.literal('permission') })
+
+export const blobPermissionSchema = permissionBaseSchema.extend({
+  resource: z.literal('blob'),
+  accept: z.array(acceptSchema).nonempty(),
+})
+export type BlobPermission = z.infer<typeof blobPermissionSchema>
+
+export const repoPermissionSchema = permissionBaseSchema.extend({
+  resource: z.literal('repo'),
+  collection: z.array(nsidSchema).nonempty(),
+  action: z.array(z.enum(['create', 'update', 'delete'])).nonempty(),
+})
+export type RepoPermission = z.infer<typeof repoPermissionSchema>
+
+export const rpcPermissionSchema = permissionBaseSchema
+  .extend({
+    resource: z.literal('rpc'),
+    aud: z.union([z.literal('*'), didSchema]).optional(),
+    lxm: z.array(nsidSchema).nonempty(),
+  })
+  .refine((data) => data.aud !== '*' || !data.lxm.includes('*'), {
+    message: "Invalid combination of 'aud' and 'lxm'",
+  })
+
+export type RpcPermission = z.infer<typeof rpcPermissionSchema>
+
+export const permissionSetSchema = z.object({
+  type: z.literal('permission-set'),
+  description: z.string().optional(),
+  permissions: z
+    .array(
+      z.discriminatedUnion('resource', [
+        blobPermissionSchema,
+        repoPermissionSchema,
+        rpcPermissionSchema,
+      ]),
+    )
+    .nonempty(),
+})
+
+export type PermissionSet = z.infer<typeof permissionSetSchema>
+
 // xrpc
 // =
 
@@ -415,9 +465,7 @@ export const lexiconDoc = z
     // Compatibility with lexicon publishing
     $type: z.literal('com.atproto.lexicon.schema').optional(),
     lexicon: z.literal(1),
-    id: z.string().refine((v: string) => NSID.isValid(v), {
-      message: 'Must be a valid NSID',
-    }),
+    id: nsidSchema,
     revision: z.number().optional(),
     description: z.string().optional(),
     defs: z.record(lexUserType),
