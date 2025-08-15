@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
-      // performed during auth. However, since this methods's "repo" parameter
+      // performed during auth. However, since this method's "repo" parameter
       // can be a handle, we will need to fetch the account again to ensure that
       // the handle matches the DID from the request's credentials. In order to
       // avoid fetching the account twice (during auth, and then again in the
