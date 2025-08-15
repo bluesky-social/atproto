@@ -51,7 +51,7 @@ import { buildLexiconResolver } from '@atproto/lexicon-resolver'
 const resolveLexicon = buildLexiconResolver({
   idResolver: new IdResolver({
     didCache: new MemoryCache(),
-  })
+  }),
 })
 
 const resolved = await resolveLexicon('app.bsky.feed.post')
