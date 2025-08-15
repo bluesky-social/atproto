@@ -13,7 +13,7 @@ This package may be used to determine the DID authority for a Lexicon based on i
 import {
   resolveLexicon,
   resolveLexiconDidAuthority,
-} from '@atproto/lexicon-resolution'
+} from '@atproto/lexicon-resolver'
 
 // Which DID is the authority over this Lexicon?
 const didAuthority = await resolveLexiconDidAuthority('app.bsky.feed.post')
@@ -46,15 +46,15 @@ Identity data is used in order to fetch and verify record contents. The @atproto
 
 ```ts
 import { IdResolver, MemoryCache } from '@atproto/identity'
-import { resolveLexicon } from '@atproto/lexicon-resolution'
+import { buildLexiconResolver } from '@atproto/lexicon-resolver'
 
-const idResolver = new IdResolver({
-  didCache: new MemoryCache(),
+const resolveLexicon = buildLexiconResolver({
+  idResolver: new IdResolver({
+    didCache: new MemoryCache(),
+  })
 })
 
-const resolved = await resolveLexicon('app.bsky.feed.post', {
-  idResolver,
-})
+const resolved = await resolveLexicon('app.bsky.feed.post')
 ```
 
 ### With DID authority override
@@ -62,7 +62,7 @@ const resolved = await resolveLexicon('app.bsky.feed.post', {
 You may specify a specific DID authority you'd like to use to perform a Lexicon resolution, overriding ATProto's DNS-based authority over Lexicons. This is described in some more detail in [Authority and Control](https://atproto.com/specs/lexicon#authority-and-control).
 
 ```ts
-import { resolveLexicon } from '@atproto/lexicon-resolution'
+import { resolveLexicon } from '@atproto/lexicon-resolver'
 
 const resolved = await resolveLexicon('app.bsky.feed.post', {
   didAuthority: 'did:plc:...',
