@@ -11,7 +11,7 @@ import { Jwks, JwksPub } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
-import { Key } from './key.js'
+import { Key, KeyMatchOptions } from './key.js'
 import {
   DeepReadonly,
   Override,
@@ -22,18 +22,17 @@ import {
   preferredOrderCmp,
 } from './util.js'
 
-export type JwtSignHeader = Override<JwtHeader, Pick<KeySearch, 'alg' | 'kid'>>
+export type JwtSignHeader = Override<
+  JwtHeader,
+  Pick<KeyMatchOptions, 'alg' | 'kid'>
+>
 
 export type JwtPayloadGetter<P = JwtPayload> = (
   header: JwtHeader,
   key: Key,
 ) => P | PromiseLike<P>
 
-export type KeySearch = {
-  use?: 'sig' | 'enc'
-  kid?: string | string[]
-  alg?: string | string[]
-}
+export type { KeyMatchOptions }
 
 const extractPrivateJwk = (key: Key): Jwk | undefined => key.privateJwk
 const extractPublicJwk = (key: Key): Jwk | undefined => key.publicJwk
@@ -118,45 +117,32 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     return this.keys.some((key) => key.kid === kid)
   }
 
-  get(search: KeySearch): K {
-    for (const key of this.list(search)) {
+  get(options: KeyMatchOptions): K {
+    for (const key of this.list(options)) {
       return key
     }
 
     throw new JwkError(
-      `Key not found ${search.kid || search.alg || '<unknown>'}`,
+      `Key not found ${options.kid ?? options.alg ?? options.usage ?? '<unknown>'}`,
       ERR_JWK_NOT_FOUND,
     )
   }
 
-  *list(search: KeySearch): Generator<K> {
-    // Optimization: Empty string or empty array will not match any key
-    if (search.kid?.length === 0) return
-    if (search.alg?.length === 0) return
-
-    for (const key of this) {
-      if (search.use && key.use !== search.use) continue
-
-      if (Array.isArray(search.kid)) {
-        if (!key.kid || !search.kid.includes(key.kid)) continue
-      } else if (search.kid) {
-        if (key.kid !== search.kid) continue
-      }
-
-      if (Array.isArray(search.alg)) {
-        if (!search.alg.some((a) => key.algorithms.includes(a))) continue
-      } else if (typeof search.alg === 'string') {
-        if (!key.algorithms.includes(search.alg)) continue
-      }
-
-      yield key
-    }
+  *list(options: KeyMatchOptions): Generator<K> {
+    for (const key of this) if (key.matches(options)) yield key
   }
 
-  findPrivateKey({ kid, alg, use }: KeySearch): { key: Key; alg: string } {
+  findPrivateKey({
+    kid,
+    alg,
+    usage,
+  }: KeyMatchOptions & { usage: 'sign' | 'encrypt' }): {
+    key: Key
+    alg: string
+  } {
     const matchingKeys: Key[] = []
 
-    for (const key of this.list({ kid, alg, use })) {
+    for (const key of this.list({ kid, alg, usage })) {
       // Not a private key
       if (!key.isPrivate) continue
 
@@ -188,7 +174,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
 
     throw new JwkError(
-      `No private key found for ${kid || alg || use || '<unknown>'}`,
+      `No private key found for ${kid || alg || usage}`,
       ERR_JWK_NOT_FOUND,
     )
   }
@@ -205,7 +191,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
       const { key, alg } = this.findPrivateKey({
         alg: sAlg,
         kid: sKid,
-        use: 'sig',
+        usage: 'sign',
       })
       const protectedHeader = { ...header, alg, kid: key.kid }
 
@@ -228,7 +214,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
 
     const errors: unknown[] = []
 
-    for (const key of this.list({ kid, alg })) {
+    for (const key of this.list({ kid, alg, usage: 'verify' })) {
       try {
         const result = await key.verifyJwt<C>(token, options)
         return { ...result, key }
