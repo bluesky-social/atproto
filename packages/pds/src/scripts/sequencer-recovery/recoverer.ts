@@ -238,7 +238,7 @@ const parseCommitEvt = async (
   blocks: BlockMap
 }> => {
   const did = evt.repo
-  const evtCar = await readCar(evt.blocks)
+  const evtCar = await readCar(evt.blocks, { skipCidVerification: true })
   const writesUnfiltered = await Promise.all(
     evt.ops.map(async (op) => {
       const { collection, rkey } = parseDataKey(op.path)

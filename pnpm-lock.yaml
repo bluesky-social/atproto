@@ -801,6 +801,46 @@ importers:
         specifier: ^5.6.3
         version: 5.8.2
 
+  packages/lexicon-resolver:
+    dependencies:
+      '@atproto-labs/fetch-node':
+        specifier: workspace:^
+        version: link:../internal/fetch-node
+      '@atproto/identity':
+        specifier: workspace:^
+        version: link:../identity
+      '@atproto/lexicon':
+        specifier: workspace:^
+        version: link:../lexicon
+      '@atproto/repo':
+        specifier: workspace:^
+        version: link:../repo
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
+      '@atproto/xrpc':
+        specifier: workspace:^
+        version: link:../xrpc
+      multiformats:
+        specifier: ^9.9.0
+        version: 9.9.0
+    devDependencies:
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
+      '@atproto/dev-env':
+        specifier: workspace:^
+        version: link:../dev-env
+      '@atproto/lex-cli':
+        specifier: workspace:^
+        version: link:../lex-cli
+      jest:
+        specifier: ^28.1.2
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.8.3
+
   packages/oauth/jwk:
     dependencies:
       multiformats:

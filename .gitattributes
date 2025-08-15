@@ -1,5 +1,6 @@
 packages/**/src/lexicon/** linguist-generated=true
 packages/api/src/client/** linguist-generated=true
+packages/lexicon-resolver/src/client/** linguist-generated=true
 packages/bsky/src/proto/** linguist-generated=true
 packages/bsync/src/proto/** linguist-generated=true
 
