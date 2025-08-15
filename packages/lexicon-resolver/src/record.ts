@@ -15,10 +15,28 @@ import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { AtpBaseClient as Client } from './client/index.js'
 import { isValidDid } from './util.js'
 
-export type ResolveRecordOptions = {
+/**
+ * Resolve a record from the network.
+ */
+export type RecordResolver = (
+  uriStr: AtUri | string,
+) => Promise<RecordResolution>
+
+/**
+ * Resolve a record from the network, verifying its authenticity.
+ */
+export type AtprotoRecordResolver = (
+  uriStr: AtUri | string,
+  options?: ResolveRecordOptions,
+) => Promise<RecordResolution>
+
+export type BuildRecordResolverOptions = {
   idResolver?: IdResolver
-  forceRefresh?: boolean
   rpc?: Partial<BuildFetchHandlerOptions> | FetchHandler
+}
+
+export type ResolveRecordOptions = {
+  forceRefresh?: boolean
 }
 
 export type RecordResolution = {
@@ -29,50 +47,54 @@ export type RecordResolution = {
 }
 
 /**
- * Resolve a record from the network, verifying its authenticity.
- * @param uriStr AtUri or string representing one for the record that will be resolved.
- * @param options
+ * Build a record resolver function.
  */
-export async function resolveRecord(
-  uriStr: AtUri | string,
-  options: ResolveRecordOptions = {},
-): Promise<RecordResolution> {
-  const { idResolver = new IdResolver(), forceRefresh, rpc } = options
-  const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
-  const did = await getDidFromUri(uri, { idResolver })
-  const identity = await idResolver.did
-    .resolveAtprotoData(did, forceRefresh)
-    .catch((err) => {
-      throw new RecordResolutionError('Could not resolve DID identity data', {
-        cause: err,
+export function buildRecordResolver(
+  options: BuildRecordResolverOptions = {},
+): AtprotoRecordResolver {
+  const { idResolver = new IdResolver(), rpc } = options
+  return async function resolveRecord(
+    uriStr: AtUri | string,
+    opts: ResolveRecordOptions = {},
+  ): Promise<RecordResolution> {
+    const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
+    const did = await getDidFromUri(uri, { idResolver })
+    const identity = await idResolver.did
+      .resolveAtprotoData(did, opts.forceRefresh)
+      .catch((err) => {
+        throw new RecordResolutionError('Could not resolve DID identity data', {
+          cause: err,
+        })
       })
-    })
-  const client = new Client(
-    typeof rpc === 'function'
-      ? rpc
-      : {
-          ...rpc,
-          service: rpc?.service ?? identity.pds,
-          fetch: rpc?.fetch ?? safeFetch,
-        },
-  )
-  const { data: proofBytes } = await client.com.atproto.sync
-    .getRecord({
-      did,
-      collection: uri.collection,
-      rkey: uri.rkey,
-    })
-    .catch((err) => {
-      throw new RecordResolutionError('Could not fetch record proof', {
-        cause: err,
+    const client = new Client(
+      typeof rpc === 'function'
+        ? rpc
+        : {
+            ...rpc,
+            service: rpc?.service ?? identity.pds,
+            fetch: rpc?.fetch ?? safeFetch,
+          },
+    )
+    const { data: proofBytes } = await client.com.atproto.sync
+      .getRecord({
+        did,
+        collection: uri.collection,
+        rkey: uri.rkey,
       })
+      .catch((err) => {
+        throw new RecordResolutionError('Could not fetch record proof', {
+          cause: err,
+        })
+      })
+    const verified = await verifyRecordProof(proofBytes, {
+      uri: AtUri.make(did, uri.collection, uri.rkey),
+      signingKey: identity.signingKey,
     })
-  const verified = await verifyRecordProof(proofBytes, {
-    uri: AtUri.make(did, uri.collection, uri.rkey),
-    signingKey: identity.signingKey,
-  })
-  return verified
+    return verified
+  }
 }
+
+export const resolveRecord = buildRecordResolver()
 
 export const safeFetch = safeFetchWrap({
   allowIpHost: false,

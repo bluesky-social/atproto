@@ -1,46 +1,18 @@
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { NSID } from '@atproto/syntax'
-import { resolveLexicon, resolveLexiconDidAuthority } from '../src/index.js'
+import {
+  AtprotoLexiconResolver,
+  buildLexiconResolver,
+  resolveLexiconDidAuthority,
+} from '../src/index.js'
 
-const dnsEntries: [entry: string, result: string][] = []
+const dnsEntries: [entry: string, ...result: string[][]][] = []
 
 jest.mock('node:dns/promises', () => {
   return {
     resolveTxt: (entry: string) => {
       const found = dnsEntries.find(([e]) => e === entry)
-      if (found) return [[found[1]]]
-      if (entry === '_lexicon.simple.test') {
-        return [['did=did:example:simpleDid']]
-      }
-      if (entry === '_lexicon.noisy.test') {
-        return [
-          ['blah blah blah'],
-          ['did:example:fakeDid'],
-          ['atproto=did:example:fakeDid'],
-          ['did=did:example:noisyDid'],
-          [
-            'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
-            'apsodfiuweproiasudfpoasidfu',
-          ],
-        ]
-      }
-      if (entry === '_lexicon.bad.test') {
-        return [
-          ['blah blah blah'],
-          ['did:example:fakeDid'],
-          ['atproto=did:example:fakeDid'],
-          [
-            'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
-            'apsodfiuweproiasudfpoasidfu',
-          ],
-        ]
-      }
-      if (entry === '_lexicon.invalid.test') {
-        return [['did=not:a:did']]
-      }
-      if (entry === '_lexicon.multi.test') {
-        return [['did=did:example:firstDid'], ['did=did:example:secondDid']]
-      }
+      if (found) return found.slice(1)
       return []
     },
   }
@@ -49,6 +21,7 @@ jest.mock('node:dns/promises', () => {
 describe('Lexicon resolution', () => {
   let network: TestNetworkNoAppView
   let sc: SeedClient
+  let resolveLexicon: AtprotoLexiconResolver
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -56,7 +29,11 @@ describe('Lexicon resolution', () => {
     })
     sc = network.getSeedClient()
     await usersSeed(sc)
-    dnsEntries.push(['_lexicon.alice.example', `did=${sc.dids.alice}`])
+    dnsEntries.push(['_lexicon.alice.example', [`did=${sc.dids.alice}`]])
+    resolveLexicon = buildLexiconResolver({
+      rpc: { fetch },
+      idResolver: network.pds.ctx.idResolver,
+    })
   })
 
   afterAll(async () => {
@@ -72,8 +49,6 @@ describe('Lexicon resolution', () => {
       sc.getHeaders(sc.dids.alice),
     )
     const result = await resolveLexicon('example.alice.name1', {
-      rpc: { fetch },
-      idResolver: network.pds.ctx.idResolver,
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.alice)
@@ -97,8 +72,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.alice.mismatch', {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow('Lexicon schema record id does not match NSID')
@@ -113,8 +86,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.bob.name', {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow(
@@ -125,8 +96,6 @@ describe('Lexicon resolution', () => {
   it('fails on missing record.', async () => {
     await expect(
       resolveLexicon('example.alice.missing', {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow('Could not resolve Lexicon schema record')
@@ -149,8 +118,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.alice.badsig', {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow(
@@ -180,8 +147,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.alice.baddoc', {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow(
@@ -217,8 +182,6 @@ describe('Lexicon resolution', () => {
     )
     const result = await resolveLexicon('example.alice.override', {
       didAuthority: sc.dids.carol,
-      rpc: { fetch },
-      idResolver: network.pds.ctx.idResolver,
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.carol)
@@ -235,21 +198,48 @@ describe('Lexicon resolution', () => {
 
   describe('DID authority', () => {
     it('handles a simple DNS resolution', async () => {
+      dnsEntries.push(['_lexicon.simple.test', ['did=did:example:simpleDid']])
       const did = await resolveLexiconDidAuthority('test.simple.name')
       expect(did).toBe('did:example:simpleDid')
     })
 
     it('handles a noisy DNS resolution', async () => {
+      dnsEntries.push([
+        '_lexicon.noisy.test',
+        ['blah blah blah'],
+        ['did:example:fakeDid'],
+        ['atproto=did:example:fakeDid'],
+        ['did=did:example:noisyDid'],
+        [
+          'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
+          'apsodfiuweproiasudfpoasidfu',
+        ],
+      ])
       const did = await resolveLexiconDidAuthority('test.noisy.name')
       expect(did).toBe('did:example:noisyDid')
     })
 
     it('handles a bad DNS resolution', async () => {
+      dnsEntries.push([
+        '_lexicon.bad.test',
+        ['blah blah blah'],
+        ['did:example:fakeDid'],
+        ['atproto=did:example:fakeDid'],
+        [
+          'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
+          'apsodfiuweproiasudfpoasidfu',
+        ],
+      ])
       const did = await resolveLexiconDidAuthority('test.bad.name')
       expect(did).toBeUndefined()
     })
 
     it('throws on multiple dids under same domain', async () => {
+      dnsEntries.push([
+        '_lexicon.bad.test',
+        ['did=did:example:firstDid'],
+        ['did=did:example:secondDid'],
+      ])
       const did = await resolveLexiconDidAuthority('test.multi.name')
       expect(did).toBeUndefined()
     })
@@ -261,6 +251,7 @@ describe('Lexicon resolution', () => {
     })
 
     it('fails on invalid DID result', async () => {
+      dnsEntries.push(['_lexicon.invalid.test', ['did=not:a:did']])
       const did = await resolveLexiconDidAuthority('test.invalid.name')
       expect(did).toBeUndefined()
     })

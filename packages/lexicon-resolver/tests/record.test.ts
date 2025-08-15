@@ -1,10 +1,11 @@
 import { dataToCborBlock } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { resolveRecord } from '../src/index.js'
+import { AtprotoRecordResolver, buildRecordResolver } from '../src/index.js'
 
-describe.only('Record resolution', () => {
+describe('Record resolution', () => {
   let network: TestNetworkNoAppView
   let sc: SeedClient
+  let resolveRecord: AtprotoRecordResolver
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -12,6 +13,10 @@ describe.only('Record resolution', () => {
     })
     sc = network.getSeedClient()
     await usersSeed(sc)
+    resolveRecord = buildRecordResolver({
+      rpc: { fetch },
+      idResolver: network.pds.ctx.idResolver,
+    })
   })
 
   afterAll(async () => {
@@ -21,8 +26,6 @@ describe.only('Record resolution', () => {
   it('resolves record by AT-URI object.', async () => {
     const post = await sc.post(sc.dids.alice, 'post1')
     const result = await resolveRecord(post.ref.uri, {
-      rpc: { fetch },
-      idResolver: network.pds.ctx.idResolver,
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.alice)
@@ -34,8 +37,6 @@ describe.only('Record resolution', () => {
   it('resolves record by AT-URI string.', async () => {
     const post = await sc.post(sc.dids.alice, 'post2')
     const result = await resolveRecord(post.ref.uriStr, {
-      rpc: { fetch },
-      idResolver: network.pds.ctx.idResolver,
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.alice)
@@ -47,8 +48,6 @@ describe.only('Record resolution', () => {
   it("does not resolve record that doesn't exist.", async () => {
     await expect(
       resolveRecord(`at://${sc.dids.alice}/app.bsky.feed.post/2222222222222`, {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow('Record not found')
@@ -66,8 +65,6 @@ describe.only('Record resolution', () => {
     )
     await expect(
       resolveRecord(post.ref.uri, {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow('Invalid signature on commit')
@@ -94,8 +91,6 @@ describe.only('Record resolution', () => {
     )
     await expect(
       resolveRecord(post.ref.uri, {
-        rpc: { fetch },
-        idResolver: network.pds.ctx.idResolver,
         forceRefresh: true,
       }),
     ).rejects.toThrow('Not a valid CID for bytes')

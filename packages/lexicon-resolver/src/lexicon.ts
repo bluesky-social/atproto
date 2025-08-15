@@ -3,12 +3,33 @@ import { CID } from 'multiformats/cid'
 import { LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
 import { Commit } from '@atproto/repo'
 import { AtUri, NSID, ensureValidDid } from '@atproto/syntax'
-import { ResolveRecordOptions, resolveRecord } from './record.js'
+import {
+  BuildRecordResolverOptions,
+  ResolveRecordOptions,
+  buildRecordResolver,
+} from './record.js'
 import { isValidDid } from './util.js'
 
 const DNS_SUBDOMAIN = '_lexicon'
 const DNS_PREFIX = 'did='
 export const LEXICON_SCHEMA_NSID = 'com.atproto.lexicon.schema'
+
+/**
+ * Resolve Lexicon from an NSID
+ */
+export type LexiconResolver = (
+  nsid: NSID | string,
+) => Promise<LexiconResolution>
+
+/**
+ * Resolve Lexicon from an NSID using Lexicon DID authority and record resolution
+ */
+export type AtprotoLexiconResolver = (
+  nsid: NSID | string,
+  options?: ResolveLexiconOptions,
+) => Promise<LexiconResolution>
+
+export type BuildLexiconResolverOptions = BuildRecordResolverOptions
 
 export type ResolveLexiconOptions = ResolveRecordOptions & {
   didAuthority?: string
@@ -23,42 +44,49 @@ export type LexiconResolution = {
 }
 
 /**
- * Resolve a Lexicon from the network, verifying its authenticity.
- * @param nsidStr NSID or string representing one for the Lexicon that will be resolved.
- * @param options
+ * Build a Lexicon resolver function.
  */
-export async function resolveLexicon(
-  nsidStr: NSID | string,
-  options: ResolveLexiconOptions = {},
-): Promise<LexiconResolution> {
-  const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
-  const didAuthority = await getDidAuthority(nsid, options)
-  const verified = await resolveRecord(
-    AtUri.make(didAuthority, LEXICON_SCHEMA_NSID, nsid.toString()),
-    options,
-  ).catch((err) => {
-    throw new LexiconResolutionError(
-      'Could not resolve Lexicon schema record',
-      { cause: err },
-    )
-  })
-  let lexicon: LexiconDoc
-  try {
-    lexicon = parseLexiconDoc(verified.record)
-  } catch (err) {
-    throw new LexiconResolutionError('Invalid Lexicon document', { cause: err })
-  }
-  if (!isLexiconSchemaRecord(lexicon)) {
-    throw new LexiconResolutionError('Invalid Lexicon schema record')
-  }
-  if (lexicon.id !== nsid.toString()) {
-    throw new LexiconResolutionError(
-      `Lexicon schema record id does not match NSID: ${lexicon.id}`,
-    )
-  }
-  const { uri, cid, commit } = verified
-  return { commit, uri, cid, nsid, lexicon }
+export function buildLexiconResolver(
+  options: BuildLexiconResolverOptions = {},
+): AtprotoLexiconResolver {
+  const resolveRecord = buildRecordResolver(options)
+  return async function (
+    nsidStr: NSID | string,
+    opts: ResolveLexiconOptions = {},
+  ): Promise<LexiconResolution> {
+    const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
+    const didAuthority = await getDidAuthority(nsid, opts)
+    const verified = await resolveRecord(
+      AtUri.make(didAuthority, LEXICON_SCHEMA_NSID, nsid.toString()),
+      { forceRefresh: opts.forceRefresh },
+    ).catch((err) => {
+      throw new LexiconResolutionError(
+        'Could not resolve Lexicon schema record',
+        { cause: err },
+      )
+    })
+    let lexicon: LexiconDoc
+    try {
+      lexicon = parseLexiconDoc(verified.record)
+    } catch (err) {
+      throw new LexiconResolutionError('Invalid Lexicon document', {
+        cause: err,
+      })
+    }
+    if (!isLexiconSchemaRecord(lexicon)) {
+      throw new LexiconResolutionError('Invalid Lexicon schema record')
+    }
+    if (lexicon.id !== nsid.toString()) {
+      throw new LexiconResolutionError(
+        `Lexicon schema record id does not match NSID: ${lexicon.id}`,
+      )
+    }
+    const { uri, cid, commit } = verified
+    return { commit, uri, cid, nsid, lexicon }
+  } satisfies LexiconResolver
 }
+
+export const resolveLexicon = buildLexiconResolver()
 
 /**
  * Resolve the DID authority for a Lexicon from the network using DNS, based on its NSID.
