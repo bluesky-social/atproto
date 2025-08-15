@@ -26,7 +26,6 @@ export type LexiconResolution = {
  * Resolve a Lexicon from the network, verifying its authenticity.
  * @param nsidStr NSID or string representing one for the Lexicon that will be resolved.
  * @param options
- * @returns
  */
 export async function resolveLexicon(
   nsidStr: NSID | string,
@@ -64,10 +63,10 @@ export async function resolveLexicon(
 /**
  * Resolve the DID authority for a Lexicon from the network using DNS, based on its NSID.
  * @param nsidStr NSID or string representing one for which to lookup its Lexicon DID authority.
- * @param options
- * @returns
  */
-export async function resolveLexiconDidAuthority(nsidStr: NSID | string) {
+export async function resolveLexiconDidAuthority(
+  nsidStr: NSID | string,
+): Promise<string | undefined> {
   const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
   const did = await resolveDns(nsid.authority)
   if (did == null || !isValidDid(did)) return

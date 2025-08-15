@@ -32,7 +32,6 @@ export type RecordResolution = {
  * Resolve a record from the network, verifying its authenticity.
  * @param uriStr AtUri or string representing one for the record that will be resolved.
  * @param options
- * @returns
  */
 export async function resolveRecord(
   uriStr: AtUri | string,
@@ -51,7 +50,11 @@ export async function resolveRecord(
   const client = new Client(
     typeof rpc === 'function'
       ? rpc
-      : { service: identity.pds, fetch: safeFetch, ...rpc },
+      : {
+          ...rpc,
+          service: rpc?.service ?? identity.pds,
+          fetch: rpc?.fetch ?? safeFetch,
+        },
   )
   const { data: proofBytes } = await client.com.atproto.sync
     .getRecord({
