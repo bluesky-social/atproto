@@ -5,7 +5,7 @@ import {
   BlobScope,
   DIDLike,
   NSID,
-  PermissionSetTransition,
+  ScopePermissionsTransition,
   RepoScope,
   RpcScope,
 } from '@atproto/oauth-scopes'
@@ -49,7 +49,10 @@ export function ScopeDescription({
   className = '',
   ...attrs
 }: ScopeDescriptionProps) {
-  const permissions = useMemo(() => new PermissionSetTransition(scope), [scope])
+  const permissions = useMemo(
+    () => new ScopePermissionsTransition(scope),
+    [scope],
+  )
   const showFineGrainedPermissions =
     !useHasOnlyBlueskySpecificScopes(permissions)
 
@@ -95,7 +98,7 @@ function IdentityWarning({
   prominent = true,
   ...props
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 } & AdmonitionProps) {
   const hasFullIdentityAccess = useMemo(() => {
     return permissions.allowsIdentity({ attr: '*' })
@@ -122,7 +125,7 @@ function EmailPermissions({
   allowEmail,
   onAllowEmail,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
   allowEmail?: boolean
   onAllowEmail?: (allowed: boolean) => void
 }) {
@@ -169,7 +172,7 @@ function EmailPermissions({
 function BlobPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -255,7 +258,7 @@ function BlobPermissions({
 function AccountPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -281,7 +284,9 @@ function AccountPermissions({
  * scope that is used by the Bluesky app, and if every repo and rpc scope are
  * used by the Bluesky app.
  */
-function useHasOnlyBlueskySpecificScopes(permissions: PermissionSetTransition) {
+function useHasOnlyBlueskySpecificScopes(
+  permissions: ScopePermissionsTransition,
+) {
   return useMemo(() => {
     if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
       return false
@@ -313,7 +318,7 @@ function useHasOnlyBlueskySpecificScopes(permissions: PermissionSetTransition) {
 function BlueskyAppviewPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const hasBskyAppRepo = useMemo(() => {
     return permissions.scopes.some(scopeEnablesBskyAppRepo)
@@ -349,7 +354,7 @@ function BlueskyAppviewPermissions({
 function BlueskyChatPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -377,7 +382,7 @@ function BlueskyChatPermissions({
 function IdentityPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -420,7 +425,7 @@ function IdentityPermissions({
 function RpcMethodsDetails({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -483,7 +488,7 @@ function RpcDescription() {
 type RpcMethodsTableProps = Override<
   HTMLAttributes<HTMLTableElement>,
   {
-    permissions: PermissionSetTransition
+    permissions: ScopePermissionsTransition
     children?: never
   }
 >
@@ -549,7 +554,7 @@ function RpcMethodsTable({
 function RepoPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -618,7 +623,7 @@ function RepoDescription() {
 type RepoTableProps = Override<
   HTMLAttributes<HTMLTableElement>,
   {
-    permissions: PermissionSetTransition
+    permissions: ScopePermissionsTransition
     children?: never
   }
 >
