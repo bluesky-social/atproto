@@ -70,8 +70,8 @@ import {
   GetBlockRecordsResponse,
   GetBlocksRequest,
   GetBlocksResponse,
-  GetBookmarksByActorAndUrisRequest,
-  GetBookmarksByActorAndUrisResponse,
+  GetBookmarksByActorAndSubjectsRequest,
+  GetBookmarksByActorAndSubjectsResponse,
   GetCountsForUsersRequest,
   GetCountsForUsersResponse,
   GetDidsByHandlesRequest,
@@ -1017,12 +1017,12 @@ export const Service = {
      * Bookmarks
      * Returns bookmarks created by the actor for the specified URIs.
      *
-     * @generated from rpc bsky.Service.GetBookmarksByActorAndUris
+     * @generated from rpc bsky.Service.GetBookmarksByActorAndSubjects
      */
-    getBookmarksByActorAndUris: {
-      name: 'GetBookmarksByActorAndUris',
-      I: GetBookmarksByActorAndUrisRequest,
-      O: GetBookmarksByActorAndUrisResponse,
+    getBookmarksByActorAndSubjects: {
+      name: 'GetBookmarksByActorAndSubjects',
+      I: GetBookmarksByActorAndSubjectsRequest,
+      O: GetBookmarksByActorAndSubjectsResponse,
       kind: MethodKind.Unary,
     },
     /**

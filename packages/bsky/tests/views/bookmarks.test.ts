@@ -8,6 +8,7 @@ import {
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { BookmarkView } from '../../src/lexicon/types/app/bsky/bookmark/defs'
 import { OutputSchema as GetBookmarksOutputSchema } from '../../src/lexicon/types/app/bsky/bookmark/getBookmarks'
 import { PostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { forSnapshot, paginateAll } from '../_util'
@@ -204,7 +205,7 @@ describe('appview bookmarks views', () => {
       expect(postAfterCarolDel.bookmarkCount).toBe(0)
     })
 
-    it('paginates bookmarks', async () => {
+    it('paginates bookmarks in descending order', async () => {
       await create(alice, sc.posts[alice][0].ref)
       await create(alice, sc.posts[alice][1].ref)
       await create(alice, sc.posts[bob][0].ref)
@@ -235,11 +236,20 @@ describe('appview bookmarks views', () => {
       const paginated = results(paginatedRes)
       assertPostViews(paginated)
 
+      // Check items are the same.
       const sort = (
         a: { item: $Typed<PostView> },
         b: { item: $Typed<PostView> },
       ) => (a.item.uri > b.item.uri ? 1 : -1)
-      expect(paginated.sort(sort)).toEqual(full.sort(sort))
+      expect([...paginated].sort(sort)).toEqual([...full].sort(sort))
+
+      // Check pagination ordering.
+      expect(paginated.at(0)?.bookmark.subject.uri).toStrictEqual(
+        sc.posts[dan][1].ref.uriStr,
+      )
+      expect(paginated.at(-1)?.bookmark.subject.uri).toStrictEqual(
+        sc.posts[alice][0].ref.uriStr,
+      )
     })
 
     it('shows posts and blocked posts correctly', async () => {
@@ -283,7 +293,7 @@ const clearBookmarks = async (db: Database) => {
 
 function assertPostViews(
   bookmarks: GetBookmarksOutputSchema['bookmarks'],
-): asserts bookmarks is { item: $Typed<AppBskyFeedDefs.PostView> }[] {
+): asserts bookmarks is (BookmarkView & { item: $Typed<PostView> })[] {
   bookmarks.forEach((b) => {
     assert(
       AppBskyFeedDefs.isPostView(b.item),

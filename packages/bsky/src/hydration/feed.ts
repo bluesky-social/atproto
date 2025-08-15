@@ -148,7 +148,7 @@ export class FeedHydrator {
         actorDid: viewer,
         refs,
       }),
-      this.dataplane.getBookmarksByActorAndUris({
+      this.dataplane.getBookmarksByActorAndSubjects({
         actorDid: viewer,
         uris: refs.map((r) => r.uri),
       }),

@@ -1274,12 +1274,12 @@ message GetActorBookmarksResponse {
   string cursor = 2;
 }
 
-message GetBookmarksByActorAndUrisRequest {
+message GetBookmarksByActorAndSubjectsRequest {
   string actor_did = 1;
   repeated string uris = 2;
 }
 
-message GetBookmarksByActorAndUrisResponse {
+message GetBookmarksByActorAndSubjectsResponse {
   repeated Bookmark bookmarks = 1;
 }
 
@@ -1448,7 +1448,7 @@ service Service {
 
   // Bookmarks
   // Returns bookmarks created by the actor for the specified URIs.
-  rpc GetBookmarksByActorAndUris(GetBookmarksByActorAndUrisRequest) returns (GetBookmarksByActorAndUrisResponse);
+  rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
   // Returns the bookmarks created by the actor.
   rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
 

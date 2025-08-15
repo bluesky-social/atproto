@@ -1,8 +1,8 @@
 export interface Bookmark {
   creator: string
+  key: string
   subjectUri: string
   subjectCid: string
-  key: string
   indexedAt: string
 }
 

@@ -13467,9 +13467,9 @@ export class GetActorBookmarksResponse extends Message<GetActorBookmarksResponse
 }
 
 /**
- * @generated from message bsky.GetBookmarksByActorAndUrisRequest
+ * @generated from message bsky.GetBookmarksByActorAndSubjectsRequest
  */
-export class GetBookmarksByActorAndUrisRequest extends Message<GetBookmarksByActorAndUrisRequest> {
+export class GetBookmarksByActorAndSubjectsRequest extends Message<GetBookmarksByActorAndSubjectsRequest> {
   /**
    * @generated from field: string actor_did = 1;
    */
@@ -13480,13 +13480,13 @@ export class GetBookmarksByActorAndUrisRequest extends Message<GetBookmarksByAct
    */
   uris: string[] = []
 
-  constructor(data?: PartialMessage<GetBookmarksByActorAndUrisRequest>) {
+  constructor(data?: PartialMessage<GetBookmarksByActorAndSubjectsRequest>) {
     super()
     proto3.util.initPartial(data, this)
   }
 
   static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.GetBookmarksByActorAndUrisRequest'
+  static readonly typeName = 'bsky.GetBookmarksByActorAndSubjectsRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     {
@@ -13501,22 +13501,28 @@ export class GetBookmarksByActorAndUrisRequest extends Message<GetBookmarksByAct
   static fromBinary(
     bytes: Uint8Array,
     options?: Partial<BinaryReadOptions>,
-  ): GetBookmarksByActorAndUrisRequest {
-    return new GetBookmarksByActorAndUrisRequest().fromBinary(bytes, options)
+  ): GetBookmarksByActorAndSubjectsRequest {
+    return new GetBookmarksByActorAndSubjectsRequest().fromBinary(
+      bytes,
+      options,
+    )
   }
 
   static fromJson(
     jsonValue: JsonValue,
     options?: Partial<JsonReadOptions>,
-  ): GetBookmarksByActorAndUrisRequest {
-    return new GetBookmarksByActorAndUrisRequest().fromJson(jsonValue, options)
+  ): GetBookmarksByActorAndSubjectsRequest {
+    return new GetBookmarksByActorAndSubjectsRequest().fromJson(
+      jsonValue,
+      options,
+    )
   }
 
   static fromJsonString(
     jsonString: string,
     options?: Partial<JsonReadOptions>,
-  ): GetBookmarksByActorAndUrisRequest {
-    return new GetBookmarksByActorAndUrisRequest().fromJsonString(
+  ): GetBookmarksByActorAndSubjectsRequest {
+    return new GetBookmarksByActorAndSubjectsRequest().fromJsonString(
       jsonString,
       options,
     )
@@ -13524,34 +13530,34 @@ export class GetBookmarksByActorAndUrisRequest extends Message<GetBookmarksByAct
 
   static equals(
     a:
-      | GetBookmarksByActorAndUrisRequest
-      | PlainMessage<GetBookmarksByActorAndUrisRequest>
+      | GetBookmarksByActorAndSubjectsRequest
+      | PlainMessage<GetBookmarksByActorAndSubjectsRequest>
       | undefined,
     b:
-      | GetBookmarksByActorAndUrisRequest
-      | PlainMessage<GetBookmarksByActorAndUrisRequest>
+      | GetBookmarksByActorAndSubjectsRequest
+      | PlainMessage<GetBookmarksByActorAndSubjectsRequest>
       | undefined,
   ): boolean {
-    return proto3.util.equals(GetBookmarksByActorAndUrisRequest, a, b)
+    return proto3.util.equals(GetBookmarksByActorAndSubjectsRequest, a, b)
   }
 }
 
 /**
- * @generated from message bsky.GetBookmarksByActorAndUrisResponse
+ * @generated from message bsky.GetBookmarksByActorAndSubjectsResponse
  */
-export class GetBookmarksByActorAndUrisResponse extends Message<GetBookmarksByActorAndUrisResponse> {
+export class GetBookmarksByActorAndSubjectsResponse extends Message<GetBookmarksByActorAndSubjectsResponse> {
   /**
    * @generated from field: repeated bsky.Bookmark bookmarks = 1;
    */
   bookmarks: Bookmark[] = []
 
-  constructor(data?: PartialMessage<GetBookmarksByActorAndUrisResponse>) {
+  constructor(data?: PartialMessage<GetBookmarksByActorAndSubjectsResponse>) {
     super()
     proto3.util.initPartial(data, this)
   }
 
   static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.GetBookmarksByActorAndUrisResponse'
+  static readonly typeName = 'bsky.GetBookmarksByActorAndSubjectsResponse'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'bookmarks', kind: 'message', T: Bookmark, repeated: true },
   ])
@@ -13559,22 +13565,28 @@ export class GetBookmarksByActorAndUrisResponse extends Message<GetBookmarksByAc
   static fromBinary(
     bytes: Uint8Array,
     options?: Partial<BinaryReadOptions>,
-  ): GetBookmarksByActorAndUrisResponse {
-    return new GetBookmarksByActorAndUrisResponse().fromBinary(bytes, options)
+  ): GetBookmarksByActorAndSubjectsResponse {
+    return new GetBookmarksByActorAndSubjectsResponse().fromBinary(
+      bytes,
+      options,
+    )
   }
 
   static fromJson(
     jsonValue: JsonValue,
     options?: Partial<JsonReadOptions>,
-  ): GetBookmarksByActorAndUrisResponse {
-    return new GetBookmarksByActorAndUrisResponse().fromJson(jsonValue, options)
+  ): GetBookmarksByActorAndSubjectsResponse {
+    return new GetBookmarksByActorAndSubjectsResponse().fromJson(
+      jsonValue,
+      options,
+    )
   }
 
   static fromJsonString(
     jsonString: string,
     options?: Partial<JsonReadOptions>,
-  ): GetBookmarksByActorAndUrisResponse {
-    return new GetBookmarksByActorAndUrisResponse().fromJsonString(
+  ): GetBookmarksByActorAndSubjectsResponse {
+    return new GetBookmarksByActorAndSubjectsResponse().fromJsonString(
       jsonString,
       options,
     )
@@ -13582,15 +13594,15 @@ export class GetBookmarksByActorAndUrisResponse extends Message<GetBookmarksByAc
 
   static equals(
     a:
-      | GetBookmarksByActorAndUrisResponse
-      | PlainMessage<GetBookmarksByActorAndUrisResponse>
+      | GetBookmarksByActorAndSubjectsResponse
+      | PlainMessage<GetBookmarksByActorAndSubjectsResponse>
       | undefined,
     b:
-      | GetBookmarksByActorAndUrisResponse
-      | PlainMessage<GetBookmarksByActorAndUrisResponse>
+      | GetBookmarksByActorAndSubjectsResponse
+      | PlainMessage<GetBookmarksByActorAndSubjectsResponse>
       | undefined,
   ): boolean {
-    return proto3.util.equals(GetBookmarksByActorAndUrisResponse, a, b)
+    return proto3.util.equals(GetBookmarksByActorAndSubjectsResponse, a, b)
   }
 }
 

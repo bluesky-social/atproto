@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       } = input.body
       validateUri(subject.uri)
 
-      const res = await ctx.dataplane.getBookmarksByActorAndUris({
+      const res = await ctx.dataplane.getBookmarksByActorAndSubjects({
         actorDid,
         uris: [subject.uri],
       })

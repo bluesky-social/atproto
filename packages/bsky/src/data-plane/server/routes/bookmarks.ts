@@ -4,7 +4,7 @@ import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import {
   Bookmark,
-  GetBookmarksByActorAndUrisResponse,
+  GetBookmarksByActorAndSubjectsResponse,
 } from '../../../proto/bsky_pb'
 import { Namespaces } from '../../../stash'
 import { Database } from '../db'
@@ -44,11 +44,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 
-  async getBookmarksByActorAndUris(req) {
+  async getBookmarksByActorAndSubjects(req) {
     const { actorDid, uris } = req
 
     if (uris.length === 0) {
-      return new GetBookmarksByActorAndUrisResponse({
+      return new GetBookmarksByActorAndSubjectsResponse({
         bookmarks: [],
       })
     }
