@@ -57,6 +57,16 @@ export default function (server: Server, ctx: AppContext) {
         swapRecord,
       } = input.body
 
+      const account = await ctx.authVerifier.findAccount(repo, {
+        checkDeactivated: true,
+        checkTakedown: true,
+      })
+
+      const did = account.did
+      if (did !== auth.credentials.did) {
+        throw new AuthRequiredError()
+      }
+
       // We can't compute permissions based on the request payload ("input") in
       // the 'auth' phase, so we do it here.
       if (auth.credentials.type === 'oauth') {
@@ -68,16 +78,6 @@ export default function (server: Server, ctx: AppContext) {
           action: 'update',
           collection,
         })
-      }
-
-      const account = await ctx.authVerifier.findAccount(repo, {
-        checkDeactivated: true,
-        checkTakedown: true,
-      })
-
-      const did = account.did
-      if (did !== auth.credentials.did) {
-        throw new AuthRequiredError()
       }
 
       const uri = AtUri.make(did, collection, rkey)

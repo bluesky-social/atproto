@@ -40,15 +40,6 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, swapCommit, swapRecord } = input.body
 
-      // We can't compute permissions based on the request payload ("input") in
-      // the 'auth' phase, so we do it here.
-      if (auth.credentials.type === 'oauth') {
-        auth.credentials.permissions.assertRepo({
-          action: 'delete',
-          collection,
-        })
-      }
-
       const account = await ctx.authVerifier.findAccount(repo, {
         checkDeactivated: true,
         checkTakedown: true,
@@ -57,6 +48,15 @@ export default function (server: Server, ctx: AppContext) {
       const did = account.did
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
+      }
+
+      // We can't compute permissions based on the request payload ("input") in
+      // the 'auth' phase, so we do it here.
+      if (auth.credentials.type === 'oauth') {
+        auth.credentials.permissions.assertRepo({
+          action: 'delete',
+          collection,
+        })
       }
 
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined

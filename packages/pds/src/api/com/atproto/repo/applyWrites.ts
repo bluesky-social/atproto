@@ -69,6 +69,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, validate, swapCommit, writes } = input.body
 
+      const account = await ctx.authVerifier.findAccount(repo, {
+        checkDeactivated: true,
+        checkTakedown: true,
+      })
+
+      const did = account.did
+      if (did !== auth.credentials.did) {
+        throw new AuthRequiredError()
+      }
+
       if (writes.length > 200) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
@@ -85,16 +95,6 @@ export default function (server: Server, ctx: AppContext) {
             auth.credentials.permissions.assertRepo({ action, collection })
           }
         }
-      }
-
-      const account = await ctx.authVerifier.findAccount(repo, {
-        checkDeactivated: true,
-        checkTakedown: true,
-      })
-
-      const did = account.did
-      if (did !== auth.credentials.did) {
-        throw new AuthRequiredError()
       }
 
       // @NOTE should preserve order of ts.writes for final use in response

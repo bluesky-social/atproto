@@ -44,13 +44,6 @@ export default function (server: Server, ctx: AppContext) {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
 
-      if (auth.credentials.type === 'oauth') {
-        auth.credentials.permissions.assertRepo({
-          action: 'create',
-          collection,
-        })
-      }
-
       const account = await ctx.authVerifier.findAccount(repo, {
         checkDeactivated: true,
         checkTakedown: true,
@@ -60,6 +53,14 @@ export default function (server: Server, ctx: AppContext) {
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
+
+      if (auth.credentials.type === 'oauth') {
+        auth.credentials.permissions.assertRepo({
+          action: 'create',
+          collection,
+        })
+      }
+
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate
