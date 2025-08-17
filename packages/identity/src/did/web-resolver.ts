@@ -35,7 +35,6 @@ export class DidWebResolver extends BaseResolver {
     return timed(this.timeout, async (signal) => {
       const res = await fetch(url, {
         signal,
-        redirect: 'error',
         headers: { accept: 'application/did+ld+json,application/json' },
       })
 
