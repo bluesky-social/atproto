@@ -252,13 +252,13 @@ export class OAuthProvider extends OAuthVerifier {
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
 
-    // Requires stores
+    // Required stores
     accountStore = asAccountStore(store),
     deviceStore = asDeviceStore(store),
     tokenStore = asTokenStore(store),
     requestStore = asRequestStore(store),
 
-    // These are optional
+    // Optional stores
     clientStore = ifClientStore(store),
     replayStore = ifReplayStore(store),
 
