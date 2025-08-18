@@ -24,6 +24,7 @@ import {
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import { AccountManager } from './account-manager/account-manager'
+import { ActorAccount } from './account-manager/helpers/account'
 import {
   AccessOutput,
   AdminTokenOutput,
@@ -424,30 +425,43 @@ export class AuthVerifier {
 
   protected async verifyStatus(
     did: string,
-    { checkTakedown = false, checkDeactivated = false }: VerifiedOptions,
+    options: VerifiedOptions,
   ): Promise<void> {
-    if (checkTakedown || checkDeactivated) {
-      const found = await this.accountManager.getAccount(did, {
-        includeDeactivated: true,
-        includeTakenDown: true,
-      })
-      if (!found) {
-        // will be turned into ExpiredToken for the client if proxied by entryway
-        throw new ForbiddenError('Account not found', 'AccountNotFound')
-      }
-      if (checkTakedown && softDeleted(found)) {
-        throw new AuthRequiredError(
-          'Account has been taken down',
-          'AccountTakedown',
-        )
-      }
-      if (checkDeactivated && found.deactivatedAt) {
-        throw new AuthRequiredError(
-          'Account is deactivated',
-          'AccountDeactivated',
-        )
-      }
+    if (options.checkDeactivated || options.checkTakedown) {
+      await this.findAccount(did, options)
     }
+  }
+
+  /**
+   * Finds an account by its handle or DID, returning possibly deactivated or
+   * taken down accounts (unless `options.checkDeactivated` or
+   * `options.checkTakedown` are set to true, respectively).
+   */
+  public async findAccount(
+    handleOrDid: string,
+    options: VerifiedOptions,
+  ): Promise<ActorAccount> {
+    const account = await this.accountManager.getAccount(handleOrDid, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+    if (!account) {
+      // will be turned into ExpiredToken for the client if proxied by entryway
+      throw new ForbiddenError('Account not found', 'AccountNotFound')
+    }
+    if (options.checkTakedown && softDeleted(account)) {
+      throw new AuthRequiredError(
+        'Account has been taken down',
+        'AccountTakedown',
+      )
+    }
+    if (options.checkDeactivated && account.deactivatedAt) {
+      throw new AuthRequiredError(
+        'Account is deactivated',
+        'AccountDeactivated',
+      )
+    }
+    return account
   }
 
   /**

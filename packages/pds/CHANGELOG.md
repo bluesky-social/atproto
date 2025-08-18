@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.4.169
+
+### Patch Changes
+
+- [#4107](https://github.com/bluesky-social/atproto/pull/4107) [`369a20116`](https://github.com/bluesky-social/atproto/commit/369a2011615bd98a2a45c8600be45228d857a524) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow use of handle in `applyWrites`'s `repo`
+
+- [#4107](https://github.com/bluesky-social/atproto/pull/4107) [`369a20116`](https://github.com/bluesky-social/atproto/commit/369a2011615bd98a2a45c8600be45228d857a524) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Perf: Avoid fetching account data twice in `putRecord`
+
+- [#4104](https://github.com/bluesky-social/atproto/pull/4104) [`75162ffb9`](https://github.com/bluesky-social/atproto/commit/75162ffb9e35bf56b3f3cb19a12ebd495bdc0af8) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Fix putRecord auth check
+
 ## 0.4.168
 
 ### Patch Changes

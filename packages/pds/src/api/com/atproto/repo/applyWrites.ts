@@ -39,8 +39,15 @@ const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.authVerifier.authorization({
-      checkTakedown: true,
-      checkDeactivated: true,
+      // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
+      // performed during auth. However, since this method's "repo" parameter
+      // can be a handle, we will need to fetch the account again to ensure that
+      // the handle matches the DID from the request's credentials. In order to
+      // avoid fetching the account twice (during auth, and then again in the
+      // controller), the checks are disabled here:
+
+      // checkTakedown: true,
+      // checkDeactivated: true,
       authorize: () => {
         // Performed in the handler as it is based on the request body
       },
@@ -62,10 +69,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, validate, swapCommit, writes } = input.body
 
-      const { did } = auth.credentials
-      if (repo !== did) {
+      const account = await ctx.authVerifier.findAccount(repo, {
+        checkDeactivated: true,
+        checkTakedown: true,
+      })
+
+      const did = account.did
+      if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
+
       if (writes.length > 200) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
