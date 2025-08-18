@@ -93,6 +93,6 @@ describe('Record resolution', () => {
       resolveRecord(post.ref.uri, {
         forceRefresh: true,
       }),
-    ).rejects.toThrow('Not a valid CID for bytes')
+    ).rejects.toThrow('Malformed record proof')
   })
 })

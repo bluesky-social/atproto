@@ -128,9 +128,15 @@ async function verifyRecordProof(
   proofBytes: Uint8Array,
   { uri, signingKey }: { uri: AtUri; signingKey: string },
 ) {
-  const { root, blocks } = await readCarWithRoot(proofBytes)
+  const { root, blocks } = await readCarWithRoot(proofBytes).catch((err) => {
+    throw new RecordResolutionError('Malformed record proof', { cause: err })
+  })
   const blockstore = new MemoryBlockstore(blocks)
-  const commit = await blockstore.readObj(root, repoDef.commit)
+  const commit = await blockstore.readObj(root, repoDef.commit).catch((err) => {
+    throw new RecordResolutionError('Invalid commit in record proof', {
+      cause: err,
+    })
+  })
   if (commit.did !== uri.host) {
     throw new RecordResolutionError(`Invalid repo did: ${commit.did}`)
   }
