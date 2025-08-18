@@ -130,11 +130,6 @@ type OAuthProviderConfig = {
   authenticationMaxAge?: number
 
   /**
-   * Maximum age an ephemeral session (one where "remember me" was not
-   * checked) can be before requiring re-authentication.
-   */
-
-  /**
    * Maximum age access & id tokens can be before requiring a refresh.
    */
   tokenMaxAge?: number
