@@ -645,7 +645,7 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
       const parsed = RepoPermission.fromString(s)
       if (!parsed) continue
 
-      for (const nsid of parsed.RepoPermission) {
+      for (const nsid of parsed.collection) {
         if (map.has(nsid)) {
           const actions = map.get(nsid)!
           for (const action of parsed.action) actions[action] = true
