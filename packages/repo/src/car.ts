@@ -54,10 +54,18 @@ async function* iterateBlocks(blocks: BlockMap) {
   }
 }
 
+export type ReadCarOptions = {
+  /**
+   * When true, does not verify CID-to-content mapping within CAR.
+   */
+  skipCidVerification?: boolean
+}
+
 export const readCar = async (
   bytes: Uint8Array,
+  opts?: ReadCarOptions,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const { roots, blocks } = await readCarStream([bytes])
+  const { roots, blocks } = await readCarStream([bytes], opts)
   const blockMap = new BlockMap()
   for await (const block of blocks) {
     blockMap.set(block.cid, block.bytes)
@@ -67,8 +75,9 @@ export const readCar = async (
 
 export const readCarWithRoot = async (
   bytes: Uint8Array,
+  opts?: ReadCarOptions,
 ): Promise<{ root: CID; blocks: BlockMap }> => {
-  const { roots, blocks } = await readCar(bytes)
+  const { roots, blocks } = await readCar(bytes, opts)
   if (roots.length !== 1) {
     throw new Error(`Expected one root, got ${roots.length}`)
   }
@@ -84,6 +93,7 @@ export type CarBlockIterable = AsyncGenerator<CarBlock, void, unknown> & {
 
 export const readCarStream = async (
   car: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  opts?: ReadCarOptions,
 ): Promise<{
   roots: CID[]
   blocks: CarBlockIterable
@@ -101,7 +111,7 @@ export const readCarStream = async (
     }
     return {
       roots: header.roots,
-      blocks: readCarBlocksIter(reader),
+      blocks: readCarBlocksIter(reader, opts),
     }
   } catch (err) {
     await reader.close()
@@ -109,27 +119,32 @@ export const readCarStream = async (
   }
 }
 
-const readCarBlocksIter = (reader: BufferedReader) => {
-  const iter = readCarBlocksIterGenerator(reader) as CarBlockIterable
-
-  iter.dump = async () => {
-    // try/finally to ensure that reader.close is called even if blocks.return throws.
-    try {
-      // Prevent the iterator from being started after this method is called.
-      await iter.return()
-    } finally {
-      // @NOTE the "finally" block of the async generator won't be called
-      // if the iteration was never started so we need to manually close here.
-      await reader.close()
-    }
+const readCarBlocksIter = (
+  reader: BufferedReader,
+  opts?: ReadCarOptions,
+): CarBlockIterable => {
+  let generator = readCarBlocksIterGenerator(reader)
+  if (!opts?.skipCidVerification) {
+    generator = verifyIncomingCarBlocks(generator)
   }
-
-  return iter
+  return Object.assign(generator, {
+    async dump() {
+      // try/finally to ensure that reader.close is called even if blocks.return throws.
+      try {
+        // Prevent the iterator from being started after this method is called.
+        await generator.return()
+      } finally {
+        // @NOTE the "finally" block of the async generator won't be called
+        // if the iteration was never started so we need to manually close here.
+        await reader.close()
+      }
+    },
+  })
 }
 
 async function* readCarBlocksIterGenerator(
   reader: BufferedReader,
-): AsyncIterable<CarBlock> {
+): AsyncGenerator<CarBlock, void, unknown> {
   try {
     while (!reader.isDone) {
       const blockSize = await reader.readVarint()
@@ -148,7 +163,7 @@ async function* readCarBlocksIterGenerator(
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
-): AsyncIterable<CarBlock> {
+): AsyncGenerator<CarBlock, void, unknown> {
   for await (const block of car) {
     await verifyCidForBytes(block.cid, block.bytes)
     yield block
