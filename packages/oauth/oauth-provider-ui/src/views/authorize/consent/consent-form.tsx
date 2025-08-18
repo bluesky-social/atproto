@@ -4,7 +4,7 @@ import { ClientImage } from '#/components/utils/client-image.tsx'
 import { DescriptionCard } from '#/components/utils/description-card.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
 import type { Account } from '@atproto/oauth-provider-api'
-import { AccountScope } from '@atproto/oauth-scopes'
+import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { Button } from '../../../components/forms/button.tsx'
 import {
@@ -42,7 +42,7 @@ function isTransitionScope(scope: string): scope is `transition:${string}` {
 }
 
 function isAccountEmailScope(scope: string): boolean {
-  const parsed = AccountScope.fromString(scope)
+  const parsed = AccountPermission.fromString(scope)
   if (!parsed) return false
   return parsed.matches({ attr: 'email', action: 'read' })
 }

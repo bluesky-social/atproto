@@ -1,19 +1,33 @@
-import { AccountScope, AccountScopeMatch } from './resources/account-scope.js'
-import { BlobScope, BlobScopeMatch } from './resources/blob-scope.js'
+import { Nsid, isNsid } from './lib/nsid.js'
 import {
-  IdentityScope,
-  IdentityScopeMatch,
-} from './resources/identity-scope.js'
-import { RepoScope, RepoScopeMatch } from './resources/repo-scope.js'
-import { RpcScope, RpcScopeMatch } from './resources/rpc-scope.js'
+  AccountPermission,
+  AccountPermissionMatch,
+  LexPermission,
+} from './resources/account-permission.js'
+import {
+  BlobPermission,
+  BlobPermissionMatch,
+} from './resources/blob-permission.js'
+import {
+  IdentityPermission,
+  IdentityPermissionMatch,
+} from './resources/identity-permission.js'
+import {
+  RepoPermission,
+  RepoPermissionMatch,
+} from './resources/repo-permission.js'
+import {
+  RpcPermission,
+  RpcPermissionMatch,
+} from './resources/rpc-permission.js'
 import { ResourceSyntax, isScopeForResource } from './syntax.js'
 
 export type ScopeMatchingOptionsByResource = {
-  account: AccountScopeMatch
-  identity: IdentityScopeMatch
-  repo: RepoScopeMatch
-  rpc: RpcScopeMatch
-  blob: BlobScopeMatch
+  account: AccountPermissionMatch
+  identity: IdentityPermissionMatch
+  repo: RepoPermissionMatch
+  rpc: RpcPermissionMatch
+  blob: BlobPermissionMatch
 }
 
 type AtprotoOauthScope =
@@ -26,6 +40,7 @@ type AtprotoOauthScope =
   | `account:${string}`
   | `identity:${string}`
   | `blob:${string}`
+  | Nsid
 export function isValidAtprotoOauthScope(
   value: string,
 ): value is AtprotoOauthScope {
@@ -35,31 +50,38 @@ export function isValidAtprotoOauthScope(
   if (value === 'transition:chat.bsky') return true
 
   if (isScopeForResource(value, 'repo')) {
-    return RepoScope.fromString(value) != null
+    return RepoPermission.fromString(value) != null
   }
   if (isScopeForResource(value, 'rpc')) {
-    return RpcScope.fromString(value) != null
+    return RpcPermission.fromString(value) != null
   }
   if (isScopeForResource(value, 'account')) {
-    return AccountScope.fromString(value) != null
+    return AccountPermission.fromString(value) != null
   }
   if (isScopeForResource(value, 'identity')) {
-    return IdentityScope.fromString(value) != null
+    return IdentityPermission.fromString(value) != null
   }
   if (isScopeForResource(value, 'blob')) {
-    return BlobScope.fromString(value) != null
+    return BlobPermission.fromString(value) != null
   }
 
-  return false
+  return isNsid(value)
 }
 
-export function parseScope(string: string) {
-  const syntax = ResourceSyntax.fromString(string)
-  if (syntax.is('account')) return AccountScope.fromSyntax(syntax)
-  if (syntax.is('identity')) return IdentityScope.fromSyntax(syntax)
-  if (syntax.is('repo')) return RepoScope.fromSyntax(syntax)
-  if (syntax.is('rpc')) return RpcScope.fromSyntax(syntax)
-  if (syntax.is('blob')) return BlobScope.fromSyntax(syntax)
+export function parsePermissionScope(string: string) {
+  return parsePermissionSyntax(ResourceSyntax.fromString(string))
+}
+
+export function parsePermissionLexicon(lexPermission: LexPermission) {
+  return parsePermissionSyntax(ResourceSyntax.fromLex(lexPermission))
+}
+
+export function parsePermissionSyntax(syntax: ResourceSyntax) {
+  if (syntax.is('account')) return AccountPermission.fromSyntax(syntax)
+  if (syntax.is('identity')) return IdentityPermission.fromSyntax(syntax)
+  if (syntax.is('repo')) return RepoPermission.fromSyntax(syntax)
+  if (syntax.is('rpc')) return RpcPermission.fromSyntax(syntax)
+  if (syntax.is('blob')) return BlobPermission.fromSyntax(syntax)
   return null
 }
 
@@ -69,16 +91,20 @@ export function scopeNeededFor<R extends keyof ScopeMatchingOptionsByResource>(
 ): string {
   switch (resource) {
     case 'account':
-      return AccountScope.scopeNeededFor(options as AccountScopeMatch)
+      return AccountPermission.scopeNeededFor(options as AccountPermissionMatch)
     case 'identity':
-      return IdentityScope.scopeNeededFor(options as IdentityScopeMatch)
+      return IdentityPermission.scopeNeededFor(
+        options as IdentityPermissionMatch,
+      )
     case 'repo':
-      return RepoScope.scopeNeededFor(options as RepoScopeMatch)
+      return RepoPermission.scopeNeededFor(options as RepoPermissionMatch)
     case 'rpc':
-      return RpcScope.scopeNeededFor(options as RpcScopeMatch)
+      return RpcPermission.scopeNeededFor(options as RpcPermissionMatch)
     case 'blob':
-      return BlobScope.scopeNeededFor(options as BlobScopeMatch)
+      return BlobPermission.scopeNeededFor(options as BlobPermissionMatch)
   }
+  // @ts-expect-error
+  throw new TypeError(`Unknown resource: ${resource}`)
 }
 
 export function scopeMatches<R extends keyof ScopeMatchingOptionsByResource>(
@@ -94,28 +120,28 @@ export function scopeMatches<R extends keyof ScopeMatchingOptionsByResource>(
   // single scope is unlikely to be parsed multiple times during a single
   // request.
   if (resource === 'rpc') {
-    const rpcScope = RpcScope.fromString(scope)
-    if (rpcScope?.matches(options as RpcScopeMatch)) {
+    const rpcScope = RpcPermission.fromString(scope)
+    if (rpcScope?.matches(options as RpcPermissionMatch)) {
       return true
     }
   } else if (resource === 'account') {
-    const accountScope = AccountScope.fromString(scope)
-    if (accountScope?.matches(options as AccountScopeMatch)) {
+    const accountScope = AccountPermission.fromString(scope)
+    if (accountScope?.matches(options as AccountPermissionMatch)) {
       return true
     }
   } else if (resource === 'identity') {
-    const identityScope = IdentityScope.fromString(scope)
-    if (identityScope?.matches(options as IdentityScopeMatch)) {
+    const identityScope = IdentityPermission.fromString(scope)
+    if (identityScope?.matches(options as IdentityPermissionMatch)) {
       return true
     }
   } else if (resource === 'repo') {
-    const repoScope = RepoScope.fromString(scope)
-    if (repoScope?.matches(options as RepoScopeMatch)) {
+    const repoScope = RepoPermission.fromString(scope)
+    if (repoScope?.matches(options as RepoPermissionMatch)) {
       return true
     }
   } else if (resource === 'blob') {
-    const blobScope = BlobScope.fromString(scope)
-    if (blobScope?.matches(options as BlobScopeMatch)) {
+    const blobScope = BlobPermission.fromString(scope)
+    if (blobScope?.matches(options as BlobPermissionMatch)) {
       return true
     }
   }

@@ -1,20 +1,32 @@
-import { AccountScope, AccountScopeMatch } from './resources/account-scope.js'
-import { BlobScope, BlobScopeMatch } from './resources/blob-scope.js'
 import {
-  IdentityScope,
-  IdentityScopeMatch,
-} from './resources/identity-scope.js'
-import { RepoScope, RepoScopeMatch } from './resources/repo-scope.js'
-import { RpcScope, RpcScopeMatch } from './resources/rpc-scope.js'
+  AccountPermission,
+  AccountPermissionMatch,
+} from './resources/account-permission.js'
+import {
+  BlobPermission,
+  BlobPermissionMatch,
+} from './resources/blob-permission.js'
+import {
+  IdentityPermission,
+  IdentityPermissionMatch,
+} from './resources/identity-permission.js'
+import {
+  RepoPermission,
+  RepoPermissionMatch,
+} from './resources/repo-permission.js'
+import {
+  RpcPermission,
+  RpcPermissionMatch,
+} from './resources/rpc-permission.js'
 import { ScopeMissingError } from './scope-missing-error.js'
 import { ScopesSet } from './scopes-set.js'
 
 export type {
-  AccountScopeMatch,
-  BlobScopeMatch,
-  IdentityScopeMatch,
-  RepoScopeMatch,
-  RpcScopeMatch,
+  AccountPermissionMatch,
+  BlobPermissionMatch,
+  IdentityPermissionMatch,
+  RepoPermissionMatch,
+  RpcPermissionMatch,
 }
 
 export class ScopePermissions {
@@ -30,52 +42,52 @@ export class ScopePermissions {
     )
   }
 
-  public allowsAccount(options: AccountScopeMatch): boolean {
+  public allowsAccount(options: AccountPermissionMatch): boolean {
     return this.scopes.matches('account', options)
   }
-  public assertAccount(options: AccountScopeMatch): void {
+  public assertAccount(options: AccountPermissionMatch): void {
     if (!this.allowsAccount(options)) {
-      const scope = AccountScope.scopeNeededFor(options)
+      const scope = AccountPermission.scopeNeededFor(options)
       throw new ScopeMissingError(scope)
     }
   }
 
-  public allowsIdentity(options: IdentityScopeMatch): boolean {
+  public allowsIdentity(options: IdentityPermissionMatch): boolean {
     return this.scopes.matches('identity', options)
   }
-  public assertIdentity(options: IdentityScopeMatch): void {
+  public assertIdentity(options: IdentityPermissionMatch): void {
     if (!this.allowsIdentity(options)) {
-      const scope = IdentityScope.scopeNeededFor(options)
+      const scope = IdentityPermission.scopeNeededFor(options)
       throw new ScopeMissingError(scope)
     }
   }
 
-  public allowsBlob(options: BlobScopeMatch): boolean {
+  public allowsBlob(options: BlobPermissionMatch): boolean {
     return this.scopes.matches('blob', options)
   }
-  public assertBlob(options: BlobScopeMatch): void {
+  public assertBlob(options: BlobPermissionMatch): void {
     if (!this.allowsBlob(options)) {
-      const scope = BlobScope.scopeNeededFor(options)
+      const scope = BlobPermission.scopeNeededFor(options)
       throw new ScopeMissingError(scope)
     }
   }
 
-  public allowsRepo(options: RepoScopeMatch): boolean {
+  public allowsRepo(options: RepoPermissionMatch): boolean {
     return this.scopes.matches('repo', options)
   }
-  public assertRepo(options: RepoScopeMatch): void {
+  public assertRepo(options: RepoPermissionMatch): void {
     if (!this.allowsRepo(options)) {
-      const scope = RepoScope.scopeNeededFor(options)
+      const scope = RepoPermission.scopeNeededFor(options)
       throw new ScopeMissingError(scope)
     }
   }
 
-  public allowsRpc(options: RpcScopeMatch): boolean {
+  public allowsRpc(options: RpcPermissionMatch): boolean {
     return this.scopes.matches('rpc', options)
   }
-  public assertRpc(options: RpcScopeMatch): void {
+  public assertRpc(options: RpcPermissionMatch): void {
     if (!this.allowsRpc(options)) {
-      const scope = RpcScope.scopeNeededFor(options)
+      const scope = RpcPermission.scopeNeededFor(options)
       throw new ScopeMissingError(scope)
     }
   }

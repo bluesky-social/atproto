@@ -130,17 +130,26 @@ describe('ScopePermissions', () => {
     it('should ignore "rpc:*?lxm=*"', () => {
       const set = new ScopePermissions('rpc:*?lxm=*')
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.method' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'com.example.method',
+        }),
       ).toBe(false)
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.getFeed' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
       ).toBe(false)
     })
 
     it('should allow constraining "lxm"', () => {
       const set = new ScopePermissions('rpc:app.bsky.feed.getFeed?aud=*')
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.getFeed' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
       ).toBe(true)
       expect(
         set.allowsRpc({ aud: 'did:plc:blahbla', lxm: 'app.bsky.feed.getFeed' }),
@@ -149,17 +158,26 @@ describe('ScopePermissions', () => {
       // Control
 
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.method' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'com.example.method',
+        }),
       ).toBe(false)
     })
 
     it('should allow constraining "aud"', () => {
-      const set = new ScopePermissions('rpc:*?aud=did:example:123')
+      const set = new ScopePermissions('rpc:*?aud=did:web:example.com')
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.method' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'com.example.method',
+        }),
       ).toBe(true)
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.getFeed' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
       ).toBe(true)
 
       // Control
@@ -171,16 +189,22 @@ describe('ScopePermissions', () => {
 
     it('should allow constraining "lxm" and "aud"', () => {
       const set = new ScopePermissions(
-        'rpc:app.bsky.feed.getFeed?aud=did:example:123',
+        'rpc:app.bsky.feed.getFeed?aud=did:web:example.com',
       )
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.getFeed' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
       ).toBe(true)
 
       // Control
 
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.method' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'com.example.method',
+        }),
       ).toBe(false)
       expect(
         set.allowsRpc({ aud: 'did:plc:blahbla', lxm: 'app.bsky.feed.getFeed' }),
@@ -190,10 +214,16 @@ describe('ScopePermissions', () => {
     it('should ignore "transition:generic"', () => {
       const set = new ScopePermissions('transition:generic')
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.getFeed' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
       ).toBe(false)
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.method' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'com.example.method',
+        }),
       ).toBe(false)
     })
 
@@ -201,13 +231,13 @@ describe('ScopePermissions', () => {
       const set = new ScopePermissions('transition:chat.bsky')
       expect(
         set.allowsRpc({
-          aud: 'did:example:123',
+          aud: 'did:web:example.com',
           lxm: 'chat.bsky.message.send',
         }),
       ).toBe(false)
       expect(
         set.allowsRpc({
-          aud: 'did:example:123',
+          aud: 'did:web:example.com',
           lxm: 'chat.bsky.conversation.get',
         }),
       ).toBe(false)
@@ -215,10 +245,13 @@ describe('ScopePermissions', () => {
       // Control
 
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.post' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.post',
+        }),
       ).toBe(false)
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.foo' }),
+        set.allowsRpc({ aud: 'did:web:example.com', lxm: 'com.example.foo' }),
       ).toBe(false)
     })
   })

@@ -1,17 +1,17 @@
-import { RepoScope } from './repo-scope.js'
+import { RepoPermission } from './repo-permission.js'
 
-describe('RepoScope', () => {
+describe('RepoPermission', () => {
   describe('static', () => {
     describe('fromString', () => {
       it('should parse positional scope', () => {
-        const scope = RepoScope.fromString('repo:com.example.foo')
+        const scope = RepoPermission.fromString('repo:com.example.foo')
         expect(scope).not.toBeNull()
         expect(scope!.collection).toEqual(['com.example.foo'])
         expect(scope!.action).toEqual(['create', 'update', 'delete'])
       })
 
       it('should parse valid repo scope with multiple actions', () => {
-        const scope = RepoScope.fromString(
+        const scope = RepoPermission.fromString(
           'repo:com.example.foo?action=create&action=update',
         )
         expect(scope).not.toBeNull()
@@ -20,14 +20,14 @@ describe('RepoScope', () => {
       })
 
       it('should parse valid repo scope without actions (defaults to create, update, delete)', () => {
-        const scope = RepoScope.fromString('repo:com.example.foo')
+        const scope = RepoPermission.fromString('repo:com.example.foo')
         expect(scope).not.toBeNull()
         expect(scope!.collection).toEqual(['com.example.foo'])
         expect(scope!.action).toEqual(['create', 'update', 'delete'])
       })
 
       it('should allow wildcard collection with specific action', () => {
-        const scope = RepoScope.fromString('repo:*?action=create')
+        const scope = RepoPermission.fromString('repo:*?action=create')
         expect(scope).not.toBeNull()
         expect(scope!.collection).toEqual(['*'])
         expect(scope!.action).toEqual(['create'])
@@ -40,7 +40,7 @@ describe('RepoScope', () => {
       })
 
       it('should allow wildcard collection without actions', () => {
-        const scope = RepoScope.fromString('repo:*')
+        const scope = RepoPermission.fromString('repo:*')
         expect(scope).not.toBeNull()
         expect(scope!.collection).toEqual(['*'])
         expect(scope!.action).toEqual(['create', 'update', 'delete'])
@@ -56,21 +56,21 @@ describe('RepoScope', () => {
       })
 
       it('should ignore scopes with invalid collection names', () => {
-        expect(RepoScope.fromString('repo:foo bar')).toBeNull()
-        expect(RepoScope.fromString('repo:.foo')).toBeNull()
-        expect(RepoScope.fromString('repo:bar.')).toBeNull()
+        expect(RepoPermission.fromString('repo:foo bar')).toBeNull()
+        expect(RepoPermission.fromString('repo:.foo')).toBeNull()
+        expect(RepoPermission.fromString('repo:bar.')).toBeNull()
       })
 
       it('should reject invalid action names', () => {
-        const scope = RepoScope.fromString(
+        const scope = RepoPermission.fromString(
           'repo:com.example.foo?action=invalid',
         )
         expect(scope).toBeNull()
       })
 
       it('should return null for invalid repo scope', () => {
-        expect(RepoScope.fromString('invalid')).toBeNull()
-        expect(RepoScope.fromString('scope')).toBeNull()
+        expect(RepoPermission.fromString('invalid')).toBeNull()
+        expect(RepoPermission.fromString('scope')).toBeNull()
       })
 
       for (const invalid of [
@@ -81,14 +81,14 @@ describe('RepoScope', () => {
         'repo?collection=invalid&action=invalid',
       ]) {
         it(`should return null for invalid rpc scope: ${invalid}`, () => {
-          expect(RepoScope.fromString(invalid)).toBeNull()
+          expect(RepoPermission.fromString(invalid)).toBeNull()
         })
       }
     })
 
     describe('scopeNeededFor', () => {
       it('should return correct scope string for specific collection and action', () => {
-        const scope = RepoScope.scopeNeededFor({
+        const scope = RepoPermission.scopeNeededFor({
           collection: 'com.example.foo',
           action: 'create',
         })
@@ -96,7 +96,7 @@ describe('RepoScope', () => {
       })
 
       it('should return scope that accepts all collections with specific action', () => {
-        const scope = RepoScope.scopeNeededFor({
+        const scope = RepoPermission.scopeNeededFor({
           collection: '*',
           action: 'create',
         })
@@ -108,14 +108,14 @@ describe('RepoScope', () => {
         // collection or action.
 
         expect(
-          RepoScope.scopeNeededFor({
+          RepoPermission.scopeNeededFor({
             collection: 'invalid',
             action: 'create',
           }),
         ).toBe('repo:invalid?action=create')
 
         expect(
-          RepoScope.scopeNeededFor({
+          RepoPermission.scopeNeededFor({
             collection: 'com.example.foo',
             // @ts-expect-error
             action: 'not-an-action',
@@ -128,7 +128,9 @@ describe('RepoScope', () => {
   describe('instance', () => {
     describe('matches', () => {
       it('should match create action', () => {
-        const scope = RepoScope.fromString('repo:com.example.foo?action=create')
+        const scope = RepoPermission.fromString(
+          'repo:com.example.foo?action=create',
+        )
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({ action: 'create', collection: 'com.example.foo' }),
@@ -136,7 +138,9 @@ describe('RepoScope', () => {
       })
 
       it('should not match unspecified action', () => {
-        const scope = RepoScope.fromString('repo:com.example.foo?action=create')
+        const scope = RepoPermission.fromString(
+          'repo:com.example.foo?action=create',
+        )
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({ action: 'update', collection: 'com.example.foo' }),
@@ -144,7 +148,7 @@ describe('RepoScope', () => {
       })
 
       it('should match wildcard collection', () => {
-        const scope = RepoScope.fromString('repo:*?action=create')
+        const scope = RepoPermission.fromString('repo:*?action=create')
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({ action: 'create', collection: 'com.example.bar' }),
@@ -152,7 +156,7 @@ describe('RepoScope', () => {
       })
 
       it('should not match different action with wildcard collection', () => {
-        const scope = RepoScope.fromString('repo:*?action=create')
+        const scope = RepoPermission.fromString('repo:*?action=create')
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({ action: 'delete', collection: 'com.example.bar' }),
@@ -160,7 +164,7 @@ describe('RepoScope', () => {
       })
 
       it('should match multiple actions', () => {
-        const scope = RepoScope.fromString(
+        const scope = RepoPermission.fromString(
           'repo:com.example.foo?action=create&action=update',
         )
         expect(scope).not.toBeNull()
@@ -176,7 +180,7 @@ describe('RepoScope', () => {
       })
 
       it('should default to "create", "update", and "delete" actions', () => {
-        const scope = RepoScope.fromString('repo:com.example.foo')
+        const scope = RepoPermission.fromString('repo:com.example.foo')
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({ action: 'create', collection: 'com.example.foo' }),
@@ -192,7 +196,10 @@ describe('RepoScope', () => {
 
     describe('toString', () => {
       it('should format repo scope correctly', () => {
-        const scope = new RepoScope(['com.example.foo'], ['create', 'update'])
+        const scope = new RepoPermission(
+          ['com.example.foo'],
+          ['create', 'update'],
+        )
         expect(scope).not.toBeNull()
         expect(scope!.toString()).toBe(
           'repo:com.example.foo?action=create&action=update',
@@ -261,7 +268,7 @@ describe('RepoScope', () => {
 
     for (const { input, expected } of testCases) {
       it(`should properly re-format ${input}`, () => {
-        expect(RepoScope.fromString(input)?.toString()).toBe(expected)
+        expect(RepoPermission.fromString(input)?.toString()).toBe(expected)
       })
     }
   })

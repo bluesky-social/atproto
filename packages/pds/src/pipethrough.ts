@@ -8,7 +8,7 @@ import {
   omit,
   streamToNodeBuffer,
 } from '@atproto/common'
-import { RpcScopeMatch } from '@atproto/oauth-scopes'
+import { RpcPermissionMatch } from '@atproto/oauth-scopes'
 import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   CatchallHandler,
@@ -27,7 +27,7 @@ import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
-  const performAuth = ctx.authVerifier.authorization<RpcScopeMatch>({
+  const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
 

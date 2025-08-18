@@ -2,12 +2,13 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { HTMLAttributes, useMemo } from 'react'
 import { Override } from '#/lib/util'
 import {
-  BlobScope,
-  DIDLike,
-  NSID,
+  AudParam,
+  BlobPermission,
+  CollectionParam,
+  LxmParam,
+  RepoPermission,
+  RpcPermission,
   ScopePermissionsTransition,
-  RepoScope,
-  RpcScope,
 } from '@atproto/oauth-scopes'
 import { Checkbox } from '../forms/checkbox'
 import { Admonition, AdmonitionProps } from './admonition'
@@ -176,19 +177,19 @@ function BlobPermissions({
 }) {
   const { t } = useLingui()
 
-  const hasRepoScope = useMemo(() => {
+  const hasRepoPermission = useMemo(() => {
     return (
       permissions.hasTransitionGeneric ||
-      permissions.scopes.some((s) => RepoScope.fromString(s) != null)
+      permissions.scopes.some((s) => RepoPermission.fromString(s) != null)
     )
   }, [permissions])
 
   const blobScopes = useMemo(() => {
     if (permissions.hasTransitionGeneric) {
-      return [new BlobScope(['*/*'])]
+      return [new BlobPermission(['*/*'])]
     }
     return Array.from(
-      permissions.scopes.map((v) => BlobScope.fromString(v)),
+      permissions.scopes.map((v) => BlobPermission.fromString(v)),
     ).filter((v) => v != null)
   }, [permissions])
 
@@ -218,7 +219,7 @@ function BlobPermissions({
     return types
   }, [blobScopes])
 
-  if (!hasRepoScope) return null
+  if (!hasRepoPermission) return null
   if (blobScopes.length === 0) return null
 
   if (types.images && !types.videos && !types.audio && !types.other) {
@@ -295,7 +296,7 @@ function useHasOnlyBlueskySpecificScopes(
     let foundOne = false
 
     for (const s of permissions.scopes) {
-      const rpc = RpcScope.fromString(s)
+      const rpc = RpcPermission.fromString(s)
       if (rpc) {
         foundOne = true
         if (isOfficialBlueskyAppviewServiceId(rpc.aud)) continue
@@ -303,7 +304,7 @@ function useHasOnlyBlueskySpecificScopes(
         return false
       }
 
-      const repo = RepoScope.fromString(s)
+      const repo = RepoPermission.fromString(s)
       if (repo) {
         foundOne = true
         if (repo.collection.every(isBlueskySpecificNsid)) continue
@@ -449,7 +450,7 @@ function RpcMethodsDetails({
     )
   }
 
-  if (permissions.scopes.some((s) => RpcScope.fromString(s) != null)) {
+  if (permissions.scopes.some((s) => RpcPermission.fromString(s) != null)) {
     return (
       <DescriptionCard
         role="listitem"
@@ -500,10 +501,10 @@ function RpcMethodsTable({
   const { t } = useLingui()
 
   const audLxmsEntries = useMemo(() => {
-    const map = new Map<'*' | DIDLike, Set<'*' | NSID>>()
+    const map = new Map<AudParam, Set<LxmParam>>()
 
     for (const s of permissions.scopes) {
-      const parsed = RpcScope.fromString(s)
+      const parsed = RpcPermission.fromString(s)
       if (!parsed) continue
 
       let set = map.get(parsed.aud)
@@ -585,7 +586,7 @@ function RepoPermissions({
     )
   }
 
-  if (permissions.scopes.some((s) => RepoScope.fromString(s) != null)) {
+  if (permissions.scopes.some((s) => RepoPermission.fromString(s) != null)) {
     return (
       <DescriptionCard
         role="listitem"
@@ -632,7 +633,7 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
 
   const nsidActions = useMemo(() => {
     const map = new Map<
-      '*' | NSID,
+      CollectionParam,
       {
         create: boolean
         update: boolean
@@ -641,10 +642,10 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
     >()
 
     for (const s of permissions.scopes) {
-      const parsed = RepoScope.fromString(s)
+      const parsed = RepoPermission.fromString(s)
       if (!parsed) continue
 
-      for (const nsid of parsed.collection) {
+      for (const nsid of parsed.RepoPermission) {
         if (map.has(nsid)) {
           const actions = map.get(nsid)!
           for (const action of parsed.action) actions[action] = true
@@ -726,14 +727,14 @@ function isBskyChatNsid(nsid: string): nsid is `chat.bsky.${string}` {
 
 function scopeEnablesChat(scope: string): boolean {
   if (scope === 'transition:chat.bsky') return true
-  const rpc = RpcScope.fromString(scope)
+  const rpc = RpcPermission.fromString(scope)
   if (!rpc) return false
   // Official Bluesky chat is not hosted by the appview service
   if (isOfficialBlueskyAppviewServiceId(rpc.aud)) return false
   return rpc.lxm.includes('*') || rpc.lxm.some(isBskyChatNsid)
 }
 
-function isBlueskySpecificNsid(nsid: NSID | '*'): boolean {
+function isBlueskySpecificNsid(nsid: CollectionParam | LxmParam): boolean {
   return nsid === '*'
     ? false
     : nsid === 'com.atproto.moderation.createReport' ||
@@ -743,7 +744,7 @@ function isBlueskySpecificNsid(nsid: NSID | '*'): boolean {
 
 function scopeEnablesBskyAppRepo(scope: string): boolean {
   if (scope === 'transition:generic') return true
-  const repo = RepoScope.fromString(scope)
+  const repo = RepoPermission.fromString(scope)
   if (!repo) return false
   return (
     repo.collection.includes('*') || repo.collection.some(isBlueskySpecificNsid)
@@ -752,7 +753,7 @@ function scopeEnablesBskyAppRepo(scope: string): boolean {
 
 function scopeEnablesPrivateBskyAppMethods(scope: string): boolean {
   if (scope === 'transition:generic') return true
-  const rpc = RpcScope.fromString(scope)
+  const rpc = RpcPermission.fromString(scope)
   if (!rpc) return false
   return (
     rpc.lxm.includes('app.bsky.actor.getPreferences') ||

@@ -1,23 +1,23 @@
-import { IdentityScope } from './identity-scope.js'
+import { IdentityPermission } from './identity-permission.js'
 
-describe('IdentityScope', () => {
+describe('IdentityPermission', () => {
   describe('static', () => {
     describe('fromString', () => {
       it('should parse positional scope', () => {
-        const scope = IdentityScope.fromString('identity:handle')
+        const scope = IdentityPermission.fromString('identity:handle')
         expect(scope).not.toBeNull()
         expect(scope!.attr).toBe('handle')
       })
 
       it('should parse valid identity scope with wildcard attribute', () => {
-        const scope = IdentityScope.fromString('identity:*')
+        const scope = IdentityPermission.fromString('identity:*')
         expect(scope).not.toBeNull()
         expect(scope!.attr).toBe('*')
       })
 
       it('should return null for invalid identity scope', () => {
-        expect(IdentityScope.fromString('invalid')).toBeNull()
-        expect(IdentityScope.fromString('identity:invalid')).toBeNull()
+        expect(IdentityPermission.fromString('invalid')).toBeNull()
+        expect(IdentityPermission.fromString('identity:invalid')).toBeNull()
       })
 
       for (const invalid of [
@@ -30,19 +30,19 @@ describe('IdentityScope', () => {
         'identity?attribute=invalid&action=invalid',
       ]) {
         it(`should return null for invalid rpc scope: ${invalid}`, () => {
-          expect(IdentityScope.fromString(invalid)).toBeNull()
+          expect(IdentityPermission.fromString(invalid)).toBeNull()
         })
       }
     })
 
     describe('scopeNeededFor', () => {
       it('should return correct scope string for specific attribute and action', () => {
-        const scope = IdentityScope.scopeNeededFor({ attr: 'handle' })
+        const scope = IdentityPermission.scopeNeededFor({ attr: 'handle' })
         expect(scope).toBe('identity:handle')
       })
 
       it('should return scope that accepts all attributes with specific action', () => {
-        const scope = IdentityScope.scopeNeededFor({ attr: '*' })
+        const scope = IdentityPermission.scopeNeededFor({ attr: '*' })
         expect(scope).toBe('identity:*')
       })
     })
@@ -51,14 +51,14 @@ describe('IdentityScope', () => {
   describe('instance', () => {
     describe('matches', () => {
       it('should match default attribute and action', () => {
-        const scope = IdentityScope.fromString('identity:handle')
+        const scope = IdentityPermission.fromString('identity:handle')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: 'handle' })).toBe(true)
         expect(scope!.matches({ attr: '*' })).toBe(false)
       })
 
       it('should match wildcard attribute with specific action', () => {
-        const scope = IdentityScope.fromString('identity:*')
+        const scope = IdentityPermission.fromString('identity:*')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: '*' })).toBe(true)
         expect(scope!.matches({ attr: 'handle' })).toBe(true)
@@ -67,12 +67,12 @@ describe('IdentityScope', () => {
 
     describe('toString', () => {
       it('should format scope with default action', () => {
-        const scope = new IdentityScope('handle')
+        const scope = new IdentityPermission('handle')
         expect(scope.toString()).toBe('identity:handle')
       })
 
       it('should format wildcard attribute with default action', () => {
-        const scope = new IdentityScope('*')
+        const scope = new IdentityPermission('*')
         expect(scope.toString()).toBe('identity:*')
       })
     })

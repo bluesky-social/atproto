@@ -1,67 +1,71 @@
-import { AccountScope } from './account-scope.js'
+import { AccountPermission } from './account-permission.js'
 
-describe('AccountScope', () => {
+describe('AccountPermission', () => {
   describe('static', () => {
     describe('fromString', () => {
       it('should parse valid scope strings', () => {
-        const scope1 = AccountScope.fromString('account:email?action=read')
+        const scope1 = AccountPermission.fromString('account:email?action=read')
         expect(scope1).not.toBeNull()
         expect(scope1!.attr).toBe('email')
         expect(scope1!.action).toBe('read')
 
-        const scope2 = AccountScope.fromString('account:repo?action=manage')
+        const scope2 = AccountPermission.fromString(
+          'account:repo?action=manage',
+        )
         expect(scope2).not.toBeNull()
         expect(scope2!.attr).toBe('repo')
         expect(scope2!.action).toBe('manage')
       })
 
       it('should parse scope without action (defaults to read)', () => {
-        const scope = AccountScope.fromString('account:status')
+        const scope = AccountPermission.fromString('account:status')
         expect(scope).not.toBeNull()
         expect(scope!.attr).toBe('status')
         expect(scope!.action).toBe('read')
       })
 
       it('should reject invalid attribute names', () => {
-        const scope = AccountScope.fromString('account:invalid')
+        const scope = AccountPermission.fromString('account:invalid')
         expect(scope).toBeNull()
       })
 
       it('should reject invalid action names', () => {
-        const scope = AccountScope.fromString('account:email?action=invalid')
+        const scope = AccountPermission.fromString(
+          'account:email?action=invalid',
+        )
         expect(scope).toBeNull()
       })
 
       it('should reject malformed scope strings', () => {
-        expect(AccountScope.fromString('invalid:email')).toBeNull()
-        expect(AccountScope.fromString('account')).toBeNull()
-        expect(AccountScope.fromString('')).toBeNull()
-        expect(AccountScope.fromString('account:')).toBeNull()
+        expect(AccountPermission.fromString('invalid:email')).toBeNull()
+        expect(AccountPermission.fromString('account')).toBeNull()
+        expect(AccountPermission.fromString('')).toBeNull()
+        expect(AccountPermission.fromString('account:')).toBeNull()
       })
     })
 
     describe('scopeNeededFor', () => {
       it('should return correct scope string for read actions', () => {
         expect(
-          AccountScope.scopeNeededFor({ attr: 'email', action: 'read' }),
+          AccountPermission.scopeNeededFor({ attr: 'email', action: 'read' }),
         ).toBe('account:email')
         expect(
-          AccountScope.scopeNeededFor({ attr: 'repo', action: 'read' }),
+          AccountPermission.scopeNeededFor({ attr: 'repo', action: 'read' }),
         ).toBe('account:repo')
         expect(
-          AccountScope.scopeNeededFor({ attr: 'status', action: 'read' }),
+          AccountPermission.scopeNeededFor({ attr: 'status', action: 'read' }),
         ).toBe('account:status')
       })
 
       it('should return correct scope string for manage actions', () => {
         expect(
-          AccountScope.scopeNeededFor({ attr: 'email', action: 'manage' }),
+          AccountPermission.scopeNeededFor({ attr: 'email', action: 'manage' }),
         ).toBe('account:email?action=manage')
         expect(
-          AccountScope.scopeNeededFor({ attr: 'repo', action: 'manage' }),
+          AccountPermission.scopeNeededFor({ attr: 'repo', action: 'manage' }),
         ).toBe('account:repo?action=manage')
         expect(
-          AccountScope.scopeNeededFor({
+          AccountPermission.scopeNeededFor({
             attr: 'status',
             action: 'manage',
           }),
@@ -73,40 +77,44 @@ describe('AccountScope', () => {
   describe('instance', () => {
     describe('matches', () => {
       it('should match read action', () => {
-        const scope = AccountScope.fromString('account:email?action=read')
+        const scope = AccountPermission.fromString('account:email?action=read')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: 'email', action: 'read' })).toBe(true)
       })
 
       it('should match manage action', () => {
-        const scope = AccountScope.fromString('account:repo?action=manage')
+        const scope = AccountPermission.fromString('account:repo?action=manage')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: 'repo', action: 'manage' })).toBe(true)
       })
 
       it('should not match unspecified action', () => {
-        const scope = AccountScope.fromString('account:email?action=read')
+        const scope = AccountPermission.fromString('account:email?action=read')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: 'email', action: 'manage' })).toBe(false)
       })
 
       it('should not match different attribute', () => {
-        const scope = AccountScope.fromString('account:email?action=read')
+        const scope = AccountPermission.fromString('account:email?action=read')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: 'repo', action: 'read' })).toBe(false)
       })
 
       it('should default to "read" action', () => {
-        const scope = AccountScope.fromString('account:email')
+        const scope = AccountPermission.fromString('account:email')
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: 'email', action: 'read' })).toBe(true)
         expect(scope!.matches({ attr: 'email', action: 'manage' })).toBe(false)
       })
 
       it('should work with all valid attributes', () => {
-        const emailScope = AccountScope.fromString('account:email?action=read')
-        const repoScope = AccountScope.fromString('account:repo?action=manage')
-        const statusScope = AccountScope.fromString(
+        const emailScope = AccountPermission.fromString(
+          'account:email?action=read',
+        )
+        const repoScope = AccountPermission.fromString(
+          'account:repo?action=manage',
+        )
+        const statusScope = AccountPermission.fromString(
           'account:status?action=read',
         )
 
@@ -126,7 +134,9 @@ describe('AccountScope', () => {
       })
 
       it('should allow read when "manage" action is specified', () => {
-        const scope = AccountScope.fromString('account:email?action=manage')
+        const scope = AccountPermission.fromString(
+          'account:email?action=manage',
+        )
         expect(scope).not.toBeNull()
         expect(scope!.matches({ attr: 'email', action: 'read' })).toBe(true)
       })
@@ -134,24 +144,26 @@ describe('AccountScope', () => {
 
     describe('toString', () => {
       it('should format scope with explicit action', () => {
-        const scope = new AccountScope('email', 'manage')
+        const scope = new AccountPermission('email', 'manage')
         expect(scope.toString()).toBe('account:email?action=manage')
       })
 
       it('should format scope with default action', () => {
-        const scope = new AccountScope('repo', 'read')
+        const scope = new AccountPermission('repo', 'read')
         expect(scope.toString()).toBe('account:repo')
       })
 
       it('should format all attributes correctly', () => {
-        expect(new AccountScope('email', 'read').toString()).toBe(
+        expect(new AccountPermission('email', 'read').toString()).toBe(
           'account:email',
         )
-        expect(new AccountScope('repo', 'read').toString()).toBe('account:repo')
-        expect(new AccountScope('status', 'read').toString()).toBe(
+        expect(new AccountPermission('repo', 'read').toString()).toBe(
+          'account:repo',
+        )
+        expect(new AccountPermission('status', 'read').toString()).toBe(
           'account:status',
         )
-        expect(new AccountScope('email', 'manage').toString()).toBe(
+        expect(new AccountPermission('email', 'manage').toString()).toBe(
           'account:email?action=manage',
         )
       })
@@ -169,7 +181,7 @@ describe('AccountScope', () => {
     ]
 
     for (const scope of testCases) {
-      expect(AccountScope.fromString(scope)?.toString()).toBe(scope)
+      expect(AccountPermission.fromString(scope)?.toString()).toBe(scope)
     }
   })
 })

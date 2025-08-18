@@ -1,8 +1,8 @@
 import {
-  AccountScopeMatch,
-  BlobScopeMatch,
-  RepoScopeMatch,
-  RpcScopeMatch,
+  AccountPermissionMatch,
+  BlobPermissionMatch,
+  RepoPermissionMatch,
+  RpcPermissionMatch,
   ScopePermissions,
 } from './scope-permissions.js'
 
@@ -23,7 +23,7 @@ export class ScopePermissionsTransition extends ScopePermissions {
     return this.scopes.has('transition:chat.bsky')
   }
 
-  override allowsAccount(options: AccountScopeMatch): boolean {
+  override allowsAccount(options: AccountPermissionMatch): boolean {
     if (
       options.attr === 'email' &&
       options.action === 'read' &&
@@ -35,7 +35,7 @@ export class ScopePermissionsTransition extends ScopePermissions {
     return super.allowsAccount(options)
   }
 
-  override allowsBlob(options: BlobScopeMatch): boolean {
+  override allowsBlob(options: BlobPermissionMatch): boolean {
     if (this.hasTransitionGeneric) {
       return true
     }
@@ -43,7 +43,7 @@ export class ScopePermissionsTransition extends ScopePermissions {
     return super.allowsBlob(options)
   }
 
-  override allowsRepo(options: RepoScopeMatch): boolean {
+  override allowsRepo(options: RepoPermissionMatch): boolean {
     if (this.hasTransitionGeneric) {
       return true
     }
@@ -51,7 +51,7 @@ export class ScopePermissionsTransition extends ScopePermissions {
     return super.allowsRepo(options)
   }
 
-  override allowsRpc(options: RpcScopeMatch) {
+  override allowsRpc(options: RpcPermissionMatch) {
     const { lxm } = options
 
     if (this.hasTransitionGeneric && lxm === '*') {

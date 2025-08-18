@@ -48,25 +48,28 @@ describe('ScopePermissionsTransition', () => {
     it('should allow rpc with transition:generic', () => {
       const set = new ScopePermissionsTransition('transition:generic')
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.post' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.post',
+        }),
       ).toBe(true)
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.foo' }),
+        set.allowsRpc({ aud: 'did:web:example.com', lxm: 'com.example.foo' }),
       ).toBe(true)
-      expect(set.allowsRpc({ aud: 'did:example:123', lxm: '*' })).toBe(true)
+      expect(set.allowsRpc({ aud: 'did:web:example.com', lxm: '*' })).toBe(true)
     })
 
     it('should allow chat.bsky.* methods with "transition:chat.bsky"', () => {
       const set = new ScopePermissionsTransition('transition:chat.bsky')
       expect(
         set.allowsRpc({
-          aud: 'did:example:123',
+          aud: 'did:web:example.com',
           lxm: 'chat.bsky.message.send',
         }),
       ).toBe(true)
       expect(
         set.allowsRpc({
-          aud: 'did:example:123',
+          aud: 'did:web:example.com',
           lxm: 'chat.bsky.conversation.get',
         }),
       ).toBe(true)
@@ -74,12 +77,17 @@ describe('ScopePermissionsTransition', () => {
       // Control
 
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.post' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.post',
+        }),
       ).toBe(false)
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.foo' }),
+        set.allowsRpc({ aud: 'did:web:example.com', lxm: 'com.example.foo' }),
       ).toBe(false)
-      expect(set.allowsRpc({ aud: 'did:example:123', lxm: '*' })).toBe(false)
+      expect(set.allowsRpc({ aud: 'did:web:example.com', lxm: '*' })).toBe(
+        false,
+      )
     })
 
     it('should reject chat methods with "transition:generic"', () => {
@@ -87,13 +95,13 @@ describe('ScopePermissionsTransition', () => {
 
       expect(
         set.allowsRpc({
-          aud: 'did:example:123',
+          aud: 'did:web:example.com',
           lxm: 'chat.bsky.message.send',
         }),
       ).toBe(false)
       expect(
         set.allowsRpc({
-          aud: 'did:example:123',
+          aud: 'did:web:example.com',
           lxm: 'chat.bsky.conversation.get',
         }),
       ).toBe(false)
@@ -101,10 +109,13 @@ describe('ScopePermissionsTransition', () => {
       // Control
 
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'app.bsky.feed.post' }),
+        set.allowsRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.post',
+        }),
       ).toBe(true)
       expect(
-        set.allowsRpc({ aud: 'did:example:123', lxm: 'com.example.foo' }),
+        set.allowsRpc({ aud: 'did:web:example.com', lxm: 'com.example.foo' }),
       ).toBe(true)
     })
   })

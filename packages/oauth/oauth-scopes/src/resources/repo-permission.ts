@@ -1,5 +1,7 @@
+import { LexPermission } from '@atproto/lexicon'
 import { Nsid, isNsid } from '../lib/nsid.js'
-import { Parser, knownValuesValidator } from '../parser.js'
+import { knownValuesValidator } from '../lib/util.js'
+import { Parser } from '../parser.js'
 import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
 
 export const REPO_ACTIONS = Object.freeze([
@@ -11,37 +13,15 @@ export type RepoAction = (typeof REPO_ACTIONS)[number]
 export const isRepoAction = knownValuesValidator(REPO_ACTIONS)
 
 export type CollectionParam = '*' | Nsid
-export const isCollectionParam = (value: string): value is CollectionParam =>
+export const isCollectionParam = (value: unknown): value is CollectionParam =>
   value === '*' || isNsid(value)
 
-export const repoParser = new Parser(
-  'repo',
-  {
-    collection: {
-      multiple: true,
-      required: true,
-      validate: isCollectionParam,
-      normalize: (value) => {
-        if (value.length > 1 && value.includes('*')) return ['*'] as const
-        return value
-      },
-    },
-    action: {
-      multiple: true,
-      required: false,
-      validate: isRepoAction,
-      default: REPO_ACTIONS,
-    },
-  },
-  'collection',
-)
-
-export type RepoScopeMatch = {
+export type RepoPermissionMatch = {
   collection: string
   action: RepoAction
 }
 
-export class RepoScope {
+export class RepoPermission {
   constructor(
     public readonly collection: NeRoArray<'*' | Nsid>,
     public readonly action: NeRoArray<RepoAction>,
@@ -51,7 +31,7 @@ export class RepoScope {
     return this.collection.includes('*')
   }
 
-  matches({ action, collection }: RepoScopeMatch): boolean {
+  matches({ action, collection }: RepoPermissionMatch): boolean {
     return (
       this.action.includes(action) &&
       (this.allowsAnyCollection ||
@@ -61,7 +41,7 @@ export class RepoScope {
 
   toString(): string {
     // Normalize (compress, de-dupe, sort)
-    return repoParser.format({
+    return RepoPermission.parser.format({
       collection: this.allowsAnyCollection
         ? ['*']
         : this.collection.length > 1
@@ -77,21 +57,49 @@ export class RepoScope {
     })
   }
 
-  static fromString(scope: string): RepoScope | null {
+  static readonly parser = new Parser(
+    'repo',
+    {
+      collection: {
+        multiple: true,
+        required: true,
+        validate: isCollectionParam,
+        normalize: (value) => {
+          if (value.length > 1 && value.includes('*')) return ['*'] as const
+          return value
+        },
+      },
+      action: {
+        multiple: true,
+        required: false,
+        validate: isRepoAction,
+        default: REPO_ACTIONS,
+      },
+    },
+    'collection',
+  )
+
+  static fromString(scope: string): RepoPermission | null {
     if (!isScopeForResource(scope, 'repo')) return null
     const syntax = ResourceSyntax.fromString(scope)
-    return this.fromSyntax(syntax)
+    return RepoPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ResourceSyntax): RepoScope | null {
-    const result = repoParser.parse(syntax)
+  static fromLex(lexPermission: LexPermission) {
+    if (lexPermission.resource !== 'repo') return null
+    const syntax = ResourceSyntax.fromLex(lexPermission)
+    return RepoPermission.fromSyntax(syntax)
+  }
+
+  static fromSyntax(syntax: ResourceSyntax): RepoPermission | null {
+    const result = RepoPermission.parser.parse(syntax)
     if (!result) return null
 
-    return new RepoScope(result.collection, result.action)
+    return new RepoPermission(result.collection, result.action)
   }
 
-  static scopeNeededFor(options: RepoScopeMatch): string {
-    return repoParser.format({
+  static scopeNeededFor(options: RepoPermissionMatch): string {
+    return RepoPermission.parser.format({
       collection: [options.collection as '*' | Nsid],
       action: [options.action],
     })

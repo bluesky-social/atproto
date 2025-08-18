@@ -1,28 +1,31 @@
 import {
   NeRoArray,
+  ParamValue,
   ResourceSyntax,
   ScopeForResource,
   formatScope,
 } from './syntax.js'
 
-type InferStringPredicate<T extends undefined | ((value: string) => boolean)> =
-  T extends ((value: string) => value is infer U extends string) ? U : string
+type InferParamPredicate<T extends (value: ParamValue) => boolean> =
+  T extends ((value: ParamValue) => value is infer U extends ParamValue)
+    ? U
+    : ParamValue
 
 type ParamsSchema = Record<
   string,
   | {
       multiple: false
       required: boolean
-      default?: string
-      normalize?: (value: string) => string
-      validate?: (value: string) => boolean
+      default?: ParamValue
+      normalize?: (value: ParamValue) => ParamValue
+      validate: (value: ParamValue) => boolean
     }
   | {
       multiple: true
       required: boolean
-      default?: NeRoArray<string>
-      normalize?: (value: NeRoArray<string>) => NeRoArray<string>
-      validate?: (value: string) => boolean
+      default?: NeRoArray<ParamValue>
+      normalize?: (value: NeRoArray<ParamValue>) => NeRoArray<ParamValue>
+      validate: (value: ParamValue) => boolean
     }
 >
 
@@ -34,8 +37,8 @@ type ParsedParams<S extends ParamsSchema> = {
           ? S[K]['default']
           : undefined)
     | (S[K]['multiple'] extends true
-        ? NeRoArray<InferStringPredicate<S[K]['validate']>>
-        : InferStringPredicate<S[K]['validate']>)
+        ? NeRoArray<InferParamPredicate<S[K]['validate']>>
+        : InferParamPredicate<S[K]['validate']>)
 } & NonNullable<unknown>
 
 export class Parser<R extends string, S extends ParamsSchema> {
@@ -53,7 +56,7 @@ export class Parser<R extends string, S extends ParamsSchema> {
     // Build params
     const params: [
       name: string,
-      value: undefined | string | NeRoArray<string>,
+      value: undefined | ParamValue | NeRoArray<ParamValue>,
     ][] = []
 
     for (const key of this.schemaKeys) {
@@ -92,8 +95,10 @@ export class Parser<R extends string, S extends ParamsSchema> {
     if (!syntax.is(this.resource)) return null
     if (syntax.containsParamsOtherThan(this.schemaKeys)) return null
 
-    const result: Record<string, undefined | string | NeRoArray<string>> =
-      Object.create(null)
+    const result: Record<
+      string,
+      undefined | ParamValue | NeRoArray<ParamValue>
+    > = Object.create(null)
 
     for (const key of this.schemaKeys) {
       const definition = this.schema[key]
@@ -105,13 +110,13 @@ export class Parser<R extends string, S extends ParamsSchema> {
       if (value === null) return null // Value is not valid
       if (value === undefined && definition.required) return null
 
-      if (value !== undefined && definition.validate) {
+      if (value !== undefined) {
         if (definition.multiple) {
-          if (!(value as NeRoArray<string>).every(definition.validate)) {
+          if (!(value as NeRoArray<ParamValue>).every(definition.validate)) {
             return null
           }
         } else {
-          if (!definition.validate(value as string)) {
+          if (!definition.validate(value as ParamValue)) {
             return null
           }
         }
@@ -142,9 +147,4 @@ function arrayParamEquals(
   for (const item of a) if (!b.includes(item)) return false
   for (const item of b) if (!a.includes(item)) return false
   return true
-}
-
-export function knownValuesValidator<T extends string>(values: Iterable<T>) {
-  const set = new Set<string>(values)
-  return (value: string): value is T => set.has(value)
 }
