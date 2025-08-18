@@ -43,6 +43,15 @@ export type LexiconResolution = {
   lexicon: LexiconDoc & LexiconSchemaRecord
 }
 
+export {
+  AtUri,
+  CID,
+  type Commit,
+  type LexiconDoc,
+  type LexiconSchemaRecord,
+  NSID,
+}
+
 /**
  * Build a Lexicon resolver function.
  */
