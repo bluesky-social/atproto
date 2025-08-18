@@ -1063,26 +1063,22 @@ export class Views {
   // Bookmarks
   // ------------
   bookmark(
-    subjectUri: string,
+    key: string,
     state: HydrationState,
   ): Un$Typed<BookmarkView> | undefined {
     const viewer = state.ctx?.viewer
     if (!viewer) return
 
-    const bookmark = state.bookmarks?.get(subjectUri)?.get(viewer)
+    const bookmark = state.bookmarks?.get(viewer)?.get(key)
     if (!bookmark) return
 
-    const atUri = new AtUri(subjectUri)
-    let item: BookmarkView['item'] | undefined = undefined
-    if (atUri.collection === ids.AppBskyFeedPost) {
-      item = this.bookmarkItemPost(subjectUri, state)
-    }
-    if (!item) return
+    const atUri = new AtUri(bookmark.subjectUri)
+    if (atUri.collection !== ids.AppBskyFeedPost) return
+
+    const item = this.maybePost(bookmark.subjectUri, state)
     return {
       createdAt: bookmark.indexedAt?.toDate().toISOString(),
-      bookmark: {
-        subject: bookmark.subject,
-      },
+      uri: bookmark.subjectUri,
       item,
     }
   }

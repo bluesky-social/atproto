@@ -66,7 +66,7 @@ describe('appview bookmarks views', () => {
 
   const create = async (actor: string, ref: RecordRef) =>
     agent.app.bsky.bookmark.createBookmark(
-      { bookmark: { subject: { cid: ref.cidStr, uri: ref.uriStr } } },
+      { cid: ref.cidStr, uri: ref.uriStr },
       {
         headers: await network.serviceHeaders(
           actor,
@@ -77,7 +77,7 @@ describe('appview bookmarks views', () => {
 
   const del = async (actor: string, ref: RecordRef) =>
     agent.app.bsky.bookmark.deleteBookmark(
-      { bookmark: { subject: { cid: ref.cidStr, uri: ref.uriStr } } },
+      { uri: ref.uriStr },
       {
         headers: await network.serviceHeaders(
           actor,
@@ -254,12 +254,8 @@ describe('appview bookmarks views', () => {
       expect([...paginated].sort(sort)).toEqual([...full].sort(sort))
 
       // Check pagination ordering.
-      expect(paginated.at(0)?.bookmark.subject.uri).toStrictEqual(
-        sc.posts[dan][1].ref.uriStr,
-      )
-      expect(paginated.at(-1)?.bookmark.subject.uri).toStrictEqual(
-        sc.posts[alice][0].ref.uriStr,
-      )
+      expect(paginated.at(0)?.uri).toStrictEqual(sc.posts[dan][1].ref.uriStr)
+      expect(paginated.at(-1)?.uri).toStrictEqual(sc.posts[alice][0].ref.uriStr)
     })
 
     it('shows posts and blocked posts correctly', async () => {

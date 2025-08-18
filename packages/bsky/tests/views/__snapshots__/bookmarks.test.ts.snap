@@ -3,12 +3,6 @@
 exports[`appview bookmarks views listing shows posts and blocked posts correctly 1`] = `
 Array [
   Object {
-    "bookmark": Object {
-      "subject": Object {
-        "cid": "cids(0)",
-        "uri": "record(0)",
-      },
-    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#postView",
@@ -118,14 +112,9 @@ Array [
         "threadMuted": false,
       },
     },
+    "uri": "record(0)",
   },
   Object {
-    "bookmark": Object {
-      "subject": Object {
-        "cid": "cids(3)",
-        "uri": "record(3)",
-      },
-    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#blockedPost",
@@ -139,14 +128,9 @@ Array [
       "blocked": true,
       "uri": "record(3)",
     },
+    "uri": "record(3)",
   },
   Object {
-    "bookmark": Object {
-      "subject": Object {
-        "cid": "cids(4)",
-        "uri": "record(6)",
-      },
-    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#postView",
@@ -218,6 +202,7 @@ Array [
         "threadMuted": false,
       },
     },
+    "uri": "record(6)",
   },
 ]
 `;
@@ -225,12 +210,6 @@ Array [
 exports[`appview bookmarks views listing shows posts and blocked posts correctly 2`] = `
 Array [
   Object {
-    "bookmark": Object {
-      "subject": Object {
-        "cid": "cids(0)",
-        "uri": "record(0)",
-      },
-    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#postView",
@@ -364,14 +343,9 @@ Array [
         "threadMuted": false,
       },
     },
+    "uri": "record(0)",
   },
   Object {
-    "bookmark": Object {
-      "subject": Object {
-        "cid": "cids(5)",
-        "uri": "record(4)",
-      },
-    },
     "createdAt": "1970-01-01T00:00:00.000Z",
     "item": Object {
       "$type": "app.bsky.feed.defs#blockedPost",
@@ -384,6 +358,7 @@ Array [
       "blocked": true,
       "uri": "record(4)",
     },
+    "uri": "record(4)",
   },
 ]
 `;

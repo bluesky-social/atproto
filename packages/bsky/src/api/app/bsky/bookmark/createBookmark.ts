@@ -10,17 +10,15 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
-      const {
-        bookmark: { subject },
-      } = input.body
-      validateUri(subject.uri)
+      const { cid, uri } = input.body
+      validateUri(uri)
 
       const res = await ctx.dataplane.getBookmarksByActorAndSubjects({
         actorDid,
-        uris: [subject.uri],
+        uris: [uri],
       })
       const [existing] = res.bookmarks
-      if (existing.key) {
+      if (existing.ref?.key) {
         // Idempotent, return without creating.
         return
       }
@@ -29,7 +27,10 @@ export default function (server: Server, ctx: AppContext) {
         actorDid,
         namespace: Namespaces.AppBskyBookmarkDefsBookmark,
         payload: {
-          subject,
+          subject: {
+            cid,
+            uri,
+          },
         } satisfies Bookmark,
         key: TID.nextStr(),
       })

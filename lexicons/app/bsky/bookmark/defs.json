@@ -3,7 +3,7 @@
   "id": "app.bsky.bookmark.defs",
   "defs": {
     "bookmark": {
-      "description": "Object used to represent a bookmark subject and to store bookmark data in stash.",
+      "description": "Object used to store bookmark data in stash.",
       "type": "object",
       "required": ["subject"],
       "properties": {
@@ -16,9 +16,13 @@
     },
     "bookmarkView": {
       "type": "object",
-      "required": ["item", "bookmark"],
+      "required": ["uri", "item"],
       "properties": {
-        "bookmark": { "type": "ref", "ref": "#bookmark" },
+        "uri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the bookmarked record."
+        },
         "createdAt": { "type": "string", "format": "datetime" },
         "item": {
           "type": "union",

@@ -4,6 +4,7 @@ import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import {
   Bookmark,
+  GetBookmarksByActorAndKeysResponse,
   GetBookmarksByActorAndSubjectsResponse,
 } from '../../../proto/bsky_pb'
 import { Namespaces } from '../../../stash'
@@ -28,19 +29,52 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const res = await builder.execute()
     return {
-      bookmarks: res.map(
-        (b): PlainMessage<Bookmark> => ({
-          actorDid: b.creator,
-          indexedAt: Timestamp.fromDate(new Date(b.indexedAt)),
-          key: b.key,
-          namespace: Namespaces.AppBskyBookmarkDefsBookmark,
-          subject: {
-            cid: b.subjectCid,
-            uri: b.subjectUri,
-          },
-        }),
-      ),
+      keys: res.map((b) => b.key),
       cursor: key.packFromResult(res),
+    }
+  },
+
+  async getBookmarksByActorAndKeys(req) {
+    const { actorDid, keys } = req
+
+    if (keys.length === 0) {
+      return new GetBookmarksByActorAndKeysResponse({
+        bookmarks: [],
+      })
+    }
+
+    const res = await db.db
+      .selectFrom('bookmark')
+      .where('bookmark.creator', '=', actorDid)
+      .where('bookmark.key', 'in', keys)
+      .selectAll()
+      .execute()
+
+    const byUri = keyBy(res, 'key')
+    const bookmarks = keys.map((did): PlainMessage<Bookmark> => {
+      const bookmark = byUri.get(did)
+      if (!bookmark) {
+        return {
+          ref: undefined,
+          subjectUri: '',
+          indexedAt: undefined,
+        }
+      }
+
+      return {
+        ref: {
+          actorDid,
+          namespace:
+            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+          key: bookmark.key,
+        },
+        subjectUri: bookmark.subjectUri,
+        indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
+      }
+    })
+
+    return {
+      bookmarks,
     }
   },
 
@@ -56,7 +90,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const res = await db.db
       .selectFrom('bookmark')
       .where('bookmark.creator', '=', actorDid)
-      .where('subjectUri', 'in', uris)
+      .where('bookmark.subjectUri', 'in', uris)
       .selectAll()
       .execute()
 
@@ -65,23 +99,20 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const bookmark = byUri.get(did)
       if (!bookmark) {
         return {
-          actorDid: '',
-          namespace: '',
-          key: '',
-          subject: undefined,
+          ref: undefined,
+          subjectUri: '',
           indexedAt: undefined,
         }
       }
 
       return {
-        actorDid,
-        namespace:
-          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
-        key: bookmark.key,
-        subject: {
-          uri: bookmark.subjectUri,
-          cid: bookmark.subjectCid,
+        ref: {
+          actorDid,
+          namespace:
+            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+          key: bookmark.key,
         },
+        subjectUri: bookmark.subjectUri,
         indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
       }
     })

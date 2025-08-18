@@ -1172,16 +1172,20 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Creates a private bookmark for the specified record. Requires authentication.',
+          'Creates a private bookmark for the specified record. Currently, only `app.bsky.feed.post` records are supported. Requires authentication.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['bookmark'],
+            required: ['uri', 'cid'],
             properties: {
-              bookmark: {
-                type: 'ref',
-                ref: 'lex:app.bsky.bookmark.defs#bookmark',
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
               },
             },
           },
@@ -1201,8 +1205,7 @@ export const schemaDict = {
     id: 'app.bsky.bookmark.defs',
     defs: {
       bookmark: {
-        description:
-          'Object used to represent a bookmark subject and to store bookmark data in stash.',
+        description: 'Object used to store bookmark data in stash.',
         type: 'object',
         required: ['subject'],
         properties: {
@@ -1216,11 +1219,12 @@ export const schemaDict = {
       },
       bookmarkView: {
         type: 'object',
-        required: ['item', 'bookmark'],
+        required: ['uri', 'item'],
         properties: {
-          bookmark: {
-            type: 'ref',
-            ref: 'lex:app.bsky.bookmark.defs#bookmark',
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+            description: 'AT-URI of the bookmarked record.',
           },
           createdAt: {
             type: 'string',
@@ -1245,26 +1249,21 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Deletes a private bookmark for the specified at-uri record. Requires authentication.',
+          'Deletes a private bookmark for the specified record. Currently, only `app.bsky.feed.post` records are supported. Requires authentication.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['bookmark'],
+            required: ['uri'],
             properties: {
-              bookmark: {
-                type: 'ref',
-                ref: 'lex:app.bsky.bookmark.defs#bookmark',
+              uri: {
+                type: 'string',
+                format: 'at-uri',
               },
             },
           },
         },
         errors: [
-          {
-            name: 'DifferentCid',
-            description:
-              'A bookmark with the specified URI was found but it has a different CID than the provided one.',
-          },
           {
             name: 'UnsupportedCollection',
             description:

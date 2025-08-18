@@ -160,7 +160,7 @@ export class FeedHydrator {
         repost: parseString(reposts.uris[i]),
         // @NOTE: The dataplane contract is that the array position will be present,
         // but the optional chaining is to ensure it works regardless of the dataplane being update to provide the data.
-        bookmarked: !!bookmarks.bookmarks[i]?.key,
+        bookmarked: !!bookmarks.bookmarks[i]?.ref?.key,
         threadMuted: threadMutesMap.get(threadRoot) ?? false,
       })
     }, new HydrationMap<PostViewerState>())

@@ -9,7 +9,6 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyBookmarkDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -18,7 +17,8 @@ const id = 'app.bsky.bookmark.createBookmark'
 export type QueryParams = {}
 
 export interface InputSchema {
-  bookmark: AppBskyBookmarkDefs.Bookmark
+  uri: string
+  cid: string
 }
 
 export interface HandlerInput {

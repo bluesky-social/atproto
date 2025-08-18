@@ -1256,22 +1256,9 @@ message GetRecordTakedownResponse {
 // Bookmarks
 //
 message Bookmark {
-  string actor_did = 1;
-  string namespace = 2;
-  string key = 3;
-  RecordRef subject = 4;
-  google.protobuf.Timestamp indexed_at = 5;
-}
-
-message GetActorBookmarksRequest {
-  string actor_did = 1;
-  int32 limit = 2;
-  string cursor = 3;
-}
-
-message GetActorBookmarksResponse {
-  repeated Bookmark bookmarks = 1;
-  string cursor = 2;
+  StashRef ref = 1;
+  string subject_uri = 2;
+  google.protobuf.Timestamp indexed_at = 3;
 }
 
 message GetBookmarksByActorAndSubjectsRequest {
@@ -1281,6 +1268,26 @@ message GetBookmarksByActorAndSubjectsRequest {
 
 message GetBookmarksByActorAndSubjectsResponse {
   repeated Bookmark bookmarks = 1;
+}
+
+message GetBookmarksByActorAndKeysRequest {
+  string actor_did = 1;
+  repeated string keys = 2;
+}
+
+message GetBookmarksByActorAndKeysResponse {
+  repeated Bookmark bookmarks = 1;
+}
+
+message GetActorBookmarksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorBookmarksResponse {
+  repeated string keys = 1; // stash keys
+  string cursor = 2;
 }
 
 
@@ -1307,7 +1314,11 @@ message GetFollowsFollowingResponse {
 message PingRequest {}
 message PingResponse {}
 
-
+message StashRef {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+}
 
 service Service {
   //
@@ -1449,6 +1460,8 @@ service Service {
   // Bookmarks
   // Returns bookmarks created by the actor for the specified URIs.
   rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
+  // Returns bookmarks created by the actor for the specified stash keys.
+  rpc GetBookmarksByActorAndKeys(GetBookmarksByActorAndKeysRequest) returns (GetBookmarksByActorAndKeysResponse);
   // Returns the bookmarks created by the actor.
   rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
 

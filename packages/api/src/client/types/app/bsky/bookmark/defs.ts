@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.bookmark.defs'
 
-/** Object used to represent a bookmark subject and to store bookmark data in stash. */
+/** Object used to store bookmark data in stash. */
 export interface Bookmark {
   $type?: 'app.bsky.bookmark.defs#bookmark'
   subject: ComAtprotoRepoStrongRef.Main
@@ -34,7 +34,8 @@ export function validateBookmark<V>(v: V) {
 
 export interface BookmarkView {
   $type?: 'app.bsky.bookmark.defs#bookmarkView'
-  bookmark: Bookmark
+  /** AT-URI of the bookmarked record. */
+  uri: string
   createdAt?: string
   item:
     | $Typed<AppBskyFeedDefs.BlockedPost>

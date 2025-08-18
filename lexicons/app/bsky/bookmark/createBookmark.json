@@ -4,17 +4,15 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Creates a private bookmark for the specified record. Requires authentication.",
+      "description": "Creates a private bookmark for the specified record. Currently, only `app.bsky.feed.post` records are supported. Requires authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["bookmark"],
+          "required": ["uri", "cid"],
           "properties": {
-            "bookmark": {
-              "type": "ref",
-              "ref": "app.bsky.bookmark.defs#bookmark"
-            }
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" }
           }
         }
       },

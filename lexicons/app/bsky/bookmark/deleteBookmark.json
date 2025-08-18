@@ -4,25 +4,18 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Deletes a private bookmark for the specified at-uri record. Requires authentication.",
+      "description": "Deletes a private bookmark for the specified record. Currently, only `app.bsky.feed.post` records are supported. Requires authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["bookmark"],
+          "required": ["uri"],
           "properties": {
-            "bookmark": {
-              "type": "ref",
-              "ref": "app.bsky.bookmark.defs#bookmark"
-            }
+            "uri": { "type": "string", "format": "at-uri" }
           }
         }
       },
       "errors": [
-        {
-          "name": "DifferentCid",
-          "description": "A bookmark with the specified URI was found but it has a different CID than the provided one."
-        },
         {
           "name": "UnsupportedCollection",
           "description": "The URI to be bookmarked is for an unsupported collection."

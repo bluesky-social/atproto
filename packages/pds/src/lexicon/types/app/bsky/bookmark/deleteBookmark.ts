@@ -9,7 +9,6 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyBookmarkDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -18,7 +17,7 @@ const id = 'app.bsky.bookmark.deleteBookmark'
 export type QueryParams = {}
 
 export interface InputSchema {
-  bookmark: AppBskyBookmarkDefs.Bookmark
+  uri: string
 }
 
 export interface HandlerInput {
@@ -29,7 +28,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'DifferentCid' | 'UnsupportedCollection'
+  error?: 'UnsupportedCollection'
 }
 
 export type HandlerOutput = HandlerError | void
