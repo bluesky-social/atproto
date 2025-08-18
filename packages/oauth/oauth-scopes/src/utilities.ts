@@ -16,23 +16,38 @@ export type ScopeMatchingOptionsByResource = {
   blob: BlobScopeMatch
 }
 
-export function isValidAtprotoOauthScope(value: string) {
+type AtprotoOauthScope =
+  | 'atproto'
+  | 'transition:email'
+  | 'transition:generic'
+  | 'transition:chat.bsky'
+  | `repo:${string}`
+  | `rpc:${string}`
+  | `account:${string}`
+  | `identity:${string}`
+  | `blob:${string}`
+export function isValidAtprotoOauthScope(
+  value: string,
+): value is AtprotoOauthScope {
   if (value === 'atproto') return true
   if (value === 'transition:email') return true
   if (value === 'transition:generic') return true
   if (value === 'transition:chat.bsky') return true
 
-  const syntax = ResourceSyntax.fromString(value)
-  if (syntax.resource === 'repo') {
-    return RepoScope.fromSyntax(syntax) != null
-  } else if (syntax.resource === 'rpc') {
-    return RpcScope.fromSyntax(syntax) != null
-  } else if (syntax.resource === 'account') {
-    return AccountScope.fromSyntax(syntax) != null
-  } else if (syntax.resource === 'identity') {
-    return IdentityScope.fromSyntax(syntax) != null
-  } else if (syntax.resource === 'blob') {
-    return BlobScope.fromSyntax(syntax) != null
+  if (isScopeForResource(value, 'repo')) {
+    return RepoScope.fromString(value) != null
+  }
+  if (isScopeForResource(value, 'rpc')) {
+    return RpcScope.fromString(value) != null
+  }
+  if (isScopeForResource(value, 'account')) {
+    return AccountScope.fromString(value) != null
+  }
+  if (isScopeForResource(value, 'identity')) {
+    return IdentityScope.fromString(value) != null
+  }
+  if (isScopeForResource(value, 'blob')) {
+    return BlobScope.fromString(value) != null
   }
 
   return false

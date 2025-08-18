@@ -1,4 +1,4 @@
-import { NSIDLike, isNSIDLike } from '../lib/nsid.js'
+import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser, knownValuesValidator } from '../parser.js'
 import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
 
@@ -10,9 +10,9 @@ export const REPO_ACTIONS = Object.freeze([
 export type RepoAction = (typeof REPO_ACTIONS)[number]
 export const isRepoAction = knownValuesValidator(REPO_ACTIONS)
 
-export type CollectionParam = '*' | NSIDLike
+export type CollectionParam = '*' | Nsid
 export const isCollectionParam = (value: string): value is CollectionParam =>
-  value === '*' || isNSIDLike(value)
+  value === '*' || isNsid(value)
 
 export const repoParser = new Parser(
   'repo',
@@ -43,7 +43,7 @@ export type RepoScopeMatch = {
 
 export class RepoScope {
   constructor(
-    public readonly collection: NeRoArray<'*' | NSIDLike>,
+    public readonly collection: NeRoArray<'*' | Nsid>,
     public readonly action: NeRoArray<RepoAction>,
   ) {}
 
@@ -65,7 +65,7 @@ export class RepoScope {
       collection: this.allowsAnyCollection
         ? ['*']
         : this.collection.length > 1
-          ? ([...new Set(this.collection)].sort() as [NSIDLike, ...NSIDLike[]])
+          ? ([...new Set(this.collection)].sort() as [Nsid, ...Nsid[]])
           : this.collection,
       action:
         this.action === REPO_ACTIONS
@@ -92,7 +92,7 @@ export class RepoScope {
 
   static scopeNeededFor(options: RepoScopeMatch): string {
     return repoParser.format({
-      collection: [options.collection as '*' | NSIDLike],
+      collection: [options.collection as '*' | Nsid],
       action: [options.action],
     })
   }

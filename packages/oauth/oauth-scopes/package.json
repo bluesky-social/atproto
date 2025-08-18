@@ -24,13 +24,15 @@
       "default": "./dist/index.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@atproto/syntax": "workspace:^"
+  },
   "devDependencies": {
     "jest": "^28.1.2",
     "typescript": "^5.6.3"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json",
+    "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   }
 }

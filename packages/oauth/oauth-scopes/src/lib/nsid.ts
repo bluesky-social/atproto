@@ -1,8 +1,4 @@
-// @TODO (?) use NSID from @atproto/syntax
+import { isValidNsid } from '@atproto/syntax'
 
-export type NSIDLike = `${string}.${string}`
-export const isNSIDLike = (value: string): value is NSIDLike =>
-  value.includes('.') &&
-  !value.includes(' ') &&
-  !value.startsWith('.') &&
-  !value.endsWith('.')
+export type Nsid = `${string}.${string}.${string}`
+export const isNsid = (v: string): v is Nsid => isValidNsid(v)

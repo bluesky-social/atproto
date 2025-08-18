@@ -4,25 +4,25 @@ describe('RepoScope', () => {
   describe('static', () => {
     describe('fromString', () => {
       it('should parse positional scope', () => {
-        const scope = RepoScope.fromString('repo:foo.bar')
+        const scope = RepoScope.fromString('repo:com.example.foo')
         expect(scope).not.toBeNull()
-        expect(scope!.collection).toEqual(['foo.bar'])
+        expect(scope!.collection).toEqual(['com.example.foo'])
         expect(scope!.action).toEqual(['create', 'update', 'delete'])
       })
 
       it('should parse valid repo scope with multiple actions', () => {
         const scope = RepoScope.fromString(
-          'repo:foo.bar?action=create&action=update',
+          'repo:com.example.foo?action=create&action=update',
         )
         expect(scope).not.toBeNull()
-        expect(scope!.collection).toEqual(['foo.bar'])
+        expect(scope!.collection).toEqual(['com.example.foo'])
         expect(scope!.action).toEqual(['create', 'update'])
       })
 
       it('should parse valid repo scope without actions (defaults to create, update, delete)', () => {
-        const scope = RepoScope.fromString('repo:foo.bar')
+        const scope = RepoScope.fromString('repo:com.example.foo')
         expect(scope).not.toBeNull()
-        expect(scope!.collection).toEqual(['foo.bar'])
+        expect(scope!.collection).toEqual(['com.example.foo'])
         expect(scope!.action).toEqual(['create', 'update', 'delete'])
       })
 
@@ -62,7 +62,9 @@ describe('RepoScope', () => {
       })
 
       it('should reject invalid action names', () => {
-        const scope = RepoScope.fromString('repo:foo.bar?action=invalid')
+        const scope = RepoScope.fromString(
+          'repo:com.example.foo?action=invalid',
+        )
         expect(scope).toBeNull()
       })
 
@@ -75,7 +77,7 @@ describe('RepoScope', () => {
         'repo:*?action=*',
         'invalid',
         'repo:invalid',
-        'repo:foo.bar?action=invalid',
+        'repo:com.example.foo?action=invalid',
         'repo?collection=invalid&action=invalid',
       ]) {
         it(`should return null for invalid rpc scope: ${invalid}`, () => {
@@ -87,10 +89,10 @@ describe('RepoScope', () => {
     describe('scopeNeededFor', () => {
       it('should return correct scope string for specific collection and action', () => {
         const scope = RepoScope.scopeNeededFor({
-          collection: 'foo.bar',
+          collection: 'com.example.foo',
           action: 'create',
         })
-        expect(scope).toBe('repo:foo.bar?action=create')
+        expect(scope).toBe('repo:com.example.foo?action=create')
       })
 
       it('should return scope that accepts all collections with specific action', () => {
@@ -101,15 +103,24 @@ describe('RepoScope', () => {
         expect(scope).toBe('repo:*?action=create')
       })
 
-      it('ignores invalid collection names', () => {
+      it('ignores invalid options', () => {
         // @NOTE the scopeNeededFor assumes valid input, so it does not validate
         // collection or action.
-        const scope = RepoScope.scopeNeededFor({
-          collection: 'invalid',
-          // @ts-expect-error
-          action: 'not-an-action',
-        })
-        expect(scope).toBe('repo:invalid?action=not-an-action')
+
+        expect(
+          RepoScope.scopeNeededFor({
+            collection: 'invalid',
+            action: 'create',
+          }),
+        ).toBe('repo:invalid?action=create')
+
+        expect(
+          RepoScope.scopeNeededFor({
+            collection: 'com.example.foo',
+            // @ts-expect-error
+            action: 'not-an-action',
+          }),
+        ).toBe('repo:com.example.foo?action=not-an-action')
       })
     })
   })
@@ -117,18 +128,18 @@ describe('RepoScope', () => {
   describe('instance', () => {
     describe('matches', () => {
       it('should match create action', () => {
-        const scope = RepoScope.fromString('repo:foo.bar?action=create')
+        const scope = RepoScope.fromString('repo:com.example.foo?action=create')
         expect(scope).not.toBeNull()
         expect(
-          scope!.matches({ action: 'create', collection: 'foo.bar' }),
+          scope!.matches({ action: 'create', collection: 'com.example.foo' }),
         ).toBe(true)
       })
 
       it('should not match unspecified action', () => {
-        const scope = RepoScope.fromString('repo:foo.bar?action=create')
+        const scope = RepoScope.fromString('repo:com.example.foo?action=create')
         expect(scope).not.toBeNull()
         expect(
-          scope!.matches({ action: 'update', collection: 'foo.bar' }),
+          scope!.matches({ action: 'update', collection: 'com.example.foo' }),
         ).toBe(false)
       })
 
@@ -136,7 +147,7 @@ describe('RepoScope', () => {
         const scope = RepoScope.fromString('repo:*?action=create')
         expect(scope).not.toBeNull()
         expect(
-          scope!.matches({ action: 'create', collection: 'any.collection' }),
+          scope!.matches({ action: 'create', collection: 'com.example.bar' }),
         ).toBe(true)
       })
 
@@ -144,47 +155,47 @@ describe('RepoScope', () => {
         const scope = RepoScope.fromString('repo:*?action=create')
         expect(scope).not.toBeNull()
         expect(
-          scope!.matches({ action: 'delete', collection: 'any.collection' }),
+          scope!.matches({ action: 'delete', collection: 'com.example.bar' }),
         ).toBe(false)
       })
 
       it('should match multiple actions', () => {
         const scope = RepoScope.fromString(
-          'repo:foo.bar?action=create&action=update',
+          'repo:com.example.foo?action=create&action=update',
         )
         expect(scope).not.toBeNull()
         expect(
-          scope!.matches({ action: 'create', collection: 'foo.bar' }),
+          scope!.matches({ action: 'create', collection: 'com.example.foo' }),
         ).toBe(true)
         expect(
-          scope!.matches({ action: 'update', collection: 'foo.bar' }),
+          scope!.matches({ action: 'update', collection: 'com.example.foo' }),
         ).toBe(true)
         expect(
-          scope!.matches({ action: 'delete', collection: 'foo.bar' }),
+          scope!.matches({ action: 'delete', collection: 'com.example.foo' }),
         ).toBe(false)
       })
 
       it('should default to "create", "update", and "delete" actions', () => {
-        const scope = RepoScope.fromString('repo:foo.bar')
+        const scope = RepoScope.fromString('repo:com.example.foo')
         expect(scope).not.toBeNull()
         expect(
-          scope!.matches({ action: 'create', collection: 'foo.bar' }),
+          scope!.matches({ action: 'create', collection: 'com.example.foo' }),
         ).toBe(true)
         expect(
-          scope!.matches({ action: 'update', collection: 'foo.bar' }),
+          scope!.matches({ action: 'update', collection: 'com.example.foo' }),
         ).toBe(true)
         expect(
-          scope!.matches({ action: 'delete', collection: 'foo.bar' }),
+          scope!.matches({ action: 'delete', collection: 'com.example.foo' }),
         ).toBe(true)
       })
     })
 
     describe('toString', () => {
       it('should format repo scope correctly', () => {
-        const scope = new RepoScope(['foo.bar'], ['create', 'update'])
+        const scope = new RepoScope(['com.example.foo'], ['create', 'update'])
         expect(scope).not.toBeNull()
         expect(scope!.toString()).toBe(
-          'repo:foo.bar?action=create&action=update',
+          'repo:com.example.foo?action=create&action=update',
         )
       })
     })
@@ -192,22 +203,22 @@ describe('RepoScope', () => {
 
   describe('consistency', () => {
     const testCases: { input: string; expected: string }[] = [
-      { input: 'repo:foo.bar', expected: 'repo:foo.bar' },
+      { input: 'repo:com.example.foo', expected: 'repo:com.example.foo' },
       {
-        input: 'repo:foo.bar?action=create',
-        expected: 'repo:foo.bar?action=create',
+        input: 'repo:com.example.foo?action=create',
+        expected: 'repo:com.example.foo?action=create',
       },
       {
-        input: 'repo:foo.bar?action=create&action=update',
-        expected: 'repo:foo.bar?action=create&action=update',
+        input: 'repo:com.example.foo?action=create&action=update',
+        expected: 'repo:com.example.foo?action=create&action=update',
       },
       {
         input: 'repo:*?action=create&action=update&action=delete',
         expected: 'repo:*',
       },
       {
-        input: 'repo:foo.bar?action=create&action=update&action=delete',
-        expected: 'repo:foo.bar',
+        input: 'repo:com.example.foo?action=create&action=update&action=delete',
+        expected: 'repo:com.example.foo',
       },
       { input: 'repo:*?action=create', expected: 'repo:*?action=create' },
       { input: 'repo:*?action=update', expected: 'repo:*?action=update' },
@@ -216,7 +227,7 @@ describe('RepoScope', () => {
         expected: 'repo:*?action=update',
       },
       {
-        input: 'repo?collection=*&collection=foo.bar&action=update',
+        input: 'repo?collection=*&collection=com.example.foo&action=update',
         expected: 'repo:*?action=update',
       },
       {
@@ -228,21 +239,23 @@ describe('RepoScope', () => {
         expected: 'repo:*',
       },
       {
-        input: 'repo?collection=*&collection=foo.bar',
+        input: 'repo?collection=*&collection=com.example.foo',
         expected: 'repo:*',
       },
       {
-        input: 'repo?action=create&collection=foo.bar',
-        expected: 'repo:foo.bar?action=create',
+        input: 'repo?action=create&collection=com.example.foo',
+        expected: 'repo:com.example.foo?action=create',
       },
       {
         input:
-          'repo?collection=foo.bar&action=create&action=update&action=delete',
-        expected: 'repo:foo.bar',
+          'repo?collection=com.example.foo&action=create&action=update&action=delete',
+        expected: 'repo:com.example.foo',
       },
       {
-        input: 'repo?action=create&collection=foo.bar&collection=baz.qux',
-        expected: 'repo?collection=baz.qux&collection=foo.bar&action=create',
+        input:
+          'repo?action=create&collection=com.example.foo&collection=com.example.bar',
+        expected:
+          'repo?collection=com.example.bar&collection=com.example.foo&action=create',
       },
     ]
 
