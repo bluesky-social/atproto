@@ -1,7 +1,10 @@
 import fs from 'node:fs'
+import nodepath from 'node:path'
 import { join } from 'node:path'
 import chalk from 'chalk'
 import { ZodError, type ZodFormattedError } from 'zod'
+import JSONC from "jsonc-parse";
+
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
 import { type FileDiff, type GeneratedAPI } from './types'
 
@@ -9,7 +12,7 @@ export function readAllLexicons(paths: string[]): LexiconDoc[] {
   paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
   const docs: LexiconDoc[] = []
   for (const path of paths) {
-    if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
+    if (!(path.endsWith('.json') || path.endsWith('.jsonc')) || !fs.statSync(path).isFile()) {
       continue
     }
     try {
@@ -31,7 +34,12 @@ export function readLexicon(path: string): LexiconDoc {
     throw e
   }
   try {
-    obj = JSON.parse(str)
+    let ext: string = nodepath.extname(path)
+    if (ext === '.jsonc') {
+      obj = JSONC.parse(str)
+    } else {
+      obj = JSON.parse(str)
+    }
   } catch (e) {
     console.error(`Failed to parse JSON in file`, path)
     throw e

@@ -29,6 +29,7 @@
     "@atproto/syntax": "workspace:^",
     "chalk": "^4.1.2",
     "commander": "^9.4.0",
+    "jsonc-parse": "^1.5.5",
     "prettier": "^3.2.5",
     "ts-morph": "^24.0.0",
     "yesno": "^0.4.0",

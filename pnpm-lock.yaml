@@ -759,6 +759,9 @@ importers:
       commander:
         specifier: ^9.4.0
         version: 9.4.0
+      jsonc-parse:
+        specifier: ^1.5.5
+        version: 1.5.5
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -6761,6 +6764,11 @@ packages:
       - supports-color
       - typescript
     dev: true
+
+  /@luxass/strip-json-comments@1.4.0:
+    resolution: {integrity: sha512-Zl343to4u/t8jz1q7R/1UY6hLX+344cwPLEXsIYthVwdU5zyjuVBGcpf2E24+QZkwFfRfmnHTcscreQzWn3hiA==}
+    engines: {node: '>=18'}
+    dev: false
 
   /@manypkg/find-root@1.1.0:
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -13739,6 +13747,13 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
     dev: true
+
+  /jsonc-parse@1.5.5:
+    resolution: {integrity: sha512-6xSVqUb+VBwXSJoyDPzgK1toG+JoOcfjWrmZNBL5ZmKnokV9dLshqyLU8NkcLavKbT5tKEr+3T0d4/7d+wVdVw==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@luxass/strip-json-comments': 1.4.0
+    dev: false
 
   /jsonc-parser@3.2.0:
     resolution: {integrity: sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==}
