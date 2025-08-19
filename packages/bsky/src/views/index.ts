@@ -1083,19 +1083,6 @@ export class Views {
     }
   }
 
-  bookmarkItemPost(
-    uri: string,
-    state: HydrationState,
-  ): $Typed<MaybePostView> | undefined {
-    const viewer = state.ctx?.viewer
-    if (!viewer) return
-
-    const bookmark = state.bookmarks?.get(uri)?.get(viewer)
-    if (!bookmark) return
-
-    return this.maybePost(uri, state)
-  }
-
   // Threads
   // ------------
 

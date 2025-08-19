@@ -64,8 +64,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       return {
         ref: {
           actorDid,
-          namespace:
-            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+          namespace: Namespaces.AppBskyBookmarkDefsBookmark,
           key: bookmark.key,
         },
         subjectUri: bookmark.subjectUri,
@@ -108,8 +107,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       return {
         ref: {
           actorDid,
-          namespace:
-            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+          namespace: Namespaces.AppBskyBookmarkDefsBookmark,
           key: bookmark.key,
         },
         subjectUri: bookmark.subjectUri,
