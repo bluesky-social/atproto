@@ -1258,7 +1258,8 @@ message GetRecordTakedownResponse {
 message Bookmark {
   StashRef ref = 1;
   string subject_uri = 2;
-  google.protobuf.Timestamp indexed_at = 3;
+  string subject_cid = 3;
+  google.protobuf.Timestamp indexed_at = 4;
 }
 
 message GetBookmarksByActorAndSubjectsRequest {

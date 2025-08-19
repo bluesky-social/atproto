@@ -254,8 +254,14 @@ describe('appview bookmarks views', () => {
       expect([...paginated].sort(sort)).toEqual([...full].sort(sort))
 
       // Check pagination ordering.
-      expect(paginated.at(0)?.uri).toStrictEqual(sc.posts[dan][1].ref.uriStr)
-      expect(paginated.at(-1)?.uri).toStrictEqual(sc.posts[alice][0].ref.uriStr)
+      expect(paginated.at(0)?.subject).toStrictEqual({
+        uri: sc.posts[dan][1].ref.uriStr,
+        cid: sc.posts[dan][1].ref.cidStr,
+      })
+      expect(paginated.at(-1)?.subject).toStrictEqual({
+        uri: sc.posts[alice][0].ref.uriStr,
+        cid: sc.posts[alice][0].ref.cidStr,
+      })
     })
 
     it('shows posts and blocked posts correctly', async () => {

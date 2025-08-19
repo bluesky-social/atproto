@@ -1219,12 +1219,12 @@ export const schemaDict = {
       },
       bookmarkView: {
         type: 'object',
-        required: ['uri', 'item'],
+        required: ['subject', 'item'],
         properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-            description: 'AT-URI of the bookmarked record.',
+          subject: {
+            description: 'A strong ref to the bookmarked record.',
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
           },
           createdAt: {
             type: 'string',

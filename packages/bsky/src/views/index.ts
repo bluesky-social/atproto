@@ -1078,7 +1078,10 @@ export class Views {
     const item = this.maybePost(bookmark.subjectUri, state)
     return {
       createdAt: bookmark.indexedAt?.toDate().toISOString(),
-      uri: bookmark.subjectUri,
+      subject: {
+        uri: bookmark.subjectUri,
+        cid: bookmark.subjectCid,
+      },
       item,
     }
   }

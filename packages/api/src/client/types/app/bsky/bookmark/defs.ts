@@ -34,8 +34,7 @@ export function validateBookmark<V>(v: V) {
 
 export interface BookmarkView {
   $type?: 'app.bsky.bookmark.defs#bookmarkView'
-  /** AT-URI of the bookmarked record. */
-  uri: string
+  subject: ComAtprotoRepoStrongRef.Main
   createdAt?: string
   item:
     | $Typed<AppBskyFeedDefs.BlockedPost>

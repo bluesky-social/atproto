@@ -112,7 +112,10 @@ Array [
         "threadMuted": false,
       },
     },
-    "uri": "record(0)",
+    "subject": Object {
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -128,7 +131,10 @@ Array [
       "blocked": true,
       "uri": "record(3)",
     },
-    "uri": "record(3)",
+    "subject": Object {
+      "cid": "cids(3)",
+      "uri": "record(3)",
+    },
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -202,7 +208,10 @@ Array [
         "threadMuted": false,
       },
     },
-    "uri": "record(6)",
+    "subject": Object {
+      "cid": "cids(4)",
+      "uri": "record(6)",
+    },
   },
 ]
 `;
@@ -343,7 +352,10 @@ Array [
         "threadMuted": false,
       },
     },
-    "uri": "record(0)",
+    "subject": Object {
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -358,7 +370,10 @@ Array [
       "blocked": true,
       "uri": "record(4)",
     },
-    "uri": "record(4)",
+    "subject": Object {
+      "cid": "cids(5)",
+      "uri": "record(4)",
+    },
   },
 ]
 `;

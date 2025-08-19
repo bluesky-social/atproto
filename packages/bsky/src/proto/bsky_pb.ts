@@ -13280,7 +13280,12 @@ export class Bookmark extends Message<Bookmark> {
   subjectUri = ''
 
   /**
-   * @generated from field: google.protobuf.Timestamp indexed_at = 3;
+   * @generated from field: string subject_cid = 3;
+   */
+  subjectCid = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp indexed_at = 4;
    */
   indexedAt?: Timestamp
 
@@ -13299,7 +13304,13 @@ export class Bookmark extends Message<Bookmark> {
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
     },
-    { no: 3, name: 'indexed_at', kind: 'message', T: Timestamp },
+    {
+      no: 3,
+      name: 'subject_cid',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 4, name: 'indexed_at', kind: 'message', T: Timestamp },
   ])
 
   static fromBinary(

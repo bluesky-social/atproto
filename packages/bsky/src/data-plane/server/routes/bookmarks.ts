@@ -57,6 +57,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         return {
           ref: undefined,
           subjectUri: '',
+          subjectCid: '',
           indexedAt: undefined,
         }
       }
@@ -68,6 +69,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           key: bookmark.key,
         },
         subjectUri: bookmark.subjectUri,
+        subjectCid: bookmark.subjectCid,
         indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
       }
     })
@@ -100,6 +102,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         return {
           ref: undefined,
           subjectUri: '',
+          subjectCid: '',
           indexedAt: undefined,
         }
       }
@@ -111,6 +114,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           key: bookmark.key,
         },
         subjectUri: bookmark.subjectUri,
+        subjectCid: bookmark.subjectCid,
         indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
       }
     })
