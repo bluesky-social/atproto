@@ -81,6 +81,11 @@ of doing this:
    })
    ```
 
+> [!TIP]
+>
+> HTTPS is required for the client_id URL. Only loopback addresses may use HTTP, as described in
+> [using in development](#using-in-development-localhost)
+
 If performances are important to you, it is recommended to burn the metadata
 into the script. Server side rendering techniques can also be used to inject the
 metadata into the script at runtime.
@@ -200,7 +205,7 @@ to initiate the OAuth flow, and redirect the user to the OAuth server.
 try {
   await client.signIn('my.handle.com', {
     state: 'some value needed later',
-    prompt: 'none', // Attempt to sign in without user interaction (SSO)
+    prompt: 'none', // Attempt to sign in without user interaction (SSO). For initial sessions use 'login'.
     ui_locales: 'fr-CA fr en', // Only supported by some OAuth servers (requires OpenID Connect support + i18n support)
     signal: new AbortController().signal, // Optional, allows to cancel the sign in (and destroy the pending authorization, for better security)
   })
