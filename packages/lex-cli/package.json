@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-cli",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "license": "MIT",
   "description": "TypeScript codegen tool for atproto Lexicon schemas",
   "keywords": [
