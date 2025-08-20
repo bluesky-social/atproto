@@ -1,36 +1,10 @@
-import { useLingui } from '@lingui/react/macro'
-import { ReactNode, useMemo } from 'react'
-import type { LocalizedString } from '@atproto/oauth-provider-api'
-
-export type MultiLangStringProps = {
-  value: LocalizedString
-  fallback?: ReactNode
-}
-
-export function MultiLangString({
-  value,
-  fallback,
-}: MultiLangStringProps): ReactNode {
-  const matchingString = useMatchingString(value)
-  return (
-    matchingString ?? fallback ?? (typeof value === 'string' ? value : value.en)
-  )
-}
-
-function useMatchingString(value: LocalizedString) {
-  const { i18n } = useLingui()
-  return useMemo(
-    () => findMatchingString(value, i18n.locale),
-    [value, i18n.locale],
-  )
-}
-
 /**
  * Only returns a string if it matches the desired locale.
  */
-function findMatchingString(
-  value: LocalizedString,
+export function findMatchingString(
+  value: string | Record<string, string | undefined>,
   locale: string,
+  fallback?: string,
 ): string | undefined {
   switch (typeof value) {
     case 'string':
@@ -58,5 +32,5 @@ function findMatchingString(
     }
   }
 
-  return undefined
+  return fallback
 }

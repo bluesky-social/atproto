@@ -2,6 +2,14 @@ import { z } from 'zod'
 import { isValidNsid } from '@atproto/syntax'
 import { requiredPropertiesRefinement } from './util'
 
+export const localeSchema = z
+  .string()
+  .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/, 'Invalid locale')
+
+export const lexLang = z.record(localeSchema, z.string().optional())
+
+export type LexLang = z.infer<typeof lexLang>
+
 // primitives
 // =
 
@@ -239,6 +247,10 @@ export type LexPermission = z.infer<typeof lexPermission>
 export const lexPermissionSet = z.object({
   type: z.literal('permission-set'),
   description: z.string().optional(),
+  title: z.string().optional(),
+  'title:lang': lexLang.optional(),
+  detail: z.string().optional(),
+  'detail:lang': lexLang.optional(),
   permissions: z.array(lexPermission).nonempty(),
 })
 

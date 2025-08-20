@@ -28,6 +28,7 @@ export interface Token {
   details: JsonEncoded<OAuthAuthorizationDetails> | null
   code: Code | null
   currentRefreshToken: RefreshToken | null
+  permissionsScope: string | null
 }
 
 export type TokenEntry = Selectable<Token>

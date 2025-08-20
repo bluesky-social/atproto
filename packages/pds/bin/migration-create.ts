@@ -14,7 +14,14 @@ export async function main() {
     )
   }
   const filename = `${prefix}-${name}`
-  const dir = path.join(__dirname, '..', 'src', 'db', 'migrations')
+  const dir = path.join(
+    __dirname,
+    '..',
+    'src',
+    'account-manager',
+    'db',
+    'migrations',
+  )
 
   await fs.writeFile(path.join(dir, `${filename}.ts`), template, { flag: 'wx' })
   await fs.writeFile(

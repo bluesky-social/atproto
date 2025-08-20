@@ -10,6 +10,10 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
+  LexiconResolver,
+  buildLexiconResolver,
+} from '@atproto/lexicon-resolver'
+import {
   AccessTokenMode,
   JoseKey,
   OAuthProvider,
@@ -308,6 +312,11 @@ export class AppContext {
       logError: false,
     })
 
+    const lexiconResolver: LexiconResolver = buildLexiconResolver({
+      idResolver,
+      rpc: { fetch: safeFetch },
+    })
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -331,6 +340,7 @@ export class AppContext {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
+          lexiconResolver,
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },

@@ -1,3 +1,4 @@
+import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { HTMLAttributes, useMemo } from 'react'
 import { Override } from '#/lib/util'
@@ -6,9 +7,11 @@ import {
   BlobPermission,
   CollectionParam,
   LxmParam,
+  Nsid,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
+  isNsid,
 } from '@atproto/oauth-scopes'
 import { Checkbox } from '../forms/checkbox'
 import { Admonition, AdmonitionProps } from './admonition'
@@ -26,6 +29,7 @@ import {
   PaperPlaneIcon,
   VideoClipIcon,
 } from './icons'
+import { LangString } from './lang-string'
 
 export type ScopeDescriptionProps = Override<
   React.HTMLAttributes<HTMLDivElement>,
@@ -33,6 +37,7 @@ export type ScopeDescriptionProps = Override<
     clientTrusted?: boolean
     clientFirstParty?: boolean
     scope?: string
+    permissionSets: PermissionSets
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -41,6 +46,7 @@ export type ScopeDescriptionProps = Override<
 
 export function ScopeDescription({
   scope,
+  permissionSets,
   clientTrusted = false,
   clientFirstParty = false,
   allowEmail,
@@ -50,10 +56,13 @@ export function ScopeDescription({
   className = '',
   ...attrs
 }: ScopeDescriptionProps) {
-  const permissions = useMemo(
-    () => new ScopePermissionsTransition(scope),
-    [scope],
-  )
+  const nsids = useMemo(() => {
+    return scope?.split(' ').filter(isNsid) ?? []
+  }, [scope])
+  const permissions = useMemo(() => {
+    return new ScopePermissionsTransition(scope)
+  }, [scope])
+
   const showFineGrainedPermissions =
     !useHasOnlyBlueskySpecificScopes(permissions)
 
@@ -76,6 +85,11 @@ export function ScopeDescription({
       <BlueskyAppviewPermissions permissions={permissions} />
       <BlueskyChatPermissions permissions={permissions} />
 
+      <PermissionSetsPermissions
+        nsids={nsids}
+        permissionSets={permissionSets}
+      />
+
       {showFineGrainedPermissions && (
         <>
           <BlobPermissions permissions={permissions} />
@@ -88,6 +102,68 @@ export function ScopeDescription({
         <IdentityWarning className="mt-2" permissions={permissions} />
       )}
     </div>
+  )
+}
+
+function PermissionSetsPermissions({
+  nsids,
+  permissionSets,
+}: {
+  nsids: Nsid[]
+  permissionSets: PermissionSets
+}) {
+  if (!nsids.length) return null
+
+  return (
+    <>
+      {nsids.map((nsid) => (
+        <PermissionSetPermissions
+          key={nsid}
+          nsid={nsid}
+          permissionSet={permissionSets[nsid]}
+        />
+      ))}
+    </>
+  )
+}
+
+function PermissionSetPermissions({
+  nsid,
+  permissionSet,
+}: {
+  nsid: Nsid
+  permissionSet?: PermissionSet
+}) {
+  return (
+    <DescriptionCard
+      role="listitem"
+      image={
+        isBskyAppNsid(nsid) ? (
+          <ButterflyIcon className="size-6" />
+        ) : isBskyChatNsid(nsid) ? (
+          <ChatIcon className="size-6" />
+        ) : (
+          // @TODO generic icon
+          <ImageIcon className="size-6" />
+        )
+      }
+      title={
+        <LangString
+          value={permissionSet?.['title:lang']}
+          fallback={permissionSet?.title ?? nsid}
+        />
+      }
+      description={
+        permissionSet?.detail ? (
+          <LangString
+            value={permissionSet['detail:lang']}
+            fallback={permissionSet.detail}
+          />
+        ) : permissionSet?.title ? (
+          nsid
+        ) : null
+      }
+    />
   )
 }
 

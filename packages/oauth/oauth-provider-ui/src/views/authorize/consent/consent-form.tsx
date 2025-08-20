@@ -1,3 +1,4 @@
+import type { PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { ReactNode, useState } from 'react'
 import { ClientImage } from '#/components/utils/client-image.tsx'
@@ -22,6 +23,7 @@ export type ConsentFormProps = Override<
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
     clientFirstParty: boolean
+    permissionSets: PermissionSets
 
     account: Account
     scope?: string
@@ -59,6 +61,7 @@ export function ConsentForm({
   clientMetadata,
   clientTrusted,
   clientFirstParty,
+  permissionSets,
 
   account,
   scope,
@@ -159,6 +162,7 @@ export function ConsentForm({
 
       <ScopeDescription
         scope={scope}
+        permissionSets={permissionSets}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}

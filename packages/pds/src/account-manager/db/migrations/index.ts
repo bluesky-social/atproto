@@ -11,3 +11,4 @@ export default {
   '004': mig004,
   '005': mig005,
 }
+export * as _20250820T131702051Z from './006-oauth-permission-sets'

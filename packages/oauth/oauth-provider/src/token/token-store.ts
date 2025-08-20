@@ -22,7 +22,9 @@ export type TokenInfo = {
 export type NewTokenData = Pick<
   TokenData,
   'clientAuth' | 'expiresAt' | 'updatedAt'
->
+> & {
+  permissionsScope: NonNullable<TokenData['permissionsScope']>
+}
 
 export interface TokenStore {
   createToken(
