@@ -1,5 +1,20 @@
 # @atproto/pds
 
+## 0.4.170
+
+### Patch Changes
+
+- [#4109](https://github.com/bluesky-social/atproto/pull/4109) [`3156ddf61`](https://github.com/bluesky-social/atproto/commit/3156ddf61519fede9ed148478f082184a1e3242e) Thanks [@foysalit](https://github.com/foysalit)! - Add batchId filter to tools.ozone.moderation.queryEvents endpoint
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12), [`3156ddf61`](https://github.com/bluesky-social/atproto/commit/3156ddf61519fede9ed148478f082184a1e3242e), [`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/repo@0.8.6
+  - @atproto/api@0.16.3
+  - @atproto/lexicon@0.4.13
+  - @atproto/aws@0.2.26
+  - @atproto/xrpc@0.7.2
+  - @atproto/xrpc-server@0.9.2
+  - @atproto-labs/xrpc-utils@0.0.19
+
 ## 0.4.169
 
 ### Patch Changes
