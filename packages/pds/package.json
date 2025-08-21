@@ -78,7 +78,6 @@
   "devDependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/bsky": "workspace:^",
-    "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:*",
     "@atproto/pds-entryway": "npm:@atproto/pds@0.3.0-entryway.3",
