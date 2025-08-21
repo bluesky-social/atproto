@@ -6,9 +6,11 @@
       "type": "query",
       "parameters": {
         "type": "params",
-        "required": ["code", "state"],
+        "required": ["state"],
         "properties": {
           "code": { "type": "string" },
+          "error": { "type": "string" },
+          "error_description": { "type": "string" },
           "state": { "type": "string" }
         }
       },

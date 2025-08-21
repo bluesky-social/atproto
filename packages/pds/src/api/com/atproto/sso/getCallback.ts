@@ -43,6 +43,21 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      if (params.error) {
+        const { error, error_description } = params;
+        const description = error_description && ` (${error_description})`;
+
+        log.error(`Callback response returned error: ${error}${description}`);
+
+        throw new InvalidRequestError(`Callback response returned error: ${error}${description}`);
+      }
+
+      if (!params.code) {
+        log.error(params, "Missing code in callback response");
+
+        throw new InvalidRequestError(`Missing code in callback response`);
+      }
+
       const { code, state } = params;
 
       if (!req.headers.cookie) {
