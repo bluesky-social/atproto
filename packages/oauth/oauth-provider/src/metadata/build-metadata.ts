@@ -8,7 +8,6 @@ import { Client } from '../client/client.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
 
 export type CustomMetadata = {
-  scopes_supported?: string[]
   authorization_details_types_supported?: string[]
   protected_resources?: string[]
 }
@@ -27,8 +26,14 @@ export function buildMetadata(
 
     scopes_supported: [
       'atproto',
-      //
-      ...(customMetadata?.scopes_supported ?? []),
+
+      // These serve as hint that this server supports the transitional scopes.
+      // This is not a specced behavior.
+      'transition:email',
+      'transition:generic',
+      'transition:chat.bsky',
+
+      // Other atproto scopes can't be enumerated as they are dynamic.
     ],
     subject_types_supported: [
       //

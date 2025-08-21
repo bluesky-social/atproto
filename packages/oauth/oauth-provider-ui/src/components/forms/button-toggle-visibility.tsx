@@ -26,7 +26,7 @@ export function ButtonToggleVisibility({
   return (
     <Button
       {...props}
-      square
+      shape="padded"
       onClick={(event) => {
         onClick?.(event)
         if (!event.defaultPrevented) toggleVisible()

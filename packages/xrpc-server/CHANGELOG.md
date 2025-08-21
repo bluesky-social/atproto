@@ -1,5 +1,23 @@
 # @atproto/xrpc-server
 
+## 0.9.2
+
+### Patch Changes
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/lexicon@0.4.13
+  - @atproto/xrpc@0.7.2
+
+## 0.9.1
+
+### Patch Changes
+
+- [#4073](https://github.com/bluesky-social/atproto/pull/4073) [`82e3e7bf6`](https://github.com/bluesky-social/atproto/commit/82e3e7bf6bd16ddee6bf684ad10160593b1b0671) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Throw `InternalServerError` instead of a `zod` validation error when handler output is not valid
+
+- [#4073](https://github.com/bluesky-social/atproto/pull/4073) [`82e3e7bf6`](https://github.com/bluesky-social/atproto/commit/82e3e7bf6bd16ddee6bf684ad10160593b1b0671) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor performance optimizations
+
+- [#4073](https://github.com/bluesky-social/atproto/pull/4073) [`82e3e7bf6`](https://github.com/bluesky-social/atproto/commit/82e3e7bf6bd16ddee6bf684ad10160593b1b0671) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `parseReqEncoding` utility
+
 ## 0.9.0
 
 ### Minor Changes

@@ -2,27 +2,27 @@ import { ComAtprotoServerGetSession } from '@atproto/api'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
-import { AccessOutput, AuthScope, OAuthOutput } from '../../../../auth-verifier'
+import { AccessOutput, OAuthOutput } from '../../../../auth-output'
+import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.authorization({
       additional: [AuthScope.SignupQueued],
+      authorize: () => {
+        // Always allowed. "email" access is checked in the handler.
+      },
     }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
-        // Allow proxying of dpop bound requests by using service auth instead
-        const headers =
-          auth.credentials.type === 'oauth' // DPoP bound tokens cannot be proxied
-            ? await ctx.entrywayAuthHeaders(
-                req,
-                auth.credentials.did,
-                'com.atproto.server.getSession',
-              )
-            : ctx.entrywayPassthruHeaders(req)
+        const headers = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          'com.atproto.server.getSession',
+        )
 
         const res = await ctx.entrywayAgent.com.atproto.server.getSession(
           undefined,
@@ -65,23 +65,16 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function output(
-  { credentials }: AccessOutput | OAuthOutput,
+  { credentials }: OAuthOutput | AccessOutput,
   data: ComAtprotoServerGetSession.OutputSchema,
 ): ComAtprotoServerGetSession.OutputSchema {
-  switch (credentials.type) {
-    case 'access':
-      return data
-
-    case 'oauth':
-      if (!credentials.oauthScopes.has('transition:email')) {
-        const { email, emailAuthFactor, emailConfirmed, ...rest } = data
-        return rest
-      }
-
-      return data
-
-    default:
-      // @ts-expect-error
-      throw new Error(`Unknown credentials type: ${credentials.type}`)
+  if (
+    credentials.type === 'oauth' &&
+    !credentials.permissions.allowsAccount({ attr: 'email', action: 'read' })
+  ) {
+    const { email, emailAuthFactor, emailConfirmed, ...rest } = data
+    return rest
   }
+
+  return data
 }

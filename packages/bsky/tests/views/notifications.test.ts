@@ -11,10 +11,13 @@ import {
   Preferences,
 } from '../../src/lexicon/types/app/bsky/notification/defs'
 import {
-  OutputSchema,
+  OutputSchema as ListActivitySubscriptionsOutputSchema,
   QueryParams,
 } from '../../src/lexicon/types/app/bsky/notification/listActivitySubscriptions'
-import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import {
+  Notification,
+  OutputSchema as ListNotificationsOutputSchema,
+} from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
 import { Namespaces } from '../../src/stash'
 import { forSnapshot, paginateAll } from '../_util'
@@ -452,7 +455,7 @@ describe('notification views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) =>
+    const results = (results: ListNotificationsOutputSchema[]) =>
       sortNotifs(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.notification.listNotifications(
@@ -744,7 +747,7 @@ describe('notification views', () => {
   })
 
   it('paginates filtered notifications', async () => {
-    const results = (results) =>
+    const results = (results: ListNotificationsOutputSchema[]) =>
       sortNotifs(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await agent.app.bsky.notification.listNotifications(
@@ -838,7 +841,7 @@ describe('notification views', () => {
       // At this point we won't have any notifications that already crossed the delay threshold.
       jest.setSystemTime(new Date(firstNotification.sortAt))
 
-      const results = (results) =>
+      const results = (results: ListNotificationsOutputSchema[]) =>
         sortNotifs(results.flatMap((res) => res.notifications))
       const paginator = async (cursor?: string) => {
         const res =
@@ -1388,8 +1391,12 @@ describe('notification views', () => {
       await put(actorDid, fred, val)
       await put(actorDid, blocked, val) // blocked is removed from the list.
 
-      const results = (results: OutputSchema[]) =>
-        sortProfiles(results.flatMap((res: OutputSchema) => res.subscriptions))
+      const results = (results: ListActivitySubscriptionsOutputSchema[]) =>
+        sortProfiles(
+          results.flatMap(
+            (res: ListActivitySubscriptionsOutputSchema) => res.subscriptions,
+          ),
+        )
       const paginator = async (cursor?: string) => {
         const { data } = await list(actorDid, { cursor, limit })
         return data

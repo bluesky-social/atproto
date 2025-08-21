@@ -23,7 +23,7 @@ import {
   SignedJwt,
   VerifyOptions,
   VerifyResult,
-  jwkValidator,
+  jwkSchema,
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from '@atproto/jwk'
@@ -241,6 +241,6 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     const kid = either(jwk.kid, inputKid)
     const use = jwk.use || 'sig'
 
-    return new JoseKey(jwkValidator.parse({ ...jwk, kid, use }))
+    return new JoseKey(jwkSchema.parse({ ...jwk, kid, use }))
   }
 }

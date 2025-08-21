@@ -43,6 +43,8 @@ import {
   GraphHydrator,
   ListAggs,
   ListItems,
+  ListMembershipState,
+  ListMembershipStates,
   ListViewerStates,
   Lists,
   RelationshipPair,
@@ -109,6 +111,7 @@ export type HydrationState = {
   postgates?: Postgates
   lists?: Lists
   listAggs?: ListAggs
+  listMemberships?: ListMembershipStates
   listViewers?: ListViewerStates
   listItems?: ListItems
   likes?: Likes
@@ -361,6 +364,45 @@ export class Hydrator {
     })
     const profileState = await this.hydrateProfiles(dids, ctx)
     return mergeStates(profileState, { listItems, ctx })
+  }
+
+  async hydrateListsMembership(
+    uris: string[],
+    did: string,
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const [
+      actorsHydrationState,
+      listsHydrationState,
+      { listitemUris: listItemUris },
+    ] = await Promise.all([
+      this.hydrateProfiles([did], ctx),
+      this.hydrateLists(uris, ctx),
+      this.dataplane.getListMembership({
+        actorDid: did,
+        listUris: uris,
+      }),
+    ])
+
+    // mapping uri -> did -> { actorListItemUri }
+    const listMemberships = new HydrationMap(
+      uris.map((uri, i) => {
+        const listItemUri = listItemUris[i]
+        return [
+          uri,
+          new HydrationMap<ListMembershipState>([
+            listItemUri
+              ? [did, { actorListItemUri: listItemUri }]
+              : [did, null],
+          ]),
+        ]
+      }),
+    )
+
+    return mergeManyStates(actorsHydrationState, listsHydrationState, {
+      listMemberships,
+      ctx,
+    })
   }
 
   // app.bsky.feed.defs#postView
@@ -1356,6 +1398,7 @@ export const mergeStates = (
     postgates: mergeMaps(stateA.postgates, stateB.postgates),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listAggs: mergeMaps(stateA.listAggs, stateB.listAggs),
+    listMemberships: mergeMaps(stateA.listMemberships, stateB.listMemberships),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
     likes: mergeMaps(stateA.likes, stateB.likes),

@@ -64,6 +64,7 @@ import {
   ReversibleModerationEvent,
 } from './types'
 import {
+  dateFromDbDatetime,
   formatLabel,
   formatLabelRow,
   getPdsAgentForRepo,
@@ -187,6 +188,7 @@ export class ModerationService {
     policies?: string[]
     modTool?: string[]
     ageAssuranceState?: string
+    batchId?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -210,6 +212,7 @@ export class ModerationService {
       policies,
       modTool,
       ageAssuranceState,
+      batchId,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -314,6 +317,11 @@ export class ModerationService {
       builder = builder
         .where('modTool', 'is not', null)
         .where(sql`("modTool" ->> 'name')`, 'in', modTool)
+    }
+    if (batchId) {
+      builder = builder
+        .where('modTool', 'is not', null)
+        .where(sql`("modTool" -> 'meta' ->> 'batchId')`, '=', batchId)
     }
     if (ageAssuranceState) {
       builder = builder
@@ -1544,6 +1552,29 @@ export class ModerationService {
 
     // Convert map values to an array and return
     return Array.from(statsMap.values())
+  }
+
+  async getAccountTimeline(did: string) {
+    const { ref } = this.db.db.dynamic
+    // Without the subquery approach, pg tries to do the sort operation first which can be super expensive when a subjectDid has too many entries
+    const result = await this.db.db
+      .selectFrom(
+        this.db.db
+          .selectFrom('moderation_event')
+          .where('subjectDid', '=', did)
+          .select([
+            dateFromDbDatetime(ref('createdAt')).as('day'),
+            'subjectUri',
+            'action',
+            sql<number>`count(*)`.as('count'),
+          ])
+          .groupBy(['day', 'subjectUri', 'action'])
+          .as('results'),
+      )
+      .selectAll()
+      .orderBy('day', 'desc')
+      .execute()
+    return result
   }
 }
 

@@ -1,5 +1,43 @@
 # @atproto/api
 
+## 0.16.3
+
+### Patch Changes
+
+- [#4109](https://github.com/bluesky-social/atproto/pull/4109) [`3156ddf61`](https://github.com/bluesky-social/atproto/commit/3156ddf61519fede9ed148478f082184a1e3242e) Thanks [@foysalit](https://github.com/foysalit)! - Add batchId filter to tools.ozone.moderation.queryEvents endpoint
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/lexicon@0.4.13
+  - @atproto/xrpc@0.7.2
+
+## 0.16.2
+
+### Patch Changes
+
+- [#4081](https://github.com/bluesky-social/atproto/pull/4081) [`c370d933b`](https://github.com/bluesky-social/atproto/commit/c370d933b76b4e15b83a82b40d1b6a32bd54add6) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Adds `purpose` filtering to `app.bsky.graph.getLists`.
+  Adds `app.bsky.graph.getListsWithMembership`.
+  Adds `app.bsky.graph.getStarterPacksWithMembership`.
+
+## 0.16.1
+
+### Patch Changes
+
+- [#3927](https://github.com/bluesky-social/atproto/pull/3927) [`171efadb4`](https://github.com/bluesky-social/atproto/commit/171efadb49f842aa8ff3bf9d790caa6e0e0456ef) Thanks [@foysalit](https://github.com/foysalit)! - Introduces ozone event timeline lexicons
+
+## 0.16.0
+
+### Minor Changes
+
+- [#4072](https://github.com/bluesky-social/atproto/pull/4072) [`9751eebd7`](https://github.com/bluesky-social/atproto/commit/9751eebd718066984a91046b63e410caecd64022) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Remove app.bsky.unspecced.checkHandleAvailability, add com.atproto.temp.checkHandleAvailability
+
+## 0.15.27
+
+### Patch Changes
+
+- [#4058](https://github.com/bluesky-social/atproto/pull/4058) [`8787fd9de`](https://github.com/bluesky-social/atproto/commit/8787fd9dea769716412c9883e355cd496664bc6e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Only allow initiating age assurance flow from certain states, return `InvalidInitiation` error if violated.
+
+- [#4049](https://github.com/bluesky-social/atproto/pull/4049) [`dc84906c8`](https://github.com/bluesky-social/atproto/commit/dc84906c865e8a97939a909dd3f75decde538363) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - app.bsky.unspecced.checkHandleAvailability lexicon
+
 ## 0.15.26
 
 ### Patch Changes

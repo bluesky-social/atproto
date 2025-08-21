@@ -111,36 +111,41 @@ export const jwkUnknownKeySchema = jwkBaseSchema.extend({
     .refine((v) => v !== 'RSA' && v !== 'EC' && v !== 'OKP' && v !== 'oct'),
 })
 
-export const jwkSchema = z.union([
-  jwkUnknownKeySchema,
-  jwkRsaKeySchema,
-  jwkEcKeySchema,
-  jwkEcSecp256k1KeySchema,
-  jwkOkpKeySchema,
-  jwkSymKeySchema,
-])
+export const jwkSchema = z
+  .union([
+    jwkUnknownKeySchema,
+    jwkRsaKeySchema,
+    jwkEcKeySchema,
+    jwkEcSecp256k1KeySchema,
+    jwkOkpKeySchema,
+    jwkSymKeySchema,
+  ])
+  .refine(
+    (k) =>
+      // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
+      // > The "use" parameter is employed to indicate whether a public key is
+      // > used for encrypting data or verifying the signature on data.
+      !k.use ||
+      !k.key_ops ||
+      k.key_ops.every(
+        k.use === 'sig' ? (o) => o === 'verify' : (o) => o === 'decrypt',
+      ),
+    {
+      message: 'use and key_ops must be consistent',
+      path: ['key_ops'],
+    },
+  )
 
 export type Jwk = z.infer<typeof jwkSchema>
 
+/** @deprecated use {@link jwkSchema} */
 export const jwkValidator = jwkSchema
-  .refine((k) => k.use != null || k.key_ops != null, 'use or key_ops required')
-  .refine(
-    (k) =>
-      !k.use ||
-      !k.key_ops ||
-      k.key_ops.every((o) =>
-        k.use === 'sig'
-          ? o === 'sign' || o === 'verify'
-          : o === 'encrypt' || o === 'decrypt',
-      ),
-    'use and key_ops must be consistent',
-  )
 
-export const jwkPubSchema = jwkValidator
+export const jwkPubSchema = jwkSchema
   .refine((k) => k.kid != null, 'kid is required')
   .refine((k) => !('k' in k) && !('d' in k), 'private key not allowed')
 
-export const jwkPrivateSchema = jwkValidator.refine(
+export const jwkPrivateSchema = jwkSchema.refine(
   (k) => ('k' in k && k.k != null) || ('d' in k && k.d != null),
   'private key required',
 )

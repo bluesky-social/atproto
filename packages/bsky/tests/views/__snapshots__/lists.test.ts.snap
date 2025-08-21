@@ -139,8 +139,8 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "listItemCount": 0,
-    "name": "cool curate list",
-    "purpose": "app.bsky.graph.defs#curatelist",
+    "name": "mod2",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
   },
   Object {
@@ -157,10 +157,86 @@ Array [
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "listItemCount": 3,
-    "name": "blah curate list!",
-    "purpose": "app.bsky.graph.defs#curatelist",
+    "listItemCount": 0,
+    "name": "mod1",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(1)",
+  },
+  Object {
+    "cid": "cids(2)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 2,
+    "name": "mod0",
+    "purpose": "app.bsky.graph.defs#modlist",
+    "uri": "record(2)",
+  },
+  Object {
+    "cid": "cids(3)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur2",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(3)",
+  },
+  Object {
+    "cid": "cids(4)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur1",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(4)",
+  },
+  Object {
+    "cid": "cids(5)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 3,
+    "name": "cur0",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(5)",
   },
 ]
 `;
@@ -471,8 +547,8 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "listItemCount": 0,
-    "name": "cool curate list",
-    "purpose": "app.bsky.graph.defs#curatelist",
+    "name": "mod2",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
   },
   Object {
@@ -489,10 +565,86 @@ Array [
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
-    "listItemCount": 3,
-    "name": "blah curate list!",
-    "purpose": "app.bsky.graph.defs#curatelist",
+    "listItemCount": 0,
+    "name": "mod1",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(1)",
+  },
+  Object {
+    "cid": "cids(2)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 2,
+    "name": "mod0",
+    "purpose": "app.bsky.graph.defs#modlist",
+    "uri": "record(2)",
+  },
+  Object {
+    "cid": "cids(3)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur2",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(3)",
+  },
+  Object {
+    "cid": "cids(4)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur1",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(4)",
+  },
+  Object {
+    "cid": "cids(5)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 3,
+    "name": "cur0",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(5)",
   },
 ]
 `;

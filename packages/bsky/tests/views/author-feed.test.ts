@@ -13,6 +13,7 @@ import {
   isPostView,
   isReasonPin,
 } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { OutputSchema as GetAuthorFeedOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import {
   ReplyRef,
   isRecord,
@@ -138,7 +139,8 @@ describe('pds author feed views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
+    const results = (results: GetAuthorFeedOutputSchema[]) =>
+      results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getAuthorFeed(
         {

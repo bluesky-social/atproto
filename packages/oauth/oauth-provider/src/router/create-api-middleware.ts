@@ -398,8 +398,13 @@ export function createApiMiddleware<
   router.use(
     apiRoute({
       method: 'POST',
-      endpoint: '/accept',
-      schema: z.object({ sub: z.union([subSchema, signedJwtSchema]) }).strict(),
+      endpoint: '/consent',
+      schema: z
+        .object({
+          sub: z.union([subSchema, signedJwtSchema]),
+          scope: z.string().optional(),
+        })
+        .strict(),
       async handler(req, res) {
         if (!this.requestUri) {
           throw new InvalidRequestError(
@@ -432,6 +437,7 @@ export function createApiMiddleware<
               account,
               this.deviceId,
               this.deviceMetadata,
+              this.input.scope,
             )
 
             const clientData = authorizedClients.get(clientId)
@@ -459,7 +465,7 @@ export function createApiMiddleware<
             throw AuthorizationError.from(parameters, err)
           }
         } catch (err) {
-          onError?.(req, res, err, 'Failed to accept authorization request')
+          onError?.(req, res, err, 'Failed to consent authorization request')
 
           // If any error happened (unauthenticated, invalid request, etc.),
           // lets make sure the request can no longer be used.

@@ -56,6 +56,11 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "^5.8.3"
   },
+  "pnpm": {
+    "overrides": {
+      "cookie": "^0.7.2"
+    }
+  },
   "workspaces": {
     "packages": [
       "packages/*",

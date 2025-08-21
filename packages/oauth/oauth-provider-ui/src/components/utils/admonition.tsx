@@ -1,52 +1,59 @@
 import { clsx } from 'clsx'
-import { JSX, memo } from 'react'
+import { JSX, ReactNode, memo } from 'react'
 import { Override } from '../../lib/util.ts'
-import { AlertIcon, EyeIcon } from './icons.tsx'
+import { AlertIcon, CircleInfoIcon } from './icons.tsx'
 
 export type AdmonitionProps = Override<
   JSX.IntrinsicElements['div'],
   {
-    role: 'alert' | 'status' | 'info'
+    prominent?: boolean
+    title?: ReactNode
+    append?: ReactNode
+    type?: 'alert' | 'status'
   }
 >
 
 export const Admonition = memo(function Admonition({
-  role = 'alert',
+  prominent,
+  title,
+  type = 'status',
+  append,
+
+  // div
   children,
   className,
   ...props
 }: AdmonitionProps) {
+  const Icon = type === 'alert' ? AlertIcon : CircleInfoIcon
+  const titleColor = prominent
+    ? 'text-inherit'
+    : type === 'alert'
+      ? 'text-warning'
+      : 'text-primary'
   return (
     <div
       {...props}
-      role={role}
+      role={props.role ?? type}
       className={clsx(
         'flex flex-row',
         'gap-2',
         'p-3',
         'rounded-lg',
-        'border',
-        'border-gray-300 dark:border-gray-700',
-        role === 'alert' && 'bg-error text-error-contrast',
+        prominent
+          ? type === 'alert'
+            ? 'bg-warning text-warning-contrast'
+            : 'bg-slate-400 text-slate-900'
+          : 'border border-slate-300 dark:border-slate-700',
         className,
       )}
     >
-      {role === 'info' ? (
-        <EyeIcon
-          aria-hidden
-          className={clsx('h-6 w-6 fill-current', 'text-primary')}
-        />
-      ) : (
-        <AlertIcon
-          aria-hidden
-          className={clsx(
-            'h-6 w-6 fill-current',
-            role === 'alert' ? 'text-inherit' : 'text-primary',
-          )}
-        />
-      )}
+      <Icon aria-hidden className={clsx('size-6 fill-current', titleColor)} />
 
-      <div className="flex flex-1 flex-col">{children}</div>
+      <div className="flex flex-1 flex-col justify-center space-y-1">
+        {title && <h3 className={`text-md ${titleColor}`}>{title}</h3>}
+        {children && <div className="text-sm">{children}</div>}
+        {append}
+      </div>
     </div>
   )
 })

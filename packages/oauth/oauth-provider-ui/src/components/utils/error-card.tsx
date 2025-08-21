@@ -48,7 +48,8 @@ export const ErrorCard = memo(function ErrorCard({
 
   return (
     <Admonition
-      role="alert"
+      prominent
+      {...props}
       aria-controls={detailsDivId}
       tabIndex={0}
       onKeyDown={(event) => {
@@ -63,10 +64,9 @@ export const ErrorCard = memo(function ErrorCard({
           setInputCount((c) => c + 1)
         }
       }}
-      {...props}
+      type="alert"
+      title={<ErrorMessage error={parsedError} />}
     >
-      <ErrorMessage error={parsedError} />
-
       {children && <div className="mt-2">{children}</div>}
 
       <div hidden={!showDetails} id={detailsDivId} aria-hidden={!showDetails}>

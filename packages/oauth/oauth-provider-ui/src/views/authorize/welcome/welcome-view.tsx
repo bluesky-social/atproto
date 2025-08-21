@@ -42,7 +42,7 @@ export function WelcomeView({
           color={onSignUp ? undefined : 'primary'}
           onClick={onSignIn}
         >
-          <Trans>Sign in</Trans>
+          <Trans context="verb">Sign in</Trans>
         </Button>
       )}
 

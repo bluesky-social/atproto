@@ -3,7 +3,11 @@ import { AtpAgent, asPredicate } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { validateRecord as validateProfileRecord } from '../../src/lexicon/types/app/bsky/actor/profile'
-import { forSnapshot } from '../_util'
+import {
+  OutputSchema as GetStarterPacksWithMembershipOutputSchema,
+  StarterPackWithMembership,
+} from '../../src/lexicon/types/app/bsky/graph/getStarterPacksWithMembership'
+import { forSnapshot, paginateAll } from '../_util'
 
 const isValidProfile = asPredicate(validateProfileRecord)
 
@@ -24,9 +28,7 @@ describe('starter packs', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-  })
 
-  beforeAll(async () => {
     const feedgen = await sc.createFeedGen(
       sc.dids.alice,
       'did:web:example.com',
@@ -260,6 +262,133 @@ describe('starter packs', () => {
       expect(data.starterPacks).toMatchObject([
         expect.objectContaining({ uri: sp4.uriStr }),
       ])
+    })
+  })
+
+  describe('starter pack membership', () => {
+    const membershipsUris = (lwms: StarterPackWithMembership[]): string[] =>
+      lwms
+        .map((spwm) => spwm.listItem?.uri)
+        .filter((li): li is string => typeof li === 'string')
+
+    it('returns all SPs by the user', async () => {
+      const view = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.bob },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyGraphGetStarterPacksWithMembership,
+          ),
+        },
+      )
+      expect(view.data.starterPacksWithMembership.length).toBe(3)
+    })
+
+    it('finds self membership', async () => {
+      const view = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.alice },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyGraphGetStarterPacksWithMembership,
+          ),
+        },
+      )
+
+      expect(view.data.starterPacksWithMembership.length).toBe(3)
+      const memberships = membershipsUris(view.data.starterPacksWithMembership)
+      expect(memberships.length).toBe(1)
+    })
+
+    it(`finds other user's membership`, async () => {
+      const view = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.bob },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyGraphGetStarterPacksWithMembership,
+          ),
+        },
+      )
+
+      expect(view.data.starterPacksWithMembership.length).toBe(3)
+      const memberships = membershipsUris(view.data.starterPacksWithMembership)
+      expect(memberships.length).toBe(1)
+    })
+
+    it('finds that user has no memberships', async () => {
+      // @NOTE: dan is not in bob's SP.
+      const view = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.dan },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyGraphGetStarterPacksWithMembership,
+          ),
+        },
+      )
+
+      expect(view.data.starterPacksWithMembership.length).toBe(1)
+      const memberships = membershipsUris(view.data.starterPacksWithMembership)
+      expect(memberships.length).toBe(0)
+    })
+
+    it('finds empty list of SPs if user has none', async () => {
+      const view = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.bob },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.carol,
+            ids.AppBskyGraphGetStarterPacksWithMembership,
+          ),
+        },
+      )
+
+      expect(view.data.starterPacksWithMembership.length).toBe(0)
+    })
+
+    it('paginates SPs with memberships', async () => {
+      const viewer = sc.dids.alice
+      const actor = sc.dids.bob
+
+      const results = (out: GetStarterPacksWithMembershipOutputSchema[]) =>
+        out.flatMap((res) => res.starterPacksWithMembership)
+      const paginator = async (cursor?: string) => {
+        const res = await agent.app.bsky.graph.getStarterPacksWithMembership(
+          { actor, limit: 2, cursor },
+          {
+            headers: await network.serviceHeaders(
+              viewer,
+              ids.AppBskyGraphGetStarterPacksWithMembership,
+            ),
+          },
+        )
+        return res.data
+      }
+
+      const paginatedAll = await paginateAll(paginator)
+      paginatedAll.forEach((res) =>
+        expect(res.starterPacksWithMembership.length).toBeLessThanOrEqual(2),
+      )
+
+      const full = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor },
+        {
+          headers: await network.serviceHeaders(
+            viewer,
+            ids.AppBskyGraphGetStarterPacksWithMembership,
+          ),
+        },
+      )
+      expect(full.data.starterPacksWithMembership.length).toBe(3)
+
+      const sortedFull = results([full.data]).sort((a, b) =>
+        a.starterPack.uri > b.starterPack.uri ? 1 : -1,
+      )
+      const sortedPaginated = results(paginatedAll).sort((a, b) =>
+        a.starterPack.uri > b.starterPack.uri ? 1 : -1,
+      )
+      expect(sortedPaginated).toEqual(sortedFull)
     })
   })
 })

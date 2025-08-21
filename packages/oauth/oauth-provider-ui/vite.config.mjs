@@ -37,11 +37,11 @@ export default defineConfig({
       plugins: [bundleManifest()],
     },
     commonjsOptions: {
-      include: [/node_modules/, /oauth-provider-api/],
+      include: [/node_modules/, /oauth-scopes/, /oauth-provider-api/],
     },
   },
   optimizeDeps: {
     // Needed because this is a monorepo and it exposes CommonJS
-    include: ['@atproto/oauth-provider-api'],
+    include: ['@atproto/oauth-provider-api', '@atproto/oauth-scopes'],
   },
 })

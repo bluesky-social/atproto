@@ -1,5 +1,15 @@
 # @atproto/jwk
 
+## 0.5.0
+
+### Minor Changes
+
+- [#4101](https://github.com/bluesky-social/atproto/pull/4101) [`8a88e2c15`](https://github.com/bluesky-social/atproto/commit/8a88e2c15451f5e8239400eeb277ad31d178b8e6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent inconsistent use of `use` and `key_ops` in JWK
+
+### Patch Changes
+
+- [#4101](https://github.com/bluesky-social/atproto/pull/4101) [`8a88e2c15`](https://github.com/bluesky-social/atproto/commit/8a88e2c15451f5e8239400eeb277ad31d178b8e6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove requirement for JWK to define either `use` or `key_ops`.
+
 ## 0.4.0
 
 ### Minor Changes

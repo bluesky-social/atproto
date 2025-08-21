@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
+import { OutputSchema as GetLikesOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getLikes'
 import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds like views', () => {
@@ -71,7 +72,8 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.likes)
+    const results = (results: GetLikesOutputSchema[]) =>
+      results.flatMap((res) => res.likes)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getLikes(
         {

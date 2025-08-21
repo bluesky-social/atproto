@@ -1,3 +1,5 @@
+import { ForbiddenError } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -5,8 +7,14 @@ import { resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAppPassword({
-    auth: ctx.authVerifier.accessFull({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
+      scopes: ACCESS_FULL,
+      authorize: () => {
+        throw new ForbiddenError(
+          'OAuth credentials are not supported for this endpoint',
+        )
+      },
     }),
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {

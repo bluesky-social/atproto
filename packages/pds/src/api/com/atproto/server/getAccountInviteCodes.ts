@@ -1,5 +1,6 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
+import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -8,7 +9,15 @@ import { genInvCodes } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
-    auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
+    auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+      scopes: ACCESS_FULL,
+      authorize: () => {
+        throw new ForbiddenError(
+          'OAuth credentials are not supported for this endpoint',
+        )
+      },
+    }),
     handler: async ({ params, auth, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(
