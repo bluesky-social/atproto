@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "build": "tsc --build tsconfig.json",
+    "build": "tsc --build tsconfig.build.json",
     "codegen": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/sync/getRecord.json"
   },
   "homepage": "https://atproto.com",
@@ -39,7 +39,6 @@
   "devDependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
-    "@atproto/dev-env": "workspace:^",
     "jest": "^28.1.2",
     "typescript": "^5.6.3"
   }
