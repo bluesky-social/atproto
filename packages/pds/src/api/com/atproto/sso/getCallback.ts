@@ -90,7 +90,7 @@ export default function (server: Server, ctx: AppContext) {
         );
       }
 
-      log.info(idp);
+      log.info(idp.name, "IDP associated with the callback");
 
       if (!idp.metadata && idp.discoverable) {
         idp.metadata = await ctx.ssoManager.fetchMetadata(new URL(idp.issuer));
@@ -111,8 +111,6 @@ export default function (server: Server, ctx: AppContext) {
         client_id: idp.clientId,
       });
 
-      log.info(idp, "IDP");
-
       if (idp.clientSecret && idp.metadata.authMethods?.includes('client_secret_post')) {
         data.append("client_secret", idp.clientSecret);
       }
@@ -120,7 +118,6 @@ export default function (server: Server, ctx: AppContext) {
       if (callback.codeVerifier) {
         data.append("code_verifier", callback.codeVerifier);
       }
-
 
       log.info([...data.entries()], `Token endpoint request`);
 
@@ -148,8 +145,6 @@ export default function (server: Server, ctx: AppContext) {
             `Failed to fetch token endpoint: ${res.status} ${res.statusText} – ${text}`
           );
         }
-
-        log.info(`Token endpoint request successful`);
       } catch (err) {
         log.error(err, `Failed to fetch token endpoint`);
 
@@ -164,8 +159,6 @@ export default function (server: Server, ctx: AppContext) {
 
           return oauthResponseSchema.parse(token);
         });
-
-        log.info(`Fetching OAuth response successful`);
       } catch (err) {
         log.error(err, `Invalid JSON from token endpoint`);
 
@@ -195,8 +188,6 @@ export default function (server: Server, ctx: AppContext) {
           log.info(tokenClaims, `Token endpoint claims`);
 
           claims = oidcClaimsSchema.parse(tokenClaims);
-
-          log.info(`Parsing ID token claims successful`);
         } catch (err) {
           log.error(err, `Invalid JSON from token endpoint`);
 
@@ -223,8 +214,6 @@ export default function (server: Server, ctx: AppContext) {
               `Failed to fetch userinfo endpoint: ${res.status} ${res.statusText} – ${text}`
             );
           }
-
-          log.info(`Fetching userinfo endpoint successful`);
         } catch (err) {
           log.error(err, `Failed to fetch userinfo endpoint`);
 
@@ -249,23 +238,14 @@ export default function (server: Server, ctx: AppContext) {
           );
         }
 
-        log.info(`No error found in WWW-Authenticate header`);
-
         try {
-          const userinfoClaims = await res.json().then(userinfo => {
-            log.info(userinfo, `Userinfo endpoint response`);
-
-            return oidcClaimsSchema.parse(userinfo);
-          });
-
-          log.info(userinfoClaims, `Userinfo endpoint claims`);
+          const userinfoClaims = await res.json()
+            .then(userinfo => oidcClaimsSchema.parse(userinfo));
 
           claims = {
             ...claims,
             ...userinfoClaims,
           };
-
-          log.info(`Parsing userinfo claims successful`);
         } catch (err) {
           log.error(err, `Invalid JSON from userinfo endpoint`);
 
@@ -273,11 +253,13 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      log.info(claims, `Claims found`);
+
       const sub = claims?.[idp.metadata.mappings.sub];
 
       if (!sub) {
         throw new InternalServerError(
-          `Absent subject in claims: ${JSON.stringify(claims, null, 4)}`,
+          `Absent subject in claims: ${JSON.stringify(claims, null, 2)}`,
         );
       }
 
@@ -286,6 +268,8 @@ export default function (server: Server, ctx: AppContext) {
       const accountClaims = await ctx.ssoManager.getAccountClaims(sub, idp.id);
 
       if (accountClaims) {
+        log.info(accountClaims, `Claims associated with account found`);
+
         account = await ctx.accountManager.getAccount(
           accountClaims.did.toLowerCase(),
           {
@@ -302,7 +286,7 @@ export default function (server: Server, ctx: AppContext) {
           );
         }
 
-        log.info(account.handle, `Found existing account`);
+        log.info(account, `Found existing account`);
       }
 
       if (!account) {
@@ -323,54 +307,7 @@ export default function (server: Server, ctx: AppContext) {
         let email = idp.metadata.mappings.email ? claims?.[idp.metadata.mappings.email] : claims?.["email"];
 
         if (idp.issuer === "https://github.com") {
-          try {
-            res = await fetch("https://api.github.com/user/emails", {
-              method: "GET",
-              headers: {
-                "Authorization": `Bearer ${body.access_token}`,
-                "Accept": "application/json",
-              },
-            });
-
-            if (!res.ok) {
-              const text = await res.text().catch(() => "<unreadable body>");
-
-              throw new InternalServerError(
-                `Failed to fetch email endpoint: ${res.status} ${res.statusText} – ${text}`
-              );
-            }
-
-            log.info(`Fetching email endpoint successful`);
-          } catch (err) {
-            log.error(err, `Failed to fetch email endpoint`);
-
-            throw new InternalServerError(`Failed to fetch email endpoint`);
-          }
-
-          try {
-            const emails = await res.json().then(emails => {
-              log.info(emails, `Email endpoint response`);
-
-              return GitHubEmailsSchema.parse(emails);
-            });
-
-            log.info(emails, `Email endpoint response`);
-
-            const primary = emails.find(email => email.primary && email.verified);
-
-            if (!primary) {
-              throw new InvalidRequestError(`No primary verified Github email`);
-            }
-
-            email = primary.email;
-
-            log.info(`Parsing emails successful`);
-          } catch (err) {
-            log.error(err, `Invalid JSON from userinfo endpoint`);
-
-            throw new InternalServerError(`Invalid JSON from userinfo endpoint`);
-          }
-
+          email = await getGithubEmail(body.access_token);
         }
 
         if (typeof email !== "string") {
@@ -391,7 +328,6 @@ export default function (server: Server, ctx: AppContext) {
 
         log.info(data, `Registering new account`);
 
-        // const { handle, did, didDoc, accessJwt, refreshJwt } =
         const { did } = await createAccount(ctx, auth, {
           ...data,
           did: undefined,
@@ -559,3 +495,46 @@ const createAccount = async (
     refreshJwt: creds.refreshJwt,
   };
 };
+
+const getGithubEmail = async (accessToken: string) => {
+  let res: Response | null = null;
+
+  try {
+    res = await fetch("https://api.github.com/user/emails", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Accept": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "<unreadable body>");
+
+      throw new InternalServerError(
+        `Failed to fetch email endpoint: ${res.status} ${res.statusText} – ${text}`
+      );
+    }
+  } catch (err) {
+    log.error(err, `Failed to fetch email endpoint`);
+
+    throw new InternalServerError(`Failed to fetch email endpoint`);
+  }
+
+  try {
+    const emails = await res.json()
+      .then(emails => GitHubEmailsSchema.parse(emails));
+
+    const primary = emails.find(email => email.primary && email.verified);
+
+    if (!primary) {
+      throw new InvalidRequestError(`No primary verified Github email`);
+    }
+
+    return primary.email;
+  } catch (err) {
+    log.error(err, `Invalid JSON from userinfo endpoint`);
+
+    throw new InternalServerError(`Invalid JSON from userinfo endpoint`);
+  }
+}
