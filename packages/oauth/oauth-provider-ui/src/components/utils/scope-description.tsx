@@ -19,6 +19,7 @@ import { DescriptionCard } from './description-card'
 import {
   AccountOutlinedIcon,
   AtSymbolIcon,
+  AtomIcon,
   AuthenticateIcon,
   ButterflyIcon,
   ChatIcon,
@@ -143,8 +144,7 @@ function PermissionSetPermissions({
         ) : isBskyChatNsid(nsid) ? (
           <ChatIcon className="size-6" />
         ) : (
-          // @TODO generic icon
-          <ImageIcon className="size-6" />
+          <AtomIcon className="size-6" />
         )
       }
       title={
