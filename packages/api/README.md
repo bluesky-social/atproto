@@ -194,7 +194,7 @@ if (AppBskyFeedPost.isRecord(post)) {
 
 Some records (ie posts) use the `app.bsky.richtext` lexicon. At the moment richtext is only used for links and mentions, but it will be extended over time to include bold, italic, and so on.
 
-ℹ️ It is **strongly** recommended to use this package's `RichText` library. Javascript encodes strings in utf16 while the protocol (and most other programming environments) use utf8. Converting between the two is challenging, but `RichText` handles that for you.
+ℹ️ It is **strongly** recommended to use this package's `RichText` library. JavaScript encodes strings in utf16 while the protocol (and most other programming environments) use utf8. Converting between the two is challenging, but `RichText` handles that for you.
 
 ```typescript
 import { RichText } from '@atproto/api'
