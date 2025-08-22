@@ -27,7 +27,6 @@ import {
 import {
   Fetch,
   isUnicastIp,
-  loggedFetch,
   safeFetchWrap,
   unicastLookup,
 } from '@atproto-labs/fetch-node'
@@ -47,7 +46,6 @@ import { Crawlers } from './crawlers'
 import { DidSqliteCache } from './did-cache'
 import { DiskBlobStore } from './disk-blobstore'
 import { ImageUrlBuilder } from './image/image-url-builder'
-import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
@@ -296,26 +294,59 @@ export class AppContext {
     // A fetch() function that protects against SSRF attacks, large responses &
     // known bad domains. This function can safely be used to fetch user
     // provided URLs (unless "disableSsrfProtection" is true, of course).
-    const safeFetch = loggedFetch({
-      fetch: safeFetchWrap({
-        // Using globalThis.fetch allows safeFetchWrap to use keep-alive. See
-        // unicastFetchWrap().
-        fetch: globalThis.fetch,
-        allowIpHost: false,
-        responseMaxSize: cfg.fetch.maxResponseSize,
-        ssrfProtection: !cfg.fetch.disableSsrfProtection,
-      }),
-      logRequest: ({ method, url }) => {
-        fetchLogger.debug({ method, uri: url }, 'fetch')
-      },
-      logResponse: false,
-      logError: false,
+    //
+    // @NOTE **DO NO** wrap this fetch with any logging or other transforms as
+    // this would prevent the use of explicit redirect from working. Indeed, we
+    // want the allowImplicitRedirect to be false here, to avoid users of the
+    // safeFetch function to unwittingly use the default "follow" redirect mode.
+    // However, when wrapping the fetch function, and in particular when that
+    // wrapper creates an intermediate Request object, the
+    // explicitRedirectCheckRequestTransform that checks whether the Request
+    // redirect mode is explicit or not will not be able to distinguish an
+    // explicit "redirect" option from the default being applied, effectively
+    // preventing the use of `redirect: "follow"`, which **is** required when
+    // the safeFetch function is used from the lexicon resolver.
+    //
+    // One *could* be tempted to implement logging by providing a custom fetch
+    // function that wraps the original fetch with logging logic. That has
+    // however another undesired side effect: it will prevent the use of
+    // "keep-alive" connection on older NodeJS version (<20). Since this package
+    // still supports Node18, we won't be doing that either.
+    const safeFetch = safeFetchWrap({
+      allowIpHost: false,
+      allowImplicitRedirect: false,
+      responseMaxSize: cfg.fetch.maxResponseSize,
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
     })
 
-    const lexiconResolver: LexiconResolver = buildLexiconResolver({
+    const baseLexiconResolver = buildLexiconResolver({
       idResolver,
       rpc: { fetch: safeFetch },
     })
+
+    const getLexiconAuthority = (_nsid: string): string | undefined => {
+      // At the moment, only a single override strategy is supported by
+      // specifying a did through which all the lexicons will be resolved. We
+      // might need more granular control in the future (e.g. per-nsid
+      // overrides)
+      return cfg.lexicon.didAuthority
+    }
+
+    const lexiconResolver: LexiconResolver = async (nsid) => {
+      return baseLexiconResolver(nsid, {
+        didAuthority: getLexiconAuthority(nsid.toString()),
+        // Right now, the lexicon resolver is only used by the oauth-provider,
+        // which caches the responses internally (through the LexiconStore).
+        // Since the `LexiconResolver` does not allow specifying a
+        // `forceRefresh` option, we hard code it here. Should PDSs need to
+        // resolve lexicons for other purposes (e.g. record validation), we'd
+        // probably want to either implement caching as built into the
+        // lexiconResolver, or allow the caller (oauth-provider, etc.) to
+        // specify a `forceRefresh` option by altering the LexiconResolver
+        // interface.
+        forceRefresh: true,
+      })
+    }
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({

@@ -6,12 +6,13 @@ import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestBsky } from './bsky'
 import { EXAMPLE_LABELER } from './const'
 import { IntrospectServer } from './introspect'
+import { LexiconAuthorityProfile } from './lexicon-authority-profile'
 import { TestNetworkNoAppView } from './network-no-appview'
 import { TestOzone } from './ozone'
 import { OzoneServiceProfile } from './ozone-service-profile'
 import { TestPds } from './pds'
 import { TestPlc } from './plc'
-import { TestServerParams } from './types'
+import { PdsConfig, TestServerParams } from './types'
 import { mockNetworkUtilities } from './util'
 
 const ADMIN_USERNAME = 'admin'
@@ -20,6 +21,7 @@ const ADMIN_PASSWORD = 'admin-pass'
 export class TestNetwork extends TestNetworkNoAppView {
   constructor(
     public plc: TestPlc,
+    public pdsAlt: TestPds,
     public pds: TestPds,
     public bsky: TestBsky,
     public ozone: TestOzone,
@@ -42,18 +44,23 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
+    const pdsAltPort = params.pdsAlt?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
 
-    const thirdPartyPdsProps = {
+    const pdsAlt = await TestPds.create({
       didPlcUrl: plc.url,
-      ...params.pds,
+      ...params.pdsAlt,
       inviteRequired: false,
-      port: await getPort(),
-    }
-    const thirdPartyPds = await TestPds.create(thirdPartyPdsProps)
-    const ozoneServiceProfile = new OzoneServiceProfile(thirdPartyPds)
+      port: pdsAltPort,
+    })
+
+    // @TODO (?) rework the Labeller so that it lives at the third party pds
+    // location?
+    const ozoneServiceProfile = new OzoneServiceProfile(pdsAlt)
     const { did: ozoneDid, key: ozoneKey } =
       await ozoneServiceProfile.createDidAndKey()
+
+    const lexiconAuthorityProfile = await LexiconAuthorityProfile.create(pdsAlt)
 
     const bsky = await TestBsky.create({
       port: bskyPort,
@@ -69,13 +76,14 @@ export class TestNetwork extends TestNetworkNoAppView {
     })
 
     const modServiceUrl = `http://localhost:${ozonePort}`
-    const pdsProps = {
+    const pdsProps: PdsConfig = {
       port: pdsPort,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
       modServiceUrl,
       modServiceDid: ozoneDid,
+      lexiconDidAuthority: lexiconAuthorityProfile.did,
       ...params.pds,
     }
 
@@ -121,7 +129,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
     await bsky.sub.processAll()
-    await thirdPartyPds.close()
 
     // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
     const ozoneVerifierPassword =
@@ -141,7 +148,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       )
     }
 
-    return new TestNetwork(plc, pds, bsky, ozone, introspect)
+    return new TestNetwork(plc, pdsAlt, pds, bsky, ozone, introspect)
   }
 
   async processFullSubscription(timeout = 5000) {
@@ -164,6 +171,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async processAll(timeout?: number) {
     await this.pds.processAll()
+    await this.pdsAlt.processAll()
     await this.ozone.processAll()
     await this.processFullSubscription(timeout)
   }
@@ -200,6 +208,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
     await this.ozone.close()
     await this.bsky.close()
+    await this.pdsAlt.close()
     await this.pds.close()
     await this.plc.close()
     await this.introspect?.close()
