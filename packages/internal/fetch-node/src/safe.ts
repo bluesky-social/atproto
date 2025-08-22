@@ -10,11 +10,26 @@ import {
   timedFetch,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import { unicastFetchWrap } from './unicast.js'
+import { UnicastFetchWrapOptions, unicastFetchWrap } from './unicast.js'
 
-export type SafeFetchWrapOptions = NonNullable<
-  Parameters<typeof safeFetchWrap>[0]
->
+export type SafeFetchWrapOptions<C> = UnicastFetchWrapOptions<C> & {
+  responseMaxSize?: number
+  ssrfProtection?: boolean
+  allowCustomPort?: boolean
+  allowData?: boolean
+  allowHttp?: boolean
+  allowIpHost?: boolean
+  allowPrivateIps?: boolean
+  timeout?: number
+  forbiddenDomainNames?: Iterable<string>
+  /**
+   * When `false`, a {@link RequestInit['redirect']} value must be explicitly
+   * provided or the request will fail.
+   *
+   * @default false
+   */
+  allowImplicitRedirect?: boolean
+}
 
 /**
  * Wrap a fetch function with safety checks so that it can be safely used
@@ -22,8 +37,9 @@ export type SafeFetchWrapOptions = NonNullable<
  *
  * @see {@link https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html}
  */
-export function safeFetchWrap({
-  fetch = globalThis.fetch as Fetch,
+export function safeFetchWrap<C>({
+  fetch = globalThis.fetch as Fetch<C>,
+  dangerouslyForceKeepAliveAgent = false,
   responseMaxSize = 512 * 1024, // 512kB
   ssrfProtection = true,
   allowCustomPort = !ssrfProtection,
@@ -33,14 +49,8 @@ export function safeFetchWrap({
   allowPrivateIps = !ssrfProtection,
   timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
-  /**
-   * When `false`, a {@link RequestInit['redirect']} value must be explicitly
-   * provided or the request will fail.
-   *
-   * @default false
-   */
   allowImplicitRedirect = false,
-} = {}) {
+}: SafeFetchWrapOptions<C> = {}) {
   return pipe(
     /**
      * Require explicit {@link RequestInit['redirect']} mode
@@ -83,7 +93,9 @@ export function safeFetchWrap({
        * input, we need to make sure that the request is not vulnerable to SSRF
        * attacks.
        */
-      allowPrivateIps ? fetch : unicastFetchWrap({ fetch }),
+      allowPrivateIps
+        ? fetch
+        : unicastFetchWrap({ fetch, dangerouslyForceKeepAliveAgent }),
     ),
 
     /**
