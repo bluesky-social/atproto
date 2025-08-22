@@ -1,4 +1,3 @@
-import { LexPermission } from '@atproto/lexicon'
 import { Accept, isAccept, matchesAnyAccept } from '../lib/mime.js'
 import { Parser } from '../parser.js'
 import {
@@ -7,6 +6,7 @@ import {
   ResourceSyntax,
   isScopeForResource,
 } from '../syntax.js'
+import type { LexPermission } from '../types.js'
 
 export const DEFAULT_ACCEPT = Object.freeze(['*/*'] as const)
 

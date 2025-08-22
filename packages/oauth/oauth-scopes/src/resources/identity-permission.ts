@@ -1,7 +1,7 @@
-import { LexPermission } from '@atproto/lexicon'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
 import { ResourceSyntax, isScopeForResource } from '../syntax.js'
+import type { LexPermission } from '../types.js'
 
 export const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
 export type IdentityAttribute = (typeof IDENTITY_ATTRIBUTES)[number]

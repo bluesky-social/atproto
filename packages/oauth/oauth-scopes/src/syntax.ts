@@ -1,5 +1,5 @@
-import { LexPermission } from '@atproto/lexicon'
 import { minIdx, sum, toRecord } from './lib/util'
+import type { LexPermission } from './types'
 
 export type ParamValue = string | number | boolean
 

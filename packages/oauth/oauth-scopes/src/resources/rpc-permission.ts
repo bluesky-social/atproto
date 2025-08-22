@@ -1,8 +1,8 @@
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
-import { LexPermission } from '@atproto/lexicon'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
+import type { LexPermission } from '../types.js'
 
 export type { AtprotoDid }
 

@@ -1,8 +1,8 @@
-import { LexPermission } from '@atproto/lexicon'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
+import type { LexPermission } from '../types.js'
 
 export const REPO_ACTIONS = Object.freeze([
   'create',

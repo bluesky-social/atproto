@@ -5,6 +5,7 @@ export * from './scopes-set.js'
 export * from './parser.js'
 export * from './syntax.js'
 export * from './utilities.js'
+export * from './types.js'
 
 export * from './resources/account-permission.js'
 export * from './resources/blob-permission.js'

@@ -1,7 +1,7 @@
-import type { LexPermission } from '@atproto/lexicon'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
 import { ResourceSyntax, isScopeForResource } from '../syntax.js'
+import type { LexPermission } from '../types.js'
 
 export type { LexPermission }
 

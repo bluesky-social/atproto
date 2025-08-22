@@ -1,5 +1,5 @@
-import type { LexPermissionSet } from '@atproto/lexicon'
 import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
+import type { LexPermissionSet } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 
 export type PermissionSet = LexPermissionSet
