@@ -8,10 +8,10 @@ import {
   CollectionParam,
   IncludeScope,
   LxmParam,
-  Nsid,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
+  includeScopeToPermissions,
 } from '@atproto/oauth-scopes'
 import { Checkbox } from '../forms/checkbox'
 import { Admonition, AdmonitionProps } from './admonition'
@@ -57,12 +57,12 @@ export function ScopeDescription({
   className = '',
   ...attrs
 }: ScopeDescriptionProps) {
-  const nsids = useMemo(() => {
+  const includeScopes = useMemo(() => {
     return Array.from(
       new Set(
         scope
           ?.split(' ')
-          .map((v) => IncludeScope.fromString(v)?.nsid)
+          .map((v) => IncludeScope.fromString(v))
           .filter((v) => v != null),
       ),
     )
@@ -94,7 +94,7 @@ export function ScopeDescription({
       <BlueskyChatPermissions permissions={permissions} />
 
       <PermissionSetsPermissions
-        nsids={nsids}
+        includeScopes={includeScopes}
         permissionSets={permissionSets}
       />
 
@@ -114,21 +114,21 @@ export function ScopeDescription({
 }
 
 function PermissionSetsPermissions({
-  nsids,
+  includeScopes,
   permissionSets,
 }: {
-  nsids: Nsid[]
+  includeScopes: IncludeScope[]
   permissionSets: PermissionSets
 }) {
-  if (!nsids.length) return null
+  if (!includeScopes.length) return null
 
   return (
     <>
-      {nsids.map((nsid) => (
+      {includeScopes.map((includeScope, i) => (
         <PermissionSetPermissions
-          key={nsid}
-          nsid={nsid}
-          permissionSet={permissionSets[nsid]}
+          key={i}
+          includeScope={includeScope}
+          permissionSet={permissionSets[includeScope.nsid]}
         />
       ))}
     </>
@@ -136,12 +136,23 @@ function PermissionSetsPermissions({
 }
 
 function PermissionSetPermissions({
-  nsid,
+  includeScope,
   permissionSet,
 }: {
-  nsid: Nsid
+  includeScope: IncludeScope
   permissionSet?: PermissionSet
 }) {
+  const { nsid } = includeScope
+
+  const permissions = useMemo(() => {
+    const parsedPermissions = permissionSet
+      ? includeScopeToPermissions(includeScope, permissionSet)
+      : []
+    return new ScopePermissionsTransition(
+      parsedPermissions.map((p) => p.toString()),
+    )
+  }, [includeScope, permissionSet])
+
   return (
     <DescriptionCard
       role="listitem"
@@ -161,16 +172,17 @@ function PermissionSetPermissions({
         />
       }
       description={
-        permissionSet?.detail ? (
-          <LangString
-            value={permissionSet['detail:lang']}
-            fallback={permissionSet.detail}
-          />
-        ) : permissionSet?.title ? (
-          nsid
-        ) : null
+        <LangString
+          value={permissionSet?.['detail:lang']}
+          fallback={
+            permissionSet?.detail || (permissionSet?.title ? nsid : null)
+          }
+        />
       }
-    />
+    >
+      <RepoTable className="mb-1" permissions={permissions} />
+      <RpcMethodsTable permissions={permissions} />
+    </DescriptionCard>
   )
 }
 
@@ -544,13 +556,7 @@ function RpcMethodsDetails({
         <p>
           <RpcDescription />
         </p>
-        <p className="mt-1">
-          <Trans>
-            The application requests the permissions necessary to perform, on
-            your behalf, the following actions:
-          </Trans>
-        </p>
-        <RpcMethodsTable className="mt-2" permissions={permissions} />
+        <RpcMethodsTable className="mt-1" permissions={permissions} />
       </DescriptionCard>
     )
   }
@@ -570,7 +576,7 @@ function RpcDescription() {
 }
 
 type RpcMethodsTableProps = Override<
-  HTMLAttributes<HTMLTableElement>,
+  HTMLAttributes<HTMLDivElement>,
   {
     permissions: ScopePermissionsTransition
     children?: never
@@ -603,35 +609,45 @@ function RpcMethodsTable({
       )
   }, [permissions])
 
+  if (!audLxmsEntries.length) return null
+
   return (
-    <table className={`w-full table-auto ${className}`} {...attrs}>
-      <thead>
-        <tr className="text-sm">
-          <th className="text-left font-normal">{t`Service`}</th>
-          <th className="text-left font-normal">{t`Methods`}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {audLxmsEntries.map(([aud, lxms]) => (
-          <tr key={aud} className="text-sm">
-            <td className="align-top text-slate-500">
-              {aud === '*' ? <em>{t`Any service`}</em> : <code>{aud}</code>}
-            </td>
-            <td className="text-slate-500">
-              {lxms.includes('*') ? (
-                <em>{t`Any method`}</em>
-              ) : (
-                lxms.map((lxm) => (
-                  <code className="block" key={lxm}>
-                    {lxm}
-                  </code>
-                ))
-              )}
-            </td>
+    <div {...attrs}>
+      <p>
+        <Trans>
+          The application requests the permissions necessary to perform, on your
+          behalf, the following actions:
+        </Trans>
+      </p>
+      <table className={`mt-2 w-full table-auto ${className}`}>
+        <thead>
+          <tr className="text-sm">
+            <th className="text-left font-normal">{t`Service`}</th>
+            <th className="text-left font-normal">{t`Methods`}</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {audLxmsEntries.map(([aud, lxms]) => (
+            <tr key={aud} className="text-sm">
+              <td className="align-top text-slate-500">
+                {aud === '*' ? <em>{t`Any service`}</em> : <code>{aud}</code>}
+              </td>
+              <td className="text-slate-500">
+                {lxms.includes('*') ? (
+                  <em>{t`Any method`}</em>
+                ) : (
+                  lxms.map((lxm) => (
+                    <code className="block" key={lxm}>
+                      {lxm}
+                    </code>
+                  ))
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
@@ -680,13 +696,7 @@ function RepoPermissions({
         <p>
           <RepoDescription />
         </p>
-        <p className="mt-1">
-          <Trans>
-            The application wants to be able to perform the following actions on
-            your repository:
-          </Trans>
-        </p>
-        <RepoTable className="mt-2" permissions={permissions} />
+        <RepoTable className="mt-1" permissions={permissions} />
       </DescriptionCard>
     )
   }
@@ -705,7 +715,7 @@ function RepoDescription() {
 }
 
 type RepoTableProps = Override<
-  HTMLAttributes<HTMLTableElement>,
+  HTMLAttributes<HTMLDivElement>,
   {
     permissions: ScopePermissionsTransition
     children?: never
@@ -745,6 +755,8 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
     return map
   }, [permissions])
 
+  if (!nsidActions.size) return null
+
   const starActions = nsidActions.get('*')
 
   const nsidActionsEntries = useMemo(() => {
@@ -754,44 +766,52 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
   }, [nsidActions])
 
   return (
-    <table className={`w-full table-auto text-left ${className}`} {...attrs}>
-      <thead>
-        <tr className="text-sm">
-          <th className="font-normal">{t`Collection`}</th>
-          <th className="text-center font-normal">{t`Create`}</th>
-          <th className="text-center font-normal">{t`Update`}</th>
-          <th className="text-center font-normal">{t`Delete`}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {nsidActionsEntries.map(([nsid, actions]) => (
-          <tr key={nsid} className="text-sm">
-            <td className="text-slate-500">
-              {nsid === '*' ? (
-                <em>{t`Any collection`}</em>
-              ) : (
-                <code>{nsid}</code>
-              )}
-            </td>
-            <td className="text-center">
-              {starActions?.create || actions.create ? (
-                <CheckMarkIcon className="inline-block size-4" />
-              ) : null}
-            </td>
-            <td className="text-center">
-              {starActions?.update || actions.update ? (
-                <CheckMarkIcon className="inline-block size-4" />
-              ) : null}
-            </td>
-            <td className="text-center">
-              {starActions?.delete || actions.delete ? (
-                <CheckMarkIcon className="inline-block size-4" />
-              ) : null}
-            </td>
+    <div {...attrs}>
+      <p>
+        <Trans>
+          The application wants to be able to perform the following actions on
+          your repository:
+        </Trans>
+      </p>
+      <table className={`mt-2 w-full table-auto text-left ${className}`}>
+        <thead>
+          <tr className="text-sm">
+            <th className="font-normal">{t`Collection`}</th>
+            <th className="text-center font-normal">{t`Create`}</th>
+            <th className="text-center font-normal">{t`Update`}</th>
+            <th className="text-center font-normal">{t`Delete`}</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {nsidActionsEntries.map(([nsid, actions]) => (
+            <tr key={nsid} className="text-sm">
+              <td className="text-slate-500">
+                {nsid === '*' ? (
+                  <em>{t`Any collection`}</em>
+                ) : (
+                  <code>{nsid}</code>
+                )}
+              </td>
+              <td className="text-center">
+                {starActions?.create || actions.create ? (
+                  <CheckMarkIcon className="inline-block size-4" />
+                ) : null}
+              </td>
+              <td className="text-center">
+                {starActions?.update || actions.update ? (
+                  <CheckMarkIcon className="inline-block size-4" />
+                ) : null}
+              </td>
+              <td className="text-center">
+                {starActions?.delete || actions.delete ? (
+                  <CheckMarkIcon className="inline-block size-4" />
+                ) : null}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

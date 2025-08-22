@@ -1,17 +1,11 @@
 import { LexPermissionSet } from '@atproto/lexicon'
 import { LexiconResolver } from '@atproto/lexicon-resolver'
 import {
-  AccountPermission,
-  BlobPermission,
-  IdentityPermission,
   IncludeScope,
-  LexPermission,
   Nsid,
-  RepoPermission,
-  RpcPermission,
-  parsePermissionLexicon,
+  includeScopeToPermissions,
 } from '@atproto/oauth-scopes'
-import { isNonNullable, stringify } from '../lib/util/function.js'
+import { stringify } from '../lib/util/function.js'
 import { LexiconGetter } from './lexicon-getter.js'
 import { LexiconStore } from './lexicon-store.js'
 
@@ -102,71 +96,10 @@ function extractNsid(nsidScope: IncludeScope): Nsid {
   return nsidScope.nsid
 }
 
-function nsidToPermissionScopes(
+export function nsidToPermissionScopes(
   this: Map<string, LexPermissionSet>,
-  nsidScope: IncludeScope,
+  includeScope: IncludeScope,
 ): string[] {
-  const permissionSet = this.get(nsidScope.nsid)!
-
-  return permissionSet.permissions
-    .map(parsePermissionLexiconWithDefault, nsidScope)
-    .filter(isNonNullable)
-    .filter(isAllowedPermissionSetPermission, nsidScope)
-    .map(stringify)
-}
-
-function parsePermissionLexiconWithDefault(
-  this: IncludeScope,
-  permission: LexPermission,
-) {
-  if (
-    permission.resource === 'rpc' &&
-    permission.aud === 'inherit' &&
-    this.aud
-  ) {
-    // "rpc:" permissions can "inherit" their audience from the
-    // "include:<nsid>?aud=<audience>" scope
-    return parsePermissionLexicon({ ...permission, aud: this.aud })
-  }
-
-  return parsePermissionLexicon(permission)
-}
-
-function isAllowedPermissionSetPermission(
-  this: IncludeScope,
-  permission:
-    | AccountPermission
-    | BlobPermission
-    | IdentityPermission
-    | RepoPermission
-    | RpcPermission,
-) {
-  if (permission instanceof RpcPermission) {
-    return permission.lxm.every(isUnderAuthority, this)
-  }
-
-  if (permission instanceof RepoPermission) {
-    return permission.collection.every(isUnderAuthority, this)
-  }
-
-  if (permission instanceof BlobPermission) {
-    return true
-  }
-
-  return false
-}
-
-function isUnderAuthority(this: IncludeScope, itemNsid: '*' | Nsid) {
-  if (itemNsid === '*') return false
-  const authorityNamespace = extractNsidNamespace(this.nsid)
-  const itemNamespace = extractNsidNamespace(itemNsid)
-  return (
-    itemNamespace === authorityNamespace ||
-    itemNamespace.startsWith(`${authorityNamespace}.`)
-  )
-}
-
-function extractNsidNamespace(nsid: Nsid) {
-  const lastDot = nsid.lastIndexOf('.')
-  return nsid.slice(0, lastDot) as `${string}.${string}`
+  const permissionSet = this.get(includeScope.nsid)!
+  return includeScopeToPermissions(includeScope, permissionSet).map(stringify)
 }

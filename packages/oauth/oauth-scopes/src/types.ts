@@ -9,3 +9,12 @@ export type LexPermission = {
   string,
   undefined | string | number | boolean | (string | number | boolean)[]
 >
+
+export type LexPermissionSet = {
+  type: 'permission-set'
+  permissions: LexPermission[]
+  title?: string
+  'title:lang'?: Record<string, undefined | string>
+  detail?: string
+  'detail:lang'?: Record<string, undefined | string>
+}

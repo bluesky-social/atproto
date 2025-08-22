@@ -1,3 +1,5 @@
+import { Nsid } from './lib/nsid.js'
+import { isNonNullable } from './lib/util.js'
 import {
   AccountPermission,
   AccountPermissionMatch,
@@ -21,6 +23,7 @@ import {
   RpcPermissionMatch,
 } from './resources/rpc-permission.js'
 import { ResourceSyntax, isResourceSyntaxFor } from './syntax.js'
+import { LexPermissionSet } from './types.js'
 
 export type ScopeMatchingOptionsByResource = {
   account: AccountPermissionMatch
@@ -150,4 +153,75 @@ export function scopeMatches<R extends keyof ScopeMatchingOptionsByResource>(
   }
 
   return false
+}
+
+/**
+ * Allows building, from a (parsed) `include:` scope, and the matching
+ * permission set definition, the list of valid and allowed bundled permissions.
+ */
+export function includeScopeToPermissions(
+  includeScope: IncludeScope,
+  permissionSet: LexPermissionSet,
+) {
+  return permissionSet.permissions
+    .map(parsePermissionLexiconWithDefault, includeScope)
+    .filter(isNonNullable)
+    .filter(isAllowedPermissionSetPermission, includeScope)
+}
+
+function parsePermissionLexiconWithDefault(
+  this: IncludeScope,
+  permission: LexPermission,
+) {
+  if (
+    permission.resource === 'rpc' &&
+    permission.aud === 'inherit' &&
+    this.aud
+  ) {
+    // "rpc:" permissions can "inherit" their audience from the
+    // "include:<nsid>?aud=<audience>" scope
+    return parsePermissionLexicon({ ...permission, aud: this.aud })
+  }
+
+  return parsePermissionLexicon(permission)
+}
+
+function isAllowedPermissionSetPermission(
+  this: IncludeScope,
+  permission:
+    | AccountPermission
+    | BlobPermission
+    | IdentityPermission
+    | RepoPermission
+    | RpcPermission,
+): permission is RpcPermission | RepoPermission | BlobPermission {
+  if (permission instanceof RpcPermission) {
+    return permission.lxm.every(isUnderAuthority, this)
+  }
+
+  if (permission instanceof RepoPermission) {
+    return permission.collection.every(isUnderAuthority, this)
+  }
+
+  if (permission instanceof BlobPermission) {
+    return true
+  }
+
+  return false
+}
+
+function isUnderAuthority(this: IncludeScope, itemNsid: '*' | Nsid) {
+  if (itemNsid === '*') return false
+
+  const authorityNamespace = extractNsidNamespace(this.nsid)
+  const itemNamespace = extractNsidNamespace(itemNsid)
+  return (
+    itemNamespace === authorityNamespace ||
+    itemNamespace.startsWith(`${authorityNamespace}.`)
+  )
+}
+
+function extractNsidNamespace(nsid: Nsid) {
+  const lastDot = nsid.lastIndexOf('.')
+  return nsid.slice(0, lastDot) as `${string}.${string}`
 }
