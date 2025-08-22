@@ -198,6 +198,7 @@ export type ServerEnvironment = {
   accountDbLocation?: string
   sequencerDbLocation?: string
   didCacheDbLocation?: string
+  ssoDbLocation?: string
 
   // actor store
   actorStoreDirectory?: string
