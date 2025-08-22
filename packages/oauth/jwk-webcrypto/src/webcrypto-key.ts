@@ -32,13 +32,7 @@ export class WebcryptoKey<
   }
 
   static async fromKeypair(cryptoKeyPair: CryptoKeyPair, kid?: string) {
-    // https://datatracker.ietf.org/doc/html/rfc7517
-    // > The "use" and "key_ops" JWK members SHOULD NOT be used together; [...]
-    // > Applications should specify which of these members they use.
-
     const {
-      key_ops,
-      use,
       alg = fromSubtleAlgorithm(cryptoKeyPair.privateKey.algorithm),
       ...jwk
     } = await crypto.subtle.exportKey(
@@ -48,17 +42,8 @@ export class WebcryptoKey<
         : cryptoKeyPair.publicKey,
     )
 
-    if (use && use !== 'sig') {
-      throw new TypeError(`Unsupported JWK use "${use}"`)
-    }
-
-    if (key_ops && !key_ops.some((o) => o === 'sign' || o === 'verify')) {
-      // Make sure that "key_ops", if present, is compatible with "use"
-      throw new TypeError(`Invalid key_ops "${key_ops}" for "sig" use`)
-    }
-
     return new WebcryptoKey(
-      jwkWithAlgSchema.parse({ ...jwk, kid, alg, use: 'sig' }),
+      jwkWithAlgSchema.parse({ ...jwk, kid, alg }),
       cryptoKeyPair,
     )
   }

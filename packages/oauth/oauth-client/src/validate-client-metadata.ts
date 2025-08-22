@@ -57,7 +57,7 @@ export function validateClientMetadata(
       }
 
       const signingKeys = keyset
-        ? Array.from(keyset.list({ use: 'sig' })).filter(
+        ? Array.from(keyset.list({ usage: 'sign' })).filter(
             (key) => key.isPrivate && key.kid,
           )
         : null
