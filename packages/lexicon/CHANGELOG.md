@@ -1,5 +1,11 @@
 # @atproto/lexicon
 
+## 0.4.14
+
+### Patch Changes
+
+- [#4122](https://github.com/bluesky-social/atproto/pull/4122) [`2104d9033`](https://github.com/bluesky-social/atproto/commit/2104d9033e2e1a3a7b821c1f0c5c8ffac5832d59) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Allow unknown fields in lexicon documents
+
 ## 0.4.13
 
 ### Patch Changes
