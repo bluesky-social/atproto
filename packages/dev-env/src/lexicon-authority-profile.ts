@@ -5,7 +5,7 @@ import { TestPds } from './pds'
 const LEXICONS: readonly LexiconDoc[] = [
   {
     lexicon: 1,
-    id: 'com.example.auth.base',
+    id: 'com.example.basePermissions',
     defs: {
       main: {
         type: 'permission-set',
@@ -19,12 +19,20 @@ const LEXICONS: readonly LexiconDoc[] = [
           {
             type: 'permission',
             resource: 'rpc',
-            aud: '*', // @TODO: remove this and use an nsid scope query param instead
+            aud: 'inherit',
             lxm: [
               'com.example.calendar.listEvents',
               'com.example.calendar.getEventDetails',
               'com.example.calendar.getEventRsvps',
             ],
+          },
+          // @NOTE: this is not a valid permission as the referenced lxm are not
+          // under the same authority as "com.example.basePermissions".
+          {
+            type: 'permission',
+            resource: 'rpc',
+            aud: '*',
+            lxm: ['com.atproto.moderation.createReport'],
           },
           {
             type: 'permission',

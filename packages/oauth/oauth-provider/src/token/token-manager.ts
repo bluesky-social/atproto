@@ -102,7 +102,7 @@ export class TokenManager {
     const expiresAt = this.createTokenExpiry(now)
 
     const permissionsScope = await this.lexiconManager.buildTokenScope(
-      parameters.scope,
+      parameters.scope!,
     )
 
     const tokenData: TokenData = {
@@ -127,13 +127,13 @@ export class TokenManager {
       { now, expiresAt, permissionsScope },
     )
 
-    const response = await this.buildTokenResponse(
-      client,
+    const response = this.buildTokenResponse(
+      inferTokenType(parameters),
       accessToken,
       refreshToken,
       expiresAt,
-      parameters,
       account.sub,
+      permissionsScope,
     )
 
     await this.store.createToken(tokenId, tokenData, refreshToken)
@@ -169,18 +169,18 @@ export class TokenManager {
   }
 
   protected buildTokenResponse(
-    client: Client,
+    tokenType: OAuthTokenType,
     accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
-    parameters: OAuthAuthorizationRequestParameters,
     sub: Sub,
+    scope: string,
   ): OAuthTokenResponse {
     return {
       access_token: accessToken,
-      token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
+      token_type: tokenType,
       refresh_token: refreshToken,
-      scope: parameters.scope,
+      scope,
 
       // @NOTE using a getter so that the value gets computed when the JSON
       // response is generated, allowing to value to be as accurate as possible.
@@ -213,7 +213,7 @@ export class TokenManager {
     const expiresAt = this.createTokenExpiry(now)
 
     const permissionsScope = await this.lexiconManager.buildTokenScope(
-      parameters.scope,
+      parameters.scope!,
     )
 
     await this.store.rotateToken(tokenInfo.id, nextTokenId, nextRefreshToken, {
@@ -237,13 +237,13 @@ export class TokenManager {
       { now, expiresAt, permissionsScope },
     )
 
-    const response = await this.buildTokenResponse(
-      client,
+    const response = this.buildTokenResponse(
+      inferTokenType(parameters),
       accessToken,
       nextRefreshToken,
       expiresAt,
-      parameters,
       account.sub,
+      permissionsScope,
     )
 
     await callAsync(this.hooks.onTokenRefreshed, {
@@ -400,4 +400,13 @@ export class TokenManager {
 
 function isCurrentTokenExpired(tokenInfo: TokenInfo): boolean {
   return tokenInfo.data.expiresAt.getTime() < Date.now()
+}
+
+function inferTokenType(
+  parameters: OAuthAuthorizationRequestParameters,
+): OAuthTokenType {
+  if (parameters.dpop_jkt) {
+    return 'DPoP'
+  }
+  return 'Bearer'
 }

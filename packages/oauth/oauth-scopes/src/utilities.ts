@@ -1,4 +1,3 @@
-import { Nsid, isNsid } from './lib/nsid.js'
 import {
   AccountPermission,
   AccountPermissionMatch,
@@ -12,6 +11,7 @@ import {
   IdentityPermission,
   IdentityPermissionMatch,
 } from './resources/identity-permission.js'
+import { IncludeScope } from './resources/include-permission.js'
 import {
   RepoPermission,
   RepoPermissionMatch,
@@ -20,7 +20,7 @@ import {
   RpcPermission,
   RpcPermissionMatch,
 } from './resources/rpc-permission.js'
-import { ResourceSyntax, isScopeForResource } from './syntax.js'
+import { ResourceSyntax, isResourceSyntaxFor } from './syntax.js'
 
 export type ScopeMatchingOptionsByResource = {
   account: AccountPermissionMatch
@@ -35,12 +35,12 @@ type AtprotoOauthScope =
   | 'transition:email'
   | 'transition:generic'
   | 'transition:chat.bsky'
+  | `account:${string}`
+  | `blob:${string}`
+  | `identity:${string}`
+  | `include:${string}`
   | `repo:${string}`
   | `rpc:${string}`
-  | `account:${string}`
-  | `identity:${string}`
-  | `blob:${string}`
-  | Nsid
 export function isValidAtprotoOauthScope(
   value: string,
 ): value is AtprotoOauthScope {
@@ -49,23 +49,26 @@ export function isValidAtprotoOauthScope(
   if (value === 'transition:generic') return true
   if (value === 'transition:chat.bsky') return true
 
-  if (isScopeForResource(value, 'repo')) {
-    return RepoPermission.fromString(value) != null
-  }
-  if (isScopeForResource(value, 'rpc')) {
-    return RpcPermission.fromString(value) != null
-  }
-  if (isScopeForResource(value, 'account')) {
+  if (isResourceSyntaxFor(value, 'account')) {
     return AccountPermission.fromString(value) != null
   }
-  if (isScopeForResource(value, 'identity')) {
-    return IdentityPermission.fromString(value) != null
-  }
-  if (isScopeForResource(value, 'blob')) {
+  if (isResourceSyntaxFor(value, 'blob')) {
     return BlobPermission.fromString(value) != null
   }
+  if (isResourceSyntaxFor(value, 'identity')) {
+    return IdentityPermission.fromString(value) != null
+  }
+  if (isResourceSyntaxFor(value, 'include')) {
+    return IncludeScope.fromString(value) != null
+  }
+  if (isResourceSyntaxFor(value, 'repo')) {
+    return RepoPermission.fromString(value) != null
+  }
+  if (isResourceSyntaxFor(value, 'rpc')) {
+    return RpcPermission.fromString(value) != null
+  }
 
-  return isNsid(value)
+  return false
 }
 
 export function parsePermissionScope(string: string) {
@@ -114,7 +117,7 @@ export function scopeMatches<R extends keyof ScopeMatchingOptionsByResource>(
 ): boolean {
   // Optimization: Do not try parsing the scope if it does not match the
   // resource prefix.
-  if (!isScopeForResource(scope, resource)) return false
+  if (!isResourceSyntaxFor(scope, resource)) return false
 
   // @NOTE we might want to cache the parsed scopes though, in practice, a
   // single scope is unlikely to be parsed multiple times during a single

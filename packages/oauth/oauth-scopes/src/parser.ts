@@ -2,7 +2,7 @@ import {
   NeRoArray,
   ParamValue,
   ResourceSyntax,
-  ScopeForResource,
+  ResourceSyntaxFor,
   formatScope,
 } from './syntax.js'
 
@@ -52,7 +52,7 @@ export class Parser<R extends string, S extends ParamsSchema> {
     this.schemaKeys = Object.keys(schema)
   }
 
-  format(values: ParsedParams<S>): ScopeForResource<R> {
+  format(values: ParsedParams<S>): ResourceSyntaxFor<R> {
     // Build params
     const params: [
       name: string,

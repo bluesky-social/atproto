@@ -4,7 +4,7 @@ import {
   NeRoArray,
   ParamValue,
   ResourceSyntax,
-  isScopeForResource,
+  isResourceSyntaxFor,
 } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
@@ -47,7 +47,7 @@ export class BlobPermission {
   )
 
   static fromString(scope: string) {
-    if (!isScopeForResource(scope, 'blob')) return null
+    if (!isResourceSyntaxFor(scope, 'blob')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return BlobPermission.fromSyntax(syntax)
   }

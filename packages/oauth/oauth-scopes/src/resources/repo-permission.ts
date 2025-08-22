@@ -1,7 +1,7 @@
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
+import { NeRoArray, ResourceSyntax, isResourceSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
 export const REPO_ACTIONS = Object.freeze([
@@ -80,7 +80,7 @@ export class RepoPermission {
   )
 
   static fromString(scope: string): RepoPermission | null {
-    if (!isScopeForResource(scope, 'repo')) return null
+    if (!isResourceSyntaxFor(scope, 'repo')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return RepoPermission.fromSyntax(syntax)
   }

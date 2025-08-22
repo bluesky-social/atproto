@@ -5,4 +5,7 @@
 export type LexPermission = {
   type: 'permission'
   resource: string
-} & Record<string, string | number | boolean | (string | number | boolean)[]>
+} & Record<
+  string,
+  undefined | string | number | boolean | (string | number | boolean)[]
+>

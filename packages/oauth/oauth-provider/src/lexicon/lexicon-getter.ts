@@ -1,5 +1,5 @@
 import { LexiconResolver, resolveLexicon } from '@atproto/lexicon-resolver'
-import { NSID } from '@atproto/syntax'
+import { Nsid } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
 import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
 import {
@@ -15,15 +15,18 @@ import {
  *
  * @private
  */
-export class LexiconGetter extends CachedGetter<NSID, LexiconData> {
+export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
   constructor(store: LexiconStore, resolver: LexiconResolver = resolveLexicon) {
     super(
       async (nsid, options, storedData) => {
         const now = new Date()
         try {
+          // @TODO We would want to be able to explicit that the Lexicon needs
+          // to be fresh, which is not possible yet with the current interface
+          // of LexiconResolver.
           const { uri, lexicon } = await resolver(nsid)
 
-          // @NOTE: currently, the sole purpose of this class is to retrieve
+          // @NOTE currently, the sole purpose of this class is to retrieve
           // permission set lexicons
           if (!isPermissionSetLexiconDoc(lexicon)) {
             // @TODO Better error
@@ -53,14 +56,14 @@ export class LexiconGetter extends CachedGetter<NSID, LexiconData> {
       },
       {
         set: async (nsid, data) => {
-          return store.storeLexicon(nsid.toString(), data)
+          return store.storeLexicon(nsid, data)
         },
         get: async (nsid) => {
-          const data = await store.findLexicon(nsid.toString())
+          const data = await store.findLexicon(nsid)
           return data === null ? undefined : data
         },
         del: async (nsid) => {
-          await store.deleteLexicon(nsid.toString())
+          await store.deleteLexicon(nsid)
         },
       },
       {

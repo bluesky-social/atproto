@@ -10,7 +10,7 @@ export type NeArray<T> = [T, ...T[]]
  */
 export type NeRoArray<T> = readonly [T, ...T[]]
 
-export type ScopeForResource<R extends string> =
+export type ResourceSyntaxFor<R extends string> =
   | R
   | `${R}:${string}`
   | `${R}?${string}`
@@ -24,14 +24,14 @@ export type ResourceSyntaxJson<R extends string = string> = {
 /**
  * Allows to quickly check if a scope is for a specific resource.
  */
-export function isScopeForResource<R extends string>(
-  scope: string,
+export function isResourceSyntaxFor<R extends string>(
+  scopeValue: string,
   resource: R,
-): scope is ScopeForResource<R> {
-  if (!scope.startsWith(resource)) return false
-  if (scope.length === resource.length) return true
+): scopeValue is ResourceSyntaxFor<R> {
+  if (!scopeValue.startsWith(resource)) return false
+  if (scopeValue.length === resource.length) return true
 
-  const nextCharCode = scope.charCodeAt(resource.length)
+  const nextCharCode = scopeValue.charCodeAt(resource.length)
   return nextCharCode === 0x3a /* : */ || nextCharCode === 0x3f /* ? */
 }
 
@@ -40,7 +40,8 @@ export function isScopeForResource<R extends string>(
  * interface compatible with the {@link URLSearchParams} interface, allowing url
  * params to be used "out of the box".
  */
-export interface PermissionParams extends Iterable<[string, ParamValue]> {
+export interface ResourceSyntaxParams
+  extends Iterable<[string, ParamValue], void, unknown> {
   readonly size: number
   keys(): Iterable<string>
   has(key: string): boolean
@@ -63,7 +64,7 @@ export class ResourceSyntax<R extends string = string> {
   constructor(
     public readonly resource: R,
     public readonly positional?: string,
-    public readonly params?: PermissionParams,
+    public readonly params?: ResourceSyntaxParams,
   ) {}
 
   is<T extends string>(resource: T): this is ResourceSyntax<T> {
@@ -153,7 +154,7 @@ export class ResourceSyntax<R extends string = string> {
     return values as [string, ...string[]]
   }
 
-  toString(): ScopeForResource<R> {
+  toString(): ResourceSyntaxFor<R> {
     return encodeScope(this.resource, this.positional, this.params)
   }
 
@@ -204,10 +205,10 @@ export class ResourceSyntax<R extends string = string> {
 }
 
 /**
- * Translates a {@link LexPermission} into a {@link PermissionParams} to be used
+ * Translates a {@link LexPermission} into a {@link ResourceSyntaxParams} to be used
  * by the {@link ResourceSyntax}.
  */
-export class LexPermissionParamsGetter implements PermissionParams {
+export class LexPermissionParamsGetter implements ResourceSyntaxParams {
   constructor(protected readonly lexPermission: LexPermission) {}
 
   get size() {
@@ -289,7 +290,7 @@ export function formatScope<R extends string>(
     [name: string, value: undefined | ParamValue | NeRoArray<ParamValue>]
   >,
   positionalName?: string,
-): ScopeForResource<R> {
+): ResourceSyntaxFor<R> {
   const queryParams = new URLSearchParams()
 
   let positionalValue: string | undefined = undefined
@@ -340,8 +341,8 @@ export function formatScope<R extends string>(
 export function encodeScope<R extends string>(
   resource: R,
   positional?: string,
-  params?: PermissionParams,
-): ScopeForResource<R> {
+  params?: ResourceSyntaxParams,
+): ResourceSyntaxFor<R> {
   let scope: string = resource
 
   if (positional !== undefined) {
@@ -356,7 +357,7 @@ export function encodeScope<R extends string>(
     scope += `?${queryString}`
   }
 
-  return scope as ScopeForResource<R>
+  return scope as ResourceSyntaxFor<R>
 }
 
 function encodeParamEntry([key, value]: [string, ParamValue]): string {

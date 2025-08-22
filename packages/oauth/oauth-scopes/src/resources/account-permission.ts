@@ -1,6 +1,6 @@
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { ResourceSyntax, isScopeForResource } from '../syntax.js'
+import { ResourceSyntax, isResourceSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
 export type { LexPermission }
@@ -56,7 +56,7 @@ export class AccountPermission {
   )
 
   static fromString(scope: string) {
-    if (!isScopeForResource(scope, 'account')) return null
+    if (!isResourceSyntaxFor(scope, 'account')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return AccountPermission.fromSyntax(syntax)
   }

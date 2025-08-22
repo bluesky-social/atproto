@@ -1,36 +1,36 @@
-import { ResourceSyntax, isScopeForResource } from './syntax.js'
+import { ResourceSyntax, isResourceSyntaxFor } from './syntax.js'
 
 describe('isScopeForResource', () => {
   describe('exact match', () => {
     it('should return true for exact match', () => {
-      expect(isScopeForResource('resource', 'resource')).toBe(true)
+      expect(isResourceSyntaxFor('resource', 'resource')).toBe(true)
     })
 
     it('should return false for different resource', () => {
-      expect(isScopeForResource('resource', 'differentResource')).toBe(false)
+      expect(isResourceSyntaxFor('resource', 'differentResource')).toBe(false)
     })
   })
 
   describe('with positional parameter', () => {
     it('should return true for exact match with positional parameter', () => {
-      expect(isScopeForResource('resource:positional', 'resource')).toBe(true)
+      expect(isResourceSyntaxFor('resource:positional', 'resource')).toBe(true)
     })
 
     it('should return false for different resource with positional parameter', () => {
       expect(
-        isScopeForResource('differentResource:positional', 'resource'),
+        isResourceSyntaxFor('differentResource:positional', 'resource'),
       ).toBe(false)
     })
   })
 
   describe('with named parameters', () => {
     it('should return true for exact match with named parameters', () => {
-      expect(isScopeForResource('resource?param=value', 'resource')).toBe(true)
+      expect(isResourceSyntaxFor('resource?param=value', 'resource')).toBe(true)
     })
 
     it('should return false for different resource with named parameters', () => {
       expect(
-        isScopeForResource('differentResource?param=value', 'resource'),
+        isResourceSyntaxFor('differentResource?param=value', 'resource'),
       ).toBe(false)
     })
   })

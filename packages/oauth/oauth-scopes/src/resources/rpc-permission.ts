@@ -1,7 +1,7 @@
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ResourceSyntax, isScopeForResource } from '../syntax.js'
+import { NeRoArray, ResourceSyntax, isResourceSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
 export type { AtprotoDid }
@@ -60,7 +60,7 @@ export class RpcPermission {
   )
 
   static fromString(scope: string): RpcPermission | null {
-    if (!isScopeForResource(scope, 'rpc')) return null
+    if (!isResourceSyntaxFor(scope, 'rpc')) return null
     const syntax = ResourceSyntax.fromString(scope)
     return RpcPermission.fromSyntax(syntax)
   }

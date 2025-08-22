@@ -10,6 +10,7 @@ export * from './types.js'
 export * from './resources/account-permission.js'
 export * from './resources/blob-permission.js'
 export * from './resources/identity-permission.js'
+export * from './resources/include-permission.js'
 export * from './resources/repo-permission.js'
 export * from './resources/rpc-permission.js'
 

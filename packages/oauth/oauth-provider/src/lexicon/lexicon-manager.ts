@@ -4,18 +4,18 @@ import {
   AccountPermission,
   BlobPermission,
   IdentityPermission,
+  IncludeScope,
+  LexPermission,
   Nsid,
   RepoPermission,
   RpcPermission,
   parsePermissionLexicon,
 } from '@atproto/oauth-scopes'
-import { NSID, parseNSID } from '../lib/nsid.js'
 import { isNonNullable, stringify } from '../lib/util/function.js'
 import { LexiconGetter } from './lexicon-getter.js'
 import { LexiconStore } from './lexicon-store.js'
 
 export * from './lexicon-store.js'
-export { NSID }
 
 export class LexiconManager {
   protected readonly lexiconGetter: LexiconGetter
@@ -25,8 +25,8 @@ export class LexiconManager {
   }
 
   public async getPermissionSetsFromScope(scope?: string) {
-    const scopeValues = new Set(scope?.split(' '))
-    return this.extractPermissionSets(scopeValues)
+    const { includeScopes } = parseScope(scope)
+    return this.extractPermissionSets(includeScopes)
   }
 
   /**
@@ -34,12 +34,17 @@ export class LexiconManager {
    * composed solely of granular permission scopes, transforming any NSID
    * into its corresponding permission scopes.
    */
-  public async buildTokenScope(scope?: string): Promise<string> {
-    const scopeValues = new Set(scope?.split(' '))
-    const permissionSets = await this.extractPermissionSets(scopeValues)
+  public async buildTokenScope(scope: string): Promise<string> {
+    const { includeScopes, otherScopes } = parseScope(scope)
 
-    return Array.from(scopeValues)
+    // If the scope does not contain any "include:<nsid>" scopes, return it as-is.
+    if (!includeScopes.length) return scope
+
+    const permissionSets = await this.extractPermissionSets(includeScopes)
+
+    return Array.from(includeScopes)
       .flatMap(nsidToPermissionScopes, permissionSets)
+      .concat(otherScopes)
       .join(' ')
   }
 
@@ -47,53 +52,88 @@ export class LexiconManager {
    * Given a list of scope values, extract those that are NSIDs and return their
    * corresponding permission sets.
    */
-  protected async extractPermissionSets(scopeValues: Set<string>) {
-    const nsids = extractNsids(scopeValues)
+  protected async extractPermissionSets(includeScopes: IncludeScope[]) {
+    const nsids = extractNsids(includeScopes)
     return this.getPermissionSets(nsids)
   }
 
-  protected async getPermissionSets(nsids: Iterable<NSID>) {
+  protected async getPermissionSets(nsids: Set<Nsid>) {
     return new Map<string, LexPermissionSet>(
       await Promise.all(Array.from(nsids, this.getPermissionSetEntry, this)),
     )
   }
 
   protected async getPermissionSetEntry(
-    nsid: NSID,
+    nsid: Nsid,
   ): Promise<[nsid: string, permissionSet: LexPermissionSet]> {
     const permissionSet = await this.getPermissionSet(nsid)
     return [nsid.toString(), permissionSet]
   }
 
-  protected async getPermissionSet(nsid: NSID): Promise<LexPermissionSet> {
+  protected async getPermissionSet(nsid: Nsid): Promise<LexPermissionSet> {
     const { lexicon } = await this.lexiconGetter.get(nsid)
     return lexicon.defs.main
   }
 }
 
-function extractNsids(scopeValues: Set<string>): NSID[] {
-  return Array.from(scopeValues, parseNSID).filter(isNonNullable)
+function parseScope(scope?: string) {
+  const otherScopes: string[] = []
+  const includeScopes: IncludeScope[] = []
+
+  if (scope) {
+    for (const scopeValue of scope.split(' ')) {
+      const parsed = IncludeScope.fromString(scopeValue)
+      if (parsed) includeScopes.push(parsed)
+      else otherScopes.push(scopeValue)
+    }
+  }
+
+  return {
+    otherScopes,
+    includeScopes,
+  }
+}
+
+function extractNsids(includeScopes: IncludeScope[]): Set<Nsid> {
+  return new Set(Array.from(includeScopes, extractNsid))
+}
+
+function extractNsid(nsidScope: IncludeScope): Nsid {
+  return nsidScope.nsid
 }
 
 function nsidToPermissionScopes(
   this: Map<string, LexPermissionSet>,
-  scopeValue: string,
-): string | string[] {
-  const permissionSet = this.get(scopeValue)
-  if (permissionSet) {
-    // The "scopeValue" is an nsid, replace it with all the granular permission
-    // scopes it implies, ignoring invalid values.
-    return permissionSet.permissions
-      .map(parsePermissionLexicon)
-      .filter(isNonNullable)
-      .filter(isAllowedPermissionSetPermission, NSID.parse(scopeValue))
-      .map(stringify)
+  nsidScope: IncludeScope,
+): string[] {
+  const permissionSet = this.get(nsidScope.nsid)!
+
+  return permissionSet.permissions
+    .map(parsePermissionLexiconWithDefault, nsidScope)
+    .filter(isNonNullable)
+    .filter(isAllowedPermissionSetPermission, nsidScope)
+    .map(stringify)
+}
+
+function parsePermissionLexiconWithDefault(
+  this: IncludeScope,
+  permission: LexPermission,
+) {
+  if (
+    permission.resource === 'rpc' &&
+    permission.aud === 'inherit' &&
+    this.aud
+  ) {
+    // "rpc:" permissions can "inherit" their audience from the
+    // "include:<nsid>?aud=<audience>" scope
+    return parsePermissionLexicon({ ...permission, aud: this.aud })
   }
-  return scopeValue
+
+  return parsePermissionLexicon(permission)
 }
 
 function isAllowedPermissionSetPermission(
-  this: NSID,
+  this: IncludeScope,
   permission:
     | AccountPermission
     | BlobPermission
@@ -109,14 +149,24 @@ function isAllowedPermissionSetPermission(
     return permission.collection.every(isUnderAuthority, this)
   }
 
-  // @TODO should we allow BlobPermission as part of a permission set?
+  if (permission instanceof BlobPermission) {
+    return true
+  }
 
   return false
 }
 
-function isUnderAuthority(this: NSID, nsidStr: '*' | Nsid) {
-  if (nsidStr === '*') return false
-  const nsid = parseNSID(nsidStr)
-  if (!nsid) return false // invalid NSID (should never happen)
-  return nsid.authority === this.authority
+function isUnderAuthority(this: IncludeScope, itemNsid: '*' | Nsid) {
+  if (itemNsid === '*') return false
+  const authorityNamespace = extractNsidNamespace(this.nsid)
+  const itemNamespace = extractNsidNamespace(itemNsid)
+  return (
+    itemNamespace === authorityNamespace ||
+    itemNamespace.startsWith(`${authorityNamespace}.`)
+  )
+}
+
+function extractNsidNamespace(nsid: Nsid) {
+  const lastDot = nsid.lastIndexOf('.')
+  return nsid.slice(0, lastDot) as `${string}.${string}`
 }

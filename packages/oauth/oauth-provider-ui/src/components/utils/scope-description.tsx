@@ -6,12 +6,12 @@ import {
   AudParam,
   BlobPermission,
   CollectionParam,
+  IncludeScope,
   LxmParam,
   Nsid,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
-  isNsid,
 } from '@atproto/oauth-scopes'
 import { Checkbox } from '../forms/checkbox'
 import { Admonition, AdmonitionProps } from './admonition'
@@ -58,7 +58,14 @@ export function ScopeDescription({
   ...attrs
 }: ScopeDescriptionProps) {
   const nsids = useMemo(() => {
-    return scope?.split(' ').filter(isNsid) ?? []
+    return Array.from(
+      new Set(
+        scope
+          ?.split(' ')
+          .map((v) => IncludeScope.fromString(v)?.nsid)
+          .filter((v) => v != null),
+      ),
+    )
   }, [scope])
   const permissions = useMemo(() => {
     return new ScopePermissionsTransition(scope)
