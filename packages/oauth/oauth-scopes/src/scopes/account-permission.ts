@@ -1,6 +1,7 @@
+import { Matchable } from '../lib/matchable.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { ResourceSyntax, isResourceSyntaxFor } from '../syntax.js'
+import { ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
 export type { LexPermission }
@@ -20,7 +21,7 @@ export type AccountPermissionMatch = {
   action: AccountAction
 }
 
-export class AccountPermission {
+export class AccountPermission implements Matchable<AccountPermissionMatch> {
   constructor(
     public readonly attr: AccountAttribute,
     public readonly action: AccountAction,
@@ -37,7 +38,7 @@ export class AccountPermission {
     return AccountPermission.parser.format(this)
   }
 
-  static readonly parser = new Parser(
+  protected static readonly parser = new Parser(
     'account',
     {
       attr: {
@@ -56,18 +57,18 @@ export class AccountPermission {
   )
 
   static fromString(scope: string) {
-    if (!isResourceSyntaxFor(scope, 'account')) return null
-    const syntax = ResourceSyntax.fromString(scope)
+    if (!isScopeSyntaxFor(scope, 'account')) return null
+    const syntax = ScopeSyntax.fromString(scope)
     return AccountPermission.fromSyntax(syntax)
   }
 
   static fromLex(lexPermission: LexPermission) {
     if (lexPermission.resource !== 'account') return null
-    const syntax = ResourceSyntax.fromLex(lexPermission)
+    const syntax = ScopeSyntax.fromLex(lexPermission)
     return AccountPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ResourceSyntax) {
+  static fromSyntax(syntax: ScopeSyntax) {
     const result = AccountPermission.parser.parse(syntax)
     if (!result) return null
 

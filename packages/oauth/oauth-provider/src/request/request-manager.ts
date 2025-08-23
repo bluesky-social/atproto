@@ -1,6 +1,6 @@
 import { isAtprotoDid } from '@atproto/did'
 import type { Account } from '@atproto/oauth-provider-api'
-import { isValidAtprotoOauthScope } from '@atproto/oauth-scopes'
+import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
@@ -181,7 +181,7 @@ export class RequestManager {
     // the fact that the AS does not know how to properly display those scopes
     // to the user, so it cannot properly ask for consent.
     const scope =
-      Array.from(scopes).filter(isValidAtprotoOauthScope).join(' ') || undefined
+      Array.from(scopes).filter(isAtprotoOauthScope).join(' ') || undefined
     parameters = { ...parameters, scope }
 
     if (parameters.code_challenge) {

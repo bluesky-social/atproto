@@ -1,10 +1,6 @@
 import { LexPermissionSet } from '@atproto/lexicon'
 import { LexiconResolver } from '@atproto/lexicon-resolver'
-import {
-  IncludeScope,
-  Nsid,
-  includeScopeToPermissions,
-} from '@atproto/oauth-scopes'
+import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
 import { stringify } from '../lib/util/function.js'
 import { LexiconGetter } from './lexicon-getter.js'
 import { LexiconStore } from './lexicon-store.js'
@@ -101,5 +97,5 @@ export function nsidToPermissionScopes(
   includeScope: IncludeScope,
 ): string[] {
   const permissionSet = this.get(includeScope.nsid)!
-  return includeScopeToPermissions(includeScope, permissionSet).map(stringify)
+  return includeScope.toPermissions(permissionSet).map(stringify)
 }

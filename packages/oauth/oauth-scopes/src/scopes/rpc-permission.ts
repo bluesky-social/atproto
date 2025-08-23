@@ -1,7 +1,8 @@
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
+import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ResourceSyntax, isResourceSyntaxFor } from '../syntax.js'
+import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
 export type { AtprotoDid }
@@ -18,7 +19,7 @@ export type RpcPermissionMatch = {
   aud: string
 }
 
-export class RpcPermission {
+export class RpcPermission implements Matchable<RpcPermissionMatch> {
   constructor(
     public readonly aud: '*' | AtprotoDid,
     public readonly lxm: NeRoArray<'*' | Nsid>,
@@ -42,7 +43,7 @@ export class RpcPermission {
     })
   }
 
-  static readonly parser = new Parser(
+  protected static readonly parser = new Parser(
     'rpc',
     {
       lxm: {
@@ -60,18 +61,18 @@ export class RpcPermission {
   )
 
   static fromString(scope: string): RpcPermission | null {
-    if (!isResourceSyntaxFor(scope, 'rpc')) return null
-    const syntax = ResourceSyntax.fromString(scope)
+    if (!isScopeSyntaxFor(scope, 'rpc')) return null
+    const syntax = ScopeSyntax.fromString(scope)
     return RpcPermission.fromSyntax(syntax)
   }
 
   static fromLex(lexPermission: LexPermission) {
     if (lexPermission.resource !== 'rpc') return null
-    const syntax = ResourceSyntax.fromLex(lexPermission)
+    const syntax = ScopeSyntax.fromLex(lexPermission)
     return RpcPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ResourceSyntax): RpcPermission | null {
+  static fromSyntax(syntax: ScopeSyntax): RpcPermission | null {
     const result = RpcPermission.parser.parse(syntax)
     if (!result) return null
 

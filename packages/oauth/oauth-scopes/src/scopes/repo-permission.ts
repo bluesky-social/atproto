@@ -1,7 +1,8 @@
+import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ResourceSyntax, isResourceSyntaxFor } from '../syntax.js'
+import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
 export const REPO_ACTIONS = Object.freeze([
@@ -21,7 +22,7 @@ export type RepoPermissionMatch = {
   action: RepoAction
 }
 
-export class RepoPermission {
+export class RepoPermission implements Matchable<RepoPermissionMatch> {
   constructor(
     public readonly collection: NeRoArray<'*' | Nsid>,
     public readonly action: NeRoArray<RepoAction>,
@@ -57,7 +58,7 @@ export class RepoPermission {
     })
   }
 
-  static readonly parser = new Parser(
+  protected static readonly parser = new Parser(
     'repo',
     {
       collection: {
@@ -80,18 +81,18 @@ export class RepoPermission {
   )
 
   static fromString(scope: string): RepoPermission | null {
-    if (!isResourceSyntaxFor(scope, 'repo')) return null
-    const syntax = ResourceSyntax.fromString(scope)
+    if (!isScopeSyntaxFor(scope, 'repo')) return null
+    const syntax = ScopeSyntax.fromString(scope)
     return RepoPermission.fromSyntax(syntax)
   }
 
   static fromLex(lexPermission: LexPermission) {
     if (lexPermission.resource !== 'repo') return null
-    const syntax = ResourceSyntax.fromLex(lexPermission)
+    const syntax = ScopeSyntax.fromLex(lexPermission)
     return RepoPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ResourceSyntax): RepoPermission | null {
+  static fromSyntax(syntax: ScopeSyntax): RepoPermission | null {
     const result = RepoPermission.parser.parse(syntax)
     if (!result) return null
 

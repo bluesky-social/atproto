@@ -1,37 +1,37 @@
-import { ResourceSyntax, isResourceSyntaxFor } from './syntax.js'
+import { ScopeSyntax, isScopeSyntaxFor } from './syntax.js'
 
-describe('isScopeForResource', () => {
+describe('isScopeSyntaxFor', () => {
   describe('exact match', () => {
     it('should return true for exact match', () => {
-      expect(isResourceSyntaxFor('resource', 'resource')).toBe(true)
+      expect(isScopeSyntaxFor('prefix', 'prefix')).toBe(true)
     })
 
-    it('should return false for different resource', () => {
-      expect(isResourceSyntaxFor('resource', 'differentResource')).toBe(false)
+    it('should return false for different prefix', () => {
+      expect(isScopeSyntaxFor('prefix', 'differentResource')).toBe(false)
     })
   })
 
   describe('with positional parameter', () => {
     it('should return true for exact match with positional parameter', () => {
-      expect(isResourceSyntaxFor('resource:positional', 'resource')).toBe(true)
+      expect(isScopeSyntaxFor('prefix:positional', 'prefix')).toBe(true)
     })
 
-    it('should return false for different resource with positional parameter', () => {
-      expect(
-        isResourceSyntaxFor('differentResource:positional', 'resource'),
-      ).toBe(false)
+    it('should return false for different prefix with positional parameter', () => {
+      expect(isScopeSyntaxFor('differentResource:positional', 'prefix')).toBe(
+        false,
+      )
     })
   })
 
   describe('with named parameters', () => {
     it('should return true for exact match with named parameters', () => {
-      expect(isResourceSyntaxFor('resource?param=value', 'resource')).toBe(true)
+      expect(isScopeSyntaxFor('prefix?param=value', 'prefix')).toBe(true)
     })
 
-    it('should return false for different resource with named parameters', () => {
-      expect(
-        isResourceSyntaxFor('differentResource?param=value', 'resource'),
-      ).toBe(false)
+    it('should return false for different prefix with named parameters', () => {
+      expect(isScopeSyntaxFor('differentResource?param=value', 'prefix')).toBe(
+        false,
+      )
     })
   })
 })
@@ -39,37 +39,37 @@ describe('isScopeForResource', () => {
 for (const { scope, normalized = scope, content } of [
   {
     scope: 'my-res',
-    content: { resource: 'my-res' },
+    content: { prefix: 'my-res' },
   },
   {
     scope: 'my-res:my-pos',
-    content: { resource: 'my-res', positional: 'my-pos' },
+    content: { prefix: 'my-res', positional: 'my-pos' },
   },
   {
     scope: 'my-res:',
-    content: { resource: 'my-res', positional: '' },
+    content: { prefix: 'my-res', positional: '' },
   },
   {
     scope: 'my-res:foo?x=value&y=value-y',
     content: {
-      resource: 'my-res',
+      prefix: 'my-res',
       positional: 'foo',
       params: { x: ['value'], y: ['value-y'] },
     },
   },
   {
     scope: 'my-res?x=value&y=value-y',
-    content: { resource: 'my-res', params: { x: ['value'], y: ['value-y'] } },
+    content: { prefix: 'my-res', params: { x: ['value'], y: ['value-y'] } },
   },
   {
     scope: 'my-res?x=foo&x=bar&x=baz',
-    content: { resource: 'my-res', params: { x: ['foo', 'bar', 'baz'] } },
+    content: { prefix: 'my-res', params: { x: ['foo', 'bar', 'baz'] } },
   },
   {
     scope: 'rpc:foo.bar?aud=did:foo:bar?lxm=bar.baz',
     normalized: 'rpc:foo.bar?aud=did:foo:bar%3Flxm%3Dbar.baz',
     content: {
-      resource: 'rpc',
+      prefix: 'rpc',
       positional: 'foo.bar',
       params: { aud: ['did:foo:bar?lxm=bar.baz'] },
     },
@@ -78,17 +78,17 @@ for (const { scope, normalized = scope, content } of [
   scope: string
   normalized?: string
   content: {
-    resource: string
+    prefix: string
     positional?: string
     params?: Record<string, string[]>
   }
 }>) {
   describe(`Valid "${scope}"`, () => {
-    const syntax = ResourceSyntax.fromString(scope)
+    const syntax = ScopeSyntax.fromString(scope)
 
     it('should match the expected syntax', () => {
       expect(syntax).toEqual({
-        resource: content.resource,
+        prefix: content.prefix,
         positional: content.positional,
         params: content.params
           ? new URLSearchParams(
@@ -104,12 +104,8 @@ for (const { scope, normalized = scope, content } of [
       expect(syntax.toString()).toBe(normalized)
     })
 
-    it(`should parse ${scope} correctly`, () => {
-      expect(syntax.toJSON()).toMatchObject(content)
-    })
-
-    it(`should match ${scope} resource`, () => {
-      expect(syntax.is(content.resource)).toBe(true)
+    it(`should match ${scope} prefix`, () => {
+      expect(syntax.is(content.prefix)).toBe(true)
     })
 
     it(`should return undefined for nonexistent single-value param`, () => {
@@ -172,7 +168,7 @@ for (const { scope, normalized = scope, content } of [
 
 describe('invalid positional parameters', () => {
   it('should return null for positional parameters used together with named parameters', () => {
-    const syntax = ResourceSyntax.fromString('my-res:pos?x=value')
+    const syntax = ScopeSyntax.fromString('my-res:pos?x=value')
     expect(syntax.getSingle('x', true)).toBeNull()
     expect(syntax.getMulti('x', true)).toBeNull()
   })
@@ -180,24 +176,24 @@ describe('invalid positional parameters', () => {
 
 describe('containsParamsOtherThan', () => {
   it('should return true if there are additional params', () => {
-    const syntax = ResourceSyntax.fromString('my-res?x=value&y=value-y')
+    const syntax = ScopeSyntax.fromString('my-res?x=value&y=value-y')
     expect(syntax.containsParamsOtherThan(['x'])).toBe(true)
   })
 })
 
 describe('url encoding', () => {
   it('should handle URL encoding in positional parameters', () => {
-    const syntax = ResourceSyntax.fromString('my-res:my%20pos')
+    const syntax = ScopeSyntax.fromString('my-res:my%20pos')
     expect(syntax.positional).toBe('my pos')
   })
 
   it('should handle URL encoding in named parameters', () => {
-    const syntax = ResourceSyntax.fromString('my-res?x=my%20value')
+    const syntax = ScopeSyntax.fromString('my-res?x=my%20value')
     expect(syntax.getSingle('x')).toBe('my value')
   })
 
   it(`should allow colon (:) in positional parameters`, () => {
-    const syntax = ResourceSyntax.fromString('my-res:my:pos')
+    const syntax = ScopeSyntax.fromString('my-res:my:pos')
     expect(syntax.positional).toBe('my:pos')
   })
 })

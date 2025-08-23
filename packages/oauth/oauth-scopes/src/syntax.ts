@@ -1,5 +1,5 @@
-import { minIdx, sum, toRecord } from './lib/util'
-import type { LexPermission } from './types'
+import { minIdx, sum } from './lib/util.js'
+import type { LexPermission } from './types.js'
 
 export type ParamValue = string | number | boolean
 
@@ -10,24 +10,18 @@ export type NeArray<T> = [T, ...T[]]
  */
 export type NeRoArray<T> = readonly [T, ...T[]]
 
-export type ResourceSyntaxFor<R extends string> =
-  | R
-  | `${R}:${string}`
-  | `${R}?${string}`
-
-export type ResourceSyntaxJson<R extends string = string> = {
-  resource: R
-  positional?: string
-  params?: Record<string, undefined | ParamValue | NeRoArray<ParamValue>>
-}
+export type ScopeSyntaxFor<P extends string> =
+  | P
+  | `${P}:${string}`
+  | `${P}?${string}`
 
 /**
  * Allows to quickly check if a scope is for a specific resource.
  */
-export function isResourceSyntaxFor<R extends string>(
+export function isScopeSyntaxFor<P extends string>(
   scopeValue: string,
-  resource: R,
-): scopeValue is ResourceSyntaxFor<R> {
+  resource: P,
+): scopeValue is ScopeSyntaxFor<P> {
   if (!scopeValue.startsWith(resource)) return false
   if (scopeValue.length === resource.length) return true
 
@@ -40,7 +34,7 @@ export function isResourceSyntaxFor<R extends string>(
  * interface compatible with the {@link URLSearchParams} interface, allowing url
  * params to be used "out of the box".
  */
-export interface ResourceSyntaxParams
+export interface ScopeSyntaxParams
   extends Iterable<[string, ParamValue], void, unknown> {
   readonly size: number
   keys(): Iterable<string>
@@ -53,22 +47,22 @@ export interface ResourceSyntaxParams
  * atproto oauth scopes.
  * The syntax is defined as follows:
  * ```nbf
- * scope := resource [':' positional] ['?' params]
+ * scope := prefix [':' positional] ['?' params]
  * params := param ['&' param]*
  * param := name '=' value
  * ```
  * Where "positional" can be used as short-hand (i.e. not used in combination
  * with) for a specific parameter.
  */
-export class ResourceSyntax<R extends string = string> {
+export class ScopeSyntax<P extends string = string> {
   constructor(
-    public readonly resource: R,
+    public readonly prefix: P,
     public readonly positional?: string,
-    public readonly params?: ResourceSyntaxParams,
+    public readonly params?: ScopeSyntaxParams,
   ) {}
 
-  is<T extends string>(resource: T): this is ResourceSyntax<T> {
-    return this.resource === (resource as string)
+  is<T extends string>(prefix: T): this is ScopeSyntax<T> {
+    return this.prefix === (prefix as string)
   }
 
   containsParamsOtherThan(allowedParam: readonly string[]): boolean {
@@ -154,29 +148,19 @@ export class ResourceSyntax<R extends string = string> {
     return values as [string, ...string[]]
   }
 
-  toString(): ResourceSyntaxFor<R> {
-    return encodeScope(this.resource, this.positional, this.params)
+  toString(): ScopeSyntaxFor<P> {
+    return encodeScope(this.prefix, this.positional, this.params)
   }
 
-  toJSON(): ResourceSyntaxJson<R> {
-    return {
-      resource: this.resource,
-      positional: this.positional,
-      params: this.params?.size ? toRecord(this.params) : undefined,
-    }
-  }
-
-  static fromString<R extends string>(
-    scope: R | `${R}:${string}` | `${R}?${string}`,
-  ): ResourceSyntax<R> {
+  static fromString<P extends string>(
+    scope: P | `${P}:${string}` | `${P}?${string}`,
+  ): ScopeSyntax<P> {
     const paramIdx = scope.indexOf('?')
     const colonIdx = scope.indexOf(':')
 
-    const resourceEnd = minIdx(paramIdx, colonIdx)
+    const prefixEnd = minIdx(paramIdx, colonIdx)
 
-    const resource = (
-      resourceEnd !== -1 ? scope.slice(0, resourceEnd) : scope
-    ) as R
+    const prefix = (prefixEnd !== -1 ? scope.slice(0, prefixEnd) : scope) as P
 
     const positional =
       colonIdx !== -1
@@ -195,20 +179,20 @@ export class ResourceSyntax<R extends string = string> {
           : new URLSearchParams(scope.slice(paramIdx + 1))
         : undefined
 
-    return new ResourceSyntax(resource, positional, params)
+    return new ScopeSyntax(prefix, positional, params)
   }
 
-  static fromLex(lexPermission: LexPermission): ResourceSyntax {
+  static fromLex(lexPermission: LexPermission): ScopeSyntax {
     const params = new LexPermissionParamsGetter(lexPermission)
-    return new ResourceSyntax(lexPermission.resource, undefined, params)
+    return new ScopeSyntax(lexPermission.resource, undefined, params)
   }
 }
 
 /**
- * Translates a {@link LexPermission} into a {@link ResourceSyntaxParams} to be used
- * by the {@link ResourceSyntax}.
+ * Translates a {@link LexPermission} into a {@link ScopeSyntaxParams} to be used
+ * by the {@link ScopeSyntax}.
  */
-export class LexPermissionParamsGetter implements ResourceSyntaxParams {
+export class LexPermissionParamsGetter implements ScopeSyntaxParams {
   constructor(protected readonly lexPermission: LexPermission) {}
 
   get size() {
@@ -279,18 +263,18 @@ function stringifyEntryItems([key, value]: [unknown, unknown]) {
 /**
  * Format a scope string for a resource with parameters
  * as a positional parameter, if possible (if it has only one value).
- * @param resource - The resource name (e.g. `rpc`, `repo`, etc.)
+ * @param prefix - The resource name (e.g. `rpc`, `repo`, etc.)
  * @param inputParams - The list of parameters.
  * @param positionalName - The name of the parameter that should be used as
  * positional parameter.
  */
-export function formatScope<R extends string>(
-  resource: R,
+export function formatScope<P extends string>(
+  prefix: P,
   inputParams: Iterable<
     [name: string, value: undefined | ParamValue | NeRoArray<ParamValue>]
   >,
   positionalName?: string,
-): ResourceSyntaxFor<R> {
+): ScopeSyntaxFor<P> {
   const queryParams = new URLSearchParams()
 
   let positionalValue: string | undefined = undefined
@@ -335,14 +319,14 @@ export function formatScope<R extends string>(
     positionalValue = undefined
   }
 
-  return encodeScope(resource, positionalValue, queryParams)
+  return encodeScope(prefix, positionalValue, queryParams)
 }
 
-export function encodeScope<R extends string>(
-  resource: R,
+export function encodeScope<P extends string>(
+  resource: P,
   positional?: string,
-  params?: ResourceSyntaxParams,
-): ResourceSyntaxFor<R> {
+  params?: ScopeSyntaxParams,
+): ScopeSyntaxFor<P> {
   let scope: string = resource
 
   if (positional !== undefined) {
@@ -357,7 +341,7 @@ export function encodeScope<R extends string>(
     scope += `?${queryString}`
   }
 
-  return scope as ResourceSyntaxFor<R>
+  return scope as ScopeSyntaxFor<P>
 }
 
 function encodeParamEntry([key, value]: [string, ParamValue]): string {

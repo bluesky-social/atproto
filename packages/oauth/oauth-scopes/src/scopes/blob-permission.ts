@@ -1,10 +1,11 @@
+import { Matchable } from '../lib/matchable.js'
 import { Accept, isAccept, matchesAnyAccept } from '../lib/mime.js'
 import { Parser } from '../parser.js'
 import {
   NeRoArray,
   ParamValue,
-  ResourceSyntax,
-  isResourceSyntaxFor,
+  ScopeSyntax,
+  isScopeSyntaxFor,
 } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
@@ -14,7 +15,7 @@ export type BlobPermissionMatch = {
   mime: string
 }
 
-export class BlobPermission {
+export class BlobPermission implements Matchable<BlobPermissionMatch> {
   constructor(public readonly accept: NeRoArray<Accept>) {}
 
   matches(options: BlobPermissionMatch) {
@@ -25,7 +26,7 @@ export class BlobPermission {
     return BlobPermission.parser.format(this)
   }
 
-  static readonly parser = new Parser(
+  protected static readonly parser = new Parser(
     'blob',
     {
       accept: {
@@ -47,18 +48,18 @@ export class BlobPermission {
   )
 
   static fromString(scope: string) {
-    if (!isResourceSyntaxFor(scope, 'blob')) return null
-    const syntax = ResourceSyntax.fromString(scope)
+    if (!isScopeSyntaxFor(scope, 'blob')) return null
+    const syntax = ScopeSyntax.fromString(scope)
     return BlobPermission.fromSyntax(syntax)
   }
 
   static fromLex(lexPermission: LexPermission) {
     if (lexPermission.resource !== 'blob') return null
-    const syntax = ResourceSyntax.fromLex(lexPermission)
+    const syntax = ScopeSyntax.fromLex(lexPermission)
     return BlobPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ResourceSyntax) {
+  static fromSyntax(syntax: ScopeSyntax) {
     const result = BlobPermission.parser.parse(syntax)
     if (!result) return null
 

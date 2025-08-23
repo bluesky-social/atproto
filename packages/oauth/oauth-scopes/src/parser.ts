@@ -1,8 +1,8 @@
 import {
   NeRoArray,
   ParamValue,
-  ResourceSyntax,
-  ResourceSyntaxFor,
+  ScopeSyntax,
+  ScopeSyntaxFor,
   formatScope,
 } from './syntax.js'
 
@@ -29,7 +29,7 @@ type ParamsSchema = Record<
     }
 >
 
-type ParsedParams<S extends ParamsSchema> = {
+type InferParams<S extends ParamsSchema> = {
   [K in keyof S]:
     | (S[K]['required'] extends true
         ? never
@@ -41,18 +41,18 @@ type ParsedParams<S extends ParamsSchema> = {
         : InferParamPredicate<S[K]['validate']>)
 } & NonNullable<unknown>
 
-export class Parser<R extends string, S extends ParamsSchema> {
-  readonly schemaKeys: ReadonlyArray<keyof S & string>
+export class Parser<P extends string, S extends ParamsSchema> {
+  public readonly schemaKeys: ReadonlyArray<keyof S & string>
 
   constructor(
-    readonly resource: R,
-    readonly schema: S,
-    readonly positionalName?: keyof S & string,
+    public readonly prefix: P,
+    public readonly schema: S,
+    public readonly positionalName?: keyof S & string,
   ) {
     this.schemaKeys = Object.keys(schema)
   }
 
-  format(values: ParsedParams<S>): ResourceSyntaxFor<R> {
+  format(values: InferParams<S>): ScopeSyntaxFor<P> {
     // Build params
     const params: [
       name: string,
@@ -88,11 +88,11 @@ export class Parser<R extends string, S extends ParamsSchema> {
       params.push([key, normalized])
     }
 
-    return formatScope<R>(this.resource, params, this.positionalName)
+    return formatScope<P>(this.prefix, params, this.positionalName)
   }
 
-  parse(syntax: ResourceSyntax) {
-    if (!syntax.is(this.resource)) return null
+  parse(syntax: ScopeSyntax) {
+    if (!syntax.is(this.prefix)) return null
     if (syntax.containsParamsOtherThan(this.schemaKeys)) return null
 
     const result: Record<
@@ -125,11 +125,11 @@ export class Parser<R extends string, S extends ParamsSchema> {
       result[key] = value ?? definition.default
     }
 
-    return result as ParsedParams<S>
+    return result as InferParams<S>
   }
 
-  parseString(scope: string): ParsedParams<S> | null {
-    const syntax = ResourceSyntax.fromString(scope)
+  parseString(scope: string): InferParams<S> | null {
+    const syntax = ScopeSyntax.fromString(scope)
     return this.parse(syntax)
   }
 }

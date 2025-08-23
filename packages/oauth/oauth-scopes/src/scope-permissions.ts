@@ -1,24 +1,21 @@
+import { ScopeMissingError } from './scope-missing-error.js'
 import {
   AccountPermission,
   AccountPermissionMatch,
-} from './resources/account-permission.js'
+} from './scopes/account-permission.js'
 import {
   BlobPermission,
   BlobPermissionMatch,
-} from './resources/blob-permission.js'
+} from './scopes/blob-permission.js'
 import {
   IdentityPermission,
   IdentityPermissionMatch,
-} from './resources/identity-permission.js'
+} from './scopes/identity-permission.js'
 import {
   RepoPermission,
   RepoPermissionMatch,
-} from './resources/repo-permission.js'
-import {
-  RpcPermission,
-  RpcPermissionMatch,
-} from './resources/rpc-permission.js'
-import { ScopeMissingError } from './scope-missing-error.js'
+} from './scopes/repo-permission.js'
+import { RpcPermission, RpcPermissionMatch } from './scopes/rpc-permission.js'
 import { ScopesSet } from './scopes-set.js'
 
 export type {
