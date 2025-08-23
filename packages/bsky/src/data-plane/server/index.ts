@@ -8,6 +8,7 @@ import createRoutes from './routes'
 
 export type { DatabaseSchema }
 
+export { BsyncSubscription } from './bsync-subscription'
 export { RepoSubscription } from './subscription'
 
 export class DataPlaneServer {
