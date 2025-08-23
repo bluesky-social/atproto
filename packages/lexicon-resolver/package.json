@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "commonjs",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
