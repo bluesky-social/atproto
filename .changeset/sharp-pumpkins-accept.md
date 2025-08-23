@@ -2,4 +2,4 @@
 "@atproto/xrpc": patch
 ---
 
-Explicitly set the `redirect: "follow"` `fetch()` option
+Explicitly set the `redirect: "follow"` in `fetch()` calls

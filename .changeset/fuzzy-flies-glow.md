@@ -2,4 +2,4 @@
 "@atproto/oauth-scopes": minor
 ---
 
-Properly validate NSID syntax
+Use strict NSID validation. repo & rpc scopes with invalid NSIDs will be rejected.
