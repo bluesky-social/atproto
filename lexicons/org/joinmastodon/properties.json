@@ -1,0 +1,72 @@
+{
+  "lexicon": 1,
+  "id": "org.joinmastodon.properties",
+  "description": "https://docs.joinmastodon.org/spec/activitypub/",
+  "defs": {
+    "attributionDomains": {
+      "type": "ref",
+      "ref": "org.w3.activitystreams.defs#objectType",
+      "description": "http://joinmastodon.org/ns#attributionDomains; Domain: Actor; Range: ?"
+    },
+    "blurhash": {
+      "type": "string",
+      "description": "http://joinmastodon.org/ns#blurhash; Domain: Image; Range: string"
+    },
+    "discoverable": {
+      "type": "boolean",
+      "description": "http://joinmastodon.org/ns#discoverable; Domain: Object; Range: boolean"
+    },
+    "featured": {
+      "type": "ref",
+      "ref": "org.w3.activitystreams.defs#objectType",
+      "description": "http://joinmastodon.org/ns#featured; Domain: Actor; Range: Collection [Object]"
+    },
+    "featuredTags": {
+      "type": "ref",
+      "ref": "org.w3.activitystreams.defs#objectType",
+      "description": "http://joinmastodon.org/ns#featuredTags; Domain: Actor; Range: Collection [HashTag]"
+    },
+    "focalPoint": {
+      "type": "unknown",
+      "description": "http://joinmastodon.org/ns#focalPoint; Domain: Image; Range: [float]; Note: Lexicon does not support floats"
+    },
+    "indexable": {
+      "type": "boolean",
+      "description": "http://joinmastodon.org/ns#indexable; Domain: Object; Range: boolean"
+    },
+    "memorial": {
+      "type": "boolean",
+      "description": "http://joinmastodon.org/ns#memorial; Domain: Object; Range: boolean"
+    },
+    "suspended": {
+      "type": "boolean",
+      "description": "http://joinmastodon.org/ns#suspended; Domain: Object; Range: boolean"
+    },
+
+
+    "value": {
+      "type": "string",
+      "description": "https://docs.joinmastodon.org/spec/activitypub/#PropertyValue; Domain: Object; Range: string"
+    },
+
+
+    "publicKey": {
+      "type": "object",
+      "description": "https://docs.joinmastodon.org/spec/activitypub/#publicKey; https://w3id.org/security#publicKey; Domain: Actor",
+      "properties": {
+        "id": { "type": "ref", "ref": "org.w3.activitystreams.properties#id" },
+        "owner": { "type": "ref", "ref": "#owner" },
+        "publicKeyPem": { "type": "ref", "ref": "#publicKeyPem" }
+      }
+    },
+    "owner": {
+      "type": "ref",
+      "ref": "org.w3.activitystreams.defs#objectType",
+      "description": "https://docs.joinmastodon.org/spec/activitypub/#publicKey; https://w3id.org/security#owner; Domain: PublicKey; Range: Actor"
+    },
+    "publicKeyPem": {
+      "type": "string",
+      "description": "https://docs.joinmastodon.org/spec/activitypub/#publicKey; https://w3id.org/security#publicKeyPem; Domain: PublicKey; Range: string"
+    }
+  }
+}
