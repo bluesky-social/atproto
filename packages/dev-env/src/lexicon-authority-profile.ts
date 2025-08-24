@@ -5,7 +5,30 @@ import { TestPds } from './pds'
 const LEXICONS: readonly LexiconDoc[] = [
   {
     lexicon: 1,
-    id: 'com.example.basePermissions',
+    id: 'com.atproto.moderation.baseAuth',
+    defs: {
+      main: {
+        type: 'permission-set',
+        title: 'Moderation',
+        'title:lang': { fr: 'Modération' },
+        detail: 'Manage moderation actions',
+        'detail:lang': {
+          'fr-BE': 'Permet de gérer les actions de modération',
+        },
+        permissions: [
+          {
+            type: 'permission',
+            resource: 'rpc',
+            aud: '*',
+            lxm: ['com.atproto.moderation.createReport'],
+          },
+        ],
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.calendar.baseAuth',
     defs: {
       main: {
         type: 'permission-set',
@@ -26,14 +49,6 @@ const LEXICONS: readonly LexiconDoc[] = [
               'com.example.calendar.getEventRsvps',
             ],
           },
-          // @NOTE: this is not a valid permission as the referenced lxm are not
-          // under the same authority as "com.example.basePermissions".
-          {
-            type: 'permission',
-            resource: 'rpc',
-            aud: '*',
-            lxm: ['com.atproto.moderation.createReport'],
-          },
           {
             type: 'permission',
             resource: 'repo',
@@ -41,6 +56,11 @@ const LEXICONS: readonly LexiconDoc[] = [
               'com.example.calendar.event',
               'com.example.calendar.rsvp',
             ],
+          },
+          {
+            type: 'permission',
+            resource: 'blob',
+            accept: ['image/*', 'video/*'],
           },
         ],
       },
