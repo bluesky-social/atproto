@@ -3,6 +3,7 @@ import { LexiconResolver } from '@atproto/lexicon-resolver'
 import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
 import { stringify } from '../lib/util/function.js'
 import { LexiconGetter } from './lexicon-getter.js'
+import { LexiconResolutionError } from './lexicon-resolution-error.js'
 import { LexiconStore } from './lexicon-store.js'
 
 export * from './lexicon-store.js'
@@ -56,8 +57,12 @@ export class LexiconManager {
   protected async getPermissionSetEntry(
     nsid: Nsid,
   ): Promise<[nsid: string, permissionSet: LexPermissionSet]> {
-    const permissionSet = await this.getPermissionSet(nsid)
-    return [nsid.toString(), permissionSet]
+    try {
+      const permissionSet = await this.getPermissionSet(nsid)
+      return [nsid.toString(), permissionSet]
+    } catch (cause) {
+      throw new LexiconResolutionError(nsid, { cause })
+    }
   }
 
   protected async getPermissionSet(nsid: Nsid): Promise<LexPermissionSet> {

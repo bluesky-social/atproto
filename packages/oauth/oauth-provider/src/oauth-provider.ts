@@ -678,9 +678,16 @@ export class OAuthProvider extends OAuthVerifier {
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
         })),
-        permissionSets: await this.lexiconManager.getPermissionSetsFromScope(
-          parameters.scope,
-        ),
+        permissionSets: await this.lexiconManager
+          .getPermissionSetsFromScope(parameters.scope)
+          .catch((cause) => {
+            throw new AuthorizationError(
+              parameters,
+              'Unable to retrieve permission sets',
+              'invalid_scope',
+              cause,
+            )
+          }),
       }
     } catch (err) {
       try {

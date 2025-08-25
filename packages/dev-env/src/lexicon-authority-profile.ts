@@ -11,9 +11,9 @@ const LEXICONS: readonly LexiconDoc[] = [
         type: 'permission-set',
         title: 'Moderation',
         'title:lang': { fr: 'Modération' },
-        detail: 'Manage moderation actions',
+        detail: 'Create moderation reports',
         'detail:lang': {
-          'fr-BE': 'Permet de gérer les actions de modération',
+          'fr-FR': 'Créer des rapports de modération',
         },
         permissions: [
           {
@@ -36,7 +36,7 @@ const LEXICONS: readonly LexiconDoc[] = [
         'title:lang': { fr: 'Calendrier' },
         detail: 'Manage your events and RSVPs',
         'detail:lang': {
-          'fr-BE': 'Permet de gérer vos événements et réponses',
+          'fr-BE': 'Gérer vos événements et réponses',
         },
         permissions: [
           {

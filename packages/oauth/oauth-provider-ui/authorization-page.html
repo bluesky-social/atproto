@@ -103,6 +103,72 @@
 
       document.cookie = `csrf-${requestUri}=xyz; path=/`
 
+      const lexicons = [
+        {
+          lexicon: 1,
+          id: 'com.atproto.moderation.basePermissions',
+          defs: {
+            main: {
+              type: 'permission-set',
+              title: 'Moderation',
+              'title:lang': { fr: 'Modération' },
+              detail: 'Create moderation reports',
+              'detail:lang': {
+                'fr-FR': 'Créer des rapports de modération',
+              },
+              permissions: [
+                {
+                  type: 'permission',
+                  resource: 'rpc',
+                  aud: '*',
+                  lxm: ['com.atproto.moderation.createReport'],
+                },
+              ],
+            },
+          },
+        },
+        {
+          lexicon: 1,
+          id: 'com.example.calendar.basePermissions',
+          defs: {
+            main: {
+              type: 'permission-set',
+              title: 'Calendar',
+              'title:lang': { fr: 'Calendrier' },
+              detail: 'Manage your events and RSVPs',
+              'detail:lang': {
+                'fr-BE': 'Gérer vos événements et réponses',
+              },
+              permissions: [
+                {
+                  type: 'permission',
+                  resource: 'rpc',
+                  aud: 'inherit',
+                  lxm: [
+                    'com.example.calendar.listEvents',
+                    'com.example.calendar.getEventDetails',
+                    'com.example.calendar.getEventRsvps',
+                  ],
+                },
+                {
+                  type: 'permission',
+                  resource: 'repo',
+                  collection: [
+                    'com.example.calendar.event',
+                    'com.example.calendar.rsvp',
+                  ],
+                },
+                {
+                  type: 'permission',
+                  resource: 'blob',
+                  accept: ['image/*', 'video/*'],
+                },
+              ],
+            },
+          },
+        },
+      ]
+
       window.__customizationData = {
         availableUserDomains,
         inviteCodeRequired: false,
@@ -126,71 +192,7 @@
         clientTrusted: false,
         clientFirstParty: false,
         permissionSets: Object.fromEntries(
-          [
-            {
-              lexicon: 1,
-              id: 'com.atproto.moderation.basePermissions',
-              defs: {
-                main: {
-                  type: 'permission-set',
-                  title: 'Moderation',
-                  'title:lang': { fr: 'Modération' },
-                  detail: 'Manage moderation actions',
-                  'detail:lang': {
-                    'fr-BE': 'Permet de gérer les actions de modération',
-                  },
-                  permissions: [
-                    {
-                      type: 'permission',
-                      resource: 'rpc',
-                      aud: '*',
-                      lxm: ['com.atproto.moderation.createReport'],
-                    },
-                  ],
-                },
-              },
-            },
-            {
-              lexicon: 1,
-              id: 'com.example.calendar.basePermissions',
-              defs: {
-                main: {
-                  type: 'permission-set',
-                  title: 'Calendar',
-                  'title:lang': { fr: 'Calendrier' },
-                  detail: 'Manage your events and RSVPs',
-                  'detail:lang': {
-                    'fr-BE': 'Permet de gérer vos événements et réponses',
-                  },
-                  permissions: [
-                    {
-                      type: 'permission',
-                      resource: 'rpc',
-                      aud: 'inherit',
-                      lxm: [
-                        'com.example.calendar.listEvents',
-                        'com.example.calendar.getEventDetails',
-                        'com.example.calendar.getEventRsvps',
-                      ],
-                    },
-                    {
-                      type: 'permission',
-                      resource: 'repo',
-                      collection: [
-                        'com.example.calendar.event',
-                        'com.example.calendar.rsvp',
-                      ],
-                    },
-                    {
-                      type: 'permission',
-                      resource: 'blob',
-                      accept: ['image/*', 'video/*'],
-                    },
-                  ],
-                },
-              },
-            },
-          ].map((v) => [v.id, v.defs.main]),
+          lexicons.map((l) => [l.id, l.defs.main]),
         ),
 
         loginHint,
@@ -199,7 +201,7 @@
           'atproto',
           'account:email',
           'include:com.atproto.moderation.basePermissions',
-          'include:com.example.calendar.basePermissions?aud=did:web:example.com',
+          'include:com.example.calendar.basePermissions?aud=did:web:example.com%23foo',
           // 'account:status?action=manage',
           // 'account:repo?action=manage',
           // 'transition:email',

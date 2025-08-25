@@ -1,4 +1,4 @@
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
+import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { isNonNullable } from '../lib/util.js'
 import { Parser } from '../parser.js'
@@ -19,7 +19,7 @@ import { RpcPermission } from './rpc-permission.js'
 export class IncludeScope {
   constructor(
     public readonly nsid: Nsid,
-    public readonly aud: undefined | AtprotoDid,
+    public readonly aud: undefined | AtprotoAudience,
   ) {}
 
   toString() {
@@ -50,7 +50,7 @@ export class IncludeScope {
       aud: {
         multiple: false,
         required: false,
-        validate: isAtprotoDid,
+        validate: isAtprotoAudience,
       },
     },
     'nsid',

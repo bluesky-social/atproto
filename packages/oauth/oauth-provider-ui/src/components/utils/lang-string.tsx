@@ -30,3 +30,28 @@ export function useLangString(
     return getLangString(value, locale, fallback)
   }, [value, locale, fallback])
 }
+
+export function LangProp<
+  P extends string,
+  O extends {
+    [K in P]?: string
+  } & {
+    [K in P as `${K}:lang`]?: MultiLangString
+  },
+>({
+  object,
+  property,
+  fallback,
+}: {
+  property: P
+  object?: O
+  fallback?: ReactNode
+}): ReactNode {
+  if (!object) return fallback
+  return (
+    <LangString
+      value={object[`${property}:lang` as keyof O]}
+      fallback={object[property] ?? fallback}
+    />
+  )
+}

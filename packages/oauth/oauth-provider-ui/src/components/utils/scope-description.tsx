@@ -29,7 +29,7 @@ import {
   NewspaperIcon,
   RaisingHandIcon,
 } from './icons'
-import { LangString } from './lang-string'
+import { LangProp } from './lang-string'
 
 export type ScopeDescriptionProps = Override<
   HTMLAttributes<HTMLDivElement>,
@@ -157,16 +157,15 @@ function IncludeScopePermissions({
         )
       }
       title={
-        <LangString
-          value={permissionSet?.['title:lang']}
-          fallback={permissionSet?.title ?? nsid}
-        />
+        <LangProp object={permissionSet} property="title" fallback={nsid} />
       }
       description={
-        <LangString
-          value={permissionSet?.['detail:lang']}
+        <LangProp
+          object={permissionSet}
+          property="detail"
           fallback={
-            permissionSet?.detail || (permissionSet?.title ? nsid : null)
+            // Do not set the "nsid" as fallback for the "detail" if is was already used when displaying the "title"
+            permissionSet?.title ? nsid : null
           }
         />
       }
@@ -174,7 +173,7 @@ function IncludeScopePermissions({
       <p className="mt-1">
         <Trans>
           The application requests the permissions necessary to perform the
-          following actions:
+          following actions on your behalf:
         </Trans>
       </p>
       {permissions ? (
@@ -484,8 +483,8 @@ function RpcMethodsDetails({
         </p>
         <p className="mt-1">
           <Trans>
-            The application requests the permissions necessary to perform, on
-            your behalf, the following actions:
+            The application requests the permissions necessary to perform the
+            following actions on your behalf:
           </Trans>
         </p>
         <RpcMethodsTable className="mt-2" permissions={permissions} />
@@ -551,10 +550,10 @@ function RpcMethodsTable({
       <thead>
         <tr className="text-sm">
           <th className="text-left font-normal">
-            <Trans context="LXM verb">Call</Trans>
+            <Trans context="RPC lxm">Call</Trans>
           </th>
           <th className="text-left font-normal">
-            <Trans>Service</Trans>
+            <Trans context="RPC aud">Towards</Trans>
           </th>
         </tr>
       </thead>
@@ -625,8 +624,8 @@ function RepoPermissions({
         </p>
         <p className="mt-1">
           <Trans>
-            The application wants to be able to perform the following actions on
-            your repository:
+            The application requests the permissions necessary to perform the
+            following actions on your behalf:
           </Trans>
         </p>
         <RepoTable className="mt-2" permissions={permissions} />
@@ -825,12 +824,26 @@ function Lxm({ lxm, ...attrs }: LxmProps) {
 }
 
 type AudProps = Override<
-  Omit<HTMLAttributes<HTMLDivElement>, 'children'>,
+  Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'>,
   { aud: AudParam }
 >
 function Aud({ aud, ...attrs }: AudProps) {
+  if (aud.startsWith('did:web:bsky.app#')) {
+    return (
+      <em {...attrs} title={aud}>
+        <Trans>Bluesky App servers</Trans>
+      </em>
+    )
+  }
+  if (aud.startsWith('did:web:bsky.chat#')) {
+    return (
+      <em {...attrs} title={aud}>
+        <Trans>Bluesky Chat servers</Trans>
+      </em>
+    )
+  }
   return (
-    <Identifier {...attrs} identifier={aud}>
+    <Identifier {...attrs} identifier={aud} title={aud}>
       <Trans>Any service</Trans>
     </Identifier>
   )

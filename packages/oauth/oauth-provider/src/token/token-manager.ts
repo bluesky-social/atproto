@@ -15,6 +15,7 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { LexiconManager } from '../lexicon/lexicon-manager.js'
+import { LexiconResolutionError } from '../lexicon/lexicon-resolution-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
@@ -101,9 +102,16 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
-    const permissionsScope = await this.lexiconManager.buildTokenScope(
-      parameters.scope!,
-    )
+    const permissionsScope = await this.lexiconManager
+      .buildTokenScope(parameters.scope!)
+      .catch((cause) => {
+        throw new InvalidRequestError(
+          cause instanceof LexiconResolutionError
+            ? cause.message
+            : 'Unable to retrieve included permission sets',
+          cause,
+        )
+      })
 
     const tokenData: TokenData = {
       createdAt: now,
@@ -212,6 +220,9 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
+    // @NOTE since the permission sets are stored in a persistent store,
+    // it's fine to propagate a 500 (server_error) here as the values should
+    // be retrievable from the store.
     const permissionsScope = await this.lexiconManager.buildTokenScope(
       parameters.scope!,
     )

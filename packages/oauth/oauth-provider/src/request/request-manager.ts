@@ -24,6 +24,7 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { LexiconManager } from '../lexicon/lexicon-manager.js'
+import { LexiconResolutionError } from '../lexicon/lexicon-resolution-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
@@ -292,7 +293,18 @@ export class RequestManager {
     // Make sure that every nsid in the scope resolves to a valid permission set
     // lexicon
     if (parameters.scope) {
-      await this.lexiconManager.getPermissionSetsFromScope(parameters.scope)
+      await this.lexiconManager
+        .getPermissionSetsFromScope(parameters.scope)
+        .catch((cause) => {
+          throw new AuthorizationError(
+            parameters,
+            cause instanceof LexiconResolutionError
+              ? cause.message
+              : 'Unable to retrieve included permission sets',
+            'invalid_scope',
+            cause,
+          )
+        })
     }
 
     return parameters
