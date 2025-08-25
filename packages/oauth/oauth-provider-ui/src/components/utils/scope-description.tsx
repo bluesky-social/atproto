@@ -1,13 +1,15 @@
 import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { HTMLAttributes, useMemo } from 'react'
+import { HTMLAttributes, ReactNode, useMemo } from 'react'
 import { Override } from '#/lib/util'
 import {
+  AtprotoDid,
   AudParam,
   BlobPermission,
   CollectionParam,
   IncludeScope,
   LxmParam,
+  Nsid,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
@@ -25,11 +27,12 @@ import {
   CheckMarkIcon,
   EmailIcon,
   NewspaperIcon,
+  RaisingHandIcon,
 } from './icons'
 import { LangString } from './lang-string'
 
 export type ScopeDescriptionProps = Override<
-  React.HTMLAttributes<HTMLDivElement>,
+  HTMLAttributes<HTMLDivElement>,
   {
     clientTrusted?: boolean
     clientFirstParty?: boolean
@@ -86,7 +89,7 @@ export function ScopeDescription({
       <BlueskyAppviewPermissions permissions={permissions} />
       <BlueskyChatPermissions permissions={permissions} />
 
-      <PermissionSetsPermissions
+      <IncludedPermissions
         includeScopes={includeScopes}
         permissionSets={permissionSets}
       />
@@ -100,7 +103,7 @@ export function ScopeDescription({
   )
 }
 
-function PermissionSetsPermissions({
+function IncludedPermissions({
   includeScopes,
   permissionSets,
 }: {
@@ -112,7 +115,7 @@ function PermissionSetsPermissions({
   return (
     <>
       {includeScopes.map((includeScope, i) => (
-        <PermissionSetPermissions
+        <IncludeScopePermissions
           key={i}
           includeScope={includeScope}
           permissionSet={permissionSets[includeScope.nsid]}
@@ -122,7 +125,7 @@ function PermissionSetsPermissions({
   )
 }
 
-function PermissionSetPermissions({
+function IncludeScopePermissions({
   includeScope,
   permissionSet,
 }: {
@@ -147,6 +150,8 @@ function PermissionSetPermissions({
           <ButterflyIcon className="size-6" />
         ) : isBskyChatNsid(nsid) ? (
           <ChatIcon className="size-6" />
+        ) : nsid.startsWith('com.atproto.moderation.') ? (
+          <RaisingHandIcon className="size-6" />
         ) : (
           <AtomIcon className="size-6" />
         )
@@ -174,8 +179,8 @@ function PermissionSetPermissions({
       </p>
       {permissions ? (
         <>
-          <RepoTable className="mt-2" permissions={permissions} />
           <RpcMethodsTable className="mt-2" permissions={permissions} />
+          <RepoTable className="mt-2" permissions={permissions} />
         </>
       ) : null}
     </DescriptionCard>
@@ -514,8 +519,6 @@ function RpcMethodsTable({
   className = '',
   ...attrs
 }: RpcMethodsTableProps) {
-  const { t } = useLingui()
-
   const audLxmsEntries = useMemo(() => {
     const map = new Map<AudParam, Set<LxmParam>>()
 
@@ -532,7 +535,12 @@ function RpcMethodsTable({
       .sort(([a], [b]) => a.localeCompare(b))
       .map(
         ([aud, lxms]) =>
-          [aud, Array.from(lxms).sort((a, b) => a.localeCompare(b))] as const,
+          [
+            aud,
+            lxms.has('*')
+              ? (['*'] as const)
+              : Array.from(lxms).sort((a, b) => a.localeCompare(b)),
+          ] as const,
       )
   }, [permissions])
 
@@ -542,29 +550,29 @@ function RpcMethodsTable({
     <table className={`w-full table-auto ${className}`} {...attrs}>
       <thead>
         <tr className="text-sm">
-          <th className="text-left font-normal">{t`Service`}</th>
-          <th className="text-left font-normal">{t`Methods`}</th>
+          <th className="text-left font-normal">
+            <Trans context="LXM verb">Call</Trans>
+          </th>
+          <th className="text-left font-normal">
+            <Trans>Service</Trans>
+          </th>
         </tr>
       </thead>
       <tbody>
-        {audLxmsEntries.map(([aud, lxms]) => (
-          <tr key={aud} className="text-sm">
-            <td className="align-top text-slate-500">
-              {aud === '*' ? <em>{t`Any service`}</em> : <code>{aud}</code>}
-            </td>
-            <td className="text-slate-500">
-              {lxms.includes('*') ? (
-                <em>{t`Any method`}</em>
-              ) : (
-                lxms.map((lxm) => (
-                  <code className="block" key={lxm}>
-                    {lxm}
-                  </code>
-                ))
+        {audLxmsEntries.map(([aud, lxms]) =>
+          lxms.map((lxm, i, array) => (
+            <tr key={lxm} className="text-xs">
+              <td className={i > 0 ? 'pt-1' : undefined}>
+                <Lxm lxm={lxm} />
+              </td>
+              {i === 0 && (
+                <td className="align-top" rowSpan={array.length}>
+                  <Aud aud={aud} />
+                </td>
               )}
-            </td>
-          </tr>
-        ))}
+            </tr>
+          )),
+        )}
       </tbody>
     </table>
   )
@@ -663,12 +671,12 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
       const parsed = RepoPermission.fromString(s)
       if (!parsed) continue
 
-      for (const nsid of parsed.collection) {
-        if (map.has(nsid)) {
-          const actions = map.get(nsid)!
+      for (const coll of parsed.collection) {
+        if (map.has(coll)) {
+          const actions = map.get(coll)!
           for (const action of parsed.action) actions[action] = true
         } else {
-          map.set(nsid, {
+          map.set(coll, {
             create: parsed.action.includes('create'),
             update: parsed.action.includes('update'),
             delete: parsed.action.includes('delete'),
@@ -710,40 +718,34 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
         </tr>
       </thead>
       <tbody>
-        {nsidActionsEntries.map(([nsid, actions]) => (
-          <tr key={nsid} className="text-sm">
-            <td className="text-slate-500">
-              {nsid === '*' ? (
-                <em>{t`Any collection`}</em>
-              ) : (
-                <code>{nsid}</code>
-              )}
+        {nsidActionsEntries.map(([coll, actions], i) => (
+          <tr key={coll} className="text-xs">
+            <td className={i > 0 ? 'pt-1' : undefined}>
+              <Collection coll={coll} />
             </td>
             <td className="text-center">
               {starActions?.create || actions.create ? (
-                <CheckMarkIcon className="inline-block size-4" />
+                <CheckMarkIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.update || actions.update ? (
-                <CheckMarkIcon className="inline-block size-4" />
+                <CheckMarkIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.delete || actions.delete ? (
-                <CheckMarkIcon className="inline-block size-4" />
+                <CheckMarkIcon className="inline-block size-3" />
               ) : null}
             </td>
           </tr>
         ))}
         {blobScopes.length > 0 && (
           <tr>
-            <td>
-              <em>
-                <Trans>Blob storage</Trans>
-              </em>
+            <td className="pt-2">
+              <Trans>Blob storage</Trans>
             </td>
-            <td colSpan={3}>
+            <td colSpan={3} className="pt-2 text-center">
               <Trans>Upload files</Trans>
             </td>
           </tr>
@@ -807,5 +809,72 @@ function scopeEnablesPrivateBskyAppMethods(scope: string): boolean {
     rpc.lxm.includes('app.bsky.graph.unmuteThread') ||
     rpc.lxm.includes('app.bsky.graph.getMutes') ||
     rpc.lxm.includes('*')
+  )
+}
+
+type LxmProps = Override<
+  Omit<HTMLAttributes<HTMLDivElement>, 'children'>,
+  { lxm: LxmParam }
+>
+function Lxm({ lxm, ...attrs }: LxmProps) {
+  return (
+    <Identifier {...attrs} identifier={lxm}>
+      <Trans>Any method</Trans>
+    </Identifier>
+  )
+}
+
+type AudProps = Override<
+  Omit<HTMLAttributes<HTMLDivElement>, 'children'>,
+  { aud: AudParam }
+>
+function Aud({ aud, ...attrs }: AudProps) {
+  return (
+    <Identifier {...attrs} identifier={aud}>
+      <Trans>Any service</Trans>
+    </Identifier>
+  )
+}
+
+type CollectionProps = Override<
+  Omit<HTMLAttributes<HTMLDivElement>, 'children'>,
+  { coll: CollectionParam }
+>
+function Collection({ coll, ...attrs }: CollectionProps) {
+  return (
+    <Identifier {...attrs} identifier={coll}>
+      <Trans>Any collection</Trans>
+    </Identifier>
+  )
+}
+
+type IdentifierProps = Override<
+  HTMLAttributes<HTMLDivElement>,
+  { identifier: Nsid | AtprotoDid | '*'; children: ReactNode }
+>
+function Identifier({
+  identifier,
+  children,
+  className = '',
+  ...attrs
+}: IdentifierProps): ReactNode {
+  return identifier === '*' ? (
+    <em {...attrs} className={`text-slate-500 ${className}`}>
+      {children}
+    </em>
+  ) : (
+    <code {...attrs} className={`text-slate-500 ${className}`}>
+      {identifier.split('.').map((part, i) => (
+        <>
+          {i > 0 && (
+            <>
+              {'.'}
+              <wbr />
+            </>
+          )}
+          {part}
+        </>
+      ))}
+    </code>
   )
 }

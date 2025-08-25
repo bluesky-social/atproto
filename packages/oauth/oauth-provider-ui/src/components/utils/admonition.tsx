@@ -35,6 +35,7 @@ export const Admonition = memo(function Admonition({
       {...props}
       role={props.role ?? type}
       className={clsx(
+        'max-w-full',
         'flex flex-row',
         'gap-2',
         'p-3',

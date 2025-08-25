@@ -5,7 +5,7 @@ import { TestPds } from './pds'
 const LEXICONS: readonly LexiconDoc[] = [
   {
     lexicon: 1,
-    id: 'com.atproto.moderation.baseAuth',
+    id: 'com.atproto.moderation.basePermissions',
     defs: {
       main: {
         type: 'permission-set',
@@ -28,7 +28,7 @@ const LEXICONS: readonly LexiconDoc[] = [
   },
   {
     lexicon: 1,
-    id: 'com.example.calendar.baseAuth',
+    id: 'com.example.calendar.basePermissions',
     defs: {
       main: {
         type: 'permission-set',
