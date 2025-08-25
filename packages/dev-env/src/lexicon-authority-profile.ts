@@ -42,7 +42,7 @@ const LEXICONS: readonly LexiconDoc[] = [
           {
             type: 'permission',
             resource: 'rpc',
-            aud: 'inherit',
+            inheritAud: true,
             lxm: [
               'com.example.calendar.listEvents',
               'com.example.calendar.getEventDetails',

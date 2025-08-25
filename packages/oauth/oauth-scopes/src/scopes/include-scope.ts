@@ -79,12 +79,18 @@ function parseIncludedPermission(
 ) {
   if (
     permission.resource === 'rpc' &&
-    permission.aud === 'inherit' &&
+    permission.inheritAud === true &&
+    permission.aud === undefined &&
     this.aud
   ) {
-    // "rpc:" permissions can "inherit" their audience from the
-    // "include:<nsid>?aud=<audience>" scope
-    return parseResourcePermissionLexicon({ ...permission, aud: this.aud })
+    // "rpc" permissions can "inherit" their audience from "aud" param defined
+    // in the "include:<nsid>?aud=<audience>" scope the permission set was
+    // loaded from.
+    return parseResourcePermissionLexicon({
+      ...permission,
+      inheritAud: undefined,
+      aud: this.aud,
+    })
   }
 
   return parseResourcePermissionLexicon(permission)
