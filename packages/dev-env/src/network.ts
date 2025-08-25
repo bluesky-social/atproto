@@ -12,7 +12,7 @@ import { TestOzone } from './ozone'
 import { OzoneServiceProfile } from './ozone-service-profile'
 import { TestPds } from './pds'
 import { TestPlc } from './plc'
-import { PdsConfig, TestServerParams } from './types'
+import { TestServerParams } from './types'
 import { mockNetworkUtilities } from './util'
 
 const ADMIN_USERNAME = 'admin'
@@ -44,14 +44,13 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
-    const pdsAltPort = params.pdsAlt?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
 
     const pdsAlt = await TestPds.create({
       didPlcUrl: plc.url,
       ...params.pdsAlt,
       inviteRequired: false,
-      port: pdsAltPort,
+      port: await getPort(),
     })
 
     // @TODO (?) rework the Labeller so that it lives at the third party pds
@@ -76,7 +75,8 @@ export class TestNetwork extends TestNetworkNoAppView {
     })
 
     const modServiceUrl = `http://localhost:${ozonePort}`
-    const pdsProps: PdsConfig = {
+
+    const pds = await TestPds.create({
       port: pdsPort,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
@@ -85,9 +85,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       modServiceDid: ozoneDid,
       lexiconDidAuthority: lexiconAuthorityProfile.did,
       ...params.pds,
-    }
-
-    const pds = await TestPds.create(pdsProps)
+    })
 
     const ozone = await TestOzone.create({
       port: ozonePort,
@@ -108,7 +106,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     })
 
     let inviteCode: string | undefined
-    if (pdsProps.inviteRequired) {
+    if (pds.ctx.cfg.invites.required) {
       const { data: invite } = await pds
         .getClient()
         .com.atproto.server.createInviteCode(
@@ -127,6 +125,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await ozone.addAdminDid(ozoneDid)
 
     mockNetworkUtilities(pds, bsky)
+    await pdsAlt.processAll()
     await pds.processAll()
     await bsky.sub.processAll()
 

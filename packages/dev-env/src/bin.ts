@@ -40,7 +40,6 @@ const run = async () => {
     introspect: { port: 2581 },
   })
   mockMailer(network.pds)
-
   await generateMockSetup(network)
 
   if (network.introspect) {
