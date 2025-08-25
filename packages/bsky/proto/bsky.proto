@@ -1271,23 +1271,19 @@ message GetBookmarksByActorAndSubjectsResponse {
   repeated Bookmark bookmarks = 1;
 }
 
-message GetBookmarksByActorAndKeysRequest {
-  string actor_did = 1;
-  repeated string keys = 2;
-}
-
-message GetBookmarksByActorAndKeysResponse {
-  repeated Bookmark bookmarks = 1;
-}
-
 message GetActorBookmarksRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
 }
 
+message BookmarkInfo {
+  string key = 1; // stash key
+  string subject = 2;
+}
+
 message GetActorBookmarksResponse {
-  repeated string keys = 1; // stash keys
+  repeated BookmarkInfo bookmarks = 1;
   string cursor = 2;
 }
 
@@ -1461,8 +1457,6 @@ service Service {
   // Bookmarks
   // Returns bookmarks created by the actor for the specified URIs.
   rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
-  // Returns bookmarks created by the actor for the specified stash keys.
-  rpc GetBookmarksByActorAndKeys(GetBookmarksByActorAndKeysRequest) returns (GetBookmarksByActorAndKeysResponse);
   // Returns the bookmarks created by the actor.
   rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
 

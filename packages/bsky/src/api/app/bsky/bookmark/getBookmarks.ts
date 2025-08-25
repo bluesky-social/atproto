@@ -10,6 +10,7 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
+import { BookmarkInfo } from '../../../../proto/bsky_pb'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
@@ -49,14 +50,14 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actorDid = params.hydrateCtx.viewer
-  const { keys, cursor } = await ctx.hydrator.dataplane.getActorBookmarks({
+  const { bookmarks, cursor } = await ctx.hydrator.dataplane.getActorBookmarks({
     actorDid: params.hydrateCtx.viewer,
     limit: params.limit,
     cursor: params.cursor,
   })
   return {
     actorDid,
-    keys,
+    bookmarkInfos: bookmarks,
     cursor: cursor || undefined,
   }
 }
@@ -65,17 +66,17 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { keys } = skeleton
-  return ctx.hydrator.hydrateBookmarks(keys, params.hydrateCtx)
+  const { bookmarkInfos } = skeleton
+  return ctx.hydrator.hydrateBookmarks(bookmarkInfos, params.hydrateCtx)
 }
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, hydration, skeleton } = input
-  const { keys, cursor } = skeleton
-  const bookmarkViews = mapDefined(keys, (key) =>
-    ctx.views.bookmark(key, hydration),
+  const { bookmarkInfos, cursor } = skeleton
+  const bookmarkViews = mapDefined(bookmarkInfos, (bookmarkInfo) =>
+    ctx.views.bookmark(bookmarkInfo.key, hydration),
   )
   return { bookmarks: bookmarkViews, cursor }
 }
@@ -91,6 +92,6 @@ type Params = QueryParams & {
 
 type SkeletonState = {
   actorDid: string
-  keys: string[]
+  bookmarkInfos: BookmarkInfo[]
   cursor?: string
 }

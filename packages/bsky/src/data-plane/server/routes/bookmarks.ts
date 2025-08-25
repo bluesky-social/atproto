@@ -4,7 +4,6 @@ import { keyBy } from '@atproto/common'
 import { Service } from '../../../proto/bsky_connect'
 import {
   Bookmark,
-  GetBookmarksByActorAndKeysResponse,
   GetBookmarksByActorAndSubjectsResponse,
 } from '../../../proto/bsky_pb'
 import { Namespaces } from '../../../stash'
@@ -29,53 +28,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const res = await builder.execute()
     return {
-      keys: res.map((b) => b.key),
+      bookmarks: res.map((b) => ({
+        key: b.key,
+        subject: b.subjectUri,
+      })),
       cursor: key.packFromResult(res),
-    }
-  },
-
-  async getBookmarksByActorAndKeys(req) {
-    const { actorDid, keys } = req
-
-    if (keys.length === 0) {
-      return new GetBookmarksByActorAndKeysResponse({
-        bookmarks: [],
-      })
-    }
-
-    const res = await db.db
-      .selectFrom('bookmark')
-      .where('bookmark.creator', '=', actorDid)
-      .where('bookmark.key', 'in', keys)
-      .selectAll()
-      .execute()
-
-    const byUri = keyBy(res, 'key')
-    const bookmarks = keys.map((did): PlainMessage<Bookmark> => {
-      const bookmark = byUri.get(did)
-      if (!bookmark) {
-        return {
-          ref: undefined,
-          subjectUri: '',
-          subjectCid: '',
-          indexedAt: undefined,
-        }
-      }
-
-      return {
-        ref: {
-          actorDid,
-          namespace: Namespaces.AppBskyBookmarkDefsBookmark,
-          key: bookmark.key,
-        },
-        subjectUri: bookmark.subjectUri,
-        subjectCid: bookmark.subjectCid,
-        indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
-      }
-    })
-
-    return {
-      bookmarks,
     }
   },
 

@@ -70,8 +70,6 @@ import {
   GetBlockRecordsResponse,
   GetBlocksRequest,
   GetBlocksResponse,
-  GetBookmarksByActorAndKeysRequest,
-  GetBookmarksByActorAndKeysResponse,
   GetBookmarksByActorAndSubjectsRequest,
   GetBookmarksByActorAndSubjectsResponse,
   GetCountsForUsersRequest,
@@ -1025,17 +1023,6 @@ export const Service = {
       name: 'GetBookmarksByActorAndSubjects',
       I: GetBookmarksByActorAndSubjectsRequest,
       O: GetBookmarksByActorAndSubjectsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * Returns bookmarks created by the actor for the specified stash keys.
-     *
-     * @generated from rpc bsky.Service.GetBookmarksByActorAndKeys
-     */
-    getBookmarksByActorAndKeys: {
-      name: 'GetBookmarksByActorAndKeys',
-      I: GetBookmarksByActorAndKeysRequest,
-      O: GetBookmarksByActorAndKeysResponse,
       kind: MethodKind.Unary,
     },
     /**

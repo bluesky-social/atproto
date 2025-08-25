@@ -8,7 +8,12 @@ import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
-import { Bookmark, Notification, RecordRef } from '../proto/bsky_pb'
+import {
+  Bookmark,
+  BookmarkInfo,
+  Notification,
+  RecordRef,
+} from '../proto/bsky_pb'
 import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
@@ -995,14 +1000,14 @@ export class Hydrator {
   }
 
   async hydrateBookmarks(
-    keys: string[],
+    bookmarkInfos: BookmarkInfo[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const viewer = ctx.viewer
     if (!viewer) return {}
-    const bookmarksRes = await this.dataplane.getBookmarksByActorAndKeys({
+    const bookmarksRes = await this.dataplane.getBookmarksByActorAndSubjects({
       actorDid: viewer,
-      keys,
+      uris: bookmarkInfos.map((b) => b.subject),
     })
 
     type BookmarkWithRef = Bookmark & { ref: RecordRef }
