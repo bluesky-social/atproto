@@ -170,8 +170,8 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async processAll(timeout?: number) {
-    await this.pds.processAll()
     await this.pdsAlt.processAll()
+    await this.pds.processAll()
     await this.ozone.processAll()
     await this.processFullSubscription(timeout)
   }
@@ -208,8 +208,8 @@ export class TestNetwork extends TestNetworkNoAppView {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
     await this.ozone.close()
     await this.bsky.close()
-    await this.pdsAlt.close()
     await this.pds.close()
+    await this.pdsAlt.close()
     await this.plc.close()
     await this.introspect?.close()
   }
