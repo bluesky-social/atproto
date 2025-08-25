@@ -1,28 +1,38 @@
 import { z } from 'zod'
 import { Did, didSchema } from './did.js'
+import { isFragment } from './lib/uri.js'
 
 /**
  * RFC3968 compliant URI
  *
  * @see {@link https://www.rfc-editor.org/rfc/rfc3986}
  */
-const rfc3968UriSchema = z.string().refine((data) => {
-  try {
-    new URL(data)
-    return true
-  } catch {
-    return false
-  }
-}, 'RFC3968 compliant URI')
+const rfc3968UriSchema = z.string().url('RFC3968 compliant URI')
 
 const didControllerSchema = z.union([didSchema, z.array(didSchema)])
 
 /**
- * @note this schema might be too permissive
+ * @note this schema is too permissive
  */
 const didRelativeUriSchema = z.union([
-  rfc3968UriSchema,
-  z.string().regex(/^#[^#]+$/),
+  rfc3968UriSchema.refine(
+    (value) => {
+      const fragmentIndex = value.indexOf('#')
+      if (fragmentIndex === -1) return false
+      return isFragment(value, fragmentIndex + 1)
+    },
+    {
+      message: 'Missing or invalid fragment in RFC3968 URI',
+    },
+  ),
+  z
+    .string()
+    .refine((value) => value.charCodeAt(0) === 35 /* # */, {
+      message: 'Fragment must start with #',
+    })
+    .refine((value) => isFragment(value, 1), {
+      message: 'Invalid char in URI fragment',
+    }),
 ])
 
 const didVerificationMethodSchema = z.object({

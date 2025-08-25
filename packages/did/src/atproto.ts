@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
+import { isFragment } from './lib/uri.js'
 import {
   DID_PLC_PREFIX,
   DID_WEB_PREFIX,
@@ -101,5 +102,16 @@ function isDidWebWithHttpsPort(did: Did<'web'>): boolean {
   return (
     did.includes('%3A', DID_WEB_PREFIX.length) &&
     !did.startsWith('did:web:localhost%3A')
+  )
+}
+
+export type AtprotoAudience = `${AtprotoDid}#${string}`
+export const isAtprotoAudience = (value: unknown): value is AtprotoAudience => {
+  if (typeof value !== 'string') return false
+  const hashIndex = value.indexOf('#')
+  if (hashIndex === -1) return false
+  if (value.indexOf('#', hashIndex + 1) !== -1) return false
+  return (
+    isFragment(value, hashIndex + 1) && isAtprotoDid(value.slice(0, hashIndex))
   )
 }
