@@ -5,6 +5,9 @@ import { Parser } from '../parser.js'
 import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
+export type { AtprotoAudience }
+export { isAtprotoAudience }
+
 export type LxmParam = '*' | Nsid
 export const isLxmParam = (value: unknown): value is LxmParam =>
   value === '*' || isNsid(value)

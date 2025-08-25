@@ -3,7 +3,7 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { HTMLAttributes, ReactNode, useMemo } from 'react'
 import { Override } from '#/lib/util'
 import {
-  AtprotoDid,
+  AtprotoAudience,
   AudParam,
   BlobPermission,
   CollectionParam,
@@ -850,7 +850,7 @@ function Collection({ coll, ...attrs }: CollectionProps) {
 
 type IdentifierProps = Override<
   HTMLAttributes<HTMLDivElement>,
-  { identifier: Nsid | AtprotoDid | '*'; children: ReactNode }
+  { identifier: Nsid | AtprotoAudience | '*'; children: ReactNode }
 >
 function Identifier({
   identifier,
@@ -864,17 +864,18 @@ function Identifier({
     </em>
   ) : (
     <code {...attrs} className={`text-slate-500 ${className}`}>
-      {identifier.split('.').map((part, i) => (
-        <>
-          {i > 0 && (
-            <>
-              {'.'}
-              <wbr />
-            </>
-          )}
-          {part}
-        </>
-      ))}
+      {identifier.split('.').map((part, i) =>
+        i === 0 ? (
+          part
+        ) : (
+          // allow word break after the dots.
+          <>
+            {'.'}
+            <wbr />
+            {part}
+          </>
+        ),
+      )}
     </code>
   )
 }
