@@ -8,6 +8,7 @@ export type InputContainerProps = Override<
     icon: ReactNode
     append?: ReactNode
     bellow?: ReactNode
+    actionable?: boolean
   }
 >
 
@@ -15,6 +16,7 @@ export function InputContainer({
   icon,
   append,
   bellow,
+  actionable,
 
   // div
   className,
@@ -24,6 +26,8 @@ export function InputContainer({
   ...props
 }: InputContainerProps) {
   const [hasFocus, setHasFocus] = useState(false)
+
+  actionable ??= props.onClick != null
 
   return (
     <div
@@ -43,6 +47,21 @@ export function InputContainer({
         'overflow-hidden',
         // Border
         'rounded-lg',
+
+        // Transition
+        'transition duration-300 ease-in-out',
+
+        // Outline
+        'outline-none',
+        'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
+        'has-focus:ring-primary has-focus:ring-2 has-focus:ring-offset-1 has-focus:ring-offset-white dark:has-focus:ring-offset-black',
+
+        // Background
+        'bg-gray-100 dark:bg-gray-800',
+        actionable
+          ? 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700'
+          : undefined,
+
         className,
       )}
     >
@@ -55,24 +74,16 @@ export function InputContainer({
           // Border
           'rounded-lg',
           bellow ? 'rounded-bl-none rounded-br-none' : undefined,
-          'outline-hidden',
-          'border-2 border-solid border-transparent',
-          'focus:border-primary has-focus:border-primary',
-          'hover:border-gray-400 hover:focus:border-gray-400',
-          'dark:hover:border-gray-500 dark:hover:focus:border-gray-500',
-          // Background
-          'has-focus:bg-slate-200 bg-gray-100 focus:bg-slate-200',
-          'dark:has-focus:bg-slate-700 dark:bg-slate-800 dark:focus:bg-slate-700',
+
           // Font
           'text-slate-600 dark:text-slate-300',
-          'accent-primary',
         )}
       >
         {icon && (
           <div
             className={clsx(
               'flex shrink-0 grow-0 items-center justify-center',
-              'mx-1',
+              'mx-2',
               hasFocus ? 'text-primary' : 'text-slate-500',
             )}
           >

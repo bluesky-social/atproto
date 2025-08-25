@@ -168,6 +168,7 @@ export function AuthorizeView({
         clientMetadata={authorizeData.clientMetadata}
         clientTrusted={authorizeData.clientTrusted}
         clientFirstParty={authorizeData.clientFirstParty}
+        permissionSets={authorizeData.permissionSets}
         account={session.account}
         scope={authorizeData.scope}
         onConsent={(scope) => doConsent(session.account.sub, scope)}

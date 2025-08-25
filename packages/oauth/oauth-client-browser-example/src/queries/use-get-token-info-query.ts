@@ -5,6 +5,6 @@ export function useGetTokenInfoQuery() {
   const { session } = useSignedInContext()
   return useQuery({
     queryKey: ['tokeninfo', session.did],
-    queryFn: async () => session.getTokenInfo(),
+    queryFn: async () => session.getTokenInfo(true),
   })
 }

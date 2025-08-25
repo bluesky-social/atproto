@@ -1,5 +1,9 @@
 import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
+import type { LexPermissionSet } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
+
+export type PermissionSet = LexPermissionSet
+export type PermissionSets = Record<string, undefined | PermissionSet>
 
 export type AuthorizeData = {
   requestUri: string
@@ -12,6 +16,7 @@ export type AuthorizeData = {
   scope?: string
   loginHint?: string
   uiLocales?: string
+  permissionSets: PermissionSets
 }
 
 export type ErrorData = {

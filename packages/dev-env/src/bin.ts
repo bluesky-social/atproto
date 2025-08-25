@@ -20,6 +20,11 @@ const run = async () => {
       hostname: 'localhost',
       enableDidDocWithSession: true,
     },
+    pdsAlt: {
+      port: 2585,
+      hostname: 'localhost',
+      enableDidDocWithSession: true,
+    },
     bsky: {
       dbPostgresSchema: 'bsky',
       port: 2584,
@@ -39,20 +44,20 @@ const run = async () => {
 
   if (network.introspect) {
     console.log(
-      `🔍 Dev-env introspection server started http://localhost:${network.introspect.port}`,
+      `🔍 Dev-env introspection server http://localhost:${network.introspect.port}`,
     )
   }
+  console.log(`👤 DID Placeholder server http://localhost:${network.plc.port}`)
+  console.log(`🌞 Main PDS http://localhost:${network.pds.port}`)
+  console.log(`👽 Alternate PDS http://localhost:${network.pdsAlt.port}`)
   console.log(
-    `👤 DID Placeholder server started http://localhost:${network.plc.port}`,
+    `🔨 Lexicon authority DID ${network.pds.ctx.cfg.lexicon.didAuthority}`,
   )
-  console.log(
-    `🌞 Personal Data server started http://localhost:${network.pds.port}`,
-  )
-  console.log(`🗼 Ozone server started http://localhost:${network.ozone.port}`)
+  console.log(`🗼 Ozone server http://localhost:${network.ozone.port}`)
   console.log(`🗼 Ozone service DID ${network.ozone.ctx.cfg.service.did}`)
-  console.log(`🌅 Bsky Appview started http://localhost:${network.bsky.port}`)
+  console.log(`🌅 Bsky Appview http://localhost:${network.bsky.port}`)
   for (const fg of network.feedGens) {
-    console.log(`🤖 Feed Generator started http://localhost:${fg.port}`)
+    console.log(`🤖 Feed Generator (${fg.did}) http://localhost:${fg.port}`)
   }
 }
 

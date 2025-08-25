@@ -18,6 +18,8 @@ import {
   HandleUnavailableError,
   InvalidInviteCodeError,
   InvalidRequestError,
+  LexiconData,
+  LexiconStore,
   NewTokenData,
   RefreshToken,
   RequestData,
@@ -52,6 +54,7 @@ import * as accountDeviceHelper from './helpers/account-device'
 import * as authRequestHelper from './helpers/authorization-request'
 import * as authorizedClientHelper from './helpers/authorized-client'
 import * as deviceHelper from './helpers/device'
+import * as lexiconHelper from './helpers/lexicon'
 import * as tokenHelper from './helpers/token'
 import * as usedRefreshTokenHelper from './helpers/used-refresh-token'
 
@@ -62,7 +65,7 @@ import * as usedRefreshTokenHelper from './helpers/used-refresh-token'
  * @note The use of this class assumes that there is no entryway.
  */
 export class OAuthStore
-  implements AccountStore, RequestStore, DeviceStore, TokenStore
+  implements AccountStore, RequestStore, DeviceStore, LexiconStore, TokenStore
 {
   constructor(
     private readonly accountManager: AccountManager,
@@ -460,6 +463,20 @@ export class OAuthStore
   async deleteDevice(deviceId: DeviceId): Promise<void> {
     // Will cascade to device_account (device_account_device_id_fk)
     await this.db.executeWithRetry(deviceHelper.removeQB(this.db, deviceId))
+  }
+
+  // LexiconStore
+
+  async findLexicon(nsid: string): Promise<LexiconData | null> {
+    return lexiconHelper.find(this.db, nsid)
+  }
+
+  async storeLexicon(nsid: string, data: LexiconData): Promise<void> {
+    return lexiconHelper.upsert(this.db, nsid, data)
+  }
+
+  async deleteLexicon(nsid: string): Promise<void> {
+    return lexiconHelper.remove(this.db, nsid)
   }
 
   // TokenStore

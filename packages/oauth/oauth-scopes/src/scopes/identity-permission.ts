@@ -1,0 +1,58 @@
+import { Matchable } from '../lib/matchable.js'
+import { knownValuesValidator } from '../lib/util.js'
+import { Parser } from '../parser.js'
+import { ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
+import type { LexPermission } from '../types.js'
+
+export const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
+export type IdentityAttribute = (typeof IDENTITY_ATTRIBUTES)[number]
+
+export type IdentityPermissionMatch = {
+  attr: IdentityAttribute
+}
+
+export class IdentityPermission implements Matchable<IdentityPermissionMatch> {
+  constructor(public readonly attr: IdentityAttribute) {}
+
+  matches(options: IdentityPermissionMatch): boolean {
+    return this.attr === '*' || this.attr === options.attr
+  }
+
+  toString() {
+    return IdentityPermission.parser.format(this)
+  }
+
+  protected static readonly parser = new Parser(
+    'identity',
+    {
+      attr: {
+        multiple: false,
+        required: true,
+        validate: knownValuesValidator(IDENTITY_ATTRIBUTES),
+      },
+    },
+    'attr',
+  )
+
+  static fromString(scope: string) {
+    if (!isScopeSyntaxFor(scope, 'identity')) return null
+    const syntax = ScopeSyntax.fromString(scope)
+    return IdentityPermission.fromSyntax(syntax)
+  }
+
+  static fromLex(lexPermission: LexPermission) {
+    if (lexPermission.resource !== 'identity') return null
+    const syntax = ScopeSyntax.fromLex(lexPermission)
+    return IdentityPermission.fromSyntax(syntax)
+  }
+
+  static fromSyntax(syntax: ScopeSyntax) {
+    const result = IdentityPermission.parser.parse(syntax)
+    if (!result) return null
+    return new IdentityPermission(result.attr)
+  }
+
+  static scopeNeededFor(options: IdentityPermissionMatch): string {
+    return IdentityPermission.parser.format(options)
+  }
+}

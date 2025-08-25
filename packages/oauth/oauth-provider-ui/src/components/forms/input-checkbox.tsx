@@ -52,7 +52,6 @@ export function InputCheckbox({
           }
           ref={mergeRefs([ref, inputRef])}
           id={inputId}
-          className="accent-primary outline-hidden"
         />
       }
       tabIndex={-1}
@@ -62,6 +61,7 @@ export function InputCheckbox({
         if (target === inputRef.current) return
 
         inputRef.current?.click()
+        inputRef.current?.focus()
       }}
     >
       {children && (

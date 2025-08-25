@@ -84,6 +84,7 @@ export class XrpcClient {
       headers: combineHeaders(reqHeaders, this.headers),
       body: reqBody,
       duplex: 'half',
+      redirect: 'follow',
       signal: opts?.signal,
     }
 

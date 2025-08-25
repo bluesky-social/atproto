@@ -29,4 +29,5 @@ export type TokenData = {
   parameters: OAuthAuthorizationRequestParameters
   details?: null // Legacy field, not used
   code: Code | null
+  permissionsScope: null | string
 }

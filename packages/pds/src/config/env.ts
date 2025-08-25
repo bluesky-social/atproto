@@ -143,6 +143,9 @@ export const readEnv = (): ServerEnvironment => {
     // fetch
     fetchMaxResponseSize: envInt('PDS_FETCH_MAX_RESPONSE_SIZE'),
 
+    // lexicon resolver
+    lexiconDidAuthority: envStr('PDS_LEXICON_RESOLVER_DID_AUTHORITY'),
+
     // proxy
     proxyAllowHTTP2: envBool('PDS_PROXY_ALLOW_HTTP2'),
     proxyHeadersTimeout: envInt('PDS_PROXY_HEADERS_TIMEOUT'),
@@ -287,6 +290,9 @@ export type ServerEnvironment = {
 
   // fetch
   fetchMaxResponseSize?: number
+
+  // lexicon resolver
+  lexiconDidAuthority?: string
 
   // proxy
   proxyAllowHTTP2?: boolean

@@ -1,3 +1,4 @@
+import type { PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
 import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
@@ -15,6 +16,7 @@ export type ConsentViewProps = Override<
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
     clientFirstParty: boolean
+    permissionSets: PermissionSets
 
     account: Account
     scope?: string
@@ -30,6 +32,7 @@ export function ConsentView({
   clientMetadata,
   clientTrusted,
   clientFirstParty,
+  permissionSets,
   account,
   scope,
   onConsent,
@@ -62,6 +65,7 @@ export function ConsentView({
         clientMetadata={clientMetadata}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
+        permissionSets={permissionSets}
         account={account}
         scope={scope}
         onBack={onBack}

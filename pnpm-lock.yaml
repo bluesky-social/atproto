@@ -1095,6 +1095,12 @@ importers:
       '@atproto/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
+      '@atproto/lexicon':
+        specifier: workspace:*
+        version: link:../../lexicon
+      '@atproto/lexicon-resolver':
+        specifier: workspace:*
+        version: link:../../lexicon-resolver
       '@atproto/oauth-provider-api':
         specifier: workspace:*
         version: link:../oauth-provider-api
@@ -1344,6 +1350,10 @@ importers:
         version: 6.2.0(@types/node@18.19.67)
 
   packages/oauth/oauth-scopes:
+    dependencies:
+      '@atproto/did':
+        specifier: workspace:^
+        version: link:../../did
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -1500,6 +1510,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/lexicon-resolver':
+        specifier: workspace:^
+        version: link:../lexicon-resolver
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider
@@ -6654,7 +6667,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.22.10
-      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3)
+      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.2)
       '@lingui/message-utils': 5.2.0
       babel-plugin-macros: 3.1.0
       unraw: 3.0.0

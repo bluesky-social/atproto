@@ -319,6 +319,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         },
       }
 
+  const lexiconCfg: LexiconResolverConfig = {
+    didAuthority: env.lexiconDidAuthority,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -337,6 +341,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
     fetch: fetchCfg,
+    lexicon: lexiconCfg,
     proxy: proxyCfg,
     oauth: oauthCfg,
   }
@@ -362,6 +367,7 @@ export type ServerConfig = {
   fetch: FetchConfig
   proxy: ProxyConfig
   oauth: OAuthConfig
+  lexicon: LexiconResolverConfig
 }
 
 export type ServiceConfig = {
@@ -458,6 +464,10 @@ export type OAuthConfig = {
     branding: BrandingInput
     trustedClients?: string[]
   }
+}
+
+export type LexiconResolverConfig = {
+  didAuthority?: string
 }
 
 export type InvitesConfig =

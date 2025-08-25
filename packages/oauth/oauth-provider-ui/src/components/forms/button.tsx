@@ -46,12 +46,18 @@ export function Button({
           : shape === 'padded'
             ? 'p-2'
             : undefined,
-        'focus:outline-none focus:ring-2',
+
+        // Transition
         'transition duration-300 ease-in-out',
+
+        // Outline
+        'outline-none',
+        'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
+
+        // Background & Text
         color === 'primary'
           ? clsx(
               'accent-slate-100',
-              'focus:ring-primary focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
               transparent
                 ? 'text-primary bg-transparent'
                 : 'bg-primary text-primary-contrast',
@@ -59,7 +65,6 @@ export function Button({
           : color === 'grey'
             ? clsx(
                 'accent-primary',
-                'focus:ring-slate-300 dark:focus:ring-slate-500',
                 'text-slate-600 dark:text-slate-300',
                 'hover:bg-gray-200 dark:hover:bg-gray-700',
                 transparent ? 'bg-transparent' : 'bg-gray-100 dark:bg-gray-800',

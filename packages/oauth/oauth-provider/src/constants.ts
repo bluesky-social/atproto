@@ -74,4 +74,7 @@ export const SESSION_FIXATION_MAX_AGE = 5 * SECOND
 /** 1 day */
 export const CODE_CHALLENGE_REPLAY_TIMEFRAME = 1 * DAY
 
+/** 5 minutes */
+export const LEXICON_REFRESH_FREQUENCY = 5 * MINUTE
+
 export const NODE_ENV = process.env.NODE_ENV || 'production'

@@ -14,6 +14,8 @@ import { DeviceId } from '../device/device-id.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
+import { LexiconManager } from '../lexicon/lexicon-manager.js'
+import { LexiconResolutionError } from '../lexicon/lexicon-resolution-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
@@ -43,6 +45,7 @@ export type { OAuthHooks, TokenStore, VerifyTokenClaimsResult }
 export class TokenManager {
   constructor(
     protected readonly store: TokenStore,
+    protected readonly lexiconManager: LexiconManager,
     protected readonly signer: Signer,
     protected readonly hooks: OAuthHooks,
     protected readonly accessTokenMode: AccessTokenMode,
@@ -61,6 +64,7 @@ export class TokenManager {
     options: {
       now: Date
       expiresAt: Date
+      permissionsScope: string
     },
   ): Promise<OAuthAccessToken> {
     return this.signer.createAccessToken({
@@ -72,7 +76,7 @@ export class TokenManager {
 
       ...(this.accessTokenMode === AccessTokenMode.stateless && {
         aud: account.aud,
-        scope: parameters.scope,
+        scope: options.permissionsScope,
         // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
         client_id: client.id,
       }),
@@ -98,6 +102,17 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
+    const permissionsScope = await this.lexiconManager
+      .buildTokenScope(parameters.scope!)
+      .catch((cause) => {
+        throw new InvalidRequestError(
+          cause instanceof LexiconResolutionError
+            ? cause.message
+            : 'Unable to retrieve included permission sets',
+          cause,
+        )
+      })
+
     const tokenData: TokenData = {
       createdAt: now,
       updatedAt: now,
@@ -108,6 +123,7 @@ export class TokenManager {
       sub: account.sub,
       parameters,
       details: null,
+      permissionsScope,
       code,
     }
 
@@ -116,16 +132,16 @@ export class TokenManager {
       account,
       client,
       parameters,
-      { now, expiresAt },
+      { now, expiresAt, permissionsScope },
     )
 
-    const response = await this.buildTokenResponse(
-      client,
+    const response = this.buildTokenResponse(
+      inferTokenType(parameters),
       accessToken,
       refreshToken,
       expiresAt,
-      parameters,
       account.sub,
+      permissionsScope,
     )
 
     await this.store.createToken(tokenId, tokenData, refreshToken)
@@ -161,18 +177,18 @@ export class TokenManager {
   }
 
   protected buildTokenResponse(
-    client: Client,
+    tokenType: OAuthTokenType,
     accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
-    parameters: OAuthAuthorizationRequestParameters,
     sub: Sub,
+    scope: string,
   ): OAuthTokenResponse {
     return {
       access_token: accessToken,
-      token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
+      token_type: tokenType,
       refresh_token: refreshToken,
-      scope: parameters.scope,
+      scope,
 
       // @NOTE using a getter so that the value gets computed when the JSON
       // response is generated, allowing to value to be as accurate as possible.
@@ -204,6 +220,13 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
+    // @NOTE since the permission sets are stored in a persistent store,
+    // it's fine to propagate a 500 (server_error) here as the values should
+    // be retrievable from the store.
+    const permissionsScope = await this.lexiconManager.buildTokenScope(
+      parameters.scope!,
+    )
+
     await this.store.rotateToken(tokenInfo.id, nextTokenId, nextRefreshToken, {
       updatedAt: now,
       expiresAt,
@@ -214,6 +237,7 @@ export class TokenManager {
       // - Allow clients to become "confidential" if they were previously
       //   "public"
       clientAuth,
+      permissionsScope,
     })
 
     const accessToken = await this.buildAccessToken(
@@ -221,16 +245,16 @@ export class TokenManager {
       account,
       client,
       parameters,
-      { now, expiresAt },
+      { now, expiresAt, permissionsScope },
     )
 
-    const response = await this.buildTokenResponse(
-      client,
+    const response = this.buildTokenResponse(
+      inferTokenType(parameters),
       accessToken,
       nextRefreshToken,
       expiresAt,
-      parameters,
       account.sub,
+      permissionsScope,
     )
 
     await callAsync(this.hooks.onTokenRefreshed, {
@@ -361,7 +385,9 @@ export class TokenManager {
       // These are not stored in the JWT access token in "light" access token
       // mode. See `buildAccessToken`.
       aud: account.aud,
-      scope: parameters.scope,
+      // Note we fallback to parameters.scope for sessions created before
+      // permissionsScope was introduced.
+      scope: data.permissionsScope ?? parameters.scope,
       client_id: data.clientId,
     }
 
@@ -385,4 +411,13 @@ export class TokenManager {
 
 function isCurrentTokenExpired(tokenInfo: TokenInfo): boolean {
   return tokenInfo.data.expiresAt.getTime() < Date.now()
+}
+
+function inferTokenType(
+  parameters: OAuthAuthorizationRequestParameters,
+): OAuthTokenType {
+  if (parameters.dpop_jkt) {
+    return 'DPoP'
+  }
+  return 'Bearer'
 }

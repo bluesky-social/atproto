@@ -1,9 +1,9 @@
-import { ScopeMissingError } from './scope-missing-error.js'
 import {
   ScopeMatchingOptionsByResource,
   scopeMatches,
   scopeNeededFor,
-} from './utilities.js'
+} from './resources.js'
+import { ScopeMissingError } from './scope-missing-error.js'
 
 export { ScopeMissingError }
 

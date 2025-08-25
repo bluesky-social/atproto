@@ -1,4 +1,4 @@
-import { PermissionSet } from '@atproto/oauth-scopes'
+import { ScopePermissions } from '@atproto/oauth-scopes'
 import { AuthScope } from './auth-scope'
 
 export type UnauthenticatedOutput = {
@@ -30,7 +30,7 @@ export type OAuthOutput = {
   credentials: {
     type: 'oauth'
     did: string
-    permissions: PermissionSet
+    permissions: ScopePermissions
   }
 }
 

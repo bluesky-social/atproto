@@ -15,10 +15,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - run: corepack enable && corepack prepare --activate
-      - uses: actions/setup-node@v4
+      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version-file: package.json
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Dependency Cache
+        uses: actions/setup-node@v4
+        with:
           cache: 'pnpm'
       - name: Get current month
         run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
@@ -46,10 +52,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - run: corepack enable && corepack prepare --activate
-      - uses: actions/setup-node@v4
+      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version-file: package.json
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Dependency Cache
+        uses: actions/setup-node@v4
+        with:
           cache: 'pnpm'
       - name: Get current month
         run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
@@ -70,10 +82,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - run: corepack enable && corepack prepare --activate
-      - uses: actions/setup-node@v4
+      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version-file: package.json
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Dependency Cache
+        uses: actions/setup-node@v4
+        with:
           cache: 'pnpm'
       - name: Get current month
         run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV

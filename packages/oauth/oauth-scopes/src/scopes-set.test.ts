@@ -22,19 +22,19 @@ describe('ScopesSet', () => {
   })
 
   it('should match included scopes', () => {
-    const set = new ScopesSet(['repo:foo.bar'])
+    const set = new ScopesSet(['repo:com.example.foo'])
     expect(
-      set.matches('repo', { action: 'create', collection: 'foo.bar' }),
+      set.matches('repo', { action: 'create', collection: 'com.example.foo' }),
     ).toBe(true)
     expect(
-      set.matches('repo', { action: 'create', collection: 'baz.qux' }),
+      set.matches('repo', { action: 'create', collection: 'com.example.bar' }),
     ).toBe(false)
   })
 
   it('should not match missing scopes', () => {
-    const set = new ScopesSet(['repo:foo.bar?action=create'])
+    const set = new ScopesSet(['repo:com.example.foo?action=create'])
     expect(
-      set.matches('repo', { action: 'delete', collection: 'foo.bar' }),
+      set.matches('repo', { action: 'delete', collection: 'com.example.foo' }),
     ).toBe(false)
   })
 

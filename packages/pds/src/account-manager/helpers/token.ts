@@ -7,6 +7,7 @@ import {
   TokenId,
 } from '@atproto/oauth-provider'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
+import { assertEmpty } from '../../util/types'
 import { AccountDb, Token } from '../db'
 import { selectAccountQB } from './account'
 
@@ -21,6 +22,7 @@ export function toTokenData(row: Selectable<Token>): TokenData {
     sub: row.did,
     parameters: fromJson(row.parameters),
     code: row.code,
+    permissionsScope: row.permissionsScope,
   }
 }
 
@@ -42,28 +44,47 @@ const selectTokenInfoQB = (db: AccountDb) =>
       'token.details',
       'token.code',
       'token.currentRefreshToken',
+      'token.permissionsScope',
     ])
 
 export const createQB = (
   db: AccountDb,
   tokenId: TokenId,
-  data: TokenData,
+  {
+    createdAt,
+    expiresAt,
+    updatedAt,
+    clientId,
+    clientAuth,
+    deviceId,
+    sub,
+    parameters,
+    details,
+    code,
+    permissionsScope,
+    ...rest
+  }: TokenData,
   refreshToken?: RefreshToken,
-) =>
-  db.db.insertInto('token').values({
+) => {
+  // @TODO Is there a way to enforce this using the type system only?
+  assertEmpty(rest, 'Unexpected fields in token data')
+
+  return db.db.insertInto('token').values({
     tokenId,
-    createdAt: toDateISO(data.createdAt),
-    expiresAt: toDateISO(data.expiresAt),
-    updatedAt: toDateISO(data.updatedAt),
-    clientId: data.clientId,
-    clientAuth: toJson(data.clientAuth),
-    deviceId: data.deviceId,
-    did: data.sub,
-    parameters: toJson(data.parameters),
-    details: data.details ? toJson(data.details) : null,
-    code: data.code,
+    createdAt: toDateISO(createdAt),
+    expiresAt: toDateISO(expiresAt),
+    updatedAt: toDateISO(updatedAt),
+    clientId: clientId,
+    clientAuth: toJson(clientAuth),
+    deviceId: deviceId,
+    did: sub,
+    parameters: toJson(parameters),
+    details: details ? toJson(details) : null,
+    code: code,
     currentRefreshToken: refreshToken || null,
+    permissionsScope: permissionsScope,
   })
+}
 
 export const forRotateQB = (db: AccountDb, id: TokenId) =>
   db.db
@@ -127,20 +148,27 @@ export const rotateQB = (
   id: number,
   newTokenId: TokenId,
   newRefreshToken: RefreshToken,
-  newData: NewTokenData,
-) =>
-  db.db
-    .updateTable('token')
-    .set({
-      tokenId: newTokenId,
-      currentRefreshToken: newRefreshToken,
+  { expiresAt, updatedAt, clientAuth, permissionsScope, ...rest }: NewTokenData,
+) => {
+  // @TODO Is there a way to enforce this using the type system only?
+  assertEmpty(rest, 'Unexpected fields in token data')
 
-      expiresAt: toDateISO(newData.expiresAt),
-      updatedAt: toDateISO(newData.updatedAt),
-      clientAuth: toJson(newData.clientAuth),
-    })
-    // uses primary key index
-    .where('id', '=', id)
+  return (
+    db.db
+      .updateTable('token')
+      .set({
+        tokenId: newTokenId,
+        currentRefreshToken: newRefreshToken,
+
+        expiresAt: toDateISO(expiresAt),
+        updatedAt: toDateISO(updatedAt),
+        clientAuth: toJson(clientAuth),
+        permissionsScope: permissionsScope,
+      })
+      // uses primary key index
+      .where('id', '=', id)
+  )
+}
 
 export const removeQB = (db: AccountDb, tokenId: TokenId) =>
   // uses "used_refresh_token_fk" to cascade delete

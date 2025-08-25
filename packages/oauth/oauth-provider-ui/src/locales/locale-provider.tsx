@@ -29,6 +29,10 @@ export function useLocaleContext(): LocaleContextValue {
   return context
 }
 
+export function useCurrentLocale(): string {
+  return useLocaleContext().locale
+}
+
 export function LocaleProvider({
   userLocales = [],
   children,

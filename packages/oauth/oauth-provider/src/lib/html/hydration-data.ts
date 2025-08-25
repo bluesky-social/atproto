@@ -14,7 +14,6 @@ export function* hydrationDataGenerator(
   }
   // The script tag is removed after the data is assigned to the global
   // variables to prevent other scripts from reading the values. The "app"
-  // script will read the global variable and then unset it. See
-  // `readBackendData()` in "src/assets/app/backend-data.ts".
+  // script will read the global variable and then unset it.
   yield js`document.currentScript.remove();`
 }

@@ -46,6 +46,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
         scope: data.parameters.scope,
         uiLocales: data.parameters.ui_locales,
         loginHint: data.parameters.login_hint,
+        permissionSets: Object.fromEntries(data.permissionSets),
       },
       __sessions: data.sessions,
     })

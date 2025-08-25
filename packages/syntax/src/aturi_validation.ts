@@ -1,6 +1,6 @@
 import { ensureValidDid, ensureValidDidRegex } from './did'
 import { ensureValidHandle, ensureValidHandleRegex } from './handle'
-import { ensureValidNsid, ensureValidNsidRegex } from './nsid'
+import { ensureValidNsid, isValidNsid } from './nsid'
 
 // Human-readable constraints on ATURI:
 //   - following regular URLs, a 8KByte hard total length limit
@@ -117,12 +117,8 @@ export const ensureValidAtUriRegex = (uri: string): void => {
     }
   }
 
-  if (groups.collection) {
-    try {
-      ensureValidNsidRegex(groups.collection)
-    } catch {
-      throw new Error('ATURI collection path segment must be a valid NSID')
-    }
+  if (groups.collection && !isValidNsid(groups.collection)) {
+    throw new Error('ATURI collection path segment must be a valid NSID')
   }
 
   if (uri.length > 8 * 1024) {

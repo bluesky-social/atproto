@@ -18,15 +18,13 @@ import { isValidDid } from './util.js'
 /**
  * Resolve a record from the network.
  */
-export type RecordResolver = (
-  uriStr: AtUri | string,
-) => Promise<RecordResolution>
+export type RecordResolver = (uri: AtUri | string) => Promise<RecordResolution>
 
 /**
  * Resolve a record from the network, verifying its authenticity.
  */
 export type AtprotoRecordResolver = (
-  uriStr: AtUri | string,
+  uri: AtUri | string,
   options?: ResolveRecordOptions,
 ) => Promise<RecordResolution>
 
@@ -45,6 +43,8 @@ export type RecordResolution = {
   cid: CID
   record: RepoRecord
 }
+
+export { AtUri, CID, type Commit, IdResolver, type RepoRecord }
 
 /**
  * Build a record resolver function.
