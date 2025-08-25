@@ -1,15 +1,13 @@
 import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { HTMLAttributes, ReactNode, useMemo } from 'react'
+import { Fragment, HTMLAttributes, ReactNode, useMemo } from 'react'
 import { Override } from '#/lib/util'
 import {
-  AtprotoAudience,
   AudParam,
   BlobPermission,
   CollectionParam,
   IncludeScope,
   LxmParam,
-  Nsid,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
@@ -816,10 +814,12 @@ type LxmProps = Override<
   { lxm: LxmParam }
 >
 function Lxm({ lxm, ...attrs }: LxmProps) {
-  return (
-    <Identifier {...attrs} identifier={lxm}>
+  return lxm === '*' ? (
+    <ItemDescription {...attrs}>
       <Trans>Any method</Trans>
-    </Identifier>
+    </ItemDescription>
+  ) : (
+    <Nsid {...attrs} nsid={lxm} />
   )
 }
 
@@ -830,65 +830,99 @@ type AudProps = Override<
 function Aud({ aud, ...attrs }: AudProps) {
   if (aud.startsWith('did:web:bsky.app#')) {
     return (
-      <em {...attrs} title={aud}>
+      <ItemDescription {...attrs} title={aud}>
         <Trans>Bluesky App servers</Trans>
-      </em>
+      </ItemDescription>
     )
   }
   if (aud.startsWith('did:web:bsky.chat#')) {
     return (
-      <em {...attrs} title={aud}>
+      <ItemDescription {...attrs} title={aud}>
         <Trans>Bluesky Chat servers</Trans>
-      </em>
+      </ItemDescription>
     )
   }
+  if (aud.startsWith('did:web:') && aud.includes('#')) {
+    const domain = aud.slice(8, aud.indexOf('#'))
+    return (
+      <ItemDescription {...attrs} title={aud}>
+        <Trans>
+          A service controlled by <b>{domain}</b>
+        </Trans>
+      </ItemDescription>
+    )
+  }
+  if (aud === '*') {
+    return (
+      <ItemDescription {...attrs}>
+        <Trans>Any service</Trans>
+      </ItemDescription>
+    )
+  }
+
   return (
-    <Identifier {...attrs} identifier={aud} title={aud}>
-      <Trans>Any service</Trans>
+    <Identifier {...attrs} title={aud}>
+      {aud}
     </Identifier>
   )
 }
 
 type CollectionProps = Override<
-  Omit<HTMLAttributes<HTMLDivElement>, 'children'>,
-  { coll: CollectionParam }
+  HTMLAttributes<HTMLDivElement>,
+  { coll: CollectionParam; children?: never }
 >
 function Collection({ coll, ...attrs }: CollectionProps) {
-  return (
-    <Identifier {...attrs} identifier={coll}>
+  return coll === '*' ? (
+    <ItemDescription {...attrs}>
       <Trans>Any collection</Trans>
+    </ItemDescription>
+  ) : (
+    <Nsid {...attrs} nsid={coll} />
+  )
+}
+
+type ItemDescriptionProps = HTMLAttributes<HTMLDivElement>
+function ItemDescription({
+  children,
+  className = '',
+  ...attrs
+}: ItemDescriptionProps) {
+  return (
+    <em {...attrs} className={`text-slate-500 ${className}`}>
+      {children}
+    </em>
+  )
+}
+
+type NsidProps = Override<IdentifierProps, { nsid: string; children?: never }>
+function Nsid({ nsid, ...attrs }: NsidProps) {
+  return (
+    <Identifier {...attrs}>
+      {nsid.split('.').map((part, i) =>
+        i === 0 ? (
+          part
+        ) : (
+          // line break **after** the dot
+          <Fragment key={i}>
+            {'.'}
+            <wbr />
+            {part}
+          </Fragment>
+        ),
+      )}
     </Identifier>
   )
 }
 
-type IdentifierProps = Override<
-  HTMLAttributes<HTMLDivElement>,
-  { identifier: Nsid | AtprotoAudience | '*'; children: ReactNode }
->
+type IdentifierProps = HTMLAttributes<HTMLDivElement>
 function Identifier({
-  identifier,
   children,
   className = '',
   ...attrs
 }: IdentifierProps): ReactNode {
-  return identifier === '*' ? (
-    <em {...attrs} className={`text-slate-500 ${className}`}>
-      {children}
-    </em>
-  ) : (
+  return (
     <code {...attrs} className={`text-slate-500 ${className}`}>
-      {identifier.split('.').map((part, i) =>
-        i === 0 ? (
-          part
-        ) : (
-          // allow word break after the dots.
-          <>
-            {'.'}
-            <wbr />
-            {part}
-          </>
-        ),
-      )}
+      {children}
     </code>
   )
 }

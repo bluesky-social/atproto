@@ -21,7 +21,11 @@ msgstr "Confirmation 2FA"
 msgid "A second authentication factor is required"
 msgstr "Un second facteur d'authentification est requis"
 
-#: src/components/utils/scope-description.tsx:282
+#: src/components/utils/scope-description.tsx:849
+msgid "A service controlled by <0>{domain}</0>"
+msgstr "Un service contrôlé par <0>{domain}</0>"
+
+#: src/components/utils/scope-description.tsx:280
 msgid "Account"
 msgstr "Compte utilisateur"
 
@@ -41,21 +45,21 @@ msgstr "Une erreur inconnue s'est produite"
 msgid "Another account"
 msgstr "Un autre compte"
 
-#: src/components/utils/scope-description.tsx:859
+#: src/components/utils/scope-description.tsx:877
 msgid "Any collection"
 msgstr "N'importe quelle collection"
 
-#: src/components/utils/scope-description.tsx:821
+#: src/components/utils/scope-description.tsx:819
 msgid "Any method"
 msgstr "N'importe quelle action"
 
-#: src/components/utils/scope-description.tsx:847
+#: src/components/utils/scope-description.tsx:858
 msgid "Any service"
 msgstr "N'importe quel service"
 
 #: src/views/authorize/welcome/welcome-view.tsx:28
-#: src/components/utils/scope-description.tsx:458
-#: src/components/utils/scope-description.tsx:478
+#: src/components/utils/scope-description.tsx:456
+#: src/components/utils/scope-description.tsx:476
 msgid "Authenticate"
 msgstr "Authentification"
 
@@ -82,7 +86,7 @@ msgstr "Retour"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
-#: src/components/utils/scope-description.tsx:745
+#: src/components/utils/scope-description.tsx:743
 msgid "Blob storage"
 msgstr "Stockage"
 
@@ -105,7 +109,7 @@ msgstr "En cliquant sur <0>{0}</0>, vous accorderez à cette application l'accè
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
 
-#: src/components/utils/scope-description.tsx:553
+#: src/components/utils/scope-description.tsx:551
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Appeler"
@@ -116,11 +120,11 @@ msgstr "Appeler"
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/components/utils/scope-description.tsx:434
+#: src/components/utils/scope-description.tsx:432
 msgid "Change your <0>@handle</0>"
 msgstr "Modifier votre <0>@pseudo</0>"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/components/utils/scope-description.tsx:392
 msgid "Chat"
 msgstr "Discussions"
 
@@ -142,7 +146,7 @@ msgstr "Code"
 msgid "Collapse details"
 msgstr "Réduire les détails"
 
-#: src/components/utils/scope-description.tsx:713
+#: src/components/utils/scope-description.tsx:711
 msgid "Collection"
 msgstr "Collection"
 
@@ -159,7 +163,7 @@ msgstr "Confirmez votre mot de passe pour continuer"
 msgid "Confirmation code"
 msgstr "Code de confirmation"
 
-#: src/components/utils/scope-description.tsx:714
+#: src/components/utils/scope-description.tsx:712
 msgid "Create"
 msgstr "Créer"
 
@@ -171,11 +175,11 @@ msgstr "Créer un nouveau compte"
 msgid "Create Account"
 msgstr "Créer un compte"
 
-#: src/components/utils/scope-description.tsx:599
+#: src/components/utils/scope-description.tsx:597
 msgid "Create, update, and delete any public record"
 msgstr "Créer, modifier et supprimer tout contenu public"
 
-#: src/components/utils/scope-description.tsx:716
+#: src/components/utils/scope-description.tsx:714
 msgid "Delete"
 msgstr "Supprimer"
 
@@ -188,7 +192,7 @@ msgid "Description"
 msgstr "Description"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
-#: src/components/utils/scope-description.tsx:242
+#: src/components/utils/scope-description.tsx:240
 msgid "Email"
 msgstr "Email"
 
@@ -274,7 +278,7 @@ msgstr "Accueil"
 msgid "Identifier"
 msgstr "Identifiant"
 
-#: src/components/utils/scope-description.tsx:427
+#: src/components/utils/scope-description.tsx:425
 msgid "Identity"
 msgstr "Identité"
 
@@ -315,15 +319,15 @@ msgstr "Ressemble à {example}"
 msgid "Make visible"
 msgstr "Rendre visible"
 
-#: src/components/utils/scope-description.tsx:430
+#: src/components/utils/scope-description.tsx:428
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Gérer votre <0>identité complète</0> y compris votre <1>@pseudo</1>"
 
-#: src/components/utils/scope-description.tsx:365
+#: src/components/utils/scope-description.tsx:363
 msgid "Manage your profile, posts, likes and follows"
 msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements"
 
-#: src/components/utils/scope-description.tsx:360
+#: src/components/utils/scope-description.tsx:358
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements ainsi que lire vos préférences privées"
 
@@ -383,11 +387,11 @@ msgstr "Mot de passe mis à jour !"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
-#: src/components/utils/scope-description.tsx:479
+#: src/components/utils/scope-description.tsx:477
 msgid "Perform actions on your behalf"
 msgstr "Effectuer des actions en votre nom"
 
-#: src/components/utils/scope-description.tsx:460
+#: src/components/utils/scope-description.tsx:458
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Effectuer des actions authentifiées vers <0>n'importe quel service</0> en votre nom"
 
@@ -401,19 +405,19 @@ msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre m
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
 
-#: src/components/utils/scope-description.tsx:620
+#: src/components/utils/scope-description.tsx:618
 msgid "Publish changes"
 msgstr "Publier des modifications"
 
-#: src/components/utils/scope-description.tsx:395
+#: src/components/utils/scope-description.tsx:393
 msgid "Read and send messages"
 msgstr "Lire et envoyer des messages"
 
-#: src/components/utils/scope-description.tsx:245
+#: src/components/utils/scope-description.tsx:243
 msgid "Read and update your account's email address"
 msgstr "Lire et mettre à jour l'adresse e-mail de votre compte"
 
-#: src/components/utils/scope-description.tsx:247
+#: src/components/utils/scope-description.tsx:245
 msgid "Read your account's email address"
 msgstr "Lire l'adresse e-mail de votre compte"
 
@@ -422,8 +426,8 @@ msgstr "Lire l'adresse e-mail de votre compte"
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
-#: src/components/utils/scope-description.tsx:598
-#: src/components/utils/scope-description.tsx:619
+#: src/components/utils/scope-description.tsx:596
+#: src/components/utils/scope-description.tsx:617
 msgid "Repository"
 msgstr "Données publiques"
 
@@ -492,7 +496,7 @@ msgstr "Support"
 msgid "Technical details"
 msgstr "Détails techniques"
 
-#: src/components/utils/scope-description.tsx:283
+#: src/components/utils/scope-description.tsx:281
 msgid "Temporarily activate or deactivate your account"
 msgstr "Activer ou désactiver temporairement votre compte"
 
@@ -506,21 +510,21 @@ msgstr "Conditions d'Utilisation"
 msgid "That handle cannot be used"
 msgstr "Ce pseudonyme ne peut pas être utilisé"
 
-#: src/components/utils/scope-description.tsx:206
+#: src/components/utils/scope-description.tsx:204
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>usurper</1>, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance."
 
-#: src/components/utils/scope-description.tsx:605
+#: src/components/utils/scope-description.tsx:603
 msgid "The application is asking to be able to create, update, and delete<0>any data</0> from your repository."
 msgstr "L'application demande la possibilité de créer, modifier et supprimer <0>n'importe quelles données</0> de votre dépôt."
 
-#: src/components/utils/scope-description.tsx:174
-#: src/components/utils/scope-description.tsx:485
-#: src/components/utils/scope-description.tsx:626
+#: src/components/utils/scope-description.tsx:172
+#: src/components/utils/scope-description.tsx:483
+#: src/components/utils/scope-description.tsx:624
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "L'application demande les autorisations nécessaires pour effectuer les actions suivantes en votre nom :"
 
-#: src/components/utils/scope-description.tsx:500
+#: src/components/utils/scope-description.tsx:498
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
 msgstr "Le réseau ATProto utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que le contenu du fil d'actualité ou de modération."
 
@@ -568,7 +572,7 @@ msgstr "Ce pseudonyme est réservé"
 msgid "This sign-in session has expired"
 msgstr "Cette session de connexion a expiré"
 
-#: src/components/utils/scope-description.tsx:556
+#: src/components/utils/scope-description.tsx:554
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Auprès de"
@@ -581,11 +585,11 @@ msgstr "Saisissez le nom d'utilisateur souhaité"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/components/utils/scope-description.tsx:715
+#: src/components/utils/scope-description.tsx:713
 msgid "Update"
 msgstr "Modifier"
 
-#: src/components/utils/scope-description.tsx:748
+#: src/components/utils/scope-description.tsx:746
 msgid "Upload files"
 msgstr "Envoyer des fichiers"
 
@@ -654,6 +658,6 @@ msgstr "Votre nom d'utilisateur complet sera : {0}"
 msgid "Your password has been updated!"
 msgstr "Votre mot de passe a été mis à jour !"
 
-#: src/components/utils/scope-description.tsx:641
+#: src/components/utils/scope-description.tsx:639
 msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
 msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau ATProto, telles que les publications, les likes et les abonnements Bluesky. Il contient également des données créées via d'autres applications auxquelles vous vous êtes connecté avec ce compte."
