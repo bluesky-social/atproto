@@ -1,18 +1,16 @@
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
+import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
 import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
-export type { AtprotoDid }
-
 export type LxmParam = '*' | Nsid
 export const isLxmParam = (value: unknown): value is LxmParam =>
   value === '*' || isNsid(value)
-export type AudParam = '*' | AtprotoDid
+export type AudParam = '*' | AtprotoAudience
 export const isAudParam = (value: unknown): value is AudParam =>
-  value === '*' || isAtprotoDid(value)
+  value === '*' || isAtprotoAudience(value)
 
 export type RpcPermissionMatch = {
   lxm: string
@@ -21,7 +19,7 @@ export type RpcPermissionMatch = {
 
 export class RpcPermission implements Matchable<RpcPermissionMatch> {
   constructor(
-    public readonly aud: '*' | AtprotoDid,
+    public readonly aud: '*' | AtprotoAudience,
     public readonly lxm: NeRoArray<'*' | Nsid>,
   ) {}
 
@@ -84,7 +82,7 @@ export class RpcPermission implements Matchable<RpcPermissionMatch> {
 
   static scopeNeededFor(options: RpcPermissionMatch): string {
     return RpcPermission.parser.format({
-      aud: options.aud as AtprotoDid,
+      aud: options.aud as AtprotoAudience,
       lxm: [options.lxm as Nsid],
     })
   }

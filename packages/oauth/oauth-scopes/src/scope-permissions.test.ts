@@ -166,16 +166,16 @@ describe('ScopePermissions', () => {
     })
 
     it('should allow constraining "aud"', () => {
-      const set = new ScopePermissions('rpc:*?aud=did:web:example.com')
+      const set = new ScopePermissions('rpc:*?aud=did:web:example.com%23foo')
       expect(
         set.allowsRpc({
-          aud: 'did:web:example.com',
+          aud: 'did:web:example.com#foo',
           lxm: 'com.example.method',
         }),
       ).toBe(true)
       expect(
         set.allowsRpc({
-          aud: 'did:web:example.com',
+          aud: 'did:web:example.com#foo',
           lxm: 'app.bsky.feed.getFeed',
         }),
       ).toBe(true)
@@ -183,17 +183,26 @@ describe('ScopePermissions', () => {
       // Control
 
       expect(
-        set.allowsRpc({ aud: 'did:plc:blahbla', lxm: 'com.example.method' }),
+        set.allowsRpc({
+          aud: 'did:web:bar.com#foo', // invalid aud (wrong service id)
+          lxm: 'com.example.method',
+        }),
+      ).toBe(false)
+      expect(
+        set.allowsRpc({
+          aud: 'did:web:example.com', // invalid aud (no service id)
+          lxm: 'com.example.method',
+        }),
       ).toBe(false)
     })
 
     it('should allow constraining "lxm" and "aud"', () => {
       const set = new ScopePermissions(
-        'rpc:app.bsky.feed.getFeed?aud=did:web:example.com',
+        'rpc:app.bsky.feed.getFeed?aud=did:web:example.com%23foo',
       )
       expect(
         set.allowsRpc({
-          aud: 'did:web:example.com',
+          aud: 'did:web:example.com#foo',
           lxm: 'app.bsky.feed.getFeed',
         }),
       ).toBe(true)

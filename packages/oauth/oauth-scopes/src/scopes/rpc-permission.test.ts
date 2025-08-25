@@ -5,10 +5,10 @@ describe('RpcPermission', () => {
     describe('fromString', () => {
       it('should parse positional scope', () => {
         const scope = RpcPermission.fromString(
-          'rpc:com.example.service?aud=did:web:example.com',
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
         )
         expect(scope).not.toBeNull()
-        expect(scope!.aud).toBe('did:web:example.com')
+        expect(scope!.aud).toBe('did:web:example.com#service_id')
         expect(scope!.lxm).toEqual(['com.example.service'])
       })
 
@@ -29,29 +29,29 @@ describe('RpcPermission', () => {
 
       it('should render strings correctly', () => {
         expect(
-          new RpcPermission('did:web:example.com', [
+          new RpcPermission('did:web:example.com#service_id', [
             'com.example.service',
           ]).toString(),
-        ).toBe('rpc:com.example.service?aud=did:web:example.com')
+        ).toBe('rpc:com.example.service?aud=did:web:example.com%23service_id')
         expect(new RpcPermission('*', ['com.example.method1']).toString()).toBe(
           'rpc:com.example.method1?aud=*',
         )
         expect(
-          new RpcPermission('did:web:example.com', [
+          new RpcPermission('did:web:example.com#service_id', [
             'com.example.method1',
             'com.example.method2',
           ]).toString(),
         ).toBe(
-          'rpc?lxm=com.example.method1&lxm=com.example.method2&aud=did:web:example.com',
+          'rpc?lxm=com.example.method1&lxm=com.example.method2&aud=did:web:example.com%23service_id',
         )
       })
 
       it('should reject scopes without lxm', () => {
         expect(
-          RpcPermission.fromString('rpc?aud=did:web:example.com'),
+          RpcPermission.fromString('rpc?aud=did:web:example.com%23service_id'),
         ).toBeNull()
         expect(
-          RpcPermission.fromString('rpc:?aud=did:web:example.com'),
+          RpcPermission.fromString('rpc:?aud=did:web:example.com%23service_id'),
         ).toBeNull()
       })
 
@@ -117,16 +117,21 @@ describe('RpcPermission', () => {
         'invalid',
         'rpc:invalid',
         'rpc:invalid?aud=did:web:example.com',
+        'rpc:invalid?aud=did:web:example.com%23service_id',
         'rpc:foo.bar',
         'rpc:foo.bar.baz?aud=did:web',
+        'rpc:foo.bar.baz?aud=did:web%23service_id',
         'rpc:foo.bar.baz?aud=did:plc:111',
+        'rpc:foo.bar.baz?aud=did:plc:111%23service_id',
         'rpc:foo.bar.baz?aud=did:foo:bar',
-        'rpc:foo.bar.baz?aud=did:web:example.com&lxm=foo.bar.baz',
+        'rpc:foo.bar.baz?aud=did:foo:bar%23service_id',
+        'rpc:foo.bar.baz?aud=did:web:example.com%23service_id&lxm=foo.bar.baz',
         'rpc:foo.bar.baz?aud=invalid',
         'rpc:foo.bar.baz?aud=invalid',
         'rpc:invalid?aud=did:web:example.com',
+        'rpc:invalid?aud=did:web:example.com%23service_id',
         'rpc:com.example.service?aud=invalid',
-        'notrpc:com.example.service?aud=did:web:example.com',
+        'notrpc:com.example.service?aud=did:web:example.com%23service_id',
         'rpc?lxm=invalid&aud=invalid',
       ]) {
         it(`should return null for invalid rpc scope: ${invalid}`, () => {
@@ -139,9 +144,11 @@ describe('RpcPermission', () => {
       it('should return correct scope string for specific lxm and aud', () => {
         const scope = RpcPermission.scopeNeededFor({
           lxm: 'com.example.service',
-          aud: 'did:web:example.com',
+          aud: 'did:web:example.com#service_id',
         })
-        expect(scope).toBe('rpc:com.example.service?aud=did:web:example.com')
+        expect(scope).toBe(
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
+        )
       })
 
       it('should return scope that accepts all aud with specific lxm', () => {
@@ -158,39 +165,39 @@ describe('RpcPermission', () => {
     describe('matches', () => {
       it('should match exact lxm and aud', () => {
         const scope = RpcPermission.fromString(
-          'rpc:com.example.service?aud=did:web:example.com',
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
         )
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({
             lxm: 'com.example.service',
-            aud: 'did:web:example.com',
+            aud: 'did:web:example.com#service_id',
           }),
         ).toBe(true)
       })
 
       it('should not match different lxm', () => {
         const scope = RpcPermission.fromString(
-          'rpc:com.example.service?aud=did:web:example.com',
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
         )
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({
             lxm: 'com.example.OtherService',
-            aud: 'did:web:example.com',
+            aud: 'did:web:example.com#service_id',
           }),
         ).toBe(false)
       })
 
       it('should not match different aud', () => {
         const scope = RpcPermission.fromString(
-          'rpc:com.example.service?aud=did:web:example.com',
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
         )
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({
             lxm: 'com.example.service',
-            aud: 'did:example:456',
+            aud: 'did:example:456#service_id',
           }),
         ).toBe(false)
       })
@@ -201,29 +208,33 @@ describe('RpcPermission', () => {
         expect(
           scope!.matches({
             lxm: 'com.example.method1',
-            aud: 'did:web:example.com',
+            aud: 'did:web:example.com#service_id',
           }),
         ).toBe(true)
       })
 
       it('should match wildcard lxm', () => {
-        const scope = RpcPermission.fromString('rpc:*?aud=did:web:example.com')
+        const scope = RpcPermission.fromString(
+          'rpc:*?aud=did:web:example.com%23service_id',
+        )
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({
             lxm: 'com.example.method1',
-            aud: 'did:web:example.com',
+            aud: 'did:web:example.com#service_id',
           }),
         ).toBe(true)
       })
 
       it('should not match different lxm with wildcard aud', () => {
-        const scope = RpcPermission.fromString('rpc:*?aud=did:web:example.com')
+        const scope = RpcPermission.fromString(
+          'rpc:*?aud=did:web:example.com%23service_id',
+        )
         expect(scope).not.toBeNull()
         expect(
           scope!.matches({
             lxm: 'com.example.anyMethod',
-            aud: 'did:web:example.com',
+            aud: 'did:web:example.com#service_id',
           }),
         ).toBe(true)
       })
@@ -231,11 +242,11 @@ describe('RpcPermission', () => {
 
     describe('toString', () => {
       it('should format scope with lxm and aud', () => {
-        const scope = new RpcPermission('did:web:example.com', [
+        const scope = new RpcPermission('did:web:example.com#service_id', [
           'com.example.service',
         ])
         expect(scope.toString()).toBe(
-          'rpc:com.example.service?aud=did:web:example.com',
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
         )
       })
 
@@ -245,16 +256,20 @@ describe('RpcPermission', () => {
       })
 
       it('should format scope with wildcard lxm', () => {
-        const scope = new RpcPermission('did:web:example.com', ['*'])
-        expect(scope.toString()).toBe('rpc:*?aud=did:web:example.com')
+        const scope = new RpcPermission('did:web:example.com#service_id', ['*'])
+        expect(scope.toString()).toBe(
+          'rpc:*?aud=did:web:example.com%23service_id',
+        )
       })
 
       it('simplifies lxm if one of them is "*"', () => {
-        const scope = new RpcPermission('did:web:example.com', [
+        const scope = new RpcPermission('did:web:example.com#service_id', [
           '*',
           'com.example.method1',
         ])
-        expect(scope.toString()).toBe('rpc:*?aud=did:web:example.com')
+        expect(scope.toString()).toBe(
+          'rpc:*?aud=did:web:example.com%23service_id',
+        )
       })
     })
   })
@@ -262,8 +277,14 @@ describe('RpcPermission', () => {
   describe('consistency', () => {
     const testCases: { input: string; expected: string }[] = [
       {
-        input: 'rpc:com.example.service?aud=did:web:example.com',
-        expected: 'rpc:com.example.service?aud=did:web:example.com',
+        input: 'rpc:com.example.service?aud=did:web:example.com%23service_id',
+        expected:
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
+      },
+      {
+        input: 'rpc:com.example.service?aud=did:web:example.com#service_id',
+        expected:
+          'rpc:com.example.service?aud=did:web:example.com%23service_id',
       },
       {
         input: 'rpc?lxm=com.example.method1&lxm=com.example.method2&aud=*',
@@ -271,16 +292,20 @@ describe('RpcPermission', () => {
       },
       {
         input:
-          'rpc?lxm=com.example.method1&lxm=com.example.method2&lxm=*&aud=did:web:example.com',
-        expected: 'rpc:*?aud=did:web:example.com',
+          'rpc?lxm=com.example.method1&lxm=com.example.method2&lxm=*&aud=did:web:example.com%23service_id',
+        expected: 'rpc:*?aud=did:web:example.com%23service_id',
       },
       {
-        input: 'rpc?aud=did:web:example.com&lxm=com.example.service',
-        expected: 'rpc:com.example.service?aud=did:web:example.com',
+        input: 'rpc?aud=did:web:example.com%23foo&lxm=com.example.service',
+        expected: 'rpc:com.example.service?aud=did:web:example.com%23foo',
       },
       {
-        input: 'rpc?lxm=com.example.method1&aud=did:web:example.com',
-        expected: 'rpc:com.example.method1?aud=did:web:example.com',
+        input: 'rpc?lxm=com.example.method1&aud=did:web:example.com#foo',
+        expected: 'rpc:com.example.method1?aud=did:web:example.com%23foo',
+      },
+      {
+        input: 'rpc?lxm=com.example.method1&aud=did:web:example.com%23bar',
+        expected: 'rpc:com.example.method1?aud=did:web:example.com%23bar',
       },
       {
         input: 'rpc:com.example.method1?&aud=*',
