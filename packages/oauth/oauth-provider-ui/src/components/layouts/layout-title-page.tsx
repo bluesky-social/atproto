@@ -44,7 +44,7 @@ export function LayoutTitlePage({
           'px-6 pt-4',
           'w-full',
           'md:max-w-lg',
-          'flex flex-row items-start',
+          'flex flex-row items-center',
           'md:flex-col md:items-end',
           'md:self-stretch',
           'md:max-w-fix md:w-1/2 md:p-4',

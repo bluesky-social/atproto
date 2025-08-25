@@ -21,21 +21,19 @@ export function LocaleSelector({
       {...props}
       className={clsx(
         'accent-primary',
+        'cursor-pointer',
         // Background
-        'bg-contrast-25',
-        'hover:bg-contrast-0 focus:bg-contrast-0 dark:hover:bg-contrast-0',
-        'focus:bg-contrast-0 dark:focus:bg-contrast-0',
+        'bg-gray-100 dark:bg-gray-800',
+        'hover:bg-gray-200 dark:hover:bg-gray-700',
         // Border
-        'outline-hidden',
-        'border-contrast-100 border',
-        // Border
-        'rounded-full',
+        'transition duration-300 ease-in-out',
+        'outline-none',
+        'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
         // Font
         'text-slate-600 dark:text-slate-300',
         // Layout
-        'px-2 py-1',
-        // Misc
-        'cursor-pointer',
+        'rounded-lg',
+        'p-2 pr-1',
         className,
       )}
       value={locale}
