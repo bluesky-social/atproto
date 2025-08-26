@@ -90,7 +90,7 @@ export class RepoPermission implements Matchable<RepoPermissionMatch> {
     return RepoPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ScopeSyntax): RepoPermission | null {
+  static fromSyntax(syntax: ScopeSyntax<'repo'>): RepoPermission | null {
     const result = RepoPermission.parser.parse(syntax)
     if (!result) return null
 

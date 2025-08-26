@@ -68,7 +68,7 @@ export class RpcPermission implements Matchable<RpcPermissionMatch> {
     return RpcPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ScopeSyntax): RpcPermission | null {
+  static fromSyntax(syntax: ScopeSyntax<'rpc'>): RpcPermission | null {
     const result = RpcPermission.parser.parse(syntax)
     if (!result) return null
 

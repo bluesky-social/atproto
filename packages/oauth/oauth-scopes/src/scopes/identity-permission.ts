@@ -39,7 +39,7 @@ export class IdentityPermission implements Matchable<IdentityPermissionMatch> {
     return IdentityPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ScopeSyntax) {
+  static fromSyntax(syntax: ScopeSyntax<'identity'>) {
     const result = IdentityPermission.parser.parse(syntax)
     if (!result) return null
     return new IdentityPermission(result.attr)

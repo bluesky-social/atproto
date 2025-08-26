@@ -59,14 +59,14 @@ export class AccountPermission implements Matchable<AccountPermissionMatch> {
     return AccountPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ScopeSyntax) {
+  static fromSyntax(syntax: ScopeSyntax<'account'>) {
     const result = AccountPermission.parser.parse(syntax)
     if (!result) return null
 
     return new AccountPermission(result.attr, result.action)
   }
 
-  static scopeNeededFor(options: AccountPermissionMatch): string {
+  static scopeNeededFor(options: AccountPermissionMatch) {
     return AccountPermission.parser.format(options)
   }
 }

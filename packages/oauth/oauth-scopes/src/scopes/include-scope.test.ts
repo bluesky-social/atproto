@@ -425,21 +425,16 @@ describe('IncludeScope', () => {
       })
 
       describe('account resources', () => {
-        const permissionSet: LexPermissionSet = {
-          type: 'permission-set',
-          permissions: [
-            {
-              type: 'permission',
-              resource: 'account',
-              attr: 'email',
-              action: 'read',
-            },
-          ],
-        }
+        const permission = {
+          type: 'permission',
+          resource: 'account',
+          attr: 'email',
+          action: 'read',
+        } as const
 
         it('is a valid permission', () => {
           // Just to make sure that the test bellow doesn't give a false negative
-          const syntax = new LexPermissionSyntax(permissionSet.permissions[0]!)
+          const syntax = new LexPermissionSyntax(permission)
           expect(AccountPermission.fromSyntax(syntax)).toMatchObject({
             attr: 'email',
             action: 'read',
@@ -449,27 +444,25 @@ describe('IncludeScope', () => {
         it('does not allow account permissions', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
-              .toPermissions(permissionSet)
+              .toPermissions({
+                type: 'permission-set',
+                permissions: [permission],
+              })
               .some((perm) => perm instanceof AccountPermission),
           ).toBe(false)
         })
       })
 
       describe('identity resources', () => {
-        const permissionSet: LexPermissionSet = {
-          type: 'permission-set',
-          permissions: [
-            {
-              type: 'permission',
-              resource: 'identity',
-              attr: 'handle',
-            },
-          ],
-        }
+        const permission = {
+          type: 'permission',
+          resource: 'identity',
+          attr: 'handle',
+        } as const
 
         it('is a valid permission', () => {
           // Just to make sure that the test bellow doesn't give a false negative
-          const syntax = new LexPermissionSyntax(permissionSet.permissions[0]!)
+          const syntax = new LexPermissionSyntax(permission)
           expect(IdentityPermission.fromSyntax(syntax)).toMatchObject({
             attr: 'handle',
           })
@@ -478,7 +471,10 @@ describe('IncludeScope', () => {
         it('does not allow identity permissions', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
-              .toPermissions(permissionSet)
+              .toPermissions({
+                type: 'permission-set',
+                permissions: [permission],
+              })
               .some((perm) => perm instanceof IdentityPermission),
           ).toBe(false)
         })

@@ -53,7 +53,7 @@ export class BlobPermission implements Matchable<BlobPermissionMatch> {
     return BlobPermission.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ScopeSyntax) {
+  static fromSyntax(syntax: ScopeSyntax<'blob'>) {
     const result = BlobPermission.parser.parse(syntax)
     if (!result) return null
 

@@ -99,8 +99,17 @@ export class Parser<P extends string, S extends ParamsSchema> {
     return new ScopeStringSyntax(this.prefix, positional, params).toString()
   }
 
-  parse(syntax: ScopeSyntax) {
-    if (syntax.prefix !== this.prefix) return null
+  // @NOTE If we needed to ever have more detailed reason as to why parsing
+  // fails, this function could easily be updated to return a
+  // ValidationResult<T> type that explains the reason for failure.
+  parse(syntax: ScopeSyntax<P>) {
+    // This check should not be needed (thanks to the P generic), but it makes
+    // the code more fool-proof.
+    if (syntax.prefix !== this.prefix) {
+      throw new TypeError(
+        `Expected prefix "${this.prefix}", but got "${syntax.prefix}"`,
+      )
+    }
 
     for (const key of syntax.keys()) {
       if (!this.schemaKeys.has(key)) return null

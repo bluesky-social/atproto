@@ -62,7 +62,7 @@ export class IncludeScope {
     return IncludeScope.fromSyntax(syntax)
   }
 
-  static fromSyntax(syntax: ScopeSyntax) {
+  static fromSyntax(syntax: ScopeSyntax<'include'>) {
     const result = IncludeScope.parser.parse(syntax)
     if (!result) return null
     return new IncludeScope(result.nsid, result.aud)
@@ -97,16 +97,23 @@ function parseIncludedPermission(
 }
 
 function parseIncludedPermissionInternal(permission: LexPermission) {
-  if (permission.resource === 'repo') {
+  if (isPermissionForResource(permission, 'repo')) {
     return RepoPermission.fromSyntax(new LexPermissionSyntax(permission))
   }
-  if (permission.resource === 'rpc') {
+  if (isPermissionForResource(permission, 'rpc')) {
     return RpcPermission.fromSyntax(new LexPermissionSyntax(permission))
   }
-  if (permission.resource === 'blob') {
+  if (isPermissionForResource(permission, 'blob')) {
     return BlobPermission.fromSyntax(new LexPermissionSyntax(permission))
   }
   return null
+}
+
+function isPermissionForResource<P extends LexPermission, T extends string>(
+  permission: P,
+  type: T,
+): permission is P & { resource: T } {
+  return permission.resource === type
 }
 
 /**

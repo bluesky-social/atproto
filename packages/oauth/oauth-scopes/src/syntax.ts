@@ -41,8 +41,8 @@ export function isScopeStringFor<P extends string>(
  * Abstract interface that allows parsing various syntaxes into permission
  * representations.
  */
-export interface ScopeSyntax {
-  readonly prefix: string
+export interface ScopeSyntax<P extends string> {
+  readonly prefix: P
   readonly positional?: ParamValue
   keys(): Iterable<string>
   getSingle(key: string): ParamValue | null | undefined
@@ -52,9 +52,11 @@ export interface ScopeSyntax {
 /**
  * Translates a scope string into a {@link ScopeSyntax}.
  */
-export class ScopeStringSyntax implements ScopeSyntax {
+export class ScopeStringSyntax<P extends string = string>
+  implements ScopeSyntax<P>
+{
   constructor(
-    readonly prefix: string,
+    readonly prefix: P,
     readonly positional?: string,
     readonly params?: Readonly<URLSearchParams>,
   ) {}
@@ -79,7 +81,7 @@ export class ScopeStringSyntax implements ScopeSyntax {
   }
 
   toString() {
-    let scope = this.prefix
+    let scope: string = this.prefix
 
     const { positional, params } = this
     if (positional !== undefined) {
@@ -90,20 +92,22 @@ export class ScopeStringSyntax implements ScopeSyntax {
       scope += `?${normalizeURIComponent(params.toString())}`
     }
 
-    return scope
+    return scope as ScopeStringFor<P>
   }
 
-  static fromString(scopeValue: string) {
+  static fromString<P extends string = string>(
+    scopeValue: ScopeStringFor<P>,
+  ): ScopeStringSyntax<P> {
     const paramIdx = scopeValue.indexOf('?')
     const colonIdx = scopeValue.indexOf(':')
     const prefixEnd = minIdx(paramIdx, colonIdx)
 
     // No param or positional
     if (prefixEnd === -1) {
-      return new ScopeStringSyntax(scopeValue)
+      return new ScopeStringSyntax(scopeValue as P)
     }
 
-    const prefix = scopeValue.slice(0, prefixEnd)
+    const prefix = scopeValue.slice(0, prefixEnd) as P
 
     // Parse the positional parameter if present
     const positional =
@@ -128,8 +132,12 @@ export class ScopeStringSyntax implements ScopeSyntax {
 /**
  * Translates a {@link LexPermission} into a {@link ScopeSyntax}.
  */
-export class LexPermissionSyntax implements ScopeSyntax {
-  constructor(readonly lexPermission: Readonly<LexPermission>) {}
+export class LexPermissionSyntax<P extends string = string>
+  implements ScopeSyntax<P>
+{
+  constructor(
+    readonly lexPermission: Readonly<LexPermission & { resource: P }>,
+  ) {}
 
   get prefix() {
     return this.lexPermission.resource
