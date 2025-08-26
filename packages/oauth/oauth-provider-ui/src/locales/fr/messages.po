@@ -41,7 +41,7 @@ msgstr "Une application sur votre appareil"
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:115
+#: src/views/authorize/sign-in/sign-in-picker.tsx:113
 msgid "Another account"
 msgstr "Un autre compte"
 
@@ -91,12 +91,12 @@ msgid "Blob storage"
 msgstr "Stockage"
 
 #: src/components/utils/scope-description.tsx:834
-msgid "Bluesky App servers"
-msgstr "Serveurs de l'application Bluesky"
+msgid "Bluesky App services"
+msgstr "Services de l'application Bluesky"
 
 #: src/components/utils/scope-description.tsx:841
-msgid "Bluesky Chat servers"
-msgstr "Serveurs de discussion Bluesky"
+msgid "Bluesky Chat services"
+msgstr "Services de discussion de Bluesky"
 
 #. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
 #: src/views/authorize/consent/consent-form.tsx:173
@@ -273,7 +273,7 @@ msgstr "Cacher"
 msgid "Home"
 msgstr "Accueil"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:92
+#: src/views/authorize/sign-in/sign-in-picker.tsx:91
 #: src/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Identifier"
 msgstr "Identifiant"
@@ -282,11 +282,11 @@ msgstr "Identifiant"
 msgid "Identity"
 msgstr "Identité"
 
-#: src/locales/locale-selector.tsx:48
+#: src/locales/locale-selector.tsx:46
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:273
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:286
 msgid "Invalid"
 msgstr "Invalide"
 
@@ -303,7 +303,7 @@ msgstr "Réinitialisons votre mot de passe !"
 msgid "Login complete"
 msgstr "Connexion terminée"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:108
+#: src/views/authorize/sign-in/sign-in-picker.tsx:107
 msgid "Login to account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
@@ -339,7 +339,7 @@ msgstr "Manquant"
 msgid "Moderate"
 msgstr "Modéré"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:85
+#: src/views/authorize/sign-in/sign-in-picker.tsx:84
 msgid "Name"
 msgstr "Nom"
 
@@ -597,7 +597,7 @@ msgstr "Envoyer des fichiers"
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:268
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:281
 msgid "Valid"
 msgstr "Valide"
 
@@ -633,7 +633,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "You are being redirected..."
 msgstr "Vous êtes redirigé..."
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:234
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:247
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 
@@ -650,7 +650,7 @@ msgid "Your account"
 msgstr "Votre compte"
 
 #. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:230
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 

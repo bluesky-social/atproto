@@ -41,7 +41,7 @@ msgstr "An application on your device"
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:115
+#: src/views/authorize/sign-in/sign-in-picker.tsx:113
 msgid "Another account"
 msgstr "Another account"
 
@@ -91,12 +91,12 @@ msgid "Blob storage"
 msgstr "Blob storage"
 
 #: src/components/utils/scope-description.tsx:834
-msgid "Bluesky App servers"
-msgstr "Bluesky App servers"
+msgid "Bluesky App services"
+msgstr "Bluesky App services"
 
 #: src/components/utils/scope-description.tsx:841
-msgid "Bluesky Chat servers"
-msgstr "Bluesky Chat servers"
+msgid "Bluesky Chat services"
+msgstr "Bluesky Chat services"
 
 #. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
 #: src/views/authorize/consent/consent-form.tsx:173
@@ -273,7 +273,7 @@ msgstr "Hide"
 msgid "Home"
 msgstr "Home"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:92
+#: src/views/authorize/sign-in/sign-in-picker.tsx:91
 #: src/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Identifier"
 msgstr "Identifier"
@@ -282,11 +282,11 @@ msgstr "Identifier"
 msgid "Identity"
 msgstr "Identity"
 
-#: src/locales/locale-selector.tsx:48
+#: src/locales/locale-selector.tsx:46
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:273
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:286
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -303,7 +303,7 @@ msgstr "Let's get your password reset!"
 msgid "Login complete"
 msgstr "Login complete"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:108
+#: src/views/authorize/sign-in/sign-in-picker.tsx:107
 msgid "Login to account that is not listed"
 msgstr "Login to account that is not listed"
 
@@ -339,7 +339,7 @@ msgstr "Missing"
 msgid "Moderate"
 msgstr "Moderate"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:85
+#: src/views/authorize/sign-in/sign-in-picker.tsx:84
 msgid "Name"
 msgstr "Name"
 
@@ -597,7 +597,7 @@ msgstr "Upload files"
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:268
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:281
 msgid "Valid"
 msgstr "Valid"
 
@@ -633,7 +633,7 @@ msgstr "Wrong identifier or password"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:234
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:247
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
@@ -650,7 +650,7 @@ msgid "Your account"
 msgstr "Your account"
 
 #. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:230
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 

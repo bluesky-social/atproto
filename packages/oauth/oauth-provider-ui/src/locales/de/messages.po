@@ -41,7 +41,7 @@ msgstr ""
 msgid "An unknown error occurred"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:115
+#: src/views/authorize/sign-in/sign-in-picker.tsx:113
 msgid "Another account"
 msgstr ""
 
@@ -91,11 +91,11 @@ msgid "Blob storage"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx:834
-msgid "Bluesky App servers"
+msgid "Bluesky App services"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx:841
-msgid "Bluesky Chat servers"
+msgid "Bluesky Chat services"
 msgstr ""
 
 #. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
@@ -273,7 +273,7 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:92
+#: src/views/authorize/sign-in/sign-in-picker.tsx:91
 #: src/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Identifier"
 msgstr ""
@@ -282,11 +282,11 @@ msgstr ""
 msgid "Identity"
 msgstr ""
 
-#: src/locales/locale-selector.tsx:48
+#: src/locales/locale-selector.tsx:46
 msgid "Interface language selector"
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:273
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:286
 msgid "Invalid"
 msgstr ""
 
@@ -303,7 +303,7 @@ msgstr ""
 msgid "Login complete"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:108
+#: src/views/authorize/sign-in/sign-in-picker.tsx:107
 msgid "Login to account that is not listed"
 msgstr ""
 
@@ -339,7 +339,7 @@ msgstr ""
 msgid "Moderate"
 msgstr ""
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:85
+#: src/views/authorize/sign-in/sign-in-picker.tsx:84
 msgid "Name"
 msgstr ""
 
@@ -597,7 +597,7 @@ msgstr ""
 msgid "Username or email address"
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:268
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:281
 msgid "Valid"
 msgstr ""
 
@@ -633,7 +633,7 @@ msgstr ""
 msgid "You are being redirected..."
 msgstr ""
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:234
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:247
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr ""
 
@@ -650,7 +650,7 @@ msgid "Your account"
 msgstr ""
 
 #. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:217
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:230
 msgid "Your full username will be: {0}"
 msgstr ""
 
