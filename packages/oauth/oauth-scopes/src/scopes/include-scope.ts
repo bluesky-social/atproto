@@ -94,9 +94,10 @@ function parseIncludedPermission(
 }
 
 function parseIncludedPermissionInternal(permission: LexPermission) {
-  if (permission.resource === 'repo') return RepoPermission.fromLex(permission)
-  if (permission.resource === 'rpc') return RpcPermission.fromLex(permission)
-  if (permission.resource === 'blob') return BlobPermission.fromLex(permission)
+  const syntax = ScopeSyntax.fromLex(permission)
+  if (syntax.is('repo')) return RepoPermission.fromSyntax(syntax)
+  if (syntax.is('rpc')) return RpcPermission.fromSyntax(syntax)
+  if (syntax.is('blob')) return BlobPermission.fromSyntax(syntax)
   return null
 }
 

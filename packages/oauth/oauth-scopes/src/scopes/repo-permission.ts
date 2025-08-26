@@ -3,9 +3,6 @@ import { Nsid, isNsid } from '../lib/nsid.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
-import type { LexPermission } from '../types.js'
-
-export { type LexPermission }
 
 export const REPO_ACTIONS = Object.freeze([
   'create',
@@ -85,12 +82,6 @@ export class RepoPermission implements Matchable<RepoPermissionMatch> {
   static fromString(scope: string): RepoPermission | null {
     if (!isScopeSyntaxFor(scope, 'repo')) return null
     const syntax = ScopeSyntax.fromString(scope)
-    return RepoPermission.fromSyntax(syntax)
-  }
-
-  static fromLex(lexPermission: LexPermission) {
-    if (lexPermission.resource !== 'repo') return null
-    const syntax = ScopeSyntax.fromLex(lexPermission)
     return RepoPermission.fromSyntax(syntax)
   }
 

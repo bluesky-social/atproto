@@ -7,9 +7,6 @@ import {
   ScopeSyntax,
   isScopeSyntaxFor,
 } from '../syntax.js'
-import type { LexPermission } from '../types.js'
-
-export { type LexPermission }
 
 export const DEFAULT_ACCEPT = Object.freeze(['*/*'] as const)
 
@@ -52,12 +49,6 @@ export class BlobPermission implements Matchable<BlobPermissionMatch> {
   static fromString(scope: string) {
     if (!isScopeSyntaxFor(scope, 'blob')) return null
     const syntax = ScopeSyntax.fromString(scope)
-    return BlobPermission.fromSyntax(syntax)
-  }
-
-  static fromLex(lexPermission: LexPermission) {
-    if (lexPermission.resource !== 'blob') return null
-    const syntax = ScopeSyntax.fromLex(lexPermission)
     return BlobPermission.fromSyntax(syntax)
   }
 

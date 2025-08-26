@@ -3,9 +3,8 @@ import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
 import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
-import type { LexPermission } from '../types.js'
 
-export { type AtprotoAudience, type LexPermission, isAtprotoAudience }
+export { type AtprotoAudience, isAtprotoAudience }
 
 export type LxmParam = '*' | Nsid
 export const isLxmParam = (value: unknown): value is LxmParam =>
@@ -63,12 +62,6 @@ export class RpcPermission implements Matchable<RpcPermissionMatch> {
   static fromString(scope: string): RpcPermission | null {
     if (!isScopeSyntaxFor(scope, 'rpc')) return null
     const syntax = ScopeSyntax.fromString(scope)
-    return RpcPermission.fromSyntax(syntax)
-  }
-
-  static fromLex(lexPermission: LexPermission) {
-    if (lexPermission.resource !== 'rpc') return null
-    const syntax = ScopeSyntax.fromLex(lexPermission)
     return RpcPermission.fromSyntax(syntax)
   }
 
