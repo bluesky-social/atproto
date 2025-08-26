@@ -15,7 +15,7 @@ import {
   RepoPermissionMatch,
 } from './scopes/repo-permission.js'
 import { RpcPermission, RpcPermissionMatch } from './scopes/rpc-permission.js'
-import { isScopeSyntaxFor } from './syntax.js'
+import { isScopeStringFor } from './syntax.js'
 
 export type ScopeMatchingOptionsByResource = {
   account: AccountPermissionMatch
@@ -54,7 +54,7 @@ export function scopeMatches<R extends keyof ScopeMatchingOptionsByResource>(
 ): boolean {
   // Optimization: Do not try parsing the scope if it does not match the
   // resource prefix.
-  if (!isScopeSyntaxFor(scope, resource)) return false
+  if (!isScopeStringFor(scope, resource)) return false
 
   // @NOTE we might want to cache the parsed scopes though, in practice, a
   // single scope is unlikely to be parsed multiple times during a single

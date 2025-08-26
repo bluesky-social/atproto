@@ -8,7 +8,3 @@ export function knownValuesValidator<T>(values: Iterable<T>) {
   const set = new Set<unknown>(values)
   return (value: unknown): value is T => set.has(value)
 }
-
-export function isNonNullable<X>(x: X): x is NonNullable<X> {
-  return x != null
-}

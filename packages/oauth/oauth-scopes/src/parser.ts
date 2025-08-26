@@ -1,9 +1,8 @@
 import {
   NeRoArray,
   ParamValue,
+  ScopeStringSyntax,
   ScopeSyntax,
-  ScopeSyntaxFor,
-  encodeScope,
 } from './syntax.js'
 
 type InferParamPredicate<T extends (value: ParamValue) => boolean> =
@@ -42,19 +41,19 @@ type InferParams<S extends ParamsSchema> = {
 } & NonNullable<unknown>
 
 export class Parser<P extends string, S extends ParamsSchema> {
-  public readonly schemaKeys: ReadonlyArray<keyof S & string>
+  public readonly schemaKeys: ReadonlySet<keyof S & string>
 
   constructor(
     public readonly prefix: P,
     public readonly schema: S,
     public readonly positionalName?: keyof S & string,
   ) {
-    this.schemaKeys = Object.keys(schema)
+    this.schemaKeys = new Set(Object.keys(schema))
   }
 
-  format(values: InferParams<S>): ScopeSyntaxFor<P> {
-    const queryParams = new URLSearchParams()
-    let positionalValue: string | undefined = undefined
+  format(values: InferParams<S>) {
+    const params = new URLSearchParams()
+    let positional: string | undefined = undefined
 
     for (const key of this.schemaKeys) {
       const value = values[key]
@@ -62,8 +61,6 @@ export class Parser<P extends string, S extends ParamsSchema> {
       if (value === undefined) continue
 
       const schema = this.schema[key]
-
-      // @TODO: when the value is an array, we could remove duplicates
 
       // Normalize the value if a normalization function is provided
       const normalized = schema.normalize
@@ -82,39 +79,32 @@ export class Parser<P extends string, S extends ParamsSchema> {
         }
       }
 
-      if (normalized === undefined) continue
-
       if (Array.isArray(normalized)) {
-        if (normalized.length === 0) {
-          // This should never happen (because "value" is supposed to be a
-          // non-empty array). Because some scope default to "*" (allow
-          // everything) when a parameter is not specified, we'd rather be safe
-          // here.
-          throw new Error(
-            `Invalid scope: parameter "${name}" cannot be an empty array`,
-          )
-        }
-
         if (key === this.positionalName && normalized.length === 1) {
-          positionalValue = String(normalized[0]!)
+          positional = String(normalized[0]!)
         } else {
-          for (const v of normalized) queryParams.append(key, String(v))
+          // remove duplicates
+          const unique = new Set(normalized.map(String))
+          for (const v of unique) params.append(key, v)
         }
       } else {
         if (key === this.positionalName) {
-          positionalValue = String(normalized)
+          positional = String(normalized)
         } else {
-          queryParams.set(key, String(normalized))
+          params.set(key, String(normalized))
         }
       }
     }
 
-    return encodeScope<P>(this.prefix, positionalValue, queryParams)
+    return new ScopeStringSyntax(this.prefix, positional, params).toString()
   }
 
   parse(syntax: ScopeSyntax) {
-    if (!syntax.is(this.prefix)) return null
-    if (syntax.containsParamsOtherThan(this.schemaKeys)) return null
+    if (syntax.prefix !== this.prefix) return null
+
+    for (const key of syntax.keys()) {
+      if (!this.schemaKeys.has(key)) return null
+    }
 
     const result: Record<
       string,
@@ -124,34 +114,49 @@ export class Parser<P extends string, S extends ParamsSchema> {
     for (const key of this.schemaKeys) {
       const definition = this.schema[key]
 
-      const value = definition.multiple
-        ? syntax.getMulti(key, key === this.positionalName)
-        : syntax.getSingle(key, key === this.positionalName)
+      const param = definition.multiple
+        ? syntax.getMulti(key)
+        : syntax.getSingle(key)
 
-      if (value === null) return null // Value is not valid
-      if (value === undefined && definition.required) return null
+      if (param === null) {
+        return null // Value is not valid
+      } else if (param !== undefined) {
+        if (key === this.positionalName && syntax.positional !== undefined) {
+          // Positional parameter cannot be used with named parameters
+          return null
+        }
 
-      if (value !== undefined) {
         if (definition.multiple) {
-          if (!(value as NeRoArray<ParamValue>).every(definition.validate)) {
+          // Empty array is not valid
+          if (!(param as ParamValue[]).length) return null
+          if (!(param as ParamValue[]).every(definition.validate)) {
             return null
           }
         } else {
-          if (!definition.validate(value as ParamValue)) {
+          if (!definition.validate(param as ParamValue)) {
             return null
           }
         }
-      }
 
-      result[key] = value ?? definition.default
+        result[key] = param as ParamValue | NeRoArray<ParamValue>
+      } else if (
+        key === this.positionalName &&
+        syntax.positional !== undefined
+      ) {
+        // No named parameters found, but there is a positional parameter
+        const { positional } = syntax
+        if (!definition.validate(positional)) {
+          return null
+        }
+        result[key] = definition.multiple ? [positional] : positional
+      } else if (definition.required) {
+        return null
+      } else {
+        result[key] = definition.default
+      }
     }
 
     return result as InferParams<S>
-  }
-
-  parseString(scope: string): InferParams<S> | null {
-    const syntax = ScopeSyntax.fromString(scope)
-    return this.parse(syntax)
   }
 }
 

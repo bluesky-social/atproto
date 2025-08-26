@@ -1,7 +1,7 @@
 import { Matchable } from '../lib/matchable.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
+import { ScopeStringSyntax, ScopeSyntax, isScopeStringFor } from '../syntax.js'
 
 export const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
 export type IdentityAttribute = (typeof IDENTITY_ATTRIBUTES)[number]
@@ -34,8 +34,8 @@ export class IdentityPermission implements Matchable<IdentityPermissionMatch> {
   )
 
   static fromString(scope: string) {
-    if (!isScopeSyntaxFor(scope, 'identity')) return null
-    const syntax = ScopeSyntax.fromString(scope)
+    if (!isScopeStringFor(scope, 'identity')) return null
+    const syntax = ScopeStringSyntax.fromString(scope)
     return IdentityPermission.fromSyntax(syntax)
   }
 

@@ -1,5 +1,8 @@
+import { LexPermissionSyntax } from '../syntax'
 import { LexPermissionSet } from '../types'
+import { AccountPermission } from './account-permission'
 import { BlobPermission, BlobPermissionMatch } from './blob-permission'
+import { IdentityPermission } from './identity-permission'
 import { IncludeScope } from './include-scope'
 import { RepoPermission, RepoPermissionMatch } from './repo-permission'
 import { RpcPermission, RpcPermissionMatch } from './rpc-permission'
@@ -14,59 +17,93 @@ const isBlobPermMatching = (match: BlobPermissionMatch) => (perm: unknown) =>
 describe('IncludeScope', () => {
   describe('static', () => {
     describe('fromString', () => {
-      it('should parse valid scope strings', () => {
-        const scope1 = IncludeScope.fromString('include:com.example.bar')
-        expect(scope1).not.toBeNull()
-        expect(scope1?.nsid).toEqual('com.example.bar')
-        expect(scope1?.aud).toBeUndefined()
-
-        const scope2 = IncludeScope.fromString(
-          'include:com.example.baz?aud=did:web:example.com%23my_service',
-        )
-        expect(scope2).not.toBeNull()
-        expect(scope2?.nsid).toEqual('com.example.baz')
-        expect(scope2?.aud).toBe('did:web:example.com#my_service')
+      it('parses positional nsid', () => {
+        expect(
+          IncludeScope.fromString('include:com.example.bar'),
+        ).toMatchObject({
+          nsid: 'com.example.bar',
+          aud: undefined,
+        })
       })
 
-      it('should reject invalid nsid', () => {
-        expect(IncludeScope.fromString('include:invalid^nsid')).toBeNull()
-        expect(IncludeScope.fromString('include:')).toBeNull()
-        expect(IncludeScope.fromString('include:com..example')).toBeNull()
-        expect(IncludeScope.fromString('include:com.example')).toBeNull()
-      })
-
-      it('should reject invalid aud', () => {
-        expect(
-          IncludeScope.fromString('include:com.example.baz?aud=invalid^did'),
-        ).toBeNull()
-
-        expect(
-          IncludeScope.fromString('include:com.example.baz?aud='),
-        ).toBeNull()
-
+      it('parses positional nsid and aud param', () => {
         expect(
           IncludeScope.fromString(
-            'include:com.example.baz?aud=did:web:example.com',
+            'include:com.example.baz?aud=did:web:example.com%23my_service',
           ),
-        ).toBeNull()
+        ).toMatchObject({
+          nsid: 'com.example.baz',
+          aud: 'did:web:example.com#my_service',
+        })
       })
 
-      it('should reject malformed scope strings', () => {
-        expect(IncludeScope.fromString('include:&')).toBeNull()
-        expect(IncludeScope.fromString('include')).toBeNull()
-        expect(IncludeScope.fromString('')).toBeNull()
-        expect(IncludeScope.fromString('include:')).toBeNull()
+      it('allows # character in query string', () => {
+        expect(
+          IncludeScope.fromString(
+            'include:com.example.baz?aud=did:web:example.com#my_service',
+          ),
+        ).toMatchObject({
+          nsid: 'com.example.baz',
+          aud: 'did:web:example.com#my_service',
+        })
       })
+
+      it('parses named nsid', () => {
+        expect(
+          IncludeScope.fromString('include?nsid=com.example.baz'),
+        ).toMatchObject({
+          nsid: 'com.example.baz',
+          aud: undefined,
+        })
+      })
+
+      it('parses named nsid and aud', () => {
+        expect(
+          IncludeScope.fromString(
+            'include?aud=did:web:example.com%23my_service&nsid=com.example.baz',
+          ),
+        ).toMatchObject({
+          nsid: 'com.example.baz',
+          aud: 'did:web:example.com#my_service',
+        })
+      })
+
+      for (const invalid of [
+        '',
+        'repo:com.example.baz',
+        'include',
+        'include#',
+
+        // Invalid NSID
+        'include:',
+        'include:#',
+        'include:&',
+        'include:com..example',
+        'include:com.example',
+        'include:com.example.-bar',
+        'include:invalid^nsid',
+        'include:nsid',
+
+        // Invalid AUD
+        'include:com.example.baz?aud=',
+        'include:com.example.baz?aud=did:web:example.com',
+        'include:com.example.baz?aud=invalid^did',
+        'include:com.example.baz?aud=invalid^did',
+      ]) {
+        it(`rejects invalid scope string: ${invalid}`, () => {
+          expect(IncludeScope.fromString(invalid)).toBeNull()
+        })
+      }
     })
   })
 
   describe('instance', () => {
     describe('toString', () => {
-      it('should format scope without aud', () => {
+      it('formats scope without aud', () => {
         const scope = new IncludeScope('com.example.foo')
         expect(scope.toString()).toEqual('include:com.example.foo')
       })
-      it('should format scope with aud', () => {
+      it('formats scope with aud', () => {
         const scope = new IncludeScope(
           'com.example.foo',
           'did:web:example.com#my_service',
@@ -85,14 +122,12 @@ describe('IncludeScope', () => {
             {
               type: 'permission',
               resource: 'blob',
-              // blob:image/*
-              // blob?accept=image/*&accept=text/*
               accept: ['image/*'],
             },
             {
               type: 'permission',
               resource: 'blob',
-              accept: 'text/*',
+              accept: 'text/*', // invalid (only array expected)
             },
             {
               type: 'permission',
@@ -103,14 +138,6 @@ describe('IncludeScope', () => {
           ],
         }
 
-        it('ignored non covered mimes', () => {
-          expect(
-            new IncludeScope('com.example.calendar.auth')
-              .toPermissions(permissionSet)
-              .some(isBlobPermMatching({ mime: 'video/mp4' })),
-          ).toBe(false)
-        })
-
         it('enables blob permissions', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
@@ -119,7 +146,15 @@ describe('IncludeScope', () => {
           ).toBe(true)
         })
 
-        it('does not allow encoding of permissions as string when they are arrays', () => {
+        it('ignores non covered mimes', () => {
+          expect(
+            new IncludeScope('com.example.calendar.auth')
+              .toPermissions(permissionSet)
+              .some(isBlobPermMatching({ mime: 'video/mp4' })),
+          ).toBe(false)
+        })
+
+        it('ignores permission with incorrectly encoded params', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
@@ -127,7 +162,7 @@ describe('IncludeScope', () => {
           ).toBe(false)
         })
 
-        it('ignores blob permission with unknown values', () => {
+        it('ignores blob permission with unknown fields', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
@@ -185,7 +220,7 @@ describe('IncludeScope', () => {
           ],
         }
 
-        it('should match rpc methods from the same authority, inheriting aud', () => {
+        it('matches rpc methods from the same authority, inheriting aud', () => {
           expect(
             new IncludeScope(
               'com.example.calendar.auth',
@@ -201,7 +236,7 @@ describe('IncludeScope', () => {
           ).toBe(true)
         })
 
-        it('should match rpc methods from the same authority, with default aud', () => {
+        it('matches rpc methods from the same authority, with default aud', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
@@ -214,7 +249,7 @@ describe('IncludeScope', () => {
           ).toBe(true)
         })
 
-        it('should ignore unspecified inherited aud', () => {
+        it('ignores unspecified inherited aud', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
@@ -225,9 +260,20 @@ describe('IncludeScope', () => {
                 }),
               ),
           ).toBe(false)
+
+          expect(
+            new IncludeScope('com.example.calendar.auth')
+              .toPermissions(permissionSet)
+              .some(
+                isRpcPermMatching({
+                  aud: 'did:web:example.com#foo',
+                  lxm: 'com.example.calendar.listEvents',
+                }),
+              ),
+          ).toBe(false)
         })
 
-        it('should allow aud *, given the right context authority', () => {
+        it('allows wildcard aud, given the right context authority', () => {
           expect(
             new IncludeScope('com.atproto.auth')
               .toPermissions(permissionSet)
@@ -240,7 +286,7 @@ describe('IncludeScope', () => {
           ).toBe(true)
         })
 
-        it('should ignore rpc methods from other authorities', () => {
+        it('ignores wildcard aud for invalid context authority', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
@@ -253,14 +299,14 @@ describe('IncludeScope', () => {
           ).toBe(false)
         })
 
-        it('should not inherit aud for invalid nsid', () => {
+        it('nots inherit aud for invalid nsid', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
               .some(
                 isRpcPermMatching({
                   aud: 'did:web:example.com#foo',
-                  lxm: 'com.atproto.moderation.createReport',
+                  lxm: 'app.bsky.feed.getFeed',
                 }),
               ),
           ).toBe(false)
@@ -277,6 +323,19 @@ describe('IncludeScope', () => {
                 isRpcPermMatching({
                   aud: 'did:web:example.com#foo',
                   lxm: 'com.example.calendar.listTheParties',
+                }),
+              ),
+          ).toBe(false)
+        })
+
+        it('ignores permission items with hard coded aud and invalid authority nsid', () => {
+          expect(
+            new IncludeScope('com.example.calendar.auth')
+              .toPermissions(permissionSet)
+              .some(
+                isRpcPermMatching({
+                  aud: 'did:web:api.bsky.app#appview',
+                  lxm: 'app.bsky.feed.getFeedSkeleton',
                 }),
               ),
           ).toBe(false)
@@ -308,7 +367,7 @@ describe('IncludeScope', () => {
           ],
         }
 
-        it('should match repo collections from the same authority', () => {
+        it('matches repo collections from the same authority', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
@@ -321,7 +380,7 @@ describe('IncludeScope', () => {
           ).toBe(true)
         })
 
-        it('should ignore repo collections from other authorities', () => {
+        it('ignores repo collections from other authorities', () => {
           expect(
             new IncludeScope('com.example.calendar.auth')
               .toPermissions(permissionSet)
@@ -336,18 +395,19 @@ describe('IncludeScope', () => {
           expect(
             new IncludeScope('com.example.bar.auth').toPermissions(
               permissionSet,
-            ),
-          ).toEqual([])
+            ).length,
+          ).toBe(0)
 
           expect(
             new IncludeScope('com.example.calendar.baz.auth').toPermissions(
               permissionSet,
-            ),
-          ).toEqual([])
+            ).length,
+          ).toBe(0)
 
           expect(
-            new IncludeScope('com.bar.auth').toPermissions(permissionSet),
-          ).toEqual([])
+            new IncludeScope('com.bar.auth').toPermissions(permissionSet)
+              .length,
+          ).toBe(0)
         })
 
         it('ignores permission items that contain a least one invalid authority', () => {
@@ -364,7 +424,65 @@ describe('IncludeScope', () => {
         })
       })
 
-      describe('other resources', () => {})
+      describe('account resources', () => {
+        const permissionSet: LexPermissionSet = {
+          type: 'permission-set',
+          permissions: [
+            {
+              type: 'permission',
+              resource: 'account',
+              attr: 'email',
+              action: 'read',
+            },
+          ],
+        }
+
+        it('is a valid permission', () => {
+          // Just to make sure that the test bellow doesn't give a false negative
+          const syntax = new LexPermissionSyntax(permissionSet.permissions[0]!)
+          expect(AccountPermission.fromSyntax(syntax)).toMatchObject({
+            attr: 'email',
+            action: 'read',
+          })
+        })
+
+        it('does not allow account permissions', () => {
+          expect(
+            new IncludeScope('com.example.calendar.auth')
+              .toPermissions(permissionSet)
+              .some((perm) => perm instanceof AccountPermission),
+          ).toBe(false)
+        })
+      })
+
+      describe('identity resources', () => {
+        const permissionSet: LexPermissionSet = {
+          type: 'permission-set',
+          permissions: [
+            {
+              type: 'permission',
+              resource: 'identity',
+              attr: 'handle',
+            },
+          ],
+        }
+
+        it('is a valid permission', () => {
+          // Just to make sure that the test bellow doesn't give a false negative
+          const syntax = new LexPermissionSyntax(permissionSet.permissions[0]!)
+          expect(IdentityPermission.fromSyntax(syntax)).toMatchObject({
+            attr: 'handle',
+          })
+        })
+
+        it('does not allow identity permissions', () => {
+          expect(
+            new IncludeScope('com.example.calendar.auth')
+              .toPermissions(permissionSet)
+              .some((perm) => perm instanceof IdentityPermission),
+          ).toBe(false)
+        })
+      })
     })
   })
 })

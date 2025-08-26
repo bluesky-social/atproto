@@ -4,8 +4,9 @@ import { Parser } from '../parser.js'
 import {
   NeRoArray,
   ParamValue,
+  ScopeStringSyntax,
   ScopeSyntax,
-  isScopeSyntaxFor,
+  isScopeStringFor,
 } from '../syntax.js'
 
 export const DEFAULT_ACCEPT = Object.freeze(['*/*'] as const)
@@ -47,8 +48,8 @@ export class BlobPermission implements Matchable<BlobPermissionMatch> {
   )
 
   static fromString(scope: string) {
-    if (!isScopeSyntaxFor(scope, 'blob')) return null
-    const syntax = ScopeSyntax.fromString(scope)
+    if (!isScopeStringFor(scope, 'blob')) return null
+    const syntax = ScopeStringSyntax.fromString(scope)
     return BlobPermission.fromSyntax(syntax)
   }
 

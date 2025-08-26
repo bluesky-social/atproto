@@ -4,7 +4,7 @@ import { IdentityPermission } from './scopes/identity-permission.js'
 import { IncludeScope } from './scopes/include-scope.js'
 import { RepoPermission } from './scopes/repo-permission.js'
 import { RpcPermission } from './scopes/rpc-permission.js'
-import { isScopeSyntaxFor } from './syntax.js'
+import { isScopeStringFor } from './syntax.js'
 
 export type AtprotoOauthScope =
   | 'atproto'
@@ -24,22 +24,22 @@ export function isAtprotoOauthScope(value: string): value is AtprotoOauthScope {
   if (value === 'transition:generic') return true
   if (value === 'transition:chat.bsky') return true
 
-  if (isScopeSyntaxFor(value, 'account')) {
+  if (isScopeStringFor(value, 'account')) {
     return AccountPermission.fromString(value) != null
   }
-  if (isScopeSyntaxFor(value, 'blob')) {
+  if (isScopeStringFor(value, 'blob')) {
     return BlobPermission.fromString(value) != null
   }
-  if (isScopeSyntaxFor(value, 'identity')) {
+  if (isScopeStringFor(value, 'identity')) {
     return IdentityPermission.fromString(value) != null
   }
-  if (isScopeSyntaxFor(value, 'include')) {
+  if (isScopeStringFor(value, 'include')) {
     return IncludeScope.fromString(value) != null
   }
-  if (isScopeSyntaxFor(value, 'repo')) {
+  if (isScopeStringFor(value, 'repo')) {
     return RepoPermission.fromString(value) != null
   }
-  if (isScopeSyntaxFor(value, 'rpc')) {
+  if (isScopeStringFor(value, 'rpc')) {
     return RpcPermission.fromString(value) != null
   }
 

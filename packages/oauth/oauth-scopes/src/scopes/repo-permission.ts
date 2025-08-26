@@ -2,7 +2,12 @@ import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
+import {
+  NeRoArray,
+  ScopeStringSyntax,
+  ScopeSyntax,
+  isScopeStringFor,
+} from '../syntax.js'
 
 export const REPO_ACTIONS = Object.freeze([
   'create',
@@ -80,8 +85,8 @@ export class RepoPermission implements Matchable<RepoPermissionMatch> {
   )
 
   static fromString(scope: string): RepoPermission | null {
-    if (!isScopeSyntaxFor(scope, 'repo')) return null
-    const syntax = ScopeSyntax.fromString(scope)
+    if (!isScopeStringFor(scope, 'repo')) return null
+    const syntax = ScopeStringSyntax.fromString(scope)
     return RepoPermission.fromSyntax(syntax)
   }
 

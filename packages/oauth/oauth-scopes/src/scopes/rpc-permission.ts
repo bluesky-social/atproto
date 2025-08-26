@@ -2,7 +2,12 @@ import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
 import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../parser.js'
-import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
+import {
+  NeRoArray,
+  ScopeStringSyntax,
+  ScopeSyntax,
+  isScopeStringFor,
+} from '../syntax.js'
 
 export { type AtprotoAudience, isAtprotoAudience }
 
@@ -60,8 +65,8 @@ export class RpcPermission implements Matchable<RpcPermissionMatch> {
   )
 
   static fromString(scope: string): RpcPermission | null {
-    if (!isScopeSyntaxFor(scope, 'rpc')) return null
-    const syntax = ScopeSyntax.fromString(scope)
+    if (!isScopeStringFor(scope, 'rpc')) return null
+    const syntax = ScopeStringSyntax.fromString(scope)
     return RpcPermission.fromSyntax(syntax)
   }
 

@@ -1,7 +1,7 @@
 import { Matchable } from '../lib/matchable.js'
 import { knownValuesValidator } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
+import { ScopeStringSyntax, ScopeSyntax, isScopeStringFor } from '../syntax.js'
 
 export const ACCOUNT_ATTRIBUTES = Object.freeze([
   'email',
@@ -54,8 +54,8 @@ export class AccountPermission implements Matchable<AccountPermissionMatch> {
   )
 
   static fromString(scope: string) {
-    if (!isScopeSyntaxFor(scope, 'account')) return null
-    const syntax = ScopeSyntax.fromString(scope)
+    if (!isScopeStringFor(scope, 'account')) return null
+    const syntax = ScopeStringSyntax.fromString(scope)
     return AccountPermission.fromSyntax(syntax)
   }
 

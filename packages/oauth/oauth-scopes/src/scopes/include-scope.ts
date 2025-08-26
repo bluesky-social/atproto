@@ -1,8 +1,12 @@
 import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
 import { Nsid, isNsid } from '../lib/nsid.js'
-import { isNonNullable } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
+import {
+  LexPermissionSyntax,
+  ScopeStringSyntax,
+  ScopeSyntax,
+  isScopeStringFor,
+} from '../syntax.js'
 import { LexPermission, LexPermissionSet } from '../types.js'
 import { BlobPermission } from './blob-permission.js'
 import { RepoPermission } from './repo-permission.js'
@@ -32,7 +36,6 @@ export class IncludeScope {
   ): Array<RpcPermission | RepoPermission | BlobPermission> {
     return permissionSet.permissions
       .map(parseIncludedPermission, this)
-      .filter(isNonNullable)
       .filter(isIncludedPermissionAllowed, this)
   }
 
@@ -54,8 +57,8 @@ export class IncludeScope {
   )
 
   static fromString(scope: string) {
-    if (!isScopeSyntaxFor(scope, 'include')) return null
-    const syntax = ScopeSyntax.fromString(scope)
+    if (!isScopeStringFor(scope, 'include')) return null
+    const syntax = ScopeStringSyntax.fromString(scope)
     return IncludeScope.fromSyntax(syntax)
   }
 
@@ -94,10 +97,15 @@ function parseIncludedPermission(
 }
 
 function parseIncludedPermissionInternal(permission: LexPermission) {
-  const syntax = ScopeSyntax.fromLex(permission)
-  if (syntax.is('repo')) return RepoPermission.fromSyntax(syntax)
-  if (syntax.is('rpc')) return RpcPermission.fromSyntax(syntax)
-  if (syntax.is('blob')) return BlobPermission.fromSyntax(syntax)
+  if (permission.resource === 'repo') {
+    return RepoPermission.fromSyntax(new LexPermissionSyntax(permission))
+  }
+  if (permission.resource === 'rpc') {
+    return RpcPermission.fromSyntax(new LexPermissionSyntax(permission))
+  }
+  if (permission.resource === 'blob') {
+    return BlobPermission.fromSyntax(new LexPermissionSyntax(permission))
+  }
   return null
 }
 

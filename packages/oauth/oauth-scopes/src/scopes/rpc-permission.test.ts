@@ -119,6 +119,7 @@ describe('RpcPermission', () => {
         'rpc:invalid?aud=did:web:example.com',
         'rpc:invalid?aud=did:web:example.com%23service_id',
         'rpc:foo.bar',
+        'rpc:com.example.service?aud=did:web:example.com%23service_id&invalid=param',
         'rpc:foo.bar.baz?aud=did:web',
         'rpc:foo.bar.baz?aud=did:web%23service_id',
         'rpc:foo.bar.baz?aud=did:plc:111',

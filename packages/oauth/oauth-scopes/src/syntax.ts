@@ -10,7 +10,7 @@ export type NeArray<T> = [T, ...T[]]
  */
 export type NeRoArray<T> = readonly [T, ...T[]]
 
-export type ScopeSyntaxFor<P extends string> =
+export type ScopeStringFor<P extends string> =
   | P
   | `${P}:${string}`
   | `${P}?${string}`
@@ -18,23 +18,33 @@ export type ScopeSyntaxFor<P extends string> =
 /**
  * Allows to quickly check if a scope is for a specific resource.
  */
-export function isScopeSyntaxFor<P extends string>(
-  scopeValue: string,
-  resource: P,
-): scopeValue is ScopeSyntaxFor<P> {
-  if (!scopeValue.startsWith(resource)) return false
-  if (scopeValue.length === resource.length) return true
+export function isScopeStringFor<P extends string>(
+  value: string,
+  prefix: P,
+): value is ScopeStringFor<P> {
+  if (value.length > prefix.length) {
+    // First, check the next char is either : or ?
+    const nextChar = value.charCodeAt(prefix.length)
+    if (nextChar !== 0x3a /* : */ && nextChar !== 0x3f /* ? */) {
+      return false
+    }
 
-  const nextCharCode = scopeValue.charCodeAt(resource.length)
-  return nextCharCode === 0x3a /* : */ || nextCharCode === 0x3f /* ? */
+    // Then check the full prefix
+    return value.startsWith(prefix)
+  } else if (value.length < prefix.length) {
+    // No match possible
+    return false
+  } else {
+    // value and prefix have the same length
+    return value === prefix
+  }
 }
 
 /**
- * Allows unifying various permission parameters into a single interface. This
- * interface compatible with the {@link URLSearchParams} interface, allowing url
- * params to be used "out of the box".
+ * Abstract interface that allows parsing various syntaxes into permission
+ * representations.
  */
-export interface ScopeSyntaxReader {
+export interface ScopeSyntax {
   readonly prefix: string
   readonly positional?: ParamValue
   keys(): Iterable<string>
@@ -43,174 +53,82 @@ export interface ScopeSyntaxReader {
 }
 
 /**
- * Utility class to parse and interpret the resource scope syntax used in
- * atproto oauth scopes.
- * The syntax is defined as follows:
- * ```nbf
- * scope := prefix [':' positional] ['?' params]
- * params := param ['&' param]*
- * param := name '=' value
- * ```
- * Where "positional" can be used as short-hand (i.e. not used in combination
- * with) for a specific parameter.
+ * Translates a scope string into a {@link ScopeSyntax}.
  */
-export class ScopeSyntax {
-  constructor(public readonly reader: ScopeSyntaxReader) {}
+export class ScopeStringSyntax implements ScopeSyntax {
+  constructor(
+    readonly prefix: string,
+    readonly positional?: string,
+    readonly params?: Readonly<URLSearchParams>,
+  ) {}
 
-  get prefix() {
-    return this.reader.prefix
-  }
-
-  get positional() {
-    return this.reader.positional
-  }
-
-  is(prefix: string): boolean {
-    return this.prefix === prefix
-  }
-
-  containsParamsOtherThan(allowedParam: readonly string[]): boolean {
-    for (const key of this.reader.keys()) {
-      if (!allowedParam.includes(key)) return true
-    }
-
-    return false
-  }
-
-  /**
-   * Retrieve the value of a parameter that only allows a single value. If the
-   * parameter is not found, it will return `undefined`. If the syntax is
-   * incorrect (i.e. the parameter has multiple values), it will return `null`.
-   */
-  getSingle(name: string, isPositional = false): ParamValue | undefined | null {
-    const value = this.reader.getSingle(name)
-
-    if (value === null) {
-      return null // Got multiple values
-    }
-
-    if (value === undefined) {
-      // No named parameter found, use positional parameter
-      if (isPositional) return this.positional
-
-      return undefined
-    }
-
-    if (isPositional && this.positional !== undefined) {
-      // Positional parameter cannot be used with named parameters
-      return null
-    }
-
-    return value
-  }
-
-  /**
-   * Retrieve the values of a parameter that allows multiple values. If the
-   * parameter is not found, it will return `undefined`. If the syntax is
-   * incorrect (i.e. there is bot a positional and named parameter), it will
-   * return `null`.
-   */
-  getMulti(
-    name: string,
-    isPositional = false,
-  ): NeRoArray<ParamValue> | null | undefined {
-    const values = this.reader.getMulti(name)
-
-    if (values === null) {
-      return null // Got single value
-    }
-
-    if (values === undefined) {
-      // No named parameter found, use positional parameter
-
-      if (isPositional && this.positional !== undefined) {
-        return [this.positional]
-      }
-
-      return undefined
-    }
-
-    if (values.length === 0) {
-      return null // Empty array are not allowed
-    }
-
-    if (isPositional && this.positional !== undefined) {
-      // @NOTE we *could* return [this.positional, ...values] here but the
-      // atproto scope syntax forbids use of both positional and named
-      // parameters.
-      return null
-    }
-
-    return values as NeArray<ParamValue>
-  }
-
-  static fromString(scope: string): ScopeSyntax {
-    const reader = new ScopeValueStringReader(scope)
-    return new ScopeSyntax(reader)
-  }
-
-  static fromLex(lexPermission: LexPermission): ScopeSyntax {
-    const reader = new LexPermissionReader(lexPermission)
-    return new ScopeSyntax(reader)
-  }
-}
-
-/**
- * Translates a scope string into a {@link ScopeSyntaxReader} to be used by the
- * {@link ScopeSyntax}.
- */
-export class ScopeValueStringReader
-  extends URLSearchParams
-  implements ScopeSyntaxReader
-{
-  readonly prefix: string
-  readonly positional?: string
-
-  constructor(value: string) {
-    const paramIdx = value.indexOf('?')
-    const colonIdx = value.indexOf(':')
-    const prefixEnd = minIdx(paramIdx, colonIdx)
-
-    const queryString =
-      paramIdx !== -1 // There is a query string
-        ? paramIdx === value.length - 1
-          ? undefined // The query string is empty
-          : value.slice(paramIdx + 1)
-        : undefined
-
-    super(queryString)
-
-    this.prefix = prefixEnd !== -1 ? value.slice(0, prefixEnd) : value
-    this.positional =
-      colonIdx !== -1
-        ? // There is a positional parameter, extract it
-          paramIdx === -1
-          ? decodeURIComponent(value.slice(colonIdx + 1))
-          : colonIdx < paramIdx
-            ? decodeURIComponent(value.slice(colonIdx + 1, paramIdx))
-            : undefined
-        : undefined
+  *keys(): Iterable<string> {
+    const { params } = this
+    if (params) yield* params.keys()
   }
 
   getSingle(key: string) {
-    if (!this.has(key)) return undefined
-    const value = this.getAll(key)
+    const { params } = this
+    if (!params?.has(key)) return undefined
+    const value = params.getAll(key)
     if (value.length > 1) return null
     return value[0]!
   }
 
   getMulti(key: string) {
-    if (!this.has(key)) return undefined
-    return this.getAll(key)
+    const { params } = this
+    if (!params?.has(key)) return undefined
+    return params.getAll(key)
+  }
+
+  toString() {
+    let scope = this.prefix
+
+    const { positional, params } = this
+    if (positional !== undefined) {
+      scope += `:${normalizeURIComponent(encodeURIComponent(positional))}`
+    }
+
+    if (params?.size) {
+      scope += `?${normalizeURIComponent(params.toString())}`
+    }
+
+    return scope
+  }
+
+  static fromString(scopeValue: string) {
+    const paramIdx = scopeValue.indexOf('?')
+    const colonIdx = scopeValue.indexOf(':')
+    const prefixEnd = minIdx(paramIdx, colonIdx)
+
+    const prefix =
+      prefixEnd !== -1 ? scopeValue.slice(0, prefixEnd) : scopeValue
+
+    const positional =
+      colonIdx !== -1
+        ? // There is a positional parameter, extract it
+          paramIdx === -1
+          ? decodeURIComponent(scopeValue.slice(colonIdx + 1))
+          : colonIdx < paramIdx
+            ? decodeURIComponent(scopeValue.slice(colonIdx + 1, paramIdx))
+            : undefined
+        : undefined
+
+    const params =
+      // Parse the query string if present and non empty
+      paramIdx !== -1 && paramIdx < scopeValue.length - 1
+        ? new URLSearchParams(scopeValue.slice(paramIdx + 1))
+        : undefined
+
+    return new ScopeStringSyntax(prefix, positional, params)
   }
 }
 
 /**
- * Translates a {@link LexPermission} into a {@link ScopeSyntaxReader} to be
- * used by the {@link ScopeSyntax}.
+ * Translates a {@link LexPermission} into a {@link ScopeSyntax}.
  */
-export class LexPermissionReader implements ScopeSyntaxReader {
-  constructor(protected readonly lexPermission: LexPermission) {}
+export class LexPermissionSyntax implements ScopeSyntax {
+  constructor(readonly lexPermission: Readonly<LexPermission>) {}
 
   get prefix() {
     return this.lexPermission.resource
@@ -251,37 +169,15 @@ export class LexPermissionReader implements ScopeSyntaxReader {
   }
 }
 
-export function encodeScope<P extends string>(
-  resource: P,
-  positional?: string,
-  params?: URLSearchParams,
-): ScopeSyntaxFor<P> {
-  let scope: string = resource
-
-  if (positional !== undefined) {
-    scope += `:${encodeScopeComponent(positional)}`
-  }
-
-  if (params?.size) {
-    scope += `?${normalizeScopeComponent(params.toString())}`
-  }
-
-  return scope as ScopeSyntaxFor<P>
-}
-
 /**
  * Set of characters that are allowed in scope components without encoding. This
  * is used to normalize scope components.
  */
-export const ALLOWED_SCOPE_CHARS = new Set(
+const ALLOWED_SCOPE_CHARS = new Set(
   // @NOTE This list must not contain "?" or "&" as it would interfere with
   // query string parsing.
   [':', '/', '+', ',', '@', '%'],
 )
-
-export function encodeScopeComponent(value: string): string {
-  return normalizeScopeComponent(encodeURIComponent(value))
-}
 
 const NORMALIZABLE_CHARS_MAP = new Map(
   Array.from(
@@ -290,7 +186,7 @@ const NORMALIZABLE_CHARS_MAP = new Map(
   ).filter(
     ([encoded, c]) =>
       // Make sure that any char added to ALLOWED_SCOPE_CHARS that is a char
-      // that indeed needs encoding. Also, the normalizeScopeComponent only
+      // that indeed needs encoding. Also, the normalizeURIComponent only
       // supports three-character percent-encoded sequences.
       encoded !== c && encoded.length === 3 && encoded.startsWith('%'),
   ),
@@ -299,7 +195,7 @@ const NORMALIZABLE_CHARS_MAP = new Map(
 /**
  * Assumes a properly url-encoded string.
  */
-export function normalizeScopeComponent(value: string): string {
+function normalizeURIComponent(value: string): string {
   // No need to read the last two characters since percent encoded characters
   // are always three characters long.
   let end = value.length - 2
