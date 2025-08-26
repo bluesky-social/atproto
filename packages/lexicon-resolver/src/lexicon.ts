@@ -70,6 +70,7 @@ export function buildLexiconResolver(
       { forceRefresh: opts.forceRefresh },
     ).catch((err) => {
       throw new LexiconResolutionError(
+        nsid,
         'Could not resolve Lexicon schema record',
         { cause: err },
       )
@@ -78,16 +79,17 @@ export function buildLexiconResolver(
     try {
       lexicon = parseLexiconDoc(verified.record)
     } catch (err) {
-      throw new LexiconResolutionError('Invalid Lexicon document', {
+      throw new LexiconResolutionError(nsid, 'Invalid Lexicon document', {
         cause: err,
       })
     }
     if (!isLexiconSchemaRecord(lexicon)) {
-      throw new LexiconResolutionError('Invalid Lexicon schema record')
+      throw new LexiconResolutionError(nsid, 'Invalid Lexicon schema record')
     }
     if (lexicon.id !== nsid.toString()) {
       throw new LexiconResolutionError(
-        `Lexicon schema record id does not match NSID: ${lexicon.id}`,
+        nsid,
+        `Lexicon schema record id (${lexicon.id}) does not match NSID`,
       )
     }
     const { uri, cid, commit } = verified
@@ -111,8 +113,12 @@ export async function resolveLexiconDidAuthority(
 }
 
 export class LexiconResolutionError extends Error {
-  constructor(message?: string, options?: ErrorOptions) {
-    super(message, options)
+  constructor(
+    public readonly nsid: NSID,
+    public readonly description = `Could not resolve Lexicon for NSID`,
+    options?: ErrorOptions,
+  ) {
+    super(`${description} (${nsid})`, options)
     this.name = 'LexiconResolutionError'
   }
 }
@@ -125,7 +131,8 @@ async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
   const did = await resolveLexiconDidAuthority(nsid)
   if (!did) {
     throw new LexiconResolutionError(
-      `Could not resolve a DID authority for NSID: ${nsid}`,
+      nsid,
+      `Could not resolve a DID authority for NSID`,
     )
   }
   return did

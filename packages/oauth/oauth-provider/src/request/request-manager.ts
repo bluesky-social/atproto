@@ -1,4 +1,5 @@
 import { isAtprotoDid } from '@atproto/did'
+import { LexiconResolutionError } from '@atproto/lexicon-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
@@ -24,7 +25,6 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { LexiconManager } from '../lexicon/lexicon-manager.js'
-import { LexiconResolutionError } from '../lexicon/lexicon-resolution-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
