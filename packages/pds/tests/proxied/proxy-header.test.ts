@@ -137,6 +137,19 @@ describe('proxy header', () => {
 
     expect(proxyServer.requests.length).toBe(1)
   })
+
+  it('handles failing manual pipethroughs', async () => {
+    // This is a PDS endpoint which uses a manual pipethrough() in its handler
+    const path = '/xrpc/app.bsky.actor.getPreferences'
+    const res = await fetch(`${network.pds.url}${path}`, {
+      headers: {
+        ...sc.getHeaders(alice),
+        'atproto-proxy': `${proxyServer.did}#atproto_test`,
+      },
+    })
+    await res.arrayBuffer() // drain
+    expect(res.status).toBe(501)
+  })
 })
 
 type ProxyReq = {
@@ -159,6 +172,12 @@ class ProxyServer {
   ): Promise<ProxyServer> {
     const requests: ProxyReq[] = []
     const app = express()
+
+    // This is a PDS endpoint which uses a manual pipethrough() in its handler
+    app.get('/xrpc/app.bsky.actor.getPreferences', (req, res) => {
+      res.sendStatus(501)
+    })
+
     app.get('*', (req, res) => {
       requests.push({
         url: req.url,
