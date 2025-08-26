@@ -1,8 +1,4 @@
-import {
-  ScopeStringParamsGetter,
-  ScopeSyntax,
-  isScopeSyntaxFor,
-} from './syntax.js'
+import { ScopeSyntax, isScopeSyntaxFor } from './syntax.js'
 
 describe('isScopeSyntaxFor', () => {
   describe('exact match', () => {
@@ -92,13 +88,6 @@ for (const { scope, content } of [
       expect(syntax).toMatchObject({
         prefix: content.prefix,
         positional: content.positional,
-        params: content.params
-          ? new ScopeStringParamsGetter(
-              Object.entries(content.params).flatMap(([k, v]) =>
-                v.map((val) => [k, val]),
-              ),
-            )
-          : undefined,
       })
     })
 

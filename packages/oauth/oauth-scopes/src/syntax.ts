@@ -34,7 +34,9 @@ export function isScopeSyntaxFor<P extends string>(
  * interface compatible with the {@link URLSearchParams} interface, allowing url
  * params to be used "out of the box".
  */
-export interface ScopeSyntaxParams {
+export interface ScopeSyntaxReader {
+  readonly prefix: string
+  readonly positional?: string
   keys(): Iterable<string>
   getSingle(key: string): ParamValue | null | undefined
   getMulti(key: string): ParamValue[] | null | undefined
@@ -52,23 +54,24 @@ export interface ScopeSyntaxParams {
  * Where "positional" can be used as short-hand (i.e. not used in combination
  * with) for a specific parameter.
  */
-export class ScopeSyntax<P extends string = string> {
-  constructor(
-    public readonly prefix: P,
-    public readonly positional?: string,
-    public readonly params?: ScopeSyntaxParams,
-  ) {}
+export class ScopeSyntax {
+  constructor(public readonly reader: ScopeSyntaxReader) {}
 
-  is<T extends string>(prefix: T): this is ScopeSyntax<T> {
-    return this.prefix === (prefix as string)
+  get prefix() {
+    return this.reader.prefix
+  }
+
+  get positional() {
+    return this.reader.positional
+  }
+
+  is(prefix: string): boolean {
+    return this.prefix === prefix
   }
 
   containsParamsOtherThan(allowedParam: readonly string[]): boolean {
-    const { params } = this
-    if (params) {
-      for (const key of params.keys()) {
-        if (!allowedParam.includes(key)) return true
-      }
+    for (const key of this.reader.keys()) {
+      if (!allowedParam.includes(key)) return true
     }
 
     return false
@@ -80,7 +83,7 @@ export class ScopeSyntax<P extends string = string> {
    * incorrect (i.e. the parameter has multiple values), it will return `null`.
    */
   getSingle(name: string, isPositional = false): ParamValue | undefined | null {
-    const value = this.params?.getSingle(name)
+    const value = this.reader.getSingle(name)
 
     if (value === null) {
       return null // Got multiple values
@@ -111,7 +114,7 @@ export class ScopeSyntax<P extends string = string> {
     name: string,
     isPositional = false,
   ): NeRoArray<ParamValue> | null | undefined {
-    const values = this.params?.getMulti(name)
+    const values = this.reader.getMulti(name)
 
     if (values === null) {
       return null // Got single value
@@ -141,46 +144,50 @@ export class ScopeSyntax<P extends string = string> {
     return values as NeArray<ParamValue>
   }
 
-  static fromString<P extends string>(
-    scope: P | `${P}:${string}` | `${P}?${string}`,
-  ): ScopeSyntax<P> {
-    const paramIdx = scope.indexOf('?')
-    const colonIdx = scope.indexOf(':')
-
-    const prefixEnd = minIdx(paramIdx, colonIdx)
-
-    const prefix = (prefixEnd !== -1 ? scope.slice(0, prefixEnd) : scope) as P
-
-    const positional =
-      colonIdx !== -1
-        ? // There is a positional parameter, extract it
-          paramIdx === -1
-          ? decodeURIComponent(scope.slice(colonIdx + 1))
-          : colonIdx < paramIdx
-            ? decodeURIComponent(scope.slice(colonIdx + 1, paramIdx))
-            : undefined
-        : undefined
-
-    const params =
-      paramIdx !== -1 // There is a query string
-        ? paramIdx === scope.length - 1
-          ? undefined // The query string is empty
-          : new ScopeStringParamsGetter(scope.slice(paramIdx + 1))
-        : undefined
-
-    return new ScopeSyntax(prefix, positional, params)
+  static fromString(scope: string): ScopeSyntax {
+    const reader = new ScopeValueStringReader(scope)
+    return new ScopeSyntax(reader)
   }
 
   static fromLex(lexPermission: LexPermission): ScopeSyntax {
-    const params = new LexPermissionParamsGetter(lexPermission)
-    return new ScopeSyntax(lexPermission.resource, undefined, params)
+    const reader = new LexPermissionReader(lexPermission)
+    return new ScopeSyntax(reader)
   }
 }
 
-export class ScopeStringParamsGetter
+export class ScopeValueStringReader
   extends URLSearchParams
-  implements ScopeSyntaxParams
+  implements ScopeSyntaxReader
 {
+  readonly prefix: string
+  readonly positional?: string
+
+  constructor(value: string) {
+    const paramIdx = value.indexOf('?')
+    const colonIdx = value.indexOf(':')
+    const prefixEnd = minIdx(paramIdx, colonIdx)
+
+    const queryString =
+      paramIdx !== -1 // There is a query string
+        ? paramIdx === value.length - 1
+          ? undefined // The query string is empty
+          : value.slice(paramIdx + 1)
+        : undefined
+
+    super(queryString)
+
+    this.prefix = prefixEnd !== -1 ? value.slice(0, prefixEnd) : value
+    this.positional =
+      colonIdx !== -1
+        ? // There is a positional parameter, extract it
+          paramIdx === -1
+          ? decodeURIComponent(value.slice(colonIdx + 1))
+          : colonIdx < paramIdx
+            ? decodeURIComponent(value.slice(colonIdx + 1, paramIdx))
+            : undefined
+        : undefined
+  }
+
   getSingle(key: string) {
     if (!this.has(key)) return undefined
     const value = this.getAll(key)
@@ -198,8 +205,16 @@ export class ScopeStringParamsGetter
  * Translates a {@link LexPermission} into a {@link ScopeSyntaxParams} to be used
  * by the {@link ScopeSyntax}.
  */
-export class LexPermissionParamsGetter implements ScopeSyntaxParams {
+export class LexPermissionReader implements ScopeSyntaxReader {
   constructor(protected readonly lexPermission: LexPermission) {}
+
+  get prefix() {
+    return this.lexPermission.resource
+  }
+
+  get positional() {
+    return undefined
+  }
 
   get(key: string) {
     // Ignore reserved keywords
