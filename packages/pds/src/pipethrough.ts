@@ -404,6 +404,10 @@ async function tryParsingError(
     // order to avoid destroying the TCP socket, while avoiding the cost of
     // consuming too much IO, we give it a chance to finish first.
 
+    // @NOTE we need to listen (and ignore) "error" events, otherwise the
+    // process could crash (since we drain the stream asynchronously here). This
+    // is performed through the "finished" call below.
+
     const to = setTimeout(() => {
       readable.destroy()
     }, 100)
