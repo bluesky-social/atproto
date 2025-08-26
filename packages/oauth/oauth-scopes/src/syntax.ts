@@ -155,6 +155,10 @@ export class ScopeSyntax {
   }
 }
 
+/**
+ * Translates a scope string into a {@link ScopeSyntaxReader} to be used by the
+ * {@link ScopeSyntax}.
+ */
 export class ScopeValueStringReader
   extends URLSearchParams
   implements ScopeSyntaxReader
@@ -202,8 +206,8 @@ export class ScopeValueStringReader
 }
 
 /**
- * Translates a {@link LexPermission} into a {@link ScopeSyntaxParams} to be used
- * by the {@link ScopeSyntax}.
+ * Translates a {@link LexPermission} into a {@link ScopeSyntaxReader} to be
+ * used by the {@link ScopeSyntax}.
  */
 export class LexPermissionReader implements ScopeSyntaxReader {
   constructor(protected readonly lexPermission: LexPermission) {}
