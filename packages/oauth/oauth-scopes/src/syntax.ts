@@ -36,7 +36,7 @@ export function isScopeSyntaxFor<P extends string>(
  */
 export interface ScopeSyntaxReader {
   readonly prefix: string
-  readonly positional?: string
+  readonly positional?: ParamValue
   keys(): Iterable<string>
   getSingle(key: string): ParamValue | null | undefined
   getMulti(key: string): ParamValue[] | null | undefined
