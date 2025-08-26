@@ -31,11 +31,8 @@ export function isScopeStringFor<P extends string>(
 
     // Then check the full prefix
     return value.startsWith(prefix)
-  } else if (value.length < prefix.length) {
-    // No match possible
-    return false
   } else {
-    // value and prefix have the same length
+    // value and prefix must be equal
     return value === prefix
   }
 }
@@ -101,21 +98,25 @@ export class ScopeStringSyntax implements ScopeSyntax {
     const colonIdx = scopeValue.indexOf(':')
     const prefixEnd = minIdx(paramIdx, colonIdx)
 
-    const prefix =
-      prefixEnd !== -1 ? scopeValue.slice(0, prefixEnd) : scopeValue
+    // No param or positional
+    if (prefixEnd === -1) {
+      return new ScopeStringSyntax(scopeValue)
+    }
 
+    const prefix = scopeValue.slice(0, prefixEnd)
+
+    // Parse the positional parameter if present
     const positional =
       colonIdx !== -1
-        ? // There is a positional parameter, extract it
-          paramIdx === -1
+        ? paramIdx === -1
           ? decodeURIComponent(scopeValue.slice(colonIdx + 1))
           : colonIdx < paramIdx
             ? decodeURIComponent(scopeValue.slice(colonIdx + 1, paramIdx))
             : undefined
         : undefined
 
+    // Parse the query string if present and non empty
     const params =
-      // Parse the query string if present and non empty
       paramIdx !== -1 && paramIdx < scopeValue.length - 1
         ? new URLSearchParams(scopeValue.slice(paramIdx + 1))
         : undefined

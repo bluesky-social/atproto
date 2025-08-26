@@ -38,13 +38,7 @@ export class RpcPermission implements Matchable<RpcPermissionMatch> {
   }
 
   toString(): string {
-    const { lxm, aud } = this
-    return RpcPermission.parser.format({
-      aud,
-      lxm: lxm.includes('*')
-        ? ['*']
-        : ([...new Set(lxm)].sort() as [Nsid, ...Nsid[]]),
-    })
+    return RpcPermission.parser.format(this)
   }
 
   protected static readonly parser = new Parser(
@@ -54,6 +48,10 @@ export class RpcPermission implements Matchable<RpcPermissionMatch> {
         multiple: true,
         required: true,
         validate: isLxmParam,
+        normalize: (value) =>
+          value.length > 1 && value.includes('*')
+            ? (['*'] as const)
+            : ([...new Set(value)].sort() as [Nsid, ...Nsid[]]),
       },
       aud: {
         multiple: false,
