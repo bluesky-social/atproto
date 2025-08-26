@@ -19,11 +19,12 @@ export async function upsert(
     lexicon: toJson(lexicon),
   }
 
-  await db.db
-    .insertInto('lexicon')
-    .values({ nsid, ...updates })
-    .onConflict((oc) => oc.column('nsid').doUpdateSet(updates))
-    .execute()
+  await db.executeWithRetry(
+    db.db
+      .insertInto('lexicon')
+      .values({ nsid, ...updates })
+      .onConflict((oc) => oc.column('nsid').doUpdateSet(updates)),
+  )
 }
 
 export async function find(

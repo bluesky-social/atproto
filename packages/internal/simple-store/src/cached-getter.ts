@@ -1,7 +1,7 @@
-import { GetStoredOptions, Key, SimpleStore, Value } from './simple-store.js'
+import { GetOptions, Key, SimpleStore, Value } from './simple-store.js'
 import { Awaitable, ContextOptions } from './util.js'
 
-export type { GetStoredOptions }
+export type { GetOptions }
 export type GetCachedOptions<C = void> = ContextOptions<C> & {
   signal?: AbortSignal
 
@@ -178,7 +178,7 @@ export class CachedGetter<
     return value
   }
 
-  async getStored(key: K, options?: GetStoredOptions): Promise<V | undefined> {
+  async getStored(key: K, options?: GetOptions): Promise<V | undefined> {
     try {
       return await this.store.get(key, options)
     } catch (err) {

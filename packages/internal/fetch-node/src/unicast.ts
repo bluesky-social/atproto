@@ -28,7 +28,7 @@ export type UnicastFetchWrapOptions<C = FetchContext> = {
    *
    * However, in the case a custom "fetch" function is passed here (fetch !==
    * globalThis.fetch), we have no guarantee that the dispatcher will be used to
-   * make the request. Because of this, in such a case, we will use a on-time
+   * make the request. Because of this, in such a case, we will use a one-time
    * use dispatcher that checks that the provided fetch function indeed made use
    * of the "unicastLookup" when a custom dispatch init function is used.
    *

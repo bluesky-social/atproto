@@ -291,28 +291,23 @@ export class AppContext {
           })
         : proxyAgentBase
 
-    // A fetch() function that protects against SSRF attacks, large responses &
-    // known bad domains. This function can safely be used to fetch user
-    // provided URLs (unless "disableSsrfProtection" is true, of course).
-    //
-    // @NOTE **DO NO** wrap this fetch with any logging or other transforms as
-    // this would prevent the use of explicit redirect from working. Indeed, we
-    // want the allowImplicitRedirect to be false here, to avoid users of the
-    // safeFetch function to unwittingly use the default "follow" redirect mode.
-    // However, when wrapping the fetch function, and in particular when that
-    // wrapper creates an intermediate Request object, the
-    // explicitRedirectCheckRequestTransform that checks whether the Request
-    // redirect mode is explicit or not will not be able to distinguish an
-    // explicit "redirect" option from the default being applied, effectively
-    // preventing the use of `redirect: "follow"`, which **is** required when
-    // the safeFetch function is used from the lexicon resolver.
-    //
-    // One *could* be tempted to implement logging by providing a custom fetch
-    // function that wraps the original fetch with logging logic. That has
-    // however another undesired side effect: it will prevent the use of
-    // "keep-alive" connection on older NodeJS version (<20). Since this package
-    // still supports Node18, we won't be doing that either.
+    /**
+     * A fetch() function that protects against SSRF attacks, large responses &
+     * known bad domains. This function can safely be used to fetch user
+     * provided URLs (unless "disableSsrfProtection" is true, of course).
+     *
+     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
+     * this might prevent the use of explicit `redirect: "follow"` init from
+     * working. See {@link safeFetchWrap}.
+     */
     const safeFetch = safeFetchWrap({
+      /**
+       * @note Since we are using NodeJS<=20, we must use `globalThis.fetch`
+       * here to ensure that a keep-alive agent is used. From NodeJS 21+ the
+       * `fetch` argument here can be set to any other value, including a
+       * logger function.
+       */
+      fetch: globalThis.fetch,
       allowIpHost: false,
       allowImplicitRedirect: false,
       responseMaxSize: cfg.fetch.maxResponseSize,

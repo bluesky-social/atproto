@@ -828,17 +828,17 @@ type AudProps = Override<
   { aud: AudParam }
 >
 function Aud({ aud, ...attrs }: AudProps) {
-  if (aud.startsWith('did:web:bsky.app#')) {
+  if (aud.startsWith('did:web:api.bsky.app#')) {
     return (
       <ItemDescription {...attrs} title={aud}>
-        <Trans>Bluesky App servers</Trans>
+        <Trans>Bluesky App services</Trans>
       </ItemDescription>
     )
   }
-  if (aud.startsWith('did:web:bsky.chat#')) {
+  if (aud.startsWith('did:web:api.bsky.chat#')) {
     return (
       <ItemDescription {...attrs} title={aud}>
-        <Trans>Bluesky Chat servers</Trans>
+        <Trans>Bluesky Chat services</Trans>
       </ItemDescription>
     )
   }

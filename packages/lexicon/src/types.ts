@@ -1,12 +1,13 @@
 import { z } from 'zod'
+import { validateLanguage } from '@atproto/common-web'
 import { isValidNsid } from '@atproto/syntax'
 import { requiredPropertiesRefinement } from './util'
 
-export const localeSchema = z
+export const languageSchema = z
   .string()
-  .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/, 'Invalid locale')
+  .refine(validateLanguage, 'Invalid BCP47 language tag')
 
-export const lexLang = z.record(localeSchema, z.string().optional())
+export const lexLang = z.record(languageSchema, z.string().optional())
 
 export type LexLang = z.infer<typeof lexLang>
 
