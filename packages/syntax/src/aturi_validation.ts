@@ -1,6 +1,6 @@
 import { ensureValidDid, ensureValidDidRegex } from './did'
 import { ensureValidHandle, ensureValidHandleRegex } from './handle'
-import { ensureValidNsid, isValidNsid } from './nsid'
+import { isValidNsid } from './nsid'
 
 // Human-readable constraints on ATURI:
 //   - following regular URLs, a 8KByte hard total length limit
@@ -53,9 +53,7 @@ export const ensureValidAtUri = (uri: string) => {
         'ATURI can not have a slash after authority without a path segment',
       )
     }
-    try {
-      ensureValidNsid(parts[3])
-    } catch {
+    if (!isValidNsid(parts[3])) {
       throw new Error(
         'ATURI requires first path segment (if supplied) to be valid NSID',
       )

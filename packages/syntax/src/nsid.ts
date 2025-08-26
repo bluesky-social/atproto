@@ -28,8 +28,7 @@ export class NSID {
   }
 
   constructor(nsid: string) {
-    ensureValidNsid(nsid)
-    this.segments = nsid.split('.')
+    this.segments = parseNsid(nsid)
   }
 
   get authority() {
@@ -50,97 +49,99 @@ export class NSID {
 
 export function ensureValidNsid(nsid: string): void {
   const result = validateNsid(nsid)
-  if (result != null) throw new InvalidNsidError(result)
+  if (!result.success) throw new InvalidNsidError(result.message)
+}
+
+export function parseNsid(nsid: string): string[] {
+  const result = validateNsid(nsid)
+  if (!result.success) throw new InvalidNsidError(result.message)
+  return result.value
 }
 
 export function isValidNsid(nsid: string): boolean {
-  return validateNsid(nsid) == null
+  return validateNsid(nsid).success
 }
 
 // Human readable constraints on NSID:
 // - a valid domain in reversed notation
 // - followed by an additional period-separated name, which is camel-case letters
-export function validateNsid(value: string): string | null {
-  const { length } = value
-  if (length > 253 + 1 + 63) {
-    return 'NSID is too long (317 chars max)'
-  }
-
-  let partCount = 1
-  let partStart = 0
-  let partHasLeadingDigit = false
-  let partHasHyphen = false
-
-  let charCode: number
-  for (let i = 0; i < length; i++) {
-    charCode = value.charCodeAt(i)
-
-    // Hot path: check frequent chars first
-    if (
-      (charCode >= 97 && charCode <= 122) /* a-z */ ||
-      (charCode >= 65 && charCode <= 90) /* A-Z */
-    ) {
-      // All good
-    } else if (charCode >= 48 && charCode <= 57 /* 0-9 */) {
-      if (i === 0) {
-        return 'NSID first part may not start with a digit'
-      }
-
-      // All good
-
-      if (i === partStart) {
-        partHasLeadingDigit = true
-      }
-    } else if (charCode === 45 /* - */) {
-      if (i === partStart) {
-        return 'NSID part can not start with hyphen'
-      }
-      if (i === length - 1 || value.charCodeAt(i + 1) === 46 /* . */) {
-        return 'NSID part can not end with hyphen'
-      }
-
-      // All good
-
-      partHasHyphen = true
-    } else if (charCode === 46 /* . */) {
-      // Check prev part size
-      if (i === partStart) {
-        return 'NSID parts can not be empty'
-      }
-      if (i - partStart > 63) {
-        return 'NSID part too long (max 63 chars)'
-      }
-
-      // All good
-
-      partCount++
-      partStart = i + 1
-      partHasHyphen = false
-      partHasLeadingDigit = false
-    } else {
-      return 'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)'
+export function validateNsid(
+  value: string,
+): { success: true; value: string[] } | { success: false; message: string } {
+  if (value.length > 253 + 1 + 63) {
+    return {
+      success: false,
+      message: 'NSID is too long (317 chars max)',
     }
   }
-
-  // Check last part size
-  if (length === partStart) {
-    return 'NSID parts can not be empty'
+  if (startsWithNumber(value)) {
+    return {
+      success: false,
+      message: 'NSID first part may not start with a digit',
+    }
   }
-  if (length - partStart > 63) {
-    return 'NSID part too long (max 63 chars)'
+  if (!/^[a-zA-Z0-9.-]*$/.test(value)) {
+    return {
+      success: false,
+      message:
+        'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)',
+    }
   }
-
-  // Check last part chars
-  if (partHasHyphen || partHasLeadingDigit) {
-    return 'NSID name part must be only letters and digits (and no leading digit)'
+  const labels = value.split('.')
+  if (labels.length < 3) {
+    return {
+      success: false,
+      message: 'NSID needs at least three parts',
+    }
   }
-
-  // Check part count
-  if (partCount < 3) {
-    return 'NSID needs at least three parts'
+  if (!isValidIdentifier(labels[labels.length - 1])) {
+    return {
+      success: false,
+      message:
+        'NSID name part must be only letters and digits (and no leading digit)',
+    }
   }
+  for (const l of labels) {
+    if (l.length < 1) {
+      return {
+        success: false,
+        message: 'NSID parts can not be empty',
+      }
+    }
+    if (l.length > 63) {
+      return {
+        success: false,
+        message: 'NSID part too long (max 63 chars)',
+      }
+    }
+    if (startsWithHyphen(l) || endsWithHyphen(l)) {
+      return {
+        success: false,
+        message: 'NSID parts can not start or end with hyphen',
+      }
+    }
+  }
+  return {
+    success: true,
+    value: labels,
+  }
+}
 
-  return null
+function startsWithNumber(v: string) {
+  const charCode = v.charCodeAt(0)
+  return charCode >= 48 && charCode <= 57
+}
+
+function startsWithHyphen(v: string) {
+  return v.charCodeAt(0) === 45 /* - */
+}
+
+function endsWithHyphen(v: string) {
+  return v.charCodeAt(v.length - 1) === 45 /* - */
+}
+
+function isValidIdentifier(v: string) {
+  return /^[a-zA-Z][a-zA-Z0-9]*$/.test(v)
 }
 
 /** @deprecated use {@link ensureValidNsid} */

@@ -1,6 +1,6 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
-import { NSID, validateNsid } from '../src'
+import { NSID, isValidNsid, validateNsid } from '../src'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {
@@ -63,7 +63,10 @@ describe('validateNsid', () => {
       'onion.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
     ]) {
       it(validNsid, () => {
-        expect(validateNsid(validNsid)).toBeNull()
+        expect(validateNsid(validNsid)).toMatchObject({
+          success: true,
+          value: expect.any(Array),
+        })
       })
     }
   })
@@ -101,7 +104,10 @@ describe('validateNsid', () => {
       'com.example.f-o',
     ]) {
       it(invalidNsid, () => {
-        expect(validateNsid(invalidNsid)).not.toBeNull()
+        expect(validateNsid(invalidNsid)).toMatchObject({
+          success: false,
+          message: expect.any(String),
+        })
       })
     }
   })
@@ -119,7 +125,7 @@ describe('validateNsid', () => {
           continue
         }
 
-        expect(validateNsid(line)).toBeNull()
+        expect(isValidNsid(line)).toBe(true)
       }
     })
   })
