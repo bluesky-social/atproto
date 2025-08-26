@@ -35,8 +35,67 @@ export class IncludeScope {
     permissionSet: LexPermissionSet,
   ): Array<RpcPermission | RepoPermission | BlobPermission> {
     return permissionSet.permissions
-      .map(parseIncludedPermission, this)
-      .filter(isIncludedPermissionAllowed, this)
+      .map(this.parsePermission, this)
+      .filter(this.isAllowedPermission, this)
+  }
+
+  protected parsePermission(permission: LexPermission) {
+    if (
+      permission.resource === 'rpc' &&
+      permission.inheritAud === true &&
+      permission.aud === undefined &&
+      this.aud !== undefined
+    ) {
+      // "rpc" permissions can "inherit" their audience from "aud" param defined
+      // in the "include:<nsid>?aud=<audience>" scope the permission set was
+      // loaded from.
+      const { inheritAud, ...rest } = permission
+      return parsePermission({ ...rest, aud: this.aud })
+    }
+
+    return parsePermission(permission)
+  }
+
+  /**
+   * Verifies that a permission included through a lexicon permission set is
+   * allowed in the context of the `include:` scope. This basically checks that
+   * the permission is "under" the namespace authority of the `include:` scope,
+   * and that it only contains "repo:", "rpc:", or "blob:" permissions.
+   */
+  protected isAllowedPermission(
+    permission: unknown,
+  ): permission is RpcPermission | RepoPermission | BlobPermission {
+    if (permission instanceof RpcPermission) {
+      return permission.lxm.every(this.isParentAuthorityOf, this)
+    }
+
+    if (permission instanceof RepoPermission) {
+      return permission.collection.every(this.isParentAuthorityOf, this)
+    }
+
+    if (permission instanceof BlobPermission) {
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Verifies that an nsid is under the same authority as the nsid of the
+   * `include:` scope.
+   */
+  protected isParentAuthorityOf(otherNsid: '*' | Nsid) {
+    if (otherNsid === '*') return false
+
+    const selfNamespace = extractNsidNamespace(this.nsid)
+    const otherNamespace = extractNsidNamespace(otherNsid)
+
+    if (otherNamespace === selfNamespace) return true
+
+    return (
+      otherNamespace.charCodeAt(selfNamespace.length) === 46 /* '.' */ &&
+      otherNamespace.startsWith(selfNamespace)
+    )
   }
 
   protected static readonly parser = new Parser(
@@ -69,34 +128,7 @@ export class IncludeScope {
   }
 }
 
-/**
- * Parses a permission included thought a lexicon permission set, in the
- * context of an `include:` scope.
- */
-function parseIncludedPermission(
-  this: IncludeScope,
-  permission: LexPermission,
-) {
-  if (
-    permission.resource === 'rpc' &&
-    permission.inheritAud === true &&
-    permission.aud === undefined &&
-    this.aud
-  ) {
-    // "rpc" permissions can "inherit" their audience from "aud" param defined
-    // in the "include:<nsid>?aud=<audience>" scope the permission set was
-    // loaded from.
-    return parseIncludedPermissionInternal({
-      ...permission,
-      inheritAud: undefined,
-      aud: this.aud,
-    })
-  }
-
-  return parseIncludedPermissionInternal(permission)
-}
-
-function parseIncludedPermissionInternal(permission: LexPermission) {
+function parsePermission(permission: LexPermission) {
   if (isPermissionForResource(permission, 'repo')) {
     return RepoPermission.fromSyntax(new LexPermissionSyntax(permission))
   }
@@ -114,46 +146,6 @@ function isPermissionForResource<P extends LexPermission, T extends string>(
   type: T,
 ): permission is P & { resource: T } {
   return permission.resource === type
-}
-
-/**
- * Verifies that a permission included through a lexicon permission set is
- * allowed in the context of the `include:` scope. This basically checks that
- * the permission is "under" the namespace authority of the `include:` scope,
- * and that it only contains "repo:", "rpc:", or "blob:" permissions.
- */
-function isIncludedPermissionAllowed(
-  this: IncludeScope,
-  permission: unknown,
-): permission is RpcPermission | RepoPermission | BlobPermission {
-  if (permission instanceof RpcPermission) {
-    return permission.lxm.every(isUnderAuthority, this)
-  }
-
-  if (permission instanceof RepoPermission) {
-    return permission.collection.every(isUnderAuthority, this)
-  }
-
-  if (permission instanceof BlobPermission) {
-    return true
-  }
-
-  return false
-}
-
-/**
- * Verifies that an nsid is under the namespace has the right authority in the
- * context of an `include:` scope.
- */
-function isUnderAuthority(this: IncludeScope, itemNsid: '*' | Nsid) {
-  if (itemNsid === '*') return false
-
-  const authorityNamespace = extractNsidNamespace(this.nsid)
-  const itemNamespace = extractNsidNamespace(itemNsid)
-  return (
-    itemNamespace === authorityNamespace ||
-    itemNamespace.startsWith(`${authorityNamespace}.`)
-  )
 }
 
 function extractNsidNamespace(nsid: Nsid) {

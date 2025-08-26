@@ -52,9 +52,7 @@ export interface ScopeSyntax<P extends string> {
 /**
  * Translates a scope string into a {@link ScopeSyntax}.
  */
-export class ScopeStringSyntax<P extends string = string>
-  implements ScopeSyntax<P>
-{
+export class ScopeStringSyntax<P extends string> implements ScopeSyntax<P> {
   constructor(
     readonly prefix: P,
     readonly positional?: string,
@@ -95,7 +93,7 @@ export class ScopeStringSyntax<P extends string = string>
     return scope as ScopeStringFor<P>
   }
 
-  static fromString<P extends string = string>(
+  static fromString<P extends string>(
     scopeValue: ScopeStringFor<P>,
   ): ScopeStringSyntax<P> {
     const paramIdx = scopeValue.indexOf('?')

@@ -1,4 +1,8 @@
-import { ScopeStringSyntax, isScopeStringFor } from './syntax.js'
+import {
+  ScopeStringFor,
+  ScopeStringSyntax,
+  isScopeStringFor,
+} from './syntax.js'
 
 describe('isScopeStringFor', () => {
   describe('exact match', () => {
@@ -80,15 +84,15 @@ describe('ScopeStringSyntax', () => {
         params: { aud: ['did:foo:bar?lxm=bar.baz'] },
       },
     },
-  ] as Array<{
-    scope: string
+  ] satisfies Array<{
+    scope: ScopeStringFor<'my-res' | 'rpc'>
     content: {
       prefix: string
       positional?: string
       params?: Record<string, string[]>
     }
   }>) {
-    const syntax = ScopeStringSyntax.fromString(scope)
+    const syntax = ScopeStringSyntax.fromString<'my-res' | 'rpc'>(scope)
 
     describe(scope, () => {
       it('should match the expected syntax', () => {
