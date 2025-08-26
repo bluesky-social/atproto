@@ -5,6 +5,7 @@ import {
   OAuthAuthorizationServerMetadata,
   OAuthEndpointName,
   OAuthParResponse,
+  OAuthRedirectUri,
   OAuthTokenRequest,
   oauthParResponseSchema,
 } from '@atproto/oauth-types'
@@ -94,7 +95,7 @@ export class OAuthServerAgent {
   async exchangeCode(
     code: string,
     codeVerifier?: string,
-    redirectUri?: string,
+    redirectUri?: OAuthRedirectUri,
   ): Promise<TokenSet> {
     const now = Date.now()
 
