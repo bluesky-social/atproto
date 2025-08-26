@@ -1,5 +1,5 @@
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { PassThrough, Readable } from 'node:stream'
+import { PassThrough, Readable, finished } from 'node:stream'
 import { Request } from 'express'
 import { Dispatcher } from 'undici'
 import {
@@ -397,15 +397,24 @@ async function tryParsingError(
   if (isJsonContentType(headers['content-type']) === false) {
     // We don't known how to parse non JSON content types so we can discard the
     // whole response.
-    //
-    // @NOTE we could also simply "drain" the stream here. This would prevent
-    // the upstream HTTP/1.1 connection from getting destroyed (closed). This
-    // would however imply to read the whole upstream response, which would be
-    // costly in terms of bandwidth and I/O processing. It is recommended to use
-    // HTTP/2 to avoid this issue (be able to destroy a single response stream
-    // without resetting the whole connection). This is not expected to happen
-    // too much as 4xx and 5xx responses are expected to be JSON.
-    readable.destroy()
+
+    // Since we don't care about the response, we would normally just destroy
+    // the stream. However, if the underlying HTTP connection is an HTTP/1.1
+    // connection, this also destroys the underlying (keep-alive) TCP socket. In
+    // order to avoid destroying the TCP socket, while avoiding the cost of
+    // consuming too much IO, we give it a chance to finish first.
+
+    // @NOTE we need to listen (and ignore) "error" events, otherwise the
+    // process could crash (since we drain the stream asynchronously here). This
+    // is performed through the "finished" call below.
+
+    const to = setTimeout(() => {
+      readable.destroy()
+    }, 100)
+    finished(readable, (_err) => {
+      clearTimeout(to)
+    })
+    readable.resume()
 
     return {}
   }

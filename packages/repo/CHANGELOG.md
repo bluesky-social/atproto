@@ -1,5 +1,14 @@
 # @atproto/repo
 
+## 0.8.6
+
+### Patch Changes
+
+- [#4069](https://github.com/bluesky-social/atproto/pull/4069) [`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12) Thanks [@devinivy](https://github.com/devinivy)! - Verify CID to content mapping within CARs unless explicitly skipped.
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/lexicon@0.4.13
+
 ## 0.8.5
 
 ### Patch Changes
