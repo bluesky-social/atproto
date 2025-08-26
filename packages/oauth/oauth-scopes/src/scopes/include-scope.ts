@@ -87,14 +87,14 @@ export class IncludeScope {
   protected isParentAuthorityOf(otherNsid: '*' | Nsid) {
     if (otherNsid === '*') return false
 
-    const selfNamespace = extractNsidNamespace(this.nsid)
-    const otherNamespace = extractNsidNamespace(otherNsid)
+    const selfGroup = extractNsidGroup(this.nsid)
+    const otherGroup = extractNsidGroup(otherNsid)
 
-    if (otherNamespace === selfNamespace) return true
+    if (otherGroup === selfGroup) return true
 
     return (
-      otherNamespace.charCodeAt(selfNamespace.length) === 46 /* '.' */ &&
-      otherNamespace.startsWith(selfNamespace)
+      otherGroup.charCodeAt(selfGroup.length) === 46 /* '.' */ &&
+      otherGroup.startsWith(selfGroup)
     )
   }
 
@@ -148,7 +148,7 @@ function isPermissionForResource<P extends LexPermission, T extends string>(
   return permission.resource === type
 }
 
-function extractNsidNamespace(nsid: Nsid) {
+function extractNsidGroup(nsid: Nsid) {
   const lastDot = nsid.lastIndexOf('.')
   return nsid.slice(0, lastDot) as `${string}.${string}`
 }
