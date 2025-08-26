@@ -25,7 +25,8 @@
     }
   },
   "dependencies": {
-    "@atproto/did": "workspace:^"
+    "@atproto/did": "workspace:^",
+    "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
     "jest": "^28.1.2",

@@ -5,6 +5,8 @@ import { Parser } from '../parser.js'
 import { NeRoArray, ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
+export { type LexPermission }
+
 export const REPO_ACTIONS = Object.freeze([
   'create',
   'update',

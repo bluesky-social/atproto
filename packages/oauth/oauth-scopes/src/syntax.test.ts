@@ -1,4 +1,8 @@
-import { ScopeSyntax, isScopeSyntaxFor } from './syntax.js'
+import {
+  ScopeStringParamsGetter,
+  ScopeSyntax,
+  isScopeSyntaxFor,
+} from './syntax.js'
 
 describe('isScopeSyntaxFor', () => {
   describe('exact match', () => {
@@ -36,7 +40,7 @@ describe('isScopeSyntaxFor', () => {
   })
 })
 
-for (const { scope, normalized = scope, content } of [
+for (const { scope, content } of [
   {
     scope: 'my-res',
     content: { prefix: 'my-res' },
@@ -67,7 +71,6 @@ for (const { scope, normalized = scope, content } of [
   },
   {
     scope: 'rpc:foo.bar?aud=did:foo:bar?lxm=bar.baz',
-    normalized: 'rpc:foo.bar?aud=did:foo:bar%3Flxm%3Dbar.baz',
     content: {
       prefix: 'rpc',
       positional: 'foo.bar',
@@ -76,7 +79,6 @@ for (const { scope, normalized = scope, content } of [
   },
 ] as Array<{
   scope: string
-  normalized?: string
   content: {
     prefix: string
     positional?: string
@@ -87,21 +89,17 @@ for (const { scope, normalized = scope, content } of [
     const syntax = ScopeSyntax.fromString(scope)
 
     it('should match the expected syntax', () => {
-      expect(syntax).toEqual({
+      expect(syntax).toMatchObject({
         prefix: content.prefix,
         positional: content.positional,
         params: content.params
-          ? new URLSearchParams(
+          ? new ScopeStringParamsGetter(
               Object.entries(content.params).flatMap(([k, v]) =>
                 v.map((val) => [k, val]),
               ),
             )
           : undefined,
       })
-    })
-
-    it(`should stringify ${scope} correctly`, () => {
-      expect(syntax.toString()).toBe(normalized)
     })
 
     it(`should match ${scope} prefix`, () => {

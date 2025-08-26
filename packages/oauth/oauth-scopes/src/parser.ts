@@ -3,7 +3,7 @@ import {
   ParamValue,
   ScopeSyntax,
   ScopeSyntaxFor,
-  formatScope,
+  encodeScope,
 } from './syntax.js'
 
 type InferParamPredicate<T extends (value: ParamValue) => boolean> =
@@ -53,11 +53,8 @@ export class Parser<P extends string, S extends ParamsSchema> {
   }
 
   format(values: InferParams<S>): ScopeSyntaxFor<P> {
-    // Build params
-    const params: [
-      name: string,
-      value: undefined | ParamValue | NeRoArray<ParamValue>,
-    ][] = []
+    const queryParams = new URLSearchParams()
+    let positionalValue: string | undefined = undefined
 
     for (const key of this.schemaKeys) {
       const value = values[key]
@@ -85,10 +82,34 @@ export class Parser<P extends string, S extends ParamsSchema> {
         }
       }
 
-      params.push([key, normalized])
+      if (normalized === undefined) continue
+
+      if (Array.isArray(normalized)) {
+        if (normalized.length === 0) {
+          // This should never happen (because "value" is supposed to be a
+          // non-empty array). Because some scope default to "*" (allow
+          // everything) when a parameter is not specified, we'd rather be safe
+          // here.
+          throw new Error(
+            `Invalid scope: parameter "${name}" cannot be an empty array`,
+          )
+        }
+
+        if (key === this.positionalName && normalized.length === 1) {
+          positionalValue = String(normalized[0]!)
+        } else {
+          for (const v of normalized) queryParams.append(key, String(v))
+        }
+      } else {
+        if (key === this.positionalName) {
+          positionalValue = String(normalized)
+        } else {
+          queryParams.set(key, String(normalized))
+        }
+      }
     }
 
-    return formatScope<P>(this.prefix, params, this.positionalName)
+    return encodeScope<P>(this.prefix, positionalValue, queryParams)
   }
 
   parse(syntax: ScopeSyntax) {

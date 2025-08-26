@@ -4,10 +4,6 @@ export function minIdx(a: number, b: number): number {
   return Math.min(a, b)
 }
 
-export function sum(a: number, b: number): number {
-  return a + b
-}
-
 export function knownValuesValidator<T>(values: Iterable<T>) {
   const set = new Set<unknown>(values)
   return (value: unknown): value is T => set.has(value)

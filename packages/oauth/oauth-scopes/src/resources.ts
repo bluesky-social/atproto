@@ -1,7 +1,6 @@
 import {
   AccountPermission,
   AccountPermissionMatch,
-  LexPermission,
 } from './scopes/account-permission.js'
 import {
   BlobPermission,
@@ -16,7 +15,7 @@ import {
   RepoPermissionMatch,
 } from './scopes/repo-permission.js'
 import { RpcPermission, RpcPermissionMatch } from './scopes/rpc-permission.js'
-import { ScopeSyntax, isScopeSyntaxFor } from './syntax.js'
+import { isScopeSyntaxFor } from './syntax.js'
 
 export type ScopeMatchingOptionsByResource = {
   account: AccountPermissionMatch
@@ -24,23 +23,6 @@ export type ScopeMatchingOptionsByResource = {
   repo: RepoPermissionMatch
   rpc: RpcPermissionMatch
   blob: BlobPermissionMatch
-}
-
-export function parseResourceScope(string: string) {
-  return parseResourceSyntax(ScopeSyntax.fromString(string))
-}
-
-export function parseResourcePermissionLexicon(lexPermission: LexPermission) {
-  return parseResourceSyntax(ScopeSyntax.fromLex(lexPermission))
-}
-
-export function parseResourceSyntax(syntax: ScopeSyntax) {
-  if (syntax.is('account')) return AccountPermission.fromSyntax(syntax)
-  if (syntax.is('identity')) return IdentityPermission.fromSyntax(syntax)
-  if (syntax.is('repo')) return RepoPermission.fromSyntax(syntax)
-  if (syntax.is('rpc')) return RpcPermission.fromSyntax(syntax)
-  if (syntax.is('blob')) return BlobPermission.fromSyntax(syntax)
-  return null
 }
 
 export function scopeNeededFor<R extends keyof ScopeMatchingOptionsByResource>(

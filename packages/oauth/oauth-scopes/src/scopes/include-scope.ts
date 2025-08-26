@@ -2,12 +2,9 @@ import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { isNonNullable } from '../lib/util.js'
 import { Parser } from '../parser.js'
-import { parseResourcePermissionLexicon } from '../resources.js'
 import { ScopeSyntax, isScopeSyntaxFor } from '../syntax.js'
 import { LexPermission, LexPermissionSet } from '../types.js'
-import { AccountPermission } from './account-permission.js'
 import { BlobPermission } from './blob-permission.js'
-import { IdentityPermission } from './identity-permission.js'
 import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
 
@@ -19,7 +16,7 @@ import { RpcPermission } from './rpc-permission.js'
 export class IncludeScope {
   constructor(
     public readonly nsid: Nsid,
-    public readonly aud: undefined | AtprotoAudience,
+    public readonly aud: undefined | AtprotoAudience = undefined,
   ) {}
 
   toString() {
@@ -86,14 +83,21 @@ function parseIncludedPermission(
     // "rpc" permissions can "inherit" their audience from "aud" param defined
     // in the "include:<nsid>?aud=<audience>" scope the permission set was
     // loaded from.
-    return parseResourcePermissionLexicon({
+    return parseIncludedPermissionInternal({
       ...permission,
       inheritAud: undefined,
       aud: this.aud,
     })
   }
 
-  return parseResourcePermissionLexicon(permission)
+  return parseIncludedPermissionInternal(permission)
+}
+
+function parseIncludedPermissionInternal(permission: LexPermission) {
+  if (permission.resource === 'repo') return RepoPermission.fromLex(permission)
+  if (permission.resource === 'rpc') return RpcPermission.fromLex(permission)
+  if (permission.resource === 'blob') return BlobPermission.fromLex(permission)
+  return null
 }
 
 /**
@@ -104,12 +108,7 @@ function parseIncludedPermission(
  */
 function isIncludedPermissionAllowed(
   this: IncludeScope,
-  permission:
-    | AccountPermission
-    | BlobPermission
-    | IdentityPermission
-    | RepoPermission
-    | RpcPermission,
+  permission: unknown,
 ): permission is RpcPermission | RepoPermission | BlobPermission {
   if (permission instanceof RpcPermission) {
     return permission.lxm.every(isUnderAuthority, this)

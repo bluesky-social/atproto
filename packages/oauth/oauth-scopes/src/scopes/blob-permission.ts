@@ -9,6 +9,8 @@ import {
 } from '../syntax.js'
 import type { LexPermission } from '../types.js'
 
+export { type LexPermission }
+
 export const DEFAULT_ACCEPT = Object.freeze(['*/*'] as const)
 
 export type BlobPermissionMatch = {

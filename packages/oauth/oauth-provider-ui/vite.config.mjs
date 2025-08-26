@@ -37,7 +37,13 @@ export default defineConfig({
       plugins: [bundleManifest()],
     },
     commonjsOptions: {
-      include: [/node_modules/, /did/, /oauth-scopes/, /oauth-provider-api/],
+      include: [
+        /node_modules/,
+        /did/,
+        /oauth-scopes/,
+        /oauth-provider-api/,
+        /syntax/,
+      ],
     },
     // this
     // @NOTE the "env" arg (when defineConfig is used with a function) does not
@@ -54,6 +60,7 @@ export default defineConfig({
       '@atproto/oauth-provider-api',
       '@atproto/did',
       '@atproto/oauth-scopes',
+      '@atproto/syntax',
     ],
   },
 })
