@@ -78,8 +78,11 @@ function parseScope(scope?: string) {
   if (scope) {
     for (const scopeValue of scope.split(' ')) {
       const parsed = IncludeScope.fromString(scopeValue)
-      if (parsed) includeScopes.push(parsed)
-      else otherScopes.push(scopeValue)
+      if (parsed) {
+        includeScopes.push(parsed)
+      } else {
+        otherScopes.push(scopeValue)
+      }
     }
   }
 
