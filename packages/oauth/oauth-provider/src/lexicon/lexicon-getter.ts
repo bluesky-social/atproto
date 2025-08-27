@@ -1,4 +1,8 @@
-import { LexiconResolver, resolveLexicon } from '@atproto/lexicon-resolver'
+import {
+  LexiconResolutionError,
+  LexiconResolver,
+  resolveLexicon,
+} from '@atproto/lexicon-resolver'
 import { Nsid } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
 import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
@@ -18,19 +22,18 @@ import {
 export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
   constructor(store: LexiconStore, resolver: LexiconResolver = resolveLexicon) {
     super(
-      async (nsid, options, storedData) => {
+      async (nsidStr, options, storedData) => {
         const now = new Date()
         try {
           // @TODO We would want to be able to explicit that the Lexicon needs
           // to be fresh, which is not possible yet with the current interface
           // of LexiconResolver.
-          const { uri, lexicon } = await resolver(nsid)
+          const { uri, nsid, lexicon } = await resolver(nsidStr)
 
           // @NOTE currently, the sole purpose of this class is to retrieve
-          // permission set lexicons
+          // "permission-set" lexicons
           if (!isPermissionSetLexiconDoc(lexicon)) {
-            // @TODO Better error
-            throw new Error(`${nsid} is not a permission set`)
+            throw new LexiconResolutionError(nsid, 'Not a permission set')
           }
 
           return {
