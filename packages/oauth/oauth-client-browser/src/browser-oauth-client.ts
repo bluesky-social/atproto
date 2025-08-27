@@ -368,10 +368,10 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
   async signInCallback() {
     const params = this.readCallbackParams()
-    const redirectUri = this.readRedirectUrl()
+    const redirectUrl = this.readRedirectUrl()
 
     // Not a (valid) OAuth redirect
-    if (!params || !redirectUri) return null
+    if (!params || !redirectUrl) return null
 
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
@@ -405,7 +405,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
 
     return this.callback(params, {
-      redirect_uri: redirectUri,
+      redirect_uri: redirectUrl.toString(),
     })
       .then(async (result) => {
         if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
