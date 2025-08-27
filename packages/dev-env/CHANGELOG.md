@@ -1,5 +1,11 @@
 # @atproto/dev-env
 
+## 0.3.167
+
+### Patch Changes
+
+- [#4145](https://github.com/bluesky-social/atproto/pull/4145) [`0f2944305`](https://github.com/bluesky-social/atproto/commit/0f2944305f8479ee51c5ae5a418ee8d67cabcaaf) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Expose AppView DID in dev-env
+
 ## 0.3.166
 
 ### Patch Changes
