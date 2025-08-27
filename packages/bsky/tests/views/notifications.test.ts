@@ -19,6 +19,7 @@ import {
   Notification,
   OutputSchema as ListNotificationsOutputSchema,
 } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
 import { Namespaces } from '../../src/stash'
 import { forSnapshot, paginateAll } from '../_util'
 
