@@ -3026,3 +3026,49 @@ Array [
   },
 ]
 `;
+
+exports[`notification views handles hide tag filters filters posts with hide tag 1`] = `Array []`;
+
+exports[`notification views handles hide tag filters shows posts with hide tag if they are followed 1`] = `
+Array [
+  Object {
+    "author": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "labels": Array [],
+    "reason": "reply",
+    "reasonSubject": "record(2)",
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(1)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(1)",
+          "uri": "record(2)",
+        },
+      },
+      "text": "no thanks",
+    },
+    "uri": "record(0)",
+  },
+]
+`;
