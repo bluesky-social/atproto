@@ -25,6 +25,10 @@ export type AuthorizeOptions = Simplify<
   }
 >
 
+export type CallbackOptions = Simplify<
+  Partial<Pick<OAuthAuthorizationRequestParameters, 'redirect_uri'>>
+>
+
 export const clientMetadataSchema = oauthClientMetadataSchema.extend({
   client_id: z.union([
     oauthClientIdDiscoverableSchema,
