@@ -82,7 +82,7 @@ export const createQB = (
     details: details ? toJson(details) : null,
     code: code,
     currentRefreshToken: refreshToken || null,
-    permissionsScope: permissionsScope,
+    permissionsScope,
   })
 }
 

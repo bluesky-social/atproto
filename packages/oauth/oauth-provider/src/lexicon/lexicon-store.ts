@@ -1,24 +1,14 @@
-import { LexPermissionSet, LexiconDoc } from '@atproto/lexicon'
+import { LexiconDoc } from '@atproto/lexicon'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 
-export { type Awaitable, type LexPermissionSet, type LexiconDoc }
-
-export type PermissionSetLexiconDoc = LexiconDoc & {
-  defs: { main: LexPermissionSet }
-}
-
-export function isPermissionSetLexiconDoc<L extends LexiconDoc>(
-  lexicon: L,
-): lexicon is L & PermissionSetLexiconDoc {
-  return lexicon.defs['main']?.type === 'permission-set'
-}
+export { type Awaitable, type LexiconDoc }
 
 export type LexiconData = {
   createdAt: Date
   updatedAt: Date
   lastSucceededAt: Date
   uri: string
-  lexicon: PermissionSetLexiconDoc
+  lexicon: LexiconDoc
 }
 
 export interface LexiconStore {

@@ -1,16 +1,8 @@
-import {
-  LexiconResolutionError,
-  LexiconResolver,
-  resolveLexicon,
-} from '@atproto/lexicon-resolver'
+import { LexiconResolver, resolveLexicon } from '@atproto/lexicon-resolver'
 import { Nsid } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
 import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
-import {
-  LexiconData,
-  LexiconStore,
-  isPermissionSetLexiconDoc,
-} from './lexicon-store.js'
+import { LexiconData, LexiconStore } from './lexicon-store.js'
 
 /**
  * This utility class handles the retrieval and caching of lexicon
@@ -21,6 +13,10 @@ import {
  */
 export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
   constructor(store: LexiconStore, resolver: LexiconResolver = resolveLexicon) {
+    // @TODO (?) We could either store failures in the store, or use another
+    // (e.g. LRU based SimpleStoreMemory) store to cache failures, to avoid
+    // hammering the resolver.
+
     super(
       async (nsidStr, options, storedData) => {
         const now = new Date()
@@ -28,13 +24,7 @@ export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
           // @TODO We would want to be able to explicit that the Lexicon needs
           // to be fresh, which is not possible yet with the current interface
           // of LexiconResolver.
-          const { uri, nsid, lexicon } = await resolver(nsidStr)
-
-          // @NOTE currently, the sole purpose of this class is to retrieve
-          // "permission-set" lexicons
-          if (!isPermissionSetLexiconDoc(lexicon)) {
-            throw new LexiconResolutionError(nsid, 'Not a permission set')
-          }
+          const { uri, lexicon } = await resolver(nsidStr)
 
           return {
             createdAt: storedData?.createdAt ?? now,
