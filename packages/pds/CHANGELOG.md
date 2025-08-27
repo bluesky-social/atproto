@@ -1,5 +1,22 @@
 # @atproto/pds
 
+## 0.4.171
+
+### Patch Changes
+
+- [#4141](https://github.com/bluesky-social/atproto/pull/4141) [`e1967c1c2`](https://github.com/bluesky-social/atproto/commit/e1967c1c2abb03bb84de424d01042c40a599b5b3) Thanks [@devinivy](https://github.com/devinivy)! - Avoid extra lookup when configured with appview details
+
+- [#4133](https://github.com/bluesky-social/atproto/pull/4133) [`c0126f4a8`](https://github.com/bluesky-social/atproto/commit/c0126f4a84940826a1d7511802cdc69260ed46df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error handling when destroying pipethrough stream
+
+- Updated dependencies [[`2104d9033`](https://github.com/bluesky-social/atproto/commit/2104d9033e2e1a3a7b821c1f0c5c8ffac5832d59)]:
+  - @atproto/lexicon@0.4.14
+  - @atproto/api@0.16.4
+  - @atproto/repo@0.8.7
+  - @atproto/xrpc@0.7.3
+  - @atproto/xrpc-server@0.9.3
+  - @atproto/aws@0.2.27
+  - @atproto-labs/xrpc-utils@0.0.20
+
 ## 0.4.170
 
 ### Patch Changes
