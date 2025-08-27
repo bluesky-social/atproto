@@ -18,6 +18,7 @@ export class TestBsky {
     public dataplane: bsky.DataPlaneServer,
     public bsync: bsky.MockBsync,
     public sub: bsky.RepoSubscription,
+    public serverDid: string,
   ) {}
 
   static async create(cfg: BskyConfig): Promise<TestBsky> {
@@ -116,7 +117,7 @@ export class TestBsky {
 
     sub.start()
 
-    return new TestBsky(url, port, db, server, dataplane, bsync, sub)
+    return new TestBsky(url, port, db, server, dataplane, bsync, sub, serverDid)
   }
 
   get ctx(): bsky.AppContext {
