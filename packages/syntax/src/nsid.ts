@@ -171,7 +171,7 @@ export function ensureValidNsidRegex(nsid: string): void {
  * Regexp based validation that behaves identically to the previous code but
  * provides less detailed error messages (while being 20% to 50% faster).
  */
-function validateNsidRegex(value: string): ValidateResult<string> {
+export function validateNsidRegex(value: string): ValidateResult<string> {
   if (value.length > 253 + 1 + 63) {
     return {
       success: false,
