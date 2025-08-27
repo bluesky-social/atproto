@@ -114,7 +114,9 @@ export class TestNetwork extends TestNetworkNoAppView {
     await ozone.addAdminDid(ozoneServiceProfile.did)
 
     mockNetworkUtilities(pds, bsky)
+    await thirdPartyPds.processAll()
     await pds.processAll()
+    await ozone.processAll()
     await bsky.sub.processAll()
     await thirdPartyPds.close()
 

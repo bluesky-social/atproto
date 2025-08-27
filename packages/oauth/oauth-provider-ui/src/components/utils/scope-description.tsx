@@ -201,12 +201,14 @@ function IdentityWarning({
   if (hasFullIdentityAccess) {
     return (
       <Admonition {...props} type={type} prominent={prominent}>
-        <Trans>
-          The application is asking for full control over your network identity,
-          meaning that it could <b>permanently break</b>, or even <b>steal</b>,
-          your account. Only grant this permission to applications you really
-          trust.
-        </Trans>
+        <p>
+          <Trans>
+            The application is asking for full control over your network
+            identity, meaning that it could <b>permanently break</b>, or even{' '}
+            <b>steal</b>, your account. Only grant this permission to
+            applications you really trust.
+          </Trans>
+        </p>
       </Admonition>
     )
   }
@@ -601,7 +603,7 @@ function RepoPermissions({
         </p>
         <p className="mt-1">
           <Trans>
-            The application is asking to be able to create, update, and delete
+            The application is asking to be able to create, update, and delete{' '}
             <b>any data</b> from your repository.
           </Trans>
         </p>
