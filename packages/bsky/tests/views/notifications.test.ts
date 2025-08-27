@@ -1,5 +1,5 @@
 import { AppBskyNotificationDeclaration, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { SeedClient, TestBsky, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import { ProfileView } from '../../src/lexicon/types/app/bsky/actor/defs'
@@ -21,6 +21,7 @@ import {
 import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
 import { Namespaces } from '../../src/stash'
 import { forSnapshot, paginateAll } from '../_util'
+import { TAG_HIDE } from '@atproto/dev-env/dist/seed/thread-v2'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -82,7 +83,18 @@ describe('notification views', () => {
       handle: 'blocked.test',
       password: 'blocked-pass',
     })
+
+    const danPost = await sc.post(sc.dids.dan, 'hello friends')
+    const eveReply = await sc.reply(
+      sc.dids.eve,
+      danPost.ref,
+      danPost.ref,
+      'no thanks',
+    )
+
     await network.processAll()
+
+    await createTag(db, { uri: eveReply.ref.uri.toString(), val: TAG_HIDE })
 
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -1478,4 +1490,21 @@ const clearPrivateData = async (db: Database) => {
 
 const clearActivitySubscription = async (db: Database) => {
   await db.db.deleteFrom('activity_subscription').execute()
+}
+
+const createTag = async (
+  db: Database,
+  opts: {
+    uri: string
+    val: string
+  },
+) => {
+  await db.db
+    .updateTable('record')
+    .set({
+      tags: JSON.stringify([opts.val]),
+    })
+    .where('uri', '=', opts.uri)
+    .returningAll()
+    .execute()
 }
