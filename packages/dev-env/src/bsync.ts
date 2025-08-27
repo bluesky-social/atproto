@@ -16,6 +16,7 @@ export class TestBsync {
     const config = bsync.envToCfg({
       port,
       apiKeys: cfg.apiKeys ?? ['api-key'],
+      dbSchema: 'bsync',
       ...cfg,
     })
 
