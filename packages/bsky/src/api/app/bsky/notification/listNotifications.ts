@@ -207,7 +207,7 @@ const noBlockOrMutesOrNeedsFiltering = (
         for (const [tag] of post.tags.entries()) {
           if (ctx.cfg.threadTagsHide.has(tag)) {
             if (!hydration.profileViewers?.get(did)?.following) {
-              return true
+              return false
             } else {
               break
             }

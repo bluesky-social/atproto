@@ -47,6 +47,9 @@ describe('notification views', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
+      bsky: {
+        threadTagsHide: new Set([TAG_HIDE]),
+      },
     })
     db = network.bsky.db
     agent = network.bsky.getClient()
@@ -84,17 +87,7 @@ describe('notification views', () => {
       password: 'blocked-pass',
     })
 
-    const danPost = await sc.post(sc.dids.dan, 'hello friends')
-    const eveReply = await sc.reply(
-      sc.dids.eve,
-      danPost.ref,
-      danPost.ref,
-      'no thanks',
-    )
-
     await network.processAll()
-
-    await createTag(db, { uri: eveReply.ref.uri.toString(), val: TAG_HIDE })
 
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -791,6 +784,48 @@ describe('notification views', () => {
 
     expect(full.data.notifications.length).toBe(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  describe('handles hide tag filters', () => {
+    beforeAll(async () => {
+      const danPost = await sc.post(sc.dids.dan, 'hello friends')
+      const eveReply = await sc.reply(
+        sc.dids.eve,
+        danPost.ref,
+        danPost.ref,
+        'no thanks',
+      )
+      await network.processAll()
+      await createTag(db, { uri: eveReply.ref.uri.toString(), val: TAG_HIDE })
+    })
+
+    it('filters posts with hide tag', async () => {
+      const results = await agent.app.bsky.notification.listNotifications(
+        { reasons: ['reply'] },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      expect(results.data.notifications.length).toEqual(0)
+    })
+
+    it('shows posts with hide tag if they are followed', async () => {
+      await sc.follow(dan, eve)
+      await network.processAll()
+      const results = await agent.app.bsky.notification.listNotifications(
+        { reasons: ['reply'] },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      expect(results.data.notifications.length).toEqual(1)
+    })
   })
 
   describe('notifications delay', () => {
