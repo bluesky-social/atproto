@@ -1,5 +1,16 @@
 # @atproto/oauth-client
 
+## 0.5.4
+
+### Patch Changes
+
+- [#4139](https://github.com/bluesky-social/atproto/pull/4139) [`6231c8730`](https://github.com/bluesky-social/atproto/commit/6231c8730adb3a4c17dec417e5332b2be61070e5) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Fix support for multiple redirect URIs in `@atproto/oauth-client`
+
+  Previously the callback method assumed a singular `redirect_uris` value, and enforced only performing the callback with the first registered redirect URI. This change allows passing the actual redirect URI to the `callback` method, much like the `authorize` method supports.
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.7.3
+
 ## 0.5.3
 
 ### Patch Changes

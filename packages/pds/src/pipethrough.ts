@@ -260,6 +260,15 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
+
+  // Special case a configured appview, while still proxying correctly any other appview
+  if (
+    ctx.cfg.bskyAppView &&
+    proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
+  ) {
+    return { did, url: ctx.cfg.bskyAppView.url }
+  }
+
   const didDoc = await ctx.idResolver.did.resolve(did)
   if (!didDoc) {
     throw new InvalidRequestError('could not resolve proxy did')
@@ -269,14 +278,6 @@ export const parseProxyHeader = async (
   const url = getServiceEndpoint(didDoc, { id: serviceId })
   if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
-  }
-
-  // Special case a configured appview, while still proxying correctly any other appview
-  if (
-    ctx.cfg.bskyAppView &&
-    proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
-  ) {
-    return { did, url: ctx.cfg.bskyAppView.url }
   }
 
   return { did, url }
