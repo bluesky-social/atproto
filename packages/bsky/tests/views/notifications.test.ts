@@ -810,6 +810,7 @@ describe('notification views', () => {
         },
       )
       expect(results.data.notifications.length).toEqual(0)
+      // expect(results.data).toMatchSnapshot()
     })
 
     it('shows posts with hide tag if they are followed', async () => {
@@ -825,6 +826,7 @@ describe('notification views', () => {
         },
       )
       expect(results.data.notifications.length).toEqual(1)
+      // expect(results.data).toMatchSnapshot()
     })
   })
 
