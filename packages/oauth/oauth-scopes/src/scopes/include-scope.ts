@@ -88,15 +88,24 @@ export class IncludeScope {
   public isParentAuthorityOf(otherNsid: '*' | Nsid) {
     if (otherNsid === '*') return false
 
-    const selfGroup = extractNsidGroup(this.nsid)
-    const otherGroup = extractNsidGroup(otherNsid)
+    const lexiconNsid = this.nsid
 
-    if (otherGroup === selfGroup) return true
+    const groupPrefixEnd = lexiconNsid.lastIndexOf('.')
 
-    return (
-      otherGroup.charCodeAt(selfGroup.length) === 46 /* '.' */ &&
-      otherGroup.startsWith(selfGroup)
-    )
+    // There should always be a dot, but since this is a security feature, let's
+    // be strict about it.
+    if (groupPrefixEnd === -1) throw new TypeError('Invalid nsid')
+
+    // Make sure that otherNsid is at least as long as the "group prefix"
+    if (groupPrefixEnd >= otherNsid.length - 1) return false
+
+    // Make sure the "group prefixes" (up to the dot itself) are the same. We
+    // check in reverse order as nsids tend to have long common prefixes.
+    for (let i = groupPrefixEnd; i >= 0; i--) {
+      if (lexiconNsid.charCodeAt(i) !== otherNsid.charCodeAt(i)) return false
+    }
+
+    return true
   }
 
   protected static readonly parser = new Parser(
@@ -147,9 +156,4 @@ function isPermissionForResource<P extends LexPermission, T extends string>(
   type: T,
 ): permission is P & { resource: T } {
   return permission.resource === type
-}
-
-function extractNsidGroup(nsid: Nsid) {
-  const lastDot = nsid.lastIndexOf('.')
-  return nsid.slice(0, lastDot) as `${string}.${string}`
 }
