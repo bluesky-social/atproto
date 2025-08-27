@@ -1,116 +1,66 @@
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds } from './pds'
+import {
+  ServiceMigrationOptions,
+  ServiceProfile,
+  ServiceUserDetails,
+} from './service-profile'
 
-export class OzoneServiceProfile {
-  did?: string
-  key?: Secp256k1Keypair
-  thirdPartyPdsClient: AtpAgent
+export class OzoneServiceProfile extends ServiceProfile {
+  static async create(
+    pds: TestPds,
+    ozoneUrl: string,
+    userDetails = {
+      email: 'mod-authority@test.com',
+      handle: 'mod-authority.test',
+      password: 'hunter2',
+    },
+  ) {
+    const client = pds.getClient()
+    await client.createAccount(userDetails)
 
-  modUserDetails = {
-    email: 'mod-authority@test.com',
-    handle: 'mod-authority.test',
-    password: 'hunter2',
+    const key = await Secp256k1Keypair.create({ exportable: true })
+
+    return new OzoneServiceProfile(pds, client, userDetails, ozoneUrl, key)
   }
 
-  public constructor(public thirdPartyPds: TestPds) {
-    this.thirdPartyPdsClient = this.thirdPartyPds.getClient()
+  protected constructor(
+    pds: TestPds,
+    client: AtpAgent,
+    userDetails: ServiceUserDetails,
+    readonly ozoneUrl: string,
+    readonly key: Secp256k1Keypair,
+  ) {
+    super(pds, client, userDetails)
   }
 
-  async createDidAndKey() {
-    await this.thirdPartyPdsClient.createAccount(this.modUserDetails)
-
-    this.did = this.thirdPartyPdsClient.accountDid
-    this.key = await Secp256k1Keypair.create({ exportable: true })
-    return { did: this.did, key: this.key }
-  }
-
-  async createAppPasswordForVerification(pds: TestPds) {
-    const pdsClient = pds.getClient()
-    await pdsClient.login({
-      identifier: this.modUserDetails.handle,
-      password: this.modUserDetails.password,
-    })
-    const { data } = await pdsClient.com.atproto.server.createAppPassword({
+  async createAppPasswordForVerification() {
+    const { data } = await this.client.com.atproto.server.createAppPassword({
       name: 'ozone-verifier',
     })
     return data.password
   }
 
-  async createServiceDetails(
-    pds: TestPds,
-    ozoneUrl: string,
-    userDetails: { inviteCode?: string } = {},
-  ) {
-    if (!this.did || !this.key) {
-      throw new Error('No DID/key found!')
-    }
-    const pdsClient = pds.getClient()
-    const describeRes = await pdsClient.com.atproto.server.describeServer()
-    const newServerDid = describeRes.data.did
-
-    const serviceJwtRes =
-      await this.thirdPartyPdsClient.com.atproto.server.getServiceAuth({
-        aud: newServerDid,
-        lxm: 'com.atproto.server.createAccount',
-      })
-    const serviceJwt = serviceJwtRes.data.token
-
-    await pdsClient.createAccount(
-      {
-        ...this.modUserDetails,
-        ...userDetails,
-        did: this.did,
+  async migrateTo(pds: TestPds, options: ServiceMigrationOptions = {}) {
+    await super.migrateTo(pds, {
+      ...options,
+      services: {
+        ...options.services,
+        atproto_labeler: {
+          type: 'AtprotoLabeler',
+          endpoint: this.ozoneUrl,
+        },
       },
-      {
-        headers: { authorization: `Bearer ${serviceJwt}` },
-        encoding: 'application/json',
+      verificationMethods: {
+        ...options.verificationMethods,
+        atproto_label: this.key.did(),
       },
-    )
-
-    // For some reason, the tests fail if the client uses the PDS URL to make
-    // its requests. This is a workaround to make the tests pass by simulating
-    // old behavior (that was not relying on the session management).
-    pdsClient.sessionManager.pdsUrl = undefined
-
-    const getDidCredentials =
-      await pdsClient.com.atproto.identity.getRecommendedDidCredentials()
-
-    await this.thirdPartyPdsClient.com.atproto.identity.requestPlcOperationSignature()
-
-    const tokenRes = await this.thirdPartyPds.ctx.accountManager.db.db
-      .selectFrom('email_token')
-      .selectAll()
-      .where('did', '=', this.did)
-      .where('purpose', '=', 'plc_operation')
-      .executeTakeFirst()
-    const token = tokenRes?.token
-    const plcOperationData = {
-      token,
-      ...getDidCredentials.data,
-    }
-
-    if (!plcOperationData.services) plcOperationData.services = {}
-    plcOperationData.services['atproto_labeler'] = {
-      type: 'AtprotoLabeler',
-      endpoint: ozoneUrl,
-    }
-    if (!plcOperationData.verificationMethods)
-      plcOperationData.verificationMethods = {}
-    plcOperationData.verificationMethods['atproto_label'] = this.key.did()
-
-    const plcOp =
-      await this.thirdPartyPdsClient.com.atproto.identity.signPlcOperation(
-        plcOperationData,
-      )
-
-    await pdsClient.com.atproto.identity.submitPlcOperation({
-      operation: plcOp.data.operation,
     })
+  }
 
-    await pdsClient.com.atproto.server.activateAccount()
-
-    await pdsClient.app.bsky.actor.profile.create(
+  async createRecords() {
+    await this.client.app.bsky.actor.profile.create(
       { repo: this.did },
       {
         displayName: 'Dev-env Moderation',
@@ -118,7 +68,7 @@ export class OzoneServiceProfile {
       },
     )
 
-    await pdsClient.app.bsky.labeler.service.create(
+    await this.client.app.bsky.labeler.service.create(
       { repo: this.did, rkey: 'self' },
       {
         policies: {

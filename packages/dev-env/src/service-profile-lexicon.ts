@@ -1,6 +1,6 @@
-import { AtpAgent } from '@atproto/api'
 import { LexiconDoc } from '@atproto/lexicon'
 import { TestPds } from './pds'
+import { ServiceProfile } from './service-profile'
 
 const LEXICONS: readonly LexiconDoc[] = [
   {
@@ -68,8 +68,8 @@ const LEXICONS: readonly LexiconDoc[] = [
   },
 ]
 
-export class LexiconAuthorityProfile {
-  static async create(
+export class LexiconAuthorityProfile extends ServiceProfile {
+  public static async create(
     pds: TestPds,
     userDetails = {
       email: 'lex-authority@test.com',
@@ -80,21 +80,25 @@ export class LexiconAuthorityProfile {
     const client = pds.getClient()
     await client.createAccount(userDetails)
 
+    return new LexiconAuthorityProfile(pds, client, userDetails)
+  }
+
+  async createRecords() {
+    await this.client.app.bsky.actor.profile.create(
+      { repo: this.did },
+      {
+        displayName: 'Lexicon Authority',
+        description: `the repo containing all the lexicons that can be resolved in dev`,
+      },
+    )
+
     for (const doc of LEXICONS) {
-      await client.com.atproto.repo.createRecord({
-        repo: client.assertDid,
+      await this.client.com.atproto.repo.createRecord({
+        repo: this.did,
         collection: 'com.atproto.lexicon.schema',
         rkey: doc.id,
         record: doc,
       })
     }
-
-    return new LexiconAuthorityProfile(client)
-  }
-
-  public constructor(public readonly agent: AtpAgent) {}
-
-  get did() {
-    return this.agent.assertDid
   }
 }

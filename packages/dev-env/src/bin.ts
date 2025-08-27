@@ -20,11 +20,6 @@ const run = async () => {
       hostname: 'localhost',
       enableDidDocWithSession: true,
     },
-    pdsAlt: {
-      port: 2585,
-      hostname: 'localhost',
-      enableDidDocWithSession: true,
-    },
     bsky: {
       dbPostgresSchema: 'bsky',
       port: 2584,
@@ -49,7 +44,6 @@ const run = async () => {
   }
   console.log(`👤 DID Placeholder server http://localhost:${network.plc.port}`)
   console.log(`🌞 Main PDS http://localhost:${network.pds.port}`)
-  console.log(`👽 Alternate PDS http://localhost:${network.pdsAlt.port}`)
   console.log(
     `🔨 Lexicon authority DID ${network.pds.ctx.cfg.lexicon.didAuthority}`,
   )
