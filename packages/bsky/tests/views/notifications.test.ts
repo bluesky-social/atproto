@@ -1,5 +1,6 @@
 import { AppBskyNotificationDeclaration, AtpAgent } from '@atproto/api'
-import { SeedClient, TestBsky, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { TAG_HIDE } from '@atproto/dev-env/dist/seed/thread-v2'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import { ProfileView } from '../../src/lexicon/types/app/bsky/actor/defs'
@@ -18,10 +19,8 @@ import {
   Notification,
   OutputSchema as ListNotificationsOutputSchema,
 } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
-import { InputSchema } from '../../src/lexicon/types/app/bsky/notification/putPreferencesV2'
 import { Namespaces } from '../../src/stash'
 import { forSnapshot, paginateAll } from '../_util'
-import { TAG_HIDE } from '@atproto/dev-env/dist/seed/thread-v2'
 
 type Database = TestNetwork['bsky']['db']
 
