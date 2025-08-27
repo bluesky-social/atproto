@@ -1,3 +1,7 @@
+export interface Matchable<T> {
+  matches(options: T): boolean
+}
+
 export function minIdx(a: number, b: number): number {
   if (a === -1) return b
   if (b === -1) return a

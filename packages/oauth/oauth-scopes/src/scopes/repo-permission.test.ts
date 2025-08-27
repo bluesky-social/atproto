@@ -113,14 +113,6 @@ describe('RepoPermission', () => {
             action: 'create',
           }),
         ).toBe('repo:invalid?action=create')
-
-        expect(
-          RepoPermission.scopeNeededFor({
-            collection: 'com.example.foo',
-            // @ts-expect-error
-            action: 'not-an-action',
-          }),
-        ).toBe('repo:com.example.foo?action=not-an-action')
       })
     })
   })

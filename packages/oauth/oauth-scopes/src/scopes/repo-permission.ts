@@ -1,13 +1,16 @@
-import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
-import { knownValuesValidator } from '../lib/util.js'
-import { Parser } from '../parser.js'
+import { Parser } from '../lib/parser.js'
+import { ResourcePermission } from '../lib/resource-permission.js'
+import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
+  NeArray,
   NeRoArray,
-  ScopeStringSyntax,
   ScopeSyntax,
   isScopeStringFor,
-} from '../syntax.js'
+} from '../lib/syntax.js'
+import { knownValuesValidator } from '../lib/util.js'
+
+export { type Nsid, isNsid }
 
 export const REPO_ACTIONS = Object.freeze([
   'create',
@@ -26,40 +29,24 @@ export type RepoPermissionMatch = {
   action: RepoAction
 }
 
-export class RepoPermission implements Matchable<RepoPermissionMatch> {
+export class RepoPermission
+  implements ResourcePermission<'repo', RepoPermissionMatch>
+{
   constructor(
     public readonly collection: NeRoArray<'*' | Nsid>,
     public readonly action: NeRoArray<RepoAction>,
   ) {}
 
-  get allowsAnyCollection() {
-    return this.collection.includes('*')
-  }
-
-  matches({ action, collection }: RepoPermissionMatch): boolean {
+  matches({ action, collection }: RepoPermissionMatch) {
     return (
       this.action.includes(action) &&
-      (this.allowsAnyCollection ||
+      (this.collection.includes('*') ||
         (this.collection as readonly string[]).includes(collection))
     )
   }
 
-  toString(): string {
-    // Normalize (compress, de-dupe, sort)
-    return RepoPermission.parser.format({
-      collection: this.allowsAnyCollection
-        ? ['*']
-        : this.collection.length > 1
-          ? ([...new Set(this.collection)].sort() as [Nsid, ...Nsid[]])
-          : this.collection,
-      action:
-        this.action === REPO_ACTIONS
-          ? REPO_ACTIONS // No need to filter if the default was used
-          : (REPO_ACTIONS.filter(includedIn, this.action) as [
-              RepoAction,
-              ...RepoAction[],
-            ]),
-    })
+  toString() {
+    return RepoPermission.parser.format(this)
   }
 
   protected static readonly parser = new Parser(
@@ -70,8 +57,11 @@ export class RepoPermission implements Matchable<RepoPermissionMatch> {
         required: true,
         validate: isCollectionParam,
         normalize: (value) => {
-          if (value.length > 1 && value.includes('*')) return ['*'] as const
-          return value
+          if (value.length > 1) {
+            if (value.includes('*')) return ['*'] as const
+            return [...new Set(value)].sort() as NeArray<Nsid>
+          }
+          return value as ['*' | Nsid]
         },
       },
       action: {
@@ -79,6 +69,11 @@ export class RepoPermission implements Matchable<RepoPermissionMatch> {
         required: false,
         validate: isRepoAction,
         default: REPO_ACTIONS,
+        normalize: (value) => {
+          return value === REPO_ACTIONS
+            ? REPO_ACTIONS // No need to filter if the default was used
+            : (REPO_ACTIONS.filter(includedIn, value) as NeArray<RepoAction>)
+        },
       },
     },
     'collection',

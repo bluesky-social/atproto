@@ -1,16 +1,15 @@
 import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
+import { LexPermission, LexPermissionSet } from '../lib/lexicon.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
-import { Parser } from '../parser.js'
-import {
-  LexPermissionSyntax,
-  ScopeStringSyntax,
-  ScopeSyntax,
-  isScopeStringFor,
-} from '../syntax.js'
-import { LexPermission, LexPermissionSet } from '../types.js'
+import { Parser } from '../lib/parser.js'
+import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
+import { ScopeStringSyntax } from '../lib/syntax-string.js'
+import { ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
 import { BlobPermission } from './blob-permission.js'
 import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
+
+export { type LexPermission, type LexPermissionSet, type Nsid, isNsid }
 
 /**
  * This is used to handle "include:" oauth scope values, used to include
@@ -31,9 +30,7 @@ export class IncludeScope {
    * Converts an "include:" to the list of permissions it includes, based on the
    * lexicon defined permission set.
    */
-  toPermissions(
-    permissionSet: LexPermissionSet,
-  ): Array<RpcPermission | RepoPermission | BlobPermission> {
+  toPermissions(permissionSet: LexPermissionSet) {
     return permissionSet.permissions
       .map(this.parsePermission, this)
       .filter(this.isAllowedPermission, this)
@@ -49,8 +46,11 @@ export class IncludeScope {
       // "rpc" permissions can "inherit" their audience from "aud" param defined
       // in the "include:<nsid>?aud=<audience>" scope the permission set was
       // loaded from.
-      const { inheritAud, ...rest } = permission
-      return parsePermission({ ...rest, aud: this.aud })
+      return parsePermission({
+        ...permission,
+        inheritAud: undefined,
+        aud: this.aud,
+      })
     }
 
     return parsePermission(permission)
@@ -81,10 +81,11 @@ export class IncludeScope {
   }
 
   /**
-   * Verifies that an nsid is under the same authority as the nsid of the
-   * `include:` scope.
+   * Verifies that a permission item's nsid is under the same authority as the
+   * nsid of the lexicon itself (which is the same as the nsid of the `include:`
+   * scope).
    */
-  protected isParentAuthorityOf(otherNsid: '*' | Nsid) {
+  public isParentAuthorityOf(otherNsid: '*' | Nsid) {
     if (otherNsid === '*') return false
 
     const selfGroup = extractNsidGroup(this.nsid)

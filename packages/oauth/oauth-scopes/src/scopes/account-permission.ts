@@ -1,7 +1,8 @@
-import { Matchable } from '../lib/matchable.js'
+import { Parser } from '../lib/parser.js'
+import { ResourcePermission } from '../lib/resource-permission.js'
+import { ScopeStringSyntax } from '../lib/syntax-string.js'
+import { ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
-import { Parser } from '../parser.js'
-import { ScopeStringSyntax, ScopeSyntax, isScopeStringFor } from '../syntax.js'
 
 export const ACCOUNT_ATTRIBUTES = Object.freeze([
   'email',
@@ -18,13 +19,15 @@ export type AccountPermissionMatch = {
   action: AccountAction
 }
 
-export class AccountPermission implements Matchable<AccountPermissionMatch> {
+export class AccountPermission
+  implements ResourcePermission<'account', AccountPermissionMatch>
+{
   constructor(
     public readonly attr: AccountAttribute,
     public readonly action: AccountAction,
   ) {}
 
-  matches(options: AccountPermissionMatch): boolean {
+  matches(options: AccountPermissionMatch) {
     return (
       this.attr === options.attr &&
       (this.action === 'manage' || this.action === options.action)

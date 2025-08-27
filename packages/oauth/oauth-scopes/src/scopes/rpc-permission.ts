@@ -1,15 +1,11 @@
 import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
-import { Matchable } from '../lib/matchable.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
-import { Parser } from '../parser.js'
-import {
-  NeRoArray,
-  ScopeStringSyntax,
-  ScopeSyntax,
-  isScopeStringFor,
-} from '../syntax.js'
+import { Parser } from '../lib/parser.js'
+import { ResourcePermission } from '../lib/resource-permission.js'
+import { ScopeStringSyntax } from '../lib/syntax-string.js'
+import { NeRoArray, ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
 
-export { type AtprotoAudience, isAtprotoAudience }
+export { type AtprotoAudience, type Nsid, isAtprotoAudience, isNsid }
 
 export type LxmParam = '*' | Nsid
 export const isLxmParam = (value: unknown): value is LxmParam =>
@@ -23,13 +19,15 @@ export type RpcPermissionMatch = {
   aud: string
 }
 
-export class RpcPermission implements Matchable<RpcPermissionMatch> {
+export class RpcPermission
+  implements ResourcePermission<'rpc', RpcPermissionMatch>
+{
   constructor(
     public readonly aud: '*' | AtprotoAudience,
     public readonly lxm: NeRoArray<'*' | Nsid>,
   ) {}
 
-  matches(options: RpcPermissionMatch): boolean {
+  matches(options: RpcPermissionMatch) {
     const { aud, lxm } = this
     return (
       (aud === '*' || aud === options.aud) &&
@@ -37,7 +35,7 @@ export class RpcPermission implements Matchable<RpcPermissionMatch> {
     )
   }
 
-  toString(): string {
+  toString() {
     return RpcPermission.parser.format(this)
   }
 

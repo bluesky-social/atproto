@@ -208,13 +208,15 @@ const lexPermission = z.intersection(
   }),
   z.record(
     z.string(),
-    z.union([
-      z.array(z.union([z.string(), z.number().int(), z.boolean()])),
+    z
+      .union([
+        z.array(z.union([z.string(), z.number().int(), z.boolean()])),
 
-      z.boolean(),
-      z.number().int(),
-      z.string(),
-    ]),
+        z.boolean(),
+        z.number().int(),
+        z.string(),
+      ])
+      .optional(),
   ),
 )
 
@@ -227,7 +229,7 @@ export const lexPermissionSet = z.object({
   'title:lang': lexLang.optional(),
   detail: z.string().optional(),
   'detail:lang': lexLang.optional(),
-  permissions: z.array(lexPermission).nonempty(),
+  permissions: z.array(lexPermission),
 })
 
 export type LexPermissionSet = z.infer<typeof lexPermissionSet>

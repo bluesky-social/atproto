@@ -1,7 +1,6 @@
 import { LexPermissionSet } from '@atproto/lexicon'
 import { LexiconResolver } from '@atproto/lexicon-resolver'
 import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
-import { stringify } from '../lib/util/function.js'
 import { LexiconGetter } from './lexicon-getter.js'
 import { LexiconStore } from './lexicon-store.js'
 
@@ -67,8 +66,8 @@ export class LexiconManager {
 }
 
 function parseScope(scope?: string) {
-  const otherScopes: string[] = []
   const includeScopes: IncludeScope[] = []
+  const otherScopes: string[] = []
 
   if (scope) {
     for (const scopeValue of scope.split(' ')) {
@@ -82,8 +81,8 @@ function parseScope(scope?: string) {
   }
 
   return {
-    otherScopes,
     includeScopes,
+    otherScopes,
   }
 }
 
@@ -100,5 +99,5 @@ export function nsidToPermissionScopes(
   includeScope: IncludeScope,
 ): string[] {
   const permissionSet = this.get(includeScope.nsid)!
-  return includeScope.toPermissions(permissionSet).map(stringify)
+  return includeScope.toPermissions(permissionSet).map(String)
 }

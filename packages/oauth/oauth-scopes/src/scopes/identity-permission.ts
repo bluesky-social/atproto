@@ -1,7 +1,8 @@
-import { Matchable } from '../lib/matchable.js'
+import { Parser } from '../lib/parser.js'
+import { ResourcePermission } from '../lib/resource-permission.js'
+import { ScopeStringSyntax } from '../lib/syntax-string.js'
+import { ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
-import { Parser } from '../parser.js'
-import { ScopeStringSyntax, ScopeSyntax, isScopeStringFor } from '../syntax.js'
 
 export const IDENTITY_ATTRIBUTES = Object.freeze(['handle', '*'] as const)
 export type IdentityAttribute = (typeof IDENTITY_ATTRIBUTES)[number]
@@ -10,10 +11,12 @@ export type IdentityPermissionMatch = {
   attr: IdentityAttribute
 }
 
-export class IdentityPermission implements Matchable<IdentityPermissionMatch> {
+export class IdentityPermission
+  implements ResourcePermission<'identity', IdentityPermissionMatch>
+{
   constructor(public readonly attr: IdentityAttribute) {}
 
-  matches(options: IdentityPermissionMatch): boolean {
+  matches(options: IdentityPermissionMatch) {
     return this.attr === '*' || this.attr === options.attr
   }
 

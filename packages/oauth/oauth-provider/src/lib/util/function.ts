@@ -37,7 +37,3 @@ export function invokeOnce<T extends (this: any, ...a: any[]) => any>(
 export function isNonNullable<X>(x: X): x is NonNullable<X> {
   return x != null
 }
-
-export function stringify(nonNullable: { toString: () => string }): string {
-  return nonNullable.toString()
-}

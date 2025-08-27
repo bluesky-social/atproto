@@ -1,13 +1,16 @@
-import { Matchable } from '../lib/matchable.js'
 import { Accept, isAccept, matchesAnyAccept } from '../lib/mime.js'
-import { Parser } from '../parser.js'
+import { Parser } from '../lib/parser.js'
+import { ResourcePermission } from '../lib/resource-permission.js'
+import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
+  NeArray,
   NeRoArray,
   ParamValue,
-  ScopeStringSyntax,
   ScopeSyntax,
   isScopeStringFor,
-} from '../syntax.js'
+} from '../lib/syntax.js'
+
+export { type Accept }
 
 export const DEFAULT_ACCEPT = Object.freeze(['*/*'] as const)
 
@@ -15,7 +18,9 @@ export type BlobPermissionMatch = {
   mime: string
 }
 
-export class BlobPermission implements Matchable<BlobPermissionMatch> {
+export class BlobPermission
+  implements ResourcePermission<'blob', BlobPermissionMatch>
+{
   constructor(public readonly accept: NeRoArray<Accept>) {}
 
   matches(options: BlobPermissionMatch) {
@@ -37,10 +42,10 @@ export class BlobPermission implements Matchable<BlobPermissionMatch> {
           // Returns a more concise representation of the accept values.
           if (value.includes('*/*')) return DEFAULT_ACCEPT
 
-          return value.map(toLowerCase).filter(isNonRedundant) as [
-            Accept,
-            ...Accept[],
-          ]
+          return value
+            .map(toLowerCase)
+            .filter(isNonRedundant)
+            .sort() as NeArray<Accept>
         },
       },
     },

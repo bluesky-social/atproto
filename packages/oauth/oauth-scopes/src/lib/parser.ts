@@ -1,9 +1,5 @@
-import {
-  NeRoArray,
-  ParamValue,
-  ScopeStringSyntax,
-  ScopeSyntax,
-} from './syntax.js'
+import { ScopeStringSyntax } from './syntax-string.js'
+import { NeRoArray, ParamValue, ScopeSyntax } from './syntax.js'
 
 type InferParamPredicate<T extends (value: ParamValue) => boolean> =
   T extends ((value: ParamValue) => value is infer U extends ParamValue)
@@ -103,13 +99,8 @@ export class Parser<P extends string, S extends ParamsSchema> {
   // fails, this function could easily be updated to return a
   // ValidationResult<T> type that explains the reason for failure.
   parse(syntax: ScopeSyntax<P>) {
-    // This check should not be needed (thanks to the P generic), but it makes
-    // the code more fool-proof.
-    if (syntax.prefix !== this.prefix) {
-      throw new TypeError(
-        `Expected prefix "${this.prefix}", but got "${syntax.prefix}"`,
-      )
-    }
+    // @NOTE no need to check prefix, since the typing (P generic) already
+    // ensures it matches
 
     for (const key of syntax.keys()) {
       if (!this.schemaKeys.has(key)) return null

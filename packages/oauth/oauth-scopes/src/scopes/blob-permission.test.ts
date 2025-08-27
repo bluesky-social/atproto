@@ -93,7 +93,7 @@ describe('BlobPermission', () => {
     describe('toString', () => {
       it('should format scope with accept parameter', () => {
         const scope = new BlobPermission(['image/png', 'image/jpeg'])
-        expect(scope.toString()).toBe('blob?accept=image/png&accept=image/jpeg')
+        expect(scope.toString()).toBe('blob?accept=image/jpeg&accept=image/png')
       })
 
       it('should strip redundant accept parameters', () => {
@@ -118,7 +118,7 @@ describe('BlobPermission', () => {
 
       it('should use query format for multiple accepts', () => {
         expect(new BlobPermission(['image/png', 'image/jpeg']).toString()).toBe(
-          'blob?accept=image/png&accept=image/jpeg',
+          'blob?accept=image/jpeg&accept=image/png',
         )
       })
     })

@@ -1,53 +1,5 @@
-import { minIdx } from './lib/util.js'
-import type { LexPermission } from './types.js'
-
-export type ParamValue = string | number | boolean
-
-export type NeArray<T> = [T, ...T[]]
-
-/**
- * Non-empty readonly array
- */
-export type NeRoArray<T> = readonly [T, ...T[]]
-
-export type ScopeStringFor<P extends string> =
-  | P
-  | `${P}:${string}`
-  | `${P}?${string}`
-
-/**
- * Allows to quickly check if a scope is for a specific resource.
- */
-export function isScopeStringFor<P extends string>(
-  value: string,
-  prefix: P,
-): value is ScopeStringFor<P> {
-  if (value.length > prefix.length) {
-    // First, check the next char is either : or ?
-    const nextChar = value.charCodeAt(prefix.length)
-    if (nextChar !== 0x3a /* : */ && nextChar !== 0x3f /* ? */) {
-      return false
-    }
-
-    // Then check the full prefix
-    return value.startsWith(prefix)
-  } else {
-    // value and prefix must be equal
-    return value === prefix
-  }
-}
-
-/**
- * Abstract interface that allows parsing various syntaxes into permission
- * representations.
- */
-export interface ScopeSyntax<P extends string> {
-  readonly prefix: P
-  readonly positional?: ParamValue
-  keys(): Iterable<string>
-  getSingle(key: string): ParamValue | null | undefined
-  getMulti(key: string): ParamValue[] | null | undefined
-}
+import { ScopeStringFor, ScopeSyntax } from './syntax.js'
+import { minIdx } from './util.js'
 
 /**
  * Translates a scope string into a {@link ScopeSyntax}.
@@ -59,35 +11,31 @@ export class ScopeStringSyntax<P extends string> implements ScopeSyntax<P> {
     readonly params?: Readonly<URLSearchParams>,
   ) {}
 
-  *keys(): Iterable<string> {
-    const { params } = this
-    if (params) yield* params.keys()
+  *keys() {
+    if (this.params) yield* this.params.keys()
   }
 
   getSingle(key: string) {
-    const { params } = this
-    if (!params?.has(key)) return undefined
-    const value = params.getAll(key)
+    if (!this.params?.has(key)) return undefined
+    const value = this.params.getAll(key)
     if (value.length > 1) return null
     return value[0]!
   }
 
   getMulti(key: string) {
-    const { params } = this
-    if (!params?.has(key)) return undefined
-    return params.getAll(key)
+    if (!this.params?.has(key)) return undefined
+    return this.params.getAll(key)
   }
 
   toString() {
     let scope: string = this.prefix
 
-    const { positional, params } = this
-    if (positional !== undefined) {
-      scope += `:${normalizeURIComponent(encodeURIComponent(positional))}`
+    if (this.positional !== undefined) {
+      scope += `:${normalizeURIComponent(encodeURIComponent(this.positional))}`
     }
 
-    if (params?.size) {
-      scope += `?${normalizeURIComponent(params.toString())}`
+    if (this.params?.size) {
+      scope += `?${normalizeURIComponent(this.params.toString())}`
     }
 
     return scope as ScopeStringFor<P>
@@ -124,55 +72,6 @@ export class ScopeStringSyntax<P extends string> implements ScopeSyntax<P> {
         : undefined
 
     return new ScopeStringSyntax(prefix, positional, params)
-  }
-}
-
-/**
- * Translates a {@link LexPermission} into a {@link ScopeSyntax}.
- */
-export class LexPermissionSyntax<P extends string = string>
-  implements ScopeSyntax<P>
-{
-  constructor(
-    readonly lexPermission: Readonly<LexPermission & { resource: P }>,
-  ) {}
-
-  get prefix() {
-    return this.lexPermission.resource
-  }
-
-  get positional() {
-    return undefined
-  }
-
-  get(key: string) {
-    // Ignore reserved keywords
-    if (key === 'type') return undefined
-    if (key === 'resource') return undefined
-
-    // Ignore inherited properties (toString(), etc.)
-    if (!Object.hasOwn(this.lexPermission, key)) return undefined
-
-    return this.lexPermission[key]
-  }
-
-  *keys(): Generator<string, void, unknown> {
-    for (const key of Object.keys(this.lexPermission)) {
-      if (this.get(key) !== undefined) yield key
-    }
-  }
-
-  getSingle(key: string) {
-    const value = this.get(key)
-    if (Array.isArray(value)) return null
-    return value
-  }
-
-  getMulti(key: string) {
-    const value = this.get(key)
-    if (value === undefined) return undefined
-    if (!Array.isArray(value)) return null
-    return value
   }
 }
 

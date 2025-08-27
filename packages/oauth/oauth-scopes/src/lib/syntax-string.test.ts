@@ -1,50 +1,5 @@
-import {
-  ScopeStringFor,
-  ScopeStringSyntax,
-  isScopeStringFor,
-} from './syntax.js'
-
-describe('isScopeStringFor', () => {
-  describe('exact match', () => {
-    it('should return true for exact match', () => {
-      expect(isScopeStringFor('prefix', 'prefix')).toBe(true)
-    })
-
-    it('should return false for different prefix', () => {
-      expect(isScopeStringFor('prefix', 'differentResource')).toBe(false)
-    })
-  })
-
-  describe('with positional parameter', () => {
-    it('should return true for exact match with positional parameter', () => {
-      expect(isScopeStringFor('prefix:positional', 'prefix')).toBe(true)
-    })
-
-    it('should return false for different prefix with positional parameter', () => {
-      expect(isScopeStringFor('differentResource:positional', 'prefix')).toBe(
-        false,
-      )
-    })
-  })
-
-  describe('with named parameters', () => {
-    it('should return true for exact match with named parameters', () => {
-      expect(isScopeStringFor('prefix?param=value', 'prefix')).toBe(true)
-    })
-
-    it('should return false for different prefix with named parameters', () => {
-      expect(isScopeStringFor('prefix', 'prefi')).toBe(false)
-      expect(isScopeStringFor('prefix:pos', 'prefi')).toBe(false)
-      expect(isScopeStringFor('prefix?param=value', 'prefi')).toBe(false)
-      expect(isScopeStringFor('prefix', 'fix')).toBe(false)
-      expect(isScopeStringFor('prefix:pos', 'fix')).toBe(false)
-      expect(isScopeStringFor('prefix?param=value', 'fix')).toBe(false)
-      expect(isScopeStringFor('differentResource?param=value', 'prefix')).toBe(
-        false,
-      )
-    })
-  })
-})
+import { ScopeStringSyntax } from './syntax-string.js'
+import { ScopeStringFor } from './syntax.js'
 
 describe('ScopeStringSyntax', () => {
   for (const { scope, content } of [
@@ -147,29 +102,29 @@ describe('ScopeStringSyntax', () => {
       }
     })
   }
-})
 
-describe('invalid positional parameters', () => {
-  it('should return null for positional parameters used together with named parameters', () => {
-    const syntax = ScopeStringSyntax.fromString('my-res:pos?x=value')
-    expect(syntax.getSingle('x')).toBe('value')
-    expect(syntax.getMulti('x')).toEqual(['value'])
-  })
-})
-
-describe('url encoding', () => {
-  it('should handle URL encoding in positional parameters', () => {
-    const syntax = ScopeStringSyntax.fromString('my-res:my%20pos')
-    expect(syntax.positional).toBe('my pos')
+  describe('invalid positional parameters', () => {
+    it('should return null for positional parameters used together with named parameters', () => {
+      const syntax = ScopeStringSyntax.fromString('my-res:pos?x=value')
+      expect(syntax.getSingle('x')).toBe('value')
+      expect(syntax.getMulti('x')).toEqual(['value'])
+    })
   })
 
-  it('should handle URL encoding in named parameters', () => {
-    const syntax = ScopeStringSyntax.fromString('my-res?x=my%20value')
-    expect(syntax.getSingle('x')).toBe('my value')
-  })
+  describe('url encoding', () => {
+    it('should handle URL encoding in positional parameters', () => {
+      const syntax = ScopeStringSyntax.fromString('my-res:my%20pos')
+      expect(syntax.positional).toBe('my pos')
+    })
 
-  it(`should allow colon (:) in positional parameters`, () => {
-    const syntax = ScopeStringSyntax.fromString('my-res:my:pos')
-    expect(syntax.positional).toBe('my:pos')
+    it('should handle URL encoding in named parameters', () => {
+      const syntax = ScopeStringSyntax.fromString('my-res?x=my%20value')
+      expect(syntax.getSingle('x')).toBe('my value')
+    })
+
+    it(`should allow colon (:) in positional parameters`, () => {
+      const syntax = ScopeStringSyntax.fromString('my-res:my:pos')
+      expect(syntax.positional).toBe('my:pos')
+    })
   })
 })
