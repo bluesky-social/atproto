@@ -789,6 +789,7 @@ describe('notification views', () => {
   describe('handles hide tag filters', () => {
     beforeAll(async () => {
       const danPost = await sc.post(sc.dids.dan, 'hello friends')
+      await network.processAll()
       const eveReply = await sc.reply(
         sc.dids.eve,
         danPost.ref,
@@ -810,7 +811,7 @@ describe('notification views', () => {
         },
       )
       expect(results.data.notifications.length).toEqual(0)
-      // expect(results.data).toMatchSnapshot()
+      expect(forSnapshot(results.data.notifications)).toMatchSnapshot()
     })
 
     it('shows posts with hide tag if they are followed', async () => {
@@ -826,7 +827,7 @@ describe('notification views', () => {
         },
       )
       expect(results.data.notifications.length).toEqual(1)
-      // expect(results.data).toMatchSnapshot()
+      expect(forSnapshot(results.data.notifications)).toMatchSnapshot()
     })
   })
 
