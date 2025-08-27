@@ -87,12 +87,6 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.pds,
     })
 
-    await lexiconAuthorityProfile.migrateTo(pds)
-    await lexiconAuthorityProfile.createRecords()
-
-    await ozoneServiceProfile.migrateTo(pds)
-    await ozoneServiceProfile.createRecords()
-
     const ozone = await TestOzone.create({
       port: ozonePort,
       plcUrl: plc.url,
@@ -110,6 +104,12 @@ export class TestNetwork extends TestNetworkNoAppView {
       verifierPassword: 'temp',
       ...params.ozone,
     })
+
+    await ozoneServiceProfile.migrateTo(pds)
+    await ozoneServiceProfile.createRecords()
+
+    await lexiconAuthorityProfile.migrateTo(pds)
+    await lexiconAuthorityProfile.createRecords()
 
     await ozone.addAdminDid(ozoneServiceProfile.did)
 
