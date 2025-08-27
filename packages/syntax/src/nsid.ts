@@ -59,28 +59,26 @@ export function parseNsid(nsid: string): string[] {
 }
 
 export function isValidNsid(nsid: string): boolean {
-  return validateNsid(nsid).success
+  // Since the regex version is more performant for valid NSIDs, we use it when
+  // we don't care about error details.
+  return validateNsidRegex(nsid).success
 }
+
+type ValidateResult<T> =
+  | { success: true; value: T }
+  | { success: false; message: string }
 
 // Human readable constraints on NSID:
 // - a valid domain in reversed notation
 // - followed by an additional period-separated name, which is camel-case letters
-export function validateNsid(
-  value: string,
-): { success: true; value: string[] } | { success: false; message: string } {
+export function validateNsid(value: string): ValidateResult<string[]> {
   if (value.length > 253 + 1 + 63) {
     return {
       success: false,
       message: 'NSID is too long (317 chars max)',
     }
   }
-  if (startsWithNumber(value)) {
-    return {
-      success: false,
-      message: 'NSID first part may not start with a digit',
-    }
-  }
-  if (!/^[a-zA-Z0-9.-]*$/.test(value)) {
+  if (hasDisallowedCharacters(value)) {
     return {
       success: false,
       message:
@@ -92,13 +90,6 @@ export function validateNsid(
     return {
       success: false,
       message: 'NSID needs at least three parts',
-    }
-  }
-  if (!isValidIdentifier(labels[labels.length - 1])) {
-    return {
-      success: false,
-      message:
-        'NSID name part must be only letters and digits (and no leading digit)',
     }
   }
   for (const l of labels) {
@@ -121,10 +112,27 @@ export function validateNsid(
       }
     }
   }
+  if (startsWithNumber(labels[0])) {
+    return {
+      success: false,
+      message: 'NSID first part may not start with a digit',
+    }
+  }
+  if (!isValidIdentifier(labels[labels.length - 1])) {
+    return {
+      success: false,
+      message:
+        'NSID name part must be only letters and digits (and no leading digit)',
+    }
+  }
   return {
     success: true,
     value: labels,
   }
+}
+
+function hasDisallowedCharacters(v) {
+  return !/^[a-zA-Z0-9.-]*$/.test(v)
 }
 
 function startsWithNumber(v: string) {
@@ -141,22 +149,50 @@ function endsWithHyphen(v: string) {
 }
 
 function isValidIdentifier(v: string) {
-  return /^[a-zA-Z][a-zA-Z0-9]*$/.test(v)
+  // Note, since we already know that "v" only contains [a-zA-Z0-9-], we can
+  // simplify the following regex by checking only the first char and presence
+  // of "-".
+
+  // return /^[a-zA-Z][a-zA-Z0-9]*$/.test(v)
+  return !startsWithNumber(v) && !v.includes('-')
 }
 
-/** @deprecated use {@link ensureValidNsid} */
-export const ensureValidNsidRegex = (nsid: string): void => {
-  // simple regex to enforce most constraints via just regex and length.
-  // hand wrote this regex based on above constraints
+/**
+ * @deprecated Use {@link ensureValidNsid} if you care about error details,
+ * {@link parseNsid}/{@link NSID.parse} if you need the parsed segments, or
+ * {@link isValidNsid} if you just want a boolean.
+ */
+export function ensureValidNsidRegex(nsid: string): void {
+  const result = validateNsidRegex(nsid)
+  if (!result.success) throw new InvalidNsidError(result.message)
+}
+
+/**
+ * Regexp based validation that behaves identically to the previous code but
+ * provides less detailed error messages (while being 20% to 50% faster).
+ */
+function validateNsidRegex(value: string): ValidateResult<string> {
+  if (value.length > 253 + 1 + 63) {
+    return {
+      success: false,
+      message: 'NSID is too long (317 chars max)',
+    }
+  }
+
   if (
-    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/.test(
-      nsid,
+    !/^[a-zA-Z](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?:\.[a-zA-Z](?:[a-zA-Z0-9]{0,62})?)$/.test(
+      value,
     )
   ) {
-    throw new InvalidNsidError("NSID didn't validate via regex")
+    return {
+      success: false,
+      message: "NSID didn't validate via regex",
+    }
   }
-  if (nsid.length > 253 + 1 + 63) {
-    throw new InvalidNsidError('NSID is too long (317 chars max)')
+
+  return {
+    success: true,
+    value,
   }
 }
 
