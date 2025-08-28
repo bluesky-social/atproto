@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.138
+
+### Patch Changes
+
+- [#4142](https://github.com/bluesky-social/atproto/pull/4142) [`66dbf8db6`](https://github.com/bluesky-social/atproto/commit/66dbf8db6dd9defeee140accd2e7b25d13feb8b6) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - add com.atproto.temp.revokeAccountCredentials lexicon schema
+
+- Updated dependencies [[`66dbf8db6`](https://github.com/bluesky-social/atproto/commit/66dbf8db6dd9defeee140accd2e7b25d13feb8b6)]:
+  - @atproto/api@0.16.5
+
 ## 0.1.137
 
 ### Patch Changes
