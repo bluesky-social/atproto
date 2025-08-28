@@ -355,6 +355,19 @@ export class AppContext {
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
+        onDecodeToken: entrywayAgent
+          ? async ({ payload }) => {
+              if (!payload.scope) return
+              if (!/^enc:[^ ]+$/.test(payload.scope)) return
+
+              // @TODO redis cache (falling back to memory cache)
+              const { data } = entrywayAgent.com.atproto.temp.loadScope({
+                scope: payload.scope,
+              })
+
+              return { ...payload, scope: data.scope }
+            }
+          : undefined,
       })
 
     const authVerifier = new AuthVerifier(
