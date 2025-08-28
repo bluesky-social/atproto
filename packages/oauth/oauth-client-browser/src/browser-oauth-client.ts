@@ -344,7 +344,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       }
     }
 
-    return null
+    return undefined
   }
 
   private readCallbackParams(): URLSearchParams | null {
@@ -369,7 +369,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     const redirectUrl = this.readRedirectUrl()
 
     // Not a (valid) OAuth redirect
-    if (!params || !redirectUrl) return null
+    if (!params) return null
 
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
