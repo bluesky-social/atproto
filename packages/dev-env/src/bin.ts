@@ -50,6 +50,7 @@ const run = async () => {
   console.log(`🗼 Ozone server http://localhost:${network.ozone.port}`)
   console.log(`🗼 Ozone service DID ${network.ozone.ctx.cfg.service.did}`)
   console.log(`🌅 Bsky Appview http://localhost:${network.bsky.port}`)
+  console.log(`🌅 Bsky Appview DID ${network.bsky.serverDid}`)
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator (${fg.did}) http://localhost:${fg.port}`)
   }

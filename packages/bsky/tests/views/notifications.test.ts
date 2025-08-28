@@ -1,5 +1,6 @@
 import { AppBskyNotificationDeclaration, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { TAG_HIDE } from '@atproto/dev-env/dist/seed/thread-v2'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
 import { ids } from '../../src/lexicon/lexicons'
 import { ProfileView } from '../../src/lexicon/types/app/bsky/actor/defs'
@@ -46,6 +47,9 @@ describe('notification views', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
+      bsky: {
+        threadTagsHide: new Set([TAG_HIDE]),
+      },
     })
     db = network.bsky.db
     agent = network.bsky.getClient()
@@ -82,6 +86,7 @@ describe('notification views', () => {
       handle: 'blocked.test',
       password: 'blocked-pass',
     })
+
     await network.processAll()
 
     alice = sc.dids.alice
@@ -781,6 +786,51 @@ describe('notification views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  describe('handles hide tag filters', () => {
+    beforeAll(async () => {
+      const danPost = await sc.post(sc.dids.dan, 'hello friends')
+      await network.processAll()
+      const eveReply = await sc.reply(
+        sc.dids.eve,
+        danPost.ref,
+        danPost.ref,
+        'no thanks',
+      )
+      await network.processAll()
+      await createTag(db, { uri: eveReply.ref.uri.toString(), val: TAG_HIDE })
+    })
+
+    it('filters posts with hide tag', async () => {
+      const results = await agent.app.bsky.notification.listNotifications(
+        { reasons: ['reply'] },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      expect(results.data.notifications.length).toEqual(0)
+      expect(forSnapshot(results.data.notifications)).toMatchSnapshot()
+    })
+
+    it('shows posts with hide tag if they are followed', async () => {
+      await sc.follow(dan, eve)
+      await network.processAll()
+      const results = await agent.app.bsky.notification.listNotifications(
+        { reasons: ['reply'] },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      expect(results.data.notifications.length).toEqual(1)
+      expect(forSnapshot(results.data.notifications)).toMatchSnapshot()
+    })
+  })
+
   describe('notifications delay', () => {
     const notificationsDelayMs = 5_000
 
@@ -1478,4 +1528,21 @@ const clearPrivateData = async (db: Database) => {
 
 const clearActivitySubscription = async (db: Database) => {
   await db.db.deleteFrom('activity_subscription').execute()
+}
+
+const createTag = async (
+  db: Database,
+  opts: {
+    uri: string
+    val: string
+  },
+) => {
+  await db.db
+    .updateTable('record')
+    .set({
+      tags: JSON.stringify([opts.val]),
+    })
+    .where('uri', '=', opts.uri)
+    .returningAll()
+    .execute()
 }
