@@ -333,17 +333,15 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     })
   }
 
-  private readRedirectUrl(): URL | null {
-    const matchesLocation = (url: URL) =>
-      location.origin === url.origin && location.pathname === url.pathname
-    const redirectUrls = this.clientMetadata.redirect_uris.map(
-      (uri) => new URL(uri),
-    )
-
-    // Only if the current URL is one of the redirect_uris
-    const matchingRedirectUrl = redirectUrls.find(matchesLocation)
-    if (matchingRedirectUrl) {
-      return matchingRedirectUrl
+  private readRedirectUrl() {
+    for (const uri of this.clientMetadata.redirect_uris) {
+      const url = new URL(uri)
+      if (
+        location.origin === url.origin &&
+        location.pathname === url.pathname
+      ) {
+        return uri
+      }
     }
 
     return null
@@ -405,7 +403,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
 
     return this.callback(params, {
-      redirect_uri: redirectUrl.toString(),
+      redirect_uri: redirectUrl,
     })
       .then(async (result) => {
         if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
