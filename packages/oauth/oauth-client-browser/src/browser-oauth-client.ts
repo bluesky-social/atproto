@@ -10,6 +10,7 @@ import {
 } from '@atproto/oauth-client'
 import {
   OAuthClientMetadataInput,
+  OAuthRedirectUri,
   OAuthResponseMode,
   assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
@@ -333,7 +334,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     })
   }
 
-  private readRedirectUrl(): URL | null {
+  private readRedirectUri(): OAuthRedirectUri | undefined {
     const matchesLocation = (url: URL) =>
       location.origin === url.origin && location.pathname === url.pathname
     const redirectUrls = this.clientMetadata.redirect_uris.map(
@@ -341,12 +342,12 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     )
 
     // Only if the current URL is one of the redirect_uris
-    const matchingRedirectUrl = redirectUrls.find(matchesLocation)
-    if (matchingRedirectUrl) {
-      return matchingRedirectUrl
+    const redirectUrl = redirectUrls.find(matchesLocation)
+    if (!redirectUrl) {
+      return undefined
     }
 
-    return null
+    return redirectUrl.toString() as OAuthRedirectUri
   }
 
   private readCallbackParams(): URLSearchParams | null {
@@ -361,17 +362,17 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
 
     // Only if the current URL is one of the redirect_uris
-    if (!this.readRedirectUrl()) return null
+    if (!this.readRedirectUri()) return null
 
     return params
   }
 
   async signInCallback() {
     const params = this.readCallbackParams()
-    const redirectUrl = this.readRedirectUrl()
+    const redirectUri = this.readRedirectUri()
 
     // Not a (valid) OAuth redirect
-    if (!params || !redirectUrl) return null
+    if (!params) return null
 
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
@@ -405,7 +406,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
 
     return this.callback(params, {
-      redirect_uri: redirectUrl.toString(),
+      redirect_uri: redirectUri,
     })
       .then(async (result) => {
         if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
