@@ -1,32 +1,38 @@
 import { jwkAlgorithms } from './alg.js'
-import { JwkError } from './errors.js'
-import { Jwk, jwkSchema } from './jwk.js'
+import {
+  Jwk,
+  KeyUsage,
+  isPrivateJwk,
+  isSharedSecretJwk,
+  jwkSchema,
+} from './jwk.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
 const jwkSchemaReadonly = jwkSchema.readonly()
 
+function isPublicKeyUsage(usage: KeyUsage): boolean {
+  return usage === 'verify' || usage === 'decrypt'
+}
+
+export type KeyMatchOptions = {
+  usage?: KeyUsage
+  kid?: string | string[]
+  alg?: string | string[]
+}
+
 export abstract class Key<J extends Jwk = Jwk> {
-  constructor(protected readonly jwk: Readonly<J>) {
-    // @TODO "use" is actually only for public keys. We should allow missing
-    // "use" here and automatically add it to the exposed `publicJwk`
+  constructor(protected readonly jwk: Readonly<J>) {}
 
-    // A key should always be used either for signing or encryption.
-    if (!jwk.use) throw new JwkError('Missing "use" Parameter value')
-  }
-
+  @cachedGetter
   get isPrivate(): boolean {
-    const { jwk } = this
-    if ('d' in jwk && jwk.d !== undefined) return true
-    if ('k' in jwk && jwk.k !== undefined) return true
-    return false
+    return isPrivateJwk(this.jwk)
   }
 
+  @cachedGetter
   get isSymetric(): boolean {
-    const { jwk } = this
-    if ('k' in jwk && jwk.k !== undefined) return true
-    return false
+    return isSharedSecretJwk(this.jwk)
   }
 
   get privateJwk(): Readonly<J> | undefined {
@@ -39,10 +45,27 @@ export abstract class Key<J extends Jwk = Jwk> {
     | undefined {
     if (this.isSymetric) return undefined
 
+    // Translate private ops into public ops
+    const publicOps = this.jwk.key_ops
+      ? Array.from(
+          new Set(
+            this.jwk.key_ops
+              .map((op) =>
+                op === 'sign' ? 'verify' : op === 'encrypt' ? 'decrypt' : op,
+              )
+              .filter(isPublicKeyUsage),
+          ),
+        )
+      : undefined
+
+    // No possible ops
+    if (publicOps?.length === 0) return undefined
+
     return jwkSchemaReadonly.parse({
       ...this.jwk,
       d: undefined,
       k: undefined,
+      key_ops: publicOps,
     }) as Exclude<J, { kty: 'oct' }> & { d?: never }
   }
 
@@ -53,8 +76,12 @@ export abstract class Key<J extends Jwk = Jwk> {
     return jwkSchemaReadonly.parse({ crv, e, kty, n, x, y })
   }
 
-  get use() {
-    return this.jwk.use!
+  get use(): 'sig' | 'enc' | undefined {
+    return this.jwk.use
+  }
+
+  get ops(): readonly KeyUsage[] | undefined {
+    return this.jwk.key_ops
   }
 
   /**
@@ -63,11 +90,11 @@ export abstract class Key<J extends Jwk = Jwk> {
    *
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7518#section-3.1 | "alg" (Algorithm) Header Parameter Values for JWS}
    */
-  get alg() {
+  get alg(): string | undefined {
     return this.jwk.alg
   }
 
-  get kid() {
+  get kid(): string | undefined {
     return this.jwk.kid
   }
 
@@ -82,6 +109,54 @@ export abstract class Key<J extends Jwk = Jwk> {
   @cachedGetter
   get algorithms(): readonly string[] {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
+  }
+
+  matches(opts: KeyMatchOptions): boolean {
+    // Optimization: Empty string or empty array will not match any key
+    if (opts.alg?.length === 0) return false
+    if (opts.kid?.length === 0) return false
+
+    if (opts.usage) {
+      if (this.ops) {
+        if (opts.usage === 'verify' && this.ops.includes('sign')) {
+          // allowed
+        } else if (opts.usage === 'decrypt' && this.ops.includes('encrypt')) {
+          // allowed
+        } else if (!this.ops.includes(opts.usage)) {
+          return false // no match
+        }
+      }
+
+      if (this.use) {
+        if (opts.usage === 'verify' && this.use === 'sig') {
+          // allowed
+        } else if (opts.usage === 'encrypt' && this.use === 'enc') {
+          // allowed
+        } else {
+          return false // no match
+        }
+      }
+
+      if (opts.usage === 'sign' || opts.usage === 'encrypt') {
+        if (!this.isPrivate) return false
+      }
+    }
+
+    if (Array.isArray(opts.kid)) {
+      if (!this.kid) return false
+      if (!opts.kid.includes(this.kid)) return false
+    } else if (opts.kid != null) {
+      if (!this.kid) return false
+      if (this.kid !== opts.kid) return false
+    }
+
+    if (Array.isArray(opts.alg)) {
+      if (!opts.alg.some((a) => this.algorithms.includes(a))) return false
+    } else if (typeof opts.alg === 'string') {
+      if (!this.algorithms.includes(opts.alg)) return false
+    }
+
+    return true
   }
 
   /**

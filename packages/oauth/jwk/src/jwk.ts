@@ -120,32 +120,56 @@ export const jwkSchema = z
     jwkOkpKeySchema,
     jwkSymKeySchema,
   ])
+  // https://datatracker.ietf.org/doc/html/rfc7517#section-4.2
+  // > The "use" (public key use) parameter identifies the intended use of the
+  // > public key
+  .refine((k): boolean => !(k.use && isPrivateJwk(k)), {
+    message: 'private key not allowed with "use" parameter',
+    path: ['use'],
+  })
+  // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
+  // > The "use" and "key_ops" JWK members SHOULD NOT be used together;
+  // > however, if both are used, the information they convey MUST be
+  // > consistent.
   .refine(
-    (k) =>
-      // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
-      // > The "use" parameter is employed to indicate whether a public key is
-      // > used for encrypting data or verifying the signature on data.
+    (k): boolean =>
       !k.use ||
       !k.key_ops ||
       k.key_ops.every(
         k.use === 'sig' ? (o) => o === 'verify' : (o) => o === 'decrypt',
       ),
     {
-      message: 'use and key_ops must be consistent',
+      message: '"key_ops" must be consistent with "use"',
       path: ['key_ops'],
     },
   )
 
 export type Jwk = z.infer<typeof jwkSchema>
 
+export function isSharedSecretJwk<J extends Readonly<Jwk>>(
+  jwk: J,
+): jwk is Extract<J, { k: NonNullable<unknown> }> {
+  return 'k' in jwk && jwk.k != null
+}
+
+export function isPrivateSecretJwk<J extends Readonly<Jwk>>(
+  jwk: J,
+): jwk is Extract<J, { d: NonNullable<unknown> }> {
+  return 'd' in jwk && jwk.d != null
+}
+
+export function isPrivateJwk<J extends Readonly<Jwk>>(jwk: J) {
+  return isPrivateSecretJwk(jwk) || isSharedSecretJwk(jwk)
+}
+
 /** @deprecated use {@link jwkSchema} */
 export const jwkValidator = jwkSchema
 
 export const jwkPubSchema = jwkSchema
   .refine((k) => k.kid != null, 'kid is required')
-  .refine((k) => !('k' in k) && !('d' in k), 'private key not allowed')
+  .refine((k) => !isPrivateJwk(k), 'private key not allowed')
 
 export const jwkPrivateSchema = jwkSchema.refine(
-  (k) => ('k' in k && k.k != null) || ('d' in k && k.d != null),
+  isPrivateJwk,
   'private key required',
 )
