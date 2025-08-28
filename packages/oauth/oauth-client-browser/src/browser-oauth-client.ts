@@ -333,6 +333,20 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     })
   }
 
+  private readRedirectUrl() {
+    for (const uri of this.clientMetadata.redirect_uris) {
+      const url = new URL(uri)
+      if (
+        location.origin === url.origin &&
+        location.pathname === url.pathname
+      ) {
+        return uri
+      }
+    }
+
+    return undefined
+  }
+
   private readCallbackParams(): URLSearchParams | null {
     const params =
       this.responseMode === 'fragment'
@@ -344,20 +358,15 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       return null
     }
 
-    const matchesLocation = (url: URL) =>
-      location.origin === url.origin && location.pathname === url.pathname
-    const redirectUrls = this.clientMetadata.redirect_uris.map(
-      (uri) => new URL(uri),
-    )
-
     // Only if the current URL is one of the redirect_uris
-    if (!redirectUrls.some(matchesLocation)) return null
+    if (!this.readRedirectUrl()) return null
 
     return params
   }
 
   async signInCallback() {
     const params = this.readCallbackParams()
+    const redirectUrl = this.readRedirectUrl()
 
     // Not a (valid) OAuth redirect
     if (!params) return null
@@ -393,7 +402,9 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       })
     }
 
-    return this.callback(params)
+    return this.callback(params, {
+      redirect_uri: redirectUrl,
+    })
       .then(async (result) => {
         if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
           const receivedByParent = await sendPopupResult({
