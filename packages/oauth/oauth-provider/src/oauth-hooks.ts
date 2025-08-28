@@ -1,10 +1,12 @@
 import { Jwks } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
+  OAuthAccessToken,
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
   OAuthClientMetadata,
   OAuthTokenResponse,
+  OAuthTokenType,
 } from '@atproto/oauth-types'
 import { SignInData } from './account/sign-in-data.js'
 import { SignUpInput } from './account/sign-up-input.js'
@@ -12,6 +14,7 @@ import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
+import { DpopProof } from './dpop/dpop-proof.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
@@ -25,6 +28,8 @@ import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
 import { DeviceId, SignUpData } from './oauth-store.js'
 import { RequestId } from './request/request-id.js'
+import { SignedTokenPayload } from './signer/signed-token-payload.js'
+import { TokenClaims } from './token/token-claims.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
@@ -37,20 +42,25 @@ export {
   type ClientId,
   type ClientInfo,
   type DeviceId,
+  type DpopProof,
   type HcaptchaClientTokens,
   type HcaptchaConfig,
   type HcaptchaVerifyResult,
   InvalidRequestError,
   type Jwks,
+  type OAuthAccessToken,
   type OAuthAuthorizationDetails,
   type OAuthAuthorizationRequestParameters,
   type OAuthClientMetadata,
   OAuthError,
   type OAuthTokenResponse,
+  type OAuthTokenType,
   type RequestMetadata,
   type SignInData,
   type SignUpData,
   type SignUpInput,
+  type SignedTokenPayload,
+  type TokenClaims as TokenPayload,
 }
 
 export type OAuthHooks = {
@@ -150,6 +160,19 @@ export type OAuthHooks = {
     deviceMetadata: RequestMetadata
     requestId: RequestId
   }) => Awaitable<void>
+
+  onCreateToken?: (data: {
+    account: Account
+    parameters: OAuthAuthorizationRequestParameters
+    payload: TokenClaims
+  }) => Awaitable<void | TokenClaims>
+
+  onDecodeToken?: (data: {
+    tokenType: OAuthTokenType
+    token: OAuthAccessToken
+    payload: SignedTokenPayload
+    dpopProof: null | DpopProof
+  }) => Promise<SignedTokenPayload | void>
 
   /**
    * This hook is called when an authorized client exchanges an authorization

@@ -103,8 +103,8 @@ import {
   refreshTokenSchema,
 } from './token/token-store.js'
 import {
+  SignedTokenPayload,
   VerifyTokenClaimsOptions,
-  VerifyTokenClaimsResult,
 } from './token/verify-token-claims.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
@@ -123,6 +123,8 @@ export type {
   LexiconResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
+  SignedTokenPayload,
+  VerifyTokenClaimsOptions,
 }
 
 type OAuthProviderConfig = {
@@ -1075,38 +1077,25 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected override async verifyToken(
+  protected override async decodeToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
     dpopProof: null | DpopProof,
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
+  ): Promise<SignedTokenPayload> {
     if (this.accessTokenMode === AccessTokenMode.stateless) {
-      return super.verifyToken(tokenType, token, dpopProof, verifyOptions)
+      return super.decodeToken(tokenType, token, dpopProof)
     }
 
     if (this.accessTokenMode === AccessTokenMode.light) {
-      const { tokenClaims } = await super.verifyToken(
+      const tokenPayload = await super.decodeToken(tokenType, token, dpopProof)
+
+      // Fill the token claims from the database
+      const claims = await this.tokenManager.loadTokenClaims(
         tokenType,
-        token,
-        dpopProof,
-        // Do not verify the scope and audience in case of "light" tokens.
-        // these will be checked through the tokenManager hereafter.
-        undefined,
+        tokenPayload,
       )
 
-      const tokenId = tokenClaims.jti
-
-      // In addition to verifying the signature (through the verifier above), we
-      // also verify the tokenId is still valid using a database to fetch
-      // missing data from "light" token.
-      return this.tokenManager.verifyToken(
-        token,
-        tokenType,
-        tokenId,
-        dpopProof,
-        verifyOptions,
-      )
+      return { ...claims, iss: tokenPayload.iss }
     }
 
     // Fool-proof
