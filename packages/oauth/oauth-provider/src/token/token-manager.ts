@@ -16,7 +16,7 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { RequestMetadata } from '../lib/http/request.js'
-import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
+import { dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Sub } from '../oidc/sub.js'
@@ -30,6 +30,7 @@ import {
 } from './refresh-token.js'
 import { TokenData } from './token-data.js'
 import { TokenId, generateTokenId, isTokenId } from './token-id.js'
+import { buildTokenPayload } from './token-payload.js'
 import { TokenInfo, TokenStore } from './token-store.js'
 
 export { AccessTokenMode, Signer }
@@ -48,34 +49,6 @@ export class TokenManager {
     return new Date(now.getTime() + this.tokenMaxAge)
   }
 
-  protected buildTokenPayload(
-    tokenId: TokenId,
-    clientId: ClientId,
-    account: Account,
-    parameters: OAuthAuthorizationRequestParameters,
-    issuedAt: Date,
-    expiresAt: Date,
-    mode: AccessTokenMode,
-  ) {
-    return {
-      jti: tokenId,
-      sub: account.sub,
-      iat: dateToEpoch(issuedAt),
-      exp: dateToEpoch(expiresAt),
-
-      ...(parameters.dpop_jkt && {
-        cnf: { jkt: parameters.dpop_jkt },
-      }),
-
-      ...(mode === AccessTokenMode.stateless && {
-        aud: account.aud,
-        scope: parameters.scope,
-        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
-        client_id: clientId,
-      }),
-    }
-  }
-
   protected async buildAccessToken(
     tokenId: TokenId,
     clientId: ClientId,
@@ -84,7 +57,7 @@ export class TokenManager {
     issuedAt: Date,
     expiresAt: Date,
   ): Promise<OAuthAccessToken> {
-    const payload = this.buildTokenPayload(
+    const payload = buildTokenPayload(
       tokenId,
       clientId,
       account,
@@ -375,7 +348,7 @@ export class TokenManager {
     const { account, data } = tokenInfo
     const { parameters } = data
 
-    const claims = this.buildTokenPayload(
+    const claims = buildTokenPayload(
       tokenId,
       data.clientId,
       account,
