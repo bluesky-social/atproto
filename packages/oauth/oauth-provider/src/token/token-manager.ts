@@ -66,7 +66,14 @@ export class TokenManager {
       expiresAt,
       this.accessTokenMode,
     )
-    return this.signer.createAccessToken(payload)
+
+    const payloadOverride = await callAsync(this.hooks.onCreateToken, {
+      account,
+      parameters,
+      payload,
+    })
+
+    return this.signer.createAccessToken(payloadOverride ?? payload)
   }
 
   async createToken(

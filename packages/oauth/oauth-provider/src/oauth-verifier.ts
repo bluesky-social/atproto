@@ -15,7 +15,7 @@ import { InvalidTokenError } from './errors/invalid-token-error.js'
 import { UseDpopNonceError } from './errors/use-dpop-nonce-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { parseAuthorizationHeader } from './lib/util/authorization-header.js'
-import { Override } from './lib/util/type.js'
+import { OAuthHooks } from './oauth-hooks.js'
 import { ReplayManager } from './replay/replay-manager.js'
 import { ReplayStoreMemory } from './replay/replay-store-memory.js'
 import { ReplayStoreRedis } from './replay/replay-store-redis.js'
@@ -29,36 +29,44 @@ import {
 
 export type * from './token/verify-token-claims.js'
 
-export type { OAuthTokenType, SignedTokenPayload, VerifyTokenClaimsOptions }
+type DecodeTokenHook = OAuthHooks['onDecodeToken']
 
-export type OAuthVerifierOptions = Override<
-  DpopManagerOptions,
-  {
-    /**
-     * The "issuer" identifier of the OAuth provider, this is the base URL of the
-     * OAuth provider.
-     */
-    issuer: URL | string
+export type OAuthVerifierOptions = DpopManagerOptions & {
+  /**
+   * The "issuer" identifier of the OAuth provider, this is the base URL of the
+   * OAuth provider.
+   */
+  issuer: URL | string
 
-    /**
-     * The keyset used to sign access tokens.
-     */
-    keyset: Keyset | Iterable<Key | undefined | null | false>
+  /**
+   * The keyset used to sign access tokens.
+   */
+  keyset: Keyset | Iterable<Key | undefined | null | false>
 
-    /**
-     * A redis instance to use for replay protection. If not provided, replay
-     * protection will use memory storage.
-     */
-    redis?: Redis | RedisOptions | string
+  /**
+   * A redis instance to use for replay protection. If not provided, replay
+   * protection will use memory storage.
+   */
+  redis?: Redis | RedisOptions | string
 
-    replayStore?: ReplayStore
-  }
->
+  replayStore?: ReplayStore
+
+  onDecodeToken?: DecodeTokenHook
+}
 
 export { DpopNonce, Key, Keyset }
-export type { DpopProof, RedisOptions, ReplayStore }
+export type {
+  DpopProof,
+  OAuthTokenType,
+  RedisOptions,
+  ReplayStore,
+  SignedTokenPayload,
+  VerifyTokenClaimsOptions,
+}
 
 export class OAuthVerifier {
+  private readonly onDecodeToken?: DecodeTokenHook
+
   public readonly issuer: OAuthIssuerIdentifier
   public readonly keyset: Keyset
 
@@ -73,6 +81,7 @@ export class OAuthVerifier {
     replayStore = redis != null
       ? new ReplayStoreRedis({ redis })
       : new ReplayStoreMemory(),
+    onDecodeToken,
 
     ...rest
   }: OAuthVerifierOptions) {
@@ -172,7 +181,14 @@ export class OAuthVerifier {
       }
     }
 
-    return payload
+    const payloadOverride = await this.onDecodeToken?.call(null, {
+      tokenType,
+      token,
+      payload,
+      dpopProof,
+    })
+
+    return payloadOverride ?? payload
   }
 
   public async authenticateRequest(
