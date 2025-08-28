@@ -9,6 +9,7 @@ import {
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
 import { DpopProof } from './dpop/dpop-proof.js'
+import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidTokenError } from './errors/invalid-token-error.js'
 import { UseDpopNonceError } from './errors/use-dpop-nonce-error.js'
@@ -19,14 +20,16 @@ import { ReplayManager } from './replay/replay-manager.js'
 import { ReplayStoreMemory } from './replay/replay-store-memory.js'
 import { ReplayStoreRedis } from './replay/replay-store-redis.js'
 import { ReplayStore } from './replay/replay-store.js'
+import { SignedTokenPayload } from './signer/signed-token-payload.js'
 import { Signer } from './signer/signer.js'
 import {
   VerifyTokenClaimsOptions,
-  VerifyTokenClaimsResult,
   verifyTokenClaims,
 } from './token/verify-token-claims.js'
 
 export type * from './token/verify-token-claims.js'
+
+export type { OAuthTokenType, SignedTokenPayload, VerifyTokenClaimsOptions }
 
 export type OAuthVerifierOptions = Override<
   DpopManagerOptions,
@@ -118,12 +121,11 @@ export class OAuthVerifier {
     return dpopProof
   }
 
-  protected async verifyToken(
+  protected async decodeToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
     dpopProof: null | DpopProof,
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
+  ): Promise<SignedTokenPayload> {
     if (!isSignedJwt(token)) {
       throw new InvalidTokenError(tokenType, `Malformed token`)
     }
@@ -134,14 +136,43 @@ export class OAuthVerifier {
         throw InvalidTokenError.from(err, tokenType)
       })
 
-    return verifyTokenClaims(
-      token,
-      payload.jti,
-      tokenType,
-      payload,
-      dpopProof,
-      verifyOptions,
-    )
+    if (payload.cnf?.jkt) {
+      // An access token with a cnf.jkt claim must be a DPoP token
+      if (tokenType !== 'DPoP') {
+        throw new InvalidTokenError(
+          'DPoP',
+          `Access token is bound to a DPoP proof, but token type is ${tokenType}`,
+        )
+      }
+
+      // DPoP token type must be used with a DPoP proof
+      if (!dpopProof) {
+        throw new InvalidDpopProofError(`DPoP proof required`)
+      }
+
+      // DPoP proof must be signed with the key that matches the "cnf" claim
+      if (payload.cnf.jkt !== dpopProof.jkt) {
+        throw new InvalidDpopKeyBindingError()
+      }
+    } else {
+      // An access token without a cnf.jkt claim must be a Bearer token
+      if (tokenType !== 'Bearer') {
+        throw new InvalidTokenError(
+          'Bearer',
+          `Bearer token type must be used without a DPoP proof`,
+        )
+      }
+
+      // Unexpected DPoP proof received for a Bearer token
+      if (dpopProof) {
+        throw new InvalidTokenError(
+          'Bearer',
+          `DPoP proof not expected for Bearer token type`,
+        )
+      }
+    }
+
+    return payload
   }
 
   public async authenticateRequest(
@@ -149,7 +180,7 @@ export class OAuthVerifier {
     httpUrl: Readonly<URL>,
     httpHeaders: Record<string, undefined | string | string[]>,
     verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
+  ): Promise<SignedTokenPayload> {
     const [tokenType, token] = parseAuthorizationHeader(
       httpHeaders['authorization'],
     )
@@ -161,14 +192,11 @@ export class OAuthVerifier {
         token,
       )
 
-      const tokenResult = await this.verifyToken(
-        tokenType,
-        token,
-        dpopProof,
-        verifyOptions,
-      )
+      const tokenClaims = await this.decodeToken(tokenType, token, dpopProof)
 
-      return tokenResult
+      verifyTokenClaims(tokenType, tokenClaims, verifyOptions)
+
+      return tokenClaims
     } catch (err) {
       if (err instanceof UseDpopNonceError) throw err.toWwwAuthenticateError()
       if (err instanceof WWWAuthenticateError) throw err
