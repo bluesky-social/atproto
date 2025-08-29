@@ -101,7 +101,12 @@ function bench(name, expectedResult, cases) {
     }
   }
 
-  console.log(name, times)
+  console.log(
+    name,
+    Object.fromEntries(
+      Object.entries(times).map(([k, v]) => [k, `${v.toFixed(2)} ms`]),
+    ),
+  )
 }
 
 /** @param value {string} */

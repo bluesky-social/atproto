@@ -82,28 +82,28 @@ type ValidateResult<T> =
 // Human readable constraints on NSID:
 // - a valid domain in reversed notation
 // - followed by an additional period-separated name, which is camel-case letters
-export function validateNsid(value: string): ValidateResult<string[]> {
-  if (value.length > 253 + 1 + 63) {
+export function validateNsid(input: string): ValidateResult<string[]> {
+  if (input.length > 253 + 1 + 63) {
     return {
       success: false,
       message: 'NSID is too long (317 chars max)',
     }
   }
-  if (hasDisallowedCharacters(value)) {
+  if (hasDisallowedCharacters(input)) {
     return {
       success: false,
       message:
         'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)',
     }
   }
-  const labels = value.split('.')
-  if (labels.length < 3) {
+  const segments = input.split('.')
+  if (segments.length < 3) {
     return {
       success: false,
       message: 'NSID needs at least three parts',
     }
   }
-  for (const l of labels) {
+  for (const l of segments) {
     if (l.length < 1) {
       return {
         success: false,
@@ -123,13 +123,13 @@ export function validateNsid(value: string): ValidateResult<string[]> {
       }
     }
   }
-  if (startsWithNumber(labels[0])) {
+  if (startsWithNumber(segments[0])) {
     return {
       success: false,
       message: 'NSID first part may not start with a digit',
     }
   }
-  if (!isValidIdentifier(labels[labels.length - 1])) {
+  if (!isValidIdentifier(segments[segments.length - 1])) {
     return {
       success: false,
       message:
@@ -138,7 +138,7 @@ export function validateNsid(value: string): ValidateResult<string[]> {
   }
   return {
     success: true,
-    value: labels,
+    value: segments,
   }
 }
 

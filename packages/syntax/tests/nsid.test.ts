@@ -1,6 +1,13 @@
 import * as fs from 'node:fs'
-import * as readline from 'node:readline'
-import { NSID, isValidNsid, validateNsid } from '../src'
+import {
+  InvalidNsidError,
+  NSID,
+  ensureValidNsid,
+  isValidNsid,
+  parseNsid,
+  validateNsid,
+  validateNsidRegex,
+} from '../src'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {
@@ -32,7 +39,57 @@ describe('NSID parsing & creation', () => {
   })
 })
 
-describe('validateNsid', () => {
+describe('NSID validation', () => {
+  const expectValid = (h: string) => {
+    expect(isValidNsid(h)).toBe(true)
+    ensureValidNsid(h)
+    expect(parseNsid(h)).toEqual(h.split('.'))
+    expect(validateNsidRegex(h)).toMatchObject({
+      success: true,
+      value: expect.any(String),
+    })
+    expect(validateNsid(h)).toMatchObject({
+      success: true,
+      value: expect.any(Array),
+    })
+  }
+  const expectInvalid = (h: string) => {
+    expect(isValidNsid(h)).toBe(false)
+    expect(() => parseNsid(h)).toThrow(InvalidNsidError)
+    expect(() => ensureValidNsid(h)).toThrow(InvalidNsidError)
+    expect(validateNsidRegex(h)).toMatchObject({
+      success: false,
+      message: expect.any(String),
+    })
+    expect(validateNsid(h)).toMatchObject({
+      success: false,
+      message: expect.any(String),
+    })
+  }
+
+  it('enforces spec details', () => {
+    expectValid('com.example.foo')
+    const longNsid = 'com.' + 'o'.repeat(63) + '.foo'
+    expectValid(longNsid)
+
+    const tooLongNsid = 'com.' + 'o'.repeat(64) + '.foo'
+    expectInvalid(tooLongNsid)
+
+    const longEnd = 'com.example.' + 'o'.repeat(63)
+    expectValid(longEnd)
+
+    const tooLongEnd = 'com.example.' + 'o'.repeat(64)
+    expectInvalid(tooLongEnd)
+
+    const longOverall = 'com.' + 'middle.'.repeat(40) + 'foo'
+    expect(longOverall.length).toBe(287)
+    expectValid(longOverall)
+
+    const tooLongOverall = 'com.' + 'middle.'.repeat(50) + 'foo'
+    expect(tooLongOverall.length).toBe(357)
+    expectInvalid(tooLongOverall)
+  })
+
   describe('valid NSIDs', () => {
     for (const validNsid of [
       'com.example.foo',
@@ -40,33 +97,30 @@ describe('validateNsid', () => {
       'com.' + 'o'.repeat(63) + '.foo',
       'com.example.' + 'o'.repeat(63),
       'com.' + 'middle.'.repeat(40) + 'foo',
-      'com.example.fooBar',
-      'net.users.bob.ping',
+
+      'a-0.b-1.c',
+      'a.0.c',
       'a.b.c',
+      'a0.b1.c3',
+      'a0.b1.cc',
+      'a01.thing.record',
+      'cn.8.lex.stuff',
+      'com.example.f00',
+      'com.example.fooBar',
       'm.xn--masekowski-d0b.pl',
+      'net.users.bob.ping',
+      'one.2.three',
       'one.two.three',
       'one.two.three.four-and.FiVe',
-      'one.2.three',
-      'a-0.b-1.c',
-      'a0.b1.cc',
-      'cn.8.lex.stuff',
-      'test.12345.record',
-      'a01.thing.record',
-      'a.0.c',
-      'xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two',
-      'a0.b1.c3',
-      'com.example.f00',
+      'onion.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
       'onion.expyuzz4wqqyqhjn.spec.getThing',
       'onion.g2zyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
       'org.4chan.lex.getThing',
-      'cn.8.lex.stuff',
-      'onion.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
+      'test.12345.record',
+      'xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two',
     ]) {
       it(validNsid, () => {
-        expect(validateNsid(validNsid)).toMatchObject({
-          success: true,
-          value: expect.any(Array),
-        })
+        expectValid(validNsid)
       })
     }
   })
@@ -112,39 +166,33 @@ describe('validateNsid', () => {
     }
   })
 
-  describe('interop valid NSIDs', () => {
-    it('conforms to interop valid NSIDs', async () => {
-      const lineReader = readline.createInterface({
-        input: fs.createReadStream(
-          `${__dirname}/interop-files/nsid_syntax_valid.txt`,
-        ),
-        terminal: false,
-      })
-      for await (const line of lineReader) {
-        if (line.startsWith('#') || line.length === 0) {
-          continue
-        }
-
-        expect(isValidNsid(line)).toBe(true)
+  describe('conforms to interop valid NSIDs', () => {
+    for (const line of fs
+      .readFileSync(`${__dirname}/interop-files/nsid_syntax_valid.txt`)
+      .toString()
+      .split('\n')) {
+      if (line.startsWith('#') || line.length === 0) {
+        continue
       }
-    })
+
+      it(line, () => {
+        expectValid(line)
+      })
+    }
   })
 
-  describe('interop invalid NSIDs', () => {
-    it('conforms to interop invalid NSIDs', async () => {
-      const lineReader = readline.createInterface({
-        input: fs.createReadStream(
-          `${__dirname}/interop-files/nsid_syntax_invalid.txt`,
-        ),
-        terminal: false,
-      })
-      for await (const line of lineReader) {
-        if (line.startsWith('#') || line.length === 0) {
-          continue
-        }
-
-        expect(validateNsid(line)).not.toBeNull()
+  describe('conforms to interop invalid NSIDs', () => {
+    for (const line of fs
+      .readFileSync(`${__dirname}/interop-files/nsid_syntax_invalid.txt`)
+      .toString()
+      .split('\n')) {
+      if (line.startsWith('#') || line.length === 0) {
+        continue
       }
-    })
+
+      it(line, () => {
+        expectInvalid(line)
+      })
+    }
   })
 })
