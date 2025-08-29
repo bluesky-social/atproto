@@ -46,7 +46,7 @@ import { Crawlers } from './crawlers'
 import { DidSqliteCache } from './did-cache'
 import { DiskBlobStore } from './disk-blobstore'
 import { ImageUrlBuilder } from './image/image-url-builder'
-import { lexiconResolverLogger } from './logger'
+import { fetchLogger, lexiconResolverLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
@@ -302,17 +302,29 @@ export class AppContext {
      * working. See {@link safeFetchWrap}.
      */
     const safeFetch = safeFetchWrap({
-      /**
-       * @note Since we are using NodeJS<=20, we must use `globalThis.fetch`
-       * here to ensure that a keep-alive agent is used. From NodeJS 21+ the
-       * `fetch` argument here can be set to any other value, including a
-       * logger function.
-       */
-      fetch: globalThis.fetch,
       allowIpHost: false,
       allowImplicitRedirect: false,
       responseMaxSize: cfg.fetch.maxResponseSize,
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
+
+      // @NOTE Since we are using NodeJS <= 20, unicastFetchWrap would normally
+      // *not* be using a keep-alive agent if it we are providing a fetch
+      // function that is different from `globalThis.fetch`. However, since the
+      // fetch function below is indeed calling `globalThis.fetch` without
+      // altering any argument, we can safely force the use of the keep-alive
+      // agent. This would not be the case if we used "loggedFetch" as that
+      // function does wrap the input & init arguments into a Request object,
+      // which, on NodeJS<=20, results in init.dispatcher *not* being used.
+      dangerouslyForceKeepAliveAgent: true,
+      fetch: function (input, init) {
+        const method =
+          init?.method ?? (input instanceof Request ? input.method : 'GET')
+        const uri = input instanceof Request ? input.url : String(input)
+
+        fetchLogger.info({ method, uri }, 'fetch')
+
+        return globalThis.fetch.call(this, input, init)
+      },
     })
 
     const baseLexiconResolver = buildLexiconResolver({
