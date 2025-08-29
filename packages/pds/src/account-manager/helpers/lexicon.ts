@@ -17,7 +17,7 @@ export async function upsert(db: AccountDb, nsid: string, data: LexiconData) {
   await db.executeWithRetry(
     db.db
       .insertInto('lexicon')
-      .values({ nsid, ...updates })
+      .values({ ...updates, nsid })
       .onConflict((oc) => oc.column('nsid').doUpdateSet(updates)),
   )
 }

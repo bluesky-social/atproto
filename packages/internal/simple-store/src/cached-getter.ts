@@ -88,7 +88,7 @@ export class CachedGetter<
   ): Promise<V> {
     signal?.throwIfAborted()
 
-    const { isStale = returnFalse, deleteOnError } = this.options
+    const { isStale, deleteOnError } = this.options
 
     const allowStored: (value: V) => Awaitable<boolean> = noCache
       ? returnFalse // Never allow stored values to be returned

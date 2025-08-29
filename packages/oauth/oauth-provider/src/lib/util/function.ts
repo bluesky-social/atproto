@@ -33,7 +33,3 @@ export function invokeOnce<T extends (this: any, ...a: any[]) => any>(
     throw new Error('Function called multiple times')
   } as T
 }
-
-export function isNonNullable<X>(x: X): x is NonNullable<X> {
-  return x != null
-}

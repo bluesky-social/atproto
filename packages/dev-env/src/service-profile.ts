@@ -15,6 +15,7 @@ export type ServiceMigrationOptions = {
 export class ServiceProfile {
   protected constructor(
     protected pds: TestPds,
+    /** @note assumes the session is already authenticated */
     protected client: AtpAgent,
     protected userDetails: ServiceUserDetails,
   ) {}
@@ -25,6 +26,12 @@ export class ServiceProfile {
 
   async migrateTo(newPds: TestPds, options: ServiceMigrationOptions = {}) {
     const newClient = newPds.getClient()
+
+    const newPdsDesc = await newClient.com.atproto.server.describeServer()
+    const serviceAuth = await this.client.com.atproto.server.getServiceAuth({
+      aud: newPdsDesc.data.did,
+      lxm: 'com.atproto.server.createAccount',
+    })
 
     const inviteCode = newPds.ctx.cfg.invites.required
       ? await newClient.com.atproto.server
@@ -37,12 +44,6 @@ export class ServiceProfile {
           )
           .then((res) => res.data.code)
       : undefined
-
-    const newPdsDesc = await newClient.com.atproto.server.describeServer()
-    const serviceAuth = await this.client.com.atproto.server.getServiceAuth({
-      aud: newPdsDesc.data.did,
-      lxm: 'com.atproto.server.createAccount',
-    })
 
     await newClient.createAccount(
       {

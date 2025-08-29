@@ -1,10 +1,7 @@
 import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  await db.schema
-    .alterTable('token')
-    .addColumn('permissionsScope', 'varchar')
-    .execute()
+  await db.schema.alterTable('token').addColumn('scope', 'varchar').execute()
 
   await db.schema
     .createTable('lexicon')
@@ -19,5 +16,5 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('lexicon').execute()
-  await db.schema.alterTable('token').dropColumn('permissionsScope').execute()
+  await db.schema.alterTable('token').dropColumn('scope').execute()
 }

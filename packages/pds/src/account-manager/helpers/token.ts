@@ -21,7 +21,7 @@ export function toTokenData(row: Selectable<Token>): TokenData {
     sub: row.did,
     parameters: fromJson(row.parameters),
     code: row.code,
-    permissionsScope: row.permissionsScope,
+    scope: row.scope,
   }
 }
 
@@ -43,7 +43,7 @@ const selectTokenInfoQB = (db: AccountDb) =>
       'token.details',
       'token.code',
       'token.currentRefreshToken',
-      'token.permissionsScope',
+      'token.scope',
     ])
 
 export const createQB = (
@@ -65,7 +65,7 @@ export const createQB = (
     details: data.details ? toJson(data.details) : null,
     code: data.code,
     currentRefreshToken: refreshToken || null,
-    permissionsScope: data.permissionsScope,
+    scope: data.scope,
   })
 }
 
@@ -142,7 +142,7 @@ export const rotateQB = (
       expiresAt: toDateISO(newData.expiresAt),
       updatedAt: toDateISO(newData.updatedAt),
       clientAuth: toJson(newData.clientAuth),
-      permissionsScope: newData.permissionsScope,
+      scope: newData.scope,
     })
     // uses primary key index
     .where('id', '=', id)

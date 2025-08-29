@@ -30,9 +30,8 @@ import {
   generateRefreshToken,
   isRefreshToken,
 } from './refresh-token.js'
-import { TokenData } from './token-data.js'
 import { TokenId, generateTokenId, isTokenId } from './token-id.js'
-import { TokenInfo, TokenStore } from './token-store.js'
+import { CreateTokenData, TokenInfo, TokenStore } from './token-store.js'
 import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
@@ -61,22 +60,20 @@ export class TokenManager {
     account: Account,
     client: Client,
     parameters: OAuthAuthorizationRequestParameters,
-    options: {
-      now: Date
-      expiresAt: Date
-      permissionsScope: string
-    },
+    createdAt: Date,
+    expiresAt: Date,
+    scope: string,
   ): Promise<OAuthAccessToken> {
     return this.signer.createAccessToken({
       jti: tokenId,
       sub: account.sub,
-      exp: dateToEpoch(options.expiresAt),
-      iat: dateToEpoch(options.now),
+      exp: dateToEpoch(expiresAt),
+      iat: dateToEpoch(createdAt),
       cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
 
       ...(this.accessTokenMode === AccessTokenMode.stateless && {
         aud: account.aud,
-        scope: options.permissionsScope,
+        scope,
         // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
         client_id: client.id,
       }),
@@ -102,7 +99,7 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
-    const permissionsScope = await this.lexiconManager
+    const scope = await this.lexiconManager
       .buildTokenScope(parameters.scope!)
       .catch((cause) => {
         throw new InvalidRequestError(
@@ -113,7 +110,26 @@ export class TokenManager {
         )
       })
 
-    const tokenData: TokenData = {
+    const accessToken = await this.buildAccessToken(
+      tokenId,
+      account,
+      client,
+      parameters,
+      now,
+      expiresAt,
+      scope,
+    )
+
+    const response = this.buildTokenResponse(
+      inferTokenType(parameters),
+      accessToken,
+      refreshToken,
+      expiresAt,
+      account.sub,
+      scope,
+    )
+
+    const tokenData: CreateTokenData = {
       createdAt: now,
       updatedAt: now,
       expiresAt,
@@ -123,26 +139,9 @@ export class TokenManager {
       sub: account.sub,
       parameters,
       details: null,
-      permissionsScope,
+      scope,
       code,
     }
-
-    const accessToken = await this.buildAccessToken(
-      tokenId,
-      account,
-      client,
-      parameters,
-      { now, expiresAt, permissionsScope },
-    )
-
-    const response = this.buildTokenResponse(
-      inferTokenType(parameters),
-      accessToken,
-      refreshToken,
-      expiresAt,
-      account.sub,
-      permissionsScope,
-    )
 
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
@@ -223,9 +222,7 @@ export class TokenManager {
     // @NOTE since the permission sets are stored in a persistent store,
     // it's fine to propagate a 500 (server_error) here as the values should
     // be retrievable from the store.
-    const permissionsScope = await this.lexiconManager.buildTokenScope(
-      parameters.scope!,
-    )
+    const scope = await this.lexiconManager.buildTokenScope(parameters.scope!)
 
     await this.store.rotateToken(tokenInfo.id, nextTokenId, nextRefreshToken, {
       updatedAt: now,
@@ -237,7 +234,7 @@ export class TokenManager {
       // - Allow clients to become "confidential" if they were previously
       //   "public"
       clientAuth,
-      permissionsScope,
+      scope,
     })
 
     const accessToken = await this.buildAccessToken(
@@ -245,7 +242,9 @@ export class TokenManager {
       account,
       client,
       parameters,
-      { now, expiresAt, permissionsScope },
+      now,
+      expiresAt,
+      scope,
     )
 
     const response = this.buildTokenResponse(
@@ -254,7 +253,7 @@ export class TokenManager {
       nextRefreshToken,
       expiresAt,
       account.sub,
-      permissionsScope,
+      scope,
     )
 
     await callAsync(this.hooks.onTokenRefreshed, {
@@ -386,8 +385,8 @@ export class TokenManager {
       // mode. See `buildAccessToken`.
       aud: account.aud,
       // Note we fallback to parameters.scope for sessions created before
-      // permissionsScope was introduced.
-      scope: data.permissionsScope ?? parameters.scope,
+      // TokenData.scope was introduced.
+      scope: data.scope ?? parameters.scope,
       client_id: data.clientId,
     }
 

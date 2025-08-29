@@ -24,7 +24,7 @@ export type SafeFetchWrapOptions<C> = UnicastFetchWrapOptions<C> & {
   forbiddenDomainNames?: Iterable<string>
   /**
    * When `false`, a {@link RequestInit['redirect']} value must be explicitly
-   * provided or the request will fail.
+   * provided as second argument to the returned function or requests will fail.
    *
    * @default false
    */

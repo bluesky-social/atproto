@@ -86,7 +86,9 @@ export class IncludeScope {
    * scope).
    */
   public isParentAuthorityOf(otherNsid: '*' | Nsid) {
-    if (otherNsid === '*') return false
+    if (otherNsid === '*') {
+      return false
+    }
 
     const lexiconNsid = this.nsid
 
@@ -94,15 +96,22 @@ export class IncludeScope {
 
     // There should always be a dot, but since this is a security feature, let's
     // be strict about it.
-    if (groupPrefixEnd === -1) throw new TypeError('Invalid nsid')
+    if (groupPrefixEnd === -1) {
+      throw new TypeError('Dot character (".") missing from lexicon NSID')
+    }
 
     // Make sure that otherNsid is at least as long as the "group prefix"
-    if (groupPrefixEnd >= otherNsid.length - 1) return false
+    if (groupPrefixEnd >= otherNsid.length - 1) {
+      return false
+    }
 
-    // Make sure the "group prefixes" (up to the dot itself) are the same. We
-    // check in reverse order as nsids tend to have long common prefixes.
+    // Make sure that the "otherNsid" starts with the group of the lexiconNsid,
+    // up to the dot itself. We check in reverse order as nsids tend to have
+    // long common prefixes.
     for (let i = groupPrefixEnd; i >= 0; i--) {
-      if (lexiconNsid.charCodeAt(i) !== otherNsid.charCodeAt(i)) return false
+      if (lexiconNsid.charCodeAt(i) !== otherNsid.charCodeAt(i)) {
+        return false
+      }
     }
 
     return true
