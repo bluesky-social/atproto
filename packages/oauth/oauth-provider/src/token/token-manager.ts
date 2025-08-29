@@ -101,13 +101,14 @@ export class TokenManager {
 
     const scope = await this.lexiconManager
       .buildTokenScope(parameters.scope!)
-      .catch((cause) => {
-        throw new InvalidRequestError(
-          cause instanceof LexiconResolutionError
-            ? cause.message
-            : 'Unable to retrieve included permission sets',
-          cause,
-        )
+      .catch((err) => {
+        // Parse expected errors
+        if (err instanceof LexiconResolutionError) {
+          throw new InvalidRequestError(err.message, err)
+        }
+
+        // Unexpected error
+        throw err
       })
 
     const accessToken = await this.buildAccessToken(
