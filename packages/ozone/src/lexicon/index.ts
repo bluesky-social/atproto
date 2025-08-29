@@ -197,6 +197,7 @@ import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
+import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
@@ -2814,6 +2815,18 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  revokeAccountCredentials<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoTempRevokeAccountCredentials.QueryParams,
+      ComAtprotoTempRevokeAccountCredentials.HandlerInput,
+      ComAtprotoTempRevokeAccountCredentials.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.revokeAccountCredentials' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

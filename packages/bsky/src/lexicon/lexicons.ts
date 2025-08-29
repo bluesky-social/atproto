@@ -13556,6 +13556,30 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempRevokeAccountCredentials: {
+    lexicon: 1,
+    id: 'com.atproto.temp.revokeAccountCredentials',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Revoke sessions, password, and app passwords associated with account. May be resolved by a password reset.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 } as const satisfies Record<string, LexiconDoc>
 export const schemas = Object.values(schemaDict) satisfies LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -13847,4 +13871,6 @@ export const ids = {
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',
+  ComAtprotoTempRevokeAccountCredentials:
+    'com.atproto.temp.revokeAccountCredentials',
 } as const
