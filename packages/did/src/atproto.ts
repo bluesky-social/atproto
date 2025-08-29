@@ -98,11 +98,29 @@ function isDidWebWithPath(did: Did<'web'>): boolean {
   return did.includes(':', DID_WEB_PREFIX.length)
 }
 
-function isDidWebWithHttpsPort(did: Did<'web'>): boolean {
+function isLocalhostDid(did: Did<'web'>): boolean {
   return (
-    did.includes('%3A', DID_WEB_PREFIX.length) &&
-    !did.startsWith('did:web:localhost%3A')
+    did === 'did:web:localhost' ||
+    did.startsWith('did:web:localhost:') ||
+    did.startsWith('did:web:localhost%3A')
   )
+}
+
+function isDidWebWithHttpsPort(did: Did<'web'>): boolean {
+  if (isLocalhostDid(did)) return false
+
+  const pathIdx = did.indexOf(':', DID_WEB_PREFIX.length)
+
+  const hasPort =
+    pathIdx === -1
+      ? // No path component, check if there's a port separator anywhere after
+        // the "did:web:" prefix
+        did.includes('%3A', DID_WEB_PREFIX.length)
+      : // There is a path component; if there is an encoded colon *before* it,
+        // then there is a port number
+        did.lastIndexOf('%3A', pathIdx) !== -1
+
+  return hasPort
 }
 
 export type AtprotoAudience = `${AtprotoDid}#${string}`
