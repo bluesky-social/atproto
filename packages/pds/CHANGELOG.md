@@ -1,5 +1,12 @@
 # @atproto/pds
 
+## 0.4.174
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-provider@0.11.1
+
 ## 0.4.173
 
 ### Patch Changes

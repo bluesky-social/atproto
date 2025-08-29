@@ -1,5 +1,11 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.6
+
+### Patch Changes
+
+- [`f4cb3e4d0`](https://github.com/bluesky-social/atproto/commit/f4cb3e4d0ac45e567fa14f79b99a84621fa89a56) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update default scopes
+
 ## 0.0.5
 
 ### Patch Changes
