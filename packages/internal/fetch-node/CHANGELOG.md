@@ -1,5 +1,13 @@
 # @atproto-labs/fetch-node
 
+## 0.1.10
+
+### Patch Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow forcing the use of keep-alive agent on older NodeJs version when unicast protection is active
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use keep-alive connection when unicast protection is enabled on NodeJS >= 20
+
 ## 0.1.9
 
 ### Patch Changes
