@@ -12,19 +12,30 @@ nsid      = authority delim name
 */
 
 export class NSID {
-  segments: string[] = []
+  readonly segments: readonly string[]
 
-  static parse(nsid: string): NSID {
-    return new NSID(nsid)
+  static parse(input: string): NSID {
+    return new NSID(input)
   }
 
   static create(authority: string, name: string): NSID {
-    const nsid = [...authority.split('.').reverse(), name].join('.')
-    return new NSID(nsid)
+    const input = [...authority.split('.').reverse(), name].join('.')
+    return new NSID(input)
   }
 
   static isValid(nsid: string) {
     return isValidNsid(nsid)
+  }
+
+  static from(input: { toString: () => string }): NSID {
+    if (input instanceof NSID) {
+      // No need to clone, NSID is immutable
+      return input
+    }
+    if (Array.isArray(input)) {
+      return new NSID((input as string[]).join('.'))
+    }
+    return new NSID(String(input))
   }
 
   constructor(nsid: string) {

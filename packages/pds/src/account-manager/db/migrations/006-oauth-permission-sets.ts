@@ -11,9 +11,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('nsid', 'varchar', (col) => col.primaryKey())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
-    .addColumn('lastSucceededAt', 'varchar', (col) => col.notNull())
-    .addColumn('uri', 'varchar', (col) => col.notNull())
-    .addColumn('lexicon', 'varchar', (col) => col.notNull())
+    .addColumn('lastSucceededAt', 'varchar')
+    .addColumn('uri', 'varchar')
+    .addColumn('lexicon', 'varchar')
     .execute()
 }
 

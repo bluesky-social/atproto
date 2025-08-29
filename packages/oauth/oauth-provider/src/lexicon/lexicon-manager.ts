@@ -2,7 +2,6 @@ import { LexPermissionSet } from '@atproto/lexicon'
 import {
   LexiconResolutionError,
   LexiconResolver,
-  NSID,
 } from '@atproto/lexicon-resolver'
 import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
 import { LexiconGetter } from './lexicon-getter.js'
@@ -65,12 +64,16 @@ export class LexiconManager {
 
   protected async getPermissionSet(nsid: Nsid): Promise<LexPermissionSet> {
     const { lexicon } = await this.lexiconGetter.get(nsid)
-    if (lexicon.defs.main?.type !== 'permission-set') {
-      throw new LexiconResolutionError(
-        NSID.parse(nsid),
-        'Lexicon document is not a permission set',
-      )
+
+    if (!lexicon) {
+      throw LexiconResolutionError.from(nsid)
     }
+
+    if (lexicon.defs.main?.type !== 'permission-set') {
+      const description = 'Lexicon document is not a permission set'
+      throw LexiconResolutionError.from(nsid, description)
+    }
+
     return lexicon.defs.main
   }
 }

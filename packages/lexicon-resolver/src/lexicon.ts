@@ -60,10 +60,10 @@ export function buildLexiconResolver(
 ): AtprotoLexiconResolver {
   const resolveRecord = buildRecordResolver(options)
   return async function (
-    nsidStr: NSID | string,
+    input: NSID | string,
     opts: ResolveLexiconOptions = {},
   ): Promise<LexiconResolution> {
-    const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
+    const nsid = NSID.from(input)
     const didAuthority = await getDidAuthority(nsid, opts)
     const verified = await resolveRecord(
       AtUri.make(didAuthority, LEXICON_SCHEMA_NSID, nsid.toString()),
@@ -101,12 +101,12 @@ export const resolveLexicon = buildLexiconResolver()
 
 /**
  * Resolve the DID authority for a Lexicon from the network using DNS, based on its NSID.
- * @param nsidStr NSID or string representing one for which to lookup its Lexicon DID authority.
+ * @param input NSID or string representing one for which to lookup its Lexicon DID authority.
  */
 export async function resolveLexiconDidAuthority(
-  nsidStr: NSID | string,
+  input: NSID | string,
 ): Promise<string | undefined> {
-  const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
+  const nsid = NSID.from(input)
   const did = await resolveDns(nsid.authority)
   if (did == null || !isValidDid(did)) return
   return did
@@ -120,6 +120,15 @@ export class LexiconResolutionError extends Error {
   ) {
     super(`${description} (${nsid})`, options)
     this.name = 'LexiconResolutionError'
+  }
+
+  static from(
+    input: NSID | string,
+    description?: string,
+    options?: ErrorOptions,
+  ): LexiconResolutionError {
+    const nsid = NSID.from(input)
+    return new LexiconResolutionError(nsid, description, options)
   }
 }
 

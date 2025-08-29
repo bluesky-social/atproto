@@ -5,9 +5,9 @@ export interface Lexicon {
   nsid: string
   createdAt: DateISO
   updatedAt: DateISO
-  lastSucceededAt: DateISO
-  uri: string
-  lexicon: JsonEncoded<LexiconDoc>
+  lastSucceededAt: null | DateISO
+  uri: null | string
+  lexicon: null | JsonEncoded<LexiconDoc>
 }
 
 export const tableName = 'lexicon'

@@ -46,6 +46,7 @@ import { Crawlers } from './crawlers'
 import { DidSqliteCache } from './did-cache'
 import { DiskBlobStore } from './disk-blobstore'
 import { ImageUrlBuilder } from './image/image-url-builder'
+import { lexiconResolverLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
@@ -327,20 +328,32 @@ export class AppContext {
       return cfg.lexicon.didAuthority
     }
 
-    const lexiconResolver: LexiconResolver = async (nsid) => {
-      return baseLexiconResolver(nsid, {
-        didAuthority: getLexiconAuthority(nsid.toString()),
-        // Right now, the lexicon resolver is only used by the oauth-provider,
-        // which caches the responses internally (through the LexiconStore).
-        // Since the `LexiconResolver` does not allow specifying a
-        // `forceRefresh` option, we hard code it here. Should PDSs need to
-        // resolve lexicons for other purposes (e.g. record validation), we'd
-        // probably want to either implement caching as built into the
-        // lexiconResolver, or allow the caller (oauth-provider, etc.) to
-        // specify a `forceRefresh` option by altering the LexiconResolver
-        // interface.
-        forceRefresh: true,
-      })
+    const lexiconResolver: LexiconResolver = async (input) => {
+      const nsid: string = String(input)
+      try {
+        const result = await baseLexiconResolver(input, {
+          didAuthority: getLexiconAuthority(nsid),
+          // Right now, the lexicon resolver is only used by the oauth-provider,
+          // which caches the responses internally (through the LexiconStore).
+          // Since the `LexiconResolver` does not allow specifying a
+          // `forceRefresh` option, we hard code it here. Should PDSs need to
+          // resolve lexicons for other purposes (e.g. record validation), we'd
+          // probably want to either implement caching as built into the
+          // lexiconResolver here, or allow the caller (oauth-provider, etc.) to
+          // specify a `forceRefresh` option by altering the LexiconResolver
+          // interface.
+          forceRefresh: true,
+        })
+
+        const { uri, cid } = result
+        lexiconResolverLogger.info({ nsid, uri, cid }, 'Resolved lexicon')
+
+        return result
+      } catch (err) {
+        lexiconResolverLogger.error({ nsid, err }, 'Lexicon resolution failed')
+
+        throw err
+      }
     }
 
     const oauthProvider = cfg.oauth.provider

@@ -1,22 +1,17 @@
 import { Insertable } from 'kysely'
 import { LexiconData } from '@atproto/oauth-provider'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
-import { assertEmpty } from '../../util/types'
 import { AccountDb, Lexicon } from '../db'
 
-export async function upsert(
-  db: AccountDb,
-  nsid: string,
-  { createdAt, updatedAt, lastSucceededAt, uri, lexicon, ...rest }: LexiconData,
-) {
-  assertEmpty(rest, 'Unexpected lexicon data')
-
+export async function upsert(db: AccountDb, nsid: string, data: LexiconData) {
   const updates: Omit<Insertable<Lexicon>, 'nsid'> = {
-    createdAt: toDateISO(createdAt),
-    updatedAt: toDateISO(updatedAt),
-    lastSucceededAt: toDateISO(lastSucceededAt),
-    uri,
-    lexicon: toJson(lexicon),
+    ...data,
+    createdAt: toDateISO(data.createdAt),
+    updatedAt: toDateISO(data.updatedAt),
+    lastSucceededAt: data.lastSucceededAt
+      ? toDateISO(data.lastSucceededAt)
+      : null,
+    lexicon: data.lexicon ? toJson(data.lexicon) : null,
   }
 
   await db.executeWithRetry(
@@ -31,19 +26,21 @@ export async function find(
   db: AccountDb,
   nsid: string,
 ): Promise<LexiconData | null> {
-  const result = await db.db
+  const row = await db.db
     .selectFrom('lexicon')
     .selectAll()
     .where('nsid', '=', nsid)
     .executeTakeFirst()
-  if (!result) return null
+  if (!row) return null
 
   return {
-    createdAt: fromDateISO(result.createdAt),
-    updatedAt: fromDateISO(result.updatedAt),
-    lastSucceededAt: fromDateISO(result.lastSucceededAt),
-    uri: result.uri,
-    lexicon: fromJson(result.lexicon),
+    ...row,
+    createdAt: fromDateISO(row.createdAt),
+    updatedAt: fromDateISO(row.updatedAt),
+    lastSucceededAt: row.lastSucceededAt
+      ? fromDateISO(row.lastSucceededAt)
+      : null,
+    lexicon: row.lexicon ? fromJson(row.lexicon) : null,
   }
 }
 

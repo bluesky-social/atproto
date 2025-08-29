@@ -1,15 +1,8 @@
 import { LexiconDoc } from '@atproto/lexicon'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import { LexiconData } from './lexicon-data.js'
 
-export { type Awaitable, type LexiconDoc }
-
-export type LexiconData = {
-  createdAt: Date
-  updatedAt: Date
-  lastSucceededAt: Date
-  uri: string
-  lexicon: LexiconDoc
-}
+export type { Awaitable, LexiconData, LexiconDoc }
 
 export interface LexiconStore {
   findLexicon(nsid: string): Awaitable<LexiconData | null>
