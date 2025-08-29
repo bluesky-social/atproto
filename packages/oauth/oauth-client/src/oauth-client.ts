@@ -416,13 +416,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         stateData.dpopKey,
       )
 
-      const redirectUri =
-        options?.redirect_uri ?? server.clientMetadata.redirect_uris[0]
-      if (!server.clientMetadata.redirect_uris.includes(redirectUri)) {
-        // The server will enforce this, but let's catch it early
-        throw new TypeError('Invalid redirect_uri')
-      }
-
       if (issuerParam != null) {
         if (!server.issuer) {
           throw new OAuthCallbackError(
@@ -451,7 +444,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       const tokenSet = await server.exchangeCode(
         codeParam,
         stateData.verifier,
-        redirectUri,
+        options?.redirect_uri ?? server.clientMetadata.redirect_uris[0],
       )
       try {
         await this.sessionGetter.setStored(tokenSet.sub, {
