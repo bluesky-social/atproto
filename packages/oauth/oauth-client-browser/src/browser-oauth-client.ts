@@ -182,14 +182,32 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     )
   }
 
+  /**
+   * This method will automatically restore any existing session, or attempt to
+   * process login callback if the URL contains oauth parameters.
+   *
+   * Use {@link BrowserOAuthClient.initCallback} instead of this method if you
+   * want to force a login callback. This can be esp. useful if you are using
+   * this lib from a framework that has some kind of URL manipulation (like a
+   * client side router).
+   *
+   * Use {@link BrowserOAuthClient.initRestore} instead of this method if you
+   * want to only restore existing sessions, and bypass the automatic processing
+   * of login callbacks.
+   */
   async init(refresh?: boolean) {
-    await fixLocation(this.clientMetadata)
+    // If the URL currently contains oauth query parameters ("state" + "code" or
+    // "state" + "error"), let's automatically process them.
+    const params = this.readCallbackParams()
+    if (params) return this.initCallback(params)
 
-    const signInResult = await this.signInCallback()
-    if (signInResult) {
-      localStorage.setItem(`${NAMESPACE}(sub)`, signInResult.session.sub)
-      return signInResult
-    }
+    return this.initRestore(refresh)
+  }
+
+  async initRestore(refresh?: boolean) {
+    // @NOTE Fixing the location should not be needed from callback endpoints
+    // since callback endpoint are required to use IP based URLs (for localhost)
+    await fixLocation(this.clientMetadata)
 
     const sub = localStorage.getItem(`${NAMESPACE}(sub)`)
     if (sub) {
@@ -333,7 +351,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     })
   }
 
-  private readRedirectUrl() {
+  public findRedirectUrl() {
     for (const uri of this.clientMetadata.redirect_uris) {
       const url = new URL(uri)
       if (
@@ -347,7 +365,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     return undefined
   }
 
-  private readCallbackParams(): URLSearchParams | null {
+  public readCallbackParams(): URLSearchParams | null {
     const params =
       this.responseMode === 'fragment'
         ? new URLSearchParams(location.hash.slice(1))
@@ -358,19 +376,13 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       return null
     }
 
-    // Only if the current URL is one of the redirect_uris
-    if (!this.readRedirectUrl()) return null
-
     return params
   }
 
-  async signInCallback() {
-    const params = this.readCallbackParams()
-    const redirectUrl = this.readRedirectUrl()
-
-    // Not a (valid) OAuth redirect
-    if (!params) return null
-
+  public async initCallback(
+    params: URLSearchParams,
+    redirectUri = this.findRedirectUrl(),
+  ) {
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
     if (this.responseMode === 'fragment') {
@@ -402,9 +414,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       })
     }
 
-    return this.callback(params, {
-      redirect_uri: redirectUrl,
-    })
+    return this.callback(params, { redirect_uri: redirectUri })
       .then(async (result) => {
         if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
           const receivedByParent = await sendPopupResult({
@@ -420,6 +430,8 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
           throw new LoginContinuedInParentWindowError() // signInPopup
         }
+
+        localStorage.setItem(`${NAMESPACE}(sub)`, result.session.sub)
 
         return result
       })
