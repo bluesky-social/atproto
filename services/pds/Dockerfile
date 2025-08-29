@@ -24,6 +24,7 @@ COPY ./packages/syntax ./packages/syntax
 COPY ./packages/identity ./packages/identity
 COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
+COPY ./packages/lexicon-resolver ./packages/lexicon-resolver
 COPY ./packages/repo ./packages/repo
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
