@@ -34,7 +34,8 @@ export type BuildFetchHandlerOptions = {
   /**
    * Bring your own fetch implementation. Typically useful for testing, logging,
    * mocking, or adding retries, session management, signatures, proof of
-   * possession (DPoP), etc. Defaults to the global `fetch` function.
+   * possession (DPoP), SSRF protection, etc. Defaults to the global `fetch`
+   * function.
    */
   fetch?: typeof globalThis.fetch
 }

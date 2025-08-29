@@ -14,6 +14,7 @@ export const crawlerLogger = subsystemLogger('pds:crawler')
 export const httpLogger = subsystemLogger('pds')
 export const fetchLogger = subsystemLogger('pds:fetch')
 export const oauthLogger = subsystemLogger('pds:oauth')
+export const lexiconResolverLogger = subsystemLogger('pds:lexicon-resolver')
 
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,

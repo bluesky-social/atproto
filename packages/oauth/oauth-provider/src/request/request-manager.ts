@@ -1,6 +1,7 @@
 import { isAtprotoDid } from '@atproto/did'
+import { LexiconResolutionError } from '@atproto/lexicon-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
-import { isValidAtprotoOauthScope } from '@atproto/oauth-scopes'
+import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
@@ -23,6 +24,7 @@ import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorizatio
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
+import { LexiconManager } from '../lexicon/lexicon-manager.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
@@ -43,6 +45,7 @@ import {
 export class RequestManager {
   constructor(
     protected readonly store: RequestStore,
+    protected readonly lexiconManager: LexiconManager,
     protected readonly signer: Signer,
     protected readonly metadata: OAuthAuthorizationServerMetadata,
     protected readonly hooks: OAuthHooks,
@@ -171,17 +174,16 @@ export class RequestManager {
     // > (Section 3.2.3) to inform the client of the actual scope granted.
 
     // Let's make sure the scopes are unique (to reduce the token & storage
-    // size) & are indeed supported.
+    // size).
+    const scopes = new Set(parameters.scope?.split(' '))
 
     // @NOTE An app requesting a not yet supported list of scopes will need to
     // re-authenticate the user once the scopes are supported. This is due to
     // the fact that the AS does not know how to properly display those scopes
     // to the user, so it cannot properly ask for consent.
-    const scopes = new Set(
-      parameters.scope?.split(' ')?.filter(isValidAtprotoOauthScope),
-    )
-
-    parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
+    const scope =
+      Array.from(scopes).filter(isAtprotoOauthScope).join(' ') || undefined
+    parameters = { ...parameters, scope }
 
     if (parameters.code_challenge) {
       switch (parameters.code_challenge_method) {
@@ -286,6 +288,23 @@ export class RequestManager {
 
       // Update the parameters to ensure the right case is used
       parameters = { ...parameters, login_hint: hint }
+    }
+
+    // Make sure that every nsid in the scope resolves to a valid permission set
+    // lexicon
+    if (parameters.scope) {
+      await this.lexiconManager
+        .getPermissionSetsFromScope(parameters.scope)
+        .catch((cause) => {
+          throw new AuthorizationError(
+            parameters,
+            cause instanceof LexiconResolutionError
+              ? cause.message
+              : 'Unable to retrieve included permission sets',
+            'invalid_scope',
+            cause,
+          )
+        })
     }
 
     return parameters

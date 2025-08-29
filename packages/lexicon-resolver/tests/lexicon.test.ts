@@ -74,7 +74,9 @@ describe('Lexicon resolution', () => {
       resolveLexicon('example.alice.mismatch', {
         forceRefresh: true,
       }),
-    ).rejects.toThrow('Lexicon schema record id does not match NSID')
+    ).rejects.toThrow(
+      'Lexicon schema record id (example.test1.mismatch.bad) does not match NSID (example.alice.mismatch)',
+    )
   })
 
   it('fails on missing DNS entry.', async () => {
@@ -89,7 +91,7 @@ describe('Lexicon resolution', () => {
         forceRefresh: true,
       }),
     ).rejects.toThrow(
-      'Could not resolve a DID authority for NSID: example.bob.name',
+      'Could not resolve a DID authority for NSID (example.bob.name)',
     )
   })
 
@@ -123,7 +125,8 @@ describe('Lexicon resolution', () => {
     ).rejects.toThrow(
       expect.objectContaining({
         name: 'LexiconResolutionError',
-        message: 'Could not resolve Lexicon schema record',
+        message:
+          'Could not resolve Lexicon schema record (example.alice.badsig)',
         cause: expect.objectContaining({
           name: 'RecordResolutionError',
           message: expect.stringContaining('Invalid signature on commit'),
@@ -152,7 +155,7 @@ describe('Lexicon resolution', () => {
     ).rejects.toThrow(
       expect.objectContaining({
         name: 'LexiconResolutionError',
-        message: 'Invalid Lexicon document',
+        message: 'Invalid Lexicon document (example.alice.baddoc)',
         cause: expect.objectContaining({
           name: 'ZodError',
         }),

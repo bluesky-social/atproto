@@ -1,13 +1,16 @@
+import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { HTMLAttributes, useMemo } from 'react'
+import { Fragment, HTMLAttributes, ReactNode, useMemo } from 'react'
 import { Override } from '#/lib/util'
 import {
-  BlobScope,
-  DIDLike,
-  NSID,
-  PermissionSetTransition,
-  RepoScope,
-  RpcScope,
+  AudParam,
+  BlobPermission,
+  CollectionParam,
+  IncludeScope,
+  LxmParam,
+  RepoPermission,
+  RpcPermission,
+  ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import { Checkbox } from '../forms/checkbox'
 import { Admonition, AdmonitionProps } from './admonition'
@@ -15,23 +18,24 @@ import { DescriptionCard } from './description-card'
 import {
   AccountOutlinedIcon,
   AtSymbolIcon,
+  AtomIcon,
   AuthenticateIcon,
   ButterflyIcon,
   ChatIcon,
   CheckMarkIcon,
   EmailIcon,
-  ImageIcon,
   NewspaperIcon,
-  PaperPlaneIcon,
-  VideoClipIcon,
+  RaisingHandIcon,
 } from './icons'
+import { LangProp } from './lang-string'
 
 export type ScopeDescriptionProps = Override<
-  React.HTMLAttributes<HTMLDivElement>,
+  HTMLAttributes<HTMLDivElement>,
   {
     clientTrusted?: boolean
     clientFirstParty?: boolean
     scope?: string
+    permissionSets: PermissionSets
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -40,6 +44,7 @@ export type ScopeDescriptionProps = Override<
 
 export function ScopeDescription({
   scope,
+  permissionSets,
   clientTrusted = false,
   clientFirstParty = false,
   allowEmail,
@@ -49,9 +54,19 @@ export function ScopeDescription({
   className = '',
   ...attrs
 }: ScopeDescriptionProps) {
-  const permissions = useMemo(() => new PermissionSetTransition(scope), [scope])
-  const showFineGrainedPermissions =
-    !useHasOnlyBlueskySpecificScopes(permissions)
+  const includeScopes = useMemo(() => {
+    return Array.from(
+      new Set(
+        scope
+          ?.split(' ')
+          .map((v) => IncludeScope.fromString(v))
+          .filter((v) => v != null),
+      ),
+    )
+  }, [scope])
+  const permissions = useMemo(() => {
+    return new ScopePermissionsTransition(scope)
+  }, [scope])
 
   if (permissions.scopes.size === 0) return null
   if (permissions.scopes.size === 1 && permissions.scopes.has('atproto')) {
@@ -72,18 +87,100 @@ export function ScopeDescription({
       <BlueskyAppviewPermissions permissions={permissions} />
       <BlueskyChatPermissions permissions={permissions} />
 
-      {showFineGrainedPermissions && (
-        <>
-          <BlobPermissions permissions={permissions} />
-          <RepoPermissions permissions={permissions} />
-          <RpcMethodsDetails permissions={permissions} />
-        </>
-      )}
+      <IncludedPermissions
+        includeScopes={includeScopes}
+        permissionSets={permissionSets}
+      />
+
+      <FineGrainedPermissions permissions={permissions} />
 
       {(!clientFirstParty || !clientTrusted) && (
         <IdentityWarning className="mt-2" permissions={permissions} />
       )}
     </div>
+  )
+}
+
+function IncludedPermissions({
+  includeScopes,
+  permissionSets,
+}: {
+  includeScopes: IncludeScope[]
+  permissionSets: PermissionSets
+}) {
+  if (!includeScopes.length) return null
+
+  return (
+    <>
+      {includeScopes.map((includeScope, i) => (
+        <IncludeScopePermissions
+          key={i}
+          includeScope={includeScope}
+          permissionSet={permissionSets[includeScope.nsid]}
+        />
+      ))}
+    </>
+  )
+}
+
+function IncludeScopePermissions({
+  includeScope,
+  permissionSet,
+}: {
+  includeScope: IncludeScope
+  permissionSet?: PermissionSet
+}) {
+  const { nsid } = includeScope
+
+  const permissions = useMemo(() => {
+    if (!permissionSet) return null
+    const parsedPermissions = includeScope.toPermissions(permissionSet)
+    return new ScopePermissionsTransition(
+      parsedPermissions.map((p) => p.toString()),
+    )
+  }, [includeScope, permissionSet])
+
+  return (
+    <DescriptionCard
+      role="listitem"
+      image={
+        isBskyAppNsid(nsid) ? (
+          <ButterflyIcon className="size-6" />
+        ) : isBskyChatNsid(nsid) ? (
+          <ChatIcon className="size-6" />
+        ) : nsid.startsWith('com.atproto.moderation.') ? (
+          <RaisingHandIcon className="size-6" />
+        ) : (
+          <AtomIcon className="size-6" />
+        )
+      }
+      title={
+        <LangProp object={permissionSet} property="title" fallback={nsid} />
+      }
+      description={
+        <LangProp
+          object={permissionSet}
+          property="detail"
+          fallback={
+            // Do not set the "nsid" as fallback for the "detail" if is was already used when displaying the "title"
+            permissionSet?.title ? nsid : null
+          }
+        />
+      }
+    >
+      <p className="mt-1">
+        <Trans>
+          The application requests the permissions necessary to perform the
+          following actions on your behalf:
+        </Trans>
+      </p>
+      {permissions ? (
+        <>
+          <RpcMethodsTable className="mt-2" permissions={permissions} />
+          <RepoTable className="mt-2" permissions={permissions} />
+        </>
+      ) : null}
+    </DescriptionCard>
   )
 }
 
@@ -95,7 +192,7 @@ function IdentityWarning({
   prominent = true,
   ...props
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 } & AdmonitionProps) {
   const hasFullIdentityAccess = useMemo(() => {
     return permissions.allowsIdentity({ attr: '*' })
@@ -104,12 +201,14 @@ function IdentityWarning({
   if (hasFullIdentityAccess) {
     return (
       <Admonition {...props} type={type} prominent={prominent}>
-        <Trans>
-          The application is asking for full control over your network identity,
-          meaning that it could <b>permanently break</b>, or even <b>steal</b>,
-          your account. Only grant this permission to applications you really
-          trust.
-        </Trans>
+        <p>
+          <Trans>
+            The application is asking for full control over your network
+            identity, meaning that it could <b>permanently break</b>, or even{' '}
+            <b>steal</b>, your account. Only grant this permission to
+            applications you really trust.
+          </Trans>
+        </p>
       </Admonition>
     )
   }
@@ -122,7 +221,7 @@ function EmailPermissions({
   allowEmail,
   onAllowEmail,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
   allowEmail?: boolean
   onAllowEmail?: (allowed: boolean) => void
 }) {
@@ -165,97 +264,10 @@ function EmailPermissions({
   return null
 }
 
-// @TODO This could be displayed as a "detail" of the repo scope (if present)
-function BlobPermissions({
-  permissions,
-}: {
-  permissions: PermissionSetTransition
-}) {
-  const { t } = useLingui()
-
-  const hasRepoScope = useMemo(() => {
-    return (
-      permissions.hasTransitionGeneric ||
-      permissions.scopes.some((s) => RepoScope.fromString(s) != null)
-    )
-  }, [permissions])
-
-  const blobScopes = useMemo(() => {
-    if (permissions.hasTransitionGeneric) {
-      return [new BlobScope(['*/*'])]
-    }
-    return Array.from(
-      permissions.scopes.map((v) => BlobScope.fromString(v)),
-    ).filter((v) => v != null)
-  }, [permissions])
-
-  const types = useMemo(() => {
-    const allowsAny = blobScopes.some((s) => s.accept.includes('*/*'))
-    const types = {
-      images: allowsAny,
-      videos: allowsAny,
-      audio: allowsAny,
-      other: allowsAny,
-    }
-    if (!allowsAny) {
-      for (const scope of blobScopes) {
-        for (const a of scope.accept) {
-          if (a.startsWith('image/')) {
-            types.images = true
-          } else if (a.startsWith('video/')) {
-            types.videos = true
-          } else if (a.startsWith('audio/')) {
-            types.audio = true
-          } else {
-            types.other = true
-          }
-        }
-      }
-    }
-    return types
-  }, [blobScopes])
-
-  if (!hasRepoScope) return null
-  if (blobScopes.length === 0) return null
-
-  if (types.images && !types.videos && !types.audio && !types.other) {
-    // Special case: only images
-    return (
-      <DescriptionCard
-        role="listitem"
-        image={<ImageIcon className="size-6" />}
-        title={t`Storage`}
-        description={t`Upload images`}
-      />
-    )
-  }
-
-  if (!types.images && types.videos && !types.audio && !types.other) {
-    // Special case: only videos
-    return (
-      <DescriptionCard
-        role="listitem"
-        image={<VideoClipIcon className="size-6" />}
-        title={t`Storage`}
-        description={t`Upload videos`}
-      />
-    )
-  }
-
-  return (
-    <DescriptionCard
-      role="listitem"
-      image={<PaperPlaneIcon className="size-6" />}
-      title={t`Storage`}
-      description={t`Upload files`}
-    />
-  )
-}
-
 function AccountPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -277,12 +289,17 @@ function AccountPermissions({
 }
 
 /**
- * A hook that returns true if, and only if, there is at least one repo or rpc
- * scope that is used by the Bluesky app, and if every repo and rpc scope are
- * used by the Bluesky app.
+ * Will display detailed rep and rpc permissions unless the app only has
+ * app.bsky or chat.bsky specific permissions, in which case the
+ * <BlueskyAppviewPermissions /> and <BlueskyChatPermissions /> components cover
+ * them.
  */
-function useHasOnlyBlueskySpecificScopes(permissions: PermissionSetTransition) {
-  return useMemo(() => {
+function FineGrainedPermissions({
+  permissions,
+}: {
+  permissions: ScopePermissionsTransition
+}) {
+  const hasOnlyBskyAppSpecificPermissions = useMemo(() => {
     if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
       return false
     }
@@ -290,7 +307,7 @@ function useHasOnlyBlueskySpecificScopes(permissions: PermissionSetTransition) {
     let foundOne = false
 
     for (const s of permissions.scopes) {
-      const rpc = RpcScope.fromString(s)
+      const rpc = RpcPermission.fromString(s)
       if (rpc) {
         foundOne = true
         if (isOfficialBlueskyAppviewServiceId(rpc.aud)) continue
@@ -298,7 +315,7 @@ function useHasOnlyBlueskySpecificScopes(permissions: PermissionSetTransition) {
         return false
       }
 
-      const repo = RepoScope.fromString(s)
+      const repo = RepoPermission.fromString(s)
       if (repo) {
         foundOne = true
         if (repo.collection.every(isBlueskySpecificNsid)) continue
@@ -308,12 +325,21 @@ function useHasOnlyBlueskySpecificScopes(permissions: PermissionSetTransition) {
 
     return foundOne
   }, [permissions])
+
+  if (hasOnlyBskyAppSpecificPermissions) return null
+
+  return (
+    <>
+      <RepoPermissions permissions={permissions} />
+      <RpcMethodsDetails permissions={permissions} />
+    </>
+  )
 }
 
 function BlueskyAppviewPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const hasBskyAppRepo = useMemo(() => {
     return permissions.scopes.some(scopeEnablesBskyAppRepo)
@@ -349,7 +375,7 @@ function BlueskyAppviewPermissions({
 function BlueskyChatPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -377,7 +403,7 @@ function BlueskyChatPermissions({
 function IdentityPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -420,7 +446,7 @@ function IdentityPermissions({
 function RpcMethodsDetails({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -444,7 +470,7 @@ function RpcMethodsDetails({
     )
   }
 
-  if (permissions.scopes.some((s) => RpcScope.fromString(s) != null)) {
+  if (permissions.scopes.some((s) => RpcPermission.fromString(s) != null)) {
     return (
       <DescriptionCard
         role="listitem"
@@ -457,8 +483,8 @@ function RpcMethodsDetails({
         </p>
         <p className="mt-1">
           <Trans>
-            The application requests the permissions necessary to perform, on
-            your behalf, the following actions:
+            The application requests the permissions necessary to perform the
+            following actions on your behalf:
           </Trans>
         </p>
         <RpcMethodsTable className="mt-2" permissions={permissions} />
@@ -483,7 +509,7 @@ function RpcDescription() {
 type RpcMethodsTableProps = Override<
   HTMLAttributes<HTMLTableElement>,
   {
-    permissions: PermissionSetTransition
+    permissions: ScopePermissionsTransition
     children?: never
   }
 >
@@ -492,13 +518,11 @@ function RpcMethodsTable({
   className = '',
   ...attrs
 }: RpcMethodsTableProps) {
-  const { t } = useLingui()
-
   const audLxmsEntries = useMemo(() => {
-    const map = new Map<'*' | DIDLike, Set<'*' | NSID>>()
+    const map = new Map<AudParam, Set<LxmParam>>()
 
     for (const s of permissions.scopes) {
-      const parsed = RpcScope.fromString(s)
+      const parsed = RpcPermission.fromString(s)
       if (!parsed) continue
 
       let set = map.get(parsed.aud)
@@ -510,37 +534,44 @@ function RpcMethodsTable({
       .sort(([a], [b]) => a.localeCompare(b))
       .map(
         ([aud, lxms]) =>
-          [aud, Array.from(lxms).sort((a, b) => a.localeCompare(b))] as const,
+          [
+            aud,
+            lxms.has('*')
+              ? (['*'] as const)
+              : Array.from(lxms).sort((a, b) => a.localeCompare(b)),
+          ] as const,
       )
   }, [permissions])
+
+  if (!audLxmsEntries.length) return null
 
   return (
     <table className={`w-full table-auto ${className}`} {...attrs}>
       <thead>
         <tr className="text-sm">
-          <th className="text-left font-normal">{t`Service`}</th>
-          <th className="text-left font-normal">{t`Methods`}</th>
+          <th className="text-left font-normal">
+            <Trans context="RPC lxm">Call</Trans>
+          </th>
+          <th className="text-left font-normal">
+            <Trans context="RPC aud">Towards</Trans>
+          </th>
         </tr>
       </thead>
       <tbody>
-        {audLxmsEntries.map(([aud, lxms]) => (
-          <tr key={aud} className="text-sm">
-            <td className="align-top text-slate-500">
-              {aud === '*' ? <em>{t`Any service`}</em> : <code>{aud}</code>}
-            </td>
-            <td className="text-slate-500">
-              {lxms.includes('*') ? (
-                <em>{t`Any method`}</em>
-              ) : (
-                lxms.map((lxm) => (
-                  <code className="block" key={lxm}>
-                    {lxm}
-                  </code>
-                ))
+        {audLxmsEntries.map(([aud, lxms]) =>
+          lxms.map((lxm, i, array) => (
+            <tr key={lxm} className="text-xs">
+              <td className={i > 0 ? 'pt-1' : undefined}>
+                <Lxm lxm={lxm} />
+              </td>
+              {i === 0 && (
+                <td className="align-top" rowSpan={array.length}>
+                  <Aud aud={aud} />
+                </td>
               )}
-            </td>
-          </tr>
-        ))}
+            </tr>
+          )),
+        )}
       </tbody>
     </table>
   )
@@ -549,7 +580,7 @@ function RpcMethodsTable({
 function RepoPermissions({
   permissions,
 }: {
-  permissions: PermissionSetTransition
+  permissions: ScopePermissionsTransition
 }) {
   const { t } = useLingui()
 
@@ -572,7 +603,7 @@ function RepoPermissions({
         </p>
         <p className="mt-1">
           <Trans>
-            The application is asking to be able to create, update, and delete
+            The application is asking to be able to create, update, and delete{' '}
             <b>any data</b> from your repository.
           </Trans>
         </p>
@@ -580,7 +611,7 @@ function RepoPermissions({
     )
   }
 
-  if (permissions.scopes.some((s) => RepoScope.fromString(s) != null)) {
+  if (permissions.scopes.some((s) => RepoPermission.fromString(s) != null)) {
     return (
       <DescriptionCard
         role="listitem"
@@ -593,8 +624,8 @@ function RepoPermissions({
         </p>
         <p className="mt-1">
           <Trans>
-            The application wants to be able to perform the following actions on
-            your repository:
+            The application requests the permissions necessary to perform the
+            following actions on your behalf:
           </Trans>
         </p>
         <RepoTable className="mt-2" permissions={permissions} />
@@ -618,7 +649,7 @@ function RepoDescription() {
 type RepoTableProps = Override<
   HTMLAttributes<HTMLTableElement>,
   {
-    permissions: PermissionSetTransition
+    permissions: ScopePermissionsTransition
     children?: never
   }
 >
@@ -627,7 +658,7 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
 
   const nsidActions = useMemo(() => {
     const map = new Map<
-      '*' | NSID,
+      CollectionParam,
       {
         create: boolean
         update: boolean
@@ -636,15 +667,15 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
     >()
 
     for (const s of permissions.scopes) {
-      const parsed = RepoScope.fromString(s)
+      const parsed = RepoPermission.fromString(s)
       if (!parsed) continue
 
-      for (const nsid of parsed.collection) {
-        if (map.has(nsid)) {
-          const actions = map.get(nsid)!
+      for (const coll of parsed.collection) {
+        if (map.has(coll)) {
+          const actions = map.get(coll)!
           for (const action of parsed.action) actions[action] = true
         } else {
-          map.set(nsid, {
+          map.set(coll, {
             create: parsed.action.includes('create'),
             update: parsed.action.includes('update'),
             delete: parsed.action.includes('delete'),
@@ -655,6 +686,17 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
 
     return map
   }, [permissions])
+
+  const blobScopes = useMemo(() => {
+    if (permissions.hasTransitionGeneric) {
+      return [new BlobPermission(['*/*'])]
+    }
+    return Array.from(
+      permissions.scopes.map((v) => BlobPermission.fromString(v)),
+    ).filter((v) => v != null)
+  }, [permissions])
+
+  if (!nsidActions.size) return null
 
   const starActions = nsidActions.get('*')
 
@@ -675,32 +717,38 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
         </tr>
       </thead>
       <tbody>
-        {nsidActionsEntries.map(([nsid, actions]) => (
-          <tr key={nsid} className="text-sm">
-            <td className="text-slate-500">
-              {nsid === '*' ? (
-                <em>{t`Any collection`}</em>
-              ) : (
-                <code>{nsid}</code>
-              )}
+        {nsidActionsEntries.map(([coll, actions], i) => (
+          <tr key={coll} className="text-xs">
+            <td className={i > 0 ? 'pt-1' : undefined}>
+              <Collection coll={coll} />
             </td>
             <td className="text-center">
               {starActions?.create || actions.create ? (
-                <CheckMarkIcon className="inline-block size-4" />
+                <CheckMarkIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.update || actions.update ? (
-                <CheckMarkIcon className="inline-block size-4" />
+                <CheckMarkIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.delete || actions.delete ? (
-                <CheckMarkIcon className="inline-block size-4" />
+                <CheckMarkIcon className="inline-block size-3" />
               ) : null}
             </td>
           </tr>
         ))}
+        {blobScopes.length > 0 && (
+          <tr>
+            <td className="pt-2">
+              <Trans>Blob storage</Trans>
+            </td>
+            <td colSpan={3} className="pt-2 text-center">
+              <Trans>Upload files</Trans>
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   )
@@ -721,14 +769,14 @@ function isBskyChatNsid(nsid: string): nsid is `chat.bsky.${string}` {
 
 function scopeEnablesChat(scope: string): boolean {
   if (scope === 'transition:chat.bsky') return true
-  const rpc = RpcScope.fromString(scope)
+  const rpc = RpcPermission.fromString(scope)
   if (!rpc) return false
   // Official Bluesky chat is not hosted by the appview service
   if (isOfficialBlueskyAppviewServiceId(rpc.aud)) return false
   return rpc.lxm.includes('*') || rpc.lxm.some(isBskyChatNsid)
 }
 
-function isBlueskySpecificNsid(nsid: NSID | '*'): boolean {
+function isBlueskySpecificNsid(nsid: CollectionParam | LxmParam): boolean {
   return nsid === '*'
     ? false
     : nsid === 'com.atproto.moderation.createReport' ||
@@ -738,7 +786,7 @@ function isBlueskySpecificNsid(nsid: NSID | '*'): boolean {
 
 function scopeEnablesBskyAppRepo(scope: string): boolean {
   if (scope === 'transition:generic') return true
-  const repo = RepoScope.fromString(scope)
+  const repo = RepoPermission.fromString(scope)
   if (!repo) return false
   return (
     repo.collection.includes('*') || repo.collection.some(isBlueskySpecificNsid)
@@ -747,7 +795,7 @@ function scopeEnablesBskyAppRepo(scope: string): boolean {
 
 function scopeEnablesPrivateBskyAppMethods(scope: string): boolean {
   if (scope === 'transition:generic') return true
-  const rpc = RpcScope.fromString(scope)
+  const rpc = RpcPermission.fromString(scope)
   if (!rpc) return false
   return (
     rpc.lxm.includes('app.bsky.actor.getPreferences') ||
@@ -760,5 +808,123 @@ function scopeEnablesPrivateBskyAppMethods(scope: string): boolean {
     rpc.lxm.includes('app.bsky.graph.unmuteThread') ||
     rpc.lxm.includes('app.bsky.graph.getMutes') ||
     rpc.lxm.includes('*')
+  )
+}
+
+type LxmProps = Override<
+  Omit<HTMLAttributes<HTMLDivElement>, 'children'>,
+  { lxm: LxmParam }
+>
+function Lxm({ lxm, ...attrs }: LxmProps) {
+  return lxm === '*' ? (
+    <ItemDescription {...attrs}>
+      <Trans>Any method</Trans>
+    </ItemDescription>
+  ) : (
+    <Nsid {...attrs} nsid={lxm} />
+  )
+}
+
+type AudProps = Override<
+  Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'>,
+  { aud: AudParam }
+>
+function Aud({ aud, ...attrs }: AudProps) {
+  if (aud.startsWith('did:web:api.bsky.app#')) {
+    return (
+      <ItemDescription {...attrs} title={aud}>
+        <Trans>Bluesky App services</Trans>
+      </ItemDescription>
+    )
+  }
+  if (aud.startsWith('did:web:api.bsky.chat#')) {
+    return (
+      <ItemDescription {...attrs} title={aud}>
+        <Trans>Bluesky Chat services</Trans>
+      </ItemDescription>
+    )
+  }
+  if (aud.startsWith('did:web:') && aud.includes('#')) {
+    const domain = aud.slice(8, aud.indexOf('#'))
+    return (
+      <ItemDescription {...attrs} title={aud}>
+        <Trans>
+          A service controlled by <b>{domain}</b>
+        </Trans>
+      </ItemDescription>
+    )
+  }
+  if (aud === '*') {
+    return (
+      <ItemDescription {...attrs}>
+        <Trans>Any service</Trans>
+      </ItemDescription>
+    )
+  }
+
+  return (
+    <Identifier {...attrs} title={aud}>
+      {aud}
+    </Identifier>
+  )
+}
+
+type CollectionProps = Override<
+  HTMLAttributes<HTMLDivElement>,
+  { coll: CollectionParam; children?: never }
+>
+function Collection({ coll, ...attrs }: CollectionProps) {
+  return coll === '*' ? (
+    <ItemDescription {...attrs}>
+      <Trans>Any collection</Trans>
+    </ItemDescription>
+  ) : (
+    <Nsid {...attrs} nsid={coll} />
+  )
+}
+
+type ItemDescriptionProps = HTMLAttributes<HTMLDivElement>
+function ItemDescription({
+  children,
+  className = '',
+  ...attrs
+}: ItemDescriptionProps) {
+  return (
+    <em {...attrs} className={`text-slate-500 ${className}`}>
+      {children}
+    </em>
+  )
+}
+
+type NsidProps = Override<IdentifierProps, { nsid: string; children?: never }>
+function Nsid({ nsid, ...attrs }: NsidProps) {
+  return (
+    <Identifier {...attrs}>
+      {nsid.split('.').map((part, i) =>
+        i === 0 ? (
+          part
+        ) : (
+          // line break **after** the dot
+          <Fragment key={i}>
+            {'.'}
+            <wbr />
+            {part}
+          </Fragment>
+        ),
+      )}
+    </Identifier>
+  )
+}
+
+type IdentifierProps = HTMLAttributes<HTMLDivElement>
+function Identifier({
+  children,
+  className = '',
+  ...attrs
+}: IdentifierProps): ReactNode {
+  return (
+    <code {...attrs} className={`text-slate-500 ${className}`}>
+      {children}
+    </code>
   )
 }

@@ -1,6 +1,5 @@
-export type NSID = `${string}.${string}`
-export const isNSID = (value: string): value is NSID =>
-  value.includes('.') &&
-  !value.includes(' ') &&
-  !value.startsWith('.') &&
-  !value.endsWith('.')
+import { isValidNsid } from '@atproto/syntax'
+
+export type Nsid = `${string}.${string}.${string}`
+export const isNsid = (v: unknown): v is Nsid =>
+  typeof v === 'string' && isValidNsid(v)

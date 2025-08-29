@@ -44,6 +44,7 @@ export function InputText({
       bellow={bellow}
       className={clsx('cursor-text', className)}
       tabIndex={-1}
+      actionable={false}
       onClick={(event) => {
         if (inputRef.current !== event.target) {
           event.preventDefault()

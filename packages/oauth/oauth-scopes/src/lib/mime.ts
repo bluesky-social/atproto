@@ -20,7 +20,8 @@ export function isMime(value: string): value is Mime {
 
 export type Accept = '*/*' | `${string}/*` | Mime
 
-export function isAccept(value: string): value is Accept {
+export function isAccept(value: unknown): value is Accept {
+  if (typeof value !== 'string') return false
   if (value === '*/*') return true // Fast path for the most common case
   if (!isStringSlashString(value)) return false
   return !value.includes('*') || value.endsWith('/*')

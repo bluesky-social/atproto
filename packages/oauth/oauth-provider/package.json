@@ -40,6 +40,8 @@
     "@atproto/did": "workspace:*",
     "@atproto/jwk": "workspace:*",
     "@atproto/jwk-jose": "workspace:*",
+    "@atproto/lexicon": "workspace:*",
+    "@atproto/lexicon-resolver": "workspace:*",
     "@atproto/oauth-types": "workspace:*",
     "@atproto/oauth-provider-api": "workspace:*",
     "@atproto/oauth-provider-frontend": "workspace:*",

@@ -10,7 +10,10 @@ import {
   VerifyTokenClaimsOptions,
   WWWAuthenticateError,
 } from '@atproto/oauth-provider'
-import { PermissionSet, PermissionSetTransition } from '@atproto/oauth-scopes'
+import {
+  ScopePermissions,
+  ScopePermissionsTransition,
+} from '@atproto/oauth-scopes'
 import {
   AuthRequiredError,
   Awaitable,
@@ -55,7 +58,7 @@ export type ExtraScopedOptions<S extends AuthScope = AuthScope> = {
 
 export type AuthorizedOptions<P extends Params = Params> = {
   authorize: (
-    permissions: PermissionSet,
+    permissions: ScopePermissions,
     ctx: MethodAuthContext<P>,
   ) => Awaitable<void>
 }
@@ -399,7 +402,7 @@ export class AuthVerifier {
 
       await this.verifyStatus(did, verifyStatusOptions)
 
-      const permissions = new PermissionSetTransition(
+      const permissions = new ScopePermissionsTransition(
         tokenClaims.scope?.split(' '),
       )
 

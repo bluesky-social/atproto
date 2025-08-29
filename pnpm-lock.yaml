@@ -1095,6 +1095,12 @@ importers:
       '@atproto/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
+      '@atproto/lexicon':
+        specifier: workspace:*
+        version: link:../../lexicon
+      '@atproto/lexicon-resolver':
+        specifier: workspace:*
+        version: link:../../lexicon-resolver
       '@atproto/oauth-provider-api':
         specifier: workspace:*
         version: link:../oauth-provider-api
@@ -1344,6 +1350,16 @@ importers:
         version: 6.2.0(@types/node@18.19.67)
 
   packages/oauth/oauth-scopes:
+    dependencies:
+      '@atproto/did':
+        specifier: workspace:^
+        version: link:../../did
+      '@atproto/lexicon':
+        specifier: workspace:^
+        version: link:../../lexicon
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../../syntax
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -1500,6 +1516,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/lexicon-resolver':
+        specifier: workspace:^
+        version: link:../lexicon-resolver
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider

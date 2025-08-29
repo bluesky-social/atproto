@@ -5,8 +5,8 @@ import {
   ensureValidAtUri,
   ensureValidDid,
   ensureValidHandle,
-  ensureValidNsid,
   ensureValidRecordKey,
+  isValidNsid,
   isValidTid,
 } from '@atproto/syntax'
 import { ValidationError, ValidationResult } from '../types'
@@ -94,15 +94,17 @@ export function atIdentifier(path: string, value: string): ValidationResult {
 }
 
 export function nsid(path: string, value: string): ValidationResult {
-  try {
-    ensureValidNsid(value)
-  } catch {
+  if (isValidNsid(value)) {
+    return {
+      success: true,
+      value,
+    }
+  } else {
     return {
       success: false,
       error: new ValidationError(`${path} must be a valid nsid`),
     }
   }
-  return { success: true, value }
 }
 
 export function cid(path: string, value: string): ValidationResult {

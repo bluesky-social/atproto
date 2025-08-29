@@ -124,6 +124,7 @@ describe('oauth', () => {
       handle_resolver: network.pds.url,
       sign_up_url: network.pds.url,
       env: 'test',
+      scope: `atproto account:email identity:* repo:*`,
     })}`
   })
 
@@ -156,6 +157,10 @@ describe('oauth', () => {
     await page.typeInInput('password', 'bob-pass')
 
     await page.clickOnButton("S'inscrire")
+
+    await page.ensureTextVisibility(
+      `L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait casser de façon permanente, ou même usurper, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance.`,
+    )
 
     // Make sure the new account is propagated to the PLC directory, allowing
     // the client to resolve the account's did

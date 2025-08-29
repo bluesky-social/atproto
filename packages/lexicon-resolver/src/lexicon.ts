@@ -43,6 +43,15 @@ export type LexiconResolution = {
   lexicon: LexiconDoc & LexiconSchemaRecord
 }
 
+export {
+  AtUri,
+  CID,
+  type Commit,
+  type LexiconDoc,
+  type LexiconSchemaRecord,
+  NSID,
+}
+
 /**
  * Build a Lexicon resolver function.
  */
@@ -51,16 +60,17 @@ export function buildLexiconResolver(
 ): AtprotoLexiconResolver {
   const resolveRecord = buildRecordResolver(options)
   return async function (
-    nsidStr: NSID | string,
+    input: NSID | string,
     opts: ResolveLexiconOptions = {},
   ): Promise<LexiconResolution> {
-    const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
+    const nsid = NSID.from(input)
     const didAuthority = await getDidAuthority(nsid, opts)
     const verified = await resolveRecord(
       AtUri.make(didAuthority, LEXICON_SCHEMA_NSID, nsid.toString()),
       { forceRefresh: opts.forceRefresh },
     ).catch((err) => {
       throw new LexiconResolutionError(
+        nsid,
         'Could not resolve Lexicon schema record',
         { cause: err },
       )
@@ -69,16 +79,17 @@ export function buildLexiconResolver(
     try {
       lexicon = parseLexiconDoc(verified.record)
     } catch (err) {
-      throw new LexiconResolutionError('Invalid Lexicon document', {
+      throw new LexiconResolutionError(nsid, 'Invalid Lexicon document', {
         cause: err,
       })
     }
     if (!isLexiconSchemaRecord(lexicon)) {
-      throw new LexiconResolutionError('Invalid Lexicon schema record')
+      throw new LexiconResolutionError(nsid, 'Invalid Lexicon schema record')
     }
     if (lexicon.id !== nsid.toString()) {
       throw new LexiconResolutionError(
-        `Lexicon schema record id does not match NSID: ${lexicon.id}`,
+        nsid,
+        `Lexicon schema record id (${lexicon.id}) does not match NSID`,
       )
     }
     const { uri, cid, commit } = verified
@@ -90,21 +101,34 @@ export const resolveLexicon = buildLexiconResolver()
 
 /**
  * Resolve the DID authority for a Lexicon from the network using DNS, based on its NSID.
- * @param nsidStr NSID or string representing one for which to lookup its Lexicon DID authority.
+ * @param input NSID or string representing one for which to lookup its Lexicon DID authority.
  */
 export async function resolveLexiconDidAuthority(
-  nsidStr: NSID | string,
+  input: NSID | string,
 ): Promise<string | undefined> {
-  const nsid = typeof nsidStr === 'string' ? NSID.parse(nsidStr) : nsidStr
+  const nsid = NSID.from(input)
   const did = await resolveDns(nsid.authority)
   if (did == null || !isValidDid(did)) return
   return did
 }
 
 export class LexiconResolutionError extends Error {
-  constructor(message?: string, options?: ErrorOptions) {
-    super(message, options)
+  constructor(
+    public readonly nsid: NSID,
+    public readonly description = `Could not resolve Lexicon for NSID`,
+    options?: ErrorOptions,
+  ) {
+    super(`${description} (${nsid})`, options)
     this.name = 'LexiconResolutionError'
+  }
+
+  static from(
+    input: NSID | string,
+    description?: string,
+    options?: ErrorOptions,
+  ): LexiconResolutionError {
+    const nsid = NSID.from(input)
+    return new LexiconResolutionError(nsid, description, options)
   }
 }
 
@@ -116,7 +140,8 @@ async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
   const did = await resolveLexiconDidAuthority(nsid)
   if (!did) {
     throw new LexiconResolutionError(
-      `Could not resolve a DID authority for NSID: ${nsid}`,
+      nsid,
+      `Could not resolve a DID authority for NSID`,
     )
   }
   return did

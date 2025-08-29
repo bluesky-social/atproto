@@ -37,11 +37,30 @@ export default defineConfig({
       plugins: [bundleManifest()],
     },
     commonjsOptions: {
-      include: [/node_modules/, /oauth-scopes/, /oauth-provider-api/],
+      include: [
+        /node_modules/,
+        /did/,
+        /oauth-scopes/,
+        /oauth-provider-api/,
+        /syntax/,
+      ],
     },
+    // this
+    // @NOTE the "env" arg (when defineConfig is used with a function) does not
+    // allow to detect watch mode. We do want to set the "buildDelay" though to
+    // avoid i18n compilation to trigger too many build (and restart of
+    // dependent services).
+    watch: process.argv.includes('--watch')
+      ? { buildDelay: 500, clearScreen: false }
+      : undefined,
   },
   optimizeDeps: {
     // Needed because this is a monorepo and it exposes CommonJS
-    include: ['@atproto/oauth-provider-api', '@atproto/oauth-scopes'],
+    include: [
+      '@atproto/oauth-provider-api',
+      '@atproto/did',
+      '@atproto/oauth-scopes',
+      '@atproto/syntax',
+    ],
   },
 })

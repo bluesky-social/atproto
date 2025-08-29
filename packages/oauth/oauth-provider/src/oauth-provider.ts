@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
+import { LexiconResolver } from '@atproto/lexicon-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -71,11 +72,13 @@ import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { LexiconManager } from './lexicon/lexicon-manager.js'
+import { LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
 import { formatError } from './lib/util/error.js'
-import { LocalizedString, MultiLangString } from './lib/util/locale.js'
+import { MultiLangString } from './lib/util/locale.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import {
@@ -117,7 +120,7 @@ export type {
   CustomizationInput,
   ErrorHandler,
   HcaptchaConfig,
-  LocalizedString,
+  LexiconResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
 }
@@ -128,11 +131,6 @@ type OAuthProviderConfig = {
    * re-authentication.
    */
   authenticationMaxAge?: number
-
-  /**
-   * Maximum age an ephemeral session (one where "remember me" was not
-   * checked) can be before requiring re-authentication.
-   */
 
   /**
    * Maximum age access & id tokens can be before requiring a refresh.
@@ -170,6 +168,11 @@ type OAuthProviderConfig = {
   safeFetch?: typeof globalThis.fetch
 
   /**
+   * A custom ATProto lexicon resolver
+   */
+  lexiconResolver?: LexiconResolver
+
+  /**
    * A redis instance to use for replay protection. If not provided, replay
    * protection will use memory storage.
    */
@@ -186,6 +189,7 @@ type OAuthProviderConfig = {
     AccountStore &
       ClientStore &
       DeviceStore &
+      LexiconStore &
       ReplayStore &
       RequestStore &
       TokenStore
@@ -194,6 +198,7 @@ type OAuthProviderConfig = {
   accountStore?: AccountStore
   clientStore?: ClientStore
   deviceStore?: DeviceStore
+  lexiconStore?: LexiconStore
   replayStore?: ReplayStore
   requestStore?: RequestStore
   tokenStore?: TokenStore
@@ -243,6 +248,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly accountManager: AccountManager
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
+  public readonly lexiconManager: LexiconManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
 
@@ -254,16 +260,18 @@ export class OAuthProvider extends OAuthVerifier {
 
     metadata,
 
+    lexiconResolver,
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
 
-    // Requires stores
+    // Required stores
     accountStore = asAccountStore(store),
     deviceStore = asDeviceStore(store),
+    lexiconStore = asLexiconStore(store),
     tokenStore = asTokenStore(store),
     requestStore = asRequestStore(store),
 
-    // These are optional
+    // Optional stores
     clientStore = ifClientStore(store),
     replayStore = ifReplayStore(store),
 
@@ -322,14 +330,17 @@ export class OAuthProvider extends OAuthVerifier {
       clientJwksCache,
       clientMetadataCache,
     )
+    this.lexiconManager = new LexiconManager(lexiconStore, lexiconResolver)
     this.requestManager = new RequestManager(
       requestStore,
+      this.lexiconManager,
       this.signer,
       this.metadata,
       this.hooks,
     )
     this.tokenManager = new TokenManager(
       tokenStore,
+      this.lexiconManager,
       this.signer,
       this.hooks,
       this.accessTokenMode,
@@ -667,6 +678,16 @@ export class OAuthProvider extends OAuthVerifier {
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
         })),
+        permissionSets: await this.lexiconManager
+          .getPermissionSetsFromScope(parameters.scope)
+          .catch((cause) => {
+            throw new AuthorizationError(
+              parameters,
+              'Unable to retrieve permission sets',
+              'invalid_scope',
+              cause,
+            )
+          }),
       }
     } catch (err) {
       try {

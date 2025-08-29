@@ -286,7 +286,11 @@ export type ServerEnvironment = {
   disableSsrfProtection?: boolean
 
   // fetch
+  fetchForceLogging?: boolean
   fetchMaxResponseSize?: number
+
+  // lexicon resolver
+  lexiconDidAuthority?: string
 
   // proxy
   proxyAllowHTTP2?: boolean

@@ -19,15 +19,10 @@ export type Session = {
   consentRequired: boolean
 }
 
-export type MultiLangString = { en: string } & Record<
-  string,
-  string | undefined
->
-
-export type LocalizedString = string | MultiLangString
+export type MultiLangString = Record<string, string | undefined>
 
 export type LinkDefinition = {
-  title: LocalizedString
+  title: string | MultiLangString
   href: string
   rel?: string
 }

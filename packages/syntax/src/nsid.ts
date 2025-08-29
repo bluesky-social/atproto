@@ -6,35 +6,40 @@ number    = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "0"
 delim     = "."
 segment   = alpha *( alpha / number / "-" )
 authority = segment *( delim segment )
-name      = alpha *( alpha )
+name      = alpha *( alpha / number )
 nsid      = authority delim name
 
 */
 
 export class NSID {
-  segments: string[] = []
+  readonly segments: readonly string[]
 
-  static parse(nsid: string): NSID {
-    return new NSID(nsid)
+  static parse(input: string): NSID {
+    return new NSID(input)
   }
 
   static create(authority: string, name: string): NSID {
-    const segments = [...authority.split('.').reverse(), name].join('.')
-    return new NSID(segments)
+    const input = [...authority.split('.').reverse(), name].join('.')
+    return new NSID(input)
   }
 
-  static isValid(nsid: string): boolean {
-    try {
-      NSID.parse(nsid)
-      return true
-    } catch (e) {
-      return false
+  static isValid(nsid: string) {
+    return isValidNsid(nsid)
+  }
+
+  static from(input: { toString: () => string }): NSID {
+    if (input instanceof NSID) {
+      // No need to clone, NSID is immutable
+      return input
     }
+    if (Array.isArray(input)) {
+      return new NSID((input as string[]).join('.'))
+    }
+    return new NSID(String(input))
   }
 
   constructor(nsid: string) {
-    ensureValidNsid(nsid)
-    this.segments = nsid.split('.')
+    this.segments = parseNsid(nsid)
   }
 
   get authority() {
@@ -53,60 +58,152 @@ export class NSID {
   }
 }
 
+export function ensureValidNsid(nsid: string): void {
+  const result = validateNsid(nsid)
+  if (!result.success) throw new InvalidNsidError(result.message)
+}
+
+export function parseNsid(nsid: string): string[] {
+  const result = validateNsid(nsid)
+  if (!result.success) throw new InvalidNsidError(result.message)
+  return result.value
+}
+
+export function isValidNsid(nsid: string): boolean {
+  // Since the regex version is more performant for valid NSIDs, we use it when
+  // we don't care about error details.
+  return validateNsidRegex(nsid).success
+}
+
+type ValidateResult<T> =
+  | { success: true; value: T }
+  | { success: false; message: string }
+
 // Human readable constraints on NSID:
 // - a valid domain in reversed notation
 // - followed by an additional period-separated name, which is camel-case letters
-export const ensureValidNsid = (nsid: string): void => {
-  const toCheck = nsid
-
-  // check that all chars are boring ASCII
-  if (!/^[a-zA-Z0-9.-]*$/.test(toCheck)) {
-    throw new InvalidNsidError(
-      'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)',
-    )
+export function validateNsid(input: string): ValidateResult<string[]> {
+  if (input.length > 253 + 1 + 63) {
+    return {
+      success: false,
+      message: 'NSID is too long (317 chars max)',
+    }
   }
-
-  if (toCheck.length > 253 + 1 + 63) {
-    throw new InvalidNsidError('NSID is too long (317 chars max)')
+  if (hasDisallowedCharacters(input)) {
+    return {
+      success: false,
+      message:
+        'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)',
+    }
   }
-  const labels = toCheck.split('.')
-  if (labels.length < 3) {
-    throw new InvalidNsidError('NSID needs at least three parts')
+  const segments = input.split('.')
+  if (segments.length < 3) {
+    return {
+      success: false,
+      message: 'NSID needs at least three parts',
+    }
   }
-  for (let i = 0; i < labels.length; i++) {
-    const l = labels[i]
+  for (const l of segments) {
     if (l.length < 1) {
-      throw new InvalidNsidError('NSID parts can not be empty')
+      return {
+        success: false,
+        message: 'NSID parts can not be empty',
+      }
     }
     if (l.length > 63) {
-      throw new InvalidNsidError('NSID part too long (max 63 chars)')
+      return {
+        success: false,
+        message: 'NSID part too long (max 63 chars)',
+      }
     }
-    if (l.endsWith('-') || l.startsWith('-')) {
-      throw new InvalidNsidError('NSID parts can not start or end with hyphen')
+    if (startsWithHyphen(l) || endsWithHyphen(l)) {
+      return {
+        success: false,
+        message: 'NSID parts can not start or end with hyphen',
+      }
     }
-    if (/^[0-9]/.test(l) && i === 0) {
-      throw new InvalidNsidError('NSID first part may not start with a digit')
+  }
+  if (startsWithNumber(segments[0])) {
+    return {
+      success: false,
+      message: 'NSID first part may not start with a digit',
     }
-    if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(l) && i + 1 === labels.length) {
-      throw new InvalidNsidError(
+  }
+  if (!isValidIdentifier(segments[segments.length - 1])) {
+    return {
+      success: false,
+      message:
         'NSID name part must be only letters and digits (and no leading digit)',
-      )
     }
+  }
+  return {
+    success: true,
+    value: segments,
   }
 }
 
-export const ensureValidNsidRegex = (nsid: string): void => {
-  // simple regex to enforce most constraints via just regex and length.
-  // hand wrote this regex based on above constraints
+function hasDisallowedCharacters(v) {
+  return !/^[a-zA-Z0-9.-]*$/.test(v)
+}
+
+function startsWithNumber(v: string) {
+  const charCode = v.charCodeAt(0)
+  return charCode >= 48 && charCode <= 57
+}
+
+function startsWithHyphen(v: string) {
+  return v.charCodeAt(0) === 45 /* - */
+}
+
+function endsWithHyphen(v: string) {
+  return v.charCodeAt(v.length - 1) === 45 /* - */
+}
+
+function isValidIdentifier(v: string) {
+  // Note, since we already know that "v" only contains [a-zA-Z0-9-], we can
+  // simplify the following regex by checking only the first char and presence
+  // of "-".
+
+  // return /^[a-zA-Z][a-zA-Z0-9]*$/.test(v)
+  return !startsWithNumber(v) && !v.includes('-')
+}
+
+/**
+ * @deprecated Use {@link ensureValidNsid} if you care about error details,
+ * {@link parseNsid}/{@link NSID.parse} if you need the parsed segments, or
+ * {@link isValidNsid} if you just want a boolean.
+ */
+export function ensureValidNsidRegex(nsid: string): void {
+  const result = validateNsidRegex(nsid)
+  if (!result.success) throw new InvalidNsidError(result.message)
+}
+
+/**
+ * Regexp based validation that behaves identically to the previous code but
+ * provides less detailed error messages (while being 20% to 50% faster).
+ */
+export function validateNsidRegex(value: string): ValidateResult<string> {
+  if (value.length > 253 + 1 + 63) {
+    return {
+      success: false,
+      message: 'NSID is too long (317 chars max)',
+    }
+  }
+
   if (
-    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/.test(
-      nsid,
+    !/^[a-zA-Z](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?:\.[a-zA-Z](?:[a-zA-Z0-9]{0,62})?)$/.test(
+      value,
     )
   ) {
-    throw new InvalidNsidError("NSID didn't validate via regex")
+    return {
+      success: false,
+      message: "NSID didn't validate via regex",
+    }
   }
-  if (nsid.length > 253 + 1 + 63) {
-    throw new InvalidNsidError('NSID is too long (317 chars max)')
+
+  return {
+    success: true,
+    value,
   }
 }
 

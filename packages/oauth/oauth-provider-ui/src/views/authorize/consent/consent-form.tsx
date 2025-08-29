@@ -1,10 +1,11 @@
+import type { PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { ReactNode, useState } from 'react'
 import { ClientImage } from '#/components/utils/client-image.tsx'
 import { DescriptionCard } from '#/components/utils/description-card.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
 import type { Account } from '@atproto/oauth-provider-api'
-import { AccountScope } from '@atproto/oauth-scopes'
+import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { Button } from '../../../components/forms/button.tsx'
 import {
@@ -22,6 +23,7 @@ export type ConsentFormProps = Override<
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
     clientFirstParty: boolean
+    permissionSets: PermissionSets
 
     account: Account
     scope?: string
@@ -42,7 +44,7 @@ function isTransitionScope(scope: string): scope is `transition:${string}` {
 }
 
 function isAccountEmailScope(scope: string): boolean {
-  const parsed = AccountScope.fromString(scope)
+  const parsed = AccountPermission.fromString(scope)
   if (!parsed) return false
   return parsed.matches({ attr: 'email', action: 'read' })
 }
@@ -59,6 +61,7 @@ export function ConsentForm({
   clientMetadata,
   clientTrusted,
   clientFirstParty,
+  permissionSets,
 
   account,
   scope,
@@ -159,6 +162,7 @@ export function ConsentForm({
 
       <ScopeDescription
         scope={scope}
+        permissionSets={permissionSets}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}
