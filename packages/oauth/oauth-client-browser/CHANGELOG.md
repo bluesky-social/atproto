@@ -1,5 +1,18 @@
 # @atproto/oauth-client-browser
 
+## 0.3.31
+
+### Patch Changes
+
+- [#4150](https://github.com/bluesky-social/atproto/pull/4150) [`86c4699da`](https://github.com/bluesky-social/atproto/commit/86c4699da8cf184c251e58c0a3a2612dd676f0ea) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow forcing OAuth callback instead of automated init.
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`86c4699da`](https://github.com/bluesky-social/atproto/commit/86c4699da8cf184c251e58c0a3a2612dd676f0ea), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/did@0.2.0
+  - @atproto-labs/simple-store@0.3.0
+  - @atproto/oauth-client@0.5.5
+  - @atproto-labs/did-resolver@0.2.1
+  - @atproto-labs/handle-resolver@0.3.1
+
 ## 0.3.30
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @atproto/repo
 
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/lexicon@0.5.0
+
 ## 0.8.7
 
 ### Patch Changes

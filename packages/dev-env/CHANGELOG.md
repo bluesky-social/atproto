@@ -1,5 +1,22 @@
 # @atproto/dev-env
 
+## 0.3.169
+
+### Patch Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable thread v2 mock data
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/lexicon@0.5.0
+  - @atproto/syntax@0.4.1
+  - @atproto/api@0.16.6
+  - @atproto/bsky@0.0.181
+  - @atproto/ozone@0.1.139
+  - @atproto/pds@0.4.173
+  - @atproto/sync@0.1.33
+  - @atproto/xrpc-server@0.9.4
+  - @atproto/bsync@0.0.21
+
 ## 0.3.168
 
 ### Patch Changes

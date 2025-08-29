@@ -1,5 +1,20 @@
 # @atproto/oauth-client
 
+## 0.5.5
+
+### Patch Changes
+
+- [#4150](https://github.com/bluesky-social/atproto/pull/4150) [`86c4699da`](https://github.com/bluesky-social/atproto/commit/86c4699da8cf184c251e58c0a3a2612dd676f0ea) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `redirect_uri` validation on the client because it does not properly match loopback redirect uris
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/did@0.2.0
+  - @atproto-labs/simple-store@0.3.0
+  - @atproto/xrpc@0.7.4
+  - @atproto-labs/did-resolver@0.2.1
+  - @atproto-labs/handle-resolver@0.3.1
+  - @atproto-labs/simple-store-memory@0.1.4
+  - @atproto-labs/identity-resolver@0.3.1
+
 ## 0.5.4
 
 ### Patch Changes
