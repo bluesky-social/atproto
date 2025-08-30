@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.11.2
+
+### Patch Changes
+
+- [#4155](https://github.com/bluesky-social/atproto/pull/4155) [`d54d278ab`](https://github.com/bluesky-social/atproto/commit/d54d278abd679fbb44ff795d02b53b7caab31301) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow unexpected error to go through when fetching permission sets
+
 ## 0.11.1
 
 ### Patch Changes
