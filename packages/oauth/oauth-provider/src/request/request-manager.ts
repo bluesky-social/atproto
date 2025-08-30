@@ -293,18 +293,22 @@ export class RequestManager {
     // Make sure that every nsid in the scope resolves to a valid permission set
     // lexicon
     if (parameters.scope) {
-      await this.lexiconManager
-        .getPermissionSetsFromScope(parameters.scope)
-        .catch((cause) => {
+      try {
+        await this.lexiconManager.getPermissionSetsFromScope(parameters.scope)
+      } catch (err) {
+        // Parse expected errors
+        if (err instanceof LexiconResolutionError) {
           throw new AuthorizationError(
             parameters,
-            cause instanceof LexiconResolutionError
-              ? cause.message
-              : 'Unable to retrieve included permission sets',
+            err.message,
             'invalid_scope',
-            cause,
+            err,
           )
-        })
+        }
+
+        // Unexpected error
+        throw err
+      }
     }
 
     return parameters

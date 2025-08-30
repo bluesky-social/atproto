@@ -357,7 +357,8 @@ export class AppContext {
           forceRefresh: true,
         })
 
-        const { uri, cid } = result
+        const cid = result.cid.toString()
+        const uri = result.uri.toString()
         lexiconResolverLogger.info({ nsid, uri, cid }, 'Resolved lexicon')
 
         return result
