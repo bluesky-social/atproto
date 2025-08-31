@@ -69,6 +69,7 @@ describe('detectFacets', () => {
     '198.185.159.145',
     'invalid IPs: http://127.0.0.1 https://255.255.255.255 https://0.0.0.0 https://169.254.1.1 https://1.1.1.011',
     'invalid URIs: https://google.a https://localhost',
+    'this is a website: google.com. The final dot it is not part of it',
   ]
   const outputs: string[][][] = [
     [['no mention']],
@@ -234,6 +235,11 @@ describe('detectFacets', () => {
       ],
     ],
     [['invalid URIs: https://google.a https://localhost']],
+    [
+      ['this is a website: '],
+      ['google.com', 'https://google.com'],
+      ['. The final dot it is not part of it'],
+    ],
   ]
   it('correctly handles a set of text inputs', async () => {
     for (let i = 0; i < inputs.length; i++) {
