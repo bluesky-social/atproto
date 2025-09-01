@@ -1,15 +1,15 @@
 import { JwkError } from './errors.js'
-import { Jwk } from './jwk.js'
+import { JwkBase } from './jwk.js'
 
 // Copy variable to prevent bundlers from automatically polyfilling "process" (e.g. parcel)
 const { process } = globalThis
 const IS_NODE_RUNTIME =
   typeof process !== 'undefined' && typeof process?.versions?.node === 'string'
 
-export function* jwkAlgorithms(jwk: Jwk): Generator<string> {
+export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
   // Ed25519, Ed448, and secp256k1 always have "alg"
   // OKP always has "use"
-  if (jwk.alg) {
+  if (typeof jwk.alg === 'string') {
     yield jwk.alg
     return
   }

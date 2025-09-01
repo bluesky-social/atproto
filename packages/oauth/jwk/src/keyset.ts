@@ -6,7 +6,6 @@ import {
   JwtCreateError,
   JwtVerifyError,
 } from './errors.js'
-import { Jwk } from './jwk.js'
 import { Jwks, JwksPub } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
@@ -34,8 +33,8 @@ export type JwtPayloadGetter<P = JwtPayload> = (
 
 export type { KeyMatchOptions }
 
-const extractPrivateJwk = (key: Key): Jwk | undefined => key.privateJwk
-const extractPublicJwk = (key: Key): Jwk | undefined => key.publicJwk
+const extractPrivateJwk = (key: Key) => key.privateJwk
+const extractPublicJwk = (key: Key) => key.publicJwk
 
 export class Keyset<K extends Key = Key> implements Iterable<K> {
   private readonly keys: readonly K[]

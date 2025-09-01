@@ -163,7 +163,7 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     allowedAlgos: string[] = ['ES256'],
     kid?: string,
     options?: Omit<GenerateKeyPairOptions, 'extractable'>,
-  ) {
+  ): Promise<JoseKey> {
     const kp = await this.generateKeyPair(allowedAlgos, {
       ...options,
       extractable: true,
@@ -240,6 +240,6 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
 
     const kid = either(jwk.kid, inputKid)
 
-    return new JoseKey(jwkSchema.parse({ ...jwk, kid }))
+    return new JoseKey<Jwk>(jwkSchema.parse({ ...jwk, kid }))
   }
 }
