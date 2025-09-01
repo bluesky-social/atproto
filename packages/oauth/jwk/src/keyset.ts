@@ -10,7 +10,7 @@ import { Jwks, JwksPub } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
-import { Key, KeyMatchOptions } from './key.js'
+import { ActivityCheckOptions, Key, KeyMatchOptions } from './key.js'
 import {
   DeepReadonly,
   Override,
@@ -144,6 +144,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     for (const key of this.list({ kid, alg, usage })) {
       // Not a private key
       if (!key.isPrivate) continue
+      if (!key.isActive()) continue
 
       // Skip negotiation if a specific "alg" was provided
       if (typeof alg === 'string') return { key, alg }
@@ -206,7 +207,8 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
 
   async verifyJwt<C extends string = never>(
     token: SignedJwt,
-    options?: VerifyOptions<C>,
+    options?: ActivityCheckOptions &
+      VerifyOptions<C> & { allowInactive?: boolean },
   ): Promise<VerifyResult<C> & { key: K }> {
     const { header } = unsafeDecodeJwt(token)
     const { kid, alg } = header
@@ -214,6 +216,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     const errors: unknown[] = []
 
     for (const key of this.list({ kid, alg, usage: 'verify' })) {
+      if (!options?.allowInactive && !key.isActive(options)) continue
       try {
         const result = await key.verifyJwt<C>(token, options)
         return { ...result, key }

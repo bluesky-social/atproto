@@ -23,6 +23,12 @@ export type KeyMatchOptions = {
   alg?: string | string[]
 }
 
+export type ActivityCheckOptions = {
+  allowRevoked?: boolean
+  clockTolerance?: number
+  currentDate?: Date
+}
+
 export abstract class Key<J extends Jwk = Jwk> {
   constructor(protected readonly jwk: Readonly<J>) {}
 
@@ -104,6 +110,25 @@ export abstract class Key<J extends Jwk = Jwk> {
   @cachedGetter
   get algorithms(): readonly string[] {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
+  }
+
+  get revoked() {
+    return this.jwk.revoked
+  }
+
+  isActive(options?: ActivityCheckOptions) {
+    if (!options?.allowRevoked && this.revoked) return false
+
+    const tolerance = options?.clockTolerance ?? 0
+    if (tolerance !== Infinity) {
+      const now = options?.currentDate?.getTime() ?? Date.now()
+      const { exp, nbf } = this.jwk
+
+      if (nbf != null && !(now >= nbf * 1e3 - tolerance)) return false
+      if (exp != null && !(now < exp * 1e3 + tolerance)) return false
+    }
+
+    return true
   }
 
   matches(opts: KeyMatchOptions): boolean {
