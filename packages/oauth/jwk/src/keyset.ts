@@ -6,15 +6,14 @@ import {
   JwtCreateError,
   JwtVerifyError,
 } from './errors.js'
-import { Jwks, JwksPub } from './jwks.js'
+import { PrivateKeyUsage } from './jwk.js'
+import { JwksPub } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { ActivityCheckOptions, Key, KeyMatchOptions } from './key.js'
 import {
-  DeepReadonly,
   Override,
-  UnReadonly,
   cachedGetter,
   isDefined,
   matchesAny,
@@ -99,17 +98,19 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
   }
 
   @cachedGetter
-  get publicJwks(): DeepReadonly<JwksPub> {
-    return {
-      keys: Array.from(this, extractPublicJwk).filter(isDefined),
-    }
+  get publicJwks() {
+    return Object.freeze({
+      keys: Object.freeze(Array.from(this, extractPublicJwk).filter(isDefined)),
+    })
   }
 
   @cachedGetter
-  get privateJwks(): DeepReadonly<Jwks> {
-    return {
-      keys: Array.from(this, extractPrivateJwk).filter(isDefined),
-    }
+  get privateJwks() {
+    return Object.freeze({
+      keys: Object.freeze(
+        Array.from(this, extractPrivateJwk).filter(isDefined),
+      ),
+    })
   }
 
   has(kid: string): boolean {
@@ -135,7 +136,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     kid,
     alg,
     usage,
-  }: KeyMatchOptions & { usage: 'sign' | 'encrypt' }): {
+  }: KeyMatchOptions & { usage: PrivateKeyUsage }): {
     key: Key
     alg: string
   } {
@@ -235,8 +236,8 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
   }
 
-  toJSON(): JwksPub {
-    // Make a copy to prevent mutation of the original keyset
-    return structuredClone(this.publicJwks) as UnReadonly<JwksPub>
+  toJSON() {
+    // Make a copy to allow mutation of the result
+    return structuredClone(this.publicJwks) as JwksPub
   }
 }

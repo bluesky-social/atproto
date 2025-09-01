@@ -207,7 +207,7 @@ export const jwkPubSchema = jwkSchema
     message: 'private key not allowed',
   })
   .refine((k): boolean => !k.key_ops || k.key_ops.every(isPublicKeyUsage), {
-    message: '"key_ops" must not contain public key usage for public keys',
+    message: '"key_ops" must not contain private key usage for public keys',
     path: ['key_ops'],
   })
   .refine(hasKid, {

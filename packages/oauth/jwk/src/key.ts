@@ -43,7 +43,9 @@ export abstract class Key<J extends Jwk = Jwk> {
   }
 
   get privateJwk(): Readonly<PrivateJwk> | undefined {
-    return this.isPrivate ? (this.jwk as Readonly<PrivateJwk>) : undefined
+    if (!this.isPrivate) return undefined
+
+    return this.jwk as Readonly<PrivateJwk>
   }
 
   @cachedGetter

@@ -1,5 +1,5 @@
 import { JwkError } from './errors.js'
-import { JwkBase } from './jwk.js'
+import { JwkBase, isEncKeyUsage, isSigKeyUsage } from './jwk.js'
 
 // Copy variable to prevent bundlers from automatically polyfilling "process" (e.g. parcel)
 const { process } = globalThis
@@ -8,7 +8,7 @@ const IS_NODE_RUNTIME =
 
 export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
   // Ed25519, Ed448, and secp256k1 always have "alg"
-  // OKP always has "use"
+
   if (typeof jwk.alg === 'string') {
     yield jwk.alg
     return
@@ -16,14 +16,14 @@ export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
 
   switch (jwk.kty) {
     case 'EC': {
-      if (jwk.use === 'enc' || jwk.use === undefined) {
+      if (jwkSupportsEnc(jwk)) {
         yield 'ECDH-ES'
         yield 'ECDH-ES+A128KW'
         yield 'ECDH-ES+A192KW'
         yield 'ECDH-ES+A256KW'
       }
 
-      if (jwk.use === 'sig' || jwk.use === undefined) {
+      if (jwkSupportsSig(jwk)) {
         const crv = 'crv' in jwk ? jwk.crv : undefined
         switch (crv) {
           case 'P-256':
@@ -54,7 +54,7 @@ export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
     }
 
     case 'RSA': {
-      if (jwk.use === 'enc' || jwk.use === undefined) {
+      if (jwkSupportsEnc(jwk)) {
         yield 'RSA-OAEP'
         yield 'RSA-OAEP-256'
         yield 'RSA-OAEP-384'
@@ -62,7 +62,7 @@ export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
         if (IS_NODE_RUNTIME) yield 'RSA1_5'
       }
 
-      if (jwk.use === 'sig' || jwk.use === undefined) {
+      if (jwkSupportsSig(jwk)) {
         yield 'PS256'
         yield 'PS384'
         yield 'PS512'
@@ -75,7 +75,7 @@ export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
     }
 
     case 'oct': {
-      if (jwk.use === 'enc' || jwk.use === undefined) {
+      if (jwkSupportsEnc(jwk)) {
         yield 'A128GCMKW'
         yield 'A192GCMKW'
         yield 'A256GCMKW'
@@ -84,7 +84,7 @@ export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
         yield 'A256KW'
       }
 
-      if (jwk.use === 'sig' || jwk.use === undefined) {
+      if (jwkSupportsSig(jwk)) {
         yield 'HS256'
         yield 'HS384'
         yield 'HS512'
@@ -96,4 +96,16 @@ export function* jwkAlgorithms(jwk: JwkBase): Generator<string, void, unknown> {
     default:
       throw new JwkError(`Unsupported kty "${jwk.kty}"`)
   }
+}
+
+function jwkSupportsEnc(jwk: JwkBase): boolean {
+  return (
+    jwk.key_ops?.some(isEncKeyUsage) ?? (jwk.use == null || jwk.use === 'enc')
+  )
+}
+
+function jwkSupportsSig(jwk: JwkBase): boolean {
+  return (
+    jwk.key_ops?.some(isSigKeyUsage) ?? (jwk.use == null || jwk.use === 'sig')
+  )
 }
