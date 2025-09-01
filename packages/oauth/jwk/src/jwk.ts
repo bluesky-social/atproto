@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { isFirstOccurrence } from './util'
+import { isLastOccurrence } from './util'
 
 export const PUBLIC_KEY_USAGE = ['verify', 'encrypt', 'wrapKey'] as const
 export const publicKeyUsageSchema = z.enum(PUBLIC_KEY_USAGE)
@@ -60,7 +60,7 @@ const jwkBaseSchema = z.object({
     .min(1, { message: 'At least one key usage must be specified' })
     // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
     // > Duplicate key operation values MUST NOT be present in the array.
-    .refine((ops) => ops.every(isFirstOccurrence), {
+    .refine((ops) => ops.every(isLastOccurrence), {
       message: 'key_ops must not contain duplicates',
     })
     .optional(),

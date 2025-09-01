@@ -198,7 +198,7 @@ export const segmentedStringRefinementFactory = <C extends number>(
   }
 }
 
-export function isFirstOccurrence<
+export function isLastOccurrence<
   T extends number | boolean | string | null | undefined | symbol | bigint,
 >(v: T, i: number, arr: readonly T[]): boolean {
   return arr.indexOf(v, i + 1) === -1
