@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.16.7
+
+### Patch Changes
+
+- [#4164](https://github.com/bluesky-social/atproto/pull/4164) [`09717f29a`](https://github.com/bluesky-social/atproto/commit/09717f29ac7ca742c9c3310980dbe4d112b7597f) Thanks [@rafaelbsky](https://github.com/rafaelbsky)! - Add bookmarks lexicons
+
 ## 0.16.6
 
 ### Patch Changes
