@@ -47,7 +47,7 @@ import { Crawlers } from './crawlers'
 import { DidSqliteCache } from './did-cache'
 import { DiskBlobStore } from './disk-blobstore'
 import { ImageUrlBuilder } from './image/image-url-builder'
-import { fetchLogger, lexiconResolverLogger } from './logger'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
@@ -423,7 +423,16 @@ export class AppContext {
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
         onDecodeToken: scopeDecoder
-          ? async ({ payload }) => {
+          ? async ({ payload, dpopProof }) => {
+              // @TODO drop this once oauth provider no longer accepts DPoP proof with
+              // query or fragment in "htu" claim.
+              if (dpopProof?.htu.match(/[?#]/)) {
+                oauthLogger.info(
+                  { htu: dpopProof.htu, client_id: payload.client_id },
+                  'DPoP proof "htu" contains query or fragment',
+                )
+              }
+
               if (!isEncodedScope(payload.scope)) return
               const scope = await scopeDecoder.get(payload.scope)
               return { ...payload, scope }

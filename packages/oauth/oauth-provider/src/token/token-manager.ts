@@ -10,7 +10,6 @@ import {
 } from '@atproto/oauth-types'
 import { AccessTokenMode } from '../access-token/access-token-mode.js'
 import { ClientAuth } from '../client/client-auth.js'
-import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
 import { TOKEN_MAX_AGE } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
@@ -54,7 +53,7 @@ export class TokenManager {
 
   protected async buildAccessToken(
     tokenId: TokenId,
-    clientId: ClientId,
+    client: Client,
     account: Account,
     parameters: OAuthAuthorizationRequestParameters,
     createdAt: Date,
@@ -63,7 +62,7 @@ export class TokenManager {
   ): Promise<OAuthAccessToken> {
     const claims = buildTokenClaims(
       tokenId,
-      clientId,
+      client.id,
       account,
       parameters,
       createdAt,
@@ -73,6 +72,7 @@ export class TokenManager {
     )
 
     const claimsOverride = await callAsync(this.hooks.onCreateToken, {
+      client,
       account,
       parameters,
       claims,
@@ -114,7 +114,7 @@ export class TokenManager {
 
     const accessToken = await this.buildAccessToken(
       tokenId,
-      client.id,
+      client,
       account,
       parameters,
       now,
@@ -241,7 +241,7 @@ export class TokenManager {
 
     const accessToken = await this.buildAccessToken(
       nextTokenId,
-      client.id,
+      client,
       account,
       parameters,
       now,

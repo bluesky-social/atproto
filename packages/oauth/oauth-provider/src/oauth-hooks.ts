@@ -168,6 +168,7 @@ export type OAuthHooks = {
    * This hook should never throw an error.
    */
   onCreateToken?: (data: {
+    client: Client
     account: Account
     parameters: OAuthAuthorizationRequestParameters
     claims: TokenClaims

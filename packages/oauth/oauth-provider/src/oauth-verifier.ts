@@ -140,7 +140,9 @@ export class OAuthVerifier {
     }
 
     const { payload } = await this.signer
-      .verifyAccessToken(token)
+      .verifyAccessToken(token, {
+        requiredClaims: ['iss', 'jti', 'iat', 'exp', 'sub'],
+      })
       .catch((err) => {
         throw InvalidTokenError.from(err, tokenType)
       })
@@ -172,13 +174,7 @@ export class OAuthVerifier {
         )
       }
 
-      // Unexpected DPoP proof received for a Bearer token
-      if (dpopProof) {
-        throw new InvalidTokenError(
-          'Bearer',
-          `DPoP proof not expected for Bearer token type`,
-        )
-      }
+      // @NOTE We ignore (but allow) DPoP proofs for Bearer tokens
     }
 
     const payloadOverride = await this.onDecodeToken?.call(null, {
