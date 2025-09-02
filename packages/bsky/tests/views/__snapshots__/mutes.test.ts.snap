@@ -180,6 +180,7 @@ Object {
         "muted": false,
       },
     },
+    "bookmarkCount": 0,
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
@@ -194,6 +195,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "bookmarked": false,
       "embeddingDisabled": false,
       "threadMuted": false,
     },
@@ -218,6 +220,7 @@ Object {
             "muted": true,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
@@ -242,6 +245,7 @@ Object {
         "repostCount": 0,
         "uri": "record(2)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -270,6 +274,7 @@ Object {
             "muted": true,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(4)",
         "embed": Object {
           "$type": "app.bsky.embed.images#view",
@@ -335,6 +340,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },

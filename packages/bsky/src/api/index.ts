@@ -5,6 +5,9 @@ import getProfiles from './app/bsky/actor/getProfiles'
 import getSuggestions from './app/bsky/actor/getSuggestions'
 import searchActors from './app/bsky/actor/searchActors'
 import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
+import createBookmark from './app/bsky/bookmark/createBookmark'
+import deleteBookmark from './app/bsky/bookmark/deleteBookmark'
+import getBookmarks from './app/bsky/bookmark/getBookmarks'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getActorLikes from './app/bsky/feed/getActorLikes'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
@@ -84,6 +87,9 @@ export * as external from './external'
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
   getTimeline(server, ctx)
+  createBookmark(server, ctx)
+  deleteBookmark(server, ctx)
+  getBookmarks(server, ctx)
   getActorFeeds(server, ctx)
   getSuggestedFeeds(server, ctx)
   getAuthorFeed(server, ctx)

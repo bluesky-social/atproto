@@ -68,6 +68,7 @@ Array [
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -82,6 +83,7 @@ Array [
           "repostCount": 0,
           "uri": "record(2)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -103,6 +105,7 @@ Array [
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -127,6 +130,7 @@ Array [
           "repostCount": 1,
           "uri": "record(3)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -167,6 +171,7 @@ Array [
                 "muted": false,
               },
             },
+            "bookmarkCount": 0,
             "cid": "cids(4)",
             "embed": Object {
               "$type": "app.bsky.embed.images#view",
@@ -232,6 +237,7 @@ Array [
             "repostCount": 0,
             "uri": "record(5)",
             "viewer": Object {
+              "bookmarked": false,
               "embeddingDisabled": false,
               "threadMuted": false,
             },
@@ -252,6 +258,7 @@ Array [
                 "muted": false,
               },
             },
+            "bookmarkCount": 0,
             "cid": "cids(3)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
@@ -266,6 +273,7 @@ Array [
             "repostCount": 1,
             "uri": "record(4)",
             "viewer": Object {
+              "bookmarked": false,
               "embeddingDisabled": false,
               "threadMuted": false,
             },
@@ -288,6 +296,7 @@ Array [
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(6)",
           "embed": Object {
             "$type": "app.bsky.embed.record#view",
@@ -447,6 +456,7 @@ Array [
           "repostCount": 0,
           "uri": "record(6)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -468,6 +478,7 @@ Array [
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(3)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -482,6 +493,7 @@ Array [
           "repostCount": 1,
           "uri": "record(4)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -503,6 +515,7 @@ Array [
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(11)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [
@@ -533,6 +546,7 @@ Array [
           "repostCount": 0,
           "uri": "record(12)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -640,6 +654,7 @@ Object {
           "muted": false,
         },
       },
+      "bookmarkCount": 0,
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
@@ -668,6 +683,7 @@ Object {
       "repostCount": 0,
       "uri": "record(0)",
       "viewer": Object {
+        "bookmarked": false,
         "embeddingDisabled": false,
         "threadMuted": false,
       },
@@ -715,6 +731,7 @@ Object {
           "muted": false,
         },
       },
+      "bookmarkCount": 0,
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
@@ -743,6 +760,7 @@ Object {
       "repostCount": 0,
       "uri": "record(0)",
       "viewer": Object {
+        "bookmarked": false,
         "embeddingDisabled": false,
         "threadMuted": false,
       },

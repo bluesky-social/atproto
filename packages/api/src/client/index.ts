@@ -19,6 +19,10 @@ import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
+import * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
+import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
+import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -301,6 +305,10 @@ export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+export * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
+export * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
+export * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
+export * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -658,6 +666,7 @@ export class AppNS {
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
+  bookmark: AppBskyBookmarkNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -670,6 +679,7 @@ export class AppBskyNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
+    this.bookmark = new AppBskyBookmarkNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -941,6 +951,48 @@ export class AppBskyActorStatusRecord {
       undefined,
       { collection: 'app.bsky.actor.status', ...params },
       { headers },
+    )
+  }
+}
+
+export class AppBskyBookmarkNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  createBookmark(
+    data?: AppBskyBookmarkCreateBookmark.InputSchema,
+    opts?: AppBskyBookmarkCreateBookmark.CallOptions,
+  ): Promise<AppBskyBookmarkCreateBookmark.Response> {
+    return this._client
+      .call('app.bsky.bookmark.createBookmark', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyBookmarkCreateBookmark.toKnownErr(e)
+      })
+  }
+
+  deleteBookmark(
+    data?: AppBskyBookmarkDeleteBookmark.InputSchema,
+    opts?: AppBskyBookmarkDeleteBookmark.CallOptions,
+  ): Promise<AppBskyBookmarkDeleteBookmark.Response> {
+    return this._client
+      .call('app.bsky.bookmark.deleteBookmark', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyBookmarkDeleteBookmark.toKnownErr(e)
+      })
+  }
+
+  getBookmarks(
+    params?: AppBskyBookmarkGetBookmarks.QueryParams,
+    opts?: AppBskyBookmarkGetBookmarks.CallOptions,
+  ): Promise<AppBskyBookmarkGetBookmarks.Response> {
+    return this._client.call(
+      'app.bsky.bookmark.getBookmarks',
+      params,
+      undefined,
+      opts,
     )
   }
 }

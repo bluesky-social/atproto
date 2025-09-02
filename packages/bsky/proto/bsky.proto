@@ -361,6 +361,7 @@ message GetInteractionCountsResponse {
   repeated int32 reposts = 2;
   repeated int32 replies = 3;
   repeated int32 quotes = 4;
+  repeated int32 bookmarks = 5;
 }
 
 message GetCountsForUsersRequest {
@@ -1251,6 +1252,42 @@ message GetRecordTakedownResponse {
 }
 
 
+//
+// Bookmarks
+//
+message Bookmark {
+  StashRef ref = 1;
+  string subject_uri = 2;
+  string subject_cid = 3;
+  google.protobuf.Timestamp indexed_at = 4;
+}
+
+message GetBookmarksByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string uris = 2;
+}
+
+message GetBookmarksByActorAndSubjectsResponse {
+  repeated Bookmark bookmarks = 1;
+}
+
+message GetActorBookmarksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message BookmarkInfo {
+  string key = 1; // stash key
+  string subject = 2;
+}
+
+message GetActorBookmarksResponse {
+  repeated BookmarkInfo bookmarks = 1;
+  string cursor = 2;
+}
+
+
 // Polo-backed Graph Endpoints
 
 
@@ -1274,8 +1311,11 @@ message GetFollowsFollowingResponse {
 message PingRequest {}
 message PingResponse {}
 
-
-
+message StashRef {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+}
 
 service Service {
   //
@@ -1413,6 +1453,12 @@ service Service {
   rpc GetBlobTakedown(GetBlobTakedownRequest) returns (GetBlobTakedownResponse);
   rpc GetRecordTakedown(GetRecordTakedownRequest) returns (GetRecordTakedownResponse);
   rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
+
+  // Bookmarks
+  // Returns bookmarks created by the actor for the specified URIs.
+  rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
+  // Returns the bookmarks created by the actor.
+  rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
