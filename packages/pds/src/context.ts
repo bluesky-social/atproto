@@ -32,6 +32,7 @@ import {
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
+import { ScopeDecoder, isEncodedScope } from './account-manager/scope-decoder'
 import { ActorStore } from './actor-store/actor-store'
 import { authPassthru, forwardedFor } from './api/proxy'
 import {
@@ -410,6 +411,10 @@ export class AppContext {
         })
       : undefined
 
+    const scopeDecoder = entrywayAgent
+      ? new ScopeDecoder(entrywayAgent, redisScratch)
+      : undefined
+
     const oauthVerifier: OAuthVerifier =
       oauthProvider ?? // OAuthProvider extends OAuthVerifier
       new OAuthVerifier({
@@ -417,6 +422,13 @@ export class AppContext {
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
+        onDecodeToken: scopeDecoder
+          ? async ({ payload }) => {
+              if (!isEncodedScope(payload.scope)) return
+              const scope = await scopeDecoder.get(payload.scope)
+              return { ...payload, scope }
+            }
+          : undefined,
       })
 
     const authVerifier = new AuthVerifier(

@@ -241,6 +241,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
 import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
+import * as ComAtprotoTempDecodeScope from './types/com/atproto/temp/decodeScope.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
@@ -527,6 +528,7 @@ export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
 export * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
+export * as ComAtprotoTempDecodeScope from './types/com/atproto/temp/decodeScope.js'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 export * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
@@ -4636,6 +4638,18 @@ export class ComAtprotoTempNS {
   ): Promise<ComAtprotoTempCheckSignupQueue.Response> {
     return this._client.call(
       'com.atproto.temp.checkSignupQueue',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  decodeScope(
+    params?: ComAtprotoTempDecodeScope.QueryParams,
+    opts?: ComAtprotoTempDecodeScope.CallOptions,
+  ): Promise<ComAtprotoTempDecodeScope.Response> {
+    return this._client.call(
+      'com.atproto.temp.decodeScope',
       params,
       undefined,
       opts,

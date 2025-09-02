@@ -13650,6 +13650,39 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempDecodeScope: {
+    lexicon: 1,
+    id: 'com.atproto.temp.decodeScope',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Allows decoding an encoded scope.',
+        parameters: {
+          type: 'params',
+          required: ['scope'],
+          properties: {
+            scope: {
+              type: 'string',
+              description: 'The scope to decode',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['scope'],
+            properties: {
+              scope: {
+                type: 'string',
+                description: 'The decoded scope',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempFetchLabels: {
     lexicon: 1,
     id: 'com.atproto.temp.fetchLabels',
@@ -18362,6 +18395,7 @@ export const ids = {
   ComAtprotoTempCheckHandleAvailability:
     'com.atproto.temp.checkHandleAvailability',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
+  ComAtprotoTempDecodeScope: 'com.atproto.temp.decodeScope',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',
