@@ -163,6 +163,10 @@ const handleModerationEvent = async ({
     await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
   }
 
+  if (isModEventReport(event)) {
+    await ctx.moderationServiceProfile().validateReasonType(event.reportType)
+  }
+
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
 

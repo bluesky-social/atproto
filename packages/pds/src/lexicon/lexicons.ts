@@ -10547,36 +10547,86 @@ export const schemaDict = {
           'com.atproto.moderation.defs#reasonRude',
           'com.atproto.moderation.defs#reasonOther',
           'com.atproto.moderation.defs#reasonAppeal',
+          'tools.ozone.report.defs#reasonAppeal',
+          'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+          'tools.ozone.report.defs#reasonViolenceThreats',
+          'tools.ozone.report.defs#reasonViolenceGraphicContent',
+          'tools.ozone.report.defs#reasonViolenceSelfHarm',
+          'tools.ozone.report.defs#reasonViolenceGlorification',
+          'tools.ozone.report.defs#reasonViolenceExtremistContent',
+          'tools.ozone.report.defs#reasonViolenceTrafficking',
+          'tools.ozone.report.defs#reasonViolenceOther',
+          'tools.ozone.report.defs#reasonSexualAbuseContent',
+          'tools.ozone.report.defs#reasonSexualNCII',
+          'tools.ozone.report.defs#reasonSexualSextortion',
+          'tools.ozone.report.defs#reasonSexualDeepfake',
+          'tools.ozone.report.defs#reasonSexualAnimal',
+          'tools.ozone.report.defs#reasonSexualUnlabeled',
+          'tools.ozone.report.defs#reasonSexualOther',
+          'tools.ozone.report.defs#reasonChildSafetyCSAM',
+          'tools.ozone.report.defs#reasonChildSafetyGroom',
+          'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
+          'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+          'tools.ozone.report.defs#reasonChildSafetyHarassment',
+          'tools.ozone.report.defs#reasonChildSafetyPromotion',
+          'tools.ozone.report.defs#reasonChildSafetyOther',
+          'tools.ozone.report.defs#reasonHarassmentTroll',
+          'tools.ozone.report.defs#reasonHarassmentTargeted',
+          'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+          'tools.ozone.report.defs#reasonHarassmentDoxxing',
+          'tools.ozone.report.defs#reasonHarassmentOther',
+          'tools.ozone.report.defs#reasonMisleadingBot',
+          'tools.ozone.report.defs#reasonMisleadingImpersonation',
+          'tools.ozone.report.defs#reasonMisleadingSpam',
+          'tools.ozone.report.defs#reasonMisleadingScam',
+          'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
+          'tools.ozone.report.defs#reasonMisleadingMisinformation',
+          'tools.ozone.report.defs#reasonMisleadingOther',
+          'tools.ozone.report.defs#reasonRuleSiteSecurity',
+          'tools.ozone.report.defs#reasonRuleStolenContent',
+          'tools.ozone.report.defs#reasonRuleProhibitedSales',
+          'tools.ozone.report.defs#reasonRuleBanEvasion',
+          'tools.ozone.report.defs#reasonRuleOther',
+          'tools.ozone.report.defs#reasonCivicElectoralProcess',
+          'tools.ozone.report.defs#reasonCivicDisclosure',
+          'tools.ozone.report.defs#reasonCivicInterference',
+          'tools.ozone.report.defs#reasonCivicMisinformation',
+          'tools.ozone.report.defs#reasonCivicImpersonation',
         ],
       },
       reasonSpam: {
         type: 'token',
-        description: 'Spam: frequent unwanted promotion, replies, mentions',
+        description:
+          'Spam: frequent unwanted promotion, replies, mentions. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingSpam`.',
       },
       reasonViolation: {
         type: 'token',
-        description: 'Direct violation of server rules, laws, terms of service',
+        description:
+          'Direct violation of server rules, laws, terms of service. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`.',
       },
       reasonMisleading: {
         type: 'token',
-        description: 'Misleading identity, affiliation, or content',
+        description:
+          'Misleading identity, affiliation, or content. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingOther`.',
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mislabeled sexual content',
+        description:
+          'Unwanted or mislabeled sexual content. Prefer new lexicon definition `tools.ozone.report.defs#reasonSexualUnlabeled`.',
       },
       reasonRude: {
         type: 'token',
         description:
-          'Rude, harassing, explicit, or otherwise unwelcoming behavior',
+          'Rude, harassing, explicit, or otherwise unwelcoming behavior. Prefer new lexicon definition `tools.ozone.report.defs#reasonHarassmentOther`.',
       },
       reasonOther: {
         type: 'token',
-        description: 'Other: reports not falling under another report category',
+        description:
+          'Reports not falling under another report category. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`.',
       },
       reasonAppeal: {
         type: 'token',
-        description: 'Appeal: appeal a previously taken moderation action',
+        description: 'Appeal a previously taken moderation action',
       },
       subjectType: {
         type: 'string',
@@ -16275,6 +16325,248 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneReportDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.report.defs',
+    defs: {
+      reasonType: {
+        type: 'string',
+        knownValues: [
+          'tools.ozone.report.defs#reasonAppeal',
+          'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+          'tools.ozone.report.defs#reasonViolenceThreats',
+          'tools.ozone.report.defs#reasonViolenceGraphicContent',
+          'tools.ozone.report.defs#reasonViolenceSelfHarm',
+          'tools.ozone.report.defs#reasonViolenceGlorification',
+          'tools.ozone.report.defs#reasonViolenceExtremistContent',
+          'tools.ozone.report.defs#reasonViolenceTrafficking',
+          'tools.ozone.report.defs#reasonViolenceOther',
+          'tools.ozone.report.defs#reasonSexualAbuseContent',
+          'tools.ozone.report.defs#reasonSexualNCII',
+          'tools.ozone.report.defs#reasonSexualSextortion',
+          'tools.ozone.report.defs#reasonSexualDeepfake',
+          'tools.ozone.report.defs#reasonSexualAnimal',
+          'tools.ozone.report.defs#reasonSexualUnlabeled',
+          'tools.ozone.report.defs#reasonSexualOther',
+          'tools.ozone.report.defs#reasonChildSafetyCSAM',
+          'tools.ozone.report.defs#reasonChildSafetyGroom',
+          'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
+          'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+          'tools.ozone.report.defs#reasonChildSafetyHarassment',
+          'tools.ozone.report.defs#reasonChildSafetyPromotion',
+          'tools.ozone.report.defs#reasonChildSafetyOther',
+          'tools.ozone.report.defs#reasonHarassmentTroll',
+          'tools.ozone.report.defs#reasonHarassmentTargeted',
+          'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+          'tools.ozone.report.defs#reasonHarassmentDoxxing',
+          'tools.ozone.report.defs#reasonHarassmentOther',
+          'tools.ozone.report.defs#reasonMisleadingBot',
+          'tools.ozone.report.defs#reasonMisleadingImpersonation',
+          'tools.ozone.report.defs#reasonMisleadingSpam',
+          'tools.ozone.report.defs#reasonMisleadingScam',
+          'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
+          'tools.ozone.report.defs#reasonMisleadingMisinformation',
+          'tools.ozone.report.defs#reasonMisleadingOther',
+          'tools.ozone.report.defs#reasonRuleSiteSecurity',
+          'tools.ozone.report.defs#reasonRuleStolenContent',
+          'tools.ozone.report.defs#reasonRuleProhibitedSales',
+          'tools.ozone.report.defs#reasonRuleBanEvasion',
+          'tools.ozone.report.defs#reasonRuleOther',
+          'tools.ozone.report.defs#reasonCivicElectoralProcess',
+          'tools.ozone.report.defs#reasonCivicDisclosure',
+          'tools.ozone.report.defs#reasonCivicInterference',
+          'tools.ozone.report.defs#reasonCivicMisinformation',
+          'tools.ozone.report.defs#reasonCivicImpersonation',
+        ],
+      },
+      reasonAppeal: {
+        type: 'token',
+        description: 'Appeal a previously taken moderation action',
+      },
+      reasonViolenceAnimalWelfare: {
+        type: 'token',
+        description: 'Animal welfare violations',
+      },
+      reasonViolenceThreats: {
+        type: 'token',
+        description: 'Threats or incitement',
+      },
+      reasonViolenceGraphicContent: {
+        type: 'token',
+        description: 'Graphic violent content',
+      },
+      reasonViolenceSelfHarm: {
+        type: 'token',
+        description: 'Self harm',
+      },
+      reasonViolenceGlorification: {
+        type: 'token',
+        description: 'Glorification of violence',
+      },
+      reasonViolenceExtremistContent: {
+        type: 'token',
+        description:
+          "Extremist content. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonViolenceTrafficking: {
+        type: 'token',
+        description: 'Human trafficking',
+      },
+      reasonViolenceOther: {
+        type: 'token',
+        description: 'Other violent content',
+      },
+      reasonSexualAbuseContent: {
+        type: 'token',
+        description: 'Adult sexual abuse content',
+      },
+      reasonSexualNCII: {
+        type: 'token',
+        description: 'Non-consensual intimate imagery',
+      },
+      reasonSexualSextortion: {
+        type: 'token',
+        description: 'Sextortion',
+      },
+      reasonSexualDeepfake: {
+        type: 'token',
+        description: 'Deepfake adult content',
+      },
+      reasonSexualAnimal: {
+        type: 'token',
+        description: 'Animal sexual abuse',
+      },
+      reasonSexualUnlabeled: {
+        type: 'token',
+        description: 'Unlabelled adult content',
+      },
+      reasonSexualOther: {
+        type: 'token',
+        description: 'Other sexual violence content',
+      },
+      reasonChildSafetyCSAM: {
+        type: 'token',
+        description:
+          "Child sexual abuse material (CSAM). These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonChildSafetyGroom: {
+        type: 'token',
+        description:
+          "Grooming or predatory behavior. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonChildSafetyMinorPrivacy: {
+        type: 'token',
+        description: 'Privacy violation involving a minor',
+      },
+      reasonChildSafetyEndangerment: {
+        type: 'token',
+        description:
+          "Child endangerment. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonChildSafetyHarassment: {
+        type: 'token',
+        description: 'Harassment or bullying of minors',
+      },
+      reasonChildSafetyPromotion: {
+        type: 'token',
+        description:
+          "Promotion of child exploitation. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonChildSafetyOther: {
+        type: 'token',
+        description:
+          "Other child safety. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonHarassmentTroll: {
+        type: 'token',
+        description: 'Trolling',
+      },
+      reasonHarassmentTargeted: {
+        type: 'token',
+        description: 'Targeted harassment',
+      },
+      reasonHarassmentHateSpeech: {
+        type: 'token',
+        description: 'Hate speech',
+      },
+      reasonHarassmentDoxxing: {
+        type: 'token',
+        description: 'Doxxing',
+      },
+      reasonHarassmentOther: {
+        type: 'token',
+        description: 'Other harassing or hateful content',
+      },
+      reasonMisleadingBot: {
+        type: 'token',
+        description: 'Fake account or bot',
+      },
+      reasonMisleadingImpersonation: {
+        type: 'token',
+        description: 'Impersonation',
+      },
+      reasonMisleadingSpam: {
+        type: 'token',
+        description: 'Spam',
+      },
+      reasonMisleadingScam: {
+        type: 'token',
+        description: 'Scam',
+      },
+      reasonMisleadingSyntheticContent: {
+        type: 'token',
+        description: 'Unlabelled gen-AI or synthetic content',
+      },
+      reasonMisleadingMisinformation: {
+        type: 'token',
+        description: 'Harmful false claims',
+      },
+      reasonMisleadingOther: {
+        type: 'token',
+        description: 'Other misleading content',
+      },
+      reasonRuleSiteSecurity: {
+        type: 'token',
+        description: 'Hacking or system attacks',
+      },
+      reasonRuleStolenContent: {
+        type: 'token',
+        description: 'Stolen content',
+      },
+      reasonRuleProhibitedSales: {
+        type: 'token',
+        description: 'Promoting or selling prohibited items or services',
+      },
+      reasonRuleBanEvasion: {
+        type: 'token',
+        description: 'Banned user returning',
+      },
+      reasonRuleOther: {
+        type: 'token',
+        description: 'Other',
+      },
+      reasonCivicElectoralProcess: {
+        type: 'token',
+        description: 'Electoral process violations',
+      },
+      reasonCivicDisclosure: {
+        type: 'token',
+        description: 'Disclosure & transparency violations',
+      },
+      reasonCivicInterference: {
+        type: 'token',
+        description: 'Voter intimidation or interference',
+      },
+      reasonCivicMisinformation: {
+        type: 'token',
+        description: 'Election misinformation',
+      },
+      reasonCivicImpersonation: {
+        type: 'token',
+        description: 'Impersonation of electoral officials/entities',
+      },
+    },
+  },
   ToolsOzoneSafelinkAddRule: {
     lexicon: 1,
     id: 'tools.ozone.safelink.addRule',
@@ -18392,6 +18684,7 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
   ToolsOzoneSafelinkQueryEvents: 'tools.ozone.safelink.queryEvents',

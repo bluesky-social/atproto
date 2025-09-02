@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { DAY, HOUR } from '@atproto/common'
+import { DAY, HOUR, MINUTE } from '@atproto/common'
 import { OzoneEnvironment } from './env'
 
 // off-config but still from env:
@@ -15,6 +15,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     did: env.serverDid,
     version: env.version,
     devMode: env.devMode,
+    serviceRecordCacheTTL: env.serviceRecordCacheTTL ?? 5 * MINUTE, // default 5 mins
   }
 
   assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
@@ -124,6 +125,7 @@ export type ServiceConfig = {
   did: string
   version?: string
   devMode?: boolean
+  serviceRecordCacheTTL: number // in ms, default 5 mins
 }
 
 export type BlobDivertConfig = {
