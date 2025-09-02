@@ -1,5 +1,4 @@
 import { OAuthTokenType } from '@atproto/oauth-types'
-import { asArray } from '../lib/util/cast.js'
 import { InvalidTokenError } from '../oauth-errors.js'
 import { SignedTokenPayload } from '../signer/signed-token-payload.js'
 
@@ -18,15 +17,20 @@ export function verifyTokenClaims(
   options?: VerifyTokenClaimsOptions,
 ): void {
   if (options?.audience) {
-    const aud = asArray(tokenClaims.aud)
-    if (!options.audience.some((v) => aud.includes(v))) {
+    const { aud } = tokenClaims
+    const hasMatch =
+      aud != null &&
+      (Array.isArray(aud)
+        ? options.audience.some(includedIn, aud)
+        : options.audience.includes(aud))
+    if (!hasMatch) {
       throw new InvalidTokenError(tokenType, `Invalid audience`)
     }
   }
 
   if (options?.scope) {
     const scopes = tokenClaims.scope?.split(' ')
-    if (!scopes || !options.scope.some((v) => scopes.includes(v))) {
+    if (!scopes || !options.scope.some(includedIn, scopes)) {
       throw new InvalidTokenError(tokenType, `Invalid scope`)
     }
   }
@@ -34,4 +38,8 @@ export function verifyTokenClaims(
   if (tokenClaims.exp != null && tokenClaims.exp * 1000 <= Date.now()) {
     throw new InvalidTokenError(tokenType, `Token expired`)
   }
+}
+
+function includedIn<T>(this: readonly T[], value: T): boolean {
+  return this.includes(value)
 }

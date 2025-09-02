@@ -161,12 +161,30 @@ export type OAuthHooks = {
     requestId: RequestId
   }) => Awaitable<void>
 
+  /**
+   * This hook is called whenever a token is about to be created. You can use
+   * it to modify the token claims or perform additional validation.
+   *
+   * This hook should never throw an error.
+   */
   onCreateToken?: (data: {
     account: Account
     parameters: OAuthAuthorizationRequestParameters
-    payload: TokenClaims
+    claims: TokenClaims
   }) => Awaitable<void | TokenClaims>
 
+  /**
+   * This hook is called whenever a token was just decoded, and basic validation
+   * was performed (signature, expiration, not-before).
+   *
+   * It can be used to modify the payload (e.g., to add custom claims), or to
+   * perform additional validation.
+   *
+   * This hook is called when authenticating requests through the
+   * `authenticateRequest()` method in `OAuthVerifier` and `OAuthProvider`.
+   *
+   * Any error thrown here will be propagated.
+   */
   onDecodeToken?: (data: {
     tokenType: OAuthTokenType
     token: OAuthAccessToken

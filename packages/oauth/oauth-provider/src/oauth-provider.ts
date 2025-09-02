@@ -1095,7 +1095,18 @@ export class OAuthProvider extends OAuthVerifier {
         tokenPayload,
       )
 
-      return { ...claims, iss: tokenPayload.iss }
+      return {
+        // Make sure to preserve any claim that might have been added through
+        // the "onDecodeToken" hook, as well as claims not contained in
+        // `TokenClaims` (such as "iss").
+        ...tokenPayload,
+        // Only the "aud", "scope" and "client_id" claims should be different
+        // from the original token. Since other claims should be identical, or
+        // possibly more up-to-date, we allow the database claims to override
+        // the original claims, so they get used during validation (by parent
+        // class).
+        ...claims,
+      }
     }
 
     // Fool-proof

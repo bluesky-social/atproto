@@ -61,7 +61,7 @@ export class TokenManager {
     expiresAt: Date,
     scope: OAuthScope | null = null,
   ): Promise<OAuthAccessToken> {
-    const payload = buildTokenClaims(
+    const claims = buildTokenClaims(
       tokenId,
       clientId,
       account,
@@ -72,13 +72,13 @@ export class TokenManager {
       this.accessTokenMode,
     )
 
-    const payloadOverride = await callAsync(this.hooks.onCreateToken, {
+    const claimsOverride = await callAsync(this.hooks.onCreateToken, {
       account,
       parameters,
-      payload,
+      claims,
     })
 
-    return this.signer.createAccessToken(payloadOverride ?? payload)
+    return this.signer.createAccessToken(claimsOverride ?? claims)
   }
 
   async createToken(
