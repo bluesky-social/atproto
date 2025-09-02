@@ -1082,34 +1082,22 @@ export class OAuthProvider extends OAuthVerifier {
     token: OAuthAccessToken,
     dpopProof: null | DpopProof,
   ): Promise<SignedTokenPayload> {
-    if (this.accessTokenMode === AccessTokenMode.stateless) {
-      return super.decodeToken(tokenType, token, dpopProof)
-    }
+    const tokenPayload = await super.decodeToken(tokenType, token, dpopProof)
 
     if (this.accessTokenMode === AccessTokenMode.light) {
-      const tokenPayload = await super.decodeToken(tokenType, token, dpopProof)
-
-      // Fill the token claims from the database
-      const claims = await this.tokenManager.loadTokenClaims(
+      const claims = await this.tokenManager.checkTokenStatus(
         tokenType,
         tokenPayload,
       )
 
-      return {
-        // Make sure to preserve any claim that might have been added through
-        // the "onDecodeToken" hook, as well as claims not contained in
-        // `TokenClaims` (such as "iss").
-        ...tokenPayload,
-        // Only the "aud", "scope" and "client_id" claims should be different
-        // from the original token. Since other claims should be identical, or
-        // possibly more up-to-date, we allow the database claims to override
-        // the original claims, so they get used during validation (by parent
-        // class).
-        ...claims,
-      }
+      // @NOTE historically, access tokens didn't include the full set of
+      // claims. The following allows to maintain backwards compatibility when a
+      // dependent of this lib updates from a version with partial claims to a
+      // version with full claims, for the period of time during which access
+      // tokens issued with the old format are still valid.
+      Object.assign(tokenPayload, claims)
     }
 
-    // Fool-proof
-    throw new Error('Invalid access token mode')
+    return tokenPayload
   }
 }

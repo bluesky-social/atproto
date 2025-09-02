@@ -18,7 +18,7 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { LexiconManager } from '../lexicon/lexicon-manager.js'
 import { RequestMetadata } from '../lib/http/request.js'
-import { dateToRelativeSeconds } from '../lib/util/date.js'
+import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Sub } from '../oidc/sub.js'
@@ -30,7 +30,7 @@ import {
   generateRefreshToken,
   isRefreshToken,
 } from './refresh-token.js'
-import { TokenClaims, buildTokenClaims } from './token-claims.js'
+import { TokenClaims } from './token-claims.js'
 import { TokenId, generateTokenId, isTokenId } from './token-id.js'
 import { CreateTokenData, TokenInfo, TokenStore } from './token-store.js'
 
@@ -51,25 +51,36 @@ export class TokenManager {
     return new Date(now.getTime() + this.tokenMaxAge)
   }
 
-  protected async buildAccessToken(
+  protected async createAccessToken(
     tokenId: TokenId,
     client: Client,
     account: Account,
     parameters: OAuthAuthorizationRequestParameters,
-    createdAt: Date,
+    issuedAt: Date,
     expiresAt: Date,
-    scope: OAuthScope | null = null,
+    scope: OAuthScope,
   ): Promise<OAuthAccessToken> {
-    const claims = buildTokenClaims(
-      tokenId,
-      client.id,
-      account,
-      parameters,
-      createdAt,
-      expiresAt,
+    const claims: TokenClaims = {
+      jti: tokenId,
+      sub: account.sub,
+      iat: dateToEpoch(issuedAt),
+      exp: dateToEpoch(expiresAt),
+      aud: account.aud,
       scope,
-      this.accessTokenMode,
-    )
+      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+      client_id: client.id,
+
+      ...(parameters.dpop_jkt && {
+        cnf: { jkt: parameters.dpop_jkt },
+      }),
+
+      ...(this.accessTokenMode === AccessTokenMode.stateless && {
+        aud: account.aud,
+        scope: scope ?? parameters.scope,
+        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+        client_id: client.id,
+      }),
+    }
 
     const claimsOverride = await callAsync(this.hooks.onCreateToken, {
       client,
@@ -112,7 +123,7 @@ export class TokenManager {
         throw err
       })
 
-    const accessToken = await this.buildAccessToken(
+    const accessToken = await this.createAccessToken(
       tokenId,
       client,
       account,
@@ -239,7 +250,7 @@ export class TokenManager {
       scope,
     })
 
-    const accessToken = await this.buildAccessToken(
+    const accessToken = await this.createAccessToken(
       nextTokenId,
       client,
       account,
@@ -356,7 +367,7 @@ export class TokenManager {
    * {@link AccessTokenMode.light} mode, using data from the store to fill the
    * data that was omitted in the token itself.
    */
-  async loadTokenClaims(
+  async checkTokenStatus(
     tokenType: OAuthTokenType,
     tokenPayload: SignedTokenPayload,
   ): Promise<TokenClaims> {
@@ -370,30 +381,30 @@ export class TokenManager {
     }
 
     const { account, data } = tokenInfo
+    try {
+      // Fool proof, make sure that the database & token payload are consistent
+      if (tokenPayload.cnf?.jkt !== data.parameters.dpop_jkt) {
+        throw new InvalidTokenError(tokenType, `Invalid token`)
+      }
 
-    // Fool proof, make sure that the database & token payload are consistent
-    if (tokenPayload.cnf?.jkt !== data.parameters.dpop_jkt) {
-      throw new InvalidTokenError(tokenType, `Invalid token`)
-    }
+      if (isCurrentTokenExpired(tokenInfo)) {
+        throw new InvalidTokenError(tokenType, `Token expired`)
+      }
 
-    if (isCurrentTokenExpired(tokenInfo)) {
+      return {
+        jti: tokenId,
+        sub: account.sub,
+        iat: dateToEpoch(data.updatedAt),
+        exp: dateToEpoch(data.expiresAt),
+        aud: account.aud,
+        scope: data.scope ?? data.parameters.scope,
+        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+        client_id: data.clientId,
+      }
+    } catch (err) {
       await this.deleteToken(tokenId)
-      throw new InvalidTokenError(tokenType, `Token expired`)
+      throw err
     }
-
-    // Only the values not included in stateless mode should be rebuilt here.
-    // Since we have access to the full token info in the database, we can use
-    // that to fill in all values.
-    return buildTokenClaims(
-      tokenId,
-      data.clientId,
-      account,
-      data.parameters,
-      data.updatedAt,
-      data.expiresAt,
-      data.scope,
-      AccessTokenMode.stateless,
-    )
   }
 
   async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {
