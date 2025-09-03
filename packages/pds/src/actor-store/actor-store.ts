@@ -1,12 +1,7 @@
 import assert from 'node:assert'
 import fs, { mkdir } from 'node:fs/promises'
 import path from 'node:path'
-import {
-  chunkArray,
-  fileExists,
-  readIfExists,
-  rmIfExists,
-} from '@atproto/common'
+import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -137,9 +132,7 @@ export class ActorStore {
       const cids = await this.read(did, async (store) =>
         store.repo.blob.getBlobCids(),
       )
-      await Promise.allSettled(
-        chunkArray(cids, 500).map((chunk) => blobstore.deleteMany(chunk)),
-      )
+      await blobstore.deleteMany(cids)
     }
 
     const { directory } = await this.getLocation(did)

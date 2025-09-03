@@ -126,6 +126,9 @@ importers:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
+      '@atproto/common-web':
+        specifier: workspace:^
+        version: link:../common-web
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto

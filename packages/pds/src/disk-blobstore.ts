@@ -3,10 +3,15 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import stream from 'node:stream'
 import { CID } from 'multiformats/cid'
-import { fileExists, isErrnoException, rmIfExists } from '@atproto/common'
+import {
+  chunkArray,
+  fileExists,
+  isErrnoException,
+  rmIfExists,
+} from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
-import { httpLogger as log } from './logger'
+import { blobStoreLogger as log } from './logger'
 
 export class DiskBlobStore implements BlobStore {
   constructor(
@@ -77,15 +82,25 @@ export class DiskBlobStore implements BlobStore {
     await this.ensureDir()
     const tmpPath = this.getTmpPath(key)
     const storedPath = this.getStoredPath(cid)
-    const alreadyHas = await this.hasStored(cid)
-    if (!alreadyHas) {
-      const data = await fs.readFile(tmpPath)
-      await fs.writeFile(storedPath, data)
-    }
+
     try {
-      await fs.rm(tmpPath)
+      await fs.rename(tmpPath, storedPath)
     } catch (err) {
-      log.error({ err, tmpPath }, 'could not delete file from temp storage')
+      if (err instanceof Error && err['code'] === 'ENOENT') {
+        // Blob was not found from temp storage...
+        const alreadyHas = await this.hasStored(cid)
+        // already saved, so we no-op
+        if (alreadyHas) return
+
+        throw new BlobNotFoundError()
+      }
+
+      log.error(
+        { err, tmpPath, storedPath },
+        'could not move file to permanent storage',
+      )
+
+      throw err
     }
   }
 
@@ -137,7 +152,9 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async deleteMany(cids: CID[]): Promise<void> {
-    await Promise.all(cids.map((cid) => this.delete(cid)))
+    for (const chunk of chunkArray(cids, 500)) {
+      await Promise.all(chunk.map((cid) => this.delete(cid)))
+    }
   }
 
   async deleteAll(): Promise<void> {
