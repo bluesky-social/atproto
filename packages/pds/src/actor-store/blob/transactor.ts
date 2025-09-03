@@ -161,6 +161,8 @@ export class BlobTransactor extends BlobReader {
     writes: PreparedWrite[],
     skipBlobStore?: boolean,
   ) {
+    this.db.assertTransaction()
+
     const deletes = writes.filter(isDelete)
     const updates = writes.filter(isUpdate)
     const uris = [...deletes, ...updates].map((w) => w.uri.toString())
@@ -215,6 +217,8 @@ export class BlobTransactor extends BlobReader {
   }
 
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
+    this.db.assertTransaction()
+
     const found = await this.db.db
       .selectFrom('blob')
       .select(['tempKey', 'size', 'mimeType'])
