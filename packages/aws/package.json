@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
+    "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@aws-sdk/client-cloudfront": "^3.261.0",

@@ -2,6 +2,7 @@ import stream from 'node:stream'
 import * as aws from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import { CID } from 'multiformats/cid'
+import { chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 
@@ -80,15 +81,23 @@ export class S3BlobStore implements BlobStore {
   }
 
   async makePermanent(key: string, cid: CID): Promise<void> {
-    const alreadyHas = await this.hasStored(cid)
-    if (!alreadyHas) {
+    try {
+      // @NOTE we normally call this method when we know the file is temporary.
+      // Because of this, we optimistically move the file, allowing to make
+      // fewer network requests in the happy path.
       await this.move({
         from: this.getTmpPath(key),
         to: this.getStoredPath(cid),
       })
-    } else {
-      // already saved, so we no-op & just delete the temp
-      await this.deleteKey(this.getTmpPath(key))
+    } catch (err) {
+      if (err instanceof BlobNotFoundError) {
+        // Blob was not found from temp storage...
+        const alreadyHas = await this.hasStored(cid)
+        // already saved, so we no-op
+        if (alreadyHas) return
+      }
+
+      throw err
     }
   }
 
@@ -160,8 +169,21 @@ export class S3BlobStore implements BlobStore {
   }
 
   async deleteMany(cids: CID[]): Promise<void> {
-    const keys = cids.map((cid) => this.getStoredPath(cid))
-    await this.deleteManyKeys(keys)
+    const errors: unknown[] = []
+    for (const chunk of chunkArray(cids, 500)) {
+      try {
+        const keys = chunk.map((cid) => this.getStoredPath(cid))
+        await this.deleteManyKeys(keys)
+      } catch (err) {
+        errors.push(err)
+      }
+    }
+    if (errors.length === 1) {
+      throw errors[0]
+    }
+    if (errors.length > 1) {
+      throw new AggregateError(errors, 'Multiple errors while deleting objects')
+    }
   }
 
   async hasStored(cid: CID): Promise<boolean> {
@@ -207,21 +229,28 @@ export class S3BlobStore implements BlobStore {
         CopySource: `${this.bucket}/${keys.from}`,
         Key: keys.to,
       })
+    } catch (err) {
+      if (err?.['Code'] === 'NoSuchKey') {
+        // Already deleted, possibly by a concurrently running process
+        throw new BlobNotFoundError()
+      }
+
+      throw err
+    }
+
+    try {
       await this.client.deleteObject({
         Bucket: this.bucket,
         Key: keys.from,
       })
     } catch (err) {
-      handleErr(err)
-    }
-  }
-}
+      if (err?.['Code'] === 'NoSuchKey') {
+        // Already deleted, possibly by a concurrently running process
+        return
+      }
 
-const handleErr = (err: unknown) => {
-  if (err?.['Code'] === 'NoSuchKey') {
-    throw new BlobNotFoundError()
-  } else {
-    throw err
+      throw err
+    }
   }
 }
 

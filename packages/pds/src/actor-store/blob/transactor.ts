@@ -11,8 +11,10 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
 import * as img from '../../image'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { blobStoreLogger as log } from '../../logger'
 import {
   PreparedBlobRef,
+  PreparedCreate,
   PreparedDelete,
   PreparedUpdate,
   PreparedWrite,
@@ -113,60 +115,61 @@ export class BlobTransactor extends BlobReader {
   async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
     await this.deleteDereferencedBlobs(writes)
 
-    const blobPromises: Promise<void>[] = []
     for (const write of writes) {
-      if (
-        write.action === WriteOpAction.Create ||
-        write.action === WriteOpAction.Update
-      ) {
+      if (isCreate(write) || isUpdate(write)) {
         for (const blob of write.blobs) {
-          blobPromises.push(this.verifyBlobAndMakePermanent(blob))
-          blobPromises.push(this.associateBlob(blob, write.uri))
+          await this.verifyBlobAndMakePermanent(blob)
+          await this.associateBlob(blob, write.uri)
         }
       }
     }
-    await Promise.all(blobPromises)
   }
 
-  async updateBlobTakedownStatus(blob: CID, takedown: StatusAttr) {
+  async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
+    this.db.assertTransaction()
+
     const takedownRef = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
       .updateTable('blob')
       .set({ takedownRef })
-      .where('cid', '=', blob.toString())
+      .where('cid', '=', cid.toString())
       .executeTakeFirst()
-    try {
-      if (takedown.applied) {
-        await this.blobstore.quarantine(blob)
-      } else {
-        await this.blobstore.unquarantine(blob)
-      }
-    } catch (err) {
-      if (!(err instanceof BlobNotFoundError)) {
-        throw err
-      }
-    }
+
+    this.db.onCommit(async () => {
+      this.backgroundQueue.add(async () => {
+        try {
+          if (takedown.applied) {
+            await this.blobstore.quarantine(cid)
+          } else {
+            await this.blobstore.unquarantine(cid)
+          }
+        } catch (err) {
+          if (err instanceof BlobNotFoundError) return
+
+          log.error(
+            { err, cid: cid.toString() },
+            'could not update blob takedown status',
+          )
+        }
+      })
+    })
   }
 
   async deleteDereferencedBlobs(
     writes: PreparedWrite[],
     skipBlobStore?: boolean,
   ) {
-    const deletes = writes.filter(
-      (w) => w.action === WriteOpAction.Delete,
-    ) as PreparedDelete[]
-    const updates = writes.filter(
-      (w) => w.action === WriteOpAction.Update,
-    ) as PreparedUpdate[]
+    const deletes = writes.filter(isDelete)
+    const updates = writes.filter(isUpdate)
     const uris = [...deletes, ...updates].map((w) => w.uri.toString())
     if (uris.length === 0) return
 
     const deletedRepoBlobs = await this.db.db
       .deleteFrom('record_blob')
       .where('recordUri', 'in', uris)
-      .returningAll()
+      .returning('blobCid')
       .execute()
     if (deletedRepoBlobs.length < 1) return
 
@@ -177,18 +180,13 @@ export class BlobTransactor extends BlobReader {
       .select('blobCid')
       .execute()
 
-    const newBlobCids = writes
-      .map((w) =>
-        w.action === WriteOpAction.Create || w.action === WriteOpAction.Update
-          ? w.blobs
-          : [],
-      )
-      .flat()
-      .map((b) => b.cid.toString())
     const cidsToKeep = [
-      ...newBlobCids,
       ...duplicateCids.map((row) => row.blobCid),
+      ...writes
+        .filter((w) => isUpdate(w) || isCreate(w))
+        .flatMap((w) => w.blobs.map((b) => b.cid.toString())),
     ]
+
     const cidsToDelete = deletedRepoBlobCids.filter(
       (cid) => !cidsToKeep.includes(cid),
     )
@@ -198,13 +196,20 @@ export class BlobTransactor extends BlobReader {
       .deleteFrom('blob')
       .where('cid', 'in', cidsToDelete)
       .execute()
+
     if (!skipBlobStore) {
       this.db.onCommit(() => {
-        this.backgroundQueue.add(async () => {
-          await Promise.allSettled(
-            cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-          )
-        })
+        // @NOTE avoids deleting all blobs in in parallel by creating 1 task
+        // per blob
+        for (const cid of cidsToDelete) {
+          this.backgroundQueue.add(async () => {
+            try {
+              await this.blobstore.delete(CID.parse(cid))
+            } catch (err) {
+              log.error({ err, cid }, 'could not delete blob from blobstore')
+            }
+          })
+        }
       })
     }
   }
@@ -212,19 +217,33 @@ export class BlobTransactor extends BlobReader {
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
     const found = await this.db.db
       .selectFrom('blob')
-      .selectAll()
+      .select(['tempKey', 'size', 'mimeType'])
       .where('cid', '=', blob.cid.toString())
       .where('takedownRef', 'is', null)
       .executeTakeFirst()
+
     if (!found) {
       throw new InvalidRequestError(
         `Could not find blob: ${blob.cid.toString()}`,
         'BlobNotFound',
       )
     }
+
     if (found.tempKey) {
       verifyBlob(blob, found)
-      await this.blobstore.makePermanent(found.tempKey, blob.cid)
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          const { cid } = blob
+          try {
+            await this.blobstore.makePermanent(found.tempKey!, cid)
+          } catch (err) {
+            log.error(
+              { err, cid: cid.toString() },
+              'could not make blob permanent',
+            )
+          }
+        })
+      })
       await this.db.db
         .updateTable('blob')
         .set({ tempKey: null })
@@ -300,7 +319,10 @@ function acceptedMime(mime: string, accepted: string[]): boolean {
   return accepted.includes(mime)
 }
 
-function verifyBlob(blob: PreparedBlobRef, found: BlobTable) {
+function verifyBlob(
+  blob: PreparedBlobRef,
+  found: Pick<BlobTable, 'size' | 'mimeType'>,
+) {
   const throwInvalid = (msg: string, errName = 'InvalidBlob') => {
     throw new InvalidRequestError(msg, errName)
   }
@@ -327,4 +349,14 @@ function verifyBlob(blob: PreparedBlobRef, found: BlobTable) {
       'InvalidMimeType',
     )
   }
+}
+
+function isCreate(write: PreparedWrite): write is PreparedCreate {
+  return write.action === WriteOpAction.Create
+}
+function isUpdate(write: PreparedWrite): write is PreparedUpdate {
+  return write.action === WriteOpAction.Update
+}
+function isDelete(write: PreparedWrite): write is PreparedDelete {
+  return write.action === WriteOpAction.Delete
 }
