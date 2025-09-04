@@ -2,4 +2,4 @@
 "@atproto/aws": patch
 ---
 
-BlobStore's `deleteMany` now supports any number of input (and with process deletes by chunks internally)
+`S3BlobStore`'s `deleteMany` now supports any number of input (and will process deletes by chunks internally)
