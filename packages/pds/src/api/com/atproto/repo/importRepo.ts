@@ -87,7 +87,6 @@ export default function (server: Server, ctx: AppContext) {
               rev,
               now,
             )
-
             const recordBlobs = findBlobRefs(parsedRecord)
             await store.repo.blob.insertBlobs(uri.toString(), recordBlobs)
           }

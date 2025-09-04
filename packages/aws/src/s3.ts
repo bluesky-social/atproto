@@ -1,21 +1,26 @@
 import stream from 'node:stream'
-import * as aws from '@aws-sdk/client-s3'
-import { Upload } from '@aws-sdk/lib-storage'
+import {
+  NoSuchKey,
+  PutObjectCommand,
+  S3,
+  S3ClientConfig,
+} from '@aws-sdk/client-s3'
 import { CID } from 'multiformats/cid'
-import { chunkArray } from '@atproto/common-web'
+import { SECOND, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 
-export type S3Config = { bucket: string; uploadTimeoutMs?: number } & Omit<
-  aws.S3ClientConfig,
-  'apiVersion'
->
+export type S3Config = {
+  bucket: string
+  requestTimeoutMs?: number
+  uploadTimeoutMs?: number
+} & Omit<S3ClientConfig, 'apiVersion' | 'requestHandler'>
 
 // @NOTE we use Upload rather than client.putObject because stream
 // length is not known in advance. See also aws/aws-sdk-js-v3#2348.
 
 export class S3BlobStore implements BlobStore {
-  private client: aws.S3
+  private client: S3
   private bucket: string
   private uploadTimeoutMs: number
 
@@ -23,12 +28,14 @@ export class S3BlobStore implements BlobStore {
     public did: string,
     cfg: S3Config,
   ) {
-    const { bucket, uploadTimeoutMs, ...rest } = cfg
+    const { bucket, requestTimeoutMs, uploadTimeoutMs, ...rest } = cfg
     this.bucket = bucket
-    this.uploadTimeoutMs = uploadTimeoutMs ?? 10000
-    this.client = new aws.S3({
+    this.uploadTimeoutMs = uploadTimeoutMs ?? 10 * SECOND
+    this.client = new S3({
       ...rest,
       apiVersion: '2006-03-01',
+      // Ensures that all requests timeout under "requestTimeoutMs"
+      requestHandler: { requestTimeout: requestTimeoutMs ?? 5 * SECOND },
     })
   }
 
@@ -54,29 +61,41 @@ export class S3BlobStore implements BlobStore {
     return `quarantine/${this.did}/${cid.toString()}`
   }
 
+  private async uploadBytes(path: string, bytes: Uint8Array | stream.Readable) {
+    // There is an issue with "Upload" that causes it to hang indefinitely. It
+    // seems that "PutObjectCommand" is not affected.
+
+    // In particular, `Upload`'s abortController **should not** be used. Indeed,
+    // in its current implementation, it uses a "Promise.race" under the hood,
+    // which will not cause the pending request to be actually destroyed, and
+    // can lead any further request (made through the same HTTP Agent) to hang
+    // indefinitely. Note that older version of AWS's SDK also presented this
+    // issue for *every* request made through the client. So make sure to use
+    // recent enough version (>= 3.879.0).
+
+    // The main drawback of using "PutObjectCommand" vs "Upload" is that
+    // "PutObjectCommand" does not support concurrent chunked uploads. This
+    // should not be an issue in our case though as the chunk size is 5MB, which
+    // is smaller than most blobs.
+
+    // See: https://github.com/aws/aws-sdk-js-v3/issues/6426
+
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: path,
+        Body: bytes,
+      }),
+      {
+        // Allow for a longer timeout for uploads than for regular requests
+        requestTimeout: this.uploadTimeoutMs,
+      },
+    )
+  }
+
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
-    // @NOTE abort results in error from aws-sdk "Upload aborted." with name "AbortError"
-    const abortController = new AbortController()
-    const timeout = setTimeout(
-      () => abortController.abort(),
-      this.uploadTimeoutMs,
-    )
-    const upload = new Upload({
-      client: this.client,
-      params: {
-        Bucket: this.bucket,
-        Body: bytes,
-        Key: this.getTmpPath(key),
-      },
-      // @ts-ignore native implementation fine in node >=15
-      abortController,
-    })
-    try {
-      await upload.done()
-    } finally {
-      clearTimeout(timeout)
-    }
+    await this.uploadBytes(this.getTmpPath(key), bytes)
     return key
   }
 
@@ -105,27 +124,7 @@ export class S3BlobStore implements BlobStore {
     cid: CID,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
-    // @NOTE abort results in error from aws-sdk "Upload aborted." with name "AbortError"
-    const abortController = new AbortController()
-    const timeout = setTimeout(
-      () => abortController.abort(),
-      this.uploadTimeoutMs,
-    )
-    const upload = new Upload({
-      client: this.client,
-      params: {
-        Bucket: this.bucket,
-        Body: bytes,
-        Key: this.getStoredPath(cid),
-      },
-      // @ts-ignore native implementation fine in node >=15
-      abortController,
-    })
-    try {
-      await upload.done()
-    } finally {
-      clearTimeout(timeout)
-    }
+    await this.uploadBytes(this.getStoredPath(cid), bytes)
   }
 
   async quarantine(cid: CID): Promise<void> {
@@ -229,13 +228,13 @@ export class S3BlobStore implements BlobStore {
         CopySource: `${this.bucket}/${keys.from}`,
         Key: keys.to,
       })
-    } catch (err) {
-      if (err?.['Code'] === 'NoSuchKey') {
+    } catch (cause) {
+      if (cause instanceof NoSuchKey) {
         // Already deleted, possibly by a concurrently running process
-        throw new BlobNotFoundError()
+        throw new BlobNotFoundError(undefined, { cause })
       }
 
-      throw err
+      throw cause
     }
 
     try {
@@ -244,7 +243,7 @@ export class S3BlobStore implements BlobStore {
         Key: keys.from,
       })
     } catch (err) {
-      if (err?.['Code'] === 'NoSuchKey') {
+      if (err instanceof NoSuchKey) {
         // Already deleted, possibly by a concurrently running process
         return
       }
