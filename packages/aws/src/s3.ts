@@ -6,7 +6,7 @@ import {
   S3ClientConfig,
 } from '@aws-sdk/client-s3'
 import { CID } from 'multiformats/cid'
-import { SECOND, chunkArray } from '@atproto/common-web'
+import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 
@@ -177,12 +177,7 @@ export class S3BlobStore implements BlobStore {
         errors.push(err)
       }
     }
-    if (errors.length === 1) {
-      throw errors[0]
-    }
-    if (errors.length > 1) {
-      throw new AggregateError(errors, 'Multiple errors while deleting objects')
-    }
+    if (errors.length) throw aggregateErrors(errors)
   }
 
   async hasStored(cid: CID): Promise<boolean> {
