@@ -226,9 +226,8 @@ export class BlobTransactor extends BlobReader {
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
           try {
-            await this.blobstore.deleteMany(
-              cidsToDelete.map((cid) => CID.parse(cid)),
-            )
+            const cids = cidsToDelete.map((cid) => CID.parse(cid))
+            await this.blobstore.deleteMany(cids)
           } catch (err) {
             log.error(
               { err, cids: cidsToDelete },

@@ -4,6 +4,7 @@ import path from 'node:path'
 import stream from 'node:stream'
 import { CID } from 'multiformats/cid'
 import {
+  aggregateErrors,
   chunkArray,
   fileExists,
   isErrnoException,
@@ -142,15 +143,18 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async deleteMany(cids: CID[]): Promise<void> {
+    const errors: unknown[] = []
     for (const chunk of chunkArray(cids, 500)) {
       await Promise.all(
-        chunk.map(async (cid) =>
-          this.delete(cid).catch((err: unknown) => {
+        chunk.map((cid) =>
+          this.delete(cid).catch((err) => {
             log.error({ err, cid: cid.toString() }, 'error deleting blob')
+            errors.push(err)
           }),
         ),
       )
     }
+    if (errors.length) throw aggregateErrors(errors)
   }
 
   async deleteAll(): Promise<void> {
