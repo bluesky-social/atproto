@@ -8,6 +8,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
+import { blobStoreLogger } from '../logger'
 import { ActorStoreReader } from './actor-store-reader'
 import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'
@@ -132,7 +133,9 @@ export class ActorStore {
       const cids = await this.read(did, async (store) =>
         store.repo.blob.getBlobCids(),
       )
-      await blobstore.deleteMany(cids)
+      await blobstore.deleteMany(cids).catch((err) => {
+        blobStoreLogger.error('Failed to delete blobs', { did, cids, err })
+      })
     }
 
     const { directory } = await this.getLocation(did)
