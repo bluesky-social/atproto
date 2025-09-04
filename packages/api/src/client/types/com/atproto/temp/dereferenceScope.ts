@@ -16,13 +16,13 @@ const is$typed = _is$typed,
 const id = 'com.atproto.temp.dereferenceScope'
 
 export type QueryParams = {
-  /** The scope to decode */
+  /** The scope reference (starts with 'ref:') */
   scope: string
 }
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  /** The decoded scope */
+  /** The full oauth permission scope */
   scope: string
 }
 

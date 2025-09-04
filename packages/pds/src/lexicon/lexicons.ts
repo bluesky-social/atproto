@@ -13656,14 +13656,15 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Allows decoding an encoded scope.',
+        description:
+          'Allows finding the oauth permission scope from a reference',
         parameters: {
           type: 'params',
           required: ['scope'],
           properties: {
             scope: {
               type: 'string',
-              description: 'The scope to decode',
+              description: "The scope reference (starts with 'ref:')",
             },
           },
         },
@@ -13675,7 +13676,7 @@ export const schemaDict = {
             properties: {
               scope: {
                 type: 'string',
-                description: 'The decoded scope',
+                description: 'The full oauth permission scope',
               },
             },
           },
