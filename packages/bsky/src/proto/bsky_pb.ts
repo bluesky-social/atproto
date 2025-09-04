@@ -13674,6 +13674,140 @@ export class GetActorBookmarksResponse extends Message<GetActorBookmarksResponse
 }
 
 /**
+ * @generated from message bsky.GetBookmarksBySubjectRequest
+ */
+export class GetBookmarksBySubjectRequest extends Message<GetBookmarksBySubjectRequest> {
+  /**
+   * @generated from field: bsky.RecordRef subject = 1;
+   */
+  subject?: RecordRef
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetBookmarksBySubjectRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetBookmarksBySubjectRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'subject', kind: 'message', T: RecordRef },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetBookmarksBySubjectRequest {
+    return new GetBookmarksBySubjectRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetBookmarksBySubjectRequest {
+    return new GetBookmarksBySubjectRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetBookmarksBySubjectRequest {
+    return new GetBookmarksBySubjectRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetBookmarksBySubjectRequest
+      | PlainMessage<GetBookmarksBySubjectRequest>
+      | undefined,
+    b:
+      | GetBookmarksBySubjectRequest
+      | PlainMessage<GetBookmarksBySubjectRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetBookmarksBySubjectRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetBookmarksBySubjectResponse
+ */
+export class GetBookmarksBySubjectResponse extends Message<GetBookmarksBySubjectResponse> {
+  /**
+   * @generated from field: repeated bsky.Bookmark bookmarks = 1;
+   */
+  bookmarks: Bookmark[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetBookmarksBySubjectResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetBookmarksBySubjectResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'bookmarks', kind: 'message', T: Bookmark, repeated: true },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetBookmarksBySubjectResponse {
+    return new GetBookmarksBySubjectResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetBookmarksBySubjectResponse {
+    return new GetBookmarksBySubjectResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetBookmarksBySubjectResponse {
+    return new GetBookmarksBySubjectResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetBookmarksBySubjectResponse
+      | PlainMessage<GetBookmarksBySubjectResponse>
+      | undefined,
+    b:
+      | GetBookmarksBySubjectResponse
+      | PlainMessage<GetBookmarksBySubjectResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetBookmarksBySubjectResponse, a, b)
+  }
+}
+
+/**
  * GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the targets
  *
  * @generated from message bsky.GetFollowsFollowingRequest

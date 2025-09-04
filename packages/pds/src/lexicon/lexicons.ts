@@ -1317,6 +1317,119 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyBookmarkGetModBookmarksByActor: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.getModBookmarksByActor',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Moderation endpoint to get bookmarks by actor. Requires moderation service auth.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'did',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['bookmarks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              bookmarks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.bookmark.defs#bookmarkView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyBookmarkGetModBookmarksBySubject: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.getModBookmarksBySubject',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Moderation endpoint to get bookmarks by subject. Requires moderation service auth.',
+        parameters: {
+          type: 'params',
+          required: ['subject'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'AT-URI of the subject (eg, a post record).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['bookmarks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              bookmarks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.bookmark.getModBookmarksBySubject#bookmark',
+                },
+              },
+            },
+          },
+        },
+      },
+      bookmark: {
+        type: 'object',
+        required: ['indexedAt', 'actor'],
+        properties: {
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          actor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedDefs: {
     lexicon: 1,
     id: 'app.bsky.embed.defs',
@@ -18409,6 +18522,10 @@ export const ids = {
   AppBskyBookmarkDefs: 'app.bsky.bookmark.defs',
   AppBskyBookmarkDeleteBookmark: 'app.bsky.bookmark.deleteBookmark',
   AppBskyBookmarkGetBookmarks: 'app.bsky.bookmark.getBookmarks',
+  AppBskyBookmarkGetModBookmarksByActor:
+    'app.bsky.bookmark.getModBookmarksByActor',
+  AppBskyBookmarkGetModBookmarksBySubject:
+    'app.bsky.bookmark.getModBookmarksBySubject',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
