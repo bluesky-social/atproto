@@ -1,5 +1,12 @@
 # @atproto/api
 
+## 0.16.8
+
+### Patch Changes
+
+- [#3881](https://github.com/bluesky-social/atproto/pull/3881) [`a5b20f021`](https://github.com/bluesky-social/atproto/commit/a5b20f0218bd13e3c5d7681de2263dcc850b7523) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add expanded moderation report reasons as outlined in
+  [RFC-0009](https://github.com/bluesky-social/proposals/tree/main/0009-mod-report-granularity)
+
 ## 0.16.7
 
 ### Patch Changes
