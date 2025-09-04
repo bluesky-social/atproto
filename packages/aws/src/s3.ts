@@ -76,7 +76,7 @@ export class S3BlobStore implements BlobStore {
     // The main drawback of using "PutObjectCommand" vs "Upload" is that
     // "PutObjectCommand" does not support concurrent chunked uploads. This
     // should not be an issue in our case though as the chunk size is 5MB, which
-    // is smaller than most blobs.
+    // is larger than most blobs.
 
     // See: https://github.com/aws/aws-sdk-js-v3/issues/6426
 
