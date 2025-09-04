@@ -45,24 +45,20 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   }
 
   async putMany(toPut: BlockMap, rev: string): Promise<void> {
-    const blocks: RepoBlock[] = []
-    toPut.forEach((bytes, cid) => {
-      blocks.push({
-        cid: cid.toString(),
-        repoRev: rev,
-        size: bytes.length,
-        content: bytes,
-      })
-    })
-    await Promise.all(
-      chunkArray(blocks, 50).map((batch) =>
-        this.db.db
-          .insertInto('repo_block')
-          .values(batch)
-          .onConflict((oc) => oc.doNothing())
-          .execute(),
-      ),
-    )
+    const blocks: RepoBlock[] = Array.from(toPut, ([cid, bytes]) => ({
+      cid: cid.toString(),
+      repoRev: rev,
+      size: bytes.length,
+      content: bytes,
+    }))
+
+    for (const batch of chunkArray(blocks, 50)) {
+      await this.db.db
+        .insertInto('repo_block')
+        .values(batch)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+    }
   }
 
   async deleteMany(cids: CID[]) {
@@ -75,11 +71,9 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   }
 
   async applyCommit(commit: CommitData, isCreate?: boolean) {
-    await Promise.all([
-      this.updateRoot(commit.cid, commit.rev, isCreate),
-      this.putMany(commit.newBlocks, commit.rev),
-      this.deleteMany(commit.removedCids.toList()),
-    ])
+    await this.updateRoot(commit.cid, commit.rev, isCreate)
+    await this.putMany(commit.newBlocks, commit.rev)
+    await this.deleteMany(commit.removedCids.toList())
   }
 
   async updateRoot(cid: CID, rev: string, isCreate = false): Promise<void> {

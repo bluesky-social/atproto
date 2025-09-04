@@ -19,16 +19,16 @@ export default function (server: Server, ctx: AppContext) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
         } else if (isStrongRef(subject)) {
           const uri = new AtUri(subject.uri)
-          await ctx.actorStore.transact(uri.hostname, (store) =>
-            store.record.updateRecordTakedownStatus(uri, takedown),
-          )
+          await ctx.actorStore.transact(uri.hostname, async (store) => {
+            await store.record.updateRecordTakedownStatus(uri, takedown)
+          })
         } else if (isRepoBlobRef(subject)) {
-          await ctx.actorStore.transact(subject.did, (store) =>
-            store.repo.blob.updateBlobTakedownStatus(
+          await ctx.actorStore.transact(subject.did, async (store) => {
+            await store.repo.blob.updateBlobTakedownStatus(
               CID.parse(subject.cid),
               takedown,
-            ),
-          )
+            )
+          })
         } else {
           throw new InvalidRequestError('Invalid subject')
         }

@@ -139,11 +139,9 @@ const processCommit = async (ctx: RecovererContext, evt: CommitEvt) => {
     commit.newBlocks = blocks
     commit.cid = evt.commit
     commit.rev = evt.rev
-    await Promise.all([
-      actorTxn.repo.storage.applyCommit(commit),
-      actorTxn.repo.indexWrites(writes, commit.rev),
-      trackBlobs(actorTxn, writes),
-    ])
+    await actorTxn.repo.storage.applyCommit(commit)
+    await actorTxn.repo.indexWrites(writes, commit.rev)
+    await trackBlobs(actorTxn, writes)
   })
 }
 
@@ -165,13 +163,11 @@ const processRepoCreation = async (
     relevantBlocks: new BlockMap(),
     removedCids: new CidSet(),
   }
-  await ctx.actorStore.transact(did, (actorTxn) =>
-    Promise.all([
-      actorTxn.repo.storage.applyCommit(commit, true),
-      actorTxn.repo.indexWrites(writes, commit.rev),
-      actorTxn.repo.blob.processWriteBlobs(commit.rev, writes),
-    ]),
-  )
+  await ctx.actorStore.transact(did, async (actorTxn) => {
+    await actorTxn.repo.storage.applyCommit(commit, true)
+    await actorTxn.repo.indexWrites(writes, commit.rev)
+    await actorTxn.repo.blob.processWriteBlobs(commit.rev, writes)
+  })
   await trackNewAccount(ctx.recoveryDb, did)
 }
 

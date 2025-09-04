@@ -13,7 +13,7 @@ export const getAndParseRecord = async (
   if (!bytes) {
     throw new MissingBlockError(cid, 'record')
   }
-  const record = await cborToLexRecord(bytes)
+  const record = cborToLexRecord(bytes)
   return { record, bytes }
 }
 

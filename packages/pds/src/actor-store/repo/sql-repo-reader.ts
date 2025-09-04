@@ -59,20 +59,18 @@ export class SqlRepoReader extends ReadableBlockstore {
     const missing = new CidSet(cached.missing)
     const missingStr = cached.missing.map((c) => c.toString())
     const blocks = new BlockMap()
-    await Promise.all(
-      chunkArray(missingStr, 500).map(async (batch) => {
-        const res = await this.db.db
-          .selectFrom('repo_block')
-          .where('repo_block.cid', 'in', batch)
-          .select(['repo_block.cid as cid', 'repo_block.content as content'])
-          .execute()
-        for (const row of res) {
-          const cid = CID.parse(row.cid)
-          blocks.set(cid, row.content)
-          missing.delete(cid)
-        }
-      }),
-    )
+    for (const batch of chunkArray(missingStr, 500)) {
+      const res = await this.db.db
+        .selectFrom('repo_block')
+        .where('repo_block.cid', 'in', batch)
+        .select(['repo_block.cid as cid', 'repo_block.content as content'])
+        .execute()
+      for (const row of res) {
+        const cid = CID.parse(row.cid)
+        blocks.set(cid, row.content)
+        missing.delete(cid)
+      }
+    }
     this.cache.addMap(blocks)
     blocks.addMap(cached.blocks)
     return { blocks, missing: missing.toList() }

@@ -55,11 +55,10 @@ export class RepoTransactor extends RepoReader {
       this.signingKey,
       writes.map(createWriteToOp),
     )
-    await Promise.all([
-      this.storage.applyCommit(commit, true),
-      this.indexWrites(writes, commit.rev),
-      this.blob.processWriteBlobs(commit.rev, writes),
-    ])
+    await this.storage.applyCommit(commit, true)
+    await this.indexWrites(writes, commit.rev)
+    await this.blob.processWriteBlobs(commit.rev, writes)
+
     const ops = writes.map((w) => ({
       action: 'create' as const,
       path: formatDataKey(w.uri.collection, w.uri.rkey),
@@ -87,14 +86,13 @@ export class RepoTransactor extends RepoReader {
       throw new InvalidRequestError('Too many writes. Max event size: 2MB')
     }
 
-    await Promise.all([
-      // persist the commit to repo storage
-      this.storage.applyCommit(commit),
-      // & send to indexing
-      this.indexWrites(writes, commit.rev),
-      // process blobs
-      this.blob.processWriteBlobs(commit.rev, writes),
-    ])
+    // persist the commit to repo storage
+    await this.storage.applyCommit(commit)
+    // & send to indexing
+    await this.indexWrites(writes, commit.rev)
+    // process blobs
+    await this.blob.processWriteBlobs(commit.rev, writes)
+
     return commit
   }
 
@@ -184,25 +182,24 @@ export class RepoTransactor extends RepoReader {
 
   async indexWrites(writes: PreparedWrite[], rev: string) {
     this.db.assertTransaction()
-    await Promise.all(
-      writes.map(async (write) => {
-        if (
-          write.action === WriteOpAction.Create ||
-          write.action === WriteOpAction.Update
-        ) {
-          await this.record.indexRecord(
-            write.uri,
-            write.cid,
-            write.record,
-            write.action,
-            rev,
-            this.now,
-          )
-        } else if (write.action === WriteOpAction.Delete) {
-          await this.record.deleteRecord(write.uri)
-        }
-      }),
-    )
+
+    for (const write of writes) {
+      if (
+        write.action === WriteOpAction.Create ||
+        write.action === WriteOpAction.Update
+      ) {
+        await this.record.indexRecord(
+          write.uri,
+          write.cid,
+          write.record,
+          write.action,
+          rev,
+          this.now,
+        )
+      } else if (write.action === WriteOpAction.Delete) {
+        await this.record.deleteRecord(write.uri)
+      }
+    }
   }
 
   async getDuplicateRecordCids(
