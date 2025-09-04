@@ -56,8 +56,6 @@ import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
 
-const { InvalidScopeReferenceError } = ComAtprotoTempDereferenceScope
-
 export type AppContextOptions = {
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
@@ -441,10 +439,13 @@ export class AppContext {
                 const scope = await scopeRefGetter
                   .dereference(payload.scope)
                   .catch((err) => {
+                    const { InvalidScopeReferenceError } =
+                      ComAtprotoTempDereferenceScope
                     if (err instanceof InvalidScopeReferenceError) {
                       // The scope reference cannot be found on the server.
                       // Consider the session as invalid, allowing entryway to
-                      // re-build the scope as the user re-authenticates.
+                      // re-build the scope as the user re-authenticates. This
+                      // should never happen though.
                       throw InvalidTokenError.from(err, tokenType)
                     }
 
