@@ -13,7 +13,7 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.atproto.temp.decodeScope'
+const id = 'com.atproto.temp.dereferenceScope'
 
 export type QueryParams = {
   /** The scope to decode */

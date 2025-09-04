@@ -1,8 +1,6 @@
 import { OAuthTokenType } from '@atproto/oauth-types'
 import { InvalidTokenError } from '../oauth-errors.js'
-import { SignedTokenPayload } from '../signer/signed-token-payload.js'
-
-export type { OAuthTokenType, SignedTokenPayload }
+import { AccessTokenPayload } from '../signer/access-token-payload.js'
 
 export type VerifyTokenClaimsOptions = {
   /** One of these audience must be included in the token audience(s) */
@@ -13,7 +11,7 @@ export type VerifyTokenClaimsOptions = {
 
 export function verifyTokenClaims(
   tokenType: OAuthTokenType,
-  tokenClaims: SignedTokenPayload,
+  tokenClaims: AccessTokenPayload,
   options?: VerifyTokenClaimsOptions,
 ): void {
   if (options?.audience) {

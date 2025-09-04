@@ -50,10 +50,11 @@ export class SimpleStoreRedis<K extends string, V extends Value>
     return `${this.options.keyPrefix}${key satisfies string}`
   }
 
-  async get(key: K, _options?: GetOptions): Promise<V | undefined> {
+  async get(key: K, options?: GetOptions): Promise<V | undefined> {
     const eKey = this.encodeKey(key)
     const eValue = await this.redis.get(eKey)
     if (eValue == null) return undefined
+    options?.signal?.throwIfAborted()
     const { decode = defaultDecoder as Decoder<any, V> } = this.options
     return decode(eValue, key)
   }

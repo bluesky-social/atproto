@@ -15,12 +15,15 @@ import {
 } from '@atproto/lexicon-resolver'
 import {
   AccessTokenMode,
+  InvalidTokenError,
   JoseKey,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
+import { XRPCError } from '@atproto/xrpc'
 import {
+  UpstreamFailureError,
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
@@ -32,7 +35,7 @@ import {
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
-import { ScopeDecoder, isEncodedScope } from './account-manager/scope-decoder'
+import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
 import { authPassthru, forwardedFor } from './api/proxy'
 import {
@@ -411,8 +414,8 @@ export class AppContext {
         })
       : undefined
 
-    const scopeDecoder = entrywayAgent
-      ? new ScopeDecoder(entrywayAgent, redisScratch)
+    const scopeRefGetter = entrywayAgent
+      ? new ScopeReferenceGetter(entrywayAgent, redisScratch)
       : undefined
 
     const oauthVerifier: OAuthVerifier =
@@ -422,8 +425,8 @@ export class AppContext {
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
-        onDecodeToken: scopeDecoder
-          ? async ({ payload, dpopProof }) => {
+        onDecodeToken: scopeRefGetter
+          ? async ({ payload, dpopProof, tokenType }) => {
               // @TODO drop this once oauth provider no longer accepts DPoP proof with
               // query or fragment in "htu" claim.
               if (dpopProof?.htu.match(/[?#]/)) {
@@ -433,9 +436,27 @@ export class AppContext {
                 )
               }
 
-              if (!isEncodedScope(payload.scope)) return
-              const scope = await scopeDecoder.get(payload.scope)
-              return { ...payload, scope }
+              if (payload.scope != null) {
+                const scope = await scopeRefGetter
+                  .dereference(payload.scope)
+                  .catch((err) => {
+                    if (err instanceof XRPCError && err.status === 404) {
+                      // The scope reference cannot be found on the server.
+                      // Consider the session as invalid, allowing entryway to
+                      // re-build the scope as the user re-authenticates.
+                      throw InvalidTokenError.from(err, tokenType)
+                    }
+
+                    throw new UpstreamFailureError(
+                      'Failed to fetch token permissions',
+                      undefined,
+                      { cause: err },
+                    )
+                  })
+                payload.scope = scope
+              }
+
+              return payload
             }
           : undefined,
       })

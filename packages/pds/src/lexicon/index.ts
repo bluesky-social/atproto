@@ -198,7 +198,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
 import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
-import * as ComAtprotoTempDecodeScope from './types/com/atproto/temp/decodeScope.js'
+import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/dereferenceScope.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
@@ -2844,15 +2844,15 @@ export class ComAtprotoTempNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  decodeScope<A extends Auth = void>(
+  dereferenceScope<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
-      ComAtprotoTempDecodeScope.QueryParams,
-      ComAtprotoTempDecodeScope.HandlerInput,
-      ComAtprotoTempDecodeScope.HandlerOutput
+      ComAtprotoTempDereferenceScope.QueryParams,
+      ComAtprotoTempDereferenceScope.HandlerInput,
+      ComAtprotoTempDereferenceScope.HandlerOutput
     >,
   ) {
-    const nsid = 'com.atproto.temp.decodeScope' // @ts-ignore
+    const nsid = 'com.atproto.temp.dereferenceScope' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -95,6 +95,7 @@ import { AuthorizationRedirectParameters } from './result/authorization-redirect
 import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
+import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
 import {
@@ -102,14 +103,12 @@ import {
   asTokenStore,
   refreshTokenSchema,
 } from './token/token-store.js'
-import {
-  SignedTokenPayload,
-  VerifyTokenClaimsOptions,
-} from './token/verify-token-claims.js'
+import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
 export { AccessTokenMode, Keyset }
 export type {
+  AccessTokenPayload,
   AuthorizationRedirectParameters,
   AuthorizationResultAuthorizePage as AuthorizationResultAuthorize,
   AuthorizationResultRedirect,
@@ -123,7 +122,6 @@ export type {
   LexiconResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
-  SignedTokenPayload,
   VerifyTokenClaimsOptions,
 }
 
@@ -1081,20 +1079,20 @@ export class OAuthProvider extends OAuthVerifier {
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
     dpopProof: null | DpopProof,
-  ): Promise<SignedTokenPayload> {
+  ): Promise<AccessTokenPayload> {
     const tokenPayload = await super.decodeToken(tokenType, token, dpopProof)
 
-    if (this.accessTokenMode === AccessTokenMode.light) {
-      const claims = await this.tokenManager.checkTokenStatus(
+    if (this.accessTokenMode !== AccessTokenMode.stateless) {
+      // @NOTE in non stateless mode, some claims can be omitted (most notably
+      // "scope"). We load the token claims here (allowing to ensure that the
+      // token is still valid, and to retrieve a (potentially updated) set of
+      // claims).
+
+      const claims = await this.tokenManager.loadTokenClaims(
         tokenType,
         tokenPayload,
       )
 
-      // @NOTE historically, access tokens didn't include the full set of
-      // claims. The following allows to maintain backwards compatibility when a
-      // dependent of this lib updates from a version with partial claims to a
-      // version with full claims, for the period of time during which access
-      // tokens issued with the old format are still valid.
       Object.assign(tokenPayload, claims)
     }
 

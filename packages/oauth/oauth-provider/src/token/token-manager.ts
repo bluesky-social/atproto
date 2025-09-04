@@ -23,7 +23,7 @@ import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Sub } from '../oidc/sub.js'
 import { Code, isCode } from '../request/code.js'
-import { SignedTokenPayload } from '../signer/signed-token-payload.js'
+import { AccessTokenPayload } from '../signer/access-token-payload.js'
 import { Signer } from '../signer/signer.js'
 import {
   RefreshToken,
@@ -66,20 +66,19 @@ export class TokenManager {
       iat: dateToEpoch(issuedAt),
       exp: dateToEpoch(expiresAt),
       aud: account.aud,
-      scope,
-      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
-      client_id: client.id,
 
       ...(parameters.dpop_jkt && {
         cnf: { jkt: parameters.dpop_jkt },
       }),
 
+      // Because tokens can end-up being quite big, we only include the scope in
+      // stateless mode.
       ...(this.accessTokenMode === AccessTokenMode.stateless && {
-        aud: account.aud,
-        scope: scope ?? parameters.scope,
-        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
-        client_id: client.id,
+        scope,
       }),
+
+      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+      client_id: client.id,
     }
 
     const claimsOverride = await callAsync(this.hooks.onCreateToken, {
@@ -367,9 +366,9 @@ export class TokenManager {
    * {@link AccessTokenMode.light} mode, using data from the store to fill the
    * data that was omitted in the token itself.
    */
-  async checkTokenStatus(
+  async loadTokenClaims(
     tokenType: OAuthTokenType,
-    tokenPayload: SignedTokenPayload,
+    tokenPayload: AccessTokenPayload,
   ): Promise<TokenClaims> {
     const tokenId = tokenPayload.jti
     const tokenInfo = await this.getTokenInfo(tokenId).catch((err) => {
@@ -381,29 +380,29 @@ export class TokenManager {
     }
 
     const { account, data } = tokenInfo
-    try {
-      // Fool proof, make sure that the database & token payload are consistent
-      if (tokenPayload.cnf?.jkt !== data.parameters.dpop_jkt) {
-        throw new InvalidTokenError(tokenType, `Invalid token`)
-      }
 
-      if (isCurrentTokenExpired(tokenInfo)) {
-        throw new InvalidTokenError(tokenType, `Token expired`)
-      }
-
-      return {
-        jti: tokenId,
-        sub: account.sub,
-        iat: dateToEpoch(data.updatedAt),
-        exp: dateToEpoch(data.expiresAt),
-        aud: account.aud,
-        scope: data.scope ?? data.parameters.scope,
-        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
-        client_id: data.clientId,
-      }
-    } catch (err) {
+    // Fool proof, make sure that the database & token payload are consistent.
+    // These should both be either undefined or a string so it's safe to compare
+    // the values directly.
+    if (tokenPayload.cnf?.jkt !== data.parameters.dpop_jkt) {
       await this.deleteToken(tokenId)
-      throw err
+      throw new InvalidTokenError(tokenType, `Invalid token`)
+    }
+
+    if (isCurrentTokenExpired(tokenInfo)) {
+      await this.deleteToken(tokenId)
+      throw new InvalidTokenError(tokenType, `Token expired`)
+    }
+
+    return {
+      jti: tokenId,
+      sub: account.sub,
+      iat: dateToEpoch(data.updatedAt),
+      exp: dateToEpoch(data.expiresAt),
+      aud: account.aud,
+      scope: data.scope ?? data.parameters.scope,
+      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+      client_id: data.clientId,
     }
   }
 

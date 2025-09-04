@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.temp.decodeScope",
+  "id": "com.atproto.temp.dereferenceScope",
   "defs": {
     "main": {
       "type": "query",

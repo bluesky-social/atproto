@@ -20,7 +20,7 @@ import { ReplayManager } from './replay/replay-manager.js'
 import { ReplayStoreMemory } from './replay/replay-store-memory.js'
 import { ReplayStoreRedis } from './replay/replay-store-redis.js'
 import { ReplayStore } from './replay/replay-store.js'
-import { SignedTokenPayload } from './signer/signed-token-payload.js'
+import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { Signer } from './signer/signer.js'
 import {
   VerifyTokenClaimsOptions,
@@ -56,11 +56,11 @@ export type OAuthVerifierOptions = DpopManagerOptions & {
 
 export { DpopNonce, Key, Keyset }
 export type {
+  AccessTokenPayload as SignedTokenPayload,
   DpopProof,
   OAuthTokenType,
   RedisOptions,
   ReplayStore,
-  SignedTokenPayload,
   VerifyTokenClaimsOptions,
 }
 
@@ -134,15 +134,13 @@ export class OAuthVerifier {
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
     dpopProof: null | DpopProof,
-  ): Promise<SignedTokenPayload> {
+  ): Promise<AccessTokenPayload> {
     if (!isSignedJwt(token)) {
       throw new InvalidTokenError(tokenType, `Malformed token`)
     }
 
     const { payload } = await this.signer
-      .verifyAccessToken(token, {
-        requiredClaims: ['iss', 'jti', 'iat', 'exp', 'sub'],
-      })
+      .verifyAccessToken(token)
       .catch((err) => {
         throw InvalidTokenError.from(err, tokenType)
       })
@@ -196,7 +194,7 @@ export class OAuthVerifier {
     httpUrl: Readonly<URL>,
     httpHeaders: Record<string, undefined | string | string[]>,
     verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<SignedTokenPayload> {
+  ): Promise<AccessTokenPayload> {
     const [tokenType, token] = parseAuthorizationHeader(
       httpHeaders['authorization'],
     )

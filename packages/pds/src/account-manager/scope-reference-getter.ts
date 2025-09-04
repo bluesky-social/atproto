@@ -6,17 +6,22 @@ import { CachedGetter } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { SimpleStoreRedis } from '@atproto-labs/simple-store-redis'
 
-type EncodedScope = `enc:${string}`
-export const isEncodedScope = (scope: unknown): scope is EncodedScope =>
-  typeof scope === 'string' && scope.startsWith('enc:') && !scope.includes(' ')
+const PREFIX = 'ref:'
+
+type ScopeReference = `${typeof PREFIX}${string}`
+export const isScopeReference = (scope: string): scope is ScopeReference =>
+  scope.startsWith(PREFIX) && !scope.includes(' ')
 
 const identity = <T>(value: T): T => value
 
-export class ScopeDecoder extends CachedGetter<EncodedScope, OAuthScope> {
+export class ScopeReferenceGetter extends CachedGetter<
+  ScopeReference,
+  OAuthScope
+> {
   constructor(entrywayAgent: Agent, redis?: Redis) {
     super(
       async (scope, { signal, noCache }) => {
-        const response = await entrywayAgent.com.atproto.temp.decodeScope(
+        const response = await entrywayAgent.com.atproto.temp.dereferenceScope(
           { scope },
           {
             signal,
@@ -36,11 +41,26 @@ export class ScopeDecoder extends CachedGetter<EncodedScope, OAuthScope> {
             // and amount of requests to entryway:
             ttl: 1 * DAY,
 
-            keyPrefix: 'enc-auth-scope:',
+            keyPrefix: `auth-scope-${PREFIX}`,
             encode: identity,
             decode: identity,
           })
         : new SimpleStoreMemory({ max: 1000 }),
     )
+  }
+
+  async dereference(scope: string): Promise<string> {
+    const values = scope.split(' ')
+
+    const references = values.filter(isScopeReference)
+    if (!references.length) return scope
+
+    const decoded = new Map<string, OAuthScope>(
+      await Promise.all(
+        references.map(async (ref) => [ref, await this.get(ref)] as const),
+      ),
+    )
+
+    return Array.from(values, (value) => decoded.get(value) ?? value).join(' ')
   }
 }

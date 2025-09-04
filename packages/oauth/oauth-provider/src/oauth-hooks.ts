@@ -25,15 +25,16 @@ import {
   HcaptchaVerifyResult,
 } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
-import { Awaitable } from './lib/util/type.js'
+import { Awaitable, OmitKey } from './lib/util/type.js'
 import { DeviceId, SignUpData } from './oauth-store.js'
 import { RequestId } from './request/request-id.js'
-import { SignedTokenPayload } from './signer/signed-token-payload.js'
+import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { TokenClaims } from './token/token-claims.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
   AccessDeniedError,
+  type AccessTokenPayload as SignedTokenPayload,
   type Account,
   AuthorizationError,
   type Awaitable,
@@ -59,8 +60,7 @@ export {
   type SignInData,
   type SignUpData,
   type SignUpInput,
-  type SignedTokenPayload,
-  type TokenClaims as TokenPayload,
+  type TokenClaims,
 }
 
 export type OAuthHooks = {
@@ -172,7 +172,7 @@ export type OAuthHooks = {
     account: Account
     parameters: OAuthAuthorizationRequestParameters
     claims: TokenClaims
-  }) => Awaitable<void | TokenClaims>
+  }) => Awaitable<void | OmitKey<AccessTokenPayload, 'iss'>>
 
   /**
    * This hook is called whenever a token was just decoded, and basic validation
@@ -189,9 +189,9 @@ export type OAuthHooks = {
   onDecodeToken?: (data: {
     tokenType: OAuthTokenType
     token: OAuthAccessToken
-    payload: SignedTokenPayload
+    payload: AccessTokenPayload
     dpopProof: null | DpopProof
-  }) => Promise<SignedTokenPayload | void>
+  }) => Promise<AccessTokenPayload | void>
 
   /**
    * This hook is called when an authorized client exchanges an authorization

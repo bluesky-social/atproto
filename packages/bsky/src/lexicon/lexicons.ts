@@ -13650,9 +13650,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoTempDecodeScope: {
+  ComAtprotoTempDereferenceScope: {
     lexicon: 1,
-    id: 'com.atproto.temp.decodeScope',
+    id: 'com.atproto.temp.dereferenceScope',
     defs: {
       main: {
         type: 'query',
@@ -14063,7 +14063,7 @@ export const ids = {
   ComAtprotoTempCheckHandleAvailability:
     'com.atproto.temp.checkHandleAvailability',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
-  ComAtprotoTempDecodeScope: 'com.atproto.temp.decodeScope',
+  ComAtprotoTempDereferenceScope: 'com.atproto.temp.dereferenceScope',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',
