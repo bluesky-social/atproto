@@ -43,6 +43,7 @@ export interface InputSchema {
     | $Typed<ToolsOzoneModerationDefs.ModEventPriorityScore>
     | $Typed<ToolsOzoneModerationDefs.AgeAssuranceEvent>
     | $Typed<ToolsOzoneModerationDefs.AgeAssuranceOverrideEvent>
+    | $Typed<ToolsOzoneModerationDefs.RevokeAccountCredentialsEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>

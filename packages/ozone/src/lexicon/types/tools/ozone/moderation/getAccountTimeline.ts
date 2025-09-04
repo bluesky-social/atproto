@@ -78,6 +78,7 @@ export interface TimelineItemSummary {
     | 'tools.ozone.moderation.defs#identityEvent'
     | 'tools.ozone.moderation.defs#recordEvent'
     | 'tools.ozone.moderation.defs#modEventPriorityScore'
+    | 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent'
     | 'tools.ozone.moderation.defs#ageAssuranceEvent'
     | 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
     | 'tools.ozone.moderation.defs#timelineEventPlcCreate'

@@ -3,6 +3,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
+import { ids } from '../../lexicon/lexicons'
 import {
   ModEventTag,
   isAgeAssuranceEvent,
@@ -16,6 +17,7 @@ import {
   isModEventTag,
   isModEventTakedown,
   isModEventUnmuteReporter,
+  isRevokeAccountCredentialsEvent,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { subjectFromInput } from '../../mod-service/subject'
@@ -67,6 +69,27 @@ const handleModerationEvent = async ({
         'Must be a full moderator to override age assurance',
       )
     }
+  }
+
+  if (isRevokeAccountCredentialsEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+
+    if (!auth.credentials.isAdmin) {
+      throw new AuthRequiredError(
+        'Must be an admin to revoke account credentials',
+      )
+    }
+
+    if (!ctx.pdsAgent) {
+      throw new InvalidRequestError('PDS not configured')
+    }
+
+    await ctx.pdsAgent.com.atproto.temp.revokeAccountCredentials(
+      { account: subject.did },
+      await ctx.pdsAuth(ids.ComAtprotoTempRevokeAccountCredentials),
+    )
   }
 
   // if less than moderator access then can only take ack and escalation actions

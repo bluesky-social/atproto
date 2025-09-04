@@ -14183,6 +14183,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+              'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
             ],
           },
           subject: {
@@ -14257,6 +14258,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+              'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
             ],
           },
           subject: {
@@ -14722,6 +14724,18 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Comment describing the reason for the override.',
+          },
+        },
+      },
+      revokeAccountCredentialsEvent: {
+        type: 'object',
+        description:
+          'Account credentials revocation by moderators. Only works on DID subjects.',
+        required: ['comment'],
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Comment describing the reason for the revocation.',
           },
         },
       },
@@ -15442,6 +15456,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventPriorityScore',
                   'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
                   'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+                  'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
                 ],
               },
               subject: {
@@ -15580,6 +15595,7 @@ export const schemaDict = {
               'tools.ozone.moderation.defs#identityEvent',
               'tools.ozone.moderation.defs#recordEvent',
               'tools.ozone.moderation.defs#modEventPriorityScore',
+              'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
               'tools.ozone.moderation.defs#ageAssuranceEvent',
               'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
               'tools.ozone.moderation.defs#timelineEventPlcCreate',
