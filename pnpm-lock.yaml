@@ -144,9 +144,6 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.879.0
         version: 3.879.0
-      '@aws-sdk/lib-storage':
-        specifier: ^3.879.0
-        version: 3.879.0(@aws-sdk/client-s3@3.879.0)
       '@noble/curves':
         specifier: ^1.7.0
         version: 1.8.0
@@ -2379,22 +2376,6 @@ packages:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
-    dev: false
-
-  /@aws-sdk/lib-storage@3.879.0(@aws-sdk/client-s3@3.879.0):
-    resolution: {integrity: sha512-FAb3vOfLIrf8lPuDoxKRu18DxXfQLEFm7MoXi0jd8ooFjD09jpVCQGNrRuMCqc688wrx7zJSovWObtn4LRjvrg==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      '@aws-sdk/client-s3': ^3.879.0
-    dependencies:
-      '@aws-sdk/client-s3': 3.879.0
-      '@smithy/abort-controller': 4.0.5
-      '@smithy/middleware-endpoint': 4.1.20
-      '@smithy/smithy-client': 4.5.1
-      buffer: 5.6.0
-      events: 3.3.0
-      stream-browserify: 3.0.0
-      tslib: 2.8.1
     dev: false
 
   /@aws-sdk/middleware-bucket-endpoint@3.873.0:
@@ -8515,13 +8496,6 @@ packages:
   /buffer-writer@2.0.0:
     resolution: {integrity: sha512-a7ZpuTZU1TRtnwyCNW3I5dc0wWNC3VR9S++Ewyk2HHZdrO3CQJqSpd+95Us590V6AL7JqUAH2IwZ/398PmNFgw==}
     engines: {node: '>=4'}
-
-  /buffer@5.6.0:
-    resolution: {integrity: sha512-/gDYp/UtU0eA1ys8bOs9J6a+E/KWIY+DZ+Q2WESNUA0jFRsJOc0SNUO6xJ5SGA1xueg3NL65W6s+NY5l9cunuw==}
-    dependencies:
-      base64-js: 1.5.1
-      ieee754: 1.2.1
-    dev: false
 
   /buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
@@ -15816,13 +15790,6 @@ packages:
   /statuses@2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
-
-  /stream-browserify@3.0.0:
-    resolution: {integrity: sha512-H73RAHsVBapbim0tU2JwwOiXUj+fikfiaoYAKHF3VJfA0pe2BCzkhAHBlLG6REzE+2WNZcxOXjK7lkso+9euLA==}
-    dependencies:
-      inherits: 2.0.4
-      readable-stream: 3.6.2
-    dev: false
 
   /stream-slice@0.1.2:
     resolution: {integrity: sha512-QzQxpoacatkreL6jsxnVb7X5R/pGw9OUv2qWTYWnmLpg4NdN31snPy/f3TdQE1ZUXaThRvj1Zw4/OGg0ZkaLMA==}

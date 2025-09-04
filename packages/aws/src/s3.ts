@@ -62,8 +62,8 @@ export class S3BlobStore implements BlobStore {
   }
 
   private async uploadBytes(path: string, bytes: Uint8Array | stream.Readable) {
-    // There is an issue with "Upload" that causes it to hang indefinitely. It
-    // seems that "PutObjectCommand" is not affected.
+    // There is an issue with @aws-sdk/lib-storage's "Upload" that causes it to
+    // hang indefinitely. It seems that "PutObjectCommand" is not affected.
 
     // In particular, `Upload`'s abortController **should not** be used. Indeed,
     // in its current implementation, it uses a "Promise.race" under the hood,
