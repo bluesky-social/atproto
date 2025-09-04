@@ -4,7 +4,7 @@ import { clientIdSchema } from '../client/client-id.js'
 import { subSchema } from '../oidc/sub.js'
 import { tokenIdSchema } from '../token/token-id.js'
 
-export const signedTokenPayloadSchema = jwtPayloadSchema
+export const accessTokenPayloadSchema = jwtPayloadSchema
   .partial()
   .extend({
     // Following are required
@@ -22,4 +22,4 @@ export const signedTokenPayloadSchema = jwtPayloadSchema
   })
   .passthrough()
 
-export type SignedTokenPayload = z.infer<typeof signedTokenPayloadSchema>
+export type AccessTokenPayload = z.infer<typeof accessTokenPayloadSchema>

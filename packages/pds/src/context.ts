@@ -5,7 +5,7 @@ import { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as ui8 from 'uint8arrays'
 import * as undici from 'undici'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ComAtprotoTempDereferenceScope } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -15,12 +15,14 @@ import {
 } from '@atproto/lexicon-resolver'
 import {
   AccessTokenMode,
+  InvalidTokenError,
   JoseKey,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
+  UpstreamFailureError,
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
@@ -32,6 +34,7 @@ import {
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
+import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
 import { authPassthru, forwardedFor } from './api/proxy'
 import {
@@ -46,7 +49,7 @@ import { Crawlers } from './crawlers'
 import { DidSqliteCache } from './did-cache'
 import { DiskBlobStore } from './disk-blobstore'
 import { ImageUrlBuilder } from './image/image-url-builder'
-import { fetchLogger, lexiconResolverLogger } from './logger'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
@@ -410,6 +413,10 @@ export class AppContext {
         })
       : undefined
 
+    const scopeRefGetter = entrywayAgent
+      ? new ScopeReferenceGetter(entrywayAgent, redisScratch)
+      : undefined
+
     const oauthVerifier: OAuthVerifier =
       oauthProvider ?? // OAuthProvider extends OAuthVerifier
       new OAuthVerifier({
@@ -417,6 +424,43 @@ export class AppContext {
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
+        onDecodeToken: scopeRefGetter
+          ? async ({ payload, dpopProof, tokenType }) => {
+              // @TODO drop this once oauth provider no longer accepts DPoP proof with
+              // query or fragment in "htu" claim.
+              if (dpopProof?.htu.match(/[?#]/)) {
+                oauthLogger.info(
+                  { htu: dpopProof.htu, client_id: payload.client_id },
+                  'DPoP proof "htu" contains query or fragment',
+                )
+              }
+
+              if (payload.scope != null) {
+                const scope = await scopeRefGetter
+                  .dereference(payload.scope)
+                  .catch((err) => {
+                    const { InvalidScopeReferenceError } =
+                      ComAtprotoTempDereferenceScope
+                    if (err instanceof InvalidScopeReferenceError) {
+                      // The scope reference cannot be found on the server.
+                      // Consider the session as invalid, allowing entryway to
+                      // re-build the scope as the user re-authenticates. This
+                      // should never happen though.
+                      throw InvalidTokenError.from(err, tokenType)
+                    }
+
+                    throw new UpstreamFailureError(
+                      'Failed to fetch token permissions',
+                      undefined,
+                      { cause: err },
+                    )
+                  })
+                payload.scope = scope
+              }
+
+              return payload
+            }
+          : undefined,
       })
 
     const authVerifier = new AuthVerifier(

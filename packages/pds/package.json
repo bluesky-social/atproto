@@ -33,6 +33,9 @@
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:*",
+    "@atproto-labs/simple-store-memory": "workspace:*",
+    "@atproto-labs/simple-store-redis": "workspace:*",
     "@atproto-labs/xrpc-utils": "workspace:*",
     "@atproto/api": "workspace:^",
     "@atproto/aws": "workspace:^",
