@@ -3,8 +3,9 @@ import stream from 'node:stream'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
 import { CID } from 'multiformats/cid'
+import PQueue from 'p-queue'
 import {
-  allFulfilled,
+  SECOND,
   cloneStream,
   sha256RawToCid,
   streamSize,
@@ -114,28 +115,40 @@ export class BlobTransactor extends BlobReader {
   async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
     await this.deleteDereferencedBlobs(writes)
 
-    // @NOTE better-sqlite3 normally doesn't require to use concurrent promises
-    // (as it performs sql requests synchronously). However, in this case, we
-    // are making async http requests while in a transaction, so we do want to
-    // make it as fast as possible.
+    const ac = new AbortController()
 
-    // @TODO We might want to limit concurrency here in the future, to avoid
-    // overwhelming the blob store with too many requests at once. This would
-    // also allow cancelling pending request if any of them fail, avoiding too
-    // many temp blobs from ending up in the persistent storage.
-
-    const blobPromises: Promise<void>[] = []
+    // Limit the number of parallel requests made to the BlobStore by using a
+    // a queue with concurrency management.
+    type Task = () => Promise<void>
+    const tasks: Task[] = []
 
     for (const write of writes) {
       if (isCreate(write) || isUpdate(write)) {
         for (const blob of write.blobs) {
-          await this.associateBlob(blob, write.uri)
-          blobPromises.push(this.verifyBlobAndMakePermanent(blob))
+          tasks.push(async () => {
+            if (ac.signal.aborted) return
+            await this.associateBlob(blob, write.uri)
+            await this.verifyBlobAndMakePermanent(blob, ac.signal)
+          })
         }
       }
     }
 
-    await allFulfilled(blobPromises)
+    try {
+      const queue = new PQueue({
+        concurrency: 20,
+        // The blob store should already limit the time of every operation. We
+        // add a timeout here as an extra precaution.
+        timeout: 60 * SECOND,
+        throwOnTimeout: true,
+      })
+
+      // Will reject as soon as any task fails, causing the "finally" block
+      // below to run, aborting every other pending tasks.
+      await queue.addAll(tasks, { priority: 1 })
+    } finally {
+      ac.abort()
+    }
   }
 
   async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
@@ -173,8 +186,6 @@ export class BlobTransactor extends BlobReader {
     writes: PreparedWrite[],
     skipBlobStore?: boolean,
   ) {
-    this.db.assertTransaction()
-
     const deletes = writes.filter(isDelete)
     const updates = writes.filter(isUpdate)
     const uris = [...deletes, ...updates].map((w) => w.uri.toString())
@@ -229,13 +240,18 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
+  async verifyBlobAndMakePermanent(
+    blob: PreparedBlobRef,
+    signal?: AbortSignal,
+  ): Promise<void> {
     const found = await this.db.db
       .selectFrom('blob')
       .select(['tempKey', 'size', 'mimeType'])
       .where('cid', '=', blob.cid.toString())
       .where('takedownRef', 'is', null)
       .executeTakeFirst()
+
+    signal?.throwIfAborted()
 
     if (!found) {
       throw new InvalidRequestError(
@@ -265,6 +281,8 @@ export class BlobTransactor extends BlobReader {
 
           throw err
         })
+
+      signal?.throwIfAborted()
 
       await this.db.db
         .updateTable('blob')
