@@ -145,7 +145,7 @@ export class BlobTransactor extends BlobReader {
 
       // Will reject as soon as any task fails, causing the "finally" block
       // below to run, aborting every other pending tasks.
-      await queue.addAll(tasks, { priority: 1 })
+      await queue.addAll(tasks)
     } finally {
       ac.abort()
     }
