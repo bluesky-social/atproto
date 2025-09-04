@@ -73,6 +73,9 @@ export class TestNetwork extends TestNetworkNoAppView {
       redisHost,
       modServiceDid: ozoneServiceProfile.did,
       labelsFromIssuerDids: [ozoneServiceProfile.did, EXAMPLE_LABELER],
+      // Using a static private key results in a static DID, which is useful for e2e tests with the social-app repo.
+      privateKey:
+        '3f916c70dc69e4c5e83877f013325b11ecac31742e6a42f5c4fb240d0703d9d5=',
       ...params.bsky,
     })
 
