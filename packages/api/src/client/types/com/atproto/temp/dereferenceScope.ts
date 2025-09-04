@@ -37,6 +37,17 @@ export interface Response {
   data: OutputSchema
 }
 
+export class InvalidScopeReferenceError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidScopeReference')
+      return new InvalidScopeReferenceError(e)
+  }
+
   return e
 }

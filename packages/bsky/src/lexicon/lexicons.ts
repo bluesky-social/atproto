@@ -13681,6 +13681,12 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidScopeReference',
+            description: 'An invalid scope reference was provided.',
+          },
+        ],
       },
     },
   },

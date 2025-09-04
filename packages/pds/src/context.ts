@@ -5,7 +5,7 @@ import { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as ui8 from 'uint8arrays'
 import * as undici from 'undici'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ComAtprotoTempDereferenceScope } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -21,7 +21,6 @@ import {
   OAuthVerifier,
 } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
-import { XRPCError } from '@atproto/xrpc'
 import {
   UpstreamFailureError,
   createServiceAuthHeaders,
@@ -56,6 +55,8 @@ import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
+
+const { InvalidScopeReferenceError } = ComAtprotoTempDereferenceScope
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -440,7 +441,7 @@ export class AppContext {
                 const scope = await scopeRefGetter
                   .dereference(payload.scope)
                   .catch((err) => {
-                    if (err instanceof XRPCError && err.status === 404) {
+                    if (err instanceof InvalidScopeReferenceError) {
                       // The scope reference cannot be found on the server.
                       // Consider the session as invalid, allowing entryway to
                       // re-build the scope as the user re-authenticates.

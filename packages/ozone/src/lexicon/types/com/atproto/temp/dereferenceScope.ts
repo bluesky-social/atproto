@@ -36,6 +36,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidScopeReference'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

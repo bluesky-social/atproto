@@ -4648,12 +4648,11 @@ export class ComAtprotoTempNS {
     params?: ComAtprotoTempDereferenceScope.QueryParams,
     opts?: ComAtprotoTempDereferenceScope.CallOptions,
   ): Promise<ComAtprotoTempDereferenceScope.Response> {
-    return this._client.call(
-      'com.atproto.temp.dereferenceScope',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.temp.dereferenceScope', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempDereferenceScope.toKnownErr(e)
+      })
   }
 
   fetchLabels(
