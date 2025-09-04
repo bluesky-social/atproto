@@ -3,7 +3,12 @@ import stream from 'node:stream'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
 import { CID } from 'multiformats/cid'
-import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
+import {
+  allFulfilled,
+  cloneStream,
+  sha256RawToCid,
+  streamSize,
+} from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
@@ -12,13 +17,7 @@ import { BackgroundQueue } from '../../background'
 import * as img from '../../image'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { blobStoreLogger as log } from '../../logger'
-import {
-  PreparedBlobRef,
-  PreparedCreate,
-  PreparedDelete,
-  PreparedUpdate,
-  PreparedWrite,
-} from '../../repo/types'
+import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
 import { ActorDb, Blob as BlobTable } from '../db'
 import { BlobReader } from './reader'
 
@@ -115,19 +114,31 @@ export class BlobTransactor extends BlobReader {
   async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
     await this.deleteDereferencedBlobs(writes)
 
+    // @NOTE better-sqlite3 normally doesn't require to use concurrent promises
+    // (as it performs sql requests synchronously). However, in this case, we
+    // are making async http requests while in a transaction, so we do want to
+    // make it as fast as possible.
+
+    // @TODO We might want to limit concurrency here in the future, to avoid
+    // overwhelming the blob store with too many requests at once. This would
+    // also allow cancelling pending request if any of them fail, avoiding too
+    // many temp blobs from ending up in the persistent storage.
+
+    const blobPromises: Promise<void>[] = []
+
     for (const write of writes) {
       if (isCreate(write) || isUpdate(write)) {
         for (const blob of write.blobs) {
-          await this.verifyBlobAndMakePermanent(blob)
           await this.associateBlob(blob, write.uri)
+          blobPromises.push(this.verifyBlobAndMakePermanent(blob))
         }
       }
     }
+
+    await allFulfilled(blobPromises)
   }
 
   async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
-    this.db.assertTransaction()
-
     const takedownRef = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null
@@ -137,24 +148,25 @@ export class BlobTransactor extends BlobReader {
       .where('cid', '=', cid.toString())
       .executeTakeFirst()
 
-    this.db.onCommit(async () => {
-      this.backgroundQueue.add(async () => {
-        try {
-          if (takedown.applied) {
-            await this.blobstore.quarantine(cid)
-          } else {
-            await this.blobstore.unquarantine(cid)
-          }
-        } catch (err) {
-          if (err instanceof BlobNotFoundError) return
+    try {
+      // @NOTE find a way to not perform i/o operations during the transaction
+      // (typically by using a state in the "blob" table, and another process to
+      // handle the actual i/o)
+      if (takedown.applied) {
+        await this.blobstore.quarantine(cid)
+      } else {
+        await this.blobstore.unquarantine(cid)
+      }
+    } catch (err) {
+      if (!(err instanceof BlobNotFoundError)) {
+        log.error(
+          { err, cid: cid.toString() },
+          'could not update blob takedown status',
+        )
 
-          log.error(
-            { err, cid: cid.toString() },
-            'could not update blob takedown status',
-          )
-        }
-      })
-    })
+        throw err
+      }
+    }
   }
 
   async deleteDereferencedBlobs(
@@ -173,7 +185,7 @@ export class BlobTransactor extends BlobReader {
       .where('recordUri', 'in', uris)
       .returning('blobCid')
       .execute()
-    if (deletedRepoBlobs.length < 1) return
+    if (deletedRepoBlobs.length === 0) return
 
     const deletedRepoBlobCids = deletedRepoBlobs.map((row) => row.blobCid)
     const duplicateCids = await this.db.db
@@ -183,16 +195,16 @@ export class BlobTransactor extends BlobReader {
       .execute()
 
     const cidsToKeep = [
-      ...duplicateCids.map((row) => row.blobCid),
       ...writes
         .filter((w) => isUpdate(w) || isCreate(w))
         .flatMap((w) => w.blobs.map((b) => b.cid.toString())),
+      ...duplicateCids.map((row) => row.blobCid),
     ]
 
     const cidsToDelete = deletedRepoBlobCids.filter(
       (cid) => !cidsToKeep.includes(cid),
     )
-    if (cidsToDelete.length < 1) return
+    if (cidsToDelete.length === 0) return
 
     await this.db.db
       .deleteFrom('blob')
@@ -201,24 +213,23 @@ export class BlobTransactor extends BlobReader {
 
     if (!skipBlobStore) {
       this.db.onCommit(() => {
-        // @NOTE avoids deleting all blobs in in parallel by creating 1 task
-        // per blob
-        for (const cid of cidsToDelete) {
-          this.backgroundQueue.add(async () => {
-            try {
-              await this.blobstore.delete(CID.parse(cid))
-            } catch (err) {
-              log.error({ err, cid }, 'could not delete blob from blobstore')
-            }
-          })
-        }
+        this.backgroundQueue.add(async () => {
+          try {
+            await this.blobstore.deleteMany(
+              cidsToDelete.map((cid) => CID.parse(cid)),
+            )
+          } catch (err) {
+            log.error(
+              { err, cids: cidsToDelete },
+              'could not delete blobs from blobstore',
+            )
+          }
+        })
       })
     }
   }
 
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
-    this.db.assertTransaction()
-
     const found = await this.db.db
       .selectFrom('blob')
       .select(['tempKey', 'size', 'mimeType'])
@@ -235,19 +246,26 @@ export class BlobTransactor extends BlobReader {
 
     if (found.tempKey) {
       verifyBlob(blob, found)
-      this.db.onCommit(() => {
-        this.backgroundQueue.add(async () => {
-          const { cid } = blob
-          try {
-            await this.blobstore.makePermanent(found.tempKey!, cid)
-          } catch (err) {
-            log.error(
-              { err, cid: cid.toString() },
-              'could not make blob permanent',
-            )
-          }
+
+      // @NOTE it is less than ideal to perform async (i/o) operations during a
+      // transaction. Especially since there have been instances of the actor-db
+      // being locked, requiring to kick the processes.
+
+      // The better solution would be to update the blob state in the database
+      // (e.g. "makeItPermanent") and to process those updates outside of the
+      // transaction.
+
+      await this.blobstore
+        .makePermanent(found.tempKey, blob.cid)
+        .catch((err) => {
+          log.error(
+            { err, cid: blob.cid.toString() },
+            'could not make blob permanent',
+          )
+
+          throw err
         })
-      })
+
       await this.db.db
         .updateTable('blob')
         .set({ tempKey: null })
@@ -355,12 +373,12 @@ function verifyBlob(
   }
 }
 
-function isCreate(write: PreparedWrite): write is PreparedCreate {
+function isCreate(write: PreparedWrite) {
   return write.action === WriteOpAction.Create
 }
-function isUpdate(write: PreparedWrite): write is PreparedUpdate {
+function isUpdate(write: PreparedWrite) {
   return write.action === WriteOpAction.Update
 }
-function isDelete(write: PreparedWrite): write is PreparedDelete {
+function isDelete(write: PreparedWrite) {
   return write.action === WriteOpAction.Delete
 }

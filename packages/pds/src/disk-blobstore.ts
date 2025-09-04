@@ -82,25 +82,15 @@ export class DiskBlobStore implements BlobStore {
     await this.ensureDir()
     const tmpPath = this.getTmpPath(key)
     const storedPath = this.getStoredPath(cid)
-
+    const alreadyHas = await this.hasStored(cid)
+    if (!alreadyHas) {
+      const data = await fs.readFile(tmpPath)
+      await fs.writeFile(storedPath, data)
+    }
     try {
-      await fs.rename(tmpPath, storedPath)
+      await fs.rm(tmpPath)
     } catch (err) {
-      if (err instanceof Error && err['code'] === 'ENOENT') {
-        // Blob was not found from temp storage...
-        const alreadyHas = await this.hasStored(cid)
-        // already saved, so we no-op
-        if (alreadyHas) return
-
-        throw new BlobNotFoundError()
-      }
-
-      log.error(
-        { err, tmpPath, storedPath },
-        'could not move file to permanent storage',
-      )
-
-      throw err
+      log.error({ err, tmpPath }, 'could not delete file from temp storage')
     }
   }
 
@@ -153,7 +143,13 @@ export class DiskBlobStore implements BlobStore {
 
   async deleteMany(cids: CID[]): Promise<void> {
     for (const chunk of chunkArray(cids, 500)) {
-      await Promise.all(chunk.map((cid) => this.delete(cid)))
+      await Promise.all(
+        chunk.map(async (cid) =>
+          this.delete(cid).catch((err: unknown) => {
+            log.error({ err, cid: cid.toString() }, 'error deleting blob')
+          }),
+        ),
+      )
     }
   }
 
