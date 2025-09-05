@@ -437,6 +437,31 @@ describe('appview bookmarks views', () => {
           cid: sc.posts[alice][0].ref.cidStr,
         })
       })
+
+      describe('blocks', () => {
+        afterEach(async () => {
+          await sc.unblock(alice, bob)
+          await network.processAll()
+        })
+
+        it('does not show posts as blocked', async () => {
+          await create(alice, sc.posts[alice][0].ref)
+          await create(alice, sc.posts[bob][0].ref)
+          await create(alice, sc.posts[carol][0].ref)
+
+          await sc.block(alice, bob)
+          await network.processAll()
+
+          const {
+            data: { bookmarks },
+          } = await getModByActor(ozone, alice)
+          expect(bookmarks).toHaveLength(3)
+          // Even though there is a block between alice and bob,
+          // Ozone doesn't see the block.
+          assertPostViews(bookmarks)
+          expect(forSnapshot(bookmarks)).toMatchSnapshot()
+        })
+      })
     })
 
     describe('get bookmarks by subject', () => {
