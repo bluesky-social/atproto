@@ -23,6 +23,8 @@ import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/create
 import * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+import * as AppBskyBookmarkGetModBookmarksByActor from './types/app/bsky/bookmark/getModBookmarksByActor.js'
+import * as AppBskyBookmarkGetModBookmarksBySubject from './types/app/bsky/bookmark/getModBookmarksBySubject.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -310,6 +312,8 @@ export * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/create
 export * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 export * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 export * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+export * as AppBskyBookmarkGetModBookmarksByActor from './types/app/bsky/bookmark/getModBookmarksByActor.js'
+export * as AppBskyBookmarkGetModBookmarksBySubject from './types/app/bsky/bookmark/getModBookmarksBySubject.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -1061,6 +1065,30 @@ export class AppBskyBookmarkNS {
   ): Promise<AppBskyBookmarkGetBookmarks.Response> {
     return this._client.call(
       'app.bsky.bookmark.getBookmarks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getModBookmarksByActor(
+    params?: AppBskyBookmarkGetModBookmarksByActor.QueryParams,
+    opts?: AppBskyBookmarkGetModBookmarksByActor.CallOptions,
+  ): Promise<AppBskyBookmarkGetModBookmarksByActor.Response> {
+    return this._client.call(
+      'app.bsky.bookmark.getModBookmarksByActor',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getModBookmarksBySubject(
+    params?: AppBskyBookmarkGetModBookmarksBySubject.QueryParams,
+    opts?: AppBskyBookmarkGetModBookmarksBySubject.CallOptions,
+  ): Promise<AppBskyBookmarkGetModBookmarksBySubject.Response> {
+    return this._client.call(
+      'app.bsky.bookmark.getModBookmarksBySubject',
       params,
       undefined,
       opts,

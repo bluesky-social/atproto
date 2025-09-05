@@ -20,6 +20,8 @@ import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searc
 import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+import * as AppBskyBookmarkGetModBookmarksByActor from './types/app/bsky/bookmark/getModBookmarksByActor.js'
+import * as AppBskyBookmarkGetModBookmarksBySubject from './types/app/bsky/bookmark/getModBookmarksBySubject.js'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
@@ -424,6 +426,30 @@ export class AppBskyBookmarkNS {
     >,
   ) {
     const nsid = 'app.bsky.bookmark.getBookmarks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModBookmarksByActor<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyBookmarkGetModBookmarksByActor.QueryParams,
+      AppBskyBookmarkGetModBookmarksByActor.HandlerInput,
+      AppBskyBookmarkGetModBookmarksByActor.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.bookmark.getModBookmarksByActor' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModBookmarksBySubject<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyBookmarkGetModBookmarksBySubject.QueryParams,
+      AppBskyBookmarkGetModBookmarksBySubject.HandlerInput,
+      AppBskyBookmarkGetModBookmarksBySubject.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.bookmark.getModBookmarksBySubject' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
