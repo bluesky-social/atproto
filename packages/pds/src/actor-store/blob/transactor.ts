@@ -136,8 +136,10 @@ export class BlobTransactor extends BlobReader {
       if (isCreate(write) || isUpdate(write)) {
         for (const blob of write.blobs) {
           await this.associateBlob(blob, write.uri)
-          const { tempKey } = await this.verifyBlob(blob)
-          if (tempKey) blobsToMakePermanent.set(tempKey, blob.cid)
+          const blobInfo = await this.verifyBlob(blob)
+          if (blobInfo.tempKey) {
+            blobsToMakePermanent.set(blobInfo.tempKey, blob.cid)
+          }
         }
       }
     }
@@ -158,12 +160,38 @@ export class BlobTransactor extends BlobReader {
       // below to run, aborting every other pending tasks (through ac.signal).
       await queue.addAll(
         Array.from(blobsToMakePermanent, ([tempKey, cid]) => async () => {
-          return this.makePermanent(tempKey, cid, ac.signal)
+          ac.signal.throwIfAborted()
+
+          // @NOTE it is less than ideal to perform i/o operations during a
+          // transaction. Especially since there have been instances of the actor-db
+          // being locked, requiring to kick the processes.
+
+          // The better solution would be to update the blob state in the database
+          // (e.g. "makeItPermanent") and to process those updates outside of the
+          // transaction.
+
+          return this.blobstore.makePermanent(tempKey, cid).catch((err) => {
+            log.error(
+              { err, cid: cid.toString() },
+              'could not make blob permanent',
+            )
+
+            throw err
+          })
         }),
       )
     } finally {
       ac.abort()
     }
+
+    await this.db.db
+      .updateTable('blob')
+      .set({ tempKey: null })
+      // @NOTE uses "blob_tempkey_idx" index.
+      // @NOTE We could get rid of that (NON PARTIAL!) index by using the
+      // primary key (cid) instead here:
+      .where('tempKey', 'in', Array.from(blobsToMakePermanent.keys()))
+      .execute()
   }
 
   async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
@@ -276,34 +304,6 @@ export class BlobTransactor extends BlobReader {
     if (found.tempKey) verifyBlob(blob, found)
 
     return found
-  }
-
-  private async makePermanent(tempKey: string, cid: CID, signal?: AbortSignal) {
-    signal?.throwIfAborted()
-
-    // @NOTE it is less than ideal to perform i/o operations during a
-    // transaction. Especially since there have been instances of the actor-db
-    // being locked, requiring to kick the processes.
-
-    // The better solution would be to update the blob state in the database
-    // (e.g. "makeItPermanent") and to process those updates outside of the
-    // transaction.
-
-    await this.blobstore.makePermanent(tempKey, cid).catch((err) => {
-      log.error({ err, cid: cid.toString() }, 'could not make blob permanent')
-
-      throw err
-    })
-
-    signal?.throwIfAborted()
-
-    await this.db.db
-      .updateTable('blob')
-      .set({ tempKey: null })
-      // @NOTE uses "blob_tempkey_idx" index. We could get rid of that index by
-      // using the primary key (cid) instead here:
-      .where('tempKey', '=', tempKey)
-      .execute()
   }
 
   async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
