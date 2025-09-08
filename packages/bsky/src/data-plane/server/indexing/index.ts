@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
@@ -32,6 +32,7 @@ import * as Profile from './plugins/profile'
 import * as Repost from './plugins/repost'
 import * as StarterPack from './plugins/starter-pack'
 import * as Threadgate from './plugins/thread-gate'
+import * as Verification from './plugins/verification'
 import { RecordProcessor } from './processor'
 
 export class IndexingService {
@@ -51,6 +52,7 @@ export class IndexingService {
     starterPack: StarterPack.PluginType
     labeler: Labeler.PluginType
     chatDeclaration: ChatDeclaration.PluginType
+    verification: Verification.PluginType
   }
 
   constructor(
@@ -74,6 +76,7 @@ export class IndexingService {
       starterPack: StarterPack.makePlugin(this.db, this.background),
       labeler: Labeler.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
+      verification: Verification.makePlugin(this.db, this.background),
     }
   }
 
@@ -422,7 +425,10 @@ const formatCheckout = (
   return records
 }
 
-const needsHandleReindex = (actor: Actor | undefined, timestamp: string) => {
+const needsHandleReindex = (
+  actor: Selectable<Actor> | undefined,
+  timestamp: string,
+) => {
   if (!actor) return true
   const timeDiff =
     new Date(timestamp).getTime() - new Date(actor.indexedAt).getTime()

@@ -27,6 +27,7 @@ export interface ProfileViewBasic {
   labels?: ComAtprotoLabelDefs.Label[]
   /** Set to true when the actor cannot actively participate in converations */
   chatDisabled?: boolean
+  verification?: AppBskyActorDefs.VerificationState
 }
 
 const hashProfileViewBasic = 'profileViewBasic'

@@ -20,11 +20,6 @@ export function sendAuthorizePageFactory(customization: Customization) {
     SPA_CSP,
     customization?.hcaptcha ? HCAPTCHA_CSP : undefined,
   )
-  const coep = customization?.hcaptcha
-    ? // https://github.com/hCaptcha/react-hcaptcha/issues/259
-      // @TODO Remove the use of `unsafeNone` once the issue above is resolved
-      CrossOriginEmbedderPolicy.unsafeNone
-    : CrossOriginEmbedderPolicy.credentialless
 
   return async function sendAuthorizePage(
     req: IncomingMessage,
@@ -54,7 +49,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
       meta: [{ name: 'robots', content: 'noindex' }],
       body: html`<div id="root"></div>`,
       csp,
-      coep,
+      coep: CrossOriginEmbedderPolicy.credentialless,
       scripts: [script, ...scripts],
       styles: [...styles, customizationCss],
     })

@@ -91,6 +91,9 @@ describe('agent', () => {
         threadgateAllowRules: undefined,
         postgateEmbeddingRules: undefined,
       },
+      verificationPrefs: {
+        hideBadges: false,
+      },
     })
   })
 
@@ -145,6 +148,9 @@ describe('agent', () => {
         threadgateAllowRules: undefined,
         postgateEmbeddingRules: undefined,
       },
+      verificationPrefs: {
+        hideBadges: false,
+      },
     })
     expect(agent.labelers).toStrictEqual(['did:plc:other'])
 
@@ -183,6 +189,9 @@ describe('agent', () => {
       postInteractionSettings: {
         threadgateAllowRules: undefined,
         postgateEmbeddingRules: undefined,
+      },
+      verificationPrefs: {
+        hideBadges: false,
       },
     })
     expect(agent.labelers).toStrictEqual([])
@@ -244,6 +253,9 @@ describe('agent', () => {
       postInteractionSettings: {
         threadgateAllowRules: undefined,
         postgateEmbeddingRules: undefined,
+      },
+      verificationPrefs: {
+        hideBadges: false,
       },
     })
   })

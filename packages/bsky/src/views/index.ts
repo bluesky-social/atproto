@@ -13,6 +13,8 @@ import {
   ProfileView,
   ProfileViewBasic,
   ProfileViewDetailed,
+  VerificationState,
+  VerificationView,
   ViewerState as ProfileViewer,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
@@ -215,6 +217,7 @@ export class Views {
     if (!baseView) return
     const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
+
     return {
       ...baseView,
       viewer: baseView.viewer
@@ -249,7 +252,6 @@ export class Views {
       pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
     }
   }
-
   profile(
     did: string,
     state: HydrationState,
@@ -291,6 +293,7 @@ export class Views {
         record: actor.profile,
       }),
     ]
+
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -317,6 +320,7 @@ export class Views {
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
+      verification: this.verification(did, state),
     }
   }
 
@@ -383,6 +387,61 @@ export class Views {
       return this.profileBasic(followerDid, state)
     })
     return { count: knownFollowers.count, followers }
+  }
+
+  verification(
+    did: string,
+    state: HydrationState,
+  ): VerificationState | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor) return
+
+    const isImpersonation = state.labels?.get(did)?.isImpersonation
+
+    const verifications: VerificationView[] = actor.verifications.map(
+      ({ issuer, uri, displayName, handle, createdAt }) => {
+        // @NOTE: We don't factor-in impersonation when evaluating the validity of each verification,
+        // only in the overall profile verification validity.
+        const isValid =
+          !!displayName &&
+          displayName === actor.profile?.displayName &&
+          !!handle &&
+          handle === actor.handle
+
+        return {
+          issuer,
+          uri,
+          isValid,
+          createdAt,
+        }
+      },
+    )
+    const hasValidVerification = verifications.some((v) => v.isValid)
+
+    const verifiedStatus = verifications.length
+      ? hasValidVerification && !isImpersonation
+        ? 'valid'
+        : 'invalid'
+      : 'none'
+    const trustedVerifierStatus = actor.trustedVerifier
+      ? isImpersonation
+        ? 'invalid'
+        : 'valid'
+      : 'none'
+
+    if (
+      verifications.length === 0 &&
+      verifiedStatus === 'none' &&
+      trustedVerifierStatus === 'none'
+    ) {
+      return undefined
+    }
+
+    return {
+      verifications,
+      verifiedStatus,
+      trustedVerifierStatus,
+    }
   }
 
   blockedProfileViewer(

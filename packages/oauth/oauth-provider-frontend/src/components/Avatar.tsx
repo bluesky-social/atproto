@@ -14,7 +14,7 @@ export function Avatar({
   const { _ } = useLingui()
   return (
     <div
-      className="align-center relative flex justify-center overflow-hidden rounded-full"
+      className="relative flex items-center justify-center overflow-hidden rounded-full"
       style={{
         width: size,
         height: size,
@@ -33,7 +33,7 @@ export function Avatar({
           {displayName.replace(/[^A-z0-0]/g, '').slice(0, 1)}
         </p>
       ) : (
-        <PersonIcon width={size * (1 / 2)} />
+        <PersonIcon height={size * (1 / 2)} width={size * (1 / 2)} />
       )}
       <div className="border-contrast-100 absolute inset-0 rounded-full border-2" />
     </div>
