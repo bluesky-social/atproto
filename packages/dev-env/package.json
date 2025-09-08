@@ -21,7 +21,7 @@
     "dev": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps --watch dist/bin.js"
   },
   "engines": {
-    "node": ">=24.7.0"
+    "node": ">=22.19.0"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
