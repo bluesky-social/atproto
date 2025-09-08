@@ -1,10 +1,17 @@
 import { CID } from 'multiformats'
 
 export class CidSet implements Iterable<CID> {
-  private set: Set<string>
+  private set = new Set<string>()
 
-  constructor(it: Iterable<CID> = []) {
-    this.set = new Set(Array.from(it, String))
+  constructor(it?: Iterable<CID>) {
+    if (it) {
+      if (it instanceof CidSet) {
+        // Optimized version when dealing with another CidSet (avoids stringify)
+        for (const cidStr of it.set) this.set.add(cidStr)
+      } else {
+        for (const cid of it) this.add(cid)
+      }
+    }
   }
 
   add(cid: CID): this {
@@ -12,13 +19,23 @@ export class CidSet implements Iterable<CID> {
     return this
   }
 
-  addSet(toMerge: CidSet): this {
-    for (const cid of toMerge) this.add(cid)
+  addSet(toMerge: Iterable<CID>): this {
+    if (toMerge instanceof CidSet) {
+      // Optimized version when dealing with another CidSet (avoids stringify)
+      for (const cidStr of toMerge.set) this.set.add(cidStr)
+    } else {
+      for (const cid of toMerge) this.add(cid)
+    }
     return this
   }
 
-  subtractSet(toSubtract: CidSet): this {
-    for (const cid of toSubtract) this.delete(cid)
+  subtractSet(toSubtract: Iterable<CID>): this {
+    if (toSubtract instanceof CidSet) {
+      // Optimized version when dealing with another CidSet (avoids stringify)
+      for (const cidStr of toSubtract.set) this.set.delete(cidStr)
+    } else {
+      for (const cid of toSubtract) this.delete(cid)
+    }
     return this
   }
 
