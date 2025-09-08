@@ -29,9 +29,10 @@ export class ScopeReferenceGetter extends CachedGetter<
           },
         )
 
-        // @NOTE the part after `enc:` is the CID of the actual scope string.
-        // Since there is a trust relationship with the entryway, we don't need
-        // to check/enforce that here.
+        // @NOTE the part after `PREFIX` (in the input scope) is the CID of the
+        // scope string returned by entryway. Since there is a trust
+        // relationship with the entryway, we don't need to verify or enforce
+        // that here.
 
         return response.data.scope
       },

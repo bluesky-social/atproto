@@ -85,6 +85,7 @@ import {
   DpopProof,
   OAuthVerifier,
   OAuthVerifierOptions,
+  VerifyTokenPayloadOptions,
 } from './oauth-verifier.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
@@ -103,7 +104,6 @@ import {
   asTokenStore,
   refreshTokenSchema,
 } from './token/token-store.js'
-import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
 export { AccessTokenMode, Keyset }
@@ -122,7 +122,7 @@ export type {
   LexiconResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
-  VerifyTokenClaimsOptions,
+  VerifyTokenPayloadOptions,
 }
 
 type OAuthProviderConfig = {
@@ -1088,12 +1088,12 @@ export class OAuthProvider extends OAuthVerifier {
       // token is still valid, and to retrieve a (potentially updated) set of
       // claims).
 
-      const claims = await this.tokenManager.loadTokenClaims(
+      const tokenClaims = await this.tokenManager.loadTokenClaims(
         tokenType,
         tokenPayload,
       )
 
-      Object.assign(tokenPayload, claims)
+      Object.assign(tokenPayload, tokenClaims)
     }
 
     return tokenPayload

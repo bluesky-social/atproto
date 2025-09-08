@@ -7,7 +7,7 @@ import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
   OAuthError,
   OAuthVerifier,
-  VerifyTokenClaimsOptions,
+  VerifyTokenPayloadOptions,
   WWWAuthenticateError,
 } from '@atproto/oauth-provider'
 import {
@@ -337,7 +337,7 @@ export class AuthVerifier {
     OAuthOutput,
     P
   > {
-    const verifyTokenOptions: VerifyTokenClaimsOptions = {
+    const verifyTokenOptions: VerifyTokenPayloadOptions = {
       audience: [this.dids.pds],
       scope: ['atproto'],
     }

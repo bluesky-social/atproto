@@ -33,3 +33,7 @@ export function invokeOnce<T extends (this: any, ...a: any[]) => any>(
     throw new Error('Function called multiple times')
   } as T
 }
+
+export function includedIn<T>(this: readonly T[], value: T): boolean {
+  return this.includes(value)
+}

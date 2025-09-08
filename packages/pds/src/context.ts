@@ -400,10 +400,11 @@ export class AppContext {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },
           // If the PDS is both an authorization server & resource server (no
-          // entryway), there is no need to use JWTs as access tokens. Instead,
-          // the PDS can use tokenId as access tokens. This allows the PDS to
-          // always use up-to-date token data from the token store.
-          accessTokenMode: AccessTokenMode.light,
+          // entryway), we can afford to check the token validity on every
+          // request. This allows revoked tokens to be rejected immediately.
+          // This also allows JWT to be shorter since some claims (notably the
+          // "scope" claim) do not need to be included in the token.
+          accessTokenMode: AccessTokenMode.stateful,
 
           getClientInfo(clientId) {
             return {
@@ -436,26 +437,27 @@ export class AppContext {
               }
 
               if (payload.scope != null) {
-                const scope = await scopeRefGetter
-                  .dereference(payload.scope)
-                  .catch((err) => {
-                    const { InvalidScopeReferenceError } =
-                      ComAtprotoTempDereferenceScope
-                    if (err instanceof InvalidScopeReferenceError) {
-                      // The scope reference cannot be found on the server.
-                      // Consider the session as invalid, allowing entryway to
-                      // re-build the scope as the user re-authenticates. This
-                      // should never happen though.
-                      throw InvalidTokenError.from(err, tokenType)
-                    }
+                try {
+                  payload.scope = await scopeRefGetter.dereference(
+                    payload.scope,
+                  )
+                } catch (cause) {
+                  const { InvalidScopeReferenceError } =
+                    ComAtprotoTempDereferenceScope
+                  if (cause instanceof InvalidScopeReferenceError) {
+                    // The scope reference cannot be found on the server.
+                    // Consider the session as invalid, allowing entryway to
+                    // re-build the scope as the user re-authenticates. This
+                    // should never happen though.
+                    throw InvalidTokenError.from(cause, tokenType)
+                  }
 
-                    throw new UpstreamFailureError(
-                      'Failed to fetch token permissions',
-                      undefined,
-                      { cause: err },
-                    )
-                  })
-                payload.scope = scope
+                  throw new UpstreamFailureError(
+                    'Failed to fetch token permissions',
+                    undefined,
+                    { cause },
+                  )
+                }
               }
 
               return payload
