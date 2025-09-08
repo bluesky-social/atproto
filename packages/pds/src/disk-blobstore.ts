@@ -3,9 +3,9 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import stream from 'node:stream'
 import { CID } from 'multiformats/cid'
-import PQueue from 'p-queue'
 import {
   aggregateErrors,
+  chunkArray,
   fileExists,
   isErrnoException,
   rmIfExists,
@@ -144,18 +144,16 @@ export class DiskBlobStore implements BlobStore {
 
   async deleteMany(cids: CID[]): Promise<void> {
     const errors: unknown[] = []
-
-    await new PQueue({ concurrency: 50 }).addAll(
-      cids.map((cid) => async () => {
-        try {
-          await this.delete(cid)
-        } catch (err) {
-          log.error({ err, cid: cid.toString() }, 'error deleting blob')
-          errors.push(err)
-        }
-      }),
-    )
-
+    for (const chunk of chunkArray(cids, 500)) {
+      await Promise.all(
+        chunk.map((cid) =>
+          this.delete(cid).catch((err) => {
+            log.error({ err, cid: cid.toString() }, 'error deleting blob')
+            errors.push(err)
+          }),
+        ),
+      )
+    }
     if (errors.length) throw aggregateErrors(errors)
   }
 
