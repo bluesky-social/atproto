@@ -48,6 +48,6 @@ deps: ## Installs dependent libs using 'pnpm install'
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
-	nvm install 24
-	nvm use 24
+	nvm install 22
+	nvm use 22
 	corepack enable
