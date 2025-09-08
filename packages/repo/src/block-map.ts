@@ -33,11 +33,6 @@ export class BlockMap extends CidMap<Uint8Array> {
     return Array.from(this.keys())
   }
 
-  addMap(toAdd: BlockMap): this {
-    for (const [cid, bytes] of toAdd) this.set(cid, bytes)
-    return this
-  }
-
   get byteSize(): number {
     let size = 0
     for (const bytes of this.values()) size += bytes.length

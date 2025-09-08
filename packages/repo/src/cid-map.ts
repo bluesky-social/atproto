@@ -4,14 +4,7 @@ export class CidMap<T> implements Iterable<[cid: CID, value: T]> {
   private map = new Map<string, T>()
 
   constructor(entries?: Iterable<readonly [cid: CID, value: T]>) {
-    if (entries) {
-      if (entries instanceof CidMap) {
-        // Optimize for constructing from another CidMap (avoids parse + stringify)
-        for (const [cidStr, value] of entries.map) this.map.set(cidStr, value)
-      } else {
-        for (const [cid, value] of entries) this.set(cid, value)
-      }
-    }
+    if (entries) this.addMap(entries)
   }
 
   get size(): number {
@@ -38,6 +31,16 @@ export class CidMap<T> implements Iterable<[cid: CID, value: T]> {
 
   clear(): void {
     this.map.clear()
+  }
+
+  addMap(toAdd: Iterable<readonly [cid: CID, value: T]>): this {
+    if (toAdd instanceof CidMap) {
+      // Optimize for constructing from another CidMap (avoids parse + stringify)
+      for (const [cidStr, value] of toAdd.map) this.map.set(cidStr, value)
+    } else {
+      for (const [cid, value] of toAdd) this.set(cid, value)
+    }
+    return this
   }
 
   forEach(cb: (value: T, cid: CID) => void, thisArg?: any): void {
