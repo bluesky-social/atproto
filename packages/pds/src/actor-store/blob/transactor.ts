@@ -283,8 +283,6 @@ export class BlobTransactor extends BlobReader {
     // to process those updates outside of the current transaction.
     const updatedCids = await this.makeBlobsPermanent(blobsToMakePermanent)
 
-    // @TODO Used to rely on the (non partial !) "blob_tempkey_idx" index. That
-    // index can now be removed.
     await this.db.db
       .updateTable('blob')
       .set({ tempKey: null })
