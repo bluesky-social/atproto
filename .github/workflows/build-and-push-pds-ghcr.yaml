@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - divy/pds-build-dblock-fix
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

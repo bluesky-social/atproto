@@ -15,11 +15,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.notification.getUnreadCount'
 
-export interface QueryParams {
+export type QueryParams = {
   priority?: boolean
   seenAt?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

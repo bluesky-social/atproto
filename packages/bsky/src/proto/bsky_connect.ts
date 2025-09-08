@@ -22,6 +22,12 @@ import {
   DeleteActorMuteResponse,
   DeleteThreadMuteRequest,
   DeleteThreadMuteResponse,
+  GetActivitySubscriptionDidsRequest,
+  GetActivitySubscriptionDidsResponse,
+  GetActivitySubscriptionsByActorAndSubjectsRequest,
+  GetActivitySubscriptionsByActorAndSubjectsResponse,
+  GetActorBookmarksRequest,
+  GetActorBookmarksResponse,
   GetActorChatDeclarationRecordsRequest,
   GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
@@ -64,6 +70,8 @@ import {
   GetBlockRecordsResponse,
   GetBlocksRequest,
   GetBlocksResponse,
+  GetBookmarksByActorAndSubjectsRequest,
+  GetBookmarksByActorAndSubjectsResponse,
   GetCountsForUsersRequest,
   GetCountsForUsersResponse,
   GetDidsByHandlesRequest,
@@ -126,6 +134,8 @@ import {
   GetMutesResponse,
   GetNewUserCountForRangeRequest,
   GetNewUserCountForRangeResponse,
+  GetNotificationDeclarationRecordsRequest,
+  GetNotificationDeclarationRecordsResponse,
   GetNotificationPreferencesRequest,
   GetNotificationPreferencesResponse,
   GetNotificationSeenRequest,
@@ -305,6 +315,15 @@ export const Service = {
       name: 'GetActorChatDeclarationRecords',
       I: GetActorChatDeclarationRecordsRequest,
       O: GetActorChatDeclarationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetNotificationDeclarationRecords
+     */
+    getNotificationDeclarationRecords: {
+      name: 'GetNotificationDeclarationRecords',
+      I: GetNotificationDeclarationRecordsRequest,
+      O: GetNotificationDeclarationRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -770,6 +789,24 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetActivitySubscriptionDids
+     */
+    getActivitySubscriptionDids: {
+      name: 'GetActivitySubscriptionDids',
+      I: GetActivitySubscriptionDidsRequest,
+      O: GetActivitySubscriptionDidsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetActivitySubscriptionsByActorAndSubjects
+     */
+    getActivitySubscriptionsByActorAndSubjects: {
+      name: 'GetActivitySubscriptionsByActorAndSubjects',
+      I: GetActivitySubscriptionsByActorAndSubjectsRequest,
+      O: GetActivitySubscriptionsByActorAndSubjectsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.UpdateNotificationSeen
      */
     updateNotificationSeen: {
@@ -974,6 +1011,29 @@ export const Service = {
       name: 'GetActorTakedown',
       I: GetActorTakedownRequest,
       O: GetActorTakedownResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Bookmarks
+     * Returns bookmarks created by the actor for the specified URIs.
+     *
+     * @generated from rpc bsky.Service.GetBookmarksByActorAndSubjects
+     */
+    getBookmarksByActorAndSubjects: {
+      name: 'GetBookmarksByActorAndSubjects',
+      I: GetBookmarksByActorAndSubjectsRequest,
+      O: GetBookmarksByActorAndSubjectsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Returns the bookmarks created by the actor.
+     *
+     * @generated from rpc bsky.Service.GetActorBookmarks
+     */
+    getActorBookmarks: {
+      name: 'GetActorBookmarks',
+      I: GetActorBookmarksRequest,
+      O: GetActorBookmarksResponse,
       kind: MethodKind.Unary,
     },
     /**

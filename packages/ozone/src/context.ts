@@ -17,6 +17,14 @@ import { BlobDiverter } from './daemon/blob-diverter'
 import { Database } from './db'
 import { ImageInvalidator } from './image-invalidator'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
+import {
+  ModerationServiceProfile,
+  ModerationServiceProfileCreator,
+} from './mod-service/profile'
+import {
+  SafelinkRuleService,
+  SafelinkRuleServiceCreator,
+} from './safelink/service'
 import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
@@ -41,7 +49,9 @@ export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
+  moderationServiceProfile: ModerationServiceProfileCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  safelinkRuleService: SafelinkRuleServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   teamService: TeamServiceCreator
@@ -130,6 +140,7 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
+    const safelinkRuleService = SafelinkRuleService.creator()
     const teamService = TeamService.creator(
       appviewAgent,
       cfg.appview.did,
@@ -139,6 +150,10 @@ export class AppContext {
     const settingService = SettingService.creator()
     const verificationService = VerificationService.creator()
     const verificationIssuer = VerificationIssuer.creator()
+    const moderationServiceProfile = ModerationServiceProfile.creator(
+      cfg,
+      appviewAgent,
+    )
 
     const sequencer = new Sequencer(modService(db))
 
@@ -153,7 +168,9 @@ export class AppContext {
         db,
         cfg,
         modService,
+        moderationServiceProfile,
         communicationTemplateService,
+        safelinkRuleService,
         teamService,
         setService,
         settingService,
@@ -204,6 +221,10 @@ export class AppContext {
     return this.opts.communicationTemplateService
   }
 
+  get safelinkRuleService(): SafelinkRuleServiceCreator {
+    return this.opts.safelinkRuleService
+  }
+
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
   }
@@ -222,6 +243,10 @@ export class AppContext {
 
   get verificationIssuer(): VerificationIssuerCreator {
     return this.opts.verificationIssuer
+  }
+
+  get moderationServiceProfile(): ModerationServiceProfileCreator {
+    return this.opts.moderationServiceProfile
   }
 
   get appviewAgent(): AtpAgent {

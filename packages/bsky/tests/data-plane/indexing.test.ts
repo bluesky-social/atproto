@@ -274,6 +274,7 @@ describe('indexing', () => {
       .executeTakeFirst()
     expect(agg).toEqual({
       uri: originalPostRef.uri,
+      bookmarkCount: 0,
       replyCount: 1,
       repostCount: 1,
       likeCount: 1,

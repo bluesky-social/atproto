@@ -20,21 +20,27 @@ import {
   JwtPayload,
   JwtVerifyError,
   Key,
-  RequiredKey,
   SignedJwt,
   VerifyOptions,
   VerifyResult,
-  jwkValidator,
+  jwkSchema,
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from '@atproto/jwk'
-import { either } from './util'
+import { RequiredKey, either } from './util.js'
 
 const { JOSEError } = errors
 
-export type Importable = string | KeyLike | Jwk
-
-export type { GenerateKeyPairOptions, GenerateKeyPairResult }
+export {
+  type GenerateKeyPairOptions,
+  type GenerateKeyPairResult,
+  type Jwk,
+  type JwtHeader,
+  type JwtPayload,
+  type KeyLike,
+  type SignedJwt,
+  type VerifyOptions,
+}
 
 export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
   /**
@@ -166,7 +172,7 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
   }
 
   static async fromImportable(
-    input: Importable,
+    input: string | KeyLike | Jwk,
     kid?: string,
   ): Promise<JoseKey> {
     if (typeof input === 'string') {
@@ -235,6 +241,6 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     const kid = either(jwk.kid, inputKid)
     const use = jwk.use || 'sig'
 
-    return new JoseKey(jwkValidator.parse({ ...jwk, kid, use }))
+    return new JoseKey(jwkSchema.parse({ ...jwk, kid, use }))
   }
 }

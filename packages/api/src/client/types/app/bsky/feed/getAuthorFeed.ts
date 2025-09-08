@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getAuthorFeed'
 
-export interface QueryParams {
+export type QueryParams = {
   actor: string
   limit?: number
   cursor?: string
@@ -30,7 +30,6 @@ export interface QueryParams {
     | (string & {})
   includePins?: boolean
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

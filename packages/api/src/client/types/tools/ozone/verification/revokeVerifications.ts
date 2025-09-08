@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.verification.revokeVerifications'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** Array of verification record uris to revoke */

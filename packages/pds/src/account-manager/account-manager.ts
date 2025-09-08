@@ -4,7 +4,7 @@ import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../auth-verifier'
+import { AuthScope } from '../auth-scope'
 import { softDeleted } from '../db'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 import {

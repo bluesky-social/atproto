@@ -1,5 +1,54 @@
 # @atproto/aws
 
+## 0.2.28
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.8.8
+
+## 0.2.27
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.8.7
+
+## 0.2.26
+
+### Patch Changes
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/repo@0.8.6
+
+## 0.2.25
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/repo@0.8.5
+
+## 0.2.24
+
+### Patch Changes
+
+- Updated dependencies [[`a8dee6af3`](https://github.com/bluesky-social/atproto/commit/a8dee6af33618d3072ebae7f23843242a32c926c)]:
+  - @atproto/repo@0.8.4
+
+## 0.2.23
+
+### Patch Changes
+
+- Updated dependencies [[`5fccbd2a1`](https://github.com/bluesky-social/atproto/commit/5fccbd2a14420e4a7c6f56ad9af4ecfe15a971e3)]:
+  - @atproto/repo@0.8.3
+
+## 0.2.22
+
+### Patch Changes
+
+- Updated dependencies [[`8bd45e2f8`](https://github.com/bluesky-social/atproto/commit/8bd45e2f898a87b3550c7f4a0c8312fad9cb4736)]:
+  - @atproto/repo@0.8.2
+
 ## 0.2.21
 
 ### Patch Changes

@@ -9,6 +9,148 @@ import {
 import { schemas } from './lexicons.js'
 import { CID } from 'multiformats/cid'
 import { type OmitKey, type Un$Typed } from './util.js'
+import * as AppBskyActorDefs from './types/app/bsky/actor/defs.js'
+import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences.js'
+import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile.js'
+import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles.js'
+import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions.js'
+import * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
+import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
+import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
+import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
+import * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
+import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
+import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
+import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
+import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
+import * as AppBskyEmbedRecord from './types/app/bsky/embed/record.js'
+import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia.js'
+import * as AppBskyEmbedVideo from './types/app/bsky/embed/video.js'
+import * as AppBskyFeedDefs from './types/app/bsky/feed/defs.js'
+import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
+import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator.js'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
+import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
+import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
+import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
+import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
+import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
+import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
+import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
+import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
+import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
+import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline.js'
+import * as AppBskyFeedLike from './types/app/bsky/feed/like.js'
+import * as AppBskyFeedPost from './types/app/bsky/feed/post.js'
+import * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate.js'
+import * as AppBskyFeedRepost from './types/app/bsky/feed/repost.js'
+import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts.js'
+import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions.js'
+import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate.js'
+import * as AppBskyGraphBlock from './types/app/bsky/graph/block.js'
+import * as AppBskyGraphDefs from './types/app/bsky/graph/defs.js'
+import * as AppBskyGraphFollow from './types/app/bsky/graph/follow.js'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks.js'
+import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
+import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
+import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
+import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
+import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
+import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
+import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+import * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
+import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+import * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
+import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
+import * as AppBskyGraphList from './types/app/bsky/graph/list.js'
+import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
+import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem.js'
+import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
+import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
+import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks.js'
+import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
+import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
+import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
+import * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
+import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
+import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
+import * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
+import * as AppBskyNotificationDeclaration from './types/app/bsky/notification/declaration.js'
+import * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
+import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
+import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
+import * as AppBskyNotificationListActivitySubscriptions from './types/app/bsky/notification/listActivitySubscriptions.js'
+import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+import * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/notification/putActivitySubscription.js'
+import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
+import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
+import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
+import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
+import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
+import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
+import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
+import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
+import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
+import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
+import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
+import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+import * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
+import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
+import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
+import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
+import * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
+import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
+import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
+import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
+import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
@@ -97,139 +239,11 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
-import * as AppBskyActorDefs from './types/app/bsky/actor/defs.js'
-import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences.js'
-import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile.js'
-import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles.js'
-import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions.js'
-import * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
-import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
-import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
-import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
-import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
-import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
-import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
-import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
-import * as AppBskyEmbedRecord from './types/app/bsky/embed/record.js'
-import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia.js'
-import * as AppBskyEmbedVideo from './types/app/bsky/embed/video.js'
-import * as AppBskyFeedDefs from './types/app/bsky/feed/defs.js'
-import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
-import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator.js'
-import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
-import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
-import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
-import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
-import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
-import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
-import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
-import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
-import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
-import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
-import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
-import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline.js'
-import * as AppBskyFeedLike from './types/app/bsky/feed/like.js'
-import * as AppBskyFeedPost from './types/app/bsky/feed/post.js'
-import * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate.js'
-import * as AppBskyFeedRepost from './types/app/bsky/feed/repost.js'
-import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts.js'
-import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions.js'
-import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate.js'
-import * as AppBskyGraphBlock from './types/app/bsky/graph/block.js'
-import * as AppBskyGraphDefs from './types/app/bsky/graph/defs.js'
-import * as AppBskyGraphFollow from './types/app/bsky/graph/follow.js'
-import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks.js'
-import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
-import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
-import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
-import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
-import * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
-import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
-import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
-import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
-import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
-import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
-import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
-import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
-import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
-import * as AppBskyGraphList from './types/app/bsky/graph/list.js'
-import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
-import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem.js'
-import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
-import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
-import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
-import * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks.js'
-import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
-import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
-import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
-import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
-import * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
-import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
-import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
-import * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
-import * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
-import * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
-import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
-import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
-import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
-import * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
-import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
-import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
-import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
-import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
-import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
-import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
-import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
-import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
-import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
-import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
-import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
-import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
-import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
-import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
-import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
-import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
-import * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
-import * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
-import * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
-import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
-import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
-import * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
-import * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
-import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
-import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
-import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
-import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
-import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
-import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
-import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
-import * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
-import * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
-import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
-import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
-import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
-import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
-import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
-import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
-import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
-import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
-import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
-import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
-import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
-import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
-import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
-import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
-import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
-import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
-import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
-import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
-import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -238,6 +252,7 @@ import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 import * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -248,6 +263,13 @@ import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
+import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
+import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
+import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
+import * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
+import * as ToolsOzoneSafelinkRemoveRule from './types/tools/ozone/safelink/removeRule.js'
+import * as ToolsOzoneSafelinkUpdateRule from './types/tools/ozone/safelink/updateRule.js'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
 import * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
 import * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs.js'
@@ -274,6 +296,148 @@ import * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/v
 import * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
 import * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
+export * as AppBskyActorDefs from './types/app/bsky/actor/defs.js'
+export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences.js'
+export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile.js'
+export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles.js'
+export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions.js'
+export * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
+export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
+export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
+export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+export * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
+export * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
+export * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
+export * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
+export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
+export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
+export * as AppBskyEmbedRecord from './types/app/bsky/embed/record.js'
+export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia.js'
+export * as AppBskyEmbedVideo from './types/app/bsky/embed/video.js'
+export * as AppBskyFeedDefs from './types/app/bsky/feed/defs.js'
+export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
+export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator.js'
+export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
+export * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
+export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
+export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
+export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
+export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
+export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
+export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
+export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
+export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
+export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
+export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
+export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
+export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
+export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline.js'
+export * as AppBskyFeedLike from './types/app/bsky/feed/like.js'
+export * as AppBskyFeedPost from './types/app/bsky/feed/post.js'
+export * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate.js'
+export * as AppBskyFeedRepost from './types/app/bsky/feed/repost.js'
+export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts.js'
+export * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions.js'
+export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate.js'
+export * as AppBskyGraphBlock from './types/app/bsky/graph/block.js'
+export * as AppBskyGraphDefs from './types/app/bsky/graph/defs.js'
+export * as AppBskyGraphFollow from './types/app/bsky/graph/follow.js'
+export * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks.js'
+export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
+export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
+export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
+export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
+export * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
+export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
+export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
+export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
+export * as AppBskyGraphGetListsWithMembership from './types/app/bsky/graph/getListsWithMembership.js'
+export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
+export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
+export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
+export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
+export * as AppBskyGraphGetStarterPacksWithMembership from './types/app/bsky/graph/getStarterPacksWithMembership.js'
+export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
+export * as AppBskyGraphList from './types/app/bsky/graph/list.js'
+export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
+export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem.js'
+export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
+export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
+export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
+export * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks.js'
+export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
+export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
+export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
+export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
+export * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
+export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
+export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
+export * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
+export * as AppBskyNotificationDeclaration from './types/app/bsky/notification/declaration.js'
+export * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
+export * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
+export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
+export * as AppBskyNotificationListActivitySubscriptions from './types/app/bsky/notification/listActivitySubscriptions.js'
+export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
+export * as AppBskyNotificationPutActivitySubscription from './types/app/bsky/notification/putActivitySubscription.js'
+export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
+export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
+export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
+export * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush.js'
+export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
+export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
+export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
+export * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
+export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
+export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
+export * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
+export * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
+export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
+export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
+export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+export * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
+export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
+export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
+export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
+export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
+export * as AppBskyUnspeccedInitAgeAssurance from './types/app/bsky/unspecced/initAgeAssurance.js'
+export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
+export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
+export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
+export * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
+export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
+export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
+export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
+export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
+export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
+export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
+export * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
+export * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
+export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
+export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
+export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
+export * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
+export * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+export * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
+export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
+export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
+export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
+export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
+export * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
+export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
+export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
+export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
+export * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
+export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
+export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
+export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
+export * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
@@ -362,139 +526,11 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
 export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
+export * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
-export * as AppBskyActorDefs from './types/app/bsky/actor/defs.js'
-export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences.js'
-export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile.js'
-export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles.js'
-export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions.js'
-export * as AppBskyActorProfile from './types/app/bsky/actor/profile.js'
-export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
-export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
-export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
-export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
-export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
-export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
-export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
-export * as AppBskyEmbedRecord from './types/app/bsky/embed/record.js'
-export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia.js'
-export * as AppBskyEmbedVideo from './types/app/bsky/embed/video.js'
-export * as AppBskyFeedDefs from './types/app/bsky/feed/defs.js'
-export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
-export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator.js'
-export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
-export * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
-export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed.js'
-export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed.js'
-export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator.js'
-export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators.js'
-export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton.js'
-export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes.js'
-export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed.js'
-export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts.js'
-export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread.js'
-export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes.js'
-export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy.js'
-export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds.js'
-export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline.js'
-export * as AppBskyFeedLike from './types/app/bsky/feed/like.js'
-export * as AppBskyFeedPost from './types/app/bsky/feed/post.js'
-export * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate.js'
-export * as AppBskyFeedRepost from './types/app/bsky/feed/repost.js'
-export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts.js'
-export * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions.js'
-export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate.js'
-export * as AppBskyGraphBlock from './types/app/bsky/graph/block.js'
-export * as AppBskyGraphDefs from './types/app/bsky/graph/defs.js'
-export * as AppBskyGraphFollow from './types/app/bsky/graph/follow.js'
-export * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks.js'
-export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks.js'
-export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers.js'
-export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows.js'
-export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers.js'
-export * as AppBskyGraphGetList from './types/app/bsky/graph/getList.js'
-export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks.js'
-export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes.js'
-export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists.js'
-export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes.js'
-export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships.js'
-export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack.js'
-export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks.js'
-export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor.js'
-export * as AppBskyGraphList from './types/app/bsky/graph/list.js'
-export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock.js'
-export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem.js'
-export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor.js'
-export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList.js'
-export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread.js'
-export * as AppBskyGraphSearchStarterPacks from './types/app/bsky/graph/searchStarterPacks.js'
-export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack.js'
-export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor.js'
-export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList.js'
-export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread.js'
-export * as AppBskyGraphVerification from './types/app/bsky/graph/verification.js'
-export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs.js'
-export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices.js'
-export * as AppBskyLabelerService from './types/app/bsky/labeler/service.js'
-export * as AppBskyNotificationDefs from './types/app/bsky/notification/defs.js'
-export * as AppBskyNotificationGetPreferences from './types/app/bsky/notification/getPreferences.js'
-export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount.js'
-export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications.js'
-export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences.js'
-export * as AppBskyNotificationPutPreferencesV2 from './types/app/bsky/notification/putPreferencesV2.js'
-export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush.js'
-export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
-export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet.js'
-export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs.js'
-export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
-export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
-export * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
-export * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
-export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
-export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
-export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
-export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
-export * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
-export * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
-export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
-export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
-export * as AppBskyUnspeccedGetTrendingTopics from './types/app/bsky/unspecced/getTrendingTopics.js'
-export * as AppBskyUnspeccedGetTrends from './types/app/bsky/unspecced/getTrends.js'
-export * as AppBskyUnspeccedGetTrendsSkeleton from './types/app/bsky/unspecced/getTrendsSkeleton.js'
-export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton.js'
-export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton.js'
-export * as AppBskyUnspeccedSearchStarterPacksSkeleton from './types/app/bsky/unspecced/searchStarterPacksSkeleton.js'
-export * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
-export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
-export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
-export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
-export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
-export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
-export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
-export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
-export * as ChatBskyConvoAcceptConvo from './types/chat/bsky/convo/acceptConvo.js'
-export * as ChatBskyConvoAddReaction from './types/chat/bsky/convo/addReaction.js'
-export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs.js'
-export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf.js'
-export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
-export * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
-export * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
-export * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
-export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
-export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
-export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
-export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
-export * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
-export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
-export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
-export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
-export * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
-export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
-export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
-export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
-export * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+export * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -503,6 +539,7 @@ export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
 export * as ToolsOzoneModerationGetRecords from './types/tools/ozone/moderation/getRecords.js'
@@ -513,6 +550,13 @@ export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
+export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
+export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
+export * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
+export * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
+export * as ToolsOzoneSafelinkRemoveRule from './types/tools/ozone/safelink/removeRule.js'
+export * as ToolsOzoneSafelinkUpdateRule from './types/tools/ozone/safelink/updateRule.js'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig.js'
 export * as ToolsOzoneSetAddValues from './types/tools/ozone/set/addValues.js'
 export * as ToolsOzoneSetDefs from './types/tools/ozone/set/defs.js'
@@ -539,15 +583,6 @@ export * as ToolsOzoneVerificationGrantVerifications from './types/tools/ozone/v
 export * as ToolsOzoneVerificationListVerifications from './types/tools/ozone/verification/listVerifications.js'
 export * as ToolsOzoneVerificationRevokeVerifications from './types/tools/ozone/verification/revokeVerifications.js'
 
-export const COM_ATPROTO_MODERATION = {
-  DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
-  DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
-  DefsReasonMisleading: 'com.atproto.moderation.defs#reasonMisleading',
-  DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
-  DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
-  DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
-  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
-}
 export const APP_BSKY_ACTOR = {
   StatusLive: 'app.bsky.actor.status#live',
 }
@@ -572,11 +607,95 @@ export const APP_BSKY_GRAPH = {
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
+export const COM_ATPROTO_MODERATION = {
+  DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
+  DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
+  DefsReasonMisleading: 'com.atproto.moderation.defs#reasonMisleading',
+  DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
+  DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
+  DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+  DefsTimelineEventPlcCreate:
+    'tools.ozone.moderation.defs#timelineEventPlcCreate',
+  DefsTimelineEventPlcOperation:
+    'tools.ozone.moderation.defs#timelineEventPlcOperation',
+  DefsTimelineEventPlcTombstone:
+    'tools.ozone.moderation.defs#timelineEventPlcTombstone',
+}
+export const TOOLS_OZONE_REPORT = {
+  DefsReasonAppeal: 'tools.ozone.report.defs#reasonAppeal',
+  DefsReasonViolenceAnimalWelfare:
+    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+  DefsReasonViolenceThreats: 'tools.ozone.report.defs#reasonViolenceThreats',
+  DefsReasonViolenceGraphicContent:
+    'tools.ozone.report.defs#reasonViolenceGraphicContent',
+  DefsReasonViolenceSelfHarm: 'tools.ozone.report.defs#reasonViolenceSelfHarm',
+  DefsReasonViolenceGlorification:
+    'tools.ozone.report.defs#reasonViolenceGlorification',
+  DefsReasonViolenceExtremistContent:
+    'tools.ozone.report.defs#reasonViolenceExtremistContent',
+  DefsReasonViolenceTrafficking:
+    'tools.ozone.report.defs#reasonViolenceTrafficking',
+  DefsReasonViolenceOther: 'tools.ozone.report.defs#reasonViolenceOther',
+  DefsReasonSexualAbuseContent:
+    'tools.ozone.report.defs#reasonSexualAbuseContent',
+  DefsReasonSexualNCII: 'tools.ozone.report.defs#reasonSexualNCII',
+  DefsReasonSexualSextortion: 'tools.ozone.report.defs#reasonSexualSextortion',
+  DefsReasonSexualDeepfake: 'tools.ozone.report.defs#reasonSexualDeepfake',
+  DefsReasonSexualAnimal: 'tools.ozone.report.defs#reasonSexualAnimal',
+  DefsReasonSexualUnlabeled: 'tools.ozone.report.defs#reasonSexualUnlabeled',
+  DefsReasonSexualOther: 'tools.ozone.report.defs#reasonSexualOther',
+  DefsReasonChildSafetyCSAM: 'tools.ozone.report.defs#reasonChildSafetyCSAM',
+  DefsReasonChildSafetyGroom: 'tools.ozone.report.defs#reasonChildSafetyGroom',
+  DefsReasonChildSafetyMinorPrivacy:
+    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
+  DefsReasonChildSafetyEndangerment:
+    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+  DefsReasonChildSafetyHarassment:
+    'tools.ozone.report.defs#reasonChildSafetyHarassment',
+  DefsReasonChildSafetyPromotion:
+    'tools.ozone.report.defs#reasonChildSafetyPromotion',
+  DefsReasonChildSafetyOther: 'tools.ozone.report.defs#reasonChildSafetyOther',
+  DefsReasonHarassmentTroll: 'tools.ozone.report.defs#reasonHarassmentTroll',
+  DefsReasonHarassmentTargeted:
+    'tools.ozone.report.defs#reasonHarassmentTargeted',
+  DefsReasonHarassmentHateSpeech:
+    'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+  DefsReasonHarassmentDoxxing:
+    'tools.ozone.report.defs#reasonHarassmentDoxxing',
+  DefsReasonHarassmentOther: 'tools.ozone.report.defs#reasonHarassmentOther',
+  DefsReasonMisleadingBot: 'tools.ozone.report.defs#reasonMisleadingBot',
+  DefsReasonMisleadingImpersonation:
+    'tools.ozone.report.defs#reasonMisleadingImpersonation',
+  DefsReasonMisleadingSpam: 'tools.ozone.report.defs#reasonMisleadingSpam',
+  DefsReasonMisleadingScam: 'tools.ozone.report.defs#reasonMisleadingScam',
+  DefsReasonMisleadingSyntheticContent:
+    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
+  DefsReasonMisleadingMisinformation:
+    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+  DefsReasonMisleadingOther: 'tools.ozone.report.defs#reasonMisleadingOther',
+  DefsReasonRuleSiteSecurity: 'tools.ozone.report.defs#reasonRuleSiteSecurity',
+  DefsReasonRuleStolenContent:
+    'tools.ozone.report.defs#reasonRuleStolenContent',
+  DefsReasonRuleProhibitedSales:
+    'tools.ozone.report.defs#reasonRuleProhibitedSales',
+  DefsReasonRuleBanEvasion: 'tools.ozone.report.defs#reasonRuleBanEvasion',
+  DefsReasonRuleOther: 'tools.ozone.report.defs#reasonRuleOther',
+  DefsReasonCivicElectoralProcess:
+    'tools.ozone.report.defs#reasonCivicElectoralProcess',
+  DefsReasonCivicDisclosure: 'tools.ozone.report.defs#reasonCivicDisclosure',
+  DefsReasonCivicInterference:
+    'tools.ozone.report.defs#reasonCivicInterference',
+  DefsReasonCivicMisinformation:
+    'tools.ozone.report.defs#reasonCivicMisinformation',
+  DefsReasonCivicImpersonation:
+    'tools.ozone.report.defs#reasonCivicImpersonation',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -586,22 +705,2902 @@ export const TOOLS_OZONE_TEAM = {
 }
 
 export class AtpBaseClient extends XrpcClient {
-  com: ComNS
   app: AppNS
   chat: ChatNS
+  com: ComNS
   tools: ToolsNS
 
   constructor(options: FetchHandler | FetchHandlerOptions) {
     super(options, schemas)
-    this.com = new ComNS(this)
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
+    this.com = new ComNS(this)
     this.tools = new ToolsNS(this)
   }
 
   /** @deprecated use `this` instead */
   get xrpc(): XrpcClient {
     return this
+  }
+}
+
+export class AppNS {
+  _client: XrpcClient
+  bsky: AppBskyNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.bsky = new AppBskyNS(client)
+  }
+}
+
+export class AppBskyNS {
+  _client: XrpcClient
+  actor: AppBskyActorNS
+  bookmark: AppBskyBookmarkNS
+  embed: AppBskyEmbedNS
+  feed: AppBskyFeedNS
+  graph: AppBskyGraphNS
+  labeler: AppBskyLabelerNS
+  notification: AppBskyNotificationNS
+  richtext: AppBskyRichtextNS
+  unspecced: AppBskyUnspeccedNS
+  video: AppBskyVideoNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.actor = new AppBskyActorNS(client)
+    this.bookmark = new AppBskyBookmarkNS(client)
+    this.embed = new AppBskyEmbedNS(client)
+    this.feed = new AppBskyFeedNS(client)
+    this.graph = new AppBskyGraphNS(client)
+    this.labeler = new AppBskyLabelerNS(client)
+    this.notification = new AppBskyNotificationNS(client)
+    this.richtext = new AppBskyRichtextNS(client)
+    this.unspecced = new AppBskyUnspeccedNS(client)
+    this.video = new AppBskyVideoNS(client)
+  }
+}
+
+export class AppBskyActorNS {
+  _client: XrpcClient
+  profile: AppBskyActorProfileRecord
+  status: AppBskyActorStatusRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.profile = new AppBskyActorProfileRecord(client)
+    this.status = new AppBskyActorStatusRecord(client)
+  }
+
+  getPreferences(
+    params?: AppBskyActorGetPreferences.QueryParams,
+    opts?: AppBskyActorGetPreferences.CallOptions,
+  ): Promise<AppBskyActorGetPreferences.Response> {
+    return this._client.call(
+      'app.bsky.actor.getPreferences',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getProfile(
+    params?: AppBskyActorGetProfile.QueryParams,
+    opts?: AppBskyActorGetProfile.CallOptions,
+  ): Promise<AppBskyActorGetProfile.Response> {
+    return this._client.call(
+      'app.bsky.actor.getProfile',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getProfiles(
+    params?: AppBskyActorGetProfiles.QueryParams,
+    opts?: AppBskyActorGetProfiles.CallOptions,
+  ): Promise<AppBskyActorGetProfiles.Response> {
+    return this._client.call(
+      'app.bsky.actor.getProfiles',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestions(
+    params?: AppBskyActorGetSuggestions.QueryParams,
+    opts?: AppBskyActorGetSuggestions.CallOptions,
+  ): Promise<AppBskyActorGetSuggestions.Response> {
+    return this._client.call(
+      'app.bsky.actor.getSuggestions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  putPreferences(
+    data?: AppBskyActorPutPreferences.InputSchema,
+    opts?: AppBskyActorPutPreferences.CallOptions,
+  ): Promise<AppBskyActorPutPreferences.Response> {
+    return this._client.call(
+      'app.bsky.actor.putPreferences',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  searchActors(
+    params?: AppBskyActorSearchActors.QueryParams,
+    opts?: AppBskyActorSearchActors.CallOptions,
+  ): Promise<AppBskyActorSearchActors.Response> {
+    return this._client.call(
+      'app.bsky.actor.searchActors',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  searchActorsTypeahead(
+    params?: AppBskyActorSearchActorsTypeahead.QueryParams,
+    opts?: AppBskyActorSearchActorsTypeahead.CallOptions,
+  ): Promise<AppBskyActorSearchActorsTypeahead.Response> {
+    return this._client.call(
+      'app.bsky.actor.searchActorsTypeahead',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
+export class AppBskyActorProfileRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyActorProfile.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.actor.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyActorProfile.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.actor.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyActorProfile.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.actor.profile'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyActorProfile.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.actor.profile'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.actor.profile', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyActorStatusRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyActorStatus.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.actor.status',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyActorStatus.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.actor.status',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyActorStatus.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.actor.status'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyActorStatus.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.actor.status'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.actor.status', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyBookmarkNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  createBookmark(
+    data?: AppBskyBookmarkCreateBookmark.InputSchema,
+    opts?: AppBskyBookmarkCreateBookmark.CallOptions,
+  ): Promise<AppBskyBookmarkCreateBookmark.Response> {
+    return this._client
+      .call('app.bsky.bookmark.createBookmark', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyBookmarkCreateBookmark.toKnownErr(e)
+      })
+  }
+
+  deleteBookmark(
+    data?: AppBskyBookmarkDeleteBookmark.InputSchema,
+    opts?: AppBskyBookmarkDeleteBookmark.CallOptions,
+  ): Promise<AppBskyBookmarkDeleteBookmark.Response> {
+    return this._client
+      .call('app.bsky.bookmark.deleteBookmark', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyBookmarkDeleteBookmark.toKnownErr(e)
+      })
+  }
+
+  getBookmarks(
+    params?: AppBskyBookmarkGetBookmarks.QueryParams,
+    opts?: AppBskyBookmarkGetBookmarks.CallOptions,
+  ): Promise<AppBskyBookmarkGetBookmarks.Response> {
+    return this._client.call(
+      'app.bsky.bookmark.getBookmarks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
+export class AppBskyEmbedNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+}
+
+export class AppBskyFeedNS {
+  _client: XrpcClient
+  generator: AppBskyFeedGeneratorRecord
+  like: AppBskyFeedLikeRecord
+  post: AppBskyFeedPostRecord
+  postgate: AppBskyFeedPostgateRecord
+  repost: AppBskyFeedRepostRecord
+  threadgate: AppBskyFeedThreadgateRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.generator = new AppBskyFeedGeneratorRecord(client)
+    this.like = new AppBskyFeedLikeRecord(client)
+    this.post = new AppBskyFeedPostRecord(client)
+    this.postgate = new AppBskyFeedPostgateRecord(client)
+    this.repost = new AppBskyFeedRepostRecord(client)
+    this.threadgate = new AppBskyFeedThreadgateRecord(client)
+  }
+
+  describeFeedGenerator(
+    params?: AppBskyFeedDescribeFeedGenerator.QueryParams,
+    opts?: AppBskyFeedDescribeFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedDescribeFeedGenerator.Response> {
+    return this._client.call(
+      'app.bsky.feed.describeFeedGenerator',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getActorFeeds(
+    params?: AppBskyFeedGetActorFeeds.QueryParams,
+    opts?: AppBskyFeedGetActorFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetActorFeeds.Response> {
+    return this._client.call(
+      'app.bsky.feed.getActorFeeds',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getActorLikes(
+    params?: AppBskyFeedGetActorLikes.QueryParams,
+    opts?: AppBskyFeedGetActorLikes.CallOptions,
+  ): Promise<AppBskyFeedGetActorLikes.Response> {
+    return this._client
+      .call('app.bsky.feed.getActorLikes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetActorLikes.toKnownErr(e)
+      })
+  }
+
+  getAuthorFeed(
+    params?: AppBskyFeedGetAuthorFeed.QueryParams,
+    opts?: AppBskyFeedGetAuthorFeed.CallOptions,
+  ): Promise<AppBskyFeedGetAuthorFeed.Response> {
+    return this._client
+      .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getFeed(
+    params?: AppBskyFeedGetFeed.QueryParams,
+    opts?: AppBskyFeedGetFeed.CallOptions,
+  ): Promise<AppBskyFeedGetFeed.Response> {
+    return this._client
+      .call('app.bsky.feed.getFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeed.toKnownErr(e)
+      })
+  }
+
+  getFeedGenerator(
+    params?: AppBskyFeedGetFeedGenerator.QueryParams,
+    opts?: AppBskyFeedGetFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedGetFeedGenerator.Response> {
+    return this._client.call(
+      'app.bsky.feed.getFeedGenerator',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getFeedGenerators(
+    params?: AppBskyFeedGetFeedGenerators.QueryParams,
+    opts?: AppBskyFeedGetFeedGenerators.CallOptions,
+  ): Promise<AppBskyFeedGetFeedGenerators.Response> {
+    return this._client.call(
+      'app.bsky.feed.getFeedGenerators',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getFeedSkeleton(
+    params?: AppBskyFeedGetFeedSkeleton.QueryParams,
+    opts?: AppBskyFeedGetFeedSkeleton.CallOptions,
+  ): Promise<AppBskyFeedGetFeedSkeleton.Response> {
+    return this._client
+      .call('app.bsky.feed.getFeedSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedSkeleton.toKnownErr(e)
+      })
+  }
+
+  getLikes(
+    params?: AppBskyFeedGetLikes.QueryParams,
+    opts?: AppBskyFeedGetLikes.CallOptions,
+  ): Promise<AppBskyFeedGetLikes.Response> {
+    return this._client.call('app.bsky.feed.getLikes', params, undefined, opts)
+  }
+
+  getListFeed(
+    params?: AppBskyFeedGetListFeed.QueryParams,
+    opts?: AppBskyFeedGetListFeed.CallOptions,
+  ): Promise<AppBskyFeedGetListFeed.Response> {
+    return this._client
+      .call('app.bsky.feed.getListFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetListFeed.toKnownErr(e)
+      })
+  }
+
+  getPostThread(
+    params?: AppBskyFeedGetPostThread.QueryParams,
+    opts?: AppBskyFeedGetPostThread.CallOptions,
+  ): Promise<AppBskyFeedGetPostThread.Response> {
+    return this._client
+      .call('app.bsky.feed.getPostThread', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetPostThread.toKnownErr(e)
+      })
+  }
+
+  getPosts(
+    params?: AppBskyFeedGetPosts.QueryParams,
+    opts?: AppBskyFeedGetPosts.CallOptions,
+  ): Promise<AppBskyFeedGetPosts.Response> {
+    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
+  }
+
+  getQuotes(
+    params?: AppBskyFeedGetQuotes.QueryParams,
+    opts?: AppBskyFeedGetQuotes.CallOptions,
+  ): Promise<AppBskyFeedGetQuotes.Response> {
+    return this._client.call('app.bsky.feed.getQuotes', params, undefined, opts)
+  }
+
+  getRepostedBy(
+    params?: AppBskyFeedGetRepostedBy.QueryParams,
+    opts?: AppBskyFeedGetRepostedBy.CallOptions,
+  ): Promise<AppBskyFeedGetRepostedBy.Response> {
+    return this._client.call(
+      'app.bsky.feed.getRepostedBy',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFeeds(
+    params?: AppBskyFeedGetSuggestedFeeds.QueryParams,
+    opts?: AppBskyFeedGetSuggestedFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetSuggestedFeeds.Response> {
+    return this._client.call(
+      'app.bsky.feed.getSuggestedFeeds',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTimeline(
+    params?: AppBskyFeedGetTimeline.QueryParams,
+    opts?: AppBskyFeedGetTimeline.CallOptions,
+  ): Promise<AppBskyFeedGetTimeline.Response> {
+    return this._client.call(
+      'app.bsky.feed.getTimeline',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  searchPosts(
+    params?: AppBskyFeedSearchPosts.QueryParams,
+    opts?: AppBskyFeedSearchPosts.CallOptions,
+  ): Promise<AppBskyFeedSearchPosts.Response> {
+    return this._client
+      .call('app.bsky.feed.searchPosts', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedSearchPosts.toKnownErr(e)
+      })
+  }
+
+  sendInteractions(
+    data?: AppBskyFeedSendInteractions.InputSchema,
+    opts?: AppBskyFeedSendInteractions.CallOptions,
+  ): Promise<AppBskyFeedSendInteractions.Response> {
+    return this._client.call(
+      'app.bsky.feed.sendInteractions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+}
+
+export class AppBskyFeedGeneratorRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedGenerator.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedGenerator.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedGenerator.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.generator'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedGenerator.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.generator'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.generator', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyFeedLikeRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedLike.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedLike.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedLike.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.like'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedLike.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.like'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.like', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyFeedPostRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedPost.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPost.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedPost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedPost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.post', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyFeedPostgateRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedPostgate.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.postgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPostgate.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.postgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedPostgate.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.postgate'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedPostgate.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.postgate'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.postgate', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyFeedRepostRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedRepost.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.repost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedRepost.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.repost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedRepost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.repost'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedRepost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.repost'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.repost', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyFeedThreadgateRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedThreadgate.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyFeedThreadgate.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedThreadgate.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.threadgate'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyFeedThreadgate.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.feed.threadgate'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.threadgate', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyGraphNS {
+  _client: XrpcClient
+  block: AppBskyGraphBlockRecord
+  follow: AppBskyGraphFollowRecord
+  list: AppBskyGraphListRecord
+  listblock: AppBskyGraphListblockRecord
+  listitem: AppBskyGraphListitemRecord
+  starterpack: AppBskyGraphStarterpackRecord
+  verification: AppBskyGraphVerificationRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.block = new AppBskyGraphBlockRecord(client)
+    this.follow = new AppBskyGraphFollowRecord(client)
+    this.list = new AppBskyGraphListRecord(client)
+    this.listblock = new AppBskyGraphListblockRecord(client)
+    this.listitem = new AppBskyGraphListitemRecord(client)
+    this.starterpack = new AppBskyGraphStarterpackRecord(client)
+    this.verification = new AppBskyGraphVerificationRecord(client)
+  }
+
+  getActorStarterPacks(
+    params?: AppBskyGraphGetActorStarterPacks.QueryParams,
+    opts?: AppBskyGraphGetActorStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphGetActorStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.graph.getActorStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getBlocks(
+    params?: AppBskyGraphGetBlocks.QueryParams,
+    opts?: AppBskyGraphGetBlocks.CallOptions,
+  ): Promise<AppBskyGraphGetBlocks.Response> {
+    return this._client.call(
+      'app.bsky.graph.getBlocks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getFollowers(
+    params?: AppBskyGraphGetFollowers.QueryParams,
+    opts?: AppBskyGraphGetFollowers.CallOptions,
+  ): Promise<AppBskyGraphGetFollowers.Response> {
+    return this._client.call(
+      'app.bsky.graph.getFollowers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getFollows(
+    params?: AppBskyGraphGetFollows.QueryParams,
+    opts?: AppBskyGraphGetFollows.CallOptions,
+  ): Promise<AppBskyGraphGetFollows.Response> {
+    return this._client.call(
+      'app.bsky.graph.getFollows',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getKnownFollowers(
+    params?: AppBskyGraphGetKnownFollowers.QueryParams,
+    opts?: AppBskyGraphGetKnownFollowers.CallOptions,
+  ): Promise<AppBskyGraphGetKnownFollowers.Response> {
+    return this._client.call(
+      'app.bsky.graph.getKnownFollowers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getList(
+    params?: AppBskyGraphGetList.QueryParams,
+    opts?: AppBskyGraphGetList.CallOptions,
+  ): Promise<AppBskyGraphGetList.Response> {
+    return this._client.call('app.bsky.graph.getList', params, undefined, opts)
+  }
+
+  getListBlocks(
+    params?: AppBskyGraphGetListBlocks.QueryParams,
+    opts?: AppBskyGraphGetListBlocks.CallOptions,
+  ): Promise<AppBskyGraphGetListBlocks.Response> {
+    return this._client.call(
+      'app.bsky.graph.getListBlocks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getListMutes(
+    params?: AppBskyGraphGetListMutes.QueryParams,
+    opts?: AppBskyGraphGetListMutes.CallOptions,
+  ): Promise<AppBskyGraphGetListMutes.Response> {
+    return this._client.call(
+      'app.bsky.graph.getListMutes',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getLists(
+    params?: AppBskyGraphGetLists.QueryParams,
+    opts?: AppBskyGraphGetLists.CallOptions,
+  ): Promise<AppBskyGraphGetLists.Response> {
+    return this._client.call('app.bsky.graph.getLists', params, undefined, opts)
+  }
+
+  getListsWithMembership(
+    params?: AppBskyGraphGetListsWithMembership.QueryParams,
+    opts?: AppBskyGraphGetListsWithMembership.CallOptions,
+  ): Promise<AppBskyGraphGetListsWithMembership.Response> {
+    return this._client.call(
+      'app.bsky.graph.getListsWithMembership',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getMutes(
+    params?: AppBskyGraphGetMutes.QueryParams,
+    opts?: AppBskyGraphGetMutes.CallOptions,
+  ): Promise<AppBskyGraphGetMutes.Response> {
+    return this._client.call('app.bsky.graph.getMutes', params, undefined, opts)
+  }
+
+  getRelationships(
+    params?: AppBskyGraphGetRelationships.QueryParams,
+    opts?: AppBskyGraphGetRelationships.CallOptions,
+  ): Promise<AppBskyGraphGetRelationships.Response> {
+    return this._client
+      .call('app.bsky.graph.getRelationships', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetRelationships.toKnownErr(e)
+      })
+  }
+
+  getStarterPack(
+    params?: AppBskyGraphGetStarterPack.QueryParams,
+    opts?: AppBskyGraphGetStarterPack.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPack.Response> {
+    return this._client.call(
+      'app.bsky.graph.getStarterPack',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getStarterPacks(
+    params?: AppBskyGraphGetStarterPacks.QueryParams,
+    opts?: AppBskyGraphGetStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.graph.getStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getStarterPacksWithMembership(
+    params?: AppBskyGraphGetStarterPacksWithMembership.QueryParams,
+    opts?: AppBskyGraphGetStarterPacksWithMembership.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacksWithMembership.Response> {
+    return this._client.call(
+      'app.bsky.graph.getStarterPacksWithMembership',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFollowsByActor(
+    params?: AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
+    opts?: AppBskyGraphGetSuggestedFollowsByActor.CallOptions,
+  ): Promise<AppBskyGraphGetSuggestedFollowsByActor.Response> {
+    return this._client.call(
+      'app.bsky.graph.getSuggestedFollowsByActor',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  muteActor(
+    data?: AppBskyGraphMuteActor.InputSchema,
+    opts?: AppBskyGraphMuteActor.CallOptions,
+  ): Promise<AppBskyGraphMuteActor.Response> {
+    return this._client.call('app.bsky.graph.muteActor', opts?.qp, data, opts)
+  }
+
+  muteActorList(
+    data?: AppBskyGraphMuteActorList.InputSchema,
+    opts?: AppBskyGraphMuteActorList.CallOptions,
+  ): Promise<AppBskyGraphMuteActorList.Response> {
+    return this._client.call(
+      'app.bsky.graph.muteActorList',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  muteThread(
+    data?: AppBskyGraphMuteThread.InputSchema,
+    opts?: AppBskyGraphMuteThread.CallOptions,
+  ): Promise<AppBskyGraphMuteThread.Response> {
+    return this._client.call('app.bsky.graph.muteThread', opts?.qp, data, opts)
+  }
+
+  searchStarterPacks(
+    params?: AppBskyGraphSearchStarterPacks.QueryParams,
+    opts?: AppBskyGraphSearchStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphSearchStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.graph.searchStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  unmuteActor(
+    data?: AppBskyGraphUnmuteActor.InputSchema,
+    opts?: AppBskyGraphUnmuteActor.CallOptions,
+  ): Promise<AppBskyGraphUnmuteActor.Response> {
+    return this._client.call('app.bsky.graph.unmuteActor', opts?.qp, data, opts)
+  }
+
+  unmuteActorList(
+    data?: AppBskyGraphUnmuteActorList.InputSchema,
+    opts?: AppBskyGraphUnmuteActorList.CallOptions,
+  ): Promise<AppBskyGraphUnmuteActorList.Response> {
+    return this._client.call(
+      'app.bsky.graph.unmuteActorList',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  unmuteThread(
+    data?: AppBskyGraphUnmuteThread.InputSchema,
+    opts?: AppBskyGraphUnmuteThread.CallOptions,
+  ): Promise<AppBskyGraphUnmuteThread.Response> {
+    return this._client.call(
+      'app.bsky.graph.unmuteThread',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+}
+
+export class AppBskyGraphBlockRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphBlock.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.block',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphBlock.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.block',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphBlock.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.block'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphBlock.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.block'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.block', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyGraphFollowRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphFollow.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.follow',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphFollow.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.follow',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphFollow.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.follow'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphFollow.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.follow'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.follow', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyGraphListRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphList.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphList.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphList.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.list'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphList.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.list'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.list', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyGraphListblockRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphListblock.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.listblock',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphListblock.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.listblock',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphListblock.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.listblock'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphListblock.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.listblock'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.listblock', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyGraphListitemRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphListitem.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.listitem',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphListitem.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.listitem',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphListitem.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.listitem'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphListitem.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.listitem'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.listitem', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyGraphStarterpackRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphStarterpack.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.starterpack',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphStarterpack.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.starterpack',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphStarterpack.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.starterpack'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphStarterpack.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.starterpack'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.starterpack', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyGraphVerificationRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphVerification.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.verification',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphVerification.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.verification',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphVerification.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.verification'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyGraphVerification.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.graph.verification'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.verification', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyLabelerNS {
+  _client: XrpcClient
+  service: AppBskyLabelerServiceRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.service = new AppBskyLabelerServiceRecord(client)
+  }
+
+  getServices(
+    params?: AppBskyLabelerGetServices.QueryParams,
+    opts?: AppBskyLabelerGetServices.CallOptions,
+  ): Promise<AppBskyLabelerGetServices.Response> {
+    return this._client.call(
+      'app.bsky.labeler.getServices',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
+export class AppBskyLabelerServiceRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyLabelerService.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.labeler.service',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyLabelerService.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.labeler.service',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyLabelerService.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.labeler.service'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyLabelerService.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.labeler.service'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.labeler.service', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyNotificationNS {
+  _client: XrpcClient
+  declaration: AppBskyNotificationDeclarationRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.declaration = new AppBskyNotificationDeclarationRecord(client)
+  }
+
+  getPreferences(
+    params?: AppBskyNotificationGetPreferences.QueryParams,
+    opts?: AppBskyNotificationGetPreferences.CallOptions,
+  ): Promise<AppBskyNotificationGetPreferences.Response> {
+    return this._client.call(
+      'app.bsky.notification.getPreferences',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getUnreadCount(
+    params?: AppBskyNotificationGetUnreadCount.QueryParams,
+    opts?: AppBskyNotificationGetUnreadCount.CallOptions,
+  ): Promise<AppBskyNotificationGetUnreadCount.Response> {
+    return this._client.call(
+      'app.bsky.notification.getUnreadCount',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  listActivitySubscriptions(
+    params?: AppBskyNotificationListActivitySubscriptions.QueryParams,
+    opts?: AppBskyNotificationListActivitySubscriptions.CallOptions,
+  ): Promise<AppBskyNotificationListActivitySubscriptions.Response> {
+    return this._client.call(
+      'app.bsky.notification.listActivitySubscriptions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  listNotifications(
+    params?: AppBskyNotificationListNotifications.QueryParams,
+    opts?: AppBskyNotificationListNotifications.CallOptions,
+  ): Promise<AppBskyNotificationListNotifications.Response> {
+    return this._client.call(
+      'app.bsky.notification.listNotifications',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  putActivitySubscription(
+    data?: AppBskyNotificationPutActivitySubscription.InputSchema,
+    opts?: AppBskyNotificationPutActivitySubscription.CallOptions,
+  ): Promise<AppBskyNotificationPutActivitySubscription.Response> {
+    return this._client.call(
+      'app.bsky.notification.putActivitySubscription',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  putPreferences(
+    data?: AppBskyNotificationPutPreferences.InputSchema,
+    opts?: AppBskyNotificationPutPreferences.CallOptions,
+  ): Promise<AppBskyNotificationPutPreferences.Response> {
+    return this._client.call(
+      'app.bsky.notification.putPreferences',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  putPreferencesV2(
+    data?: AppBskyNotificationPutPreferencesV2.InputSchema,
+    opts?: AppBskyNotificationPutPreferencesV2.CallOptions,
+  ): Promise<AppBskyNotificationPutPreferencesV2.Response> {
+    return this._client.call(
+      'app.bsky.notification.putPreferencesV2',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  registerPush(
+    data?: AppBskyNotificationRegisterPush.InputSchema,
+    opts?: AppBskyNotificationRegisterPush.CallOptions,
+  ): Promise<AppBskyNotificationRegisterPush.Response> {
+    return this._client.call(
+      'app.bsky.notification.registerPush',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  unregisterPush(
+    data?: AppBskyNotificationUnregisterPush.InputSchema,
+    opts?: AppBskyNotificationUnregisterPush.CallOptions,
+  ): Promise<AppBskyNotificationUnregisterPush.Response> {
+    return this._client.call(
+      'app.bsky.notification.unregisterPush',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateSeen(
+    data?: AppBskyNotificationUpdateSeen.InputSchema,
+    opts?: AppBskyNotificationUpdateSeen.CallOptions,
+  ): Promise<AppBskyNotificationUpdateSeen.Response> {
+    return this._client.call(
+      'app.bsky.notification.updateSeen',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+}
+
+export class AppBskyNotificationDeclarationRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyNotificationDeclaration.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.notification.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyNotificationDeclaration.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.notification.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyNotificationDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.notification.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppBskyNotificationDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.bsky.notification.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.notification.declaration', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppBskyRichtextNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+}
+
+export class AppBskyUnspeccedNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getAgeAssuranceState(
+    params?: AppBskyUnspeccedGetAgeAssuranceState.QueryParams,
+    opts?: AppBskyUnspeccedGetAgeAssuranceState.CallOptions,
+  ): Promise<AppBskyUnspeccedGetAgeAssuranceState.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getAgeAssuranceState',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getConfig(
+    params?: AppBskyUnspeccedGetConfig.QueryParams,
+    opts?: AppBskyUnspeccedGetConfig.CallOptions,
+  ): Promise<AppBskyUnspeccedGetConfig.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getConfig',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPopularFeedGenerators(
+    params?: AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
+    opts?: AppBskyUnspeccedGetPopularFeedGenerators.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPopularFeedGenerators.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPopularFeedGenerators',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPostThreadOtherV2(
+    params?: AppBskyUnspeccedGetPostThreadOtherV2.QueryParams,
+    opts?: AppBskyUnspeccedGetPostThreadOtherV2.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPostThreadOtherV2.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadOtherV2',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getPostThreadV2(
+    params?: AppBskyUnspeccedGetPostThreadV2.QueryParams,
+    opts?: AppBskyUnspeccedGetPostThreadV2.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPostThreadV2.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getPostThreadV2',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFeeds(
+    params?: AppBskyUnspeccedGetSuggestedFeeds.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeeds.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeeds.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeeds',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedFeedsSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedFeedsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedStarterPacks(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacks.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacks.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacks',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedStarterPacksSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsers(
+    params?: AppBskyUnspeccedGetSuggestedUsers.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsers.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsers.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestionsSkeleton(
+    params?: AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestionsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestionsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestionsSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTaggedSuggestions(
+    params?: AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
+    opts?: AppBskyUnspeccedGetTaggedSuggestions.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTaggedSuggestions.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTaggedSuggestions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrendingTopics(
+    params?: AppBskyUnspeccedGetTrendingTopics.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendingTopics.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendingTopics',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrends(
+    params?: AppBskyUnspeccedGetTrends.QueryParams,
+    opts?: AppBskyUnspeccedGetTrends.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrends.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrends',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTrendsSkeleton(
+    params?: AppBskyUnspeccedGetTrendsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetTrendsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTrendsSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getTrendsSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  initAgeAssurance(
+    data?: AppBskyUnspeccedInitAgeAssurance.InputSchema,
+    opts?: AppBskyUnspeccedInitAgeAssurance.CallOptions,
+  ): Promise<AppBskyUnspeccedInitAgeAssurance.Response> {
+    return this._client
+      .call('app.bsky.unspecced.initAgeAssurance', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedInitAgeAssurance.toKnownErr(e)
+      })
+  }
+
+  searchActorsSkeleton(
+    params?: AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchActorsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchActorsSkeleton.Response> {
+    return this._client
+      .call('app.bsky.unspecced.searchActorsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchActorsSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchPostsSkeleton(
+    params?: AppBskyUnspeccedSearchPostsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchPostsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchPostsSkeleton.Response> {
+    return this._client
+      .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchStarterPacksSkeleton(
+    params?: AppBskyUnspeccedSearchStarterPacksSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchStarterPacksSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchStarterPacksSkeleton.Response> {
+    return this._client
+      .call(
+        'app.bsky.unspecced.searchStarterPacksSkeleton',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchStarterPacksSkeleton.toKnownErr(e)
+      })
+  }
+}
+
+export class AppBskyVideoNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getJobStatus(
+    params?: AppBskyVideoGetJobStatus.QueryParams,
+    opts?: AppBskyVideoGetJobStatus.CallOptions,
+  ): Promise<AppBskyVideoGetJobStatus.Response> {
+    return this._client.call(
+      'app.bsky.video.getJobStatus',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getUploadLimits(
+    params?: AppBskyVideoGetUploadLimits.QueryParams,
+    opts?: AppBskyVideoGetUploadLimits.CallOptions,
+  ): Promise<AppBskyVideoGetUploadLimits.Response> {
+    return this._client.call(
+      'app.bsky.video.getUploadLimits',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  uploadVideo(
+    data?: AppBskyVideoUploadVideo.InputSchema,
+    opts?: AppBskyVideoUploadVideo.CallOptions,
+  ): Promise<AppBskyVideoUploadVideo.Response> {
+    return this._client.call('app.bsky.video.uploadVideo', opts?.qp, data, opts)
+  }
+}
+
+export class ChatNS {
+  _client: XrpcClient
+  bsky: ChatBskyNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.bsky = new ChatBskyNS(client)
+  }
+}
+
+export class ChatBskyNS {
+  _client: XrpcClient
+  actor: ChatBskyActorNS
+  convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.actor = new ChatBskyActorNS(client)
+    this.convo = new ChatBskyConvoNS(client)
+    this.moderation = new ChatBskyModerationNS(client)
+  }
+}
+
+export class ChatBskyActorNS {
+  _client: XrpcClient
+  declaration: ChatBskyActorDeclarationRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.declaration = new ChatBskyActorDeclarationRecord(client)
+  }
+
+  deleteAccount(
+    data?: ChatBskyActorDeleteAccount.InputSchema,
+    opts?: ChatBskyActorDeleteAccount.CallOptions,
+  ): Promise<ChatBskyActorDeleteAccount.Response> {
+    return this._client.call(
+      'chat.bsky.actor.deleteAccount',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  exportAccountData(
+    params?: ChatBskyActorExportAccountData.QueryParams,
+    opts?: ChatBskyActorExportAccountData.CallOptions,
+  ): Promise<ChatBskyActorExportAccountData.Response> {
+    return this._client.call(
+      'chat.bsky.actor.exportAccountData',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
+export class ChatBskyActorDeclarationRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: ChatBskyActorDeclaration.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'chat.bsky.actor.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: ChatBskyActorDeclaration.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'chat.bsky.actor.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ChatBskyActorDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'chat.bsky.actor.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ChatBskyActorDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'chat.bsky.actor.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'chat.bsky.actor.declaration', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ChatBskyConvoNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  acceptConvo(
+    data?: ChatBskyConvoAcceptConvo.InputSchema,
+    opts?: ChatBskyConvoAcceptConvo.CallOptions,
+  ): Promise<ChatBskyConvoAcceptConvo.Response> {
+    return this._client.call(
+      'chat.bsky.convo.acceptConvo',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  addReaction(
+    data?: ChatBskyConvoAddReaction.InputSchema,
+    opts?: ChatBskyConvoAddReaction.CallOptions,
+  ): Promise<ChatBskyConvoAddReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.addReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoAddReaction.toKnownErr(e)
+      })
+  }
+
+  deleteMessageForSelf(
+    data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
+    opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
+  ): Promise<ChatBskyConvoDeleteMessageForSelf.Response> {
+    return this._client.call(
+      'chat.bsky.convo.deleteMessageForSelf',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  getConvo(
+    params?: ChatBskyConvoGetConvo.QueryParams,
+    opts?: ChatBskyConvoGetConvo.CallOptions,
+  ): Promise<ChatBskyConvoGetConvo.Response> {
+    return this._client.call(
+      'chat.bsky.convo.getConvo',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getConvoAvailability(
+    params?: ChatBskyConvoGetConvoAvailability.QueryParams,
+    opts?: ChatBskyConvoGetConvoAvailability.CallOptions,
+  ): Promise<ChatBskyConvoGetConvoAvailability.Response> {
+    return this._client.call(
+      'chat.bsky.convo.getConvoAvailability',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getConvoForMembers(
+    params?: ChatBskyConvoGetConvoForMembers.QueryParams,
+    opts?: ChatBskyConvoGetConvoForMembers.CallOptions,
+  ): Promise<ChatBskyConvoGetConvoForMembers.Response> {
+    return this._client.call(
+      'chat.bsky.convo.getConvoForMembers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getLog(
+    params?: ChatBskyConvoGetLog.QueryParams,
+    opts?: ChatBskyConvoGetLog.CallOptions,
+  ): Promise<ChatBskyConvoGetLog.Response> {
+    return this._client.call('chat.bsky.convo.getLog', params, undefined, opts)
+  }
+
+  getMessages(
+    params?: ChatBskyConvoGetMessages.QueryParams,
+    opts?: ChatBskyConvoGetMessages.CallOptions,
+  ): Promise<ChatBskyConvoGetMessages.Response> {
+    return this._client.call(
+      'chat.bsky.convo.getMessages',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  leaveConvo(
+    data?: ChatBskyConvoLeaveConvo.InputSchema,
+    opts?: ChatBskyConvoLeaveConvo.CallOptions,
+  ): Promise<ChatBskyConvoLeaveConvo.Response> {
+    return this._client.call('chat.bsky.convo.leaveConvo', opts?.qp, data, opts)
+  }
+
+  listConvos(
+    params?: ChatBskyConvoListConvos.QueryParams,
+    opts?: ChatBskyConvoListConvos.CallOptions,
+  ): Promise<ChatBskyConvoListConvos.Response> {
+    return this._client.call(
+      'chat.bsky.convo.listConvos',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  muteConvo(
+    data?: ChatBskyConvoMuteConvo.InputSchema,
+    opts?: ChatBskyConvoMuteConvo.CallOptions,
+  ): Promise<ChatBskyConvoMuteConvo.Response> {
+    return this._client.call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
+  }
+
+  removeReaction(
+    data?: ChatBskyConvoRemoveReaction.InputSchema,
+    opts?: ChatBskyConvoRemoveReaction.CallOptions,
+  ): Promise<ChatBskyConvoRemoveReaction.Response> {
+    return this._client
+      .call('chat.bsky.convo.removeReaction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoRemoveReaction.toKnownErr(e)
+      })
+  }
+
+  sendMessage(
+    data?: ChatBskyConvoSendMessage.InputSchema,
+    opts?: ChatBskyConvoSendMessage.CallOptions,
+  ): Promise<ChatBskyConvoSendMessage.Response> {
+    return this._client.call(
+      'chat.bsky.convo.sendMessage',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  sendMessageBatch(
+    data?: ChatBskyConvoSendMessageBatch.InputSchema,
+    opts?: ChatBskyConvoSendMessageBatch.CallOptions,
+  ): Promise<ChatBskyConvoSendMessageBatch.Response> {
+    return this._client.call(
+      'chat.bsky.convo.sendMessageBatch',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  unmuteConvo(
+    data?: ChatBskyConvoUnmuteConvo.InputSchema,
+    opts?: ChatBskyConvoUnmuteConvo.CallOptions,
+  ): Promise<ChatBskyConvoUnmuteConvo.Response> {
+    return this._client.call(
+      'chat.bsky.convo.unmuteConvo',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateAllRead(
+    data?: ChatBskyConvoUpdateAllRead.InputSchema,
+    opts?: ChatBskyConvoUpdateAllRead.CallOptions,
+  ): Promise<ChatBskyConvoUpdateAllRead.Response> {
+    return this._client.call(
+      'chat.bsky.convo.updateAllRead',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  updateRead(
+    data?: ChatBskyConvoUpdateRead.InputSchema,
+    opts?: ChatBskyConvoUpdateRead.CallOptions,
+  ): Promise<ChatBskyConvoUpdateRead.Response> {
+    return this._client.call('chat.bsky.convo.updateRead', opts?.qp, data, opts)
+  }
+}
+
+export class ChatBskyModerationNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getActorMetadata(
+    params?: ChatBskyModerationGetActorMetadata.QueryParams,
+    opts?: ChatBskyModerationGetActorMetadata.CallOptions,
+  ): Promise<ChatBskyModerationGetActorMetadata.Response> {
+    return this._client.call(
+      'chat.bsky.moderation.getActorMetadata',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getMessageContext(
+    params?: ChatBskyModerationGetMessageContext.QueryParams,
+    opts?: ChatBskyModerationGetMessageContext.CallOptions,
+  ): Promise<ChatBskyModerationGetMessageContext.Response> {
+    return this._client.call(
+      'chat.bsky.moderation.getMessageContext',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  updateActorAccess(
+    data?: ChatBskyModerationUpdateActorAccess.InputSchema,
+    opts?: ChatBskyModerationUpdateActorAccess.CallOptions,
+  ): Promise<ChatBskyModerationUpdateActorAccess.Response> {
+    return this._client.call(
+      'chat.bsky.moderation.updateActorAccess',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 }
 
@@ -1016,6 +4015,24 @@ export class ComAtprotoLexiconSchemaRecord {
     const collection = 'com.atproto.lexicon.schema'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComAtprotoLexiconSchema.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.atproto.lexicon.schema'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
       undefined,
       { collection, ...params, record: { ...record, $type: collection } },
       { encoding: 'application/json', headers },
@@ -1673,6 +4690,17 @@ export class ComAtprotoTempNS {
     )
   }
 
+  checkHandleAvailability(
+    params?: ComAtprotoTempCheckHandleAvailability.QueryParams,
+    opts?: ComAtprotoTempCheckHandleAvailability.CallOptions,
+  ): Promise<ComAtprotoTempCheckHandleAvailability.Response> {
+    return this._client
+      .call('com.atproto.temp.checkHandleAvailability', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempCheckHandleAvailability.toKnownErr(e)
+      })
+  }
+
   checkSignupQueue(
     params?: ComAtprotoTempCheckSignupQueue.QueryParams,
     opts?: ComAtprotoTempCheckSignupQueue.CallOptions,
@@ -1708,2358 +4736,13 @@ export class ComAtprotoTempNS {
       opts,
     )
   }
-}
 
-export class AppNS {
-  _client: XrpcClient
-  bsky: AppBskyNS
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.bsky = new AppBskyNS(client)
-  }
-}
-
-export class AppBskyNS {
-  _client: XrpcClient
-  actor: AppBskyActorNS
-  embed: AppBskyEmbedNS
-  feed: AppBskyFeedNS
-  graph: AppBskyGraphNS
-  labeler: AppBskyLabelerNS
-  notification: AppBskyNotificationNS
-  richtext: AppBskyRichtextNS
-  unspecced: AppBskyUnspeccedNS
-  video: AppBskyVideoNS
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.actor = new AppBskyActorNS(client)
-    this.embed = new AppBskyEmbedNS(client)
-    this.feed = new AppBskyFeedNS(client)
-    this.graph = new AppBskyGraphNS(client)
-    this.labeler = new AppBskyLabelerNS(client)
-    this.notification = new AppBskyNotificationNS(client)
-    this.richtext = new AppBskyRichtextNS(client)
-    this.unspecced = new AppBskyUnspeccedNS(client)
-    this.video = new AppBskyVideoNS(client)
-  }
-}
-
-export class AppBskyActorNS {
-  _client: XrpcClient
-  profile: AppBskyActorProfileRecord
-  status: AppBskyActorStatusRecord
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.profile = new AppBskyActorProfileRecord(client)
-    this.status = new AppBskyActorStatusRecord(client)
-  }
-
-  getPreferences(
-    params?: AppBskyActorGetPreferences.QueryParams,
-    opts?: AppBskyActorGetPreferences.CallOptions,
-  ): Promise<AppBskyActorGetPreferences.Response> {
-    return this._client.call(
-      'app.bsky.actor.getPreferences',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getProfile(
-    params?: AppBskyActorGetProfile.QueryParams,
-    opts?: AppBskyActorGetProfile.CallOptions,
-  ): Promise<AppBskyActorGetProfile.Response> {
-    return this._client.call(
-      'app.bsky.actor.getProfile',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getProfiles(
-    params?: AppBskyActorGetProfiles.QueryParams,
-    opts?: AppBskyActorGetProfiles.CallOptions,
-  ): Promise<AppBskyActorGetProfiles.Response> {
-    return this._client.call(
-      'app.bsky.actor.getProfiles',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestions(
-    params?: AppBskyActorGetSuggestions.QueryParams,
-    opts?: AppBskyActorGetSuggestions.CallOptions,
-  ): Promise<AppBskyActorGetSuggestions.Response> {
-    return this._client.call(
-      'app.bsky.actor.getSuggestions',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  putPreferences(
-    data?: AppBskyActorPutPreferences.InputSchema,
-    opts?: AppBskyActorPutPreferences.CallOptions,
-  ): Promise<AppBskyActorPutPreferences.Response> {
-    return this._client.call(
-      'app.bsky.actor.putPreferences',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  searchActors(
-    params?: AppBskyActorSearchActors.QueryParams,
-    opts?: AppBskyActorSearchActors.CallOptions,
-  ): Promise<AppBskyActorSearchActors.Response> {
-    return this._client.call(
-      'app.bsky.actor.searchActors',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  searchActorsTypeahead(
-    params?: AppBskyActorSearchActorsTypeahead.QueryParams,
-    opts?: AppBskyActorSearchActorsTypeahead.CallOptions,
-  ): Promise<AppBskyActorSearchActorsTypeahead.Response> {
-    return this._client.call(
-      'app.bsky.actor.searchActorsTypeahead',
-      params,
-      undefined,
-      opts,
-    )
-  }
-}
-
-export class AppBskyActorProfileRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyActorProfile.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.actor.profile',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyActorProfile.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.actor.profile',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyActorProfile.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.actor.profile'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      {
-        collection,
-        rkey: 'self',
-        ...params,
-        record: { ...record, $type: collection },
-      },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.actor.profile', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyActorStatusRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyActorStatus.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.actor.status',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyActorStatus.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.actor.status',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyActorStatus.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.actor.status'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      {
-        collection,
-        rkey: 'self',
-        ...params,
-        record: { ...record, $type: collection },
-      },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.actor.status', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyEmbedNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-}
-
-export class AppBskyFeedNS {
-  _client: XrpcClient
-  generator: AppBskyFeedGeneratorRecord
-  like: AppBskyFeedLikeRecord
-  post: AppBskyFeedPostRecord
-  postgate: AppBskyFeedPostgateRecord
-  repost: AppBskyFeedRepostRecord
-  threadgate: AppBskyFeedThreadgateRecord
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.generator = new AppBskyFeedGeneratorRecord(client)
-    this.like = new AppBskyFeedLikeRecord(client)
-    this.post = new AppBskyFeedPostRecord(client)
-    this.postgate = new AppBskyFeedPostgateRecord(client)
-    this.repost = new AppBskyFeedRepostRecord(client)
-    this.threadgate = new AppBskyFeedThreadgateRecord(client)
-  }
-
-  describeFeedGenerator(
-    params?: AppBskyFeedDescribeFeedGenerator.QueryParams,
-    opts?: AppBskyFeedDescribeFeedGenerator.CallOptions,
-  ): Promise<AppBskyFeedDescribeFeedGenerator.Response> {
-    return this._client.call(
-      'app.bsky.feed.describeFeedGenerator',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getActorFeeds(
-    params?: AppBskyFeedGetActorFeeds.QueryParams,
-    opts?: AppBskyFeedGetActorFeeds.CallOptions,
-  ): Promise<AppBskyFeedGetActorFeeds.Response> {
-    return this._client.call(
-      'app.bsky.feed.getActorFeeds',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getActorLikes(
-    params?: AppBskyFeedGetActorLikes.QueryParams,
-    opts?: AppBskyFeedGetActorLikes.CallOptions,
-  ): Promise<AppBskyFeedGetActorLikes.Response> {
-    return this._client
-      .call('app.bsky.feed.getActorLikes', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetActorLikes.toKnownErr(e)
-      })
-  }
-
-  getAuthorFeed(
-    params?: AppBskyFeedGetAuthorFeed.QueryParams,
-    opts?: AppBskyFeedGetAuthorFeed.CallOptions,
-  ): Promise<AppBskyFeedGetAuthorFeed.Response> {
-    return this._client
-      .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
-      })
-  }
-
-  getFeed(
-    params?: AppBskyFeedGetFeed.QueryParams,
-    opts?: AppBskyFeedGetFeed.CallOptions,
-  ): Promise<AppBskyFeedGetFeed.Response> {
-    return this._client
-      .call('app.bsky.feed.getFeed', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetFeed.toKnownErr(e)
-      })
-  }
-
-  getFeedGenerator(
-    params?: AppBskyFeedGetFeedGenerator.QueryParams,
-    opts?: AppBskyFeedGetFeedGenerator.CallOptions,
-  ): Promise<AppBskyFeedGetFeedGenerator.Response> {
-    return this._client.call(
-      'app.bsky.feed.getFeedGenerator',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getFeedGenerators(
-    params?: AppBskyFeedGetFeedGenerators.QueryParams,
-    opts?: AppBskyFeedGetFeedGenerators.CallOptions,
-  ): Promise<AppBskyFeedGetFeedGenerators.Response> {
-    return this._client.call(
-      'app.bsky.feed.getFeedGenerators',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getFeedSkeleton(
-    params?: AppBskyFeedGetFeedSkeleton.QueryParams,
-    opts?: AppBskyFeedGetFeedSkeleton.CallOptions,
-  ): Promise<AppBskyFeedGetFeedSkeleton.Response> {
-    return this._client
-      .call('app.bsky.feed.getFeedSkeleton', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetFeedSkeleton.toKnownErr(e)
-      })
-  }
-
-  getLikes(
-    params?: AppBskyFeedGetLikes.QueryParams,
-    opts?: AppBskyFeedGetLikes.CallOptions,
-  ): Promise<AppBskyFeedGetLikes.Response> {
-    return this._client.call('app.bsky.feed.getLikes', params, undefined, opts)
-  }
-
-  getListFeed(
-    params?: AppBskyFeedGetListFeed.QueryParams,
-    opts?: AppBskyFeedGetListFeed.CallOptions,
-  ): Promise<AppBskyFeedGetListFeed.Response> {
-    return this._client
-      .call('app.bsky.feed.getListFeed', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetListFeed.toKnownErr(e)
-      })
-  }
-
-  getPosts(
-    params?: AppBskyFeedGetPosts.QueryParams,
-    opts?: AppBskyFeedGetPosts.CallOptions,
-  ): Promise<AppBskyFeedGetPosts.Response> {
-    return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
-  }
-
-  getPostThread(
-    params?: AppBskyFeedGetPostThread.QueryParams,
-    opts?: AppBskyFeedGetPostThread.CallOptions,
-  ): Promise<AppBskyFeedGetPostThread.Response> {
-    return this._client
-      .call('app.bsky.feed.getPostThread', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetPostThread.toKnownErr(e)
-      })
-  }
-
-  getQuotes(
-    params?: AppBskyFeedGetQuotes.QueryParams,
-    opts?: AppBskyFeedGetQuotes.CallOptions,
-  ): Promise<AppBskyFeedGetQuotes.Response> {
-    return this._client.call('app.bsky.feed.getQuotes', params, undefined, opts)
-  }
-
-  getRepostedBy(
-    params?: AppBskyFeedGetRepostedBy.QueryParams,
-    opts?: AppBskyFeedGetRepostedBy.CallOptions,
-  ): Promise<AppBskyFeedGetRepostedBy.Response> {
-    return this._client.call(
-      'app.bsky.feed.getRepostedBy',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedFeeds(
-    params?: AppBskyFeedGetSuggestedFeeds.QueryParams,
-    opts?: AppBskyFeedGetSuggestedFeeds.CallOptions,
-  ): Promise<AppBskyFeedGetSuggestedFeeds.Response> {
-    return this._client.call(
-      'app.bsky.feed.getSuggestedFeeds',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getTimeline(
-    params?: AppBskyFeedGetTimeline.QueryParams,
-    opts?: AppBskyFeedGetTimeline.CallOptions,
-  ): Promise<AppBskyFeedGetTimeline.Response> {
-    return this._client.call(
-      'app.bsky.feed.getTimeline',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  searchPosts(
-    params?: AppBskyFeedSearchPosts.QueryParams,
-    opts?: AppBskyFeedSearchPosts.CallOptions,
-  ): Promise<AppBskyFeedSearchPosts.Response> {
-    return this._client
-      .call('app.bsky.feed.searchPosts', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedSearchPosts.toKnownErr(e)
-      })
-  }
-
-  sendInteractions(
-    data?: AppBskyFeedSendInteractions.InputSchema,
-    opts?: AppBskyFeedSendInteractions.CallOptions,
-  ): Promise<AppBskyFeedSendInteractions.Response> {
-    return this._client.call(
-      'app.bsky.feed.sendInteractions',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-}
-
-export class AppBskyFeedGeneratorRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedGenerator.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.generator',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedGenerator.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.generator',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyFeedGenerator.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.feed.generator'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.generator', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyFeedLikeRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedLike.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.like',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedLike.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.like',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyFeedLike.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.feed.like'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.like', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyFeedPostRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedPost.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.post',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPost.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.post',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyFeedPost.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.feed.post'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.post', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyFeedPostgateRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedPostgate.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.postgate',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPostgate.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.postgate',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyFeedPostgate.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.feed.postgate'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.postgate', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyFeedRepostRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedRepost.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.repost',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedRepost.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.repost',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyFeedRepost.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.feed.repost'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.repost', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyFeedThreadgateRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedThreadgate.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.threadgate',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyFeedThreadgate.Record
-  }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.threadgate',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyFeedThreadgate.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.feed.threadgate'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.threadgate', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyGraphNS {
-  _client: XrpcClient
-  block: AppBskyGraphBlockRecord
-  follow: AppBskyGraphFollowRecord
-  list: AppBskyGraphListRecord
-  listblock: AppBskyGraphListblockRecord
-  listitem: AppBskyGraphListitemRecord
-  starterpack: AppBskyGraphStarterpackRecord
-  verification: AppBskyGraphVerificationRecord
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.block = new AppBskyGraphBlockRecord(client)
-    this.follow = new AppBskyGraphFollowRecord(client)
-    this.list = new AppBskyGraphListRecord(client)
-    this.listblock = new AppBskyGraphListblockRecord(client)
-    this.listitem = new AppBskyGraphListitemRecord(client)
-    this.starterpack = new AppBskyGraphStarterpackRecord(client)
-    this.verification = new AppBskyGraphVerificationRecord(client)
-  }
-
-  getActorStarterPacks(
-    params?: AppBskyGraphGetActorStarterPacks.QueryParams,
-    opts?: AppBskyGraphGetActorStarterPacks.CallOptions,
-  ): Promise<AppBskyGraphGetActorStarterPacks.Response> {
-    return this._client.call(
-      'app.bsky.graph.getActorStarterPacks',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getBlocks(
-    params?: AppBskyGraphGetBlocks.QueryParams,
-    opts?: AppBskyGraphGetBlocks.CallOptions,
-  ): Promise<AppBskyGraphGetBlocks.Response> {
-    return this._client.call(
-      'app.bsky.graph.getBlocks',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getFollowers(
-    params?: AppBskyGraphGetFollowers.QueryParams,
-    opts?: AppBskyGraphGetFollowers.CallOptions,
-  ): Promise<AppBskyGraphGetFollowers.Response> {
-    return this._client.call(
-      'app.bsky.graph.getFollowers',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getFollows(
-    params?: AppBskyGraphGetFollows.QueryParams,
-    opts?: AppBskyGraphGetFollows.CallOptions,
-  ): Promise<AppBskyGraphGetFollows.Response> {
-    return this._client.call(
-      'app.bsky.graph.getFollows',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getKnownFollowers(
-    params?: AppBskyGraphGetKnownFollowers.QueryParams,
-    opts?: AppBskyGraphGetKnownFollowers.CallOptions,
-  ): Promise<AppBskyGraphGetKnownFollowers.Response> {
-    return this._client.call(
-      'app.bsky.graph.getKnownFollowers',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getList(
-    params?: AppBskyGraphGetList.QueryParams,
-    opts?: AppBskyGraphGetList.CallOptions,
-  ): Promise<AppBskyGraphGetList.Response> {
-    return this._client.call('app.bsky.graph.getList', params, undefined, opts)
-  }
-
-  getListBlocks(
-    params?: AppBskyGraphGetListBlocks.QueryParams,
-    opts?: AppBskyGraphGetListBlocks.CallOptions,
-  ): Promise<AppBskyGraphGetListBlocks.Response> {
-    return this._client.call(
-      'app.bsky.graph.getListBlocks',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getListMutes(
-    params?: AppBskyGraphGetListMutes.QueryParams,
-    opts?: AppBskyGraphGetListMutes.CallOptions,
-  ): Promise<AppBskyGraphGetListMutes.Response> {
-    return this._client.call(
-      'app.bsky.graph.getListMutes',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getLists(
-    params?: AppBskyGraphGetLists.QueryParams,
-    opts?: AppBskyGraphGetLists.CallOptions,
-  ): Promise<AppBskyGraphGetLists.Response> {
-    return this._client.call('app.bsky.graph.getLists', params, undefined, opts)
-  }
-
-  getMutes(
-    params?: AppBskyGraphGetMutes.QueryParams,
-    opts?: AppBskyGraphGetMutes.CallOptions,
-  ): Promise<AppBskyGraphGetMutes.Response> {
-    return this._client.call('app.bsky.graph.getMutes', params, undefined, opts)
-  }
-
-  getRelationships(
-    params?: AppBskyGraphGetRelationships.QueryParams,
-    opts?: AppBskyGraphGetRelationships.CallOptions,
-  ): Promise<AppBskyGraphGetRelationships.Response> {
-    return this._client
-      .call('app.bsky.graph.getRelationships', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetRelationships.toKnownErr(e)
-      })
-  }
-
-  getStarterPack(
-    params?: AppBskyGraphGetStarterPack.QueryParams,
-    opts?: AppBskyGraphGetStarterPack.CallOptions,
-  ): Promise<AppBskyGraphGetStarterPack.Response> {
-    return this._client.call(
-      'app.bsky.graph.getStarterPack',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getStarterPacks(
-    params?: AppBskyGraphGetStarterPacks.QueryParams,
-    opts?: AppBskyGraphGetStarterPacks.CallOptions,
-  ): Promise<AppBskyGraphGetStarterPacks.Response> {
-    return this._client.call(
-      'app.bsky.graph.getStarterPacks',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedFollowsByActor(
-    params?: AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
-    opts?: AppBskyGraphGetSuggestedFollowsByActor.CallOptions,
-  ): Promise<AppBskyGraphGetSuggestedFollowsByActor.Response> {
-    return this._client.call(
-      'app.bsky.graph.getSuggestedFollowsByActor',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  muteActor(
-    data?: AppBskyGraphMuteActor.InputSchema,
-    opts?: AppBskyGraphMuteActor.CallOptions,
-  ): Promise<AppBskyGraphMuteActor.Response> {
-    return this._client.call('app.bsky.graph.muteActor', opts?.qp, data, opts)
-  }
-
-  muteActorList(
-    data?: AppBskyGraphMuteActorList.InputSchema,
-    opts?: AppBskyGraphMuteActorList.CallOptions,
-  ): Promise<AppBskyGraphMuteActorList.Response> {
-    return this._client.call(
-      'app.bsky.graph.muteActorList',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  muteThread(
-    data?: AppBskyGraphMuteThread.InputSchema,
-    opts?: AppBskyGraphMuteThread.CallOptions,
-  ): Promise<AppBskyGraphMuteThread.Response> {
-    return this._client.call('app.bsky.graph.muteThread', opts?.qp, data, opts)
-  }
-
-  searchStarterPacks(
-    params?: AppBskyGraphSearchStarterPacks.QueryParams,
-    opts?: AppBskyGraphSearchStarterPacks.CallOptions,
-  ): Promise<AppBskyGraphSearchStarterPacks.Response> {
-    return this._client.call(
-      'app.bsky.graph.searchStarterPacks',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  unmuteActor(
-    data?: AppBskyGraphUnmuteActor.InputSchema,
-    opts?: AppBskyGraphUnmuteActor.CallOptions,
-  ): Promise<AppBskyGraphUnmuteActor.Response> {
-    return this._client.call('app.bsky.graph.unmuteActor', opts?.qp, data, opts)
-  }
-
-  unmuteActorList(
-    data?: AppBskyGraphUnmuteActorList.InputSchema,
-    opts?: AppBskyGraphUnmuteActorList.CallOptions,
-  ): Promise<AppBskyGraphUnmuteActorList.Response> {
-    return this._client.call(
-      'app.bsky.graph.unmuteActorList',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  unmuteThread(
-    data?: AppBskyGraphUnmuteThread.InputSchema,
-    opts?: AppBskyGraphUnmuteThread.CallOptions,
-  ): Promise<AppBskyGraphUnmuteThread.Response> {
-    return this._client.call(
-      'app.bsky.graph.unmuteThread',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-}
-
-export class AppBskyGraphBlockRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphBlock.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.block',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyGraphBlock.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.block',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyGraphBlock.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.block'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.block', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyGraphFollowRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphFollow.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.follow',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyGraphFollow.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.follow',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyGraphFollow.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.follow'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.follow', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyGraphListRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphList.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.list',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyGraphList.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.list',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyGraphList.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.list'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.list', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyGraphListblockRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphListblock.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.listblock',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyGraphListblock.Record
-  }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.listblock',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyGraphListblock.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.listblock'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.listblock', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyGraphListitemRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphListitem.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.listitem',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyGraphListitem.Record }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.listitem',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyGraphListitem.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.listitem'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.listitem', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyGraphStarterpackRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphStarterpack.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.starterpack',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyGraphStarterpack.Record
-  }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.starterpack',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyGraphStarterpack.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.starterpack'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.starterpack', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyGraphVerificationRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphVerification.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.verification',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyGraphVerification.Record
-  }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.verification',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyGraphVerification.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.graph.verification'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection, ...params, record: { ...record, $type: collection } },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.verification', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyLabelerNS {
-  _client: XrpcClient
-  service: AppBskyLabelerServiceRecord
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.service = new AppBskyLabelerServiceRecord(client)
-  }
-
-  getServices(
-    params?: AppBskyLabelerGetServices.QueryParams,
-    opts?: AppBskyLabelerGetServices.CallOptions,
-  ): Promise<AppBskyLabelerGetServices.Response> {
-    return this._client.call(
-      'app.bsky.labeler.getServices',
-      params,
-      undefined,
-      opts,
-    )
-  }
-}
-
-export class AppBskyLabelerServiceRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyLabelerService.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.labeler.service',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyLabelerService.Record
-  }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.labeler.service',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<AppBskyLabelerService.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'app.bsky.labeler.service'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      {
-        collection,
-        rkey: 'self',
-        ...params,
-        record: { ...record, $type: collection },
-      },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.labeler.service', ...params },
-      { headers },
-    )
-  }
-}
-
-export class AppBskyNotificationNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  getPreferences(
-    params?: AppBskyNotificationGetPreferences.QueryParams,
-    opts?: AppBskyNotificationGetPreferences.CallOptions,
-  ): Promise<AppBskyNotificationGetPreferences.Response> {
-    return this._client.call(
-      'app.bsky.notification.getPreferences',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getUnreadCount(
-    params?: AppBskyNotificationGetUnreadCount.QueryParams,
-    opts?: AppBskyNotificationGetUnreadCount.CallOptions,
-  ): Promise<AppBskyNotificationGetUnreadCount.Response> {
-    return this._client.call(
-      'app.bsky.notification.getUnreadCount',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  listNotifications(
-    params?: AppBskyNotificationListNotifications.QueryParams,
-    opts?: AppBskyNotificationListNotifications.CallOptions,
-  ): Promise<AppBskyNotificationListNotifications.Response> {
-    return this._client.call(
-      'app.bsky.notification.listNotifications',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  putPreferences(
-    data?: AppBskyNotificationPutPreferences.InputSchema,
-    opts?: AppBskyNotificationPutPreferences.CallOptions,
-  ): Promise<AppBskyNotificationPutPreferences.Response> {
-    return this._client.call(
-      'app.bsky.notification.putPreferences',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  putPreferencesV2(
-    data?: AppBskyNotificationPutPreferencesV2.InputSchema,
-    opts?: AppBskyNotificationPutPreferencesV2.CallOptions,
-  ): Promise<AppBskyNotificationPutPreferencesV2.Response> {
-    return this._client.call(
-      'app.bsky.notification.putPreferencesV2',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  registerPush(
-    data?: AppBskyNotificationRegisterPush.InputSchema,
-    opts?: AppBskyNotificationRegisterPush.CallOptions,
-  ): Promise<AppBskyNotificationRegisterPush.Response> {
-    return this._client.call(
-      'app.bsky.notification.registerPush',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  updateSeen(
-    data?: AppBskyNotificationUpdateSeen.InputSchema,
-    opts?: AppBskyNotificationUpdateSeen.CallOptions,
-  ): Promise<AppBskyNotificationUpdateSeen.Response> {
-    return this._client.call(
-      'app.bsky.notification.updateSeen',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-}
-
-export class AppBskyRichtextNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-}
-
-export class AppBskyUnspeccedNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  getConfig(
-    params?: AppBskyUnspeccedGetConfig.QueryParams,
-    opts?: AppBskyUnspeccedGetConfig.CallOptions,
-  ): Promise<AppBskyUnspeccedGetConfig.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getConfig',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getPopularFeedGenerators(
-    params?: AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
-    opts?: AppBskyUnspeccedGetPopularFeedGenerators.CallOptions,
-  ): Promise<AppBskyUnspeccedGetPopularFeedGenerators.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getPopularFeedGenerators',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getPostThreadOtherV2(
-    params?: AppBskyUnspeccedGetPostThreadOtherV2.QueryParams,
-    opts?: AppBskyUnspeccedGetPostThreadOtherV2.CallOptions,
-  ): Promise<AppBskyUnspeccedGetPostThreadOtherV2.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getPostThreadOtherV2',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getPostThreadV2(
-    params?: AppBskyUnspeccedGetPostThreadV2.QueryParams,
-    opts?: AppBskyUnspeccedGetPostThreadV2.CallOptions,
-  ): Promise<AppBskyUnspeccedGetPostThreadV2.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getPostThreadV2',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedFeeds(
-    params?: AppBskyUnspeccedGetSuggestedFeeds.QueryParams,
-    opts?: AppBskyUnspeccedGetSuggestedFeeds.CallOptions,
-  ): Promise<AppBskyUnspeccedGetSuggestedFeeds.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getSuggestedFeeds',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedFeedsSkeleton(
-    params?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedGetSuggestedFeedsSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedGetSuggestedFeedsSkeleton.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getSuggestedFeedsSkeleton',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedStarterPacks(
-    params?: AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
-    opts?: AppBskyUnspeccedGetSuggestedStarterPacks.CallOptions,
-  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacks.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getSuggestedStarterPacks',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedStarterPacksSkeleton(
-    params?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedGetSuggestedStarterPacksSkeleton.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedUsers(
-    params?: AppBskyUnspeccedGetSuggestedUsers.QueryParams,
-    opts?: AppBskyUnspeccedGetSuggestedUsers.CallOptions,
-  ): Promise<AppBskyUnspeccedGetSuggestedUsers.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getSuggestedUsers',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestedUsersSkeleton(
-    params?: AppBskyUnspeccedGetSuggestedUsersSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedGetSuggestedUsersSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedGetSuggestedUsersSkeleton.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getSuggestedUsersSkeleton',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getSuggestionsSkeleton(
-    params?: AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedGetSuggestionsSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedGetSuggestionsSkeleton.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getSuggestionsSkeleton',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getTaggedSuggestions(
-    params?: AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
-    opts?: AppBskyUnspeccedGetTaggedSuggestions.CallOptions,
-  ): Promise<AppBskyUnspeccedGetTaggedSuggestions.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getTaggedSuggestions',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getTrendingTopics(
-    params?: AppBskyUnspeccedGetTrendingTopics.QueryParams,
-    opts?: AppBskyUnspeccedGetTrendingTopics.CallOptions,
-  ): Promise<AppBskyUnspeccedGetTrendingTopics.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getTrendingTopics',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getTrends(
-    params?: AppBskyUnspeccedGetTrends.QueryParams,
-    opts?: AppBskyUnspeccedGetTrends.CallOptions,
-  ): Promise<AppBskyUnspeccedGetTrends.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getTrends',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getTrendsSkeleton(
-    params?: AppBskyUnspeccedGetTrendsSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedGetTrendsSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedGetTrendsSkeleton.Response> {
-    return this._client.call(
-      'app.bsky.unspecced.getTrendsSkeleton',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  searchActorsSkeleton(
-    params?: AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedSearchActorsSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedSearchActorsSkeleton.Response> {
-    return this._client
-      .call('app.bsky.unspecced.searchActorsSkeleton', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedSearchActorsSkeleton.toKnownErr(e)
-      })
-  }
-
-  searchPostsSkeleton(
-    params?: AppBskyUnspeccedSearchPostsSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedSearchPostsSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedSearchPostsSkeleton.Response> {
-    return this._client
-      .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
-      })
-  }
-
-  searchStarterPacksSkeleton(
-    params?: AppBskyUnspeccedSearchStarterPacksSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedSearchStarterPacksSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedSearchStarterPacksSkeleton.Response> {
-    return this._client
-      .call(
-        'app.bsky.unspecced.searchStarterPacksSkeleton',
-        params,
-        undefined,
-        opts,
-      )
-      .catch((e) => {
-        throw AppBskyUnspeccedSearchStarterPacksSkeleton.toKnownErr(e)
-      })
-  }
-}
-
-export class AppBskyVideoNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  getJobStatus(
-    params?: AppBskyVideoGetJobStatus.QueryParams,
-    opts?: AppBskyVideoGetJobStatus.CallOptions,
-  ): Promise<AppBskyVideoGetJobStatus.Response> {
-    return this._client.call(
-      'app.bsky.video.getJobStatus',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getUploadLimits(
-    params?: AppBskyVideoGetUploadLimits.QueryParams,
-    opts?: AppBskyVideoGetUploadLimits.CallOptions,
-  ): Promise<AppBskyVideoGetUploadLimits.Response> {
-    return this._client.call(
-      'app.bsky.video.getUploadLimits',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  uploadVideo(
-    data?: AppBskyVideoUploadVideo.InputSchema,
-    opts?: AppBskyVideoUploadVideo.CallOptions,
-  ): Promise<AppBskyVideoUploadVideo.Response> {
-    return this._client.call('app.bsky.video.uploadVideo', opts?.qp, data, opts)
-  }
-}
-
-export class ChatNS {
-  _client: XrpcClient
-  bsky: ChatBskyNS
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.bsky = new ChatBskyNS(client)
-  }
-}
-
-export class ChatBskyNS {
-  _client: XrpcClient
-  actor: ChatBskyActorNS
-  convo: ChatBskyConvoNS
-  moderation: ChatBskyModerationNS
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.actor = new ChatBskyActorNS(client)
-    this.convo = new ChatBskyConvoNS(client)
-    this.moderation = new ChatBskyModerationNS(client)
-  }
-}
-
-export class ChatBskyActorNS {
-  _client: XrpcClient
-  declaration: ChatBskyActorDeclarationRecord
-
-  constructor(client: XrpcClient) {
-    this._client = client
-    this.declaration = new ChatBskyActorDeclarationRecord(client)
-  }
-
-  deleteAccount(
-    data?: ChatBskyActorDeleteAccount.InputSchema,
-    opts?: ChatBskyActorDeleteAccount.CallOptions,
-  ): Promise<ChatBskyActorDeleteAccount.Response> {
-    return this._client.call(
-      'chat.bsky.actor.deleteAccount',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  exportAccountData(
-    params?: ChatBskyActorExportAccountData.QueryParams,
-    opts?: ChatBskyActorExportAccountData.CallOptions,
-  ): Promise<ChatBskyActorExportAccountData.Response> {
-    return this._client.call(
-      'chat.bsky.actor.exportAccountData',
-      params,
-      undefined,
-      opts,
-    )
-  }
-}
-
-export class ChatBskyActorDeclarationRecord {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  async list(
-    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: ChatBskyActorDeclaration.Record }[]
-  }> {
-    const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'chat.bsky.actor.declaration',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: ChatBskyActorDeclaration.Record
-  }> {
-    const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'chat.bsky.actor.declaration',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: OmitKey<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: Un$Typed<ChatBskyActorDeclaration.Record>,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    const collection = 'chat.bsky.actor.declaration'
-    const res = await this._client.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      {
-        collection,
-        rkey: 'self',
-        ...params,
-        record: { ...record, $type: collection },
-      },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._client.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'chat.bsky.actor.declaration', ...params },
-      { headers },
-    )
-  }
-}
-
-export class ChatBskyConvoNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  acceptConvo(
-    data?: ChatBskyConvoAcceptConvo.InputSchema,
-    opts?: ChatBskyConvoAcceptConvo.CallOptions,
-  ): Promise<ChatBskyConvoAcceptConvo.Response> {
-    return this._client.call(
-      'chat.bsky.convo.acceptConvo',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  addReaction(
-    data?: ChatBskyConvoAddReaction.InputSchema,
-    opts?: ChatBskyConvoAddReaction.CallOptions,
-  ): Promise<ChatBskyConvoAddReaction.Response> {
-    return this._client
-      .call('chat.bsky.convo.addReaction', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ChatBskyConvoAddReaction.toKnownErr(e)
-      })
-  }
-
-  deleteMessageForSelf(
-    data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
-    opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
-  ): Promise<ChatBskyConvoDeleteMessageForSelf.Response> {
-    return this._client.call(
-      'chat.bsky.convo.deleteMessageForSelf',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  getConvo(
-    params?: ChatBskyConvoGetConvo.QueryParams,
-    opts?: ChatBskyConvoGetConvo.CallOptions,
-  ): Promise<ChatBskyConvoGetConvo.Response> {
-    return this._client.call(
-      'chat.bsky.convo.getConvo',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getConvoAvailability(
-    params?: ChatBskyConvoGetConvoAvailability.QueryParams,
-    opts?: ChatBskyConvoGetConvoAvailability.CallOptions,
-  ): Promise<ChatBskyConvoGetConvoAvailability.Response> {
-    return this._client.call(
-      'chat.bsky.convo.getConvoAvailability',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getConvoForMembers(
-    params?: ChatBskyConvoGetConvoForMembers.QueryParams,
-    opts?: ChatBskyConvoGetConvoForMembers.CallOptions,
-  ): Promise<ChatBskyConvoGetConvoForMembers.Response> {
-    return this._client.call(
-      'chat.bsky.convo.getConvoForMembers',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getLog(
-    params?: ChatBskyConvoGetLog.QueryParams,
-    opts?: ChatBskyConvoGetLog.CallOptions,
-  ): Promise<ChatBskyConvoGetLog.Response> {
-    return this._client.call('chat.bsky.convo.getLog', params, undefined, opts)
-  }
-
-  getMessages(
-    params?: ChatBskyConvoGetMessages.QueryParams,
-    opts?: ChatBskyConvoGetMessages.CallOptions,
-  ): Promise<ChatBskyConvoGetMessages.Response> {
-    return this._client.call(
-      'chat.bsky.convo.getMessages',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  leaveConvo(
-    data?: ChatBskyConvoLeaveConvo.InputSchema,
-    opts?: ChatBskyConvoLeaveConvo.CallOptions,
-  ): Promise<ChatBskyConvoLeaveConvo.Response> {
-    return this._client.call('chat.bsky.convo.leaveConvo', opts?.qp, data, opts)
-  }
-
-  listConvos(
-    params?: ChatBskyConvoListConvos.QueryParams,
-    opts?: ChatBskyConvoListConvos.CallOptions,
-  ): Promise<ChatBskyConvoListConvos.Response> {
-    return this._client.call(
-      'chat.bsky.convo.listConvos',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  muteConvo(
-    data?: ChatBskyConvoMuteConvo.InputSchema,
-    opts?: ChatBskyConvoMuteConvo.CallOptions,
-  ): Promise<ChatBskyConvoMuteConvo.Response> {
-    return this._client.call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
-  }
-
-  removeReaction(
-    data?: ChatBskyConvoRemoveReaction.InputSchema,
-    opts?: ChatBskyConvoRemoveReaction.CallOptions,
-  ): Promise<ChatBskyConvoRemoveReaction.Response> {
-    return this._client
-      .call('chat.bsky.convo.removeReaction', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ChatBskyConvoRemoveReaction.toKnownErr(e)
-      })
-  }
-
-  sendMessage(
-    data?: ChatBskyConvoSendMessage.InputSchema,
-    opts?: ChatBskyConvoSendMessage.CallOptions,
-  ): Promise<ChatBskyConvoSendMessage.Response> {
-    return this._client.call(
-      'chat.bsky.convo.sendMessage',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  sendMessageBatch(
-    data?: ChatBskyConvoSendMessageBatch.InputSchema,
-    opts?: ChatBskyConvoSendMessageBatch.CallOptions,
-  ): Promise<ChatBskyConvoSendMessageBatch.Response> {
-    return this._client.call(
-      'chat.bsky.convo.sendMessageBatch',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  unmuteConvo(
-    data?: ChatBskyConvoUnmuteConvo.InputSchema,
-    opts?: ChatBskyConvoUnmuteConvo.CallOptions,
-  ): Promise<ChatBskyConvoUnmuteConvo.Response> {
-    return this._client.call(
-      'chat.bsky.convo.unmuteConvo',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  updateAllRead(
-    data?: ChatBskyConvoUpdateAllRead.InputSchema,
-    opts?: ChatBskyConvoUpdateAllRead.CallOptions,
-  ): Promise<ChatBskyConvoUpdateAllRead.Response> {
-    return this._client.call(
-      'chat.bsky.convo.updateAllRead',
-      opts?.qp,
-      data,
-      opts,
-    )
-  }
-
-  updateRead(
-    data?: ChatBskyConvoUpdateRead.InputSchema,
-    opts?: ChatBskyConvoUpdateRead.CallOptions,
-  ): Promise<ChatBskyConvoUpdateRead.Response> {
-    return this._client.call('chat.bsky.convo.updateRead', opts?.qp, data, opts)
-  }
-}
-
-export class ChatBskyModerationNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-
-  getActorMetadata(
-    params?: ChatBskyModerationGetActorMetadata.QueryParams,
-    opts?: ChatBskyModerationGetActorMetadata.CallOptions,
-  ): Promise<ChatBskyModerationGetActorMetadata.Response> {
-    return this._client.call(
-      'chat.bsky.moderation.getActorMetadata',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  getMessageContext(
-    params?: ChatBskyModerationGetMessageContext.QueryParams,
-    opts?: ChatBskyModerationGetMessageContext.CallOptions,
-  ): Promise<ChatBskyModerationGetMessageContext.Response> {
-    return this._client.call(
-      'chat.bsky.moderation.getMessageContext',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
-  updateActorAccess(
-    data?: ChatBskyModerationUpdateActorAccess.InputSchema,
-    opts?: ChatBskyModerationUpdateActorAccess.CallOptions,
-  ): Promise<ChatBskyModerationUpdateActorAccess.Response> {
+  revokeAccountCredentials(
+    data?: ComAtprotoTempRevokeAccountCredentials.InputSchema,
+    opts?: ComAtprotoTempRevokeAccountCredentials.CallOptions,
+  ): Promise<ComAtprotoTempRevokeAccountCredentials.Response> {
     return this._client.call(
-      'chat.bsky.moderation.updateActorAccess',
+      'com.atproto.temp.revokeAccountCredentials',
       opts?.qp,
       data,
       opts,
@@ -4082,6 +4765,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
   setting: ToolsOzoneSettingNS
@@ -4094,6 +4778,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.hosting = new ToolsOzoneHostingNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
+    this.safelink = new ToolsOzoneSafelinkNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
     this.setting = new ToolsOzoneSettingNS(client)
@@ -4192,6 +4877,22 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.emitEvent', opts?.qp, data, opts)
       .catch((e) => {
         throw ToolsOzoneModerationEmitEvent.toKnownErr(e)
+      })
+  }
+
+  getAccountTimeline(
+    params?: ToolsOzoneModerationGetAccountTimeline.QueryParams,
+    opts?: ToolsOzoneModerationGetAccountTimeline.CallOptions,
+  ): Promise<ToolsOzoneModerationGetAccountTimeline.Response> {
+    return this._client
+      .call(
+        'tools.ozone.moderation.getAccountTimeline',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ToolsOzoneModerationGetAccountTimeline.toKnownErr(e)
       })
   }
 
@@ -4311,6 +5012,71 @@ export class ToolsOzoneModerationNS {
       undefined,
       opts,
     )
+  }
+}
+
+export class ToolsOzoneSafelinkNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  addRule(
+    data?: ToolsOzoneSafelinkAddRule.InputSchema,
+    opts?: ToolsOzoneSafelinkAddRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkAddRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.addRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkAddRule.toKnownErr(e)
+      })
+  }
+
+  queryEvents(
+    data?: ToolsOzoneSafelinkQueryEvents.InputSchema,
+    opts?: ToolsOzoneSafelinkQueryEvents.CallOptions,
+  ): Promise<ToolsOzoneSafelinkQueryEvents.Response> {
+    return this._client.call(
+      'tools.ozone.safelink.queryEvents',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  queryRules(
+    data?: ToolsOzoneSafelinkQueryRules.InputSchema,
+    opts?: ToolsOzoneSafelinkQueryRules.CallOptions,
+  ): Promise<ToolsOzoneSafelinkQueryRules.Response> {
+    return this._client.call(
+      'tools.ozone.safelink.queryRules',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  removeRule(
+    data?: ToolsOzoneSafelinkRemoveRule.InputSchema,
+    opts?: ToolsOzoneSafelinkRemoveRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkRemoveRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.removeRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkRemoveRule.toKnownErr(e)
+      })
+  }
+
+  updateRule(
+    data?: ToolsOzoneSafelinkUpdateRule.InputSchema,
+    opts?: ToolsOzoneSafelinkUpdateRule.CallOptions,
+  ): Promise<ToolsOzoneSafelinkUpdateRule.Response> {
+    return this._client
+      .call('tools.ozone.safelink.updateRule', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneSafelinkUpdateRule.toKnownErr(e)
+      })
   }
 }
 

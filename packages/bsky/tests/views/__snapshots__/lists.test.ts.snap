@@ -4,6 +4,11 @@ exports[`bsky actor likes feed views does include users with creator block relat
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "frankie.test",
       "labels": Array [],
@@ -16,6 +21,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -33,6 +43,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(3)",
       "handle": "eve.test",
       "labels": Array [],
@@ -50,6 +65,11 @@ exports[`bsky actor likes feed views does include users with creator block relat
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "frankie.test",
       "labels": Array [],
@@ -62,6 +82,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -79,6 +104,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(3)",
       "handle": "eve.test",
       "labels": Array [],
@@ -97,6 +127,11 @@ Array [
   Object {
     "cid": "cids(0)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
@@ -104,13 +139,94 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "listItemCount": 0,
-    "name": "cool curate list",
-    "purpose": "app.bsky.graph.defs#curatelist",
+    "name": "mod2",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
   },
   Object {
     "cid": "cids(1)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "mod1",
+    "purpose": "app.bsky.graph.defs#modlist",
+    "uri": "record(1)",
+  },
+  Object {
+    "cid": "cids(2)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 2,
+    "name": "mod0",
+    "purpose": "app.bsky.graph.defs#modlist",
+    "uri": "record(2)",
+  },
+  Object {
+    "cid": "cids(3)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur2",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(3)",
+  },
+  Object {
+    "cid": "cids(4)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur1",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(4)",
+  },
+  Object {
+    "cid": "cids(5)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
@@ -118,9 +234,9 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "listItemCount": 3,
-    "name": "blah curate list!",
+    "name": "cur0",
     "purpose": "app.bsky.graph.defs#curatelist",
-    "uri": "record(1)",
+    "uri": "record(5)",
   },
 ]
 `;
@@ -129,6 +245,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -142,6 +263,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -155,6 +281,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -168,6 +299,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -181,6 +317,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -198,6 +339,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -216,6 +362,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -233,6 +384,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -251,6 +407,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -268,6 +429,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -285,6 +451,11 @@ exports[`bsky actor likes feed views does not include users with creator block r
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
@@ -302,6 +473,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(2)",
       "handle": "eve.test",
       "labels": Array [],
@@ -319,6 +495,11 @@ exports[`bsky actor likes feed views does return all users regardless of creator
 Array [
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "greta.test",
       "labels": Array [],
@@ -331,6 +512,11 @@ Array [
   },
   Object {
     "subject": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(1)",
       "handle": "frankie.test",
       "labels": Array [],
@@ -349,6 +535,11 @@ Array [
   Object {
     "cid": "cids(0)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
@@ -356,13 +547,94 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "listItemCount": 0,
-    "name": "cool curate list",
-    "purpose": "app.bsky.graph.defs#curatelist",
+    "name": "mod2",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
   },
   Object {
     "cid": "cids(1)",
     "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "mod1",
+    "purpose": "app.bsky.graph.defs#modlist",
+    "uri": "record(1)",
+  },
+  Object {
+    "cid": "cids(2)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 2,
+    "name": "mod0",
+    "purpose": "app.bsky.graph.defs#modlist",
+    "uri": "record(2)",
+  },
+  Object {
+    "cid": "cids(3)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur2",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(3)",
+  },
+  Object {
+    "cid": "cids(4)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
+      "did": "user(0)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cur1",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(4)",
+  },
+  Object {
+    "cid": "cids(5)",
+    "creator": Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+      },
       "did": "user(0)",
       "handle": "eve.test",
       "labels": Array [],
@@ -370,9 +642,9 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "listItemCount": 3,
-    "name": "blah curate list!",
+    "name": "cur0",
     "purpose": "app.bsky.graph.defs#curatelist",
-    "uri": "record(1)",
+    "uri": "record(5)",
   },
 ]
 `;

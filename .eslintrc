@@ -63,6 +63,10 @@
       "env": { "commonjs": true }
     },
     {
+      "files": ["vite.config.js", "vite.config.cjs", "vite.config.mjs"],
+      "env": { "node": true }
+    },
+    {
       "files": ["jest.setup.js"],
       "env": { "jest": true }
     },

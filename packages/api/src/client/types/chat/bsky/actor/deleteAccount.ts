@@ -15,8 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'chat.bsky.actor.deleteAccount'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = undefined
 
 export interface OutputSchema {}

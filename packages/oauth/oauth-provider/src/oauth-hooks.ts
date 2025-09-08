@@ -12,7 +12,10 @@ import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
+import { AccessDeniedError } from './errors/access-denied-error.js'
+import { AuthorizationError } from './errors/authorization-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
+import { OAuthError } from './errors/oauth-error.js'
 import {
   HcaptchaClientTokens,
   HcaptchaConfig,
@@ -20,7 +23,6 @@ import {
 } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable } from './lib/util/type.js'
-import { AccessDeniedError, OAuthError } from './oauth-errors.js'
 import { DeviceId, SignUpData } from './oauth-store.js'
 import { RequestId } from './request/request-id.js'
 
@@ -28,6 +30,7 @@ import { RequestId } from './request/request-id.js'
 export {
   AccessDeniedError,
   type Account,
+  AuthorizationError,
   type Awaitable,
   Client,
   type ClientAuth,
@@ -116,9 +119,22 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
+   * Allows validating an authorization request (typically the requested scopes)
+   * before it is created. Note that the validity against the client metadata is
+   * already enforced by the OAuth provider.
+   *
+   * @throws {AuthorizationError}
+   */
+  onAuthorizationRequest?: (data: {
+    client: Client
+    clientAuth: null | ClientAuth
+    parameters: Readonly<OAuthAuthorizationRequestParameters>
+  }) => Awaitable<void>
+
+  /**
    * This hook is called when a client is authorized.
    *
-   * @throws {AccessDeniedError} to deny the authorization request and redirect
+   * @throws {AuthorizationError} to deny the authorization request and redirect
    * the user to the client with an OAuth error (other errors will result in an
    * internal server error being displayed to the user)
    *

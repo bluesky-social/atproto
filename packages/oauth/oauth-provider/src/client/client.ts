@@ -24,10 +24,10 @@ import {
   OAuthRedirectUri,
 } from '@atproto/oauth-types'
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
+import { AuthorizationError } from '../errors/authorization-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
-import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { asArray } from '../lib/util/cast.js'
@@ -285,7 +285,7 @@ export class Client {
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
   ): Readonly<OAuthAuthorizationRequestParameters> {
     if (parameters.client_id !== this.id) {
-      throw new InvalidParametersError(
+      throw new AuthorizationError(
         parameters,
         'The "client_id" parameter field does not match the value used to authenticate the client',
       )
@@ -314,7 +314,7 @@ export class Client {
     }
 
     if (!this.metadata.response_types.includes(parameters.response_type)) {
-      throw new InvalidParametersError(
+      throw new AuthorizationError(
         parameters,
         `Invalid response_type "${parameters.response_type}" requested by the client`,
       )
@@ -322,7 +322,7 @@ export class Client {
 
     if (parameters.response_type.includes('code')) {
       if (!this.metadata.grant_types.includes('authorization_code')) {
-        throw new InvalidParametersError(
+        throw new AuthorizationError(
           parameters,
           `This client is not allowed to use the "authorization_code" grant type`,
         )
@@ -336,7 +336,7 @@ export class Client {
           compareRedirectUri(uri, redirect_uri),
         )
       ) {
-        throw new InvalidParametersError(
+        throw new AuthorizationError(
           parameters,
           `Invalid redirect_uri ${redirect_uri}`,
         )
@@ -351,7 +351,7 @@ export class Client {
         // > "redirect_uri": OPTIONAL if only one redirect URI is registered for
         // > this client. REQUIRED if multiple redirect URIs are registered for this
         // > client.
-        throw new InvalidParametersError(parameters, 'redirect_uri is required')
+        throw new AuthorizationError(parameters, 'redirect_uri is required')
       }
     }
 

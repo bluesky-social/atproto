@@ -1,11 +1,11 @@
-export type Awaitable<V> = V | PromiseLike<V>
+import { Awaitable } from './util.js'
 
-export type Key = string | number
+export type Key = NonNullable<unknown>
 export type Value = NonNullable<unknown> | null
 
 export type GetOptions = { signal?: AbortSignal }
 
-export interface SimpleStore<K extends Key = string, V extends Value = Value> {
+export interface SimpleStore<K extends Key, V extends Value> {
   /**
    * @return undefined if the key is not in the store (which is why Value cannot contain "undefined").
    */

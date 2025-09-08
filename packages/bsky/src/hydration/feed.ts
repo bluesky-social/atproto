@@ -32,6 +32,7 @@ export type Posts = HydrationMap<Post>
 export type PostViewerState = {
   like?: string
   repost?: string
+  bookmarked?: boolean
   threadMuted?: boolean
 }
 
@@ -49,6 +50,7 @@ export type PostAgg = {
   replies: number
   reposts: number
   quotes: number
+  bookmarks: number
 }
 
 export type PostAggs = HydrationMap<PostAgg>
@@ -137,7 +139,7 @@ export class FeedHydrator {
   ): Promise<PostViewerStates> {
     if (!refs.length) return new HydrationMap<PostViewerState>()
     const threadRoots = refs.map((r) => r.threadRoot)
-    const [likes, reposts, threadMutesMap] = await Promise.all([
+    const [likes, reposts, bookmarks, threadMutesMap] = await Promise.all([
       this.dataplane.getLikesByActorAndSubjects({
         actorDid: viewer,
         refs,
@@ -146,12 +148,19 @@ export class FeedHydrator {
         actorDid: viewer,
         refs,
       }),
+      this.dataplane.getBookmarksByActorAndSubjects({
+        actorDid: viewer,
+        uris: refs.map((r) => r.uri),
+      }),
       this.getThreadMutes(threadRoots, viewer),
     ])
     return refs.reduce((acc, { uri, threadRoot }, i) => {
       return acc.set(uri, {
         like: parseString(likes.uris[i]),
         repost: parseString(reposts.uris[i]),
+        // @NOTE: The dataplane contract is that the array position will be present,
+        // but the optional chaining is to ensure it works regardless of the dataplane being update to provide the data.
+        bookmarked: !!bookmarks.bookmarks.at(i)?.ref?.key,
         threadMuted: threadMutesMap.get(threadRoot) ?? false,
       })
     }, new HydrationMap<PostViewerState>())
@@ -225,6 +234,7 @@ export class FeedHydrator {
         reposts: counts.reposts[i] ?? 0,
         replies: counts.replies[i] ?? 0,
         quotes: counts.quotes[i] ?? 0,
+        bookmarks: counts.bookmarks[i] ?? 0,
       })
     }, new HydrationMap<PostAgg>())
   }

@@ -10,6 +10,14 @@ import { TokenId } from './token-id.js'
 const BEARER = 'Bearer' satisfies OAuthTokenType
 const DPOP = 'DPoP' satisfies OAuthTokenType
 
+export type {
+  DpopProof,
+  OAuthAccessToken,
+  OAuthTokenType,
+  SignedTokenPayload,
+  TokenId,
+}
+
 export type VerifyTokenClaimsOptions = {
   /** One of these audience must be included in the token audience(s) */
   audience?: [string, ...string[]]

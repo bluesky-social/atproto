@@ -6,13 +6,14 @@ import {
   Preferences,
 } from '../../../../lexicon/types/app/bsky/notification/defs'
 import {
-  ChatNotificationFilter,
+  ChatNotificationInclude,
   ChatNotificationPreference,
   FilterableNotificationPreference,
-  NotificationFilter,
+  NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
 } from '../../../../proto/bsky_pb'
+import { AppPlatform } from '../../../../proto/courier_pb'
 
 type DeepPartial<T> = T extends object
   ? {
@@ -23,11 +24,11 @@ type DeepPartial<T> = T extends object
 const ensureChatPreference = (
   p?: DeepPartial<ChatPreference>,
 ): ChatPreference => {
-  const filters = ['all', 'accepted']
+  const includeValues = ['all', 'accepted']
   return {
-    filter:
-      typeof p?.filter === 'string' && filters.includes(p.filter)
-        ? p.filter
+    include:
+      typeof p?.include === 'string' && includeValues.includes(p.include)
+        ? p.include
         : 'all',
     push: p?.push ?? true,
   }
@@ -36,11 +37,11 @@ const ensureChatPreference = (
 const ensureFilterablePreference = (
   p?: DeepPartial<FilterablePreference>,
 ): FilterablePreference => {
-  const filters = ['all', 'follows']
+  const includeValues = ['all', 'follows']
   return {
-    filter:
-      typeof p?.filter === 'string' && filters.includes(p.filter)
-        ? p.filter
+    include:
+      typeof p?.include === 'string' && includeValues.includes(p.include)
+        ? p.include
         : 'all',
     list: p?.list ?? true,
     push: p?.push ?? true,
@@ -78,7 +79,8 @@ const protobufChatPreferenceToLex = (
   p?: DeepPartial<ChatNotificationPreference>,
 ): DeepPartial<ChatPreference> => {
   return {
-    filter: p?.filter === ChatNotificationFilter.ACCEPTED ? 'accepted' : 'all',
+    include:
+      p?.include === ChatNotificationInclude.ACCEPTED ? 'accepted' : 'all',
     push: p?.push?.enabled,
   }
 }
@@ -87,7 +89,7 @@ const protobufFilterablePreferenceToLex = (
   p?: DeepPartial<FilterableNotificationPreference>,
 ): DeepPartial<FilterablePreference> => {
   return {
-    filter: p?.filter === NotificationFilter.FOLLOWS ? 'follows' : 'all',
+    include: p?.include === NotificationInclude.FOLLOWS ? 'follows' : 'all',
     list: p?.list?.enabled,
     push: p?.push?.enabled,
   }
@@ -121,3 +123,20 @@ export const protobufToLex = (
     verified: protobufPreferenceToLex(res.verified),
   })
 }
+
+type LexPlatform = 'ios' | 'android' | 'web'
+
+export function assertLexPlatform(
+  platform: string,
+): asserts platform is LexPlatform {
+  if (platform !== 'ios' && platform !== 'android' && platform !== 'web') {
+    throw new Error('Unsupported platform: must be "ios", "android", or "web".')
+  }
+}
+
+export const lexPlatformToProtoPlatform = (platform: string): AppPlatform =>
+  platform === 'ios'
+    ? AppPlatform.IOS
+    : platform === 'android'
+      ? AppPlatform.ANDROID
+      : AppPlatform.WEB

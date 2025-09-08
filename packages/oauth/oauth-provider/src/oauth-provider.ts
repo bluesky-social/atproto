@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { ZodError } from 'zod'
 import { Jwks, Keyset } from '@atproto/jwk'
+import { LexiconResolver } from '@atproto/lexicon-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -64,19 +64,21 @@ import {
   deviceManagerOptionsSchema,
 } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
-import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
+import { AuthorizationError } from './errors/authorization-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
 import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { LexiconManager } from './lexicon/lexicon-manager.js'
+import { LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
-import { LocalizedString, MultiLangString } from './lib/util/locale.js'
-import { extractZodErrorMessage } from './lib/util/zod-error.js'
+import { formatError } from './lib/util/error.js'
+import { MultiLangString } from './lib/util/locale.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import {
@@ -104,6 +106,7 @@ import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
 } from './token/verify-token-claims.js'
+import { isPARResponseError } from './types/par-response-error.js'
 
 export { AccessTokenMode, Keyset }
 export type {
@@ -117,7 +120,7 @@ export type {
   CustomizationInput,
   ErrorHandler,
   HcaptchaConfig,
-  LocalizedString,
+  LexiconResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
 }
@@ -128,11 +131,6 @@ type OAuthProviderConfig = {
    * re-authentication.
    */
   authenticationMaxAge?: number
-
-  /**
-   * Maximum age an ephemeral session (one where "remember me" was not
-   * checked) can be before requiring re-authentication.
-   */
 
   /**
    * Maximum age access & id tokens can be before requiring a refresh.
@@ -170,6 +168,11 @@ type OAuthProviderConfig = {
   safeFetch?: typeof globalThis.fetch
 
   /**
+   * A custom ATProto lexicon resolver
+   */
+  lexiconResolver?: LexiconResolver
+
+  /**
    * A redis instance to use for replay protection. If not provided, replay
    * protection will use memory storage.
    */
@@ -186,6 +189,7 @@ type OAuthProviderConfig = {
     AccountStore &
       ClientStore &
       DeviceStore &
+      LexiconStore &
       ReplayStore &
       RequestStore &
       TokenStore
@@ -194,6 +198,7 @@ type OAuthProviderConfig = {
   accountStore?: AccountStore
   clientStore?: ClientStore
   deviceStore?: DeviceStore
+  lexiconStore?: LexiconStore
   replayStore?: ReplayStore
   requestStore?: RequestStore
   tokenStore?: TokenStore
@@ -233,6 +238,7 @@ export type OAuthProviderOptions = OAuthProviderConfig &
 
 export class OAuthProvider extends OAuthVerifier {
   protected readonly accessTokenMode: AccessTokenMode
+  protected readonly hooks: OAuthHooks
 
   public readonly metadata: OAuthAuthorizationServerMetadata
   public readonly customization: Customization
@@ -242,6 +248,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly accountManager: AccountManager
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
+  public readonly lexiconManager: LexiconManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
 
@@ -253,16 +260,18 @@ export class OAuthProvider extends OAuthVerifier {
 
     metadata,
 
+    lexiconResolver,
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
 
-    // Requires stores
+    // Required stores
     accountStore = asAccountStore(store),
     deviceStore = asDeviceStore(store),
+    lexiconStore = asLexiconStore(store),
     tokenStore = asTokenStore(store),
     requestStore = asRequestStore(store),
 
-    // These are optional
+    // Optional stores
     clientStore = ifClientStore(store),
     replayStore = ifReplayStore(store),
 
@@ -286,20 +295,18 @@ export class OAuthProvider extends OAuthVerifier {
     const deviceManagerOptions: DeviceManagerOptions =
       deviceManagerOptionsSchema.parse(rest)
 
-    // @NOTE: hooks don't really need a type parser, as all zod can actually
-    // check at runtime is the fact that the values are functions. The only way
-    // we would benefit from zod here would be to wrap the functions with a
-    // validator for the provided function's return types, which we do not add
-    // because it would impact runtime performance and we trust the users of
-    // this lib (basically ourselves) to rely on the typing system to ensure the
-    // correct types are returned.
-    const hooks: OAuthHooks = rest
-
     // @NOTE: validation of super params (if we wanted to implement it) should
     // be the responsibility of the super class.
     const superOptions: OAuthVerifierOptions = rest
 
     super({ replayStore, ...superOptions })
+
+    // @NOTE: hooks don't really need a type parser, as all zod can actually
+    // check at runtime is the fact that the values are functions. The only way
+    // we would benefit from zod here would be to wrap the functions with a
+    // validator for the provided function's return types, which we don't
+    // really need if types are respected.
+    this.hooks = rest
 
     this.accessTokenMode = accessTokenMode
     this.authenticationMaxAge = authenticationMaxAge
@@ -310,29 +317,32 @@ export class OAuthProvider extends OAuthVerifier {
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
-      hooks,
+      this.hooks,
       this.customization,
     )
     this.clientManager = new ClientManager(
       this.metadata,
       this.keyset,
-      hooks,
+      this.hooks,
       clientStore || null,
       loopbackMetadata || null,
       safeFetch,
       clientJwksCache,
       clientMetadataCache,
     )
+    this.lexiconManager = new LexiconManager(lexiconStore, lexiconResolver)
     this.requestManager = new RequestManager(
       requestStore,
+      this.lexiconManager,
       this.signer,
       this.metadata,
-      hooks,
+      this.hooks,
     )
     this.tokenManager = new TokenManager(
       tokenStore,
+      this.lexiconManager,
       this.signer,
-      hooks,
+      this.hooks,
       this.accessTokenMode,
       tokenMaxAge,
     )
@@ -448,11 +458,8 @@ export class OAuthProvider extends OAuthVerifier {
     const parameters = await oauthAuthorizationRequestParametersSchema
       .parseAsync(payload)
       .catch((err) => {
-        const message =
-          err instanceof ZodError
-            ? `Invalid request parameters: ${err.message}`
-            : `Invalid "request" object`
-        throw InvalidRequestError.from(err, message)
+        const msg = formatError(err, 'Invalid parameters in JAR')
+        throw new InvalidRequestError(msg, err)
       })
 
     return parameters
@@ -505,7 +512,7 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
-      const { uri, expiresAt } =
+      const { requestUri, expiresAt } =
         await this.requestManager.createAuthorizationRequest(
           client,
           clientAuth,
@@ -514,7 +521,7 @@ export class OAuthProvider extends OAuthVerifier {
         )
 
       return {
-        request_uri: uri,
+        request_uri: requestUri,
         expires_in: dateToRelativeSeconds(expiresAt),
       }
     } catch (err) {
@@ -522,7 +529,7 @@ export class OAuthProvider extends OAuthVerifier {
       // > Since initial processing of the pushed authorization request does not
       // > involve resource owner interaction, error codes related to user
       // > interaction, such as "access_denied", are never returned.
-      if (err instanceof AccessDeniedError) {
+      if (err instanceof AuthorizationError && !isPARResponseError(err.error)) {
         throw new InvalidRequestError(err.error_description, err)
       }
       throw err
@@ -539,10 +546,8 @@ export class OAuthProvider extends OAuthVerifier {
       const requestUri = await requestUriSchema
         .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
         .catch((err) => {
-          throw new InvalidRequestError(
-            extractZodErrorMessage(err) ?? 'Input validation error',
-            err,
-          )
+          const msg = formatError(err, 'Invalid "request_uri" query parameter')
+          throw new InvalidRequestError(msg, err)
         })
 
       return this.requestManager.get(requestUri, deviceId, client.id)
@@ -592,24 +597,24 @@ export class OAuthProvider extends OAuthVerifier {
     const { issuer } = this
 
     // If there is a chance to redirect the user to the client, let's do
-    // it by wrapping the error in an AccessDeniedError.
-    const accessDeniedCatcher =
+    // it by wrapping the error in an AuthorizationError.
+    const throwAuthorizationError =
       'redirect_uri' in query
         ? (err: unknown): never => {
             // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.2.1
-            throw AccessDeniedError.from(query, err, 'invalid_request')
+            throw AuthorizationError.from(query, err)
           }
         : null
 
     const client = await this.clientManager
       .getClient(clientCredentials.client_id)
-      .catch(accessDeniedCatcher)
+      .catch(throwAuthorizationError)
 
-    const { parameters, uri } = await this.processAuthorizationRequest(
+    const { parameters, requestUri } = await this.processAuthorizationRequest(
       client,
       deviceId,
       query,
-    ).catch(accessDeniedCatcher)
+    ).catch(throwAuthorizationError)
 
     try {
       const sessions = await this.getSessions(client.id, deviceId, parameters)
@@ -632,7 +637,7 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         const code = await this.requestManager.setAuthorized(
-          uri,
+          requestUri,
           client,
           ssoSession.account,
           deviceId,
@@ -649,7 +654,7 @@ export class OAuthProvider extends OAuthVerifier {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
             const code = await this.requestManager.setAuthorized(
-              uri,
+              requestUri,
               client,
               ssoSession.account,
               deviceId,
@@ -665,7 +670,7 @@ export class OAuthProvider extends OAuthVerifier {
         issuer,
         client,
         parameters,
-        uri,
+        requestUri,
         sessions: sessions.map((session) => ({
           // Map to avoid leaking other data that might be present in the session
           account: session.account,
@@ -673,20 +678,20 @@ export class OAuthProvider extends OAuthVerifier {
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
         })),
-        scopeDetails: parameters.scope
-          ?.split(/\s+/)
-          .filter(Boolean)
-          .sort((a, b) => a.localeCompare(b))
-          .map((scope) => ({
-            scope,
-            // @TODO Allow to customize the scope descriptions (e.g.
-            // using a hook)
-            description: undefined,
-          })),
+        permissionSets: await this.lexiconManager
+          .getPermissionSetsFromScope(parameters.scope)
+          .catch((cause) => {
+            throw new AuthorizationError(
+              parameters,
+              'Unable to retrieve permission sets',
+              'invalid_scope',
+              cause,
+            )
+          }),
       }
     } catch (err) {
       try {
-        await this.requestManager.delete(uri)
+        await this.requestManager.delete(requestUri)
       } catch {
         // There are two error here. Better keep the outer one.
         //
@@ -694,9 +699,7 @@ export class OAuthProvider extends OAuthVerifier {
         // (allowing to log this error)
       }
 
-      // Not using accessDeniedCatcher here because "parameters" will most
-      // likely contain the redirect_uri (using the client default).
-      throw AccessDeniedError.from(parameters, err, 'server_error')
+      throw AuthorizationError.from(parameters, err)
     }
   }
 
@@ -872,12 +875,8 @@ export class OAuthProvider extends OAuthVerifier {
     const code = await codeSchema
       .parseAsync(input.code, { path: ['code'] })
       .catch((err) => {
-        throw InvalidGrantError.from(
-          err,
-          err instanceof ZodError
-            ? `Invalid code: ${err.message}`
-            : `Invalid code`,
-        )
+        const msg = formatError(err, 'Invalid code')
+        throw new InvalidGrantError(msg, err)
       })
 
     const data = await this.requestManager
@@ -999,7 +998,8 @@ export class OAuthProvider extends OAuthVerifier {
     const refreshToken = await refreshTokenSchema
       .parseAsync(input.refresh_token, { path: ['refresh_token'] })
       .catch((err) => {
-        throw InvalidGrantError.from(err, `Invalid refresh token`)
+        const msg = formatError(err, 'Invalid refresh token')
+        throw new InvalidGrantError(msg, err)
       })
 
     const tokenInfo = await this.tokenManager.consumeRefreshToken(refreshToken)

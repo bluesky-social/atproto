@@ -16,6 +16,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -24,6 +29,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -38,6 +44,7 @@ Object {
           "repostCount": 0,
           "uri": "record(0)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -56,6 +63,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -64,6 +76,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -88,6 +101,7 @@ Object {
           "repostCount": 0,
           "uri": "record(1)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -114,6 +128,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -122,6 +141,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -136,6 +156,7 @@ Object {
           "repostCount": 0,
           "uri": "record(0)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -154,6 +175,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-bob.test",
             "labels": Array [],
@@ -162,6 +188,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -186,6 +213,7 @@ Object {
           "repostCount": 0,
           "uri": "record(1)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -204,6 +232,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -212,6 +245,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -236,6 +270,7 @@ Object {
           "repostCount": 0,
           "uri": "record(2)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -262,6 +297,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -270,6 +310,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -284,6 +325,7 @@ Object {
           "repostCount": 0,
           "uri": "record(0)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -302,6 +344,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-bob.test",
             "labels": Array [],
@@ -310,6 +357,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -334,6 +382,7 @@ Object {
           "repostCount": 0,
           "uri": "record(1)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -352,6 +401,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -360,6 +414,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -384,6 +439,7 @@ Object {
           "repostCount": 0,
           "uri": "record(2)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -410,6 +466,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -418,6 +479,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -432,6 +494,7 @@ Object {
           "repostCount": 0,
           "uri": "record(0)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -450,6 +513,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-carol.test",
             "labels": Array [],
@@ -458,6 +526,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -482,6 +551,7 @@ Object {
           "repostCount": 0,
           "uri": "record(1)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -508,6 +578,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -516,6 +591,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -530,6 +606,7 @@ Object {
           "repostCount": 0,
           "uri": "record(0)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -548,6 +625,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -556,6 +638,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -580,6 +663,7 @@ Object {
           "repostCount": 0,
           "uri": "record(1)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -598,6 +682,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -606,6 +695,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -630,6 +720,7 @@ Object {
           "repostCount": 0,
           "uri": "record(2)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -656,6 +747,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -664,6 +760,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -678,6 +775,7 @@ Object {
           "repostCount": 0,
           "uri": "record(0)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -696,6 +794,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -704,6 +807,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -728,6 +832,7 @@ Object {
           "repostCount": 0,
           "uri": "record(1)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -746,6 +851,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -754,6 +864,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -778,6 +889,7 @@ Object {
           "repostCount": 0,
           "uri": "record(2)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -804,6 +916,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -812,6 +929,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -826,6 +944,7 @@ Object {
           "repostCount": 0,
           "uri": "record(0)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -844,6 +963,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -852,6 +976,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -876,6 +1001,7 @@ Object {
           "repostCount": 0,
           "uri": "record(1)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -894,6 +1020,11 @@ Object {
         "opThread": true,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(0)",
             "handle": "simple-op.test",
             "labels": Array [],
@@ -902,6 +1033,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -926,6 +1058,7 @@ Object {
           "repostCount": 0,
           "uri": "record(2)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -944,6 +1077,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -952,6 +1090,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(3)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -976,6 +1115,7 @@ Object {
           "repostCount": 0,
           "uri": "record(3)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -994,6 +1134,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "simple-bob.test",
             "labels": Array [],
@@ -1002,6 +1147,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(4)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -1026,6 +1172,7 @@ Object {
           "repostCount": 0,
           "uri": "record(4)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -1044,6 +1191,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(1)",
             "handle": "simple-alice.test",
             "labels": Array [],
@@ -1052,6 +1204,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(5)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -1076,6 +1229,7 @@ Object {
           "repostCount": 0,
           "uri": "record(5)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },
@@ -1094,6 +1248,11 @@ Object {
         "opThread": false,
         "post": Object {
           "author": Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(3)",
             "handle": "simple-carol.test",
             "labels": Array [],
@@ -1102,6 +1261,7 @@ Object {
               "muted": false,
             },
           },
+          "bookmarkCount": 0,
           "cid": "cids(6)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
@@ -1126,6 +1286,7 @@ Object {
           "repostCount": 0,
           "uri": "record(6)",
           "viewer": Object {
+            "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
           },

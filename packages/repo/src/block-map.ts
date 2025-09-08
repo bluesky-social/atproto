@@ -3,8 +3,16 @@ import * as uint8arrays from 'uint8arrays'
 import { dataToCborBlock } from '@atproto/common'
 import { LexValue, lexToIpld } from '@atproto/lexicon'
 
-export class BlockMap {
+export class BlockMap implements Iterable<[cid: CID, bytes: Uint8Array]> {
   private map: Map<string, Uint8Array> = new Map()
+
+  constructor(entries?: Iterable<readonly [cid: CID, bytes: Uint8Array]>) {
+    if (entries) {
+      for (const [cid, bytes] of entries) {
+        this.set(cid, bytes)
+      }
+    }
+  }
 
   async add(value: LexValue): Promise<CID> {
     const block = await dataToCborBlock(lexToIpld(value))
@@ -49,25 +57,19 @@ export class BlockMap {
   }
 
   forEach(cb: (bytes: Uint8Array, cid: CID) => void): void {
-    this.map.forEach((val, key) => cb(val, CID.parse(key)))
+    for (const [cid, bytes] of this) cb(bytes, cid)
   }
 
   entries(): Entry[] {
-    const entries: Entry[] = []
-    this.forEach((bytes, cid) => {
-      entries.push({ cid, bytes })
-    })
-    return entries
+    return Array.from(this, toEntry)
   }
 
   cids(): CID[] {
-    return this.entries().map((e) => e.cid)
+    return Array.from(this.keys())
   }
 
   addMap(toAdd: BlockMap): BlockMap {
-    toAdd.forEach((bytes, cid) => {
-      this.set(cid, bytes)
-    })
+    for (const [cid, bytes] of toAdd) this.set(cid, bytes)
     return this
   }
 
@@ -77,9 +79,7 @@ export class BlockMap {
 
   get byteSize(): number {
     let size = 0
-    this.forEach((bytes) => {
-      size += bytes.length
-    })
+    for (const bytes of this.values()) size += bytes.length
     return size
   }
 
@@ -87,15 +87,35 @@ export class BlockMap {
     if (this.size !== other.size) {
       return false
     }
-    for (const entry of this.entries()) {
-      const otherBytes = other.get(entry.cid)
+    for (const [cid, bytes] of this) {
+      const otherBytes = other.get(cid)
       if (!otherBytes) return false
-      if (!uint8arrays.equals(entry.bytes, otherBytes)) {
+      if (!uint8arrays.equals(bytes, otherBytes)) {
         return false
       }
     }
     return true
   }
+
+  *keys(): Generator<CID, void, unknown> {
+    for (const key of this.map.keys()) {
+      yield CID.parse(key)
+    }
+  }
+
+  *values(): Generator<Uint8Array, void, unknown> {
+    yield* this.map.values()
+  }
+
+  *[Symbol.iterator](): Generator<[CID, Uint8Array], void, unknown> {
+    for (const [key, value] of this.map) {
+      yield [CID.parse(key), value]
+    }
+  }
+}
+
+function toEntry([cid, bytes]: readonly [CID, Uint8Array]): Entry {
+  return { cid, bytes }
 }
 
 type Entry = {

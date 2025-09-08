@@ -35,11 +35,10 @@ export const rebuildRepo = async (
 ) => {
   const memoryStore = new MemoryBlockstore()
   const commit = await ctx.actorStore.transact(did, async (store) => {
-    const [rootDetails, records, existingCids] = await Promise.all([
-      store.repo.storage.getRootDetailed(),
-      store.record.listAll(),
-      store.record.listExistingBlocks(),
-    ])
+    const rootDetails = await store.repo.storage.getRootDetailed()
+    const records = await store.record.listAll()
+    const existingCids = await store.record.listExistingBlocks()
+
     // increment existing rev by 1 ms
     const revTid = TID.fromStr(rootDetails.rev)
     const rev = TID.fromTime(

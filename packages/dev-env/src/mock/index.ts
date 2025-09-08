@@ -184,7 +184,7 @@ export async function generateMockSetup(env: TestNetwork) {
   const filteredPost = await bob.app.bsky.feed.post.create(
     { repo: bob.accountDid },
     {
-      text: 'reallly bad post should be deleted',
+      text: 'really bad post should be deleted',
       createdAt: date.next().value,
     },
   )
@@ -328,6 +328,46 @@ export async function generateMockSetup(env: TestNetwork) {
       embed: {
         $type: 'app.bsky.embed.record',
         record: fgBobRes,
+      },
+      createdAt: date.next().value,
+    },
+  )
+
+  const fg3Uri = AtUri.make(
+    carla.accountDid,
+    'app.bsky.feed.generator',
+    'carla-intr-algo',
+  )
+  const fg3 = await env.createFeedGen({
+    [fg3Uri.toString()]: async () => {
+      const feed = posts
+        .filter(() => rand(2) === 0)
+        .map((post) => ({ post: post.uri }))
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+        },
+      }
+    },
+  })
+  const fgCarlaRes = await carla.app.bsky.feed.generator.create(
+    { repo: carla.accountDid, rkey: fg3Uri.rkey },
+    {
+      did: fg3.did,
+      displayName: `Acceptin' Generator`,
+      acceptsInteractions: true,
+      createdAt: date.next().value,
+    },
+  )
+
+  await alice.app.bsky.feed.post.create(
+    { repo: alice.accountDid },
+    {
+      text: `carla accepts interactions on her feed`,
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: fgCarlaRes,
       },
       createdAt: date.next().value,
     },
@@ -502,6 +542,7 @@ export async function generateMockSetup(env: TestNetwork) {
 
   await setVerifier(env.bsky.db, alice.accountDid)
 
+  // @TODO the following should be optimized as it makes dev-env start very slow (>10 sec)
   const sc = env.getSeedClient()
   await seedThreadV2.simple(sc)
   await seedThreadV2.long(sc)

@@ -21,6 +21,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       replies: uris.map((uri) => byUri.get(uri)?.replyCount ?? 0),
       reposts: uris.map((uri) => byUri.get(uri)?.repostCount ?? 0),
       quotes: uris.map((uri) => byUri.get(uri)?.quoteCount ?? 0),
+      bookmarks: uris.map((uri) => byUri.get(uri)?.bookmarkCount ?? 0),
     }
   },
   async getCountsForUsers(req) {

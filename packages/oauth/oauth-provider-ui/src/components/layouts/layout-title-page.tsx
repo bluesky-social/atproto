@@ -1,24 +1,28 @@
 import { clsx } from 'clsx'
 import { JSX, ReactNode } from 'react'
+import type { CustomizationData } from '@atproto/oauth-provider-api'
 import { Override } from '../../lib/util.ts'
 import { LocaleSelector } from '../../locales/locale-selector.tsx'
 
 export type LayoutTitlePageProps = Override<
   JSX.IntrinsicElements['div'],
   {
-    title?: string
+    customizationData?: CustomizationData
+    title?: ReactNode
+    htmlTitle?: string
     subtitle?: ReactNode
-    children?: ReactNode
   }
 >
 
 export function LayoutTitlePage({
-  children,
+  customizationData,
   title,
   subtitle,
+  htmlTitle = typeof title === 'string' ? title : undefined,
 
-  // HTMLDivElement
+  // div
   className,
+  children,
   ...props
 }: LayoutTitlePageProps) {
   return (
@@ -33,14 +37,14 @@ export function LayoutTitlePage({
         'dark:bg-slate-900 dark:text-slate-100',
       )}
     >
-      {title && <title>{title}</title>}
+      {htmlTitle && <title>{htmlTitle}</title>}
 
       <div
         className={clsx(
           'px-6 pt-4',
           'w-full',
           'md:max-w-lg',
-          'flex flex-row items-start',
+          'flex flex-row items-center',
           'md:flex-col md:items-end',
           'md:self-stretch',
           'md:max-w-fix md:w-1/2 md:p-4',

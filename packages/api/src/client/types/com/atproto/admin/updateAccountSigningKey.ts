@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.admin.updateAccountSigningKey'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   did: string

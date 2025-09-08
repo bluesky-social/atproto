@@ -23,6 +23,7 @@
             "app.bsky.embed.recordWithMedia#view"
           ]
         },
+        "bookmarkCount": { "type": "integer" },
         "replyCount": { "type": "integer" },
         "repostCount": { "type": "integer" },
         "likeCount": { "type": "integer" },
@@ -42,6 +43,7 @@
       "properties": {
         "repost": { "type": "string", "format": "at-uri" },
         "like": { "type": "string", "format": "at-uri" },
+        "bookmarked": { "type": "boolean" },
         "threadMuted": { "type": "boolean" },
         "replyDisabled": { "type": "boolean" },
         "embeddingDisabled": { "type": "boolean" },

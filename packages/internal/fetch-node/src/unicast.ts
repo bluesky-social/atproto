@@ -13,32 +13,55 @@ import { isUnicastIp } from './util.js'
 
 const { IPv4, IPv6 } = ipaddr
 
-export type SsrfFetchWrapOptions<C = FetchContext> = {
+export type UnicastFetchWrapOptions<C = FetchContext> = {
   fetch?: Fetch<C>
+
+  /**
+   * ## ‼️ important security feature use with care
+   *
+   * On older NodeJS version, the `dispatcher` init option is ignored when
+   * creating a new Request instance. It can only be passed through the fetch
+   * function directly.
+   *
+   * Since this is a security feature, we need to ensure that the unicastLookup
+   * function is called to resolve the hostname to a unicast IP address.
+   *
+   * However, in the case a custom "fetch" function is passed here (fetch !==
+   * globalThis.fetch), we have no guarantee that the dispatcher will be used to
+   * make the request. Because of this, in such a case, we will use a one-time
+   * use dispatcher that checks that the provided fetch function indeed made use
+   * of the "unicastLookup" when a custom dispatch init function is used.
+   *
+   * Sadly, this means that we cannot use "keepAlive" connections, as the method
+   * used to ensure that "unicastLookup" gets called requires to create a new
+   * dispatcher for each request.
+   *
+   * If you can guarantee that the provided fetch function will make use of the
+   * "dispatcher" init option, you can set this flag to true, which will enable
+   * the use of a single agent (with keep-alive) for all requests.
+   *
+   * @default false
+   * @note This option has no effect on Node.js versions >= 20
+   */
+  dangerouslyForceKeepAliveAgent?: boolean
 }
+
+// @TODO support other runtimes ?
+const SUPPORTS_REQUEST_INIT_DISPATCHER =
+  Number(process.versions.node.split('.')[0]) >= 20
 
 /**
  * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
  */
 export function unicastFetchWrap<C = FetchContext>({
   fetch = globalThis.fetch,
-}: SsrfFetchWrapOptions<C>): Fetch<C> {
-  // In order to enforce the SSRF protection, we need to use a custom dispatcher
-  // that uses "unicastLookup" to resolve the hostname to a unicast IP address.
-
-  // In case a custom "fetch" function is passed here, we have no assurance that
-  // the dispatcher will be used to make the request. Because of this, in case a
-  // custom fetch method is passed, we will use a on-time use dispatcher that
-  // ensures that "unicastLookup" gets called to resolve the hostname to an IP
-  // address and ensure that it is a unicast address.
-
-  // Sadly, this means that we cannot use "keepAlive" connections, as the method
-  // used to ensure that "unicastLookup" gets called requires to create a new
-  // dispatcher for each request.
-
-  // @TODO: find a way to use a re-usable dispatcher with a custom fetch method.
-
-  if (fetch === globalThis.fetch) {
+  dangerouslyForceKeepAliveAgent = false,
+}: UnicastFetchWrapOptions<C>): Fetch<C> {
+  if (
+    SUPPORTS_REQUEST_INIT_DISPATCHER ||
+    dangerouslyForceKeepAliveAgent ||
+    fetch === globalThis.fetch
+  ) {
     const dispatcher = new Agent({
       connect: { lookup: unicastLookup },
     })
@@ -62,8 +85,14 @@ export function unicastFetchWrap<C = FetchContext>({
         )
       }
 
-      // @ts-expect-error non-standard option
-      return fetch.call(this, input, { ...init, dispatcher })
+      if (SUPPORTS_REQUEST_INIT_DISPATCHER) {
+        // @ts-expect-error non-standard option
+        const request = new Request(input, { ...init, dispatcher })
+        return fetch.call(this, request)
+      } else {
+        // @ts-expect-error non-standard option
+        return fetch.call(this, input, { ...init, dispatcher })
+      }
     }
   } else {
     return async function (input, init): Promise<Response> {
@@ -96,14 +125,16 @@ export function unicastFetchWrap<C = FetchContext>({
         }
 
         case undefined: {
-          // hostname is a domain name, using the dispatcher defined above
-          // will result in the DNS lookup being performed, ensuring that the
-          // hostname resolves to a unicast address.
+          // hostname is a domain name, let's create a new dispatcher that
+          // will 1) use the unicastLookup function to resolve the hostname
+          // and 2) allow us to check that the lookup function was indeed
+          // called.
 
           let didLookup = false
           const dispatcher = new Client(url.origin, {
-            // Do *not* enable H2 here, as it will cause an error (the client
-            // will terminate the connection before the response is consumed).
+            // Do *not* enable H2 here, as it will cause an error (the
+            // client will terminate the connection before the response is
+            // consumed).
             // https://github.com/nodejs/undici/issues/3671
             connect: {
               keepAlive: false, // Client will be used once

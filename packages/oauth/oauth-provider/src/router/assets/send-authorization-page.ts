@@ -36,16 +36,17 @@ export function sendAuthorizePageFactory(customization: Customization) {
     const script = declareHydrationData<HydrationData['authorization-page']>({
       __customizationData: customizationData,
       __authorizeData: {
-        requestUri: data.uri,
+        requestUri: data.requestUri,
 
         clientId: data.client.id,
         clientMetadata: data.client.metadata,
         clientTrusted: data.client.info.isTrusted,
+        clientFirstParty: data.client.info.isFirstParty,
 
-        scopeDetails: data.scopeDetails,
-
+        scope: data.parameters.scope,
         uiLocales: data.parameters.ui_locales,
         loginHint: data.parameters.login_hint,
+        permissionSets: Object.fromEntries(data.permissionSets),
       },
       __sessions: data.sessions,
     })

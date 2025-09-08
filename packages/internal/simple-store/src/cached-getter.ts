@@ -1,13 +1,8 @@
-import {
-  Awaitable,
-  GetOptions as GetStoredOptions,
-  Key,
-  SimpleStore,
-  Value,
-} from './simple-store.js'
+import { GetOptions, Key, SimpleStore, Value } from './simple-store.js'
+import { Awaitable, ContextOptions } from './util.js'
 
-export type { GetStoredOptions }
-export type GetCachedOptions<C = void> = {
+export type { GetOptions }
+export type GetCachedOptions<C = void> = ContextOptions<C> & {
   signal?: AbortSignal
 
   /**
@@ -28,11 +23,17 @@ export type GetCachedOptions<C = void> = {
    * @default false // If no isStale option was provided to the CachedGetter
    */
   allowStale?: boolean
-} & (C extends void ? { context?: C } : { context: C })
+}
+
+export type GetterOptions<C = void> = {
+  context: C extends void ? undefined : C
+  noCache: boolean
+  signal?: AbortSignal
+}
 
 export type Getter<K extends Key, V extends Value, C = void> = (
   key: K,
-  options: GetCachedOptions<C>,
+  options: GetterOptions<C>,
   storedValue: undefined | V,
 ) => Awaitable<V>
 
@@ -60,12 +61,12 @@ export class CachedGetter<
   V extends Value = Value,
   C = void,
 > {
-  private pending = new Map<K, PendingItem<V>>()
+  private readonly pending = new Map<K, PendingItem<V>>()
 
   constructor(
     readonly getter: Getter<K, V, C>,
     readonly store: SimpleStore<K, V>,
-    readonly options?: CachedGetterOptions<K, V>,
+    readonly options: CachedGetterOptions<K, V> = {},
   ) {}
 
   async get(
@@ -76,41 +77,55 @@ export class CachedGetter<
     key: C extends void ? never : K,
     options: GetCachedOptions<C>,
   ): Promise<V>
-  async get(key: K, options = {} as GetCachedOptions<C>): Promise<V> {
-    options.signal?.throwIfAborted()
+  async get(
+    key: K,
+    {
+      signal,
+      context,
+      allowStale = false,
+      noCache = false,
+    } = {} as GetCachedOptions<C>,
+  ): Promise<V> {
+    signal?.throwIfAborted()
 
-    const isStale = this.options?.isStale
+    const { isStale, deleteOnError } = this.options
 
-    const allowStored: (value: V) => Awaitable<boolean> = options.noCache
+    const allowStored: (value: V) => Awaitable<boolean> = noCache
       ? returnFalse // Never allow stored values to be returned
-      : options.allowStale || isStale == null
+      : allowStale || isStale == null
         ? returnTrue // Always allow stored values to be returned
         : async (value: V) => !(await isStale(key, value))
 
     // As long as concurrent requests are made for the same key, only one
-    // request will be made to the cache & getter function at a time. This works
-    // because there is no async operation between the while() loop and the
-    // pending.set() call. Because of the "single threaded" nature of
+    // request will be made to the getStored & getter functions at a time. This
+    // works because there is no async operation between the while() loop and
+    // the pending.set() call below. Because of the single threaded nature of
     // JavaScript, the pending item will be set before the next iteration of the
-    // while loop.
+    // while loop of any concurrent request.
     let previousExecutionFlow: undefined | PendingItem<V>
     while ((previousExecutionFlow = this.pending.get(key))) {
       try {
+        // If a concurrent request is already in progress, wait for it to finish
         const { isFresh, value } = await previousExecutionFlow
 
+        // Use the concurrent request's result if it is fresh
         if (isFresh) return value
+        // Use the concurrent request's result if not fresh (loaded from the
+        // store), and matches the conditions for using a stored value.
         if (await allowStored(value)) return value
       } catch {
         // Ignore errors from previous execution flows (they will have been
         // propagated by that flow).
       }
 
-      options.signal?.throwIfAborted()
+      // Break the loop if the signal was aborted
+      signal?.throwIfAborted()
     }
 
     const currentExecutionFlow: PendingItem<V> = Promise.resolve()
       .then(async () => {
-        const storedValue = await this.getStored(key, options)
+        const storedValue = await this.getStored(key, { signal })
+
         if (storedValue !== undefined && (await allowStored(storedValue))) {
           // Use the stored value as return value for the current execution
           // flow. Notify other concurrent execution flows (that should be
@@ -120,11 +135,13 @@ export class CachedGetter<
         }
 
         return Promise.resolve()
-          .then(async () => (0, this.getter)(key, options, storedValue))
+          .then(async () => {
+            const options = { signal, noCache, context } as GetterOptions<C>
+            return this.getter.call(null, key, options, storedValue)
+          })
           .catch(async (err) => {
             if (storedValue !== undefined) {
               try {
-                const deleteOnError = this.options?.deleteOnError
                 if (await deleteOnError?.(err, key, storedValue)) {
                   await this.delStored(key, err)
                 }
@@ -161,7 +178,7 @@ export class CachedGetter<
     return value
   }
 
-  async getStored(key: K, options?: GetStoredOptions): Promise<V | undefined> {
+  async getStored(key: K, options?: GetOptions): Promise<V | undefined> {
     try {
       return await this.store.get(key, options)
     } catch (err) {

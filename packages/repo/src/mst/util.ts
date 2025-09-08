@@ -117,7 +117,7 @@ export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
 export const isValidMstKey = (str: string): boolean => {
   const split = str.split('/')
   return (
-    str.length <= 256 &&
+    str.length <= 1024 &&
     split.length === 2 &&
     split[0].length > 0 &&
     split[1].length > 0 &&
@@ -126,7 +126,7 @@ export const isValidMstKey = (str: string): boolean => {
   )
 }
 
-export const validCharsRegex = /^[a-zA-Z0-9_\-:.]*$/
+export const validCharsRegex = /^[a-zA-Z0-9_~\-:.]*$/
 
 export const isValidChars = (str: string): boolean => {
   return str.match(validCharsRegex) !== null

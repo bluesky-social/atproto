@@ -153,7 +153,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
   }
 
-  findPrivateKey({ kid, alg, use }: KeySearch): [key: Key, alg: string] {
+  findPrivateKey({ kid, alg, use }: KeySearch): { key: Key; alg: string } {
     const matchingKeys: Key[] = []
 
     for (const key of this.list({ kid, alg, use })) {
@@ -161,7 +161,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
       if (!key.isPrivate) continue
 
       // Skip negotiation if a specific "alg" was provided
-      if (typeof alg === 'string') return [key, alg]
+      if (typeof alg === 'string') return { key, alg }
 
       matchingKeys.push(key)
     }
@@ -174,14 +174,16 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     // Return the first candidates that matches the preferred algorithms
     for (const prefAlg of this.preferredSigningAlgorithms) {
       for (const [matchingKey, matchingAlgs] of candidates) {
-        if (matchingAlgs.includes(prefAlg)) return [matchingKey, prefAlg]
+        if (matchingAlgs.includes(prefAlg)) {
+          return { key: matchingKey, alg: prefAlg }
+        }
       }
     }
 
     // Return any candidate
     for (const [matchingKey, matchingAlgs] of candidates) {
       for (const alg of matchingAlgs) {
-        return [matchingKey, alg]
+        return { key: matchingKey, alg }
       }
     }
 
@@ -200,7 +202,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     payload: JwtPayload | JwtPayloadGetter,
   ): Promise<SignedJwt> {
     try {
-      const [key, alg] = this.findPrivateKey({
+      const { key, alg } = this.findPrivateKey({
         alg: sAlg,
         kid: sKid,
         use: 'sig',

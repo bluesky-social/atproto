@@ -1,9 +1,11 @@
 import net from 'node:net'
+import { sql } from 'kysely'
 import AtpAgent from '@atproto/api'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { LabelRow } from '../db/schema/label'
+import { DbRef } from '../db/types'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
 
 export type SignedLabel = Label & { sig: Uint8Array }
@@ -82,4 +84,13 @@ export const getPdsAgentForRepo = async (
   }
 
   return { url, agent: new AtpAgent({ service: url }) }
+}
+
+export const dateFromDatetime = (datetime: Date) => {
+  const [date] = datetime.toISOString().split('T')
+  return date
+}
+
+export const dateFromDbDatetime = (dateRef: DbRef) => {
+  return sql<string>`SPLIT_PART(${dateRef}, 'T', 1)`
 }
