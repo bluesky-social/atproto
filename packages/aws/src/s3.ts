@@ -8,7 +8,14 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 
 export type S3Config = {
   bucket: string
+  /**
+   * The maximum time any request to S3 (including uploading blob chunks
+   * uploads) can take, in milliseconds.
+   */
   requestTimeoutMs?: number
+  /**
+   * The maximum total time an upload to S3 can take, in milliseconds.
+   */
   uploadTimeoutMs?: number
 } & Omit<S3ClientConfig, 'apiVersion' | 'requestHandler'>
 
@@ -27,8 +34,11 @@ export class S3BlobStore implements BlobStore {
     this.client = new S3({
       ...rest,
       apiVersion: '2006-03-01',
-      // Ensures that all requests timeout under "requestTimeoutMs"
-      requestHandler: { requestTimeout: requestTimeoutMs ?? 5 * SECOND },
+      // Ensures that all requests timeout under "requestTimeoutMs".
+      //
+      // @NOTE This will also apply to the upload of each individual chunk
+      // when using Upload from @aws-sdk/lib-storage.
+      requestHandler: { requestTimeout: requestTimeoutMs ?? 10 * SECOND },
     })
   }
 
@@ -55,20 +65,18 @@ export class S3BlobStore implements BlobStore {
   }
 
   private async uploadBytes(path: string, bytes: Uint8Array | stream.Readable) {
-    // @NOTE we use Upload rather than client.putObject because stream
-    // length is not known in advance. See also aws/aws-sdk-js-v3#2348.
+    // @NOTE we use Upload rather than client.putObject because stream length is
+    // not known in advance. See also aws/aws-sdk-js-v3#2348.
     //
-    // See also https://github.com/aws/aws-sdk-js-v3/issues/6426, wherein
-    // Upload my hang the s3 connection under certain circumstances. We
-    // don't have a good way to avoid this, so we use timeouts defensively
-    // on all s3 requests.
+    // See also https://github.com/aws/aws-sdk-js-v3/issues/6426, wherein Upload
+    // may hang the s3 connection under certain circumstances. We don't have a
+    // good way to avoid this, so we use timeouts defensively on all s3
+    // requests.
 
-    // @NOTE abort results in error from aws-sdk "Upload aborted." with name "AbortError"
+    const abortSignal = AbortSignal.timeout(this.uploadTimeoutMs)
     const abortController = new AbortController()
-    const timeout = setTimeout(
-      () => abortController.abort(),
-      this.uploadTimeoutMs,
-    )
+    abortSignal.addEventListener('abort', () => abortController.abort())
+
     const upload = new Upload({
       client: this.client,
       params: {
@@ -79,10 +87,16 @@ export class S3BlobStore implements BlobStore {
       // @ts-ignore native implementation fine in node >=15
       abortController,
     })
+
     try {
       await upload.done()
-    } finally {
-      clearTimeout(timeout)
+    } catch (err) {
+      // Translate aws-sdk's abort error to something more specific
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error('Blob upload timed out', { cause: err })
+      }
+
+      throw err
     }
   }
 
