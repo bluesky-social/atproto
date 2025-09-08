@@ -1,5 +1,5 @@
 import { Insertable } from 'kysely'
-import { LexiconData } from '@atproto/oauth-provider'
+import { LEXICON_REFRESH_FREQUENCY, LexiconData } from '@atproto/oauth-provider'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
 import { AccountDb, Lexicon } from '../db'
 
@@ -19,6 +19,19 @@ export async function upsert(db: AccountDb, nsid: string, data: LexiconData) {
       .insertInto('lexicon')
       .values({ ...updates, nsid })
       .onConflict((oc) => oc.column('nsid').doUpdateSet(updates)),
+  )
+
+  // Garbage collection: remove old, never resolved, lexicons.
+  // Uses "lexicon_failures_idx"
+  await db.executeWithRetry(
+    db.db
+      .deleteFrom('lexicon')
+      .where('lexicon', 'is', null)
+      .where(
+        'updatedAt',
+        '<',
+        toDateISO(new Date(Date.now() - LEXICON_REFRESH_FREQUENCY)),
+      ),
   )
 }
 
