@@ -115,41 +115,34 @@ export class BlobTransactor extends BlobReader {
   async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
     await this.deleteDereferencedBlobs(writes)
 
-    const ac = new AbortController()
-
     // @NOTE We want to make sure that all blobs are verified before starting to
     // make any of them permanent. This is to avoid a situation where some blobs
     // are made permanent (in storage) but the transaction fails (e.g. due to
-    // another blob being invalid). For that purpose, we create a list of
-    // "tasks" to be performed after all blobs have been verified.
-    //
-    // @NOTE If any task fails (e.g. due to a timeout), we might still end-up in
-    // a situation where some blobs are made permanent while the transaction
-    // will be aborted. This should be mitigated by moving the code that makes
-    // blobs permanent outside of the transaction (e.g. in the background
-    // queue). This is also fine for now since this can't be triggered by a user
-    // (only by failing uploads, which is a server issue).
-    type Task = () => Promise<void>
-    const makePermanentTasks: Task[] = []
+    // another blob being invalid). For that purpose, we create a list of all
+    // blobs to make permanent. If any upload task fails (e.g. due to a
+    // timeout), we might still end-up in a situation where some blobs are made
+    // permanent while the transaction will be aborted. This should be mitigated
+    // by moving the code that makes blobs permanent outside of the transaction
+    // (e.g. in the background queue). This is also fine for now since this
+    // can't be triggered by a user (only by failing uploads, which is a server
+    // issue).
+
+    // @NOTE we are using a Map to avoid potential duplicates (e.g. because a
+    // blob is referenced multiple times in the same transaction). Is is safe to
+    // index the map by tempKey because each tempKey is unique to a blob cid.
+    const blobsToMakePermanent = new Map<string, CID>()
 
     for (const write of writes) {
       if (isCreate(write) || isUpdate(write)) {
         for (const blob of write.blobs) {
           await this.associateBlob(blob, write.uri)
           const { tempKey } = await this.verifyBlob(blob)
-
-          // If the blob is not permanent yet (i.e. has a tempKey), we add a
-          // task to make it permanent once all blobs have been verified.
-          if (tempKey) {
-            makePermanentTasks.push(async () => {
-              if (ac.signal.aborted) return
-              await this.makePermanent(tempKey, blob.cid, ac.signal)
-            })
-          }
+          if (tempKey) blobsToMakePermanent.set(tempKey, blob.cid)
         }
       }
     }
 
+    const ac = new AbortController()
     try {
       // Limit the number of parallel requests made to the BlobStore by using a
       // a queue with concurrency management.
@@ -162,8 +155,12 @@ export class BlobTransactor extends BlobReader {
       })
 
       // Will reject as soon as any task fails, causing the "finally" block
-      // below to run, aborting every other pending tasks.
-      await queue.addAll(makePermanentTasks)
+      // below to run, aborting every other pending tasks (through ac.signal).
+      await queue.addAll(
+        Array.from(blobsToMakePermanent, ([tempKey, cid]) => async () => {
+          return this.makePermanent(tempKey, cid, ac.signal)
+        }),
+      )
     } finally {
       ac.abort()
     }
