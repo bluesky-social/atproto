@@ -205,10 +205,12 @@ export class BlobTransactor extends BlobReader {
       .select('blobCid')
       .execute()
 
+    const newBlobCids = writes
+      .filter((w) => isUpdate(w) || isCreate(w))
+      .flatMap((w) => w.blobs.map((b) => b.cid.toString()))
+
     const cidsToKeep = [
-      ...writes
-        .filter((w) => isUpdate(w) || isCreate(w))
-        .flatMap((w) => w.blobs.map((b) => b.cid.toString())),
+      ...newBlobCids,
       ...duplicateCids.map((row) => row.blobCid),
     ]
 
