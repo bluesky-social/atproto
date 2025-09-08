@@ -2,4 +2,4 @@
 "@atproto/aws": patch
 ---
 
-Set a 5 seconds timeout on every `S3BlobStore` requests (does not apply to file uploads)
+Set a timeout (of 10 seconds by default) on every `S3BlobStore` requests
