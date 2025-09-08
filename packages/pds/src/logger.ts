@@ -3,6 +3,7 @@ import { stdSerializers } from 'pino'
 import { pinoHttp } from 'pino-http'
 import { obfuscateHeaders, subsystemLogger } from '@atproto/common'
 
+export const blobStoreLogger = subsystemLogger('pds:blob-store')
 export const dbLogger = subsystemLogger('pds:db')
 export const didCacheLogger = subsystemLogger('pds:did-cache')
 export const readStickyLogger = subsystemLogger('pds:read-sticky')
