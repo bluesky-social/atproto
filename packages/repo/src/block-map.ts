@@ -20,7 +20,7 @@ export class BlockMap implements Iterable<[cid: CID, bytes: Uint8Array]> {
     return block.cid
   }
 
-  set(cid: CID, bytes: Uint8Array): BlockMap {
+  set(cid: CID, bytes: Uint8Array): this {
     this.map.set(cid.toString(), bytes)
     return this
   }
@@ -29,7 +29,7 @@ export class BlockMap implements Iterable<[cid: CID, bytes: Uint8Array]> {
     return this.map.get(cid.toString())
   }
 
-  delete(cid: CID): BlockMap {
+  delete(cid: CID): this {
     this.map.delete(cid.toString())
     return this
   }
@@ -68,7 +68,7 @@ export class BlockMap implements Iterable<[cid: CID, bytes: Uint8Array]> {
     return Array.from(this.keys())
   }
 
-  addMap(toAdd: BlockMap): BlockMap {
+  addMap(toAdd: BlockMap): this {
     for (const [cid, bytes] of toAdd) this.set(cid, bytes)
     return this
   }
