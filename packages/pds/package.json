@@ -49,7 +49,7 @@
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.4",
     "@hapi/address": "^5.1.1",
-    "better-sqlite3": "^10.0.0",
+    "better-sqlite3": "^12.2.0",
     "bytes": "^3.1.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
