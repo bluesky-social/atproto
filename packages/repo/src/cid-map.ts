@@ -5,8 +5,11 @@ export class CidMap<T> implements Iterable<[cid: CID, value: T]> {
 
   constructor(entries?: Iterable<readonly [cid: CID, value: T]>) {
     if (entries) {
-      for (const [cid, value] of entries) {
-        this.set(cid, value)
+      if (entries instanceof CidMap) {
+        // Optimize for constructing from another CidMap (avoids parse + stringify)
+        for (const [cidStr, value] of entries.map) this.map.set(cidStr, value)
+      } else {
+        for (const [cid, value] of entries) this.set(cid, value)
       }
     }
   }
