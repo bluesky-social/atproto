@@ -2,4 +2,4 @@
 "@atproto/pds": patch
 ---
 
-Improve blob manageemnt strategy to avoid creating orphaned blob in the storage
+Improve blob management strategy to avoid creating orphaned blobs in the storage

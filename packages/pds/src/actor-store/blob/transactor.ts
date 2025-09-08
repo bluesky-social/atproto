@@ -198,6 +198,7 @@ export class BlobTransactor extends BlobReader {
       ...newBlobCids,
       ...duplicateCids.map((row) => row.blobCid),
     ]
+
     const cidsToDelete = deletedRepoBlobCids.filter(
       (cid) => !cidsToKeep.includes(cid),
     )
@@ -207,6 +208,7 @@ export class BlobTransactor extends BlobReader {
       .deleteFrom('blob')
       .where('cid', 'in', cidsToDelete)
       .execute()
+
     if (!skipBlobStore) {
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
@@ -258,14 +260,7 @@ export class BlobTransactor extends BlobReader {
     // make any of them permanent. This is to avoid a situation where some blobs
     // are made permanent in storage when the transaction failed (e.g. due to
     // another blob being invalid). For that purpose, we create a list of all
-    // blobs to make permanent before actually making any of them permanent.
-
-    // If any upload task fails (e.g. due to a timeout), we might still end-up
-    // in a situation where some blobs are made permanent while the transaction
-    // will be aborted. This should be fixed by moving the code that makes blobs
-    // permanent outside of the transaction (e.g. in the background queue). This
-    // is fine for now since this can't be triggered by a user (only by failing
-    // uploads, which is a server issue).
+    // (verified) blobs candidates before actually making any of them permanent.
 
     const blobsToMakePermanent = new CidMap<string>()
 
@@ -276,11 +271,17 @@ export class BlobTransactor extends BlobReader {
       if (tempKey) blobsToMakePermanent.set(blob.cid, tempKey)
     }
 
+    // If any upload task fails (e.g. due to a timeout), we might still end-up
+    // in a situation where some blobs are getting orphaned. This can be fixed
+    // by moving the code that makes blobs permanent out of the transaction
+    // (e.g. in the background queue). This is fine for now since this can't be
+    // triggered by a user (only by failing uploads, which is a server issue).
+
     // @NOTE it is less than ideal to perform i/o operations during a
     // transaction. Especially since there have been instances of the actor-db
-    // being locked, requiring to kick the processes. The better solution would
-    // be to update the blob state in the database (e.g. "makeItPermanent") and
-    // to process those updates outside of the current transaction.
+    // being locked, requiring to kick the processes. A better solution would be
+    // to update the blob state in the database (e.g. "makeItPermanent") and to
+    // process those updates outside of the current transaction.
     const updatedCids = await this.makeBlobsPermanent(blobsToMakePermanent)
 
     await this.db.db
@@ -290,6 +291,15 @@ export class BlobTransactor extends BlobReader {
       .execute()
   }
 
+  /**
+   * Concurrently make blobs permanent in the BlobStore. If any of the task
+   * fails, all other tasks are aborted. Blobs are **not** removed from the
+   * permanent storage if a task fails (or the transaction is rolled back). This
+   * could result in orphaned blobs (which, currently, would need to be cleaned
+   * up manually).
+   *
+   * @returns The list of CIDs that were made permanent.
+   */
   private async makeBlobsPermanent(it: Iterable<[cid: CID, tempKey: string]>) {
     const ac = new AbortController()
 
@@ -299,8 +309,6 @@ export class BlobTransactor extends BlobReader {
       try {
         await this.blobstore.makePermanent(tempKey, cid)
 
-        // Record the cid of the blob that was made permanent in the returned
-        // array.
         return cid
       } catch (err) {
         log.error(

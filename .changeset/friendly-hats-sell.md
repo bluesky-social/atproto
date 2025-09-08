@@ -2,4 +2,4 @@
 "@atproto/repo": patch
 ---
 
-Refactor `BlockMap` by extending `CidMap`
+Refactor `BlockMap` into a sub-class of `CidMap`

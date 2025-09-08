@@ -2,4 +2,4 @@
 "@atproto/repo": patch
 ---
 
-Improve `CidSet` interface
+Improve the interface of the `CidSet` class

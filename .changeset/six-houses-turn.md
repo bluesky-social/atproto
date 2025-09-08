@@ -2,4 +2,4 @@
 "@atproto/repo": patch
 ---
 
-Expose new `CidMap` utility
+Expose new `CidMap<T>` utility class
