@@ -144,11 +144,6 @@ export class BlobTransactor extends BlobReader {
       }
     }
 
-    // @NOTE it is less than ideal to perform i/o operations during a
-    // transaction. Especially since there have been instances of the actor-db
-    // being locked, requiring to kick the processes. The better solution would
-    // be to update the blob state in the database (e.g. "makeItPermanent") and
-    // to process those updates outside of the current transaction.
     await this.makeBlobsPermanent(blobsToMakePermanent)
   }
 
@@ -273,6 +268,11 @@ export class BlobTransactor extends BlobReader {
   }
 
   private async makeBlobsPermanent(it: Iterable<[tempKey: string, cid: CID]>) {
+    // @NOTE it is less than ideal to perform i/o operations during a
+    // transaction. Especially since there have been instances of the actor-db
+    // being locked, requiring to kick the processes. The better solution would
+    // be to update the blob state in the database (e.g. "makeItPermanent") and
+    // to process those updates outside of the current transaction.
     const updatedCids = await this.makeBlobsPermanentConcurrently(it)
 
     // @TODO Used to rely on the (non partial !) "blob_tempkey_idx" index. That
@@ -308,23 +308,23 @@ export class BlobTransactor extends BlobReader {
       }
     })
 
-    try {
-      // Limit the number of parallel requests made to the BlobStore by using a
-      // a queue with concurrency management. This will basically behave like
-      // `Promise.all` (throwing as soon as any task fails) but with a limited
-      // number of tasks running in parallel.
-      return await new PQueue({
-        concurrency: 20,
-        // The blob store should already limit the time of every operation. We
-        // add a timeout here as an extra precaution.
-        timeout: 60 * SECOND,
-        throwOnTimeout: true,
-      }).addAll(tasks)
-    } finally {
+    // Limit the number of parallel requests made to the BlobStore by using a
+    // queue with concurrency management.
+    const queue = new PQueue({
+      concurrency: 20,
+      // The blob store should already limit the time of every operation. We
+      // add a timeout here as an extra precaution.
+      timeout: 60 * SECOND,
+      throwOnTimeout: true,
+    })
+
+    // This will basically behave like `Promise.all` (throwing as soon as any
+    // task fails) but with a limited number of tasks running in parallel.
+    return queue.addAll(tasks).finally(() => {
       // If a task fails (either because of a timeout or an error), we abort all
       // other tasks that are still running by aborting the shared signal.
-      ac.abort()
-    }
+      queue.clear()
+    })
   }
 
   async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
