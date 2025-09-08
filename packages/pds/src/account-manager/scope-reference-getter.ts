@@ -9,8 +9,8 @@ import { SimpleStoreRedis } from '@atproto-labs/simple-store-redis'
 const PREFIX = 'ref:'
 
 type ScopeReference = `${typeof PREFIX}${string}`
-export const isScopeReference = (scope: string): scope is ScopeReference =>
-  scope.startsWith(PREFIX) && !scope.includes(' ')
+const isScopeReference = (scope?: OAuthScope): scope is ScopeReference =>
+  scope != null && scope.startsWith(PREFIX) && !scope.includes(' ')
 
 const identity = <T>(value: T): T => value
 
@@ -50,18 +50,8 @@ export class ScopeReferenceGetter extends CachedGetter<
     )
   }
 
-  async dereference(scope: string): Promise<string> {
-    const values = scope.split(' ')
-
-    const references = values.filter(isScopeReference)
-    if (!references.length) return scope
-
-    const decoded = new Map<string, OAuthScope>(
-      await Promise.all(
-        references.map(async (ref) => [ref, await this.get(ref)] as const),
-      ),
-    )
-
-    return Array.from(values, (value) => decoded.get(value) ?? value).join(' ')
+  async dereference(scope?: OAuthScope): Promise<undefined | OAuthScope> {
+    if (isScopeReference(scope)) return this.get(scope)
+    return scope
   }
 }

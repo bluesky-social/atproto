@@ -436,28 +436,24 @@ export class AppContext {
                 )
               }
 
-              if (payload.scope != null) {
-                try {
-                  payload.scope = await scopeRefGetter.dereference(
-                    payload.scope,
-                  )
-                } catch (cause) {
-                  const { InvalidScopeReferenceError } =
-                    ComAtprotoTempDereferenceScope
-                  if (cause instanceof InvalidScopeReferenceError) {
-                    // The scope reference cannot be found on the server.
-                    // Consider the session as invalid, allowing entryway to
-                    // re-build the scope as the user re-authenticates. This
-                    // should never happen though.
-                    throw InvalidTokenError.from(cause, tokenType)
-                  }
-
-                  throw new UpstreamFailureError(
-                    'Failed to fetch token permissions',
-                    undefined,
-                    { cause },
-                  )
+              try {
+                payload.scope = await scopeRefGetter.dereference(payload.scope)
+              } catch (cause) {
+                const { InvalidScopeReferenceError } =
+                  ComAtprotoTempDereferenceScope
+                if (cause instanceof InvalidScopeReferenceError) {
+                  // The scope reference cannot be found on the server.
+                  // Consider the session as invalid, allowing entryway to
+                  // re-build the scope as the user re-authenticates. This
+                  // should never happen though.
+                  throw InvalidTokenError.from(cause, tokenType)
                 }
+
+                throw new UpstreamFailureError(
+                  'Failed to fetch token permissions',
+                  undefined,
+                  { cause },
+                )
               }
 
               return payload
