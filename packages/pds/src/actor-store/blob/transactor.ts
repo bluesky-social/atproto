@@ -144,53 +144,20 @@ export class BlobTransactor extends BlobReader {
       }
     }
 
-    const ac = new AbortController()
-    try {
-      // Limit the number of parallel requests made to the BlobStore by using a
-      // a queue with concurrency management.
-      const queue = new PQueue({
-        concurrency: 20,
-        // The blob store should already limit the time of every operation. We
-        // add a timeout here as an extra precaution.
-        timeout: 60 * SECOND,
-        throwOnTimeout: true,
-      })
+    // @NOTE it is less than ideal to perform i/o operations during a
+    // transaction. Especially since there have been instances of the actor-db
+    // being locked, requiring to kick the processes. The better solution would
+    // be to update the blob state in the database (e.g. "makeItPermanent") and
+    // to process those updates outside of the transaction.
+    const updatedCids = await this.makeBlobsPermanent(blobsToMakePermanent)
 
-      // Will reject as soon as any task fails, causing the "finally" block
-      // below to run, aborting every other pending tasks (through ac.signal).
-      await queue.addAll(
-        Array.from(blobsToMakePermanent, ([tempKey, cid]) => async () => {
-          ac.signal.throwIfAborted()
-
-          // @NOTE it is less than ideal to perform i/o operations during a
-          // transaction. Especially since there have been instances of the actor-db
-          // being locked, requiring to kick the processes.
-
-          // The better solution would be to update the blob state in the database
-          // (e.g. "makeItPermanent") and to process those updates outside of the
-          // transaction.
-
-          return this.blobstore.makePermanent(tempKey, cid).catch((err) => {
-            log.error(
-              { err, cid: cid.toString() },
-              'could not make blob permanent',
-            )
-
-            throw err
-          })
-        }),
-      )
-    } finally {
-      ac.abort()
-    }
-
+    // @TODO This used to rely on the (non partial) "blob_tempkey_idx" index.
+    // That index should now be removed as this now relies on the primary key
+    // index.
     await this.db.db
       .updateTable('blob')
       .set({ tempKey: null })
-      // @NOTE uses "blob_tempkey_idx" index.
-      // @NOTE We could get rid of that (NON PARTIAL!) index by using the
-      // primary key (cid) instead here:
-      .where('tempKey', 'in', Array.from(blobsToMakePermanent.keys()))
+      .where('cid', 'in', updatedCids)
       .execute()
   }
 
@@ -304,6 +271,45 @@ export class BlobTransactor extends BlobReader {
     if (found.tempKey) verifyBlob(blob, found)
 
     return found
+  }
+
+  private async makeBlobsPermanent(it: Iterable<[tempKey: string, cid: CID]>) {
+    const ac = new AbortController()
+
+    // Limit the number of parallel requests made to the BlobStore by using a
+    // a queue with concurrency management.
+    const queue = new PQueue({
+      concurrency: 20,
+      // The blob store should already limit the time of every operation. We
+      // add a timeout here as an extra precaution.
+      timeout: 60 * SECOND,
+      throwOnTimeout: true,
+    })
+
+    // Will throw as soon as any of the tasks throws (e.g. due to a timeout or
+    // i/o error).
+    return await queue.addAll(
+      Array.from(it, ([tempKey, cid]) => async () => {
+        ac.signal.throwIfAborted()
+
+        try {
+          await this.blobstore.makePermanent(tempKey, cid)
+
+          // Record the cids that have been successfully made permanent.
+          return cid.toString()
+        } catch (err) {
+          // Abort every other pending tasks
+          ac.abort()
+
+          log.error(
+            { err, cid: cid.toString() },
+            'could not make blob permanent',
+          )
+
+          throw err
+        }
+      }),
+    )
   }
 
   async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
