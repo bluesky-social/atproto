@@ -28,9 +28,14 @@ export class S3BlobStore implements BlobStore {
     public did: string,
     cfg: S3Config,
   ) {
-    const { bucket, requestTimeoutMs, uploadTimeoutMs, ...rest } = cfg
+    const {
+      bucket,
+      uploadTimeoutMs = 10 * SECOND,
+      requestTimeoutMs = uploadTimeoutMs,
+      ...rest
+    } = cfg
     this.bucket = bucket
-    this.uploadTimeoutMs = uploadTimeoutMs ?? 10 * SECOND
+    this.uploadTimeoutMs = uploadTimeoutMs
     this.client = new S3({
       ...rest,
       apiVersion: '2006-03-01',
@@ -38,7 +43,7 @@ export class S3BlobStore implements BlobStore {
       //
       // @NOTE This will also apply to the upload of each individual chunk
       // when using Upload from @aws-sdk/lib-storage.
-      requestHandler: { requestTimeout: requestTimeoutMs ?? 10 * SECOND },
+      requestHandler: { requestTimeout: requestTimeoutMs },
     })
   }
 
