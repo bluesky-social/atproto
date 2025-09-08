@@ -265,6 +265,8 @@ export class BlobTransactor extends BlobReader {
     const blobsToMakePermanent = new CidMap<string>()
 
     for (const blob of blobs) {
+      // Avoid verifying the same blob multiple times (e.g. if it is used in
+      // multiple records in the same transaction).
       if (blobsToMakePermanent.has(blob.cid)) continue
 
       const { tempKey } = await this.verifyBlob(blob)
