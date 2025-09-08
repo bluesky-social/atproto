@@ -4,14 +4,7 @@ export class CidSet implements Iterable<CID> {
   private set = new Set<string>()
 
   constructor(it?: Iterable<CID>) {
-    if (it) {
-      if (it instanceof CidSet) {
-        // Optimized version when dealing with another CidSet (avoids stringify)
-        for (const cidStr of it.set) this.set.add(cidStr)
-      } else {
-        for (const cid of it) this.add(cid)
-      }
-    }
+    if (it) this.addSet(it)
   }
 
   add(cid: CID): this {
