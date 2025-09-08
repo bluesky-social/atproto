@@ -11,7 +11,12 @@ import {
   streamSize,
 } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
-import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
+import {
+  BlobNotFoundError,
+  BlobStore,
+  CidMap,
+  WriteOpAction,
+} from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
@@ -117,34 +122,18 @@ export class BlobTransactor extends BlobReader {
 
     await this.deleteDereferencedBlobs(writes)
 
-    // @NOTE We want to make sure that all blobs are verified before starting to
-    // make any of them permanent. This is to avoid a situation where some blobs
-    // are made permanent in storage when the transaction failed (e.g. due to
-    // another blob being invalid). For that purpose, we create a list of all
-    // blobs to make permanent. If any upload task fails (e.g. due to a
-    // timeout), we might still end-up in a situation where some blobs are made
-    // permanent while the transaction will be aborted. This should be mitigated
-    // by moving the code that makes blobs permanent outside of the transaction
-    // (e.g. in the background queue). This is also fine for now since this
-    // can't be triggered by a user (only by failing uploads, which is a server
-    // issue).
-
-    // @NOTE we are using a Map to avoid potential duplicates (e.g. because a
-    // blob is referenced multiple times in the same transaction). Is is safe to
-    // index the map by tempKey because each tempKey is unique to a blob cid.
-    const blobsToMakePermanent = new Map<string, CID>()
+    const blobsToMakePermanent: PreparedBlobRef[] = []
 
     for (const write of writes) {
       if (isCreate(write) || isUpdate(write)) {
         for (const blob of write.blobs) {
           await this.associateBlob(blob, write.uri)
-          const { tempKey } = await this.verifyBlob(blob)
-          if (tempKey) blobsToMakePermanent.set(tempKey, blob.cid)
+          blobsToMakePermanent.push(blob)
         }
       }
     }
 
-    await this.makeBlobsPermanent(blobsToMakePermanent)
+    await this.verifyBlobsAndMakePermanent(blobsToMakePermanent)
   }
 
   async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
@@ -236,12 +225,7 @@ export class BlobTransactor extends BlobReader {
   }
 
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
-    this.db.assertTransaction()
-
-    const found = await this.verifyBlob(blob)
-    if (found.tempKey) {
-      await this.makeBlobsPermanent([[found.tempKey, blob.cid]])
-    }
+    await this.verifyBlobsAndMakePermanent([blob])
   }
 
   private async verifyBlob(blob: PreparedBlobRef) {
@@ -267,29 +251,51 @@ export class BlobTransactor extends BlobReader {
     return found
   }
 
-  private async makeBlobsPermanent(it: Iterable<[tempKey: string, cid: CID]>) {
+  async verifyBlobsAndMakePermanent(blobs: Iterable<PreparedBlobRef>) {
+    this.db.assertTransaction()
+
+    // @NOTE We want to make sure that all blobs are verified before starting to
+    // make any of them permanent. This is to avoid a situation where some blobs
+    // are made permanent in storage when the transaction failed (e.g. due to
+    // another blob being invalid). For that purpose, we create a list of all
+    // blobs to make permanent before actually making any of them permanent.
+
+    // If any upload task fails (e.g. due to a timeout), we might still end-up
+    // in a situation where some blobs are made permanent while the transaction
+    // will be aborted. This should be fixed by moving the code that makes blobs
+    // permanent outside of the transaction (e.g. in the background queue). This
+    // is fine for now since this can't be triggered by a user (only by failing
+    // uploads, which is a server issue).
+
+    const blobsToMakePermanent = new CidMap<string>()
+
+    for (const blob of blobs) {
+      if (blobsToMakePermanent.has(blob.cid)) continue
+
+      const { tempKey } = await this.verifyBlob(blob)
+      if (tempKey) blobsToMakePermanent.set(blob.cid, tempKey)
+    }
+
     // @NOTE it is less than ideal to perform i/o operations during a
     // transaction. Especially since there have been instances of the actor-db
     // being locked, requiring to kick the processes. The better solution would
     // be to update the blob state in the database (e.g. "makeItPermanent") and
     // to process those updates outside of the current transaction.
-    const updatedCids = await this.makeBlobsPermanentConcurrently(it)
+    const updatedCids = await this.makeBlobsPermanent(blobsToMakePermanent)
 
     // @TODO Used to rely on the (non partial !) "blob_tempkey_idx" index. That
     // index can now be removed.
     await this.db.db
       .updateTable('blob')
       .set({ tempKey: null })
-      .where('cid', 'in', Array.from(updatedCids, String))
+      .where('cid', 'in', updatedCids.map(String))
       .execute()
   }
 
-  private async makeBlobsPermanentConcurrently(
-    it: Iterable<[tempKey: string, cid: CID]>,
-  ) {
+  private async makeBlobsPermanent(it: Iterable<[cid: CID, tempKey: string]>) {
     const ac = new AbortController()
 
-    const tasks = Array.from(it, ([tempKey, cid]) => async () => {
+    const tasks = Array.from(it, ([cid, tempKey]) => async () => {
       ac.signal.throwIfAborted()
 
       try {

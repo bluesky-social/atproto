@@ -1,25 +1,24 @@
 import { CID } from 'multiformats'
 
-export class CidSet {
+export class CidSet implements Iterable<CID> {
   private set: Set<string>
 
-  constructor(arr: CID[] = []) {
-    const strArr = arr.map((c) => c.toString())
-    this.set = new Set(strArr)
+  constructor(it: Iterable<CID> = []) {
+    this.set = new Set(Array.from(it, String))
   }
 
-  add(cid: CID): CidSet {
+  add(cid: CID): this {
     this.set.add(cid.toString())
     return this
   }
 
-  addSet(toMerge: CidSet): CidSet {
-    toMerge.toList().map((c) => this.add(c))
+  addSet(toMerge: CidSet): this {
+    for (const cid of toMerge) this.add(cid)
     return this
   }
 
-  subtractSet(toSubtract: CidSet): CidSet {
-    toSubtract.toList().map((c) => this.delete(c))
+  subtractSet(toSubtract: CidSet): this {
+    for (const cid of toSubtract) this.delete(cid)
     return this
   }
 
@@ -36,13 +35,19 @@ export class CidSet {
     return this.set.size
   }
 
-  clear(): CidSet {
+  clear(): this {
     this.set.clear()
     return this
   }
 
   toList(): CID[] {
-    return [...this.set].map((c) => CID.parse(c))
+    return Array.from(this)
+  }
+
+  *[Symbol.iterator](): Generator<CID, void, unknown> {
+    for (const cidStr of this.set) {
+      yield CID.parse(cidStr)
+    }
   }
 }
 
