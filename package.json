@@ -61,7 +61,12 @@
       "cookie": "^0.7.2"
     },
     "onlyBuiltDependencies": [
-      "better-sqlite3"
+      "@datadog/native-appsec",
+      "@datadog/native-iast-taint-tracking",
+      "@datadog/native-metrics",
+      "@datadog/pprof",
+      "better-sqlite3",
+      "dd-trace"
     ]
   },
   "workspaces": {
