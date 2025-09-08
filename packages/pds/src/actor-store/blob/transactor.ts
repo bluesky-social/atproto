@@ -113,11 +113,13 @@ export class BlobTransactor extends BlobReader {
   }
 
   async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
+    this.db.assertTransaction()
+
     await this.deleteDereferencedBlobs(writes)
 
     // @NOTE We want to make sure that all blobs are verified before starting to
     // make any of them permanent. This is to avoid a situation where some blobs
-    // are made permanent (in storage) but the transaction fails (e.g. due to
+    // are made permanent in storage when the transaction failed (e.g. due to
     // another blob being invalid). For that purpose, we create a list of all
     // blobs to make permanent. If any upload task fails (e.g. due to a
     // timeout), we might still end-up in a situation where some blobs are made
@@ -136,10 +138,8 @@ export class BlobTransactor extends BlobReader {
       if (isCreate(write) || isUpdate(write)) {
         for (const blob of write.blobs) {
           await this.associateBlob(blob, write.uri)
-          const blobInfo = await this.verifyBlob(blob)
-          if (blobInfo.tempKey) {
-            blobsToMakePermanent.set(blobInfo.tempKey, blob.cid)
-          }
+          const { tempKey } = await this.verifyBlob(blob)
+          if (tempKey) blobsToMakePermanent.set(tempKey, blob.cid)
         }
       }
     }
@@ -148,16 +148,15 @@ export class BlobTransactor extends BlobReader {
     // transaction. Especially since there have been instances of the actor-db
     // being locked, requiring to kick the processes. The better solution would
     // be to update the blob state in the database (e.g. "makeItPermanent") and
-    // to process those updates outside of the transaction.
+    // to process those updates outside of the current transaction.
     const updatedCids = await this.makeBlobsPermanent(blobsToMakePermanent)
 
-    // @TODO This used to rely on the (non partial) "blob_tempkey_idx" index.
-    // That index should now be removed as this now relies on the primary key
-    // index.
+    // @TODO Used to rely on the (non partial !) "blob_tempkey_idx" index. That
+    // index can now be removed.
     await this.db.db
       .updateTable('blob')
       .set({ tempKey: null })
-      .where('cid', 'in', updatedCids)
+      .where('cid', 'in', updatedCids.map(String))
       .execute()
   }
 
@@ -288,21 +287,19 @@ export class BlobTransactor extends BlobReader {
 
     // Will throw as soon as any of the tasks throws (e.g. due to a timeout or
     // i/o error).
-    return await queue.addAll(
+    return queue.addAll(
       Array.from(it, ([tempKey, cid]) => async () => {
         ac.signal.throwIfAborted()
 
         try {
           await this.blobstore.makePermanent(tempKey, cid)
-
-          // Record the cids that have been successfully made permanent.
-          return cid.toString()
+          return cid
         } catch (err) {
           // Abort every other pending tasks
           ac.abort()
 
           log.error(
-            { err, cid: cid.toString() },
+            { err, tempKey, cid: cid.toString() },
             'could not make blob permanent',
           )
 
