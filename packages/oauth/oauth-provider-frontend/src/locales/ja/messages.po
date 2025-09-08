@@ -8,7 +8,7 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-04-16 23:30+0900\n"
+"PO-Revision-Date: 2025-09-09 06:43+0900\n"
 "Last-Translator: dolciss\n"
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
@@ -55,7 +55,7 @@ msgstr "サインインに戻る"
 
 #: src/routes/account/_minimalLayout/branding.tsx:14
 msgid "Branding"
-msgstr ""
+msgstr "ブランド"
 
 #: src/components/Prompt.tsx:56
 msgid "Cancel"
@@ -214,7 +214,7 @@ msgstr "パスワードをリセット"
 #: src/routes/account/_appLayout/$sub.tsx:203
 #: src/routes/account/_appLayout/$sub.tsx:208
 msgid "Revoke access"
-msgstr ""
+msgstr "アクセスを取り消す"
 
 #: src/routes/account/_appLayout/$sub.tsx:197
 msgid "Revoke access to {clientName}"
@@ -270,11 +270,11 @@ msgstr "このデバイス"
 
 #: src/routes/account/_appLayout/$sub.tsx:67
 msgid "This is a list of all the applications you have authorized to access your account."
-msgstr ""
+msgstr "このリストは、あなたのアカウントへのアクセスを許可したすべてのアプリケーションの一覧です。"
 
 #: src/routes/account/_appLayout/$sub.tsx:105
 msgid "This is a list of all the devices you have used to sign in to your account. New apps can be authorized from any of these devices. If you believe that your account has been compromised, we recommend that you revoke access to all devices."
-msgstr ""
+msgstr "このリストは、あなたのアカウントにサインインするために使用したすべてのデバイスの一覧です。これらのデバイスのいずれかから新しいアプリを認証できます。アカウントが侵害されたと思われる場合は、すべてのデバイスへのアクセスを取り消すことをお勧めします。"
 
 #: src/routes/account/_appLayout/$sub.tsx:283
 msgid "Unknown user agent"
