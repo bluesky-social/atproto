@@ -9,12 +9,12 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 export type S3Config = {
   bucket: string
   /**
-   * The maximum time any request to S3 (including uploading blob chunks
+   * The maximum time any request to S3 (including individual blob chunks
    * uploads) can take, in milliseconds.
    */
   requestTimeoutMs?: number
   /**
-   * The maximum total time an upload to S3 can take, in milliseconds.
+   * The maximum total time a blob upload can take, in milliseconds.
    */
   uploadTimeoutMs?: number
 } & Omit<S3ClientConfig, 'apiVersion' | 'requestHandler'>
@@ -121,6 +121,10 @@ export class S3BlobStore implements BlobStore {
         to: this.getStoredPath(cid),
       })
     } catch (err) {
+      // If the optimistic move failed because the temp file was not found,
+      // check if the permanent file already exists. If it does, we can assume
+      // that another process made the file permanent concurrently, and we can
+      // no-op.
       if (err instanceof BlobNotFoundError) {
         // Blob was not found from temp storage...
         const alreadyHas = await this.hasStored(cid)

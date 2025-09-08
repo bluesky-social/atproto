@@ -2,4 +2,4 @@
 "@atproto/pds": patch
 ---
 
-Fully read CAR stream before starting transaction in `importRepo`, resulting in faster transactions
+Fully read CAR stream before starting transaction in `importRepo`, resulting in shorter transactions
