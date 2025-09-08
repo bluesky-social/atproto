@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
 
 export class CidMap<T> implements Iterable<[cid: CID, value: T]> {
-  private map: Map<string, T> = new Map()
+  private map = new Map<string, T>()
 
   constructor(entries?: Iterable<readonly [cid: CID, value: T]>) {
     if (entries) {
