@@ -29,7 +29,7 @@ import {
 
 export type * from './token/verify-token-claims.js'
 
-type DecodeTokenHook = OAuthHooks['onDecodeToken']
+export type DecodeTokenHook = OAuthHooks['onDecodeToken']
 
 export type OAuthVerifierOptions = DpopManagerOptions & {
   /**
@@ -56,7 +56,7 @@ export type OAuthVerifierOptions = DpopManagerOptions & {
 
 export { DpopNonce, Key, Keyset }
 export type {
-  AccessTokenPayload as SignedTokenPayload,
+  AccessTokenPayload,
   DpopProof,
   OAuthTokenType,
   RedisOptions,

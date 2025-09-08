@@ -34,7 +34,7 @@ import { TokenClaims } from './token/token-claims.js'
 // Make sure all types needed to implement the OAuthHooks are exported
 export {
   AccessDeniedError,
-  type AccessTokenPayload as SignedTokenPayload,
+  type AccessTokenPayload,
   type Account,
   AuthorizationError,
   type Awaitable,
