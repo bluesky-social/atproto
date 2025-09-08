@@ -149,15 +149,7 @@ export class BlobTransactor extends BlobReader {
     // being locked, requiring to kick the processes. The better solution would
     // be to update the blob state in the database (e.g. "makeItPermanent") and
     // to process those updates outside of the current transaction.
-    const updatedCids = await this.makeBlobsPermanent(blobsToMakePermanent)
-
-    // @TODO Used to rely on the (non partial !) "blob_tempkey_idx" index. That
-    // index can now be removed.
-    await this.db.db
-      .updateTable('blob')
-      .set({ tempKey: null })
-      .where('cid', 'in', updatedCids.map(String))
-      .execute()
+    await this.makeBlobsPermanent(blobsToMakePermanent)
   }
 
   async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
@@ -248,6 +240,15 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
+  async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
+    this.db.assertTransaction()
+
+    const found = await this.verifyBlob(blob)
+    if (found.tempKey) {
+      await this.makeBlobsPermanent([[found.tempKey, blob.cid]])
+    }
+  }
+
   private async verifyBlob(blob: PreparedBlobRef) {
     const found = await this.db.db
       .selectFrom('blob')
@@ -255,7 +256,6 @@ export class BlobTransactor extends BlobReader {
       .where('cid', '=', blob.cid.toString())
       .where('takedownRef', 'is', null)
       .executeTakeFirst()
-
     if (!found) {
       throw new InvalidRequestError(
         `Could not find blob: ${blob.cid.toString()}`,
@@ -273,6 +273,20 @@ export class BlobTransactor extends BlobReader {
   }
 
   private async makeBlobsPermanent(it: Iterable<[tempKey: string, cid: CID]>) {
+    const updatedCids = await this.makeBlobsPermanentConcurrently(it)
+
+    // @TODO Used to rely on the (non partial !) "blob_tempkey_idx" index. That
+    // index can now be removed.
+    await this.db.db
+      .updateTable('blob')
+      .set({ tempKey: null })
+      .where('cid', 'in', Array.from(updatedCids, String))
+      .execute()
+  }
+
+  private async makeBlobsPermanentConcurrently(
+    it: Iterable<[tempKey: string, cid: CID]>,
+  ) {
     const ac = new AbortController()
 
     const tasks = Array.from(it, ([tempKey, cid]) => async () => {
