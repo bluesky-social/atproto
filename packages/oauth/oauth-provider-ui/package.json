@@ -10,7 +10,7 @@
     "directory": "packages/oauth/oauth-provider-ui"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=24.7.0"
   },
   "type": "commonjs",
   "exports": {

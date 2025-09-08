@@ -370,7 +370,7 @@ export class ScanMuteOperationsResponse extends Message<ScanMuteOperationsRespon
   ])
 
   static fromBinary(
-    bytes: Uint8Array,
+    bytes: Uint8Array<ArrayBuffer>,
     options?: Partial<BinaryReadOptions>,
   ): ScanMuteOperationsResponse {
     return new ScanMuteOperationsResponse().fromBinary(bytes, options)
@@ -753,7 +753,7 @@ export class Operation extends Message<Operation> {
   /**
    * @generated from field: bytes payload = 6;
    */
-  payload = new Uint8Array(0)
+  payload: Uint8Array<ArrayBuffer> = new Uint8Array(0)
 
   constructor(data?: PartialMessage<Operation>) {
     super()
@@ -827,7 +827,7 @@ export class PutOperationRequest extends Message<PutOperationRequest> {
   /**
    * @generated from field: bytes payload = 5;
    */
-  payload = new Uint8Array(0)
+  payload: Uint8Array<ArrayBuffer> = new Uint8Array(0)
 
   constructor(data?: PartialMessage<PutOperationRequest>) {
     super()
@@ -1010,7 +1010,7 @@ export class ScanOperationsResponse extends Message<ScanOperationsResponse> {
   ])
 
   static fromBinary(
-    bytes: Uint8Array,
+    bytes: Uint8Array<ArrayBuffer>,
     options?: Partial<BinaryReadOptions>,
   ): ScanOperationsResponse {
     return new ScanOperationsResponse().fromBinary(bytes, options)

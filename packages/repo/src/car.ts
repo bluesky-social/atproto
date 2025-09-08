@@ -15,28 +15,28 @@ import { CarBlock } from './types'
 export async function* writeCarStream(
   root: CID | null,
   blocks: AsyncIterable<CarBlock>,
-): AsyncIterable<Uint8Array> {
+): AsyncIterable<Uint8Array<ArrayBuffer>> {
   const header = new Uint8Array(
     cbor.encode({
       version: 1,
       roots: root ? [root] : [],
     }),
   )
-  yield new Uint8Array(varint.encode(header.byteLength))
+  yield new Uint8Array<ArrayBuffer>(varint.encode(header.byteLength))
   yield header
   for await (const block of blocks) {
-    yield new Uint8Array(
+    yield new Uint8Array<ArrayBuffer>(
       varint.encode(block.cid.bytes.byteLength + block.bytes.byteLength),
     )
-    yield block.cid.bytes
-    yield block.bytes
+    yield block.cid.bytes as Uint8Array<ArrayBuffer>
+    yield block.bytes as Uint8Array<ArrayBuffer>
   }
 }
 
 export const blocksToCarFile = (
   root: CID | null,
   blocks: BlockMap,
-): Promise<Uint8Array> => {
+): Promise<Uint8Array<ArrayBuffer>> => {
   const carStream = blocksToCarStream(root, blocks)
   return streamToBuffer(carStream)
 }
@@ -44,7 +44,7 @@ export const blocksToCarFile = (
 export const blocksToCarStream = (
   root: CID | null,
   blocks: BlockMap,
-): AsyncIterable<Uint8Array> => {
+): AsyncIterable<Uint8Array<ArrayBuffer>> => {
   return writeCarStream(root, iterateBlocks(blocks))
 }
 

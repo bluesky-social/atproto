@@ -13,7 +13,7 @@ import * as util from '../util'
 export const getFullRepo = (
   storage: RepoStorage,
   commitCid: CID,
-): AsyncIterable<Uint8Array> => {
+): AsyncIterable<Uint8Array<ArrayBuffer>> => {
   return writeCarStream(commitCid, iterateFullRepo(storage, commitCid))
 }
 
@@ -33,7 +33,7 @@ export const getRecords = (
   storage: ReadableBlockstore,
   commitCid: CID,
   paths: RecordPath[],
-): AsyncIterable<Uint8Array> => {
+): AsyncIterable<Uint8Array<ArrayBuffer>> => {
   return writeCarStream(
     commitCid,
     iterateRecordBlocks(storage, commitCid, paths),

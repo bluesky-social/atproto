@@ -57,7 +57,7 @@ describe('util', () => {
 
   describe('streamToBuffer', () => {
     it('reads iterable into array', async () => {
-      const iterable: AsyncIterable<Uint8Array> = {
+      const iterable: AsyncIterable<Uint8Array<ArrayBuffer>> = {
         async *[Symbol.asyncIterator]() {
           yield new Uint8Array([0xa, 0xb])
           yield new Uint8Array([0xc, 0xd])

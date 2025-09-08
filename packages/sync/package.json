@@ -16,7 +16,7 @@
     "directory": "packages/sync"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=24.7.0"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

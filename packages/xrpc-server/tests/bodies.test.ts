@@ -191,7 +191,9 @@ describe('Bodies', () => {
         'io.example.validationTest',
         {},
         // Does not need to be a valid jpeg
-        new Blob([randomBytes(123)], { type: 'image/jpeg' }),
+        new Blob([randomBytes(123) as Uint8Array<ArrayBuffer>], {
+          type: 'image/jpeg',
+        }),
       ),
     ).rejects.toThrow(`Wrong request encoding (Content-Type): image/jpeg`)
     await expect(
@@ -266,7 +268,7 @@ describe('Bodies', () => {
   })
 
   it('supports ArrayBuffers', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const bytesResponse = await client.call('io.example.blobTest', {}, bytes, {
@@ -299,7 +301,7 @@ describe('Bodies', () => {
   })
 
   it('supports ArrayBufferView', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const bufferResponse = await client.call(
@@ -311,7 +313,7 @@ describe('Bodies', () => {
   })
 
   it('supports Blob', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const blobResponse = await client.call(
@@ -323,7 +325,7 @@ describe('Bodies', () => {
   })
 
   it('supports Blob without explicit type', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const blobResponse = await client.call(
@@ -335,7 +337,7 @@ describe('Bodies', () => {
   })
 
   it('supports ReadableStream', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const streamResponse = await client.call(
@@ -353,7 +355,7 @@ describe('Bodies', () => {
   })
 
   it('supports blob uploads', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const { data } = await client.call('io.example.blobTest', {}, bytes, {
@@ -363,7 +365,7 @@ describe('Bodies', () => {
   })
 
   it(`supports identity encoding`, async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const { data } = await client.call('io.example.blobTest', {}, bytes, {
@@ -374,7 +376,7 @@ describe('Bodies', () => {
   })
 
   it('supports gzip encoding', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const { data } = await client.call(
@@ -392,7 +394,7 @@ describe('Bodies', () => {
   })
 
   it('supports deflate encoding', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const { data } = await client.call(
@@ -410,7 +412,7 @@ describe('Bodies', () => {
   })
 
   it('supports br encoding', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const { data } = await client.call(
@@ -428,7 +430,7 @@ describe('Bodies', () => {
   })
 
   it('supports multiple encodings', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
     const expectedCid = await cidForCbor(bytes)
 
     const { data } = await client.call(
@@ -446,7 +448,7 @@ describe('Bodies', () => {
   })
 
   it('fails gracefully on invalid encodings', async () => {
-    const bytes = randomBytes(1024)
+    const bytes = randomBytes(1024) as Uint8Array<ArrayBuffer>
 
     const promise = client.call(
       'io.example.blobTest',
@@ -476,7 +478,7 @@ describe('Bodies', () => {
   })
 
   it('supports max blob size (based on content-length)', async () => {
-    const bytes = randomBytes(BLOB_LIMIT + 1)
+    const bytes = randomBytes(BLOB_LIMIT + 1) as Uint8Array<ArrayBuffer>
 
     // Exactly the number of allowed bytes
     await client.call('io.example.blobTest', {}, bytes.slice(0, BLOB_LIMIT), {
@@ -493,7 +495,7 @@ describe('Bodies', () => {
 
   it('supports max blob size (missing content-length)', async () => {
     // We stream bytes in these tests so that content-length isn't included.
-    const bytes = randomBytes(BLOB_LIMIT + 1)
+    const bytes = randomBytes(BLOB_LIMIT + 1) as Uint8Array<ArrayBuffer>
 
     // Exactly the number of allowed bytes
     await client.call(
@@ -530,7 +532,7 @@ describe('Bodies', () => {
     const res = await fetch(`${url}/xrpc/io.example.blobTest`, {
       method: 'post',
       headers: { 'Content-Type': '' },
-      body: randomBytes(BLOB_LIMIT),
+      body: randomBytes(BLOB_LIMIT) as Uint8Array<ArrayBuffer>,
       // @ts-ignore see note in @atproto/xrpc/client.ts
       duplex: 'half',
     })

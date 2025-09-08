@@ -1,4 +1,4 @@
-FROM node:18-alpine as build
+FROM node:24.7-alpine3.21 as build
 
 RUN corepack enable
 
@@ -30,7 +30,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > 
 WORKDIR services/bsync
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine
+FROM node:24.7-alpine3.21
 
 RUN apk add --update dumb-init
 

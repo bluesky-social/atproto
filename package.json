@@ -6,9 +6,9 @@
   "license": "MIT",
   "private": true,
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=24.7.0"
   },
-  "packageManager": "pnpm@8.15.9+sha512.499434c9d8fdd1a2794ebf4552b3b25c0a633abcee5bb15e7b5de90f32f47b513aca98cd5cfd001c31f0db454bc3804edccd578501e4ca293a6816166bbd9f81",
+  "packageManager": "pnpm@10.15.1+sha512.34e538c329b5553014ca8e8f4535997f96180a1d0f614339357449935350d924e22f8614682191264ec33d1462ac21561aff97f6bb18065351c162c7e8f6de67",
   "scripts": {
     "lint:fix": "pnpm lint --fix",
     "lint": "eslint . --ext .ts,.js,.tsx,.jsx",
@@ -38,7 +38,7 @@
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
     "@types/jest": "^28.1.4",
-    "@types/node": "^18.19.67",
+    "@types/node": "^24.3.1",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "dotenv": "^16.0.3",

@@ -60,8 +60,7 @@ describe('keypairs', () => {
 
     it('produces a valid signature on a typed array of a large arraybuffer', async () => {
       const bytes = await randomBytes(8192)
-      const arrBuf = bytes.buffer
-      const sliceView = new Uint8Array(arrBuf, 1024, 1024)
+      const sliceView = Uint8Array.from(bytes).slice(1024, 1024)
       expect(sliceView.buffer.byteLength).toBe(8192)
       const sig = await imported.sign(sliceView)
       const validSig = await p256.verifyDidSig(keypair.did(), sliceView, sig)

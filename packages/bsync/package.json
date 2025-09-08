@@ -25,7 +25,7 @@
     "buf:gen": "buf generate proto"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=24.7.0"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
