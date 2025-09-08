@@ -222,7 +222,6 @@ export class BlobTransactor extends BlobReader {
       ...newBlobCids,
       ...duplicateCids.map((row) => row.blobCid),
     ]
-
     const cidsToDelete = deletedRepoBlobCids.filter(
       (cid) => !cidsToKeep.includes(cid),
     )
@@ -232,7 +231,6 @@ export class BlobTransactor extends BlobReader {
       .deleteFrom('blob')
       .where('cid', 'in', cidsToDelete)
       .execute()
-
     if (!skipBlobStore) {
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
@@ -267,7 +265,9 @@ export class BlobTransactor extends BlobReader {
 
     // If the blob was already made permanent (i.e. has no tempKey), we skip
     // verification.
-    if (found.tempKey) verifyBlob(blob, found)
+    if (found.tempKey) {
+      verifyBlob(blob, found)
+    }
 
     return found
   }
@@ -275,38 +275,42 @@ export class BlobTransactor extends BlobReader {
   private async makeBlobsPermanent(it: Iterable<[tempKey: string, cid: CID]>) {
     const ac = new AbortController()
 
-    // Limit the number of parallel requests made to the BlobStore by using a
-    // a queue with concurrency management.
-    const queue = new PQueue({
-      concurrency: 20,
-      // The blob store should already limit the time of every operation. We
-      // add a timeout here as an extra precaution.
-      timeout: 60 * SECOND,
-      throwOnTimeout: true,
+    const tasks = Array.from(it, ([tempKey, cid]) => async () => {
+      ac.signal.throwIfAborted()
+
+      try {
+        await this.blobstore.makePermanent(tempKey, cid)
+
+        // Record the cid of the blob that was made permanent in the returned
+        // array.
+        return cid
+      } catch (err) {
+        log.error(
+          { err, tempKey, cid: cid.toString() },
+          'could not make blob permanent',
+        )
+
+        throw err
+      }
     })
 
-    // Will throw as soon as any of the tasks throws (e.g. due to a timeout or
-    // i/o error).
-    return queue.addAll(
-      Array.from(it, ([tempKey, cid]) => async () => {
-        ac.signal.throwIfAborted()
-
-        try {
-          await this.blobstore.makePermanent(tempKey, cid)
-          return cid
-        } catch (err) {
-          // Abort every other pending tasks
-          ac.abort()
-
-          log.error(
-            { err, tempKey, cid: cid.toString() },
-            'could not make blob permanent',
-          )
-
-          throw err
-        }
-      }),
-    )
+    try {
+      // Limit the number of parallel requests made to the BlobStore by using a
+      // a queue with concurrency management. This will basically behave like
+      // `Promise.all` (throwing as soon as any task fails) but with a limited
+      // number of tasks running in parallel.
+      return await new PQueue({
+        concurrency: 20,
+        // The blob store should already limit the time of every operation. We
+        // add a timeout here as an extra precaution.
+        timeout: 60 * SECOND,
+        throwOnTimeout: true,
+      }).addAll(tasks)
+    } finally {
+      // If a task fails (either because of a timeout or an error), we abort all
+      // other tasks that are still running by aborting the shared signal.
+      ac.abort()
+    }
   }
 
   async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
