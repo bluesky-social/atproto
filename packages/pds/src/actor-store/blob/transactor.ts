@@ -332,12 +332,12 @@ export class BlobTransactor extends BlobReader {
       throwOnTimeout: true,
     })
 
-    // This will basically behave like `Promise.all` (throwing as soon as any
-    // task fails) but with a limited number of tasks running in parallel.
+    // This will behave like `Promise.all` (throwing as soon as any task fails)
+    // but with a limited number of tasks running concurrently.
     return queue.addAll(tasks).finally(() => {
-      // If a task fails (either because of a timeout or an error), we abort all
-      // other tasks that are still running by aborting the shared signal.
-      queue.clear()
+      // If a task fails (either because of a queue timeout or an error), we
+      // abort all other tasks that are still running by aborting the signal.
+      ac.abort()
     })
   }
 
