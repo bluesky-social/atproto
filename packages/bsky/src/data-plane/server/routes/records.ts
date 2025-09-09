@@ -56,10 +56,7 @@ export const getRecords =
       const indexedAt = row?.indexedAt
         ? Timestamp.fromDate(new Date(row?.indexedAt))
         : undefined
-      const recordBytes = ui8.fromString(
-        json,
-        'utf8',
-      ) as Uint8Array<ArrayBuffer>
+      const recordBytes = ui8.fromString(json, 'utf8')
       return new Record({
         record: recordBytes,
         cid: row?.cid,

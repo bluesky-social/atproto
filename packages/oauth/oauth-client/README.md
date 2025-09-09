@@ -42,16 +42,14 @@ const client = new OAuthClient({
       return JoseKey.generate(algs)
     },
 
-    getRandomValues(
-      length: number,
-    ): Uint8Array | PromiseLike<Uint8Array<ArrayBuffer>> {
+    getRandomValues(length: number): Uint8Array | PromiseLike<Uint8Array> {
       return crypto.getRandomValues(new Uint8Array(length))
     },
 
     digest(
-      bytes: Uint8Array<ArrayBuffer>,
+      bytes: Uint8Array,
       algorithm: { name: string },
-    ): Uint8Array<ArrayBuffer> | PromiseLike<Uint8Array<ArrayBuffer>> {
+    ): Uint8Array | PromiseLike<Uint8Array> {
       // sha256 is required. Unsupported algorithms should throw an error.
 
       if (algorithm.name.startsWith('sha')) {

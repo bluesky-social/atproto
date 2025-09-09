@@ -7,6 +7,10 @@ pnpm-lock.yaml
 .changeset
 CHANGELOG.md
 
+# Protobuf generated code
+packages/bsky/src/proto
+packages/bsync/src/proto
+
 # Prettier is used to format the code during codegen
 packages/api/src/client
 packages/lexicon-resolver/src/client

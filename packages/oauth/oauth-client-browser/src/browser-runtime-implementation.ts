@@ -38,23 +38,20 @@ export class BrowserRuntimeImplementation implements RuntimeImplementation {
     return WebcryptoKey.generate(algs)
   }
 
-  getRandomValues(byteLength: number): Uint8Array<ArrayBuffer> {
+  getRandomValues(byteLength: number): Uint8Array {
     return crypto.getRandomValues(new Uint8Array(byteLength))
   }
 
   async digest(
-    data: Uint8Array<ArrayBufferLike>,
+    data: Uint8Array,
     { name }: DigestAlgorithm,
-  ): Promise<Uint8Array<ArrayBuffer>> {
+  ): Promise<Uint8Array> {
     switch (name) {
       case 'sha256':
       case 'sha384':
       case 'sha512': {
-        const buf = await crypto.subtle.digest(
-          `SHA-${name.slice(3)}`,
-          data as Uint8Array<ArrayBuffer>,
-        )
-        return new Uint8Array<ArrayBuffer>(buf)
+        const buf = await crypto.subtle.digest(`SHA-${name.slice(3)}`, data)
+        return new Uint8Array(buf)
       }
       default:
         throw new Error(`Unsupported digest algorithm: ${name}`)

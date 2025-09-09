@@ -42,10 +42,6 @@ export {
   type VerifyOptions,
 }
 
-function isJwk(input: string | KeyLike | Jwk): input is Jwk {
-  return typeof input === 'object' && ('kty' in input || 'alg' in input)
-}
-
 export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
   /**
    * Some runtimes (e.g. Bun) require an `alg` second argument to be set when
@@ -196,7 +192,7 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
 
     if (typeof input === 'object') {
       // Jwk
-      if (isJwk(input)) {
+      if ('kty' in input || 'alg' in input) {
         return this.fromJWK(input, kid)
       }
 
@@ -236,7 +232,7 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
   }
 
   static async fromJWK(
-    input: string | Jwk | JWK,
+    input: string | Record<string, unknown>,
     inputKid?: string,
   ): Promise<JoseKey> {
     const jwk = typeof input === 'string' ? JSON.parse(input) : input

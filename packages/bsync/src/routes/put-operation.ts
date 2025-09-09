@@ -122,6 +122,6 @@ type Operation = {
   actorDid: string
   namespace: string
   key: string
-  payload: Uint8Array<ArrayBuffer>
+  payload: Uint8Array
   method: OperationMethod
 }

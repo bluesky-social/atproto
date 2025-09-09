@@ -4,8 +4,8 @@
   "packageManager": "pnpm@8.15.9",
   "dependencies": {
     "@atproto/pds": "workspace:^",
-    "dd-trace": "^4.18.0",
     "@opentelemetry/instrumentation": "^0.204.0",
+    "dd-trace": "^4.18.0",
     "opentelemetry-plugin-better-sqlite3": "^1.11.0"
   }
 }

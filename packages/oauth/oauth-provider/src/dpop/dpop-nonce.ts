@@ -14,7 +14,7 @@ export const rotationIntervalSchema = z
 const SECRET_BYTE_LENGTH = 32
 
 export const secretBytesSchema = z
-  .instanceof(Uint8Array<ArrayBuffer>)
+  .instanceof(Uint8Array)
   .refine((secret) => secret.length === SECRET_BYTE_LENGTH, {
     message: `Secret must be exactly ${SECRET_BYTE_LENGTH} bytes long`,
   })
@@ -26,17 +26,14 @@ export const secretHexSchema = z
     `Secret must be a ${SECRET_BYTE_LENGTH * 2} chars hex string`,
   )
   .length(SECRET_BYTE_LENGTH * 2)
-  .transform(
-    (hex): Uint8Array<ArrayBuffer> =>
-      Buffer.from(hex, 'hex') as Uint8Array<ArrayBuffer>,
-  )
+  .transform((hex): Uint8Array => Buffer.from(hex, 'hex'))
 
 export const dpopSecretSchema = z.union([secretBytesSchema, secretHexSchema])
 export type DpopSecret = z.input<typeof dpopSecretSchema>
 
 export class DpopNonce {
   readonly #rotationInterval: number
-  readonly #secret: Uint8Array<ArrayBuffer>
+  readonly #secret: Uint8Array
 
   // Nonce state
   #counter: number
@@ -45,7 +42,7 @@ export class DpopNonce {
   #next: string
 
   constructor(
-    secret: DpopSecret = Uint8Array.from(randomBytes(SECRET_BYTE_LENGTH)),
+    secret: DpopSecret = randomBytes(SECRET_BYTE_LENGTH),
     rotationInterval = MAX_ROTATION_INTERVAL,
   ) {
     this.#rotationInterval = rotationIntervalSchema.parse(rotationInterval)

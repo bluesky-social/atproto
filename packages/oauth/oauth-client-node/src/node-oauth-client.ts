@@ -73,9 +73,9 @@ export class NodeOAuthClient extends OAuthClient {
     runtimeImplementation = {
       requestLock,
       createKey: (algs) => JoseKey.generate(algs),
-      getRandomValues: (length: number) => Uint8Array.from(randomBytes(length)),
+      getRandomValues: randomBytes,
       digest: (bytes, algorithm) =>
-        Uint8Array.from(createHash(algorithm.name).update(bytes).digest()),
+        createHash(algorithm.name).update(bytes).digest(),
     },
 
     ...options

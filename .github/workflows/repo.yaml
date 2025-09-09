@@ -19,7 +19,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version-file: package.json
       - name: Enable Corepack
         run: corepack enable
       - name: Configure Dependency Cache
@@ -56,7 +56,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version-file: package.json
       - name: Enable Corepack
         run: corepack enable
       - name: Configure Dependency Cache
@@ -86,7 +86,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version-file: package.json
       - name: Enable Corepack
         run: corepack enable
       - name: Configure Dependency Cache

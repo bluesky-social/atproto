@@ -142,7 +142,7 @@ describe('signatures', () => {
 async function generateTestVectors(): Promise<TestVector[]> {
   const p256Key = await P256Keypair.create({ exportable: true })
   const secpKey = await Secp256k1Keypair.create({ exportable: true })
-  const messageBytes = cborEncode({ hello: 'world' }) as Uint8Array<ArrayBuffer>
+  const messageBytes = cborEncode({ hello: 'world' })
   const messageBase64 = uint8arrays.toString(messageBytes, 'base64')
   return [
     {
