@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/simple-store-redis",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Redis based simple-store implementation",
   "keywords": [

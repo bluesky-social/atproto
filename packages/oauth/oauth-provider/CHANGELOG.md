@@ -1,5 +1,25 @@
 # @atproto/oauth-provider
 
+## 0.12.0
+
+### Minor Changes
+
+- [#4149](https://github.com/bluesky-social/atproto/pull/4149) [`8914f9abd`](https://github.com/bluesky-social/atproto/commit/8914f9abde2059c551d7e4c8d104227986098b82) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `AccessTokenMode` enum values to be more meaningful
+
+- [#4149](https://github.com/bluesky-social/atproto/pull/4149) [`8914f9abd`](https://github.com/bluesky-social/atproto/commit/8914f9abde2059c551d7e4c8d104227986098b82) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `SignedTokenPayload` to `AccessTokenPayload`
+
+### Patch Changes
+
+- [#4149](https://github.com/bluesky-social/atproto/pull/4149) [`8914f9abd`](https://github.com/bluesky-social/atproto/commit/8914f9abde2059c551d7e4c8d104227986098b82) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `onCreateToken` and `onDecodeToken` hooks to intercept access token JWT claims encoding/decoding
+
+- Updated dependencies [[`8914f9abd`](https://github.com/bluesky-social/atproto/commit/8914f9abde2059c551d7e4c8d104227986098b82), [`8914f9abd`](https://github.com/bluesky-social/atproto/commit/8914f9abde2059c551d7e4c8d104227986098b82), [`d570db43d`](https://github.com/bluesky-social/atproto/commit/d570db43d6df2044dbaa5813cac469b3e73ba219)]:
+  - @atproto/oauth-scopes@0.2.0
+  - @atproto/oauth-provider-frontend@0.2.1
+  - @atproto/oauth-provider-ui@0.3.1
+  - @atproto/lexicon-resolver@0.2.1
+  - @atproto/common@0.4.12
+  - @atproto/lexicon@0.5.1
+
 ## 0.11.2
 
 ### Patch Changes
