@@ -32,6 +32,7 @@ import {
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
+import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
 import { authPassthru, forwardedFor } from './api/proxy'
 import {
@@ -46,7 +47,7 @@ import { Crawlers } from './crawlers'
 import { DidSqliteCache } from './did-cache'
 import { DiskBlobStore } from './disk-blobstore'
 import { ImageUrlBuilder } from './image/image-url-builder'
-import { fetchLogger, lexiconResolverLogger } from './logger'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
@@ -397,10 +398,11 @@ export class AppContext {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },
           // If the PDS is both an authorization server & resource server (no
-          // entryway), there is no need to use JWTs as access tokens. Instead,
-          // the PDS can use tokenId as access tokens. This allows the PDS to
-          // always use up-to-date token data from the token store.
-          accessTokenMode: AccessTokenMode.light,
+          // entryway), we can afford to check the token validity on every
+          // request. This allows revoked tokens to be rejected immediately.
+          // This also allows JWT to be shorter since some claims (notably the
+          // "scope" claim) do not need to be included in the token.
+          accessTokenMode: AccessTokenMode.stateful,
 
           getClientInfo(clientId) {
             return {
@@ -410,6 +412,10 @@ export class AppContext {
         })
       : undefined
 
+    const scopeRefGetter = entrywayAgent
+      ? new ScopeReferenceGetter(entrywayAgent, redisScratch)
+      : undefined
+
     const oauthVerifier: OAuthVerifier =
       oauthProvider ?? // OAuthProvider extends OAuthVerifier
       new OAuthVerifier({
@@ -417,6 +423,21 @@ export class AppContext {
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
+        onDecodeToken: scopeRefGetter
+          ? async ({ payload, dpopProof }) => {
+              // @TODO drop this once oauth provider no longer accepts DPoP proof with
+              // query or fragment in "htu" claim.
+              if (dpopProof?.htu.match(/[?#]/)) {
+                oauthLogger.info(
+                  { htu: dpopProof.htu, client_id: payload.client_id },
+                  'DPoP proof "htu" contains query or fragment',
+                )
+              }
+
+              const scope = await scopeRefGetter.dereference(payload.scope)
+              return { ...payload, scope }
+            }
+          : undefined,
       })
 
     const authVerifier = new AuthVerifier(

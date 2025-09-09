@@ -13700,6 +13700,46 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempDereferenceScope: {
+    lexicon: 1,
+    id: 'com.atproto.temp.dereferenceScope',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Allows finding the oauth permission scope from a reference',
+        parameters: {
+          type: 'params',
+          required: ['scope'],
+          properties: {
+            scope: {
+              type: 'string',
+              description: "The scope reference (starts with 'ref:')",
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['scope'],
+            properties: {
+              scope: {
+                type: 'string',
+                description: 'The full oauth permission scope',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidScopeReference',
+            description: 'An invalid scope reference was provided.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoTempFetchLabels: {
     lexicon: 1,
     id: 'com.atproto.temp.fetchLabels',
@@ -14080,6 +14120,7 @@ export const ids = {
   ComAtprotoTempCheckHandleAvailability:
     'com.atproto.temp.checkHandleAvailability',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
+  ComAtprotoTempDereferenceScope: 'com.atproto.temp.dereferenceScope',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',

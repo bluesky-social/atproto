@@ -9,53 +9,65 @@ import {
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
 import { DpopProof } from './dpop/dpop-proof.js'
+import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidTokenError } from './errors/invalid-token-error.js'
 import { UseDpopNonceError } from './errors/use-dpop-nonce-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { parseAuthorizationHeader } from './lib/util/authorization-header.js'
-import { Override } from './lib/util/type.js'
+import { includedIn } from './lib/util/function.js'
+import { OAuthHooks } from './oauth-hooks.js'
 import { ReplayManager } from './replay/replay-manager.js'
 import { ReplayStoreMemory } from './replay/replay-store-memory.js'
 import { ReplayStoreRedis } from './replay/replay-store-redis.js'
 import { ReplayStore } from './replay/replay-store.js'
+import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { Signer } from './signer/signer.js'
-import {
-  VerifyTokenClaimsOptions,
-  VerifyTokenClaimsResult,
-  verifyTokenClaims,
-} from './token/verify-token-claims.js'
 
-export type * from './token/verify-token-claims.js'
+export type DecodeTokenHook = OAuthHooks['onDecodeToken']
 
-export type OAuthVerifierOptions = Override<
-  DpopManagerOptions,
-  {
-    /**
-     * The "issuer" identifier of the OAuth provider, this is the base URL of the
-     * OAuth provider.
-     */
-    issuer: URL | string
+export type OAuthVerifierOptions = DpopManagerOptions & {
+  /**
+   * The "issuer" identifier of the OAuth provider, this is the base URL of the
+   * OAuth provider.
+   */
+  issuer: URL | string
 
-    /**
-     * The keyset used to sign access tokens.
-     */
-    keyset: Keyset | Iterable<Key | undefined | null | false>
+  /**
+   * The keyset used to sign access tokens.
+   */
+  keyset: Keyset | Iterable<Key | undefined | null | false>
 
-    /**
-     * A redis instance to use for replay protection. If not provided, replay
-     * protection will use memory storage.
-     */
-    redis?: Redis | RedisOptions | string
+  /**
+   * A redis instance to use for replay protection. If not provided, replay
+   * protection will use memory storage.
+   */
+  redis?: Redis | RedisOptions | string
 
-    replayStore?: ReplayStore
-  }
->
+  replayStore?: ReplayStore
+
+  onDecodeToken?: DecodeTokenHook
+}
+
+export type VerifyTokenPayloadOptions = {
+  /** One of these audience must be included in the token audience(s) */
+  audience?: [string, ...string[]]
+  /** One of these scope must be included in the token scope(s) */
+  scope?: [string, ...string[]]
+}
 
 export { DpopNonce, Key, Keyset }
-export type { DpopProof, RedisOptions, ReplayStore }
+export type {
+  AccessTokenPayload,
+  DpopProof,
+  OAuthTokenType,
+  RedisOptions,
+  ReplayStore,
+}
 
 export class OAuthVerifier {
+  private readonly onDecodeToken?: DecodeTokenHook
+
   public readonly issuer: OAuthIssuerIdentifier
   public readonly keyset: Keyset
 
@@ -70,6 +82,7 @@ export class OAuthVerifier {
     replayStore = redis != null
       ? new ReplayStoreRedis({ redis })
       : new ReplayStoreMemory(),
+    onDecodeToken,
 
     ...rest
   }: OAuthVerifierOptions) {
@@ -118,12 +131,11 @@ export class OAuthVerifier {
     return dpopProof
   }
 
-  protected async verifyToken(
+  protected async decodeToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
     dpopProof: null | DpopProof,
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
+  ): Promise<AccessTokenPayload> {
     if (!isSignedJwt(token)) {
       throw new InvalidTokenError(tokenType, `Malformed token`)
     }
@@ -134,22 +146,56 @@ export class OAuthVerifier {
         throw InvalidTokenError.from(err, tokenType)
       })
 
-    return verifyTokenClaims(
-      token,
-      payload.jti,
+    if (payload.cnf?.jkt) {
+      // An access token with a cnf.jkt claim must be a DPoP token
+      if (tokenType !== 'DPoP') {
+        throw new InvalidTokenError(
+          'DPoP',
+          `Access token is bound to a DPoP proof, but token type is ${tokenType}`,
+        )
+      }
+
+      // DPoP token type must be used with a DPoP proof
+      if (!dpopProof) {
+        throw new InvalidDpopProofError(`DPoP proof required`)
+      }
+
+      // DPoP proof must be signed with the key that matches the "cnf" claim
+      if (payload.cnf.jkt !== dpopProof.jkt) {
+        throw new InvalidDpopKeyBindingError()
+      }
+    } else {
+      // An access token without a cnf.jkt claim must be a Bearer token
+      if (tokenType !== 'Bearer') {
+        throw new InvalidTokenError(
+          'Bearer',
+          `Bearer token type must be used without a DPoP proof`,
+        )
+      }
+
+      // @NOTE We ignore (but allow) DPoP proofs for Bearer tokens
+    }
+
+    const payloadOverride = await this.onDecodeToken?.call(null, {
       tokenType,
+      token,
       payload,
       dpopProof,
-      verifyOptions,
-    )
+    })
+
+    return payloadOverride ?? payload
   }
 
+  /**
+   * @throws {WWWAuthenticateError}
+   * @throws {InvalidTokenError}
+   */
   public async authenticateRequest(
     httpMethod: string,
     httpUrl: Readonly<URL>,
     httpHeaders: Record<string, undefined | string | string[]>,
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
+    verifyOptions?: VerifyTokenPayloadOptions,
+  ): Promise<AccessTokenPayload> {
     const [tokenType, token] = parseAuthorizationHeader(
       httpHeaders['authorization'],
     )
@@ -161,19 +207,45 @@ export class OAuthVerifier {
         token,
       )
 
-      const tokenResult = await this.verifyToken(
-        tokenType,
-        token,
-        dpopProof,
-        verifyOptions,
-      )
+      const tokenPayload = await this.decodeToken(tokenType, token, dpopProof)
 
-      return tokenResult
+      this.verifyTokenPayload(tokenType, tokenPayload, verifyOptions)
+
+      return tokenPayload
     } catch (err) {
       if (err instanceof UseDpopNonceError) throw err.toWwwAuthenticateError()
       if (err instanceof WWWAuthenticateError) throw err
 
       throw InvalidTokenError.from(err, tokenType)
+    }
+  }
+
+  protected verifyTokenPayload(
+    tokenType: OAuthTokenType,
+    tokenPayload: AccessTokenPayload,
+    options?: VerifyTokenPayloadOptions,
+  ): void {
+    if (options?.audience) {
+      const { aud } = tokenPayload
+      const hasMatch =
+        aud != null &&
+        (Array.isArray(aud)
+          ? options.audience.some(includedIn, aud)
+          : options.audience.includes(aud))
+      if (!hasMatch) {
+        throw new InvalidTokenError(tokenType, `Invalid audience`)
+      }
+    }
+
+    if (options?.scope) {
+      const scopes = tokenPayload.scope?.split(' ')
+      if (!scopes || !options.scope.some(includedIn, scopes)) {
+        throw new InvalidTokenError(tokenType, `Invalid scope`)
+      }
+    }
+
+    if (tokenPayload.exp != null && tokenPayload.exp * 1000 <= Date.now()) {
+      throw new InvalidTokenError(tokenType, `Token expired`)
     }
   }
 }

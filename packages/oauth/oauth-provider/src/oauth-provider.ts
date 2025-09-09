@@ -85,6 +85,7 @@ import {
   DpopProof,
   OAuthVerifier,
   OAuthVerifierOptions,
+  VerifyTokenPayloadOptions,
 } from './oauth-verifier.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
@@ -95,6 +96,7 @@ import { AuthorizationRedirectParameters } from './result/authorization-redirect
 import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
+import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
 import {
@@ -102,14 +104,11 @@ import {
   asTokenStore,
   refreshTokenSchema,
 } from './token/token-store.js'
-import {
-  VerifyTokenClaimsOptions,
-  VerifyTokenClaimsResult,
-} from './token/verify-token-claims.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
 export { AccessTokenMode, Keyset }
 export type {
+  AccessTokenPayload,
   AuthorizationRedirectParameters,
   AuthorizationResultAuthorizePage as AuthorizationResultAuthorize,
   AuthorizationResultRedirect,
@@ -123,6 +122,7 @@ export type {
   LexiconResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
+  VerifyTokenPayloadOptions,
 }
 
 type OAuthProviderConfig = {
@@ -1075,41 +1075,27 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected override async verifyToken(
+  protected override async decodeToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
     dpopProof: null | DpopProof,
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
-    if (this.accessTokenMode === AccessTokenMode.stateless) {
-      return super.verifyToken(tokenType, token, dpopProof, verifyOptions)
-    }
+  ): Promise<AccessTokenPayload> {
+    const tokenPayload = await super.decodeToken(tokenType, token, dpopProof)
 
-    if (this.accessTokenMode === AccessTokenMode.light) {
-      const { tokenClaims } = await super.verifyToken(
+    if (this.accessTokenMode !== AccessTokenMode.stateless) {
+      // @NOTE in non stateless mode, some claims can be omitted (most notably
+      // "scope"). We load the token claims here (allowing to ensure that the
+      // token is still valid, and to retrieve a (potentially updated) set of
+      // claims).
+
+      const tokenClaims = await this.tokenManager.loadTokenClaims(
         tokenType,
-        token,
-        dpopProof,
-        // Do not verify the scope and audience in case of "light" tokens.
-        // these will be checked through the tokenManager hereafter.
-        undefined,
+        tokenPayload,
       )
 
-      const tokenId = tokenClaims.jti
-
-      // In addition to verifying the signature (through the verifier above), we
-      // also verify the tokenId is still valid using a database to fetch
-      // missing data from "light" token.
-      return this.tokenManager.verifyToken(
-        token,
-        tokenType,
-        tokenId,
-        dpopProof,
-        verifyOptions,
-      )
+      Object.assign(tokenPayload, tokenClaims)
     }
 
-    // Fool-proof
-    throw new Error('Invalid access token mode')
+    return tokenPayload
   }
 }

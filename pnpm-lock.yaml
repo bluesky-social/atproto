@@ -735,6 +735,19 @@ importers:
         specifier: ^5.6.3
         version: 5.8.2
 
+  packages/internal/simple-store-redis:
+    dependencies:
+      '@atproto-labs/simple-store':
+        specifier: workspace:*
+        version: link:../simple-store
+      ioredis:
+        specifier: ^5.3.2
+        version: 5.3.2
+    devDependencies:
+      typescript:
+        specifier: ^5.6.3
+        version: 5.8.3
+
   packages/internal/xrpc-utils:
     dependencies:
       '@atproto/xrpc':
@@ -1498,6 +1511,15 @@ importers:
       '@atproto-labs/fetch-node':
         specifier: workspace:*
         version: link:../internal/fetch-node
+      '@atproto-labs/simple-store':
+        specifier: workspace:*
+        version: link:../internal/simple-store
+      '@atproto-labs/simple-store-memory':
+        specifier: workspace:*
+        version: link:../internal/simple-store-memory
+      '@atproto-labs/simple-store-redis':
+        specifier: workspace:*
+        version: link:../internal/simple-store-redis
       '@atproto-labs/xrpc-utils':
         specifier: workspace:*
         version: link:../internal/xrpc-utils
@@ -4208,7 +4230,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.4
+      debug: 4.3.7
       espree: 9.6.1
       globals: 13.21.0
       ignore: 5.2.4
@@ -4338,7 +4360,7 @@ packages:
     engines: {node: '>=10.10.0'}
     dependencies:
       '@humanwhocodes/object-schema': 2.0.2
-      debug: 4.3.4
+      debug: 4.3.7
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -7733,7 +7755,7 @@ packages:
     dependencies:
       '@typescript-eslint/typescript-estree': 7.4.0(typescript@5.8.3)
       '@typescript-eslint/utils': 7.4.0(eslint@8.57.0)(typescript@5.8.3)
-      debug: 4.3.4
+      debug: 4.3.7
       eslint: 8.57.0
       ts-api-utils: 1.0.3(typescript@5.8.3)
       typescript: 5.8.3
@@ -7757,7 +7779,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 7.4.0
       '@typescript-eslint/visitor-keys': 7.4.0
-      debug: 4.3.4
+      debug: 4.3.7
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -7798,7 +7820,7 @@ packages:
   /@typescript/vfs@1.5.0:
     resolution: {integrity: sha512-AJS307bPgbsZZ9ggCT3wwpg3VbTKMFNHfaY/uF0ahSkYYrPF2dSSKDNIDIQAHm9qJqbLvCsSJH7yN4Vs/CsMMg==}
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
     dev: true

@@ -7,7 +7,7 @@ import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
   OAuthError,
   OAuthVerifier,
-  VerifyTokenClaimsOptions,
+  VerifyTokenPayloadOptions,
   WWWAuthenticateError,
 } from '@atproto/oauth-provider'
 import {
@@ -39,7 +39,6 @@ import {
 } from './auth-output'
 import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
 import { softDeleted } from './db'
-import { oauthLogger } from './logger'
 import { appendVary } from './util/http'
 import { WithRequired } from './util/types'
 
@@ -338,7 +337,7 @@ export class AuthVerifier {
     OAuthOutput,
     P
   > {
-    const verifyTokenOptions: VerifyTokenClaimsOptions = {
+    const verifyTokenOptions: VerifyTokenPayloadOptions = {
       audience: [this.dids.pds],
       scope: ['atproto'],
     }
@@ -358,7 +357,7 @@ export class AuthVerifier {
       const originalUrl = req.originalUrl || req.url || '/'
       const url = new URL(originalUrl, this._publicUrl)
 
-      const { tokenClaims, dpopProof } = await this.oauthVerifier
+      const { scope, sub: did } = await this.oauthVerifier
         .authenticateRequest(
           req.method || 'GET',
           url,
@@ -383,28 +382,13 @@ export class AuthVerifier {
           throw err
         })
 
-      // @TODO drop this once oauth provider no longer accepts DPoP proof with
-      // query or fragment in "htu" claim.
-      if (dpopProof?.htu.match(/[?#]/)) {
-        oauthLogger.info(
-          {
-            client_id: tokenClaims.client_id,
-            htu: dpopProof.htu,
-          },
-          'DPoP proof "htu" contains query or fragment',
-        )
-      }
-
-      const { sub: did } = tokenClaims
       if (typeof did !== 'string' || !did.startsWith('did:')) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
       await this.verifyStatus(did, verifyStatusOptions)
 
-      const permissions = new ScopePermissionsTransition(
-        tokenClaims.scope?.split(' '),
-      )
+      const permissions = new ScopePermissionsTransition(scope?.split(' '))
 
       // Should never happen
       if (!permissions.scopes.has('atproto')) {

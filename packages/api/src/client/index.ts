@@ -241,6 +241,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
 import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
+import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/dereferenceScope.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
@@ -528,6 +529,7 @@ export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 export * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
 export * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
+export * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/dereferenceScope.js'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 export * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
@@ -4711,6 +4713,17 @@ export class ComAtprotoTempNS {
       undefined,
       opts,
     )
+  }
+
+  dereferenceScope(
+    params?: ComAtprotoTempDereferenceScope.QueryParams,
+    opts?: ComAtprotoTempDereferenceScope.CallOptions,
+  ): Promise<ComAtprotoTempDereferenceScope.Response> {
+    return this._client
+      .call('com.atproto.temp.dereferenceScope', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempDereferenceScope.toKnownErr(e)
+      })
   }
 
   fetchLabels(

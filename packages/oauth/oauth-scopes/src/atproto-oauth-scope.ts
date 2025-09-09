@@ -1,4 +1,5 @@
 import { ScopeStringFor, isScopeStringFor } from './lib/syntax.js'
+import { isNonNullable } from './lib/util.js'
 import { AccountPermission } from './scopes/account-permission.js'
 import { BlobPermission } from './scopes/blob-permission.js'
 import { IdentityPermission } from './scopes/identity-permission.js'
@@ -8,11 +9,20 @@ import { RpcPermission } from './scopes/rpc-permission.js'
 
 export { type ScopeStringFor, isScopeStringFor }
 
+export const STATIC_SCOPE_VALUES = Object.freeze([
+  'atproto',
+  'transition:email',
+  'transition:generic',
+  'transition:chat.bsky',
+] as const)
+
+export type StaticScopeValue = (typeof STATIC_SCOPE_VALUES)[number]
+export function isStaticScopeValue(value: string): value is StaticScopeValue {
+  return (STATIC_SCOPE_VALUES as readonly string[]).includes(value)
+}
+
 export type AtprotoOauthScope =
-  | 'atproto'
-  | 'transition:email'
-  | 'transition:generic'
-  | 'transition:chat.bsky'
+  | StaticScopeValue
   | ScopeStringFor<'account'>
   | ScopeStringFor<'blob'>
   | ScopeStringFor<'identity'>
@@ -29,10 +39,7 @@ export type AtprotoOauthScope =
  */
 export function isAtprotoOauthScope(value: string): value is AtprotoOauthScope {
   return (
-    value === 'atproto' ||
-    value === 'transition:email' ||
-    value === 'transition:generic' ||
-    value === 'transition:chat.bsky' ||
+    isStaticScopeValue(value) ||
     AccountPermission.fromString(value) != null ||
     BlobPermission.fromString(value) != null ||
     IdentityPermission.fromString(value) != null ||
@@ -40,4 +47,33 @@ export function isAtprotoOauthScope(value: string): value is AtprotoOauthScope {
     RepoPermission.fromString(value) != null ||
     RpcPermission.fromString(value) != null
   )
+}
+
+export function normalizeAtprotoOauthScope(scope: string) {
+  return scope
+    .split(' ')
+    .map(normalizeAtprotoOauthScopeValue)
+    .filter(isNonNullable)
+    .sort()
+    .join(' ')
+}
+
+export function normalizeAtprotoOauthScopeValue(
+  value: string,
+): AtprotoOauthScope | null {
+  if (isStaticScopeValue(value)) return value
+
+  for (const Scope of [
+    AccountPermission,
+    BlobPermission,
+    IdentityPermission,
+    IncludeScope,
+    RepoPermission,
+    RpcPermission,
+  ]) {
+    const parsed = Scope.fromString(value)
+    if (parsed) return parsed.toString()
+  }
+
+  return null
 }
