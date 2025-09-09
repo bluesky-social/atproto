@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.1.142
+
+### Patch Changes
+
+- [#4170](https://github.com/bluesky-social/atproto/pull/4170) [`55cc15cdd`](https://github.com/bluesky-social/atproto/commit/55cc15cdd664865d53f027e63708226012dc39ef) Thanks [@foysalit](https://github.com/foysalit)! - Add ozone proxy for revoke credentials
+
 ## 0.1.141
 
 ### Patch Changes
