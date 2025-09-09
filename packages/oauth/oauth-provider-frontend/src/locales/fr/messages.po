@@ -139,6 +139,7 @@ msgid "Get reset code"
 msgstr "Obtenir le code de réinitialisation"
 
 #: src/routes/account/_appLayout/$sub.tsx:53
+#: src/components/Footer.tsx:70
 msgid "Home"
 msgstr "Accueil"
 
@@ -200,6 +201,10 @@ msgstr "Le mot de passe est requis"
 #: src/routes/account/_minimalLayout/reset-password.tsx:79
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères"
+
+#: src/components/Footer.tsx:71
+msgid "Privacy Policy"
+msgstr "Politique de confidentialité"
 
 #: src/routes/account/_appLayout/$sub.tsx:302
 msgid "Remove this device"
@@ -263,6 +268,14 @@ msgstr "Déconnexion de l'appareil réussie"
 #: src/routes/account/_appLayout/$sub.tsx:166
 msgid "Successfully signed out"
 msgstr "Déconnexion réussie"
+
+#: src/components/Footer.tsx:73
+msgid "Support"
+msgstr "Support"
+
+#: src/components/Footer.tsx:72
+msgid "Terms of Service"
+msgstr "Conditions d'utilisation"
 
 #: src/routes/account/_appLayout/$sub.tsx:298
 msgid "This device"

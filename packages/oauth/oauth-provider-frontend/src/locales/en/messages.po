@@ -139,6 +139,7 @@ msgid "Get reset code"
 msgstr "Get reset code"
 
 #: src/routes/account/_appLayout/$sub.tsx:53
+#: src/components/Footer.tsx:70
 msgid "Home"
 msgstr "Home"
 
@@ -200,6 +201,10 @@ msgstr "Password is required"
 #: src/routes/account/_minimalLayout/reset-password.tsx:79
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password must be at least {MIN_PASSWORD_LENGTH} characters"
+
+#: src/components/Footer.tsx:71
+msgid "Privacy Policy"
+msgstr "Privacy Policy"
 
 #: src/routes/account/_appLayout/$sub.tsx:302
 msgid "Remove this device"
@@ -263,6 +268,14 @@ msgstr "Successfully removed device"
 #: src/routes/account/_appLayout/$sub.tsx:166
 msgid "Successfully signed out"
 msgstr "Successfully signed out"
+
+#: src/components/Footer.tsx:73
+msgid "Support"
+msgstr "Support"
+
+#: src/components/Footer.tsx:72
+msgid "Terms of Service"
+msgstr "Terms of Service"
 
 #: src/routes/account/_appLayout/$sub.tsx:298
 msgid "This device"

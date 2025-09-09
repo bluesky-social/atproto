@@ -139,6 +139,7 @@ msgid "Get reset code"
 msgstr ""
 
 #: src/routes/account/_appLayout/$sub.tsx:53
+#: src/components/Footer.tsx:70
 msgid "Home"
 msgstr ""
 
@@ -199,6 +200,10 @@ msgstr ""
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:79
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
+msgstr ""
+
+#: src/components/Footer.tsx:71
+msgid "Privacy Policy"
 msgstr ""
 
 #: src/routes/account/_appLayout/$sub.tsx:302
@@ -262,6 +267,14 @@ msgstr ""
 
 #: src/routes/account/_appLayout/$sub.tsx:166
 msgid "Successfully signed out"
+msgstr ""
+
+#: src/components/Footer.tsx:73
+msgid "Support"
+msgstr ""
+
+#: src/components/Footer.tsx:72
+msgid "Terms of Service"
 msgstr ""
 
 #: src/routes/account/_appLayout/$sub.tsx:298

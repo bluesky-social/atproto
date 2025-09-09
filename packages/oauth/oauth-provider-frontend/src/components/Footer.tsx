@@ -1,9 +1,13 @@
+import { useLingui } from '@lingui/react/macro'
+import { ReactNode } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { LocaleSelector } from '#/components/LocaleSelector'
 import { useCustomizationData } from '#/data/useCustomizationData'
 import { useLocale } from '#/locales'
 import { Locale, locales } from '#/locales/locales'
-import { findMatchingString } from '#/util/lang'
+import { getLangString } from '#/util/lang'
+import { useLangString } from '#/util/lang-string'
+import type { LinkDefinition } from '@atproto/oauth-provider-api'
 
 export function Footer() {
   const { locale, setLocale } = useLocale()
@@ -16,7 +20,7 @@ export function Footer() {
           ? (link as typeof link & { title: string })
           : {
               ...link,
-              title: findMatchingString(
+              title: getLangString(
                 link.title,
                 locale,
                 link.title['en'] || Object.values(link.title).find(Boolean),
@@ -35,7 +39,7 @@ export function Footer() {
             className="text-text-light mr-4 text-sm hover:underline focus:underline focus:outline-none"
             key={link.href}
           >
-            {link.title}
+            <LinkTitle link={link} />
           </a>
         ))}
       </div>
@@ -50,4 +54,26 @@ export function Footer() {
       />
     </footer>
   )
+}
+
+export type LinkNameProps = {
+  link: LinkDefinition
+}
+
+export function LinkTitle({ link }: LinkNameProps): ReactNode {
+  const { t } = useLingui()
+
+  const title = useLangString(link.title)
+  if (title) return title
+
+  // Fallback
+  if (link.rel === 'canonical') return t`Home`
+  if (link.rel === 'privacy-policy') return t`Privacy Policy`
+  if (link.rel === 'terms-of-service') return t`Terms of Service`
+  if (link.rel === 'help') return t`Support`
+
+  // English version
+  return typeof link.title === 'object'
+    ? link.title['en'] || Object.values(link.title).find(Boolean)
+    : link.title
 }
