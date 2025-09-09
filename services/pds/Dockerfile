@@ -41,6 +41,7 @@ COPY ./packages/internal/fetch ./packages/internal/fetch
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/simple-store ./packages/internal/simple-store
 COPY ./packages/internal/simple-store-memory ./packages/internal/simple-store-memory
+COPY ./packages/internal/simple-store-redis ./packages/internal/simple-store-redis
 COPY ./packages/internal/rollup-plugin-bundle-manifest ./packages/internal/rollup-plugin-bundle-manifest
 COPY ./packages/internal/xrpc-utils ./packages/internal/xrpc-utils
 COPY ./services/pds ./services/pds
