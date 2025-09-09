@@ -1,9 +1,10 @@
-import {
-  Fetch,
-  isUnicastIp,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
+import assert from 'node:assert'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+import { Redis } from 'ioredis'
+import * as nodemailer from 'nodemailer'
+import * as ui8 from 'uint8arrays'
+import * as undici from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
@@ -23,13 +24,12 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import * as plc from '@did-plc/lib'
-import express from 'express'
-import { Redis } from 'ioredis'
-import assert from 'node:assert'
-import * as nodemailer from 'nodemailer'
-import * as ui8 from 'uint8arrays'
-import * as undici from 'undici'
+import {
+  Fetch,
+  isUnicastIp,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'

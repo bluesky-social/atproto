@@ -1,11 +1,11 @@
+import Redis from 'ioredis'
+import { Agent, ComAtprotoTempDereferenceScope } from '@atproto/api'
+import { DAY, backoffMs, retry } from '@atproto/common'
+import { InvalidTokenError, OAuthScope } from '@atproto/oauth-provider'
+import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { CachedGetter, GetterOptions } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { SimpleStoreRedis } from '@atproto-labs/simple-store-redis'
-import { Agent, ComAtprotoTempDereferenceScope } from '@atproto/api'
-import { backoffMs, DAY, retry } from '@atproto/common'
-import { InvalidTokenError, OAuthScope } from '@atproto/oauth-provider'
-import { UpstreamFailureError } from '@atproto/xrpc-server'
-import Redis from 'ioredis'
 
 const { InvalidScopeReferenceError } = ComAtprotoTempDereferenceScope
 const PREFIX = 'ref:'
