@@ -1,5 +1,12 @@
 # @atproto/lexicon
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099)]:
+  - @atproto/common-web@0.4.3
+
 ## 0.5.0
 
 ### Minor Changes

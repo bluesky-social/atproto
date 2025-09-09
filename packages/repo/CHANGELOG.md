@@ -1,5 +1,19 @@
 # @atproto/repo
 
+## 0.8.9
+
+### Patch Changes
+
+- [#4169](https://github.com/bluesky-social/atproto/pull/4169) [`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add iterator support to the `BlockMap` class
+
+- [#4169](https://github.com/bluesky-social/atproto/pull/4169) [`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Small performance improvement
+
+- Updated dependencies [[`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099)]:
+  - @atproto/common-web@0.4.3
+  - @atproto/common@0.4.12
+  - @atproto/lexicon@0.5.1
+  - @atproto/crypto@0.4.4
+
 ## 0.8.8
 
 ### Patch Changes
