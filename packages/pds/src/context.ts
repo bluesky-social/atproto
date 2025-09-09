@@ -423,21 +423,22 @@ export class AppContext {
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
-        onDecodeToken: scopeRefGetter
-          ? async ({ payload, dpopProof }) => {
-              // @TODO drop this once oauth provider no longer accepts DPoP proof with
-              // query or fragment in "htu" claim.
-              if (dpopProof?.htu.match(/[?#]/)) {
-                oauthLogger.info(
-                  { htu: dpopProof.htu, client_id: payload.client_id },
-                  'DPoP proof "htu" contains query or fragment',
-                )
-              }
+        onDecodeToken: async ({ payload, dpopProof }) => {
+          // @TODO drop this once oauth provider no longer accepts DPoP proof with
+          // query or fragment in "htu" claim.
+          if (dpopProof?.htu.match(/[?#]/)) {
+            oauthLogger.info(
+              { htu: dpopProof.htu, client_id: payload.client_id },
+              'DPoP proof "htu" contains query or fragment',
+            )
+          }
 
-              const scope = await scopeRefGetter.dereference(payload.scope)
-              return { ...payload, scope }
-            }
-          : undefined,
+          if (scopeRefGetter) {
+            payload.scope = await scopeRefGetter.dereference(payload.scope)
+          }
+
+          return payload
+        },
       })
 
     const authVerifier = new AuthVerifier(

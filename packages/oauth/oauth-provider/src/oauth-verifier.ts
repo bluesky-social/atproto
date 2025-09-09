@@ -104,6 +104,8 @@ export class OAuthVerifier {
     this.dpopManager = new DpopManager(dpopMgrOptions)
     this.replayManager = new ReplayManager(replayStore)
     this.signer = new Signer(this.issuer, this.keyset)
+
+    this.onDecodeToken = onDecodeToken
   }
 
   public nextDpopNonce() {
@@ -233,19 +235,26 @@ export class OAuthVerifier {
           ? options.audience.some(includedIn, aud)
           : options.audience.includes(aud))
       if (!hasMatch) {
-        throw new InvalidTokenError(tokenType, `Invalid audience`)
+        const details = `(got: ${aud}, expected one of: ${options.audience})`
+        throw new InvalidTokenError(tokenType, `Invalid audience ${details}`)
       }
     }
 
     if (options?.scope) {
-      const scopes = tokenPayload.scope?.split(' ')
+      const { scope } = tokenPayload
+      const scopes = scope?.split(' ')
       if (!scopes || !options.scope.some(includedIn, scopes)) {
-        throw new InvalidTokenError(tokenType, `Invalid scope`)
+        const details = `(got: ${scope}, expected one of: ${options.scope})`
+        throw new InvalidTokenError(tokenType, `Invalid scope ${details}`)
       }
     }
 
     if (tokenPayload.exp != null && tokenPayload.exp * 1000 <= Date.now()) {
-      throw new InvalidTokenError(tokenType, `Token expired`)
+      const expirationDate = new Date(tokenPayload.exp * 1000).toISOString()
+      throw new InvalidTokenError(
+        tokenType,
+        `Token expired at ${expirationDate}`,
+      )
     }
   }
 }
