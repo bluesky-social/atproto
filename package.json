@@ -61,12 +61,19 @@
       "cookie": "^0.7.2"
     },
     "onlyBuiltDependencies": [
+      "@bufbuild/buf",
       "@datadog/native-appsec",
       "@datadog/native-iast-taint-tracking",
       "@datadog/native-metrics",
       "@datadog/pprof",
+      "@swc/core",
       "better-sqlite3",
-      "dd-trace"
+      "cbor-extract",
+      "dd-trace",
+      "esbuild",
+      "protobufjs",
+      "puppeteer",
+      "sharp"
     ]
   },
   "workspaces": {
