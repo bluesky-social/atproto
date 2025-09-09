@@ -1,8 +1,25 @@
+type LangStringValue =
+  | undefined
+  | null
+  | string
+  | Record<string, string | undefined>
+
 /**
- * Only returns a string if it matches the desired locale.
+ * Only returns a string if it matches the desired {@link locale}, or return the
+ * provided {@link fallback}.
  */
-export function findMatchingString(
-  value: string | Record<string, string | undefined>,
+export function getLangString(
+  value: LangStringValue,
+  locale: string,
+  fallback: string,
+): string
+export function getLangString(
+  value: LangStringValue,
+  locale: string,
+  fallback?: string,
+): string | undefined
+export function getLangString(
+  value: LangStringValue,
   locale: string,
   fallback?: string,
 ): string | undefined {
@@ -13,6 +30,9 @@ export function findMatchingString(
       break
 
     case 'object': {
+      // Fool-proof
+      if (value === null) break
+
       // Exact match
       const localeMatch = value[locale]
       if (typeof localeMatch === 'string') return localeMatch
@@ -25,8 +45,8 @@ export function findMatchingString(
       // Fallback to any locale from same language (e.g. "pt-PT" -> "pt-BR")
       for (const k in value) {
         if (k.startsWith(`${lang}-`)) {
-          const fallbackMatch = value[k]
-          if (typeof fallbackMatch === 'string') return fallbackMatch
+          const countryMatch = value[k]
+          if (typeof countryMatch === 'string') return countryMatch
         }
       }
     }
