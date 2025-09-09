@@ -424,7 +424,7 @@ export class AppContext {
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
         onDecodeToken: scopeRefGetter
-          ? async ({ payload, dpopProof, tokenType }) => {
+          ? async ({ payload, dpopProof }) => {
               // @TODO drop this once oauth provider no longer accepts DPoP proof with
               // query or fragment in "htu" claim.
               if (dpopProof?.htu.match(/[?#]/)) {
