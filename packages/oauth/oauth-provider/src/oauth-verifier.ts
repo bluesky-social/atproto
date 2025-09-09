@@ -104,6 +104,8 @@ export class OAuthVerifier {
     this.dpopManager = new DpopManager(dpopMgrOptions)
     this.replayManager = new ReplayManager(replayStore)
     this.signer = new Signer(this.issuer, this.keyset)
+
+    this.onDecodeToken = onDecodeToken
   }
 
   public nextDpopNonce() {

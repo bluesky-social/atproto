@@ -295,11 +295,7 @@ export class OAuthProvider extends OAuthVerifier {
     const deviceManagerOptions: DeviceManagerOptions =
       deviceManagerOptionsSchema.parse(rest)
 
-    // @NOTE: validation of super params (if we wanted to implement it) should
-    // be the responsibility of the super class.
-    const superOptions: OAuthVerifierOptions = rest
-
-    super({ replayStore, ...superOptions })
+    super({ replayStore, ...rest })
 
     // @NOTE: hooks don't really need a type parser, as all zod can actually
     // check at runtime is the fact that the values are functions. The only way
