@@ -1,11 +1,10 @@
-import assert from 'node:assert'
-import * as plc from '@did-plc/lib'
-import express from 'express'
-import { Redis } from 'ioredis'
-import * as nodemailer from 'nodemailer'
-import * as ui8 from 'uint8arrays'
-import * as undici from 'undici'
-import { AtpAgent, ComAtprotoTempDereferenceScope } from '@atproto/api'
+import {
+  Fetch,
+  isUnicastIp,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
+import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -15,23 +14,22 @@ import {
 } from '@atproto/lexicon-resolver'
 import {
   AccessTokenMode,
-  InvalidTokenError,
   JoseKey,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
-  UpstreamFailureError,
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import {
-  Fetch,
-  isUnicastIp,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+import { Redis } from 'ioredis'
+import assert from 'node:assert'
+import * as nodemailer from 'nodemailer'
+import * as ui8 from 'uint8arrays'
+import * as undici from 'undici'
 import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
@@ -436,27 +434,8 @@ export class AppContext {
                 )
               }
 
-              try {
-                payload.scope = await scopeRefGetter.dereference(payload.scope)
-              } catch (cause) {
-                const { InvalidScopeReferenceError } =
-                  ComAtprotoTempDereferenceScope
-                if (cause instanceof InvalidScopeReferenceError) {
-                  // The scope reference cannot be found on the server.
-                  // Consider the session as invalid, allowing entryway to
-                  // re-build the scope as the user re-authenticates. This
-                  // should never happen though.
-                  throw InvalidTokenError.from(cause, tokenType)
-                }
-
-                throw new UpstreamFailureError(
-                  'Failed to fetch token permissions',
-                  undefined,
-                  { cause },
-                )
-              }
-
-              return payload
+              const scope = await scopeRefGetter.dereference(payload.scope)
+              return { ...payload, scope }
             }
           : undefined,
       })
