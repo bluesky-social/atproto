@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.178
+
+### Patch Changes
+
+- [#4189](https://github.com/bluesky-social/atproto/pull/4189) [`ff30786af`](https://github.com/bluesky-social/atproto/commit/ff30786af6f72ad6506939bfca01a3f55a096c1c) Thanks [@foysalit](https://github.com/foysalit)! - Add revoke credentials moderation event type to lexicons
+
+- Updated dependencies [[`ff30786af`](https://github.com/bluesky-social/atproto/commit/ff30786af6f72ad6506939bfca01a3f55a096c1c)]:
+  - @atproto/api@0.16.9
+
 ## 0.4.177
 
 ### Patch Changes
