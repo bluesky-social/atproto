@@ -6,6 +6,7 @@ import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { CachedGetter, GetterOptions } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { SimpleStoreRedis } from '@atproto-labs/simple-store-redis'
+import { oauthLogger } from '../logger.js'
 
 const { InvalidScopeReferenceError } = ComAtprotoTempDereferenceScope
 const PREFIX = 'ref:'
@@ -25,8 +26,8 @@ export class ScopeReferenceGetter extends CachedGetter<
     redis?: Redis,
   ) {
     super(
-      async (scope, options) => {
-        return retry(async () => this.fetchDereferencedScope(scope, options), {
+      async (ref, options) => {
+        return retry(async () => this.fetchDereferencedScope(ref, options), {
           maxRetries: 3,
           getWaitMs: (n) => backoffMs(n, 250, 2000),
           retryable: (err) =>
@@ -49,28 +50,41 @@ export class ScopeReferenceGetter extends CachedGetter<
   }
 
   protected async fetchDereferencedScope(
-    scope: ScopeReference,
-    options?: GetterOptions,
+    ref: ScopeReference,
+    opts?: GetterOptions,
   ): Promise<OAuthScope> {
-    const response = await this.entryway.com.atproto.temp.dereferenceScope(
-      { scope },
-      {
-        signal: options?.signal,
-        headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
-      },
-    )
+    oauthLogger.info({ ref }, 'Fetching scope reference')
 
-    // @NOTE the part after `PREFIX` (in the input scope) is the CID of the
-    // scope string returned by entryway. Since there is a trust
-    // relationship with the entryway, we don't need to verify or enforce
-    // that here.
+    try {
+      const response = await this.entryway.com.atproto.temp.dereferenceScope(
+        { scope: ref },
+        {
+          signal: opts?.signal,
+          headers: opts?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
+        },
+      )
 
-    return response.data.scope
+      const { scope } = response.data
+
+      oauthLogger.info({ ref, scope }, 'Successfully fetched scope reference')
+
+      // @NOTE the part after `PREFIX` (in the input scope) is the CID of the
+      // scope string returned by entryway. Since there is a trust
+      // relationship with the entryway, we don't need to verify or enforce
+      // that here.
+
+      return scope
+    } catch (err) {
+      oauthLogger.error({ err, ref }, 'Failed to fetch scope reference')
+
+      throw err
+    }
   }
 
   async dereference(scope?: OAuthScope): Promise<undefined | OAuthScope> {
-    if (!isScopeReference(scope)) return scope
+    oauthLogger.debug({ scope }, 'Dereferencing scope')
 
+    if (!isScopeReference(scope)) return scope
     return this.get(scope).catch(handleDereferenceError)
   }
 }
