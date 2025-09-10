@@ -30,6 +30,7 @@ import { loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
 import compression from './util/compression'
 import * as wellKnown from './well-known'
+import * as webfinger from './activitypub/webfinger'
 
 export { createSecretKeyObject } from './auth-verifier'
 export * from './config'
@@ -161,6 +162,7 @@ export class PDS {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
+    app.use(webfinger.createRouter(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 
