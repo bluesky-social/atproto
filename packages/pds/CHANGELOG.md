@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.4.179
+
+### Patch Changes
+
+- [#4191](https://github.com/bluesky-social/atproto/pull/4191) [`cf4117966`](https://github.com/bluesky-social/atproto/commit/cf4117966c1b1c1786a25bb352c12ad57b617a05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Always log warnings when DPOP proof `htu` contains # or ?.
+
+- [#4191](https://github.com/bluesky-social/atproto/pull/4191) [`cf4117966`](https://github.com/bluesky-social/atproto/commit/cf4117966c1b1c1786a25bb352c12ad57b617a05) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add logging around scope dereferencing operations
+
+- Updated dependencies [[`cf4117966`](https://github.com/bluesky-social/atproto/commit/cf4117966c1b1c1786a25bb352c12ad57b617a05), [`cf4117966`](https://github.com/bluesky-social/atproto/commit/cf4117966c1b1c1786a25bb352c12ad57b617a05), [`cf4117966`](https://github.com/bluesky-social/atproto/commit/cf4117966c1b1c1786a25bb352c12ad57b617a05)]:
+  - @atproto/oauth-provider@0.12.1
+
 ## 0.4.178
 
 ### Patch Changes
