@@ -9,7 +9,7 @@ export interface Operation {
   namespace: string
   key: string
   method: OperationMethod
-  payload: Uint8Array
+  payload: Uint8Array<ArrayBuffer>
   createdAt: GeneratedAlways<Date>
 }
 

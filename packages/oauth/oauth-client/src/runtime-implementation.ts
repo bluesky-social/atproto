@@ -4,18 +4,20 @@ import { Awaitable } from './util.js'
 export type { Key }
 export type RuntimeKeyFactory = (algs: string[]) => Key | PromiseLike<Key>
 
-export type RuntimeRandomValues = (length: number) => Awaitable<Uint8Array>
+export type RuntimeRandomValues = (
+  length: number,
+) => Awaitable<Uint8Array<ArrayBuffer>>
 
 export type DigestAlgorithm = { name: 'sha256' | 'sha384' | 'sha512' }
 export type RuntimeDigest = (
-  data: Uint8Array,
+  data: Uint8Array<ArrayBuffer>,
   alg: DigestAlgorithm,
-) => Awaitable<Uint8Array>
+) => Awaitable<Uint8Array<ArrayBuffer>>
 
 export type RuntimeLock = <T>(
   name: string,
-  fn: () => Awaitable<T>,
-) => Awaitable<T>
+  fn: () => PromiseLike<T>,
+) => PromiseLike<T>
 
 export interface RuntimeImplementation {
   createKey: RuntimeKeyFactory

@@ -794,7 +794,6 @@ function isPrivateUseUriScheme(uri: URL) {
 function buildJsonGetRequest(uri: string, options?: GetCachedOptions) {
   return new Request(uri, {
     headers: { accept: 'application/json' },
-    // @ts-expect-error invalid types in "undici-types"
     cache: options?.noCache ? 'no-cache' : undefined,
     signal: options?.signal,
     redirect: 'error',
