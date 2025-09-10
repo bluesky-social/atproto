@@ -530,7 +530,7 @@ describe('Bodies', () => {
     const res = await fetch(`${url}/xrpc/io.example.blobTest`, {
       method: 'post',
       headers: { 'Content-Type': '' },
-      body: randomBytes(BLOB_LIMIT),
+      body: randomBytes(BLOB_LIMIT) as Uint8Array<ArrayBuffer>,
       // @ts-ignore see note in @atproto/xrpc/client.ts
       duplex: 'half',
     })
