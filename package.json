@@ -59,7 +59,24 @@
   "pnpm": {
     "overrides": {
       "cookie": "^0.7.2"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "@bufbuild/buf",
+      "@datadog/native-appsec",
+      "@datadog/native-iast-taint-tracking",
+      "@datadog/native-metrics",
+      "@datadog/pprof",
+      "@swc/core",
+      "cbor-extract",
+      "dd-trace",
+      "esbuild",
+      "protobufjs",
+      "puppeteer"
+    ],
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "sharp"
+    ]
   },
   "workspaces": {
     "packages": [
