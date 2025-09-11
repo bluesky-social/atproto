@@ -1064,12 +1064,10 @@ export class Views {
   // ------------
   bookmark(
     key: string,
+    actorDid: string,
     state: HydrationState,
   ): Un$Typed<BookmarkView> | undefined {
-    const viewer = state.ctx?.viewer
-    if (!viewer) return
-
-    const bookmark = state.bookmarks?.get(viewer)?.get(key)
+    const bookmark = state.bookmarks?.get(actorDid)?.get(key)
     if (!bookmark) return
 
     const atUri = new AtUri(bookmark.subjectUri)
