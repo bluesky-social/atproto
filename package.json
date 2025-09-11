@@ -25,8 +25,8 @@
     "i18n": "pnpm run --parallel i18n:extract",
     "dev": "NODE_ENV=development pnpm run --recursive --parallel --stream '/^(dev|dev:.+)$/'",
     "dev:tsc": "tsc --build tsconfig.json --preserveWatchOutput --watch",
-    "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm test --stream --recursive",
-    "test:withFlags": "pnpm run test --",
+    "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream --recursive test",
+    "test:withFlags": "pnpm run test",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
     "version-packages": "changeset version && git add ."
