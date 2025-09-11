@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22.19.0"
   },
   "packageManager": "pnpm@8.15.9+sha512.499434c9d8fdd1a2794ebf4552b3b25c0a633abcee5bb15e7b5de90f32f47b513aca98cd5cfd001c31f0db454bc3804edccd578501e4ca293a6816166bbd9f81",
   "scripts": {
@@ -38,7 +38,7 @@
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
     "@types/jest": "^28.1.4",
-    "@types/node": "^18.19.67",
+    "@types/node": "^22.18.1",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "dotenv": "^16.0.3",
