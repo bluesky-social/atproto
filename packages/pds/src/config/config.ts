@@ -25,7 +25,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
-    blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
+    blobUploadLimit: env.blobUploadLimit ?? 100000000 // 100MB
     devMode: env.devMode ?? false,
   }
 
