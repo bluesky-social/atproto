@@ -14,9 +14,13 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     rateLimit: {
-      durationMs: HOUR,
-      points: 2500,
+      durationMs: ctx.cfg.rateLimits.repoUploadBlobRateLimitDuration,
+      points: ctx.cfg.rateLimits.repoUploadBlobRateLimitPoints,
     },
+    // rateLimit: {
+    //   durationMs: HOUR,
+    //   points: 2500,
+    // },
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
 

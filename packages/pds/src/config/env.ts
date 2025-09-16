@@ -116,6 +116,8 @@ export const readEnv = (): ServerEnvironment => {
     rateLimitsEnabled: envBool('PDS_RATE_LIMITS_ENABLED'),
     rateLimitBypassKey: envStr('PDS_RATE_LIMIT_BYPASS_KEY'),
     rateLimitBypassIps: envList('PDS_RATE_LIMIT_BYPASS_IPS'),
+    rateLimitRepoUploadBlobTimeDuration: envInt('PDS_RATE_LIMIT_REPO_UPLOAD_BLOB_TIME_DURATION'),
+    rateLimitRepoUploadBlobPoints: envInt('PDS_RATE_LIMIT_REPO_UPLOAD_BLOB_POINTS'),
 
     // redis
     redisScratchAddress: envStr('PDS_REDIS_SCRATCH_ADDRESS'),
@@ -264,6 +266,8 @@ export type ServerEnvironment = {
   rateLimitsEnabled?: boolean
   rateLimitBypassKey?: string
   rateLimitBypassIps?: string[]
+  rateLimitRepoUploadBlobTimeDuration?: number
+  rateLimitRepoUploadBlobPoints?: number
 
   // redis
   redisScratchAddress?: string
