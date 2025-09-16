@@ -86,3 +86,24 @@ export const numberPreprocess = (val: unknown): unknown => {
   }
   return val
 }
+
+/**
+ * Returns true if the two arrays contain the same elements, regardless of order
+ * or duplicates.
+ */
+export function arrayEquivalent<T>(a: readonly T[], b: readonly T[]) {
+  if (a === b) return true
+  return a.every(includedIn, b) && b.every(includedIn, a)
+}
+
+export function includedIn<T>(this: readonly T[], item: T) {
+  return this.includes(item)
+}
+
+export function asArray<T>(
+  value: Iterable<T> | undefined,
+): undefined | readonly T[] {
+  if (value == null) return undefined
+  if (Array.isArray(value)) return value // already a (possibly readonly) array
+  return Array.from(value)
+}
