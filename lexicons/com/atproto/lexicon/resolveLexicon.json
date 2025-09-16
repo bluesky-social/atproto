@@ -8,7 +8,7 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "handle": {
+          "lexicon": {
             "description": "The lexicon NSID to resolve.",
             "format": "nsid",
             "type": "string"
