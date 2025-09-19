@@ -73,7 +73,7 @@ export class ServerMailer {
       from: mailOpts.from ?? this.config.email?.fromAddress,
       html,
     })
-    if (!this.config.email?.smtpUrl) {
+    if (!this.config.email) {
       mailerLogger.debug(
         'No SMTP URL has been configured. Intended to send email:\n' +
           JSON.stringify(res, null, 2),

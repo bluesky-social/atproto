@@ -3,6 +3,7 @@ import * as plc from '@did-plc/lib'
 import express from 'express'
 import { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
+import type SMTPTransport from 'nodemailer/lib/smtp-transport'
 import * as ui8 from 'uint8arrays'
 import * as undici from 'undici'
 import { AtpAgent } from '@atproto/api'
@@ -154,18 +155,37 @@ export class AppContext {
             cfg.blobstore.tempLocation,
           )
 
-    const mailTransport =
-      cfg.email !== null
+    const mailTransport = cfg.email !== null
+      ? 'smtpUrl' in cfg.email
         ? nodemailer.createTransport(cfg.email.smtpUrl)
-        : nodemailer.createTransport({ jsonTransport: true })
-
+        : nodemailer.createTransport<SMTPTransport.SentMessageInfo>({
+            host: cfg.email.smtpHost,
+            port: cfg.email.smtpPort,
+            pool: cfg.email.smtpPool,
+            secure: cfg.email.smtpSecure,
+            auth: {
+              user: cfg.email.smtpAuthUser,
+              pass: cfg.email.smtpAuthPassword,
+            },
+          } as SMTPTransport.Options)
+      : nodemailer.createTransport({ jsonTransport: true })
     const mailer = new ServerMailer(mailTransport, cfg)
 
     const modMailTransport =
       cfg.moderationEmail !== null
-        ? nodemailer.createTransport(cfg.moderationEmail.smtpUrl)
+        ? 'smtpUrl' in cfg.moderationEmail
+          ? nodemailer.createTransport(cfg.moderationEmail.smtpUrl)
+          : nodemailer.createTransport<SMTPTransport.SentMessageInfo>({
+              host: cfg.moderationEmail.smtpHost,
+              port: cfg.moderationEmail.smtpPort,
+              pool: cfg.moderationEmail.smtpPool,
+              secure: cfg.moderationEmail.smtpSecure,
+              auth: {
+                user: cfg.moderationEmail.smtpAuthUser,
+                pass: cfg.moderationEmail.smtpAuthPassword,
+              },
+            } as SMTPTransport.Options)
         : nodemailer.createTransport({ jsonTransport: true })
-
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
     const didCache = new DidSqliteCache(
