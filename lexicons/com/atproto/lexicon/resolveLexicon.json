@@ -9,9 +9,9 @@
         "type": "params",
         "properties": {
           "lexicon": {
-            "description": "The lexicon NSID to resolve.",
             "format": "nsid",
-            "type": "string"
+            "type": "string",
+            "description": "The lexicon NSID to resolve."
           }
         },
         "required": ["lexicon"]
@@ -23,15 +23,18 @@
           "properties": {
             "cid": {
               "type": "string",
-              "format": "cid"
+              "format": "cid",
+              "description": "The CID of the lexicon schema record."
             },
             "lexicon": {
               "type": "ref",
-              "ref": "com.atproto.lexicon.schema"
+              "ref": "com.atproto.lexicon.schema",
+              "description": "The resolved lexicon schema record."
             },
             "uri": {
               "type": "string",
-              "format": "at-uri"
+              "format": "at-uri",
+              "description": "The AT-URI of the lexicon schema record."
             }
           },
           "required": ["uri", "cid", "lexicon"]
