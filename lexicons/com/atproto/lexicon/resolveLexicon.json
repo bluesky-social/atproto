@@ -14,9 +14,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "nsid"
-        ]
+        "required": ["lexicon"]
       },
       "output": {
         "encoding": "application/json",
@@ -36,11 +34,7 @@
               "format": "at-uri"
             }
           },
-          "required": [
-            "uri",
-            "cid",
-            "lexicon"
-          ]
+          "required": ["uri", "cid", "lexicon"]
         }
       },
       "errors": [
