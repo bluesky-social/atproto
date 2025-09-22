@@ -8,13 +8,13 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "lexicon": {
+          "nsid": {
             "format": "nsid",
             "type": "string",
             "description": "The lexicon NSID to resolve."
           }
         },
-        "required": ["lexicon"]
+        "required": ["nsid"]
       },
       "output": {
         "encoding": "application/json",
@@ -26,7 +26,7 @@
               "format": "cid",
               "description": "The CID of the lexicon schema record."
             },
-            "lexicon": {
+            "schema": {
               "type": "ref",
               "ref": "com.atproto.lexicon.schema",
               "description": "The resolved lexicon schema record."
@@ -37,7 +37,7 @@
               "description": "The AT-URI of the lexicon schema record."
             }
           },
-          "required": ["uri", "cid", "lexicon"]
+          "required": ["uri", "cid", "schema"]
         }
       },
       "errors": [
