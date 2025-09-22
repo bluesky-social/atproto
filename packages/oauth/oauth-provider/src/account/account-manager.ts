@@ -6,7 +6,6 @@ import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
-import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
 import { Customization } from '../oauth-provider.js'
@@ -16,8 +15,8 @@ import {
   AccountStore,
   AuthorizedClientData,
   DeviceAccount,
-  ResetPasswordConfirmData,
-  ResetPasswordRequestData,
+  ResetPasswordConfirmInput,
+  ResetPasswordRequestInput,
   SignUpData,
 } from './account-store.js'
 import { SignInData } from './sign-in-data.js'
@@ -67,7 +66,7 @@ export class AccountManager {
         throw InvalidRequestError.from(err, 'hCaptcha verification failed')
       })
 
-    await callAsync(this.hooks.onHcaptchaResult, {
+    await this.hooks.onHcaptchaResult?.call(null, {
       input,
       deviceId,
       deviceMetadata,
@@ -118,7 +117,7 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: SignUpInput,
   ): Promise<Account> {
-    await callAsync(this.hooks.onSignUpAttempt, {
+    await this.hooks.onSignUpAttempt?.call(null, {
       input,
       deviceId,
       deviceMetadata,
@@ -138,7 +137,7 @@ export class AccountManager {
     })
 
     try {
-      await callAsync(this.hooks.onSignedUp, {
+      await this.hooks.onSignedUp?.call(null, {
         data,
         account,
         deviceId,
@@ -162,7 +161,7 @@ export class AccountManager {
     data: SignInData,
   ): Promise<Account> {
     try {
-      await callAsync(this.hooks.onSignInAttempt, {
+      await this.hooks.onSignInAttempt?.call(null, {
         data,
         deviceId,
         deviceMetadata,
@@ -175,7 +174,7 @@ export class AccountManager {
         },
       )
 
-      await callAsync(this.hooks.onSignedIn, {
+      await this.hooks.onSignedIn?.call(null, {
         data,
         account,
         deviceId,
@@ -247,15 +246,35 @@ export class AccountManager {
       .filter((deviceAccount) => deviceAccount.account.sub === sub)
   }
 
-  public async resetPasswordRequest(data: ResetPasswordRequestData) {
+  public async resetPasswordRequest(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: ResetPasswordRequestInput,
+  ) {
+    await this.hooks.onResetPasswordRequest?.call(null, {
+      input,
+      deviceId,
+      deviceMetadata,
+    })
+
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      await this.store.resetPasswordRequest(data)
+      await this.store.resetPasswordRequest(input)
     })
   }
 
-  public async resetPasswordConfirm(data: ResetPasswordConfirmData) {
+  public async resetPasswordConfirm(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: ResetPasswordConfirmInput,
+  ) {
+    await this.hooks.onResetPasswordConfirm?.call(null, {
+      input,
+      deviceId,
+      deviceMetadata,
+    })
+
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      await this.store.resetPasswordConfirm(data)
+      await this.store.resetPasswordConfirm(input)
     })
   }
 

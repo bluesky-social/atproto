@@ -231,7 +231,11 @@ export function createApiMiddleware<
         })
         .strict(),
       async handler() {
-        await server.accountManager.resetPasswordRequest(this.input)
+        await server.accountManager.resetPasswordRequest(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+        )
         return { json: { success: true } }
       },
     }),
@@ -248,7 +252,11 @@ export function createApiMiddleware<
         })
         .strict(),
       async handler() {
-        await server.accountManager.resetPasswordConfirm(this.input)
+        await server.accountManager.resetPasswordConfirm(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+        )
         return { json: { success: true } }
       },
     }),

@@ -26,7 +26,6 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { LexiconManager } from '../lexicon/lexicon-manager.js'
 import { RequestMetadata } from '../lib/http/request.js'
-import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
@@ -64,7 +63,7 @@ export class RequestManager {
   ) {
     const parameters = await this.validate(client, clientAuth, input)
 
-    await callAsync(this.hooks.onAuthorizationRequest, {
+    await this.hooks.onAuthorizationRequest?.call(null, {
       client,
       clientAuth,
       parameters,
@@ -444,7 +443,7 @@ export class RequestManager {
         parameters,
       })
 
-      await callAsync(this.hooks.onAuthorized, {
+      await this.hooks.onAuthorized?.call(null, {
         client,
         account,
         parameters,
