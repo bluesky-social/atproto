@@ -1,5 +1,17 @@
 # @atproto/oauth-provider
 
+## 0.13.0
+
+### Minor Changes
+
+- [#4217](https://github.com/bluesky-social/atproto/pull/4217) [`7351589a3`](https://github.com/bluesky-social/atproto/commit/7351589a317ff438c6010154e642a297adb76aa8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `ResetPasswordConfirmData` exported type to `ResetPasswordConfirmInput`.
+
+- [#4217](https://github.com/bluesky-social/atproto/pull/4217) [`7351589a3`](https://github.com/bluesky-social/atproto/commit/7351589a317ff438c6010154e642a297adb76aa8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `ResetPasswordRequestData` exported type to `ResetPasswordRequestInput`.
+
+### Patch Changes
+
+- [#4217](https://github.com/bluesky-social/atproto/pull/4217) [`7351589a3`](https://github.com/bluesky-social/atproto/commit/7351589a317ff438c6010154e642a297adb76aa8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `onResetPasswordRequest` and `onResetPasswordConfirm` hooks
+
 ## 0.12.1
 
 ### Patch Changes
