@@ -25,8 +25,8 @@ import {
   RequestData,
   RequestId,
   RequestStore,
-  ResetPasswordConfirmData,
-  ResetPasswordRequestData,
+  ResetPasswordConfirmInput,
+  ResetPasswordRequestInput,
   SignUpData,
   Sub,
   TokenData,
@@ -331,7 +331,7 @@ export class OAuthStore
   async resetPasswordRequest({
     locale: _locale,
     email,
-  }: ResetPasswordRequestData): Promise<void> {
+  }: ResetPasswordRequestInput): Promise<void> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
       includeTakenDown: true,
@@ -352,7 +352,7 @@ export class OAuthStore
     )
   }
 
-  async resetPasswordConfirm(data: ResetPasswordConfirmData): Promise<void> {
+  async resetPasswordConfirm(data: ResetPasswordConfirmInput): Promise<void> {
     try {
       await this.accountManager.resetPassword(data)
     } catch (err) {
