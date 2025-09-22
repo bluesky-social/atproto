@@ -107,3 +107,42 @@ export function asArray<T>(
   if (Array.isArray(value)) return value // already a (possibly readonly) array
   return Array.from(value)
 }
+
+export type SpaceSeparatedValue<Value extends string> =
+  `${'' | `${string} `}${Value}${'' | ` ${string}`}`
+
+export const isSpaceSeparatedValue = <Value extends string>(
+  value: Value,
+  input: string,
+): input is SpaceSeparatedValue<Value> => {
+  if (value.length === 0) throw new TypeError('Value cannot be empty')
+  if (value.includes(' ')) throw new TypeError('Value cannot contain spaces')
+
+  // Optimized version of:
+  // return input.split(' ').includes(value)
+
+  const inputLength = input.length
+  const valueLength = value.length
+
+  if (inputLength < valueLength) return false
+
+  let idx = input.indexOf(value)
+  let idxEnd: number
+
+  while (idx !== -1) {
+    idxEnd = idx + valueLength
+
+    if (
+      // at beginning or preceded by space
+      (idx === 0 || input.charCodeAt(idx - 1) === 32) &&
+      // at end or followed by space
+      (idxEnd === inputLength || input.charCodeAt(idxEnd) === 32)
+    ) {
+      return true
+    }
+
+    idx = input.indexOf(value, idxEnd + 1)
+  }
+
+  return false
+}

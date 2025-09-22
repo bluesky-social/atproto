@@ -25,6 +25,7 @@
     }
   },
   "dependencies": {
+    "@atproto/did": "workspace:*",
     "@atproto/jwk": "workspace:*",
     "zod": "^3.23.8"
   },

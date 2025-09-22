@@ -1,7 +1,9 @@
 import { AtprotoDid } from '@atproto/did'
-import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
+import {
+  AtprotoOAuthScope,
+  OAuthAuthorizationServerMetadata,
+} from '@atproto/oauth-types'
 import { Fetch, bindFetch } from '@atproto-labs/fetch'
-import { AtprotoScope } from './atproto-token-response.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
@@ -12,10 +14,11 @@ const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
 
+export type { AtprotoOAuthScope }
 export type TokenInfo = {
   expiresAt?: Date
   expired?: boolean
-  scope: AtprotoScope
+  scope: AtprotoOAuthScope
   iss: string
   aud: string
   sub: AtprotoDid
