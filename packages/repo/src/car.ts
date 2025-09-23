@@ -169,7 +169,7 @@ async function* readCarBlocksIterGenerator(
       // yield to the event loop every 25 blocks
       // in the case the incoming CAR is synchrnous, this can end up jamming up the thread
       blocks++
-      if (blocks % 20 === 0) {
+      if (blocks % 25 === 0) {
         await new Promise((resolve) => setImmediate(resolve))
       }
     }
