@@ -282,6 +282,12 @@ describe('oauth', () => {
   })
 
   it('Allows to sign-in through OAuth', async () => {
+    const sendConfirmSigninMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmSignin')
+      .mockImplementation(async () => {
+        // noop
+      })
+
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
@@ -305,7 +311,15 @@ describe('oauth', () => {
       'label::-p-text(Se souvenir de ce compte sur cet appareil)',
     )
 
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(0)
+
     await page.clickOnButton('Se connecter')
+
+    await page.waitForNetworkIdle()
+
+    // Alice doesn't have a confirmed email address, so shouldn't receive a
+    // Email OTP challenge:
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(0)
 
     await page.checkTitle("Authoriser l'accès")
 
