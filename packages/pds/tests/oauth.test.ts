@@ -134,7 +134,13 @@ describe('oauth', () => {
     await browser?.close()
   })
 
-  it('Allows to sign-up trough OAuth', async () => {
+  it('Allows to sign-up through OAuth', async () => {
+    const sendConfirmEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
@@ -156,7 +162,18 @@ describe('oauth', () => {
     await page.typeInInput('email', 'bob@test.com')
     await page.typeInInput('password', 'bob-pass')
 
+    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(0)
+
     await page.clickOnButton("S'inscrire")
+
+    await page.waitForNetworkIdle()
+
+    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendConfirmEmailMock.mock.lastCall
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
 
     await page.ensureTextVisibility(
       `L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait casser de façon permanente, ou même usurper, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance.`,
@@ -241,7 +258,7 @@ describe('oauth', () => {
     sendTemplateMock.mockRestore()
   })
 
-  it('Allows to sign-in trough OAuth', async () => {
+  it('Allows to sign-in through OAuth', async () => {
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
