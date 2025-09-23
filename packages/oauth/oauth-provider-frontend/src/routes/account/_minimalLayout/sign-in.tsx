@@ -122,6 +122,7 @@ function LoginForm() {
           setShowCode(true)
         } else if (e instanceof InvalidCredentialsError) {
           setShowCode(false)
+          form.resetField('code')
           setError(_(msg`Invalid identifier or password.`))
         } else {
           setError(_(msg`An error occurred, please try again.`))
