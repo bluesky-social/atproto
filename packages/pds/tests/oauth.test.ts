@@ -11,6 +11,8 @@ import { type Browser, type Page, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'
+import { ServerMailer } from '../src/mailer'
+import { MailCatcher } from './utils/mailcatcher'
 
 class PageHelper implements AsyncDisposable {
   constructor(protected readonly page: Page) {}
@@ -84,6 +86,8 @@ class PageHelper implements AsyncDisposable {
 describe('oauth', () => {
   let browser: Browser
   let network: TestNetworkNoAppView
+  let mailer: ServerMailer
+  let mailCatcher: MailCatcher
   let client: Server
 
   let appUrl: string
@@ -104,6 +108,9 @@ describe('oauth', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'oauth',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
+    mailer = network.pds.ctx.mailer
+    mailCatcher = new MailCatcher(mailer)
 
     const sc = network.getSeedClient()
 
@@ -112,6 +119,22 @@ describe('oauth', () => {
       handle: 'alice.test',
       password: 'alice-pass',
     })
+
+    // Used for 2FA tests:
+    const jane = await sc.createAccount('jane', {
+      email: 'jane@test.com',
+      handle: 'jane.test',
+      password: 'jane-pass',
+    })
+
+    const { mail } = await mailCatcher.getMailFrom(
+      sc.requestConfirmationEmail(jane.did),
+    )
+
+    const token = mailCatcher.getTokenFromMail(mail)
+
+    assert(token, 'Expected email confirmation token for Jane')
+    await sc.confirmEmail(jane.did, token)
 
     client = createServer(clientHandler)
     client.listen(0)
@@ -316,6 +339,70 @@ describe('oauth', () => {
 
       await input.press('Enter')
     })
+
+    await page.checkTitle("Authoriser l'accès")
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Token info', 'h2')
+
+    await page.clickOn('button[aria-label="User menu"]')
+
+    await page.clickOnButton('Sign out')
+
+    await page.waitForNetworkIdle()
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('Allows to sign-in through OAuth when Email OTP is required', async () => {
+    const sendConfirmSigninMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmSignin')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeIn('input[name="identifier"]', 'jane.test')
+
+      await input.press('Enter')
+    })
+
+    await page.checkTitle('Connexion')
+
+    await page.typeIn('input[type="password"]', 'jane-pass')
+
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(0)
+
+    await page.clickOnButton('Se connecter')
+
+    await page.waitForNetworkIdle()
+
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendConfirmSigninMock.mock.lastCall
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+
+    const token = params.token
+
+    await page.ensureTextVisibility('Confirmation 2FA', 'legend')
+
+    await page.typeIn('input[placeholder="Ressemble à XXXXX-XXXXX"]', token)
+
+    await page.clickOnButton('Confirmer')
 
     await page.checkTitle("Authoriser l'accès")
 
