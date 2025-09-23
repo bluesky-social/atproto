@@ -65,12 +65,18 @@ export const readCar = async (
   bytes: Uint8Array,
   opts?: ReadCarOptions,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const { roots, blocks } = await readCarStream([bytes], opts)
+  const { roots, blocks } = await readCarStream(chunkBytes(bytes), opts)
   const blockMap = new BlockMap()
   for await (const block of blocks) {
     blockMap.set(block.cid, block.bytes)
   }
   return { roots, blocks: blockMap }
+}
+
+async function* chunkBytes(bytes: Uint8Array, chunkSize = 1024) {
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    yield bytes.subarray(i, i + chunkSize)
+  }
 }
 
 export const readCarWithRoot = async (
@@ -145,6 +151,7 @@ const readCarBlocksIter = (
 async function* readCarBlocksIterGenerator(
   reader: BufferedReader,
 ): AsyncGenerator<CarBlock, void, unknown> {
+  let blocks = 0
   try {
     while (!reader.isDone) {
       const blockSize = await reader.readVarint()
@@ -155,6 +162,13 @@ async function* readCarBlocksIterGenerator(
       const cid = parseCidFromBytes(blockBytes.subarray(0, 36))
       const bytes = blockBytes.subarray(36)
       yield { cid, bytes }
+
+      // yield to the event loop every 25 blocks
+      // in the case the incoming CAR is synchrnous, this can end up jamming up the thread
+      blocks++
+      if (blocks % 20 === 0) {
+        await new Promise((resolve) => setImmediate(resolve))
+      }
     }
   } finally {
     await reader.close()
