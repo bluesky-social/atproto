@@ -161,6 +161,25 @@ export class SeedClient<
     return this.accounts[account.did]
   }
 
+  async requestConfirmationEmail(by: string) {
+    await this.agent.com.atproto.server.requestEmailConfirmation(undefined, {
+      headers: this.getHeaders(by),
+    })
+  }
+
+  async confirmEmail(by: string, token: string) {
+    const email = this.accounts[by].email
+    await this.agent.com.atproto.server.confirmEmail(
+      {
+        email,
+        token,
+      },
+      {
+        headers: this.getHeaders(by),
+      },
+    )
+  }
+
   async updateHandle(by: string, handle: string) {
     await this.agent.com.atproto.identity.updateHandle(
       { handle },
