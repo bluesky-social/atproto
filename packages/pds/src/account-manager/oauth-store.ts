@@ -203,18 +203,11 @@ export class OAuthStore
     locale: _locale,
     username: identifier,
     password,
-    // Not supported by the PDS (yet?)
-    emailOtp = undefined,
+    emailOtp,
   }: AuthenticateAccountData): Promise<Account> {
-    // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
-      // Should never happen
-      if (emailOtp != null) {
-        throw new Error('Email OTP is not supported')
-      }
-
       const { user, appPassword, isSoftDeleted } =
-        await this.accountManager.login({ identifier, password })
+        await this.accountManager.login({ identifier, password, emailOtp })
 
       if (isSoftDeleted) {
         throw new InvalidRequestError('Account was taken down')

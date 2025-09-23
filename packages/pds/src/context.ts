@@ -238,6 +238,7 @@ export class AppContext {
     })
 
     const accountManager = new AccountManager(
+      mailer,
       idResolver,
       jwtSecretKey,
       cfg.service.did,

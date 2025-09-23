@@ -2,8 +2,12 @@ import { KeyObject } from 'node:crypto'
 import { CID } from 'multiformats/cid'
 import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
+import {
+  InvalidCredentialsError,
+  SecondAuthenticationFactorRequiredError,
+} from '@atproto/oauth-provider'
 import { isValidTld } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScope } from '../auth-scope'
 import { softDeleted } from '../db'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
@@ -13,6 +17,7 @@ import {
   isServiceDomain,
 } from '../handle/index'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+import { ServerMailer } from '../mailer'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
@@ -35,6 +40,7 @@ export class AccountManager {
   readonly db: AccountDb
 
   constructor(
+    readonly mailer: ServerMailer,
     readonly idResolver: IdResolver,
     readonly jwtKey: KeyObject,
     readonly serviceDid: string,
@@ -352,9 +358,11 @@ export class AccountManager {
   async login({
     identifier,
     password,
+    emailOtp,
   }: {
     identifier: string
     password: string
+    emailOtp?: string
   }): Promise<{
     user: ActorAccount
     appPassword: password.AppPassDescript | null
@@ -375,8 +383,9 @@ export class AccountManager {
           })
 
       if (!user) {
-        throw new AuthRequiredError('Invalid identifier or password')
+        throw new InvalidCredentialsError()
       }
+
       const isSoftDeleted = softDeleted(user)
 
       let appPassword: password.AppPassDescript | null = null
@@ -387,11 +396,29 @@ export class AccountManager {
       if (!validAccountPass) {
         // takendown/suspended accounts cannot login with app password
         if (isSoftDeleted) {
-          throw new AuthRequiredError('Invalid identifier or password')
+          throw new InvalidCredentialsError()
         }
         appPassword = await this.verifyAppPassword(user.did, password)
         if (appPassword === null) {
-          throw new AuthRequiredError('Invalid identifier or password')
+          throw new InvalidCredentialsError()
+        }
+      }
+
+      if (user.email && user.emailConfirmedAt) {
+        if (!emailOtp) {
+          await this.sendConfirmSignin({ did: user.did, email: user.email })
+
+          throw new SecondAuthenticationFactorRequiredError(
+            'emailOtp',
+            user.email,
+          )
+        }
+
+        try {
+          await this.confirmSignin({ did: user.did, token: emailOtp })
+        } catch (err) {
+          // This ensures we clear the OTP code field correctly in @atproto/oauth-provider-ui:
+          throw InvalidCredentialsError.from(err)
         }
       }
 
@@ -512,6 +539,18 @@ export class AccountManager {
   ) {
     await emailToken.assertValidToken(this.db, did, purpose, token)
     await emailToken.deleteEmailToken(this.db, did, purpose)
+  }
+
+  async sendConfirmSignin(opts: { did: string; email: string }) {
+    const { did, email } = opts
+
+    const token = await this.createEmailToken(did, 'otp')
+    await this.mailer.sendConfirmSignin({ token }, { to: email })
+  }
+
+  async confirmSignin(opts: { did: string; token: string }) {
+    const { did, token } = opts
+    await this.assertValidEmailTokenAndCleanup(did, 'otp', token)
   }
 
   async confirmEmail(opts: { did: string; token: string }) {
