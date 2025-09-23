@@ -553,6 +553,13 @@ export class AccountManager {
     await this.assertValidEmailTokenAndCleanup(did, 'otp', token)
   }
 
+  async sendConfirmEmail(opts: { did: string; email: string }) {
+    const { did, email } = opts
+
+    const token = await this.createEmailToken(did, 'confirm_email')
+    await this.mailer.sendConfirmEmail({ token }, { to: email })
+  }
+
   async confirmEmail(opts: { did: string; token: string }) {
     const { did, token } = opts
     await emailToken.assertValidToken(this.db, did, 'confirm_email', token)

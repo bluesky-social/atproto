@@ -181,6 +181,13 @@ export class OAuthStore
           const account = await this.accountManager.getAccount(did)
           if (!account) throw new Error('Account not found')
 
+          if (account.email && !account.emailConfirmedAt) {
+            await this.accountManager.sendConfirmEmail({
+              did,
+              email: account.email,
+            })
+          }
+
           return await this.buildAccount(account)
         } catch (err) {
           this.accountManager.deleteAccount(did)
