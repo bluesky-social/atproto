@@ -38,13 +38,13 @@ export function assertOAuthLoopbackClientId(
   void parseOAuthLoopbackClientId(input)
 }
 
-export function isOAuthClientIdLoopback(
-  input: string,
-): input is OAuthClientIdLoopback {
+export function isOAuthClientIdLoopback<T extends string>(
+  input: T,
+): input is T & OAuthClientIdLoopback {
   return safeParseOAuthLoopbackClientId(input).success
 }
 
-export function asOAuthClientIdLoopback(input: string): OAuthClientIdLoopback {
+export function asOAuthClientIdLoopback<T extends string>(input: T) {
   assertOAuthLoopbackClientId(input)
   return input
 }

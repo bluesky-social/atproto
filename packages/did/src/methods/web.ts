@@ -32,7 +32,7 @@ export function isDidWeb(input: unknown): input is Did<'web'> {
   return canParse(buildDidWebUrl(input as Did<'web'>))
 }
 
-export function asDidWeb(input: unknown): Did<'web'> {
+export function asDidWeb<T>(input: T) {
   assertDidWeb(input)
   return input
 }

@@ -3,15 +3,15 @@ import { ModerationPrefs } from './moderation/types'
 
 export type UnknownServiceType = string & NonNullable<unknown>
 export type AtprotoServiceType = 'atproto_labeler' | UnknownServiceType
-export function isAtprotoServiceType(
-  input: string,
-): input is AtprotoServiceType {
+export function isAtprotoServiceType<T extends string>(
+  input: T,
+): input is T & AtprotoServiceType {
   return !input.includes(' ') && !input.includes('#')
 }
 
 // @TODO use tools from @atproto/did
 export type Did = `did:${string}:${string}`
-export function isDid(input: string): input is Did {
+export function isDid<T extends string>(input: T): input is T & Did {
   if (!input.startsWith('did:')) return false
   if (input.length < 8) return false
   if (input.length > 2048) return false

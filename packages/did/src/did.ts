@@ -244,7 +244,7 @@ export function isDid(input: unknown): input is Did {
   }
 }
 
-export function asDid(input: unknown): Did {
+export function asDid<T>(input: T) {
   assertDid(input)
   return input
 }
