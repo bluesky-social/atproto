@@ -131,7 +131,11 @@ export class AppContext {
       parsed = null
       log.info({ err, val }, 'failed to parse labeler header')
     }
-    if (!parsed) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
+    // Explicitly check if the header was not supplied at all, and return the default labeler if it was not.
+    // A supplied header with an empty string should mean that _no_ labelers will be applied
+    if (parsed === null) {
+      return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
+    }
     return parsed
   }
 }
