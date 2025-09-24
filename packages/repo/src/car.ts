@@ -59,7 +59,6 @@ export type ReadCarOptions = {
    * When true, does not verify CID-to-content mapping within CAR.
    */
   skipCidVerification?: boolean
-  maxSize?: number
 }
 
 export const readCar = async (
@@ -99,7 +98,7 @@ export const readCarStream = async (
   roots: CID[]
   blocks: CarBlockIterable
 }> => {
-  const reader = new BufferedReader(car, opts?.maxSize)
+  const reader = new BufferedReader(car)
   try {
     const headerSize = await reader.readVarint()
     if (headerSize === null) {
@@ -175,12 +174,8 @@ class BufferedReader {
   buffer: Uint8Array = new Uint8Array()
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
-  bytesRead = 0
 
-  constructor(
-    stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
-    public maxSize?: number,
-  ) {
+  constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
     this.iterator =
       Symbol.asyncIterator in stream
         ? stream[Symbol.asyncIterator]()
@@ -226,10 +221,6 @@ class BufferedReader {
         return
       }
       this.buffer = ui8.concat([this.buffer, next.value])
-      this.bytesRead += next.value.byteLength
-      if (this.maxSize && this.bytesRead > this.maxSize) {
-        throw new Error('max size exceeded')
-      }
     }
   }
 

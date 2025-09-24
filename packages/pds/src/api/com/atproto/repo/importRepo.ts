@@ -16,6 +16,9 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
+    opts: {
+      blobLimit: ctx.cfg.service.maxImportSize,
+    },
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       scopes: ACCESS_FULL,
@@ -23,27 +26,16 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertAccount({ attr: 'repo', action: 'manage' })
       },
     }),
-    handler: async ({ input, auth, req }) => {
+    handler: async ({ input, auth }) => {
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
-      }
-
-      // Fail early if request is not using chuncked encoding
-      const contentLength = req.header('content-length')
-      if (contentLength != null && ctx.cfg.service.maxImportSize) {
-        const size = Number(contentLength || 'NaN')
-        if (Number.isNaN(size) || size > ctx.cfg.service.maxImportSize) {
-          throw new InvalidRequestError('Import size exceeds maximum allowed')
-        }
       }
 
       const { did } = auth.credentials
 
       // @NOTE process as much as we can before the transaction, in particular
       // the reading of the body stream.
-      const { roots, blocks } = await readCarStream(input.body, {
-        maxSize: ctx.cfg.service.maxImportSize,
-      })
+      const { roots, blocks } = await readCarStream(input.body)
       if (roots.length !== 1) {
         await blocks.dump()
         throw new InvalidRequestError('expected one root')
