@@ -145,6 +145,13 @@ export const schemaDict = {
             maxGraphemes: 256,
             maxLength: 2560,
           },
+          pronouns: {
+            type: 'string',
+          },
+          website: {
+            type: 'string',
+            format: 'uri',
+          },
           avatar: {
             type: 'string',
             format: 'uri',
@@ -963,6 +970,16 @@ export const schemaDict = {
               description: 'Free-form profile description text.',
               maxGraphemes: 256,
               maxLength: 2560,
+            },
+            pronouns: {
+              type: 'string',
+              description: 'Free-form pronouns text.',
+              maxGraphemes: 20,
+              maxLength: 200,
+            },
+            website: {
+              type: 'string',
+              format: 'uri',
             },
             avatar: {
               type: 'blob',

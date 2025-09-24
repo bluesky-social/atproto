@@ -265,6 +265,8 @@ export class Views {
 
     return {
       ...baseView,
+      pronouns: actor.profile?.pronouns,
+      website: this.profileWebsite(did, state),
       viewer: baseView.viewer
         ? {
             ...baseView.viewer,
@@ -442,6 +444,16 @@ export class Views {
       return activitySubscription
     }
     return undefined
+  }
+
+  profileWebsite(did: string, state: HydrationState): string | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor?.profile?.website) return
+    const { website } = actor.profile
+
+    // The record property accepts any URI, but we don't want
+    // to pass the client any schemes other than HTTPS.
+    return website.startsWith('https://') ? website : undefined
   }
 
   knownFollowers(

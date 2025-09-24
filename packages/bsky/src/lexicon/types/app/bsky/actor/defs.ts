@@ -77,6 +77,8 @@ export interface ProfileViewDetailed {
   handle: string
   displayName?: string
   description?: string
+  pronouns?: string
+  website?: string
   avatar?: string
   banner?: string
   followersCount?: number
