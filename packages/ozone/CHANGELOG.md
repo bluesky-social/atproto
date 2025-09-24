@@ -1,5 +1,12 @@
 # @atproto/ozone
 
+## 0.1.144
+
+### Patch Changes
+
+- Updated dependencies [[`8dc4caf55`](https://github.com/bluesky-social/atproto/commit/8dc4caf55840578c835b4c851d4a599c15627a78)]:
+  - @atproto/api@0.16.10
+
 ## 0.1.143
 
 ### Patch Changes

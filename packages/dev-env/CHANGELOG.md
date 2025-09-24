@@ -1,5 +1,19 @@
 # @atproto/dev-env
 
+## 0.3.178
+
+### Patch Changes
+
+- [#4224](https://github.com/bluesky-social/atproto/pull/4224) [`8dc4caf55`](https://github.com/bluesky-social/atproto/commit/8dc4caf55840578c835b4c851d4a599c15627a78) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Accept profile creation overrides
+
+- [#4181](https://github.com/bluesky-social/atproto/pull/4181) [`86bb25768`](https://github.com/bluesky-social/atproto/commit/86bb25768d9099f06c45960bd46df72120406690) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Use static DID for bsky on dev-env
+
+- Updated dependencies [[`8dc4caf55`](https://github.com/bluesky-social/atproto/commit/8dc4caf55840578c835b4c851d4a599c15627a78), [`0c20539c7`](https://github.com/bluesky-social/atproto/commit/0c20539c7185f6070d4337dbda3da92c39a3434f)]:
+  - @atproto/api@0.16.10
+  - @atproto/pds@0.4.181
+  - @atproto/bsky@0.0.185
+  - @atproto/ozone@0.1.144
+
 ## 0.3.177
 
 ### Patch Changes

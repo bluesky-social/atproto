@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.181
+
+### Patch Changes
+
+- [#4083](https://github.com/bluesky-social/atproto/pull/4083) [`0c20539c7`](https://github.com/bluesky-social/atproto/commit/0c20539c7185f6070d4337dbda3da92c39a3434f) Thanks [@dholms](https://github.com/dholms)! - Add env for max import size on repo.importRepo
+
+- Updated dependencies [[`8dc4caf55`](https://github.com/bluesky-social/atproto/commit/8dc4caf55840578c835b4c851d4a599c15627a78)]:
+  - @atproto/api@0.16.10
+
 ## 0.4.180
 
 ### Patch Changes
