@@ -1,4 +1,5 @@
-import './disposable-polyfill/index.js'
+import 'core-js/modules/esnext.symbol.async-dispose'
+import 'core-js/modules/esnext.symbol.dispose'
 
 export * from '@atproto/jwk-webcrypto'
 export * from '@atproto/oauth-client'

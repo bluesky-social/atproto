@@ -25,9 +25,9 @@ export class ExpoKey extends Key<NativeJwk> {
     return NativeModule.verifyJwt(token, this.jwk, options)
   }
 
-  static generate(algs: string[]): ExpoKey {
+  static async generate(algs: string[]): Promise<ExpoKey> {
     if (algs.includes('ES256')) {
-      const jwk = NativeModule.generatePrivateJwk('ES256')
+      const jwk = await NativeModule.generatePrivateJwk('ES256')
       return new ExpoKey(jwk)
     }
 

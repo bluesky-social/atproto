@@ -5,8 +5,6 @@ import type {
 } from '@atproto/oauth-client'
 
 export interface ExpoOAuthClientInterface extends OAuthClient, Disposable {
-  signIn(
-    input: string,
-    options?: Omit<AuthorizeOptions, 'display'>,
-  ): Promise<OAuthSession>
+  signIn(input: string, options?: AuthorizeOptions): Promise<OAuthSession>
+  handleCallback(): Promise<null | OAuthSession>
 }

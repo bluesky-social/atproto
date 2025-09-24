@@ -1,5 +1,5 @@
 import { NativeModule, requireNativeModule } from 'expo'
-import { VerifyOptions, VerifyResult } from '@atproto/oauth-client'
+import { SignedJwt, VerifyOptions, VerifyResult } from '@atproto/oauth-client'
 import { ExpoAtprotoAuthModuleEvents } from './ExpoAtprotoAuthModule.types'
 
 export type NativeJwk = {
@@ -18,16 +18,12 @@ declare class ExpoAtprotoOAuthClientModule extends NativeModule<ExpoAtprotoAuthM
 
   getRandomValues(byteLength: number): Uint8Array
 
-  generatePrivateJwk(algorithim: string): NativeJwk
+  generatePrivateJwk(algorithm: string): NativeJwk
 
-  createJwt(
-    header: string,
-    payload: string,
-    jwk: NativeJwk,
-  ): `${string}.${string}.${string}`
+  createJwt(header: string, payload: string, jwk: NativeJwk): SignedJwt
 
   verifyJwt<C extends string = never>(
-    token: string,
+    token: SignedJwt,
     jwk: NativeJwk,
     options: VerifyOptions<C>,
   ): VerifyResult<C>

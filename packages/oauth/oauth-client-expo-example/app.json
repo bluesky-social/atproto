@@ -1,5 +1,6 @@
 {
   "expo": {
+    "jsEngine": "hermes",
     "name": "ExpoAtprotoOAuthTutorial",
     "slug": "ExpoAtprotoOAuthTutorial",
     "version": "1.0.0",

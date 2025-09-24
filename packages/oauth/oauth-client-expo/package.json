@@ -25,20 +25,26 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./polyfill": {
+      "types": "./dist/polyfill.d.ts",
+      "default": "./dist/polyfill.js"
     }
   },
   "devDependencies": {
-    "expo": "~54.0.0"
+    "expo": "~54.0.0",
+    "expo-module-scripts": "^5.0.7"
   },
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:*",
     "@atproto/oauth-client": "workspace:*",
     "@atproto/oauth-client-browser": "workspace:*",
-    "@hazae41/disposable-stack-polyfill": "^1.0.3",
     "abortcontroller-polyfill": "^1.7.8",
+    "core-js": "^3",
     "event-target-polyfill": "^0.0.4",
     "expo-web-browser": "^15.0.7",
-    "react-native-mmkv": "^3.3.3"
+    "react-native-mmkv": "^3.3.3",
+    "react-native-url-polyfill": "^2.0.0"
   },
   "peerDependencies": {
     "expo": "*"

@@ -71,9 +71,13 @@ export class MMKVSimpleStoreTTL<V extends Value>
     this.#store.clearAll()
   }
 
+  getExpirationTime(key: string): number | undefined {
+    return this.#store.getNumber(key) ?? undefined
+  }
+
   isExpired(key: string): boolean {
-    const expirationDate = this.#store.getNumber(key)
-    return expirationDate != null && expirationDate < Date.now()
+    const expirationTime = this.getExpirationTime(key)
+    return expirationTime != null && expirationTime < Date.now()
   }
 
   clearExpired() {

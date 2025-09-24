@@ -1,9 +1,8 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { SplashScreen, Stack } from 'expo-router'
 import { BskyAgentProvider } from '@/components/BskyAgentProvider'
 import { SessionProvider, useSession } from '@/components/SessionProvider'
-import { SplashScreenController } from '@/components/SplashScreenController'
 import { oauthClient } from '@/utils/oauthClient'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Stack } from 'expo-router'
 
 const queryClient = new QueryClient()
 
@@ -13,7 +12,6 @@ export default function Layout() {
       <QueryClientProvider client={queryClient}>
         <BskyAgentProvider>
           <RootNavigator />
-          <SplashScreenController />
         </BskyAgentProvider>
       </QueryClientProvider>
     </SessionProvider>
@@ -22,7 +20,11 @@ export default function Layout() {
 
 // Separate component so it can access the SessionProvider context
 function RootNavigator() {
-  const { isLoggedIn } = useSession()
+  const { isLoading, isLoggedIn } = useSession()
+
+  if (!isLoading) {
+    SplashScreen.hideAsync()
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

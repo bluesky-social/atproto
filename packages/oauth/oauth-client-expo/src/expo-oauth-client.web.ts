@@ -28,4 +28,15 @@ export class ExpoOAuthClient
       display: options?.display ?? 'touch',
     })
   }
+
+  async handleCallback(): Promise<null | OAuthSession> {
+    const params = this.readCallbackParams()
+    if (!params) return null
+
+    const url = this.findRedirectUrl()
+    if (!url) return null
+
+    const { session } = await this.callback(params, { redirect_uri: url })
+    return session
+  }
 }

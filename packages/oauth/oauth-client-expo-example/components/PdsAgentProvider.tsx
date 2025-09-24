@@ -1,5 +1,5 @@
+import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
 import { Agent } from '@atproto/api'
-import { createContext, PropsWithChildren, useContext, useMemo } from 'react'
 import { useSession } from './SessionProvider'
 
 export type PdsAgent = Agent & { did: string }

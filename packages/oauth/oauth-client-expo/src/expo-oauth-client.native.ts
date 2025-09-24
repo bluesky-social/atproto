@@ -1,4 +1,4 @@
-import '@hazae41/disposable-stack-polyfill'
+import './polyfill'
 
 import { openAuthSessionAsync } from 'expo-web-browser'
 import {
@@ -37,10 +37,9 @@ export class ExpoOAuthClient
       responseMode: options.responseMode ?? 'fragment',
       keyset: undefined,
       runtimeImplementation: {
-        createKey: (algs) => ExpoKey.generate(algs),
-        getRandomValues: (length) => NativeModule.getRandomValues(length),
-        digest: (bytes, algorithm) =>
-          NativeModule.digest(bytes, algorithm.name),
+        createKey: async (algs) => ExpoKey.generate(algs),
+        digest: async (bytes, { name }) => NativeModule.digest(bytes, name),
+        getRandomValues: async (length) => NativeModule.getRandomValues(length),
       },
       sessionStore: stack.use(new SessionStore()),
       stateStore: stack.use(new StateStore()),
@@ -55,7 +54,13 @@ export class ExpoOAuthClient
       ),
     })
 
+    stack.defer(() => super[Symbol.dispose]?.())
+
     this.#disposables = stack.move()
+  }
+
+  async handleCallback(): Promise<null | OAuthSession> {
+    return null
   }
 
   async signIn(

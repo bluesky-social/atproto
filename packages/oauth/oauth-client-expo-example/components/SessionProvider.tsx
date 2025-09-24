@@ -1,15 +1,15 @@
-import { useBrowserWarmUp } from '@/utils/useBrowserWarmUp'
-import type { OAuthSession } from '@atproto/oauth-client'
-import type { ExpoOAuthClient } from '@atproto/oauth-client-expo'
 import * as store from 'expo-secure-store'
 import {
-  createContext,
   PropsWithChildren,
+  createContext,
   useCallback,
   useContext,
   useEffect,
   useState,
 } from 'react'
+import { useBrowserWarmUp } from '@/utils/useBrowserWarmUp'
+import type { OAuthSession } from '@atproto/oauth-client'
+import type { ExpoOAuthClientInterface } from '@atproto/oauth-client-expo'
 
 const CURRENT_AUTH_DID = 'oauth_provider-current'
 
@@ -35,7 +35,7 @@ export function SessionProvider({
   client,
   children,
 }: PropsWithChildren<{
-  client: ExpoOAuthClient
+  client: ExpoOAuthClientInterface
 }>) {
   const [initialized, setInitialized] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -48,19 +48,25 @@ export function SessionProvider({
   useEffect(() => {
     setInitialized(false)
     setSession(null)
-    void store
-      .getItemAsync(CURRENT_AUTH_DID)
-      .then((lastDid) => {
+
+    void client
+      .handleCallback()
+      .then(async (newSession) => {
+        if (newSession) return setSession(newSession)
+
+        const lastDid = await store.getItemAsync(CURRENT_AUTH_DID)
+        if (!lastDid) return
+
         // Use "false" as restore argument to allow the app to work off-line
-        if (lastDid) return client.restore(lastDid, false)
-        else return null
+        const restoredSession = await client.restore(lastDid, false)
+        setSession(restoredSession)
+
+        // Force a refresh here, which will cause the session to be deleted
+        // by the "deleted" event handler if the refresh token was revoked
+        await restoredSession.getTokenInfo(true)
       })
       .catch((err) => {
-        console.error('Error loading stored atproto session', err)
-        return null
-      })
-      .then((session) => {
-        setSession(session)
+        console.warn('Error setting up OAuth Session', err)
       })
       .finally(() => {
         setInitialized(true)
@@ -101,8 +107,6 @@ export function SessionProvider({
       })
     }
 
-    check()
-
     const interval = setInterval(check, 10 * 60e3)
     return () => clearInterval(interval)
   }, [session])
@@ -112,11 +116,9 @@ export function SessionProvider({
       setLoading(true)
 
       try {
-        const session = await client.restore(input, true).catch(async (err) => {
-          const result = await client.signIn(input)
-          if (result.status === 'success') return result.session
-          throw new Error(`Failed to sign in: ${result.status}`)
-        })
+        const session = await client
+          .restore(input, true)
+          .catch(async (_err) => client.signIn(input))
 
         setSession(session)
         await store.setItemAsync(CURRENT_AUTH_DID, session.did)

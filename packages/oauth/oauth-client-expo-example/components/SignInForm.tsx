@@ -25,7 +25,7 @@ export function SignInForm({
         setError(err instanceof Error ? err.message : 'Unknown error')
       }
     },
-    [disabled, signIn]
+    [disabled, signIn],
   )
 
   return (

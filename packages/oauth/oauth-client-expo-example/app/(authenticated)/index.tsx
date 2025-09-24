@@ -1,8 +1,8 @@
+import { useQuery } from '@tanstack/react-query'
+import { Button, Image, Text, View } from 'react-native'
 import { useBskyAgent } from '@/components/BskyAgentProvider'
 import { usePdsAgent } from '@/components/PdsAgentProvider'
 import { useOAuthSession, useSession } from '@/components/SessionProvider'
-import { useQuery } from '@tanstack/react-query'
-import { Button, Image, Text, View } from 'react-native'
 
 export default function Index() {
   const session = useOAuthSession()

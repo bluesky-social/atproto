@@ -38,7 +38,8 @@
     "@atproto/jwk": "workspace:*",
     "@atproto/jwk-webcrypto": "workspace:*",
     "@atproto/oauth-client": "workspace:*",
-    "@atproto/oauth-types": "workspace:*"
+    "@atproto/oauth-types": "workspace:*",
+    "core-js": "^3"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

@@ -195,7 +195,13 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
    * want to only restore existing sessions, and bypass the automatic processing
    * of login callbacks.
    */
-  async init(refresh?: boolean) {
+  async init(
+    refresh?: boolean,
+  ): Promise<
+    | { session: OAuthSession; state: string | null }
+    | { session: OAuthSession }
+    | undefined
+  > {
     // If the URL currently contains oauth query parameters ("state" + "code" or
     // "state" + "error"), let's automatically process them.
     const params = this.readCallbackParams()
