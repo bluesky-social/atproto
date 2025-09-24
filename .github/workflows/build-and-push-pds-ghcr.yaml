@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - divy/pds-build-dblock-fix
+      - async-car-fixes
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
