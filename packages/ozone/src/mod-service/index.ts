@@ -188,6 +188,7 @@ export class ModerationService {
     policies?: string[]
     modTool?: string[]
     ageAssuranceState?: string
+    batchId?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -211,6 +212,7 @@ export class ModerationService {
       policies,
       modTool,
       ageAssuranceState,
+      batchId,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -315,6 +317,11 @@ export class ModerationService {
       builder = builder
         .where('modTool', 'is not', null)
         .where(sql`("modTool" ->> 'name')`, 'in', modTool)
+    }
+    if (batchId) {
+      builder = builder
+        .where('modTool', 'is not', null)
+        .where(sql`("modTool" -> 'meta' ->> 'batchId')`, '=', batchId)
     }
     if (ageAssuranceState) {
       builder = builder

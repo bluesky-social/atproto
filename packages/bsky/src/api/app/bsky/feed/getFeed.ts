@@ -226,7 +226,7 @@ const skeletonFromFeedGen = async (
     skeleton = result.data
 
     if (result.data.cursor === params.cursor) {
-      // Prevents loops if the custom feed echoes the the input cursor back.
+      // Prevents loops if the custom feed echoes the input cursor back.
       skeleton.cursor = undefined
     }
 

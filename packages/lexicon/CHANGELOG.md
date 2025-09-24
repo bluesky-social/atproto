@@ -1,5 +1,35 @@
 # @atproto/lexicon
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099)]:
+  - @atproto/common-web@0.4.3
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `permission-set` in lexicon documents
+
+### Patch Changes
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/syntax@0.4.1
+
+## 0.4.14
+
+### Patch Changes
+
+- [#4122](https://github.com/bluesky-social/atproto/pull/4122) [`2104d9033`](https://github.com/bluesky-social/atproto/commit/2104d9033e2e1a3a7b821c1f0c5c8ffac5832d59) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Allow unknown fields in lexicon documents
+
+## 0.4.13
+
+### Patch Changes
+
+- [#4069](https://github.com/bluesky-social/atproto/pull/4069) [`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12) Thanks [@devinivy](https://github.com/devinivy)! - Lexicon document validation compatible with published lexicons.
+
 ## 0.4.12
 
 ### Patch Changes

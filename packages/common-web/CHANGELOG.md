@@ -1,5 +1,11 @@
 # @atproto/common-web
 
+## 0.4.3
+
+### Patch Changes
+
+- [#4169](https://github.com/bluesky-social/atproto/pull/4169) [`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `aggregateErrors` utility
+
 ## 0.4.2
 
 ### Patch Changes

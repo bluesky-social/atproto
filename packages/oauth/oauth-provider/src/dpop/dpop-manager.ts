@@ -136,7 +136,9 @@ export class DpopManager {
       throw wrapInvalidDpopProofError(err, 'Failed to calculate jkt')
     })
 
-    return { jti, jkt, htm, htu }
+    // @NOTE We freeze the proof to prevent accidental modification (esp. from
+    // hooks).
+    return Object.freeze({ jti, jkt, htm, htu })
   }
 }
 

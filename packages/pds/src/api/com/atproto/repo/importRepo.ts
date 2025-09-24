@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import PQueue from 'p-queue'
 import { TID } from '@atproto/common'
 import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
 import {
@@ -11,77 +10,78 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
+import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
-    auth: ctx.authVerifier.accessFull({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
+      scopes: ACCESS_FULL,
+      authorize: (permissions) => {
+        permissions.assertAccount({ attr: 'repo', action: 'manage' })
+      },
     }),
     handler: async ({ input, auth, req }) => {
-      const did = auth.credentials.did
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
       }
-      const contentLength = Number(req.header('content-length'))
-      const size = isNaN(contentLength) ? 0 : contentLength
-      if (
-        ctx.cfg.service.maxImportSize &&
-        size > ctx.cfg.service.maxImportSize
-      ) {
-        throw new InvalidRequestError('Import size exceeds maximum allowed')
+
+      // Fail early if request is not using chuncked encoding
+      const contentLength = req.header('content-length')
+      if (contentLength != null && ctx.cfg.service.maxImportSize) {
+        const size = Number(contentLength || 'NaN')
+        if (Number.isNaN(size) || size > ctx.cfg.service.maxImportSize) {
+          throw new InvalidRequestError('Import size exceeds maximum allowed')
+        }
       }
 
-      await ctx.actorStore.transact(did, (store) =>
-        importRepo(store, input.body, size),
-      )
-    },
-  })
-}
+      const { did } = auth.credentials
 
-const importRepo = async (
-  actorStore: ActorStoreTransactor,
-  incomingCar: AsyncIterable<Uint8Array>,
-  maxCarSize: number,
-) => {
-  const now = new Date().toISOString()
-  const rev = TID.nextStr()
-  const did = actorStore.repo.did
+      // @NOTE process as much as we can before the transaction, in particular
+      // the reading of the body stream.
+      const { roots, blocks } = await readCarStream(input.body, {
+        maxSize: ctx.cfg.service.maxImportSize,
+      })
+      if (roots.length !== 1) {
+        await blocks.dump()
+        throw new InvalidRequestError('expected one root')
+      }
 
-  const { roots, blocks } = await readCarStream(incomingCar, maxCarSize)
-  if (roots.length !== 1) {
-    await blocks.dump()
-    throw new InvalidRequestError('expected one root')
-  }
-  const blockMap = new BlockMap()
-  for await (const block of blocks) {
-    blockMap.set(block.cid, block.bytes)
-  }
-  const currRepo = await actorStore.repo.maybeLoadRepo()
-  const diff = await verifyDiff(
-    currRepo,
-    blockMap,
-    roots[0],
-    undefined,
-    undefined,
-    { ensureLeaves: false },
-  )
-  diff.commit.rev = rev
-  await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)
-  const recordQueue = new PQueue({ concurrency: 50 })
-  const controller = new AbortController()
-  for (const write of diff.writes) {
-    recordQueue
-      .add(
-        async () => {
+      const blockMap = new BlockMap()
+      for await (const block of blocks) {
+        blockMap.set(block.cid, block.bytes)
+      }
+
+      await ctx.actorStore.transact(did, async (store) => {
+        const now = new Date().toISOString()
+        const rev = TID.nextStr()
+        const did = store.repo.did
+
+        const currRepo = await store.repo.maybeLoadRepo()
+        const diff = await verifyDiff(
+          currRepo,
+          blockMap,
+          roots[0],
+          undefined,
+          undefined,
+          { ensureLeaves: false },
+        )
+        diff.commit.rev = rev
+        await store.repo.storage.applyCommit(diff.commit, currRepo === null)
+
+        // @NOTE There is no point in performing the following concurrently
+        // since better-sqlite3 is synchronous.
+        for (const write of diff.writes) {
           const uri = AtUri.make(did, write.collection, write.rkey)
           if (write.action === WriteOpAction.Delete) {
-            await actorStore.record.deleteRecord(uri)
+            await store.record.deleteRecord(uri)
           } else {
             let parsedRecord: RepoRecord
             try {
+              // @NOTE getAndParseRecord returns a promise for historical
+              // reasons but it's internal processing is actually synchronous.
               const parsed = await getAndParseRecord(blockMap, write.cid)
               parsedRecord = parsed.record
             } catch {
@@ -89,7 +89,8 @@ const importRepo = async (
                 `Could not parse record at '${write.collection}/${write.rkey}'`,
               )
             }
-            const indexRecord = actorStore.record.indexRecord(
+
+            await store.record.indexRecord(
               uri,
               write.cid,
               parsedRecord,
@@ -98,19 +99,12 @@ const importRepo = async (
               now,
             )
             const recordBlobs = findBlobRefs(parsedRecord)
-            const indexRecordBlobs = actorStore.repo.blob.insertBlobs(
-              uri.toString(),
-              recordBlobs,
-            )
-            await Promise.all([indexRecord, indexRecordBlobs])
+            await store.repo.blob.insertBlobs(uri.toString(), recordBlobs)
           }
-        },
-        { signal: controller.signal },
-      )
-      .catch((err) => controller.abort(err))
-  }
-  await recordQueue.onIdle()
-  controller.signal.throwIfAborted()
+        }
+      })
+    },
+  })
 }
 
 export const findBlobRefs = (val: LexValue, layer = 0): BlobRef[] => {

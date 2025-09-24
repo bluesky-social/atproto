@@ -201,8 +201,21 @@ export function SignUpHandleForm({
               className={clsx(
                 'block w-full',
                 'text-sm',
-                'rounded-lg p-2',
-                'bg-white dark:bg-slate-600',
+
+                'accent-primary',
+                'cursor-pointer',
+                // Background
+                'bg-gray-100 dark:bg-gray-800',
+                'hover:bg-gray-200 dark:hover:bg-gray-700',
+                // Border
+                'transition duration-300 ease-in-out',
+                'outline-none',
+                'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
+                // Font
+                'text-slate-600 dark:text-slate-300',
+                // Layout
+                'rounded-lg',
+                'p-2 pr-1',
               )}
             >
               {domains.map((domain, idx) => (
@@ -230,13 +243,11 @@ export function SignUpHandleForm({
         }
       />
 
-      <Admonition role="status">
-        <p className="text-md">
-          <Trans>
-            You can change this username to any domain name you control after
-            your account is set up.
-          </Trans>
-        </p>
+      <Admonition type="status">
+        <Trans>
+          You can change this username to any domain name you control after your
+          account is set up.
+        </Trans>
       </Admonition>
     </FormCardAsync>
   )

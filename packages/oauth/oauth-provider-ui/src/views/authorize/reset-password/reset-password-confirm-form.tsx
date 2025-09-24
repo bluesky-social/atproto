@@ -49,13 +49,11 @@ export function ResetPasswordConfirmForm({
       }}
       invalid={invalid || !token || !password}
     >
-      <Admonition role="info">
-        <p id={tokenAriaId} className="text-md">
-          <Trans>
-            You will receive an email with a "reset code". Enter that code here
-            then enter your new password.
-          </Trans>
-        </p>
+      <Admonition id={tokenAriaId} type="status">
+        <Trans>
+          You will receive an email with a "reset code". Enter that code here
+          then enter your new password.
+        </Trans>
       </Admonition>
 
       <Fieldset label={<Trans>Reset code</Trans>}>

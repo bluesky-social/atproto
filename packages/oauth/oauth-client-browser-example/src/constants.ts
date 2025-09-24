@@ -20,5 +20,18 @@ export const SIGN_UP_URL: string =
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ??
   (ENV === 'development'
-    ? 'atproto transition:generic transition:email transition:chat.bsky'
-    : 'atproto transition:generic')
+    ? [
+        'atproto',
+        'account:email',
+        'identity:*',
+        'include:com.atproto.moderation.basePermissions',
+        'include:com.example.calendar.basePermissions?aud=did:web:api.bsky.app#foo',
+      ].join(' ')
+    : [
+        'atproto',
+        'account:email',
+        'account:status',
+        'blob:*/*',
+        'repo:*',
+        'rpc:*?aud=did:web:bsky.app#bsky_appview',
+      ].join(' '))

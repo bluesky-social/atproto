@@ -1,0 +1,38 @@
+{
+  "name": "@atproto-labs/simple-store-redis",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Redis based simple-store implementation",
+  "keywords": [
+    "cache",
+    "node",
+    "memory"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/internal/simple-store-redis"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@atproto-labs/simple-store": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "peerDependencies": {
+    "ioredis": "^5.3.2"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  }
+}

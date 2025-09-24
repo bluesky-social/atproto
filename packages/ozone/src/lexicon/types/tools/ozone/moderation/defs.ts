@@ -45,6 +45,7 @@ export interface ModEventView {
     | $Typed<ModEventPriorityScore>
     | $Typed<AgeAssuranceEvent>
     | $Typed<AgeAssuranceOverrideEvent>
+    | $Typed<RevokeAccountCredentialsEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -94,6 +95,7 @@ export interface ModEventViewDetail {
     | $Typed<ModEventPriorityScore>
     | $Typed<AgeAssuranceEvent>
     | $Typed<AgeAssuranceOverrideEvent>
+    | $Typed<RevokeAccountCredentialsEvent>
     | { $type: string }
   subject:
     | $Typed<RepoView>
@@ -449,6 +451,27 @@ export function validateAgeAssuranceOverrideEvent<V>(v: V) {
     v,
     id,
     hashAgeAssuranceOverrideEvent,
+  )
+}
+
+/** Account credentials revocation by moderators. Only works on DID subjects. */
+export interface RevokeAccountCredentialsEvent {
+  $type?: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent'
+  /** Comment describing the reason for the revocation. */
+  comment: string
+}
+
+const hashRevokeAccountCredentialsEvent = 'revokeAccountCredentialsEvent'
+
+export function isRevokeAccountCredentialsEvent<V>(v: V) {
+  return is$typed(v, id, hashRevokeAccountCredentialsEvent)
+}
+
+export function validateRevokeAccountCredentialsEvent<V>(v: V) {
+  return validate<RevokeAccountCredentialsEvent & V>(
+    v,
+    id,
+    hashRevokeAccountCredentialsEvent,
   )
 }
 

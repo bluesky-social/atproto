@@ -1,8 +1,10 @@
 import { SignedJwt, isSignedJwt } from '@atproto/jwk'
+import { LexiconResolutionError } from '@atproto/lexicon-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   OAuthAccessToken,
   OAuthAuthorizationRequestParameters,
+  OAuthScope,
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
@@ -14,35 +16,30 @@ import { DeviceId } from '../device/device-id.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
+import { LexiconManager } from '../lexicon/lexicon-manager.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
-import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { DpopProof } from '../oauth-verifier.js'
 import { Sub } from '../oidc/sub.js'
 import { Code, isCode } from '../request/code.js'
-import { SignedTokenPayload } from '../signer/signed-token-payload.js'
+import { AccessTokenPayload } from '../signer/access-token-payload.js'
 import { Signer } from '../signer/signer.js'
 import {
   RefreshToken,
   generateRefreshToken,
   isRefreshToken,
 } from './refresh-token.js'
-import { TokenData } from './token-data.js'
+import { TokenClaims } from './token-claims.js'
 import { TokenId, generateTokenId, isTokenId } from './token-id.js'
-import { TokenInfo, TokenStore } from './token-store.js'
-import {
-  VerifyTokenClaimsOptions,
-  VerifyTokenClaimsResult,
-  verifyTokenClaims,
-} from './verify-token-claims.js'
+import { CreateTokenData, TokenInfo, TokenStore } from './token-store.js'
 
 export { AccessTokenMode, Signer }
-export type { OAuthHooks, TokenStore, VerifyTokenClaimsResult }
+export type { OAuthHooks, TokenStore }
 
 export class TokenManager {
   constructor(
     protected readonly store: TokenStore,
+    protected readonly lexiconManager: LexiconManager,
     protected readonly signer: Signer,
     protected readonly hooks: OAuthHooks,
     protected readonly accessTokenMode: AccessTokenMode,
@@ -53,30 +50,44 @@ export class TokenManager {
     return new Date(now.getTime() + this.tokenMaxAge)
   }
 
-  protected async buildAccessToken(
+  protected async createAccessToken(
     tokenId: TokenId,
-    account: Account,
     client: Client,
+    account: Account,
     parameters: OAuthAuthorizationRequestParameters,
-    options: {
-      now: Date
-      expiresAt: Date
-    },
+    issuedAt: Date,
+    expiresAt: Date,
+    scope: OAuthScope,
   ): Promise<OAuthAccessToken> {
-    return this.signer.createAccessToken({
+    const claims: TokenClaims = {
       jti: tokenId,
       sub: account.sub,
-      exp: dateToEpoch(options.expiresAt),
-      iat: dateToEpoch(options.now),
-      cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
+      iat: dateToEpoch(issuedAt),
+      exp: dateToEpoch(expiresAt),
+      aud: account.aud,
 
-      ...(this.accessTokenMode === AccessTokenMode.stateless && {
-        aud: account.aud,
-        scope: parameters.scope,
-        // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
-        client_id: client.id,
+      ...(parameters.dpop_jkt && {
+        cnf: { jkt: parameters.dpop_jkt },
       }),
+
+      // Because tokens can end-up being quite big, we only include the scope in
+      // stateless mode.
+      ...(this.accessTokenMode === AccessTokenMode.stateless && {
+        scope,
+      }),
+
+      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
+      client_id: client.id,
+    }
+
+    const claimsOverride = await this.hooks.onCreateToken?.call(null, {
+      client,
+      account,
+      parameters,
+      claims,
     })
+
+    return this.signer.createAccessToken(claimsOverride ?? claims)
   }
 
   async createToken(
@@ -98,7 +109,38 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
-    const tokenData: TokenData = {
+    const scope = await this.lexiconManager
+      .buildTokenScope(parameters.scope!)
+      .catch((err) => {
+        // Parse expected errors
+        if (err instanceof LexiconResolutionError) {
+          throw new InvalidRequestError(err.message, err)
+        }
+
+        // Unexpected error
+        throw err
+      })
+
+    const accessToken = await this.createAccessToken(
+      tokenId,
+      client,
+      account,
+      parameters,
+      now,
+      expiresAt,
+      scope,
+    )
+
+    const response = this.buildTokenResponse(
+      inferTokenType(parameters),
+      accessToken,
+      refreshToken,
+      expiresAt,
+      account.sub,
+      scope,
+    )
+
+    const tokenData: CreateTokenData = {
       createdAt: now,
       updatedAt: now,
       expiresAt,
@@ -108,30 +150,14 @@ export class TokenManager {
       sub: account.sub,
       parameters,
       details: null,
+      scope,
       code,
     }
-
-    const accessToken = await this.buildAccessToken(
-      tokenId,
-      account,
-      client,
-      parameters,
-      { now, expiresAt },
-    )
-
-    const response = await this.buildTokenResponse(
-      client,
-      accessToken,
-      refreshToken,
-      expiresAt,
-      parameters,
-      account.sub,
-    )
 
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
     try {
-      await callAsync(this.hooks.onTokenCreated, {
+      await this.hooks.onTokenCreated?.call(null, {
         client,
         clientAuth,
         clientMetadata,
@@ -161,18 +187,18 @@ export class TokenManager {
   }
 
   protected buildTokenResponse(
-    client: Client,
+    tokenType: OAuthTokenType,
     accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
-    parameters: OAuthAuthorizationRequestParameters,
     sub: Sub,
+    scope: string,
   ): OAuthTokenResponse {
     return {
       access_token: accessToken,
-      token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
+      token_type: tokenType,
       refresh_token: refreshToken,
-      scope: parameters.scope,
+      scope,
 
       // @NOTE using a getter so that the value gets computed when the JSON
       // response is generated, allowing to value to be as accurate as possible.
@@ -204,6 +230,11 @@ export class TokenManager {
     const now = new Date()
     const expiresAt = this.createTokenExpiry(now)
 
+    // @NOTE since the permission sets are stored in a persistent store,
+    // it's fine to propagate a 500 (server_error) here as the values should
+    // be retrievable from the store.
+    const scope = await this.lexiconManager.buildTokenScope(parameters.scope!)
+
     await this.store.rotateToken(tokenInfo.id, nextTokenId, nextRefreshToken, {
       updatedAt: now,
       expiresAt,
@@ -214,26 +245,29 @@ export class TokenManager {
       // - Allow clients to become "confidential" if they were previously
       //   "public"
       clientAuth,
+      scope,
     })
 
-    const accessToken = await this.buildAccessToken(
+    const accessToken = await this.createAccessToken(
       nextTokenId,
-      account,
       client,
+      account,
       parameters,
-      { now, expiresAt },
+      now,
+      expiresAt,
+      scope,
     )
 
-    const response = await this.buildTokenResponse(
-      client,
+    const response = this.buildTokenResponse(
+      inferTokenType(parameters),
       accessToken,
       nextRefreshToken,
       expiresAt,
-      parameters,
       account.sub,
+      scope,
     )
 
-    await callAsync(this.hooks.onTokenRefreshed, {
+    await this.hooks.onTokenRefreshed?.call(null, {
       client,
       clientAuth,
       clientMetadata,
@@ -326,13 +360,16 @@ export class TokenManager {
     return this.store.readToken(tokenId)
   }
 
-  async verifyToken(
-    token: OAuthAccessToken,
+  /**
+   * This method is called to when decoding a token that was encoded in
+   * {@link AccessTokenMode.light} mode, using data from the store to fill the
+   * data that was omitted in the token itself.
+   */
+  async loadTokenClaims(
     tokenType: OAuthTokenType,
-    tokenId: TokenId,
-    dpopProof: null | DpopProof,
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
+    tokenPayload: AccessTokenPayload,
+  ): Promise<TokenClaims> {
+    const tokenId = tokenPayload.jti
     const tokenInfo = await this.getTokenInfo(tokenId).catch((err) => {
       throw InvalidTokenError.from(err, tokenType)
     })
@@ -341,38 +378,31 @@ export class TokenManager {
       throw new InvalidTokenError(tokenType, `Invalid token`)
     }
 
+    const { account, data } = tokenInfo
+
+    // Fool proof, make sure that the database & token payload are consistent.
+    // These should both be either undefined or a string so it's safe to compare
+    // the values directly.
+    if (tokenPayload.cnf?.jkt !== data.parameters.dpop_jkt) {
+      await this.deleteToken(tokenId)
+      throw new InvalidTokenError(tokenType, `Invalid token`)
+    }
+
     if (isCurrentTokenExpired(tokenInfo)) {
       await this.deleteToken(tokenId)
       throw new InvalidTokenError(tokenType, `Token expired`)
     }
 
-    const { account, data } = tokenInfo
-    const { parameters } = data
-
-    // Construct a list of claim, as if the token was a JWT.
-    const tokenClaims: SignedTokenPayload = {
-      iss: this.signer.issuer,
+    return {
       jti: tokenId,
       sub: account.sub,
-      exp: dateToEpoch(data.expiresAt),
       iat: dateToEpoch(data.updatedAt),
-      cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
-
-      // These are not stored in the JWT access token in "light" access token
-      // mode. See `buildAccessToken`.
+      exp: dateToEpoch(data.expiresAt),
       aud: account.aud,
-      scope: parameters.scope,
+      scope: data.scope ?? data.parameters.scope,
+      // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
       client_id: data.clientId,
     }
-
-    return verifyTokenClaims(
-      token,
-      tokenId,
-      tokenType,
-      tokenClaims,
-      dpopProof,
-      verifyOptions,
-    )
   }
 
   async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {
@@ -385,4 +415,13 @@ export class TokenManager {
 
 function isCurrentTokenExpired(tokenInfo: TokenInfo): boolean {
   return tokenInfo.data.expiresAt.getTime() < Date.now()
+}
+
+function inferTokenType(
+  parameters: OAuthAuthorizationRequestParameters,
+): OAuthTokenType {
+  if (parameters.dpop_jkt) {
+    return 'DPoP'
+  }
+  return 'Bearer'
 }

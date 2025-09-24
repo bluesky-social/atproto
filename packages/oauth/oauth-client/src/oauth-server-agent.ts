@@ -5,6 +5,7 @@ import {
   OAuthAuthorizationServerMetadata,
   OAuthEndpointName,
   OAuthParResponse,
+  OAuthRedirectUri,
   OAuthTokenRequest,
   oauthParResponseSchema,
 } from '@atproto/oauth-types'
@@ -91,12 +92,18 @@ export class OAuthServerAgent {
     }
   }
 
-  async exchangeCode(code: string, codeVerifier?: string): Promise<TokenSet> {
+  async exchangeCode(
+    code: string,
+    codeVerifier?: string,
+    redirectUri?: OAuthRedirectUri,
+  ): Promise<TokenSet> {
     const now = Date.now()
 
     const tokenResponse = await this.request('token', {
       grant_type: 'authorization_code',
-      redirect_uri: this.clientMetadata.redirect_uris[0]!,
+      // redirectUri should always be passed by the calling code, but if it is
+      // not, default to the first redirect_uri registered for the client:
+      redirect_uri: redirectUri ?? this.clientMetadata.redirect_uris[0],
       code,
       code_verifier: codeVerifier,
     })

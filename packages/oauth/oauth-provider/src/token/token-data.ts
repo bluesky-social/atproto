@@ -29,4 +29,12 @@ export type TokenData = {
   parameters: OAuthAuthorizationRequestParameters
   details?: null // Legacy field, not used
   code: Code | null
+
+  /**
+   * This will contain the parameter scope, translated into permissions
+   *
+   * @note null because this didn't use to exist. New tokens should always
+   * include a scope.
+   */
+  scope: string | null
 }

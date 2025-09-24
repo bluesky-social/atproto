@@ -542,6 +542,7 @@ export async function generateMockSetup(env: TestNetwork) {
 
   await setVerifier(env.bsky.db, alice.accountDid)
 
+  // @TODO the following should be optimized as it makes dev-env start very slow (>10 sec)
   const sc = env.getSeedClient()
   await seedThreadV2.simple(sc)
   await seedThreadV2.long(sc)

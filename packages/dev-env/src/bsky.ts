@@ -6,7 +6,6 @@ import * as bsky from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
 import { BskyConfig } from './types'
-
 export * from '@atproto/bsky'
 
 export class TestBsky {
@@ -18,10 +17,13 @@ export class TestBsky {
     public dataplane: bsky.DataPlaneServer,
     public bsync: bsky.MockBsync,
     public sub: bsky.RepoSubscription,
+    public serverDid: string,
   ) {}
 
   static async create(cfg: BskyConfig): Promise<TestBsky> {
-    const serviceKeypair = await Secp256k1Keypair.create()
+    const serviceKeypair = cfg.privateKey
+      ? await Secp256k1Keypair.import(cfg.privateKey)
+      : await Secp256k1Keypair.create()
     const plcClient = new PlcClient(cfg.plcUrl)
 
     const port = cfg.port || (await getPort())
@@ -116,7 +118,7 @@ export class TestBsky {
 
     sub.start()
 
-    return new TestBsky(url, port, db, server, dataplane, bsync, sub)
+    return new TestBsky(url, port, db, server, dataplane, bsync, sub, serverDid)
   }
 
   get ctx(): bsky.AppContext {
