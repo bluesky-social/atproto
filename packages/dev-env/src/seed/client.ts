@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { CID } from 'multiformats/cid'
 import {
+  AppBskyActorProfile,
   AppBskyFeedLike,
   AppBskyFeedPost,
   AppBskyFeedRepost,
@@ -174,6 +175,7 @@ export class SeedClient<
     description: string,
     selfLabels?: string[],
     joinedViaStarterPack?: RecordRef,
+    overrides?: Partial<AppBskyActorProfile.Record>,
   ): Promise<{
     displayName: string
     description: string
@@ -207,6 +209,7 @@ export class SeedClient<
             : undefined,
           joinedViaStarterPack: joinedViaStarterPack?.raw,
           createdAt: new Date().toISOString(),
+          ...overrides,
         },
         this.getHeaders(by),
       )
