@@ -28,7 +28,7 @@
             },
             "schema": {
               "type": "ref",
-              "ref": "com.atproto.lexicon.schema",
+              "ref": "com.atproto.lexicon.schema#main",
               "description": "The resolved lexicon schema record."
             },
             "uri": {
