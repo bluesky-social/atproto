@@ -151,6 +151,9 @@ export const readEnv = (): ServerEnvironment => {
     proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
     proxyMaxRetries: envInt('PDS_PROXY_MAX_RETRIES'),
     proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
+
+    // websocket
+    wsPerMessageDeflate: envBool('PDS_WS_PERMESSAGE_DEFLATE'),
   }
 }
 
@@ -301,4 +304,7 @@ export type ServerEnvironment = {
   proxyMaxResponseSize?: number
   proxyMaxRetries?: number
   proxyPreferCompressed?: boolean
+
+  // ws
+  wsPerMessageDeflate?: boolean
 }

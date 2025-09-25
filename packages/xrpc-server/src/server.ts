@@ -386,9 +386,11 @@ export class Server {
     const authVerifier = this.createAuthVerifier(cfg)
 
     const { handler } = cfg
+    const { ws } = this.options
     this.subscriptions.set(
       nsid,
       new XrpcStreamServer({
+        ...ws,
         noServer: true,
         handler: async function* (req, signal) {
           try {

@@ -324,6 +324,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     didAuthority: env.lexiconDidAuthority,
   }
 
+  const wsCfg: WebSocketConfig = {
+    perMessageDeflate: env.wsPerMessageDeflate,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -345,6 +349,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     lexicon: lexiconCfg,
     proxy: proxyCfg,
     oauth: oauthCfg,
+    ws: wsCfg,
   }
 }
 
@@ -369,6 +374,7 @@ export type ServerConfig = {
   proxy: ProxyConfig
   oauth: OAuthConfig
   lexicon: LexiconResolverConfig
+  ws: WebSocketConfig
 }
 
 export type ServiceConfig = {
@@ -519,4 +525,8 @@ export type ModServiceConfig = {
 export type ReportServiceConfig = {
   url: string
   did: string
+}
+
+export type WebSocketConfig = {
+  perMessageDeflate?: boolean
 }
