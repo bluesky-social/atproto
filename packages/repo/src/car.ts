@@ -1,3 +1,4 @@
+import { setImmediate } from 'node:timers/promises'
 import * as cbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
@@ -170,7 +171,7 @@ async function* readCarBlocksIterGenerator(
       // in the case the incoming CAR is synchronous, this can end up jamming up the thread
       blocks++
       if (blocks % 25 === 0) {
-        await new Promise((resolve) => setImmediate(resolve))
+        await setImmediate()
       }
     }
   } finally {
