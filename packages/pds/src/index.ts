@@ -142,6 +142,9 @@ export class PDS {
             ],
           }
         : undefined,
+      ws: {
+        perMessageDeflate: cfg.ws.perMessageDeflate,
+      },
     })
 
     apiRoutes(server, ctx)
