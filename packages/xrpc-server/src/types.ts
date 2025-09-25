@@ -1,6 +1,7 @@
 import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { NextFunction, Request, Response } from 'express'
+import { ServerOptions as WsServerOptions } from 'ws'
 import { z } from 'zod'
 import { ErrorResult, XRPCError } from './errors'
 import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
@@ -34,6 +35,7 @@ export type Options = {
    * @note This function should not throw errors.
    */
   errorParser?: (err: unknown) => XRPCError
+  ws?: Omit<WsServerOptions, 'noServer' | 'server' | 'host' | 'path' | 'port'>
 }
 
 export type UndecodedParams = Request['query']
