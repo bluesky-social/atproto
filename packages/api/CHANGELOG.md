@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.16.11
+
+### Patch Changes
+
+- [#4228](https://github.com/bluesky-social/atproto/pull/4228) [`1a5d7427b`](https://github.com/bluesky-social/atproto/commit/1a5d7427bf5811a019e7b50c7c2af711b8f2dd33) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+
+- [#4228](https://github.com/bluesky-social/atproto/pull/4228) [`1a5d7427b`](https://github.com/bluesky-social/atproto/commit/1a5d7427bf5811a019e7b50c7c2af711b8f2dd33) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton
+
 ## 0.16.10
 
 ### Patch Changes
