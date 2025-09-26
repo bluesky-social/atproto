@@ -86,3 +86,63 @@ export const numberPreprocess = (val: unknown): unknown => {
   }
   return val
 }
+
+/**
+ * Returns true if the two arrays contain the same elements, regardless of order
+ * or duplicates.
+ */
+export function arrayEquivalent<T>(a: readonly T[], b: readonly T[]) {
+  if (a === b) return true
+  return a.every(includedIn, b) && b.every(includedIn, a)
+}
+
+export function includedIn<T>(this: readonly T[], item: T) {
+  return this.includes(item)
+}
+
+export function asArray<T>(
+  value: Iterable<T> | undefined,
+): undefined | readonly T[] {
+  if (value == null) return undefined
+  if (Array.isArray(value)) return value // already a (possibly readonly) array
+  return Array.from(value)
+}
+
+export type SpaceSeparatedValue<Value extends string> =
+  `${'' | `${string} `}${Value}${'' | ` ${string}`}`
+
+export const isSpaceSeparatedValue = <Value extends string>(
+  value: Value,
+  input: string,
+): input is SpaceSeparatedValue<Value> => {
+  if (value.length === 0) throw new TypeError('Value cannot be empty')
+  if (value.includes(' ')) throw new TypeError('Value cannot contain spaces')
+
+  // Optimized version of:
+  // return input.split(' ').includes(value)
+
+  const inputLength = input.length
+  const valueLength = value.length
+
+  if (inputLength < valueLength) return false
+
+  let idx = input.indexOf(value)
+  let idxEnd: number
+
+  while (idx !== -1) {
+    idxEnd = idx + valueLength
+
+    if (
+      // at beginning or preceded by space
+      (idx === 0 || input.charCodeAt(idx - 1) === 32) &&
+      // at end or followed by space
+      (idxEnd === inputLength || input.charCodeAt(idxEnd) === 32)
+    ) {
+      return true
+    }
+
+    idx = input.indexOf(value, idxEnd + 1)
+  }
+
+  return false
+}

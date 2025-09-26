@@ -18,7 +18,7 @@ export function isDidPlc(input: unknown): input is Did<'plc'> {
   return true
 }
 
-export function asDidPlc(input: unknown): Did<'plc'> {
+export function asDidPlc<T>(input: T) {
   assertDidPlc(input)
   return input
 }

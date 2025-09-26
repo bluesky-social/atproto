@@ -1,106 +1,164 @@
-import { TypeOf, ZodIssueCode } from 'zod'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
   OAuthLoopbackRedirectURI,
-  OAuthRedirectUri,
   oauthLoopbackRedirectURISchema,
 } from './oauth-redirect-uri.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 
-const PREFIX = 'http://localhost'
+export const LOOPBACK_CLIENT_ID_ORIGIN = 'http://localhost'
+
+// @NOTE This is not actually based on a standard, but rather a convention
+// established by Bluesky in the Atproto specs and implementation. As such, and
+// in order to respect the convention from this package, these should be
+// prefixed with "Atproto" instead of "OAuth". For legacy reasons, we keep the
+// current names, but we should rename them in a future major release, unless
+// loopback client ids have since then been standardized.
+
+export type OAuthClientIdLoopback =
+  `http://localhost${'' | `/`}${'' | `?${string}`}`
+
+export type OAuthLoopbackClientIdParams = {
+  scope?: OAuthScope
+  redirect_uris?: [OAuthLoopbackRedirectURI, ...OAuthLoopbackRedirectURI[]]
+}
 
 export const oauthClientIdLoopbackSchema = oauthClientIdSchema.superRefine(
-  (value, ctx): value is `${typeof PREFIX}${'' | '/'}${'' | `?${string}`}` => {
-    try {
-      assertOAuthLoopbackClientId(value)
-      return true
-    } catch (error) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message:
-          error instanceof TypeError
-            ? error.message
-            : 'Invalid loopback client ID',
-      })
-      return false
+  (input, ctx): input is OAuthClientIdLoopback => {
+    const result = safeParseOAuthLoopbackClientId(input)
+    if (!result.success) {
+      ctx.addIssue({ code: 'custom', message: result.message })
     }
+    return result.success
   },
 )
 
-export type OAuthClientIdLoopback = TypeOf<typeof oauthClientIdLoopbackSchema>
-
-export function isOAuthClientIdLoopback(
-  clientId: string,
-): clientId is OAuthClientIdLoopback {
-  try {
-    parseOAuthLoopbackClientId(clientId)
-    return true
-  } catch {
-    return false
-  }
-}
-
 export function assertOAuthLoopbackClientId(
-  clientId: string,
-): asserts clientId is OAuthClientIdLoopback {
-  void parseOAuthLoopbackClientId(clientId)
+  input: string,
+): asserts input is OAuthClientIdLoopback {
+  void parseOAuthLoopbackClientId(input)
 }
 
-// @TODO should we turn this into a zod schema? (more coherent error with other
-// validation functions)
-export function parseOAuthLoopbackClientId(clientId: string): {
-  scope?: OAuthScope
-  redirect_uris?: [OAuthRedirectUri, ...OAuthRedirectUri[]]
-} {
-  if (!clientId.startsWith(PREFIX)) {
-    throw new TypeError(`Loopback ClientID must start with "${PREFIX}"`)
-  } else if (clientId.includes('#', PREFIX.length)) {
-    throw new TypeError('Loopback ClientID must not contain a hash component')
+export function isOAuthClientIdLoopback<T extends string>(
+  input: T,
+): input is T & OAuthClientIdLoopback {
+  return safeParseOAuthLoopbackClientId(input).success
+}
+
+export function asOAuthClientIdLoopback<T extends string>(input: T) {
+  assertOAuthLoopbackClientId(input)
+  return input
+}
+
+export function parseOAuthLoopbackClientId(
+  input: string,
+): OAuthLoopbackClientIdParams {
+  const result = safeParseOAuthLoopbackClientId(input)
+  if (result.success) return result.value
+
+  throw new TypeError(`Invalid loopback client ID: ${result.message}`)
+}
+
+/**
+ * Similar to Zod's {@link SafeParseReturnType} but uses a simple "message"
+ * string instead of an "error" Error object.
+ */
+type LightParseReturnType<T> =
+  | { success: true; value: T }
+  | { success: false; message: string }
+
+export function safeParseOAuthLoopbackClientId(
+  input: string,
+): LightParseReturnType<OAuthLoopbackClientIdParams> {
+  // @NOTE Not using "new URL" to ensure input indeed matches the type
+  // OAuthClientIdLoopback
+
+  if (!input.startsWith(LOOPBACK_CLIENT_ID_ORIGIN)) {
+    return {
+      success: false,
+      message: `Value must start with "${LOOPBACK_CLIENT_ID_ORIGIN}"`,
+    }
   }
 
+  if (input.includes('#', LOOPBACK_CLIENT_ID_ORIGIN.length)) {
+    return {
+      success: false,
+      message: 'Value must not contain a hash component',
+    }
+  }
+
+  // Since we don't allow a path component (except for a single "/") the query
+  // string starts after the origin (+ 1 if there is a "/")
   const queryStringIdx =
-    clientId.length > PREFIX.length && clientId[PREFIX.length] === '/'
-      ? PREFIX.length + 1
-      : PREFIX.length
+    input.length > LOOPBACK_CLIENT_ID_ORIGIN.length &&
+    input.charCodeAt(LOOPBACK_CLIENT_ID_ORIGIN.length) === 0x2f /* '/' */
+      ? LOOPBACK_CLIENT_ID_ORIGIN.length + 1
+      : LOOPBACK_CLIENT_ID_ORIGIN.length
 
-  if (clientId.length === queryStringIdx) {
-    return {} // no query string to parse
-  }
-
-  if (clientId[queryStringIdx] !== '?') {
-    throw new TypeError('Loopback ClientID must not contain a path component')
-  }
-
-  const searchParams = new URLSearchParams(clientId.slice(queryStringIdx + 1))
-
-  for (const name of searchParams.keys()) {
-    if (name !== 'redirect_uri' && name !== 'scope') {
-      throw new TypeError(`Invalid query parameter "${name}" in client ID`)
+  // Since we determined the position of the query string based on the origin
+  // length (instead of looking for a "?"), we need to make sure the query
+  // string position (if any) indeed starts with a "?".
+  if (
+    input.length !== queryStringIdx &&
+    input.charCodeAt(queryStringIdx) !== 0x3f /* '?' */
+  ) {
+    return {
+      success: false,
+      message: 'Value must not contain a path component',
     }
   }
 
-  const scope = searchParams.get('scope') ?? undefined
-  if (scope != null) {
-    if (searchParams.getAll('scope').length > 1) {
-      throw new TypeError(
-        'Loopback ClientID must contain at most one scope query parameter',
-      )
-    } else if (!oauthScopeSchema.safeParse(scope).success) {
-      throw new TypeError('Invalid scope query parameter in client ID')
+  const queryString = input.slice(queryStringIdx + 1)
+  return safeParseOAuthLoopbackClientIdQueryString(queryString)
+}
+
+export function safeParseOAuthLoopbackClientIdQueryString(
+  input: string | Iterable<[key: string, value: string]>,
+): LightParseReturnType<OAuthLoopbackClientIdParams> {
+  // Parse query params
+  const params: OAuthLoopbackClientIdParams = {}
+
+  const it = typeof input === 'string' ? new URLSearchParams(input) : input
+  for (const [key, value] of it) {
+    if (key === 'scope') {
+      if ('scope' in params) {
+        return {
+          success: false,
+          message: 'Duplicate "scope" query parameter',
+        }
+      }
+
+      const res = oauthScopeSchema.safeParse(value)
+      if (!res.success) {
+        const reason = res.error.issues.map((i) => i.message).join(', ')
+        return {
+          success: false,
+          message: `Invalid "scope" query parameter: ${reason || 'Validation failed'}`,
+        }
+      }
+
+      params.scope = res.data
+    } else if (key === 'redirect_uri') {
+      const res = oauthLoopbackRedirectURISchema.safeParse(value)
+      if (!res.success) {
+        const reason = res.error.issues.map((i) => i.message).join(', ')
+        return {
+          success: false,
+          message: `Invalid "redirect_uri" query parameter: ${reason || 'Validation failed'}`,
+        }
+      }
+
+      if (params.redirect_uris == null) params.redirect_uris = [res.data]
+      else params.redirect_uris.push(res.data)
+    } else {
+      return {
+        success: false,
+        message: `Unexpected query parameter "${key}"`,
+      }
     }
   }
-
-  const redirect_uris = searchParams.has('redirect_uri')
-    ? (searchParams
-        .getAll('redirect_uri')
-        .map((value) => oauthLoopbackRedirectURISchema.parse(value)) as [
-        OAuthLoopbackRedirectURI,
-        ...OAuthLoopbackRedirectURI[],
-      ])
-    : undefined
 
   return {
-    scope,
-    redirect_uris,
+    success: true,
+    value: params,
   }
 }

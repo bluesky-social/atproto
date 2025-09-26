@@ -14,7 +14,7 @@ import { OAuthResponseError } from './oauth-response-error.js'
 import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { Runtime } from './runtime.js'
-import { CustomEventTarget, combineSignals, timeoutSignal } from './util.js'
+import { CustomEventTarget, combineSignals } from './util.js'
 
 export type Session = {
   dpopKey: Key
@@ -264,7 +264,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
    * if they are expired. When `undefined`, the credentials will be refreshed
    * if, and only if, they are (about to be) expired. Defaults to `undefined`.
    */
-  async getSession(sub: AtprotoDid, refresh?: boolean) {
+  async getSession(sub: AtprotoDid, refresh: boolean | 'auto' = 'auto') {
     return this.get(sub, {
       noCache: refresh === true,
       allowStale: refresh === false,
@@ -277,7 +277,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
       async () => {
         // Make sure, even if there is no signal in the options, that the
         // request will be cancelled after at most 30 seconds.
-        using signal = timeoutSignal(30e3, options)
+        const signal = AbortSignal.timeout(30e3)
 
         using abortController = combineSignals([options?.signal, signal])
 

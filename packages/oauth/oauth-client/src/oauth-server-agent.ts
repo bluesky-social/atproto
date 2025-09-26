@@ -1,21 +1,19 @@
 import { AtprotoDid } from '@atproto/did'
 import { Key, Keyset } from '@atproto/jwk'
 import {
+  AtprotoOAuthScope,
+  AtprotoOAuthTokenResponse,
   OAuthAuthorizationRequestPar,
   OAuthAuthorizationServerMetadata,
   OAuthEndpointName,
   OAuthParResponse,
   OAuthRedirectUri,
   OAuthTokenRequest,
+  atprotoOAuthTokenResponseSchema,
   oauthParResponseSchema,
 } from '@atproto/oauth-types'
 import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
-import {
-  AtprotoScope,
-  AtprotoTokenResponse,
-  atprotoTokenResponseSchema,
-} from './atproto-token-response.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import {
@@ -27,13 +25,14 @@ import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { Runtime } from './runtime.js'
 import { ClientMetadata } from './types.js'
-import { timeoutSignal } from './util.js'
+
+export type { AtprotoOAuthScope, AtprotoOAuthTokenResponse }
 
 export type TokenSet = {
   iss: string
   sub: AtprotoDid
   aud: string
-  scope: AtprotoScope
+  scope: AtprotoOAuthScope
 
   refresh_token?: string
   access_token: string
@@ -187,12 +186,10 @@ export class OAuthServerAgent {
    * @returns The user's PDS URL (the resource server for the user)
    */
   protected async verifyIssuer(sub: AtprotoDid): Promise<string> {
-    using signal = timeoutSignal(10e3)
-
     const resolved = await this.oauthResolver.resolveFromIdentity(sub, {
       noCache: true,
       allowStale: false,
-      signal,
+      signal: AbortSignal.timeout(10e3),
     })
 
     if (this.issuer !== resolved.metadata.issuer) {
@@ -214,7 +211,7 @@ export class OAuthServerAgent {
         : Record<string, unknown>,
   ): Promise<
     Endpoint extends 'token'
-      ? AtprotoTokenResponse
+      ? AtprotoOAuthTokenResponse
       : Endpoint extends 'pushed_authorization_request'
         ? OAuthParResponse
         : Json
@@ -244,7 +241,7 @@ export class OAuthServerAgent {
     if (response.ok) {
       switch (endpoint) {
         case 'token':
-          return atprotoTokenResponseSchema.parse(json)
+          return atprotoOAuthTokenResponseSchema.parse(json)
         case 'pushed_authorization_request':
           return oauthParResponseSchema.parse(json)
         default:
