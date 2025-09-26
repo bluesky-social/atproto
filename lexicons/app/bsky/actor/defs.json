@@ -13,6 +13,7 @@
           "maxGraphemes": 64,
           "maxLength": 640
         },
+        "pronouns": { "type": "string" },
         "avatar": { "type": "string", "format": "uri" },
         "associated": {
           "type": "ref",
@@ -45,6 +46,7 @@
           "maxGraphemes": 64,
           "maxLength": 640
         },
+        "pronouns": { "type": "string" },
         "description": {
           "type": "string",
           "maxGraphemes": 256,

@@ -31,6 +31,9 @@ export const schemaDict = {
             maxGraphemes: 64,
             maxLength: 640,
           },
+          pronouns: {
+            type: 'string',
+          },
           avatar: {
             type: 'string',
             format: 'uri',
@@ -80,6 +83,9 @@ export const schemaDict = {
             type: 'string',
             maxGraphemes: 64,
             maxLength: 640,
+          },
+          pronouns: {
+            type: 'string',
           },
           description: {
             type: 'string',
