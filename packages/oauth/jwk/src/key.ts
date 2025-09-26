@@ -8,7 +8,7 @@ import { cachedGetter } from './util.js'
 const jwkSchemaReadonly = jwkSchema.readonly()
 
 export abstract class Key<J extends Jwk = Jwk> {
-  constructor(protected readonly jwk: Readonly<J>) {
+  constructor(readonly jwk: Readonly<J>) {
     // @TODO "use" is actually only for public keys. We should allow missing
     // "use" here and automatically add it to the exposed `publicJwk`
 

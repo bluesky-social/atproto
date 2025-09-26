@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": ["./base.json", "expo-module-scripts/tsconfig.base.json"],
+
+  // Overrides
+  "compilerOptions": {
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedParameters": true
+  }
+}

@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "dbaeumer.vscode-eslint",
+    "expo.vscode-expo-tools",
     "wengerk.highlight-bad-chars",
     "esbenp.prettier-vscode",
     "streetsidesoftware.code-spell-checker"
