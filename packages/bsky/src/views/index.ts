@@ -265,7 +265,6 @@ export class Views {
 
     return {
       ...baseView,
-      pronouns: actor.profile?.pronouns,
       website: this.profileWebsite(did, state),
       viewer: baseView.viewer
         ? {
@@ -345,6 +344,7 @@ export class Views {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
       displayName: actor.profile?.displayName,
+      pronouns: actor.profile?.pronouns,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(
             'avatar',

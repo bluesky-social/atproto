@@ -26,6 +26,7 @@ export interface ProfileViewBasic {
   did: string
   handle: string
   displayName?: string
+  pronouns?: string
   avatar?: string
   associated?: ProfileAssociated
   viewer?: ViewerState
@@ -50,6 +51,7 @@ export interface ProfileView {
   did: string
   handle: string
   displayName?: string
+  pronouns?: string
   description?: string
   avatar?: string
   associated?: ProfileAssociated
