@@ -1,5 +1,12 @@
 # @atproto/oauth-provider
 
+## 0.13.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon-resolver@0.2.2
+
 ## 0.13.0
 
 ### Minor Changes
