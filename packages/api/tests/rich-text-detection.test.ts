@@ -60,6 +60,16 @@ describe('detectFacets', () => {
     'punctuation https://foo.com, https://bar.com/whatever; https://baz.com.',
     'parenthentical (https://foo.com)',
     'except for https://foo.com/thing_(cool)',
+    'HTTPS://google.com',
+    'https://google.COM',
+    'ko-fi.com',
+    '日本語.jp',
+    'GOOGLE.com',
+    'https://34.64.0.52',
+    '198.185.159.145',
+    'invalid IPs: http://127.0.0.1 https://255.255.255.255 https://0.0.0.0 https://169.254.1.1 https://1.1.1.011',
+    'invalid URIs: https://google.a https://localhost',
+    'this is a website: google.com. The final dot it is not part of it',
   ]
   const outputs: string[][][] = [
     [['no mention']],
@@ -211,6 +221,24 @@ describe('detectFacets', () => {
     [
       ['except for '],
       ['https://foo.com/thing_(cool)', 'https://foo.com/thing_(cool)'],
+    ],
+    [['HTTPS://google.com', 'HTTPS://google.com']],
+    [['https://google.COM', 'https://google.COM']],
+    [['ko-fi.com', 'https://ko-fi.com']],
+    [['日本語.jp', 'https://日本語.jp']],
+    [['GOOGLE.com', 'https://GOOGLE.com']],
+    [['https://34.64.0.52', 'https://34.64.0.52']],
+    [['198.185.159.145', 'https://198.185.159.145']],
+    [
+      [
+        'invalid IPs: http://127.0.0.1 https://255.255.255.255 https://0.0.0.0 https://169.254.1.1 https://1.1.1.011',
+      ],
+    ],
+    [['invalid URIs: https://google.a https://localhost']],
+    [
+      ['this is a website: '],
+      ['google.com', 'https://google.com'],
+      ['. The final dot it is not part of it'],
     ],
   ]
   it('correctly handles a set of text inputs', async () => {
