@@ -22,7 +22,7 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22.19.0"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
