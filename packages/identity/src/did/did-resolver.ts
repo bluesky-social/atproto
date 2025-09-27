@@ -9,11 +9,11 @@ export class DidResolver extends BaseResolver {
 
   constructor(opts: DidResolverOpts) {
     super(opts.didCache)
-    const { timeout = 3000, plcUrl = 'https://plc.directory' } = opts
+    const { fetch = globalThis.fetch, timeout = 3000, plcUrl = 'https://plc.directory' } = opts
     // do not pass cache to sub-methods or we will be double caching
     this.methods = {
-      plc: new DidPlcResolver(plcUrl, timeout),
-      web: new DidWebResolver(timeout),
+      plc: new DidPlcResolver(fetch, plcUrl, timeout),
+      web: new DidWebResolver(fetch, timeout),
     }
   }
 
