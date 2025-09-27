@@ -14,7 +14,7 @@
     "directory": "packages/xrpc-server"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22.19.0"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
