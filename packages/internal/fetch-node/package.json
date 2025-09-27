@@ -24,7 +24,7 @@
     }
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22.19.0"
   },
   "dependencies": {
     "@atproto-labs/fetch": "workspace:*",

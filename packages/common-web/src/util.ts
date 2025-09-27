@@ -87,7 +87,9 @@ export const bailableWait = (ms: number): BailableWait => {
   return { bail, wait: () => waitPromise }
 }
 
-export const flattenUint8Arrays = (arrs: Uint8Array[]): Uint8Array => {
+export const flattenUint8Arrays = (
+  arrs: Uint8Array<ArrayBuffer>[],
+): Uint8Array<ArrayBuffer> => {
   const length = arrs.reduce((acc, cur) => {
     return acc + cur.length
   }, 0)
@@ -101,9 +103,9 @@ export const flattenUint8Arrays = (arrs: Uint8Array[]): Uint8Array => {
 }
 
 export const streamToBuffer = async (
-  stream: AsyncIterable<Uint8Array>,
-): Promise<Uint8Array> => {
-  const arrays: Uint8Array[] = []
+  stream: AsyncIterable<Uint8Array<ArrayBuffer>>,
+): Promise<Uint8Array<ArrayBuffer>> => {
+  const arrays: Uint8Array<ArrayBuffer>[] = []
   for await (const chunk of stream) {
     arrays.push(chunk)
   }
