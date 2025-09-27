@@ -100,7 +100,9 @@ function Item({ item: { label, onClick, items }, ...props }: ItemProps) {
         </button>
       )}
 
-      {items?.map((item, index) => <Item key={index} item={item} />)}
+      {items?.map((item, index) => (
+        <Item key={index} item={item} />
+      ))}
     </div>
   )
 }

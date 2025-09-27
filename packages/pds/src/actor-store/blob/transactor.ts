@@ -153,7 +153,7 @@ export class BlobTransactor extends BlobReader {
 
   async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
     const takedownRef = takedown.applied
-      ? takedown.ref ?? new Date().toISOString()
+      ? (takedown.ref ?? new Date().toISOString())
       : null
     await this.db.db
       .updateTable('blob')
