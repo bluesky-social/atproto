@@ -2,7 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/bookmark/getBookmarks'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/bookmark/getModBookmarksByActor'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -15,24 +15,25 @@ import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getBookmarks = createPipeline(
+  const getModBookmarksByActor = createPipeline(
     skeleton,
     hydration,
     noRules, // Blocks are included and handled on views. Mutes are included.
     presentation,
   )
-  server.app.bsky.bookmark.getBookmarks({
-    auth: ctx.authVerifier.standard,
+  server.app.bsky.bookmark.getModBookmarksByActor({
+    auth: ctx.authVerifier.modService,
     handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
+        includeTakedowns,
       })
 
-      const result = await getBookmarks(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+      const result = await getModBookmarksByActor(
+        { ...params, hydrateCtx },
         ctx,
       )
 
@@ -49,7 +50,7 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
-  const actorDid = params.hydrateCtx.viewer
+  const actorDid = params.actor
   const { bookmarks, cursor } = await ctx.hydrator.dataplane.getActorBookmarks({
     actorDid,
     limit: params.limit,
@@ -69,7 +70,7 @@ const hydration = async (
   const { bookmarkInfos } = skeleton
   return ctx.hydrator.hydrateBookmarks(
     bookmarkInfos,
-    params.hydrateCtx.viewer,
+    params.actor,
     params.hydrateCtx,
   )
 }
@@ -80,7 +81,7 @@ const presentation = (
   const { ctx, hydration, params, skeleton } = input
   const { bookmarkInfos, cursor } = skeleton
   const bookmarkViews = mapDefined(bookmarkInfos, (bookmarkInfo) =>
-    ctx.views.bookmark(bookmarkInfo.key, params.hydrateCtx.viewer, hydration),
+    ctx.views.bookmark(bookmarkInfo.key, params.actor, hydration),
   )
   return { bookmarks: bookmarkViews, cursor }
 }
@@ -91,7 +92,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = {
