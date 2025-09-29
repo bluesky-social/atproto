@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
+  "authors": [
+    "Hailey <me@haileyok.com> (https://github.com/haileyok)",
+    "Matthieu Sieben <me@matthieusieben.com> (https://github.com/matthieusieben)"
+  ],
   "keywords": [
     "atproto",
     "oauth",
