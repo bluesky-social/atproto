@@ -6,7 +6,7 @@ import {
   OAuthClient,
   OAuthSession,
 } from '@atproto/oauth-client'
-import { default as NativeModule } from './ExpoAtprotoAuthModule'
+import { default as NativeModule } from './ExpoAtprotoOAuthClientModule'
 import { ExpoOAuthClientInterface } from './expo-oauth-client-interface'
 import { ExpoOAuthClientOptions } from './expo-oauth-client-options'
 import { ExpoKey } from './utils/expo-key'
@@ -34,7 +34,7 @@ export class ExpoOAuthClient
 
     super({
       ...options,
-      responseMode: options.responseMode ?? 'fragment',
+      responseMode: options.responseMode ?? 'query',
       keyset: undefined,
       runtimeImplementation: {
         createKey: async (algs) => ExpoKey.generate(algs),
@@ -83,9 +83,11 @@ export class ExpoOAuthClient
       display: options?.display ?? 'touch',
     })
 
-    const result = await openAuthSessionAsync(url.toString(), redirectUri, {
-      createTask: false,
-    })
+    console.debug('openAuthSessionAsync', { url, redirectUri })
+
+    const result = await openAuthSessionAsync(url.toString(), redirectUri)
+
+    console.debug('AUTH SESSION RESULT', result)
 
     if (result.type === 'success') {
       const callbackUrl = new URL(result.url)

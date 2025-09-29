@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 
-group = 'expo.modules.atprotoauth'
+group = 'expo.modules.atprotooauthclient'
 version = '0.1.0'
 
 def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
@@ -32,7 +32,7 @@ if (useManagedAndroidSdkVersions) {
 }
 
 android {
-  namespace "expo.modules.atprotoauth"
+  namespace "expo.modules.atprotooauthclient"
   defaultConfig {
     versionCode 1
     versionName "0.1.0"

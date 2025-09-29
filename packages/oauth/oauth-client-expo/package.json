@@ -31,10 +31,6 @@
       "default": "./dist/polyfill.js"
     }
   },
-  "devDependencies": {
-    "expo": "~54.0.0",
-    "expo-module-scripts": "^5.0.7"
-  },
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:*",
     "@atproto/oauth-client": "workspace:*",
@@ -44,7 +40,7 @@
     "event-target-polyfill": "^0.0.4",
     "expo-web-browser": "^15.0.7",
     "react-native-mmkv": "^3.3.3",
-    "react-native-url-polyfill": "^2.0.0"
+    "react-native-url-polyfill": "^3.0.0"
   },
   "peerDependencies": {
     "expo": "*"

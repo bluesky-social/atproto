@@ -1,11 +1,11 @@
-package expo.modules.expoatprotoauth
+package expo.modules.atprotooauthclient
 
 import com.nimbusds.jose.Algorithm
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.util.Base64URL
-import expo.modules.atprotoauth.EncodedJWK
+import expo.modules.atprotooauthclient.EncodedJWK
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.interfaces.ECPrivateKey

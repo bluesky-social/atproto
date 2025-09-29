@@ -4,6 +4,6 @@
     "modules": ["ExpoAtprotoOAuthClientModule"]
   },
   "android": {
-    "modules": ["expo.modules.atprotoauth.ExpoAtprotoOAuthClientModule"]
+    "modules": ["expo.modules.atprotooauthclient.ExpoAtprotoOAuthClientModule"]
   }
 }

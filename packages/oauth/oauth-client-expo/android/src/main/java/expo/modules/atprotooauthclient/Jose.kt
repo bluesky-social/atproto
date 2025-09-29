@@ -1,4 +1,4 @@
-package expo.modules.expoatprotoauth
+package expo.modules.atprotooauthclient
 
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.ECDSASigner
@@ -6,8 +6,8 @@ import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.jwk.ECKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
-import expo.modules.atprotoauth.VerifyOptions
-import expo.modules.atprotoauth.VerifyResult
+import expo.modules.atprotooauthclient.VerifyOptions
+import expo.modules.atprotooauthclient.VerifyResult
 
 class InvalidPayloadException(
   message: String,

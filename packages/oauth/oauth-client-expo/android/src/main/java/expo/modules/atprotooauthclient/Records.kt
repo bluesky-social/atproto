@@ -1,4 +1,4 @@
-package expo.modules.atprotoauth
+package expo.modules.atprotooauthclient
 
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
