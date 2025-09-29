@@ -418,8 +418,9 @@ export class CredentialSession implements SessionManager {
           this.session = undefined
           this.persistSession?.('expired', undefined)
         } else {
-          this.session = undefined
-          this.persistSession?.('network-error', undefined)
+          // Assume the problem is transient and the session can be reused later.
+          this.session = session
+          this.persistSession?.('network-error', session)
         }
       }
 
