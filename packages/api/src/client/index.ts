@@ -251,6 +251,7 @@ import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -261,8 +262,10 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+import * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -539,6 +542,7 @@ export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+export * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -549,8 +553,10 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+export * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -4882,6 +4888,18 @@ export class ToolsOzoneModerationNS {
     this._client = client
   }
 
+  cancelScheduledActions(
+    data?: ToolsOzoneModerationCancelScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationCancelScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationCancelScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.cancelScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   emitEvent(
     data?: ToolsOzoneModerationEmitEvent.InputSchema,
     opts?: ToolsOzoneModerationEmitEvent.CallOptions,
@@ -4991,6 +5009,18 @@ export class ToolsOzoneModerationNS {
     )
   }
 
+  listScheduledActions(
+    data?: ToolsOzoneModerationListScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationListScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationListScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.listScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   queryEvents(
     params?: ToolsOzoneModerationQueryEvents.QueryParams,
     opts?: ToolsOzoneModerationQueryEvents.CallOptions,
@@ -5011,6 +5041,18 @@ export class ToolsOzoneModerationNS {
       'tools.ozone.moderation.queryStatuses',
       params,
       undefined,
+      opts,
+    )
+  }
+
+  scheduleAction(
+    data?: ToolsOzoneModerationScheduleAction.InputSchema,
+    opts?: ToolsOzoneModerationScheduleAction.CallOptions,
+  ): Promise<ToolsOzoneModerationScheduleAction.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.scheduleAction',
+      opts?.qp,
+      data,
       opts,
     )
   }

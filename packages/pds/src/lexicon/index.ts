@@ -207,6 +207,7 @@ import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
@@ -216,8 +217,10 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+import * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -3083,6 +3086,18 @@ export class ToolsOzoneModerationNS {
     this._server = server
   }
 
+  cancelScheduledActions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneModerationCancelScheduledActions.QueryParams,
+      ToolsOzoneModerationCancelScheduledActions.HandlerInput,
+      ToolsOzoneModerationCancelScheduledActions.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.cancelScheduledActions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   emitEvent<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3191,6 +3206,18 @@ export class ToolsOzoneModerationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  listScheduledActions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneModerationListScheduledActions.QueryParams,
+      ToolsOzoneModerationListScheduledActions.HandlerInput,
+      ToolsOzoneModerationListScheduledActions.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.listScheduledActions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   queryEvents<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3212,6 +3239,18 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.queryStatuses' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  scheduleAction<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneModerationScheduleAction.QueryParams,
+      ToolsOzoneModerationScheduleAction.HandlerInput,
+      ToolsOzoneModerationScheduleAction.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.scheduleAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

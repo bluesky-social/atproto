@@ -1,0 +1,134 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderation.scheduleAction",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Schedule a moderation action to be executed at a future time",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["action", "subjects", "createdBy", "scheduling"],
+          "properties": {
+            "action": {
+              "type": "union",
+              "refs": ["#takedown"]
+            },
+            "subjects": {
+              "type": "array",
+              "maxLength": 100,
+              "items": {
+                "type": "string",
+                "format": "did"
+              },
+              "description": "Array of DID subjects to schedule the action for"
+            },
+            "createdBy": {
+              "type": "string",
+              "format": "did"
+            },
+            "scheduling": {
+              "type": "ref",
+              "ref": "#schedulingConfig"
+            },
+            "modTool": {
+              "type": "ref",
+              "ref": "tools.ozone.moderation.defs#modTool",
+              "description": "This will be propagated to the moderation event when it is applied"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "#scheduledActionResults"
+        }
+      }
+    },
+    "takedown": {
+      "type": "object",
+      "description": "Schedule a takedown action",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the takedown should be in effect before automatically expiring."
+        },
+        "acknowledgeAccountSubjects": {
+          "type": "boolean",
+          "description": "If true, all other reports on content authored by this account will be resolved (acknowledged)."
+        },
+        "policies": {
+          "type": "array",
+          "maxLength": 5,
+          "items": {
+            "type": "string"
+          },
+          "description": "Names/Keywords of the policies that drove the decision."
+        }
+      }
+    },
+    "schedulingConfig": {
+      "type": "object",
+      "description": "Configuration for when the action should be executed",
+      "properties": {
+        "executeAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Exact time to execute the action"
+        },
+        "executeAfter": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Earliest time to execute the action (for randomized scheduling)"
+        },
+        "executeUntil": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Latest time to execute the action (for randomized scheduling)"
+        }
+      }
+    },
+    "scheduledActionResults": {
+      "type": "object",
+      "required": ["succeeded", "failed"],
+      "properties": {
+        "succeeded": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "did"
+          }
+        },
+        "failed": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#failedScheduling"
+          }
+        }
+      }
+    },
+    "failedScheduling": {
+      "type": "object",
+      "required": ["subject", "error"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "format": "did"
+        },
+        "error": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

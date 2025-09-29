@@ -14181,6 +14181,83 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationCancelScheduledActions: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.cancelScheduledActions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Cancel all pending scheduled moderation actions for specified subjects',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjects'],
+            properties: {
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description:
+                  'Array of DID subjects to cancel scheduled actions for',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.cancelScheduledActions#cancellationResults',
+          },
+        },
+      },
+      cancellationResults: {
+        type: 'object',
+        required: ['succeeded', 'failed'],
+        properties: {
+          succeeded: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+            description:
+              'DIDs for which all pending scheduled actions were successfully cancelled',
+          },
+          failed: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.cancelScheduledActions#failedCancellation',
+            },
+            description:
+              'DIDs for which cancellation failed with error details',
+          },
+        },
+      },
+      failedCancellation: {
+        type: 'object',
+        required: ['did', 'error'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          error: {
+            type: 'string',
+          },
+          errorCode: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationDefs: {
     lexicon: 1,
     id: 'tools.ozone.moderation.defs',
@@ -14224,6 +14301,8 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
               'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+              'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           subject: {
@@ -14299,6 +14378,8 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
               'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+              'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           subject: {
@@ -14984,6 +15065,17 @@ export const schemaDict = {
           },
         },
       },
+      scheduleTakedownEvent: {
+        type: 'object',
+        description: 'Logs a scheduled takedown action for an account.',
+        properties: {},
+      },
+      cancelScheduledTakedownEvent: {
+        type: 'object',
+        description:
+          'Logs cancellation of a scheduled takedown action for an account.',
+        properties: {},
+      },
       repoView: {
         type: 'object',
         required: [
@@ -15457,6 +15549,88 @@ export const schemaDict = {
         description:
           'Moderation event timeline event for a PLC tombstone operation',
       },
+      scheduledActionView: {
+        type: 'object',
+        description: 'View of a scheduled moderation action',
+        required: ['id', 'action', 'did', 'createdBy', 'createdAt', 'status'],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Auto-incrementing row ID',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['takedown'],
+            description: 'Type of action to be executed',
+          },
+          eventData: {
+            type: 'unknown',
+            description:
+              'Serialized event object that will be propagated to the event when performed',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+            description: 'Subject DID for the action',
+          },
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Exact time to execute the action',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Earliest time to execute the action (for randomized scheduling)',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Latest time to execute the action (for randomized scheduling)',
+          },
+          randomizeExecution: {
+            type: 'boolean',
+            description:
+              'Whether execution time should be randomized within the specified range',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who created this scheduled action',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the scheduled action was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the scheduled action was last updated',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['pending', 'executed', 'cancelled', 'failed'],
+            description: 'Current status of the scheduled action',
+          },
+          lastExecutedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the action was last attempted to be executed',
+          },
+          lastFailureReason: {
+            type: 'string',
+            description: 'Reason for the last execution failure',
+          },
+          executionEventId: {
+            type: 'integer',
+            description:
+              'ID of the moderation event created when action was successfully executed',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -15497,6 +15671,8 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
                   'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
                   'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+                  'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+                  'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
                 ],
               },
               subject: {
@@ -15645,6 +15821,8 @@ export const schemaDict = {
               'tools.ozone.hosting.getAccountHistory#emailConfirmed',
               'tools.ozone.hosting.getAccountHistory#passwordUpdated',
               'tools.ozone.hosting.getAccountHistory#handleUpdated',
+              'tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           count: {
@@ -15907,6 +16085,85 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:tools.ozone.moderation.defs#subjectView',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationListScheduledActions: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.listScheduledActions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'List scheduled moderation actions with optional filtering',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              startTime: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'Filter actions scheduled to execute after this time',
+              },
+              endTime: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'Filter actions scheduled to execute before this time',
+              },
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description: 'Filter actions for specific DID subjects',
+              },
+              statuses: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  knownValues: ['pending', 'executed', 'cancelled', 'failed'],
+                },
+                description: 'Filter actions by status',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actions'],
+            properties: {
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#scheduledActionView',
+                },
+              },
+              cursor: {
+                type: 'string',
+                description: 'Cursor for next page of results',
               },
             },
           },
@@ -16326,6 +16583,147 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationScheduleAction: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.scheduleAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Schedule a moderation action to be executed at a future time',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['action', 'subjects', 'createdBy', 'scheduling'],
+            properties: {
+              action: {
+                type: 'union',
+                refs: ['lex:tools.ozone.moderation.scheduleAction#takedown'],
+              },
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description: 'Array of DID subjects to schedule the action for',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+              },
+              scheduling: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.scheduleAction#schedulingConfig',
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
+                description:
+                  'This will be propagated to the moderation event when it is applied',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.scheduleAction#scheduledActionResults',
+          },
+        },
+      },
+      takedown: {
+        type: 'object',
+        description: 'Schedule a takedown action',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+          acknowledgeAccountSubjects: {
+            type: 'boolean',
+            description:
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that drove the decision.',
+          },
+        },
+      },
+      schedulingConfig: {
+        type: 'object',
+        description: 'Configuration for when the action should be executed',
+        properties: {
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Exact time to execute the action',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Earliest time to execute the action (for randomized scheduling)',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Latest time to execute the action (for randomized scheduling)',
+          },
+        },
+      },
+      scheduledActionResults: {
+        type: 'object',
+        required: ['succeeded', 'failed'],
+        properties: {
+          succeeded: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+          failed: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.scheduleAction#failedScheduling',
+            },
+          },
+        },
+      },
+      failedScheduling: {
+        type: 'object',
+        required: ['subject', 'error'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          error: {
+            type: 'string',
+          },
+          errorCode: {
+            type: 'string',
           },
         },
       },
@@ -18726,6 +19124,8 @@ export const ids = {
   ToolsOzoneCommunicationUpdateTemplate:
     'tools.ozone.communication.updateTemplate',
   ToolsOzoneHostingGetAccountHistory: 'tools.ozone.hosting.getAccountHistory',
+  ToolsOzoneModerationCancelScheduledActions:
+    'tools.ozone.moderation.cancelScheduledActions',
   ToolsOzoneModerationDefs: 'tools.ozone.moderation.defs',
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
   ToolsOzoneModerationGetAccountTimeline:
@@ -18738,8 +19138,11 @@ export const ids = {
     'tools.ozone.moderation.getReporterStats',
   ToolsOzoneModerationGetRepos: 'tools.ozone.moderation.getRepos',
   ToolsOzoneModerationGetSubjects: 'tools.ozone.moderation.getSubjects',
+  ToolsOzoneModerationListScheduledActions:
+    'tools.ozone.moderation.listScheduledActions',
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
+  ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',

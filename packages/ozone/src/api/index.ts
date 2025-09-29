@@ -8,6 +8,7 @@ import updateTemplate from './communication/updateTemplate'
 import fetchLabels from './label/fetchLabels'
 import queryLabels from './label/queryLabels'
 import subscribeLabels from './label/subscribeLabels'
+import cancelScheduledActions from './moderation/cancelScheduledActions'
 import emitEvent from './moderation/emitEvent'
 import getAccountTimeline from './moderation/getAccountTimeline'
 import getEvent from './moderation/getEvent'
@@ -17,8 +18,10 @@ import getRepo from './moderation/getRepo'
 import getReporterStats from './moderation/getReporterStats'
 import getRepos from './moderation/getRepos'
 import getSubjects from './moderation/getSubjects'
+import listScheduledActions from './moderation/listScheduledActions'
 import queryEvents from './moderation/queryEvents'
 import queryStatuses from './moderation/queryStatuses'
+import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
 import createReport from './report/createReport'
@@ -94,5 +97,8 @@ export default function (server: Server, ctx: AppContext) {
   querySafelinkEvents(server, ctx)
   querySafelinkRules(server, ctx)
   getAccountTimeline(server, ctx)
+  scheduleAction(server, ctx)
+  listScheduledActions(server, ctx)
+  cancelScheduledActions(server, ctx)
   return server
 }
