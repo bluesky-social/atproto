@@ -2,7 +2,7 @@
 
 Welcome friends!
 
-This repository contains Bluesky's reference implementation of AT Protocol, and of the `app.bsky` microblogging application service backend.
+This repository contains Bluesky's reference implementation of AT Protocol, and of the `bsky.app` microblogging application service backend.
 
 ## What is in here?
 
