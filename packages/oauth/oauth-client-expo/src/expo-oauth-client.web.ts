@@ -36,7 +36,7 @@ export class ExpoOAuthClient
     const url = this.findRedirectUrl()
     if (!url) return null
 
-    const { session } = await this.callback(params, { redirect_uri: url })
+    const { session } = await this.initCallback(params, url)
     return session
   }
 }
