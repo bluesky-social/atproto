@@ -3,6 +3,7 @@ import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs'
 import { ids } from '../src/lexicon/lexicons'
+import { ProtectedTagSettingKey } from '../src/setting/constants'
 
 describe('scheduled action processor', () => {
   let network: TestNetwork
@@ -321,6 +322,171 @@ describe('scheduled action processor', () => {
         ])
         expect(modEvents.length).toBe(1)
       }
+    })
+  })
+
+  describe('takedown validation checks', () => {
+    it('fails when trying to takedown an already taken down account', async () => {
+      const testSubject = 'did:plc:already_takendown'
+
+      // takedown the account manually
+      await adminAgent.tools.ozone.moderation.emitEvent(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: testSubject,
+          },
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTakedown',
+            comment: 'Manual takedown first',
+          },
+          createdBy: adminAgent.session?.did || 'did:plc:admin',
+        },
+        await getAdminHeaders(ids.ToolsOzoneModerationEmitEvent),
+      )
+
+      // Schedule a takedown for the already taken down account
+      await scheduleTestAction(testSubject, {
+        executeAt: new Date(Date.now() - 1000).toISOString(),
+      })
+
+      // Process the scheduled action
+      await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
+
+      // Verify the scheduled action failed
+      const failedActions = await getScheduledActions([testSubject], ['failed'])
+      expect(failedActions.length).toBe(1)
+      expect(failedActions[0].status).toBe('failed')
+      expect(failedActions[0].lastFailureReason).toContain(
+        'Account is already taken down',
+      )
+    })
+
+    it.only('enforces protected tag restrictions when account has protected tags', async () => {
+      const testSubject = 'did:plc:protected_tag_test'
+
+      // add the protected tag to the account
+      await adminAgent.tools.ozone.moderation.emitEvent(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: testSubject,
+          },
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTag',
+            add: ['vip'],
+            remove: [],
+          },
+          createdBy: adminAgent.session?.did || 'did:plc:admin',
+        },
+        await getAdminHeaders(ids.ToolsOzoneModerationEmitEvent),
+      )
+
+      // add protected tag setting for the instance and make that tag actionable by a mod only
+      await adminAgent.tools.ozone.setting.upsertOption(
+        {
+          key: ProtectedTagSettingKey,
+          scope: 'instance',
+          managerRole: 'tools.ozone.team.defs#roleAdmin',
+          value: { vip: { moderators: [sc.dids.alice] } },
+        },
+        await getAdminHeaders(ids.ToolsOzoneSettingUpsertOption),
+      )
+
+      // Schedule a takedown action created by a non-admin moderator
+      await adminAgent.tools.ozone.moderation.scheduleAction(
+        {
+          action: {
+            $type: 'tools.ozone.moderation.scheduleAction#takedown',
+            comment: 'Test protected tag enforcement',
+          },
+          subjects: [testSubject],
+          createdBy: 'did:plc:non_admin_moderator', // Non-admin creator
+          scheduling: {
+            executeAt: new Date(Date.now() - 1000).toISOString(),
+          },
+        },
+        await getAdminHeaders(ids.ToolsOzoneModerationScheduleAction),
+      )
+
+      // Process the scheduled action
+      await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
+
+      // Verify the scheduled action failed due to protected tag restrictions
+      const failedActions = await getScheduledActions([testSubject], ['failed'])
+      expect(failedActions.length).toBe(1)
+      expect(failedActions[0].status).toBe('failed')
+      expect(failedActions[0].lastFailureReason).toContain('tag')
+
+      // Clean up protected tags setting
+      await adminAgent.tools.ozone.setting.removeOptions(
+        {
+          keys: [ProtectedTagSettingKey],
+          scope: 'instance',
+        },
+        await getAdminHeaders(ids.ToolsOzoneSettingRemoveOptions),
+      )
+    })
+
+    it('allows takedown of accounts with protected tags when created by authorized user', async () => {
+      const testSubject = 'did:plc:authorized_protected_tag_test'
+
+      // Set up protected tags configuration allowing admins
+      await adminAgent.tools.ozone.setting.upsertOption(
+        {
+          key: ProtectedTagSettingKey,
+          scope: 'instance',
+          managerRole: 'tools.ozone.team.defs#roleAdmin',
+          value: { vip: { roles: ['tools.ozone.team.defs#roleAdmin'] } },
+        },
+        await getAdminHeaders(ids.ToolsOzoneSettingUpsertOption),
+      )
+
+      // Add a protected tag to the account
+      await adminAgent.tools.ozone.moderation.emitEvent(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: testSubject,
+          },
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTag',
+            add: ['vip'],
+            remove: [],
+          },
+          createdBy: adminAgent.session?.did || 'did:plc:admin',
+        },
+        await getAdminHeaders(ids.ToolsOzoneModerationEmitEvent),
+      )
+
+      await adminAgent.tools.ozone.moderation.scheduleAction(
+        {
+          action: {
+            $type: 'tools.ozone.moderation.scheduleAction#takedown',
+            comment: 'Admin takedown of protected account',
+          },
+          subjects: [testSubject],
+          createdBy: network.ozone.ctx.cfg.service.did,
+          scheduling: {
+            executeAt: new Date(Date.now() - 1000).toISOString(),
+          },
+        },
+        await getAdminHeaders(ids.ToolsOzoneModerationScheduleAction),
+      )
+
+      await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
+
+      const executedActions = await getScheduledActions(
+        [testSubject],
+        ['executed'],
+      )
+      expect(executedActions.length).toBe(1)
+      expect(executedActions[0].status).toBe('executed')
+
+      const modEvents = await getModerationEvents(testSubject, [
+        'tools.ozone.moderation.defs#modEventTakedown',
+      ])
+      expect(modEvents.length).toBe(1)
     })
   })
 })
