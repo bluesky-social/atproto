@@ -13,6 +13,7 @@
           "maxGraphemes": 64,
           "maxLength": 640
         },
+        "pronouns": { "type": "string" },
         "avatar": { "type": "string", "format": "uri" },
         "associated": {
           "type": "ref",
@@ -45,6 +46,7 @@
           "maxGraphemes": 64,
           "maxLength": 640
         },
+        "pronouns": { "type": "string" },
         "description": {
           "type": "string",
           "maxGraphemes": 256,
@@ -88,6 +90,8 @@
           "maxGraphemes": 256,
           "maxLength": 2560
         },
+        "pronouns": { "type": "string" },
+        "website": { "type": "string", "format": "uri" },
         "avatar": { "type": "string", "format": "uri" },
         "banner": { "type": "string", "format": "uri" },
         "followersCount": { "type": "integer" },
