@@ -362,7 +362,7 @@ describe('scheduled action processor', () => {
       )
     })
 
-    it.only('enforces protected tag restrictions when account has protected tags', async () => {
+    it('enforces protected tag restrictions when account has protected tags', async () => {
       const testSubject = 'did:plc:protected_tag_test'
 
       // add the protected tag to the account
