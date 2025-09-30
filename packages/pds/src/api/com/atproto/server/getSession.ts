@@ -8,6 +8,8 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
 
+let count = 0
+
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
     auth: ctx.authVerifier.authorization({
@@ -45,6 +47,14 @@ export default function (server: Server, ctx: AppContext) {
           `Could not find user info for account: ${did}`,
         )
       }
+
+      if (count > 10) {
+        throw new InvalidRequestError(
+          `taco`,
+        )
+      }
+
+      count++
 
       const { status, active } = formatAccountStatus(user)
 
