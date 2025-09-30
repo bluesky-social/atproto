@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.17.0
+
+### Minor Changes
+
+- [#4238](https://github.com/bluesky-social/atproto/pull/4238) [`dba2d30e2`](https://github.com/bluesky-social/atproto/commit/dba2d30e2c4ce0eb624f2139b485719d14474940) Thanks [@gaearon](https://github.com/gaearon)! - Don't clear session in resumeSession on transient network errors
+
+### Patch Changes
+
+- [#4232](https://github.com/bluesky-social/atproto/pull/4232) [`7f38ee03c`](https://github.com/bluesky-social/atproto/commit/7f38ee03c01357686a4ce54cdf8eed4e37074a58) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `pronouns` to `profileView` and `profileViewBasic`
+
 ## 0.16.11
 
 ### Patch Changes
