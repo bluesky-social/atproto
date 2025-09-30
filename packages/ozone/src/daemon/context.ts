@@ -8,6 +8,7 @@ import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { ModerationService } from '../mod-service'
 import { ScheduledActionService } from '../scheduled-action/service'
+import { SettingService } from '../setting/service'
 import { TeamService } from '../team'
 import { getSigningKeyId } from '../util'
 import { EventPusher } from './event-pusher'
@@ -75,6 +76,7 @@ export class DaemonContext {
       appviewAgent,
       createAuthHeaders,
     )
+    const settingService = SettingService.creator()
     const scheduledActionService = ScheduledActionService.creator()
     const teamService = TeamService.creator(
       appviewAgent,
@@ -96,6 +98,8 @@ export class DaemonContext {
 
     const scheduledActionProcessor = new ScheduledActionProcessor(
       db,
+      cfg.service.did,
+      settingService,
       modService,
       scheduledActionService,
     )

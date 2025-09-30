@@ -1,14 +1,21 @@
+import { Selectable } from 'kysely'
 import { MINUTE, SECOND } from '@atproto/common'
+import {
+  assertProtectedTagAction,
+  getProtectedTags,
+} from '../api/moderation/util'
 import { Database } from '../db'
+import { ScheduledAction } from '../db/schema/scheduled-action'
 import {
   ModEventTakedown,
   ModTool,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { dbLogger } from '../logger'
-import { ModerationServiceCreator } from '../mod-service'
-import { subjectFromInput } from '../mod-service/subject'
+import { ModerationService, ModerationServiceCreator } from '../mod-service'
+import { RepoSubject } from '../mod-service/subject'
 import { ModEventType } from '../mod-service/types'
 import { ScheduledActionServiceCreator } from '../scheduled-action/service'
+import { SettingService, SettingServiceCreator } from '../setting/service'
 
 export class ScheduledActionProcessor {
   destroyed = false
@@ -17,6 +24,8 @@ export class ScheduledActionProcessor {
 
   constructor(
     private db: Database,
+    private serviceDid: string,
+    private settingService: SettingServiceCreator,
     private modService: ModerationServiceCreator,
     private scheduledActionService: ScheduledActionServiceCreator,
   ) {}
@@ -46,6 +55,7 @@ export class ScheduledActionProcessor {
   }
 
   async executeScheduledAction(actionId: number) {
+    const settingService = this.settingService(this.db)
     await this.db.transaction(async (dbTxn) => {
       const moderationTxn = this.modService(dbTxn)
       const scheduledActionTxn = this.scheduledActionService(dbTxn)
@@ -91,15 +101,12 @@ export class ScheduledActionProcessor {
             )
         }
 
-        // Execute the moderation action
-        const moderationEvent = await moderationTxn.logEvent({
+        const moderationEvent = await this.performTakedown({
+          action,
           event,
-          subject: subjectFromInput({
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: action.did,
-          }),
-          createdBy: action.createdBy,
           modTool,
+          moderationTxn,
+          settingService,
         })
 
         // Mark the scheduled action as executed
@@ -110,9 +117,9 @@ export class ScheduledActionProcessor {
 
         dbLogger.info(
           {
+            did: action.did,
             scheduledActionId: actionId,
             moderationEventId: moderationEvent.event.id,
-            did: action.did,
           },
           'executed scheduled action',
         )
@@ -132,6 +139,60 @@ export class ScheduledActionProcessor {
         )
       }
     })
+  }
+
+  async performTakedown({
+    action,
+    event,
+    modTool,
+    moderationTxn,
+    settingService,
+  }: {
+    action: Selectable<ScheduledAction>
+    event: ModEventType
+    modTool: ModTool | undefined
+
+    moderationTxn: ModerationService
+    settingService: SettingService
+  }) {
+    const subject = new RepoSubject(action.did)
+
+    const status = await moderationTxn.getStatus(subject)
+
+    if (status?.takendown) {
+      throw new Error(`Account is already taken down`)
+    }
+
+    if (status?.tags?.length) {
+      const protectedTags = await getProtectedTags(
+        settingService,
+        this.serviceDid,
+      )
+
+      if (protectedTags) {
+        assertProtectedTagAction({
+          protectedTags,
+          subjectTags: status.tags,
+          actionAuthor: action.createdBy,
+          isAdmin: true,
+          isModerator: false,
+          isTriage: false,
+        })
+      }
+    }
+
+    // log the event which also applies the necessary state changes to moderation subject
+    const moderationEvent = await moderationTxn.logEvent({
+      event,
+      subject,
+      modTool,
+      createdBy: action.createdBy,
+    })
+
+    // register the takedown in event pusher
+    await moderationTxn.takedownRepo(subject, moderationEvent.event.id)
+
+    return moderationEvent
   }
 
   async findAndExecuteScheduledActions() {
