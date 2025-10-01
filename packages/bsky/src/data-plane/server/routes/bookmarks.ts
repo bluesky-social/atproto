@@ -5,6 +5,7 @@ import { Service } from '../../../proto/bsky_connect'
 import {
   Bookmark,
   GetBookmarksByActorAndSubjectsResponse,
+  GetBookmarksBySubjectResponse,
 } from '../../../proto/bsky_pb'
 import { Namespaces } from '../../../stash'
 import { Database } from '../db'
@@ -78,6 +79,44 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     return {
       bookmarks,
+    }
+  },
+
+  async getBookmarksBySubject(req) {
+    const { subject, cursor, limit } = req
+
+    if (!subject) {
+      return new GetBookmarksBySubjectResponse()
+    }
+
+    const { ref } = db.db.dynamic
+
+    let builder = db.db
+      .selectFrom('bookmark')
+      .where('bookmark.subjectUri', '=', subject.uri)
+      .selectAll()
+
+    const key = new StashKeyKey(ref('bookmark.key'))
+    builder = key.paginate(builder, {
+      cursor,
+      limit,
+    })
+
+    const res = await builder.execute()
+    return {
+      bookmarks: res.map((b) => {
+        return {
+          ref: {
+            actorDid: b.creator,
+            namespace: Namespaces.AppBskyBookmarkDefsBookmark,
+            key: b.key,
+          },
+          subjectUri: b.subjectUri,
+          subjectCid: b.subjectCid,
+          indexedAt: Timestamp.fromDate(new Date(b.indexedAt)),
+        }
+      }),
+      cursor: key.packFromResult(res),
     }
   },
 })

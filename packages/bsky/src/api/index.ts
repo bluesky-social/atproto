@@ -8,6 +8,8 @@ import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import createBookmark from './app/bsky/bookmark/createBookmark'
 import deleteBookmark from './app/bsky/bookmark/deleteBookmark'
 import getBookmarks from './app/bsky/bookmark/getBookmarks'
+import getModBookmarksByActor from './app/bsky/bookmark/getModBookmarksByActor'
+import getModBookmarksBySubject from './app/bsky/bookmark/getModBookmarksBySubject'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getActorLikes from './app/bsky/feed/getActorLikes'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
@@ -91,6 +93,8 @@ export default function (server: Server, ctx: AppContext) {
   createBookmark(server, ctx)
   deleteBookmark(server, ctx)
   getBookmarks(server, ctx)
+  getModBookmarksByActor(server, ctx)
+  getModBookmarksBySubject(server, ctx)
   getActorFeeds(server, ctx)
   getSuggestedFeeds(server, ctx)
   getAuthorFeed(server, ctx)

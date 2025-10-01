@@ -1001,12 +1001,11 @@ export class Hydrator {
 
   async hydrateBookmarks(
     bookmarkInfos: BookmarkInfo[],
+    actorDid: string,
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const viewer = ctx.viewer
-    if (!viewer) return {}
     const bookmarksRes = await this.dataplane.getBookmarksByActorAndSubjects({
-      actorDid: viewer,
+      actorDid,
       uris: bookmarkInfos.map((b) => b.subject),
     })
 
@@ -1017,7 +1016,7 @@ export class Hydrator {
     // mapping DID -> stash key -> bookmark
     const bookmarksMap = new HydrationMap([
       [
-        viewer,
+        actorDid,
         new HydrationMap<Bookmark>(
           bookmarks.map((bookmark) => {
             const {

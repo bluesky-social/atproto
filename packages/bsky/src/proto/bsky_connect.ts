@@ -72,6 +72,8 @@ import {
   GetBlocksResponse,
   GetBookmarksByActorAndSubjectsRequest,
   GetBookmarksByActorAndSubjectsResponse,
+  GetBookmarksBySubjectRequest,
+  GetBookmarksBySubjectResponse,
   GetCountsForUsersRequest,
   GetCountsForUsersResponse,
   GetDidsByHandlesRequest,
@@ -1034,6 +1036,17 @@ export const Service = {
       name: 'GetActorBookmarks',
       I: GetActorBookmarksRequest,
       O: GetActorBookmarksResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Returns bookmarks for a given subject.
+     *
+     * @generated from rpc bsky.Service.GetBookmarksBySubject
+     */
+    getBookmarksBySubject: {
+      name: 'GetBookmarksBySubject',
+      I: GetBookmarksBySubjectRequest,
+      O: GetBookmarksBySubjectResponse,
       kind: MethodKind.Unary,
     },
     /**

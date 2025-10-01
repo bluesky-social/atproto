@@ -1287,6 +1287,18 @@ message GetActorBookmarksResponse {
   string cursor = 2;
 }
 
+message GetBookmarksBySubjectRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetBookmarksBySubjectResponse {
+  repeated Bookmark bookmarks = 1;
+  string cursor = 2;
+}
+
+
 
 // Polo-backed Graph Endpoints
 
@@ -1459,6 +1471,8 @@ service Service {
   rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
   // Returns the bookmarks created by the actor.
   rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
+  // Returns bookmarks for a given subject.
+  rpc GetBookmarksBySubject(GetBookmarksBySubjectRequest) returns (GetBookmarksBySubjectResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
