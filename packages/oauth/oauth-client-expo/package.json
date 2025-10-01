@@ -42,12 +42,13 @@
     "abortcontroller-polyfill": "^1.7.8",
     "core-js": "^3",
     "event-target-polyfill": "^0.0.4",
-    "expo-web-browser": "^15.0.7",
+    "expo-web-browser": "^15.0.8",
     "react-native-mmkv": "^3.3.3",
     "react-native-url-polyfill": "^3.0.0"
   },
   "peerDependencies": {
-    "expo": "*"
+    "expo": "*",
+    "react-native": "*"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
