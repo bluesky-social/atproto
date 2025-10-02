@@ -485,10 +485,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       dpopKey,
       authMethod = 'legacy',
       tokenSet,
-    } = await this.sessionGetter.get(sub, {
-      noCache: refresh === true,
-      allowStale: refresh === false,
-    })
+    } = await this.sessionGetter.getSession(sub, refresh)
 
     try {
       const server = await this.serverFactory.fromIssuer(

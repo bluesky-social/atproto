@@ -94,7 +94,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
         clientId,
         ...options,
       })
-      return new BrowserOAuthClient({ clientMetadata, ...options })
+      return new BrowserOAuthClient({ ...options, clientMetadata })
     } else {
       throw new TypeError(`Invalid client id: ${clientId}`)
     }
@@ -195,17 +195,21 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
    * want to only restore existing sessions, and bypass the automatic processing
    * of login callbacks.
    */
-  async init(
-    refresh?: boolean,
-  ): Promise<
+  async init(refresh?: boolean): Promise<
+    // Session restored
+    | { session: OAuthSession; state?: never }
+    // Login callback processed
     | { session: OAuthSession; state: string | null }
-    | { session: OAuthSession }
+    // No session or callback
     | undefined
   > {
     // If the URL currently contains oauth query parameters ("state" + "code" or
     // "state" + "error"), let's automatically process them.
     const params = this.readCallbackParams()
-    if (params) return this.initCallback(params)
+    if (params) {
+      const redirectUri = this.findRedirectUrl()
+      if (redirectUri) return this.initCallback(params, redirectUri)
+    }
 
     return this.initRestore(refresh)
   }
@@ -384,9 +388,16 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   }
 
   public async initCallback(
-    params: URLSearchParams,
+    params = this.readCallbackParams(),
     redirectUri = this.findRedirectUrl(),
-  ) {
+  ): Promise<{
+    session: OAuthSession
+    state: string | null
+  }> {
+    if (!params) {
+      throw new TypeError('No OAuth callback parameters found in the URL')
+    }
+
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
     if (this.responseMode === 'fragment') {

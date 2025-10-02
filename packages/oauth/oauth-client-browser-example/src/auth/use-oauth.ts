@@ -5,6 +5,7 @@ import {
   AuthorizeOptions,
   BrowserOAuthClient,
   BrowserOAuthClientLoadOptions,
+  BrowserOAuthClientOptions,
   LoginContinuedInParentWindowError,
   OAuthSession,
 } from '@atproto/oauth-client-browser'
@@ -60,21 +61,51 @@ type ClientOptions =
         | 'allowHttp'
       >
     >
+  | Simplify<
+      Pick<
+        BrowserOAuthClientOptions,
+        | 'clientMetadata'
+        | 'handleResolver'
+        | 'responseMode'
+        | 'plcDirectoryUrl'
+        | 'fetch'
+        | 'allowHttp'
+      >
+    >
 
 function useOAuthClient(options: ClientOptions): null | BrowserOAuthClient
 function useOAuthClient(
   options: Partial<
-    { client: BrowserOAuthClient } & BrowserOAuthClientLoadOptions
+    { client: BrowserOAuthClient } & BrowserOAuthClientLoadOptions &
+      BrowserOAuthClientOptions
   >,
 ) {
   const {
     client: clientInput,
-    clientId,
+    clientMetadata,
+    clientId = clientMetadata?.client_id,
     handleResolver,
     responseMode,
     plcDirectoryUrl,
     allowHttp,
   } = options
+
+  // Input sanity checks
+  if (!clientInput && !handleResolver) {
+    throw new TypeError('handleResolver is required in ClientOptions.')
+  } else if (
+    clientId &&
+    clientMetadata &&
+    clientId !== clientMetadata.client_id
+  ) {
+    throw new TypeError('clientId and clientMetadata.client_id do not match.')
+  } else if (
+    clientId &&
+    clientInput &&
+    clientInput.clientMetadata.client_id !== clientId
+  ) {
+    throw new TypeError('client and clientId do not match.')
+  }
 
   const [client, setClient] = useState<null | BrowserOAuthClient>(
     clientInput || null,
@@ -82,45 +113,74 @@ function useOAuthClient(
   const fetch = useCallbackRef(options.fetch || globalThis.fetch)
 
   useEffect(() => {
+    const ac = new AbortController()
+    const { signal } = ac
+
     if (clientInput) {
       setClient(clientInput)
-    } else if (clientId && handleResolver) {
-      const ac = new AbortController()
-      const { signal } = ac
-
-      setClient(null)
-
-      void BrowserOAuthClient.load({
-        clientId,
+    } else if (clientMetadata) {
+      const client = new BrowserOAuthClient({
+        clientMetadata,
         handleResolver,
         responseMode,
         plcDirectoryUrl,
         fetch,
         allowHttp,
-        signal,
-      }).then(
-        (client) => {
-          if (!signal.aborted) {
-            signal.addEventListener('abort', () => client.dispose(), {
-              once: true,
-            })
-            setClient(client)
-          } else {
-            client.dispose()
-          }
-        },
-        (err) => {
-          if (!signal.aborted) throw err
-        },
-      )
+      })
 
-      return () => ac.abort()
+      setClient(client)
+
+      signal.addEventListener('abort', () => client.dispose(), { once: true })
+    } else if (clientId) {
+      setClient(null)
+
+      const loadClientForever = async (): Promise<BrowserOAuthClient> => {
+        for (let failureCount = 0; ; failureCount++) {
+          try {
+            signal.throwIfAborted()
+
+            console.info('Loading OAuth client metadata:', clientId)
+
+            return await BrowserOAuthClient.load({
+              clientId,
+              handleResolver,
+              responseMode,
+              plcDirectoryUrl,
+              fetch,
+              allowHttp,
+              signal,
+            })
+          } catch (err) {
+            const backoff = Math.min(5e3, 2 ** failureCount * 100)
+            console.error(
+              `Failed to load client (failures: ${failureCount}, retrying in ${backoff}ms):`,
+              err,
+            )
+            await new Promise((res) => setTimeout(res, backoff))
+            if (signal.aborted) throw err
+          }
+        }
+      }
+
+      void loadClientForever().then((client) => {
+        if (signal.aborted) {
+          client.dispose()
+        } else {
+          setClient(client)
+          signal.addEventListener('abort', () => client.dispose(), {
+            once: true,
+          })
+        }
+      })
     } else {
-      throw new TypeError('Invalid ClientOptions passed to useOAuthClient.')
+      setClient(null)
     }
+
+    return () => ac.abort()
   }, [
     clientInput,
     clientId,
+    clientMetadata,
     handleResolver,
     responseMode,
     plcDirectoryUrl,
@@ -137,6 +197,8 @@ export type UseOAuthOptions = ClientOptions & {
 
   state?: string
   scope?: string
+
+  refreshOnInit?: boolean
 }
 
 export function useOAuth(options: UseOAuthOptions) {
@@ -165,8 +227,8 @@ export function useOAuth(options: UseOAuthOptions) {
     setIsLoginPopup(false)
     setIsInitializing(clientForInit != null)
 
-    clientForInit
-      ?.init()
+    void clientForInit
+      ?.init(options.refreshOnInit)
       .then(
         async (r) => {
           if (clientForInitRef.current !== clientForInit) return
@@ -175,7 +237,7 @@ export function useOAuth(options: UseOAuthOptions) {
           if (r) {
             setSession(r.session)
 
-            if ('state' in r) {
+            if (r.state !== undefined) {
               await onSignedIn(r.session, r.state)
             } else {
               await onRestored(r.session)
@@ -228,6 +290,8 @@ export function useOAuth(options: UseOAuthOptions) {
         'deleted',
         ({ detail: { sub } }) => {
           if (session.sub === sub) {
+            console.debug('Session was deleted, signing out', { sub })
+
             setSession(null)
             void onSignedOut()
           }

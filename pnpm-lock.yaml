@@ -1428,6 +1428,9 @@ importers:
 
   packages/oauth/oauth-types:
     dependencies:
+      '@atproto/did':
+        specifier: workspace:*
+        version: link:../../did
       '@atproto/jwk':
         specifier: workspace:*
         version: link:../jwk

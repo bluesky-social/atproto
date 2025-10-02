@@ -21,21 +21,10 @@ export const atprotoDidSchema = z
   .refine(isAtprotoDid, `Atproto only allows "plc" and "web" DID methods`)
 
 export function isAtprotoDid(input: unknown): input is AtprotoDid {
-  // Optimized equivalent of:
-  // return isDidPlc(input) || isAtprotoDidWeb(input)
-
-  if (typeof input !== 'string') {
-    return false
-  } else if (input.startsWith(DID_PLC_PREFIX)) {
-    return isDidPlc(input)
-  } else if (input.startsWith(DID_WEB_PREFIX)) {
-    return isAtprotoDidWeb(input)
-  } else {
-    return false
-  }
+  return isDidPlc(input) || isAtprotoDidWeb(input)
 }
 
-export function asAtprotoDid(input: unknown): AtprotoDid {
+export function asAtprotoDid<T>(input: T) {
   assertAtprotoDid(input)
   return input
 }
