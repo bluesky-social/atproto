@@ -15172,13 +15172,33 @@ export const schemaDict = {
       scheduleTakedownEvent: {
         type: 'object',
         description: 'Logs a scheduled takedown action for an account.',
-        properties: {},
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
       },
       cancelScheduledTakedownEvent: {
         type: 'object',
         description:
           'Logs cancellation of a scheduled takedown action for an account.',
-        properties: {},
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
       },
       repoView: {
         type: 'object',

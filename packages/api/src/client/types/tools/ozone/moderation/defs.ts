@@ -708,6 +708,10 @@ export function validateRecordEvent<V>(v: V) {
 /** Logs a scheduled takedown action for an account. */
 export interface ScheduleTakedownEvent {
   $type?: 'tools.ozone.moderation.defs#scheduleTakedownEvent'
+  comment?: string
+  executeAt?: string
+  executeAfter?: string
+  executeUntil?: string
 }
 
 const hashScheduleTakedownEvent = 'scheduleTakedownEvent'
@@ -723,6 +727,7 @@ export function validateScheduleTakedownEvent<V>(v: V) {
 /** Logs cancellation of a scheduled takedown action for an account. */
 export interface CancelScheduledTakedownEvent {
   $type?: 'tools.ozone.moderation.defs#cancelScheduledTakedownEvent'
+  comment?: string
 }
 
 const hashCancelScheduledTakedownEvent = 'cancelScheduledTakedownEvent'

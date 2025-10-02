@@ -1,3 +1,4 @@
+import { ToolsOzoneModerationScheduleAction } from '@atproto/api'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
@@ -66,18 +67,24 @@ export default function (server: Server, ctx: AppContext) {
               ...executionSchedule,
             })
             // log an event in the mod event stream
-            await modService.logEvent({
-              event: {
-                $type: 'tools.ozone.moderation.defs#scheduleTakedownEvent',
-              },
-              subject: subjectFromInput({
-                did: subject,
-                $type: 'com.atproto.admin.defs#repoRef',
-              }),
-              createdBy: actualCreatedBy,
-              createdAt: now,
-              modTool,
-            })
+            if (ToolsOzoneModerationScheduleAction.isTakedown(action)) {
+              await modService.logEvent({
+                event: {
+                  $type: 'tools.ozone.moderation.defs#scheduleTakedownEvent',
+                  executeAfter: scheduling.executeAfter,
+                  executeUntil: scheduling.executeUntil,
+                  executeAt: scheduling.executeAt,
+                  comment: action.comment,
+                },
+                subject: subjectFromInput({
+                  did: subject,
+                  $type: 'com.atproto.admin.defs#repoRef',
+                }),
+                createdBy: actualCreatedBy,
+                createdAt: now,
+                modTool,
+              })
+            }
             succeeded.push(subject)
           })
         } catch (error) {
