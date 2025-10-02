@@ -1,3 +1,4 @@
+import { setImmediate } from 'node:timers/promises'
 import * as cbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
@@ -65,7 +66,7 @@ export const readCar = async (
   bytes: Uint8Array,
   opts?: ReadCarOptions,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const { roots, blocks } = await readCarStream([bytes], opts)
+  const { roots, blocks } = await readCarReader(new Ui8Reader(bytes), opts)
   const blockMap = new BlockMap()
   for await (const block of blocks) {
     blockMap.set(block.cid, block.bytes)
@@ -98,9 +99,18 @@ export const readCarStream = async (
   roots: CID[]
   blocks: CarBlockIterable
 }> => {
-  const reader = new BufferedReader(car)
+  return readCarReader(new BufferedReader(car), opts)
+}
+
+export const readCarReader = async (
+  reader: BytesReader,
+  opts?: ReadCarOptions,
+): Promise<{
+  roots: CID[]
+  blocks: CarBlockIterable
+}> => {
   try {
-    const headerSize = await reader.readVarint()
+    const headerSize = await readVarint(reader)
     if (headerSize === null) {
       throw new Error('Could not parse CAR header')
     }
@@ -120,7 +130,7 @@ export const readCarStream = async (
 }
 
 const readCarBlocksIter = (
-  reader: BufferedReader,
+  reader: BytesReader,
   opts?: ReadCarOptions,
 ): CarBlockIterable => {
   let generator = readCarBlocksIterGenerator(reader)
@@ -143,11 +153,12 @@ const readCarBlocksIter = (
 }
 
 async function* readCarBlocksIterGenerator(
-  reader: BufferedReader,
+  reader: BytesReader,
 ): AsyncGenerator<CarBlock, void, unknown> {
+  let blocks = 0
   try {
     while (!reader.isDone) {
-      const blockSize = await reader.readVarint()
+      const blockSize = await readVarint(reader)
       if (blockSize === null) {
         break
       }
@@ -155,6 +166,13 @@ async function* readCarBlocksIterGenerator(
       const cid = parseCidFromBytes(blockBytes.subarray(0, 36))
       const bytes = blockBytes.subarray(36)
       yield { cid, bytes }
+
+      // yield to the event loop every 25 blocks
+      // in the case the incoming CAR is synchronous, this can end up jamming up the thread
+      blocks++
+      if (blocks % 25 === 0) {
+        await setImmediate()
+      }
     }
   } finally {
     await reader.close()
@@ -170,7 +188,52 @@ export async function* verifyIncomingCarBlocks(
   }
 }
 
-class BufferedReader {
+const readVarint = async (reader: BytesReader): Promise<number | null> => {
+  let done = false
+  const bytes: Uint8Array[] = []
+  while (!done) {
+    const byte = await reader.read(1)
+    if (byte.byteLength === 0) {
+      if (bytes.length > 0) {
+        throw new Error('could not parse varint')
+      } else {
+        return null
+      }
+    }
+    bytes.push(byte)
+    if (byte[0] < 128) {
+      done = true
+    }
+  }
+  const concatted = ui8.concat(bytes)
+  return varint.decode(concatted)
+}
+
+interface BytesReader {
+  isDone: boolean
+  read(bytesToRead: number): Promise<Uint8Array>
+  close(): Promise<void>
+}
+
+class Ui8Reader implements BytesReader {
+  idx = 0
+  isDone = false
+
+  constructor(public bytes: Uint8Array) {}
+
+  async read(bytesToRead: number): Promise<Uint8Array> {
+    const value = this.bytes.subarray(this.idx, this.idx + bytesToRead)
+    this.idx += bytesToRead
+    if (this.idx >= this.bytes.length) {
+      this.isDone = true
+    }
+    return value
+  }
+
+  async close(): Promise<void> {}
+}
+
+class BufferedReader implements BytesReader {
   buffer: Uint8Array = new Uint8Array()
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
@@ -187,27 +250,6 @@ class BufferedReader {
     const value = this.buffer.subarray(0, bytesToRead)
     this.buffer = this.buffer.subarray(bytesToRead)
     return value
-  }
-
-  async readVarint(): Promise<number | null> {
-    let done = false
-    const bytes: Uint8Array[] = []
-    while (!done) {
-      const byte = await this.read(1)
-      if (byte.byteLength === 0) {
-        if (bytes.length > 0) {
-          throw new Error('could not parse varint')
-        } else {
-          return null
-        }
-      }
-      bytes.push(byte)
-      if (byte[0] < 128) {
-        done = true
-      }
-    }
-    const concatted = ui8.concat(bytes)
-    return varint.decode(concatted)
   }
 
   private async readUntilBuffered(bytesToRead: number) {

@@ -31,6 +31,9 @@ export const schemaDict = {
             maxGraphemes: 64,
             maxLength: 640,
           },
+          pronouns: {
+            type: 'string',
+          },
           avatar: {
             type: 'string',
             format: 'uri',
@@ -80,6 +83,9 @@ export const schemaDict = {
             type: 'string',
             maxGraphemes: 64,
             maxLength: 640,
+          },
+          pronouns: {
+            type: 'string',
           },
           description: {
             type: 'string',
@@ -144,6 +150,13 @@ export const schemaDict = {
             type: 'string',
             maxGraphemes: 256,
             maxLength: 2560,
+          },
+          pronouns: {
+            type: 'string',
+          },
+          website: {
+            type: 'string',
+            format: 'uri',
           },
           avatar: {
             type: 'string',
@@ -963,6 +976,16 @@ export const schemaDict = {
               description: 'Free-form profile description text.',
               maxGraphemes: 256,
               maxLength: 2560,
+            },
+            pronouns: {
+              type: 'string',
+              description: 'Free-form pronouns text.',
+              maxGraphemes: 20,
+              maxLength: 200,
+            },
+            website: {
+              type: 'string',
+              format: 'uri',
             },
             avatar: {
               type: 'blob',
@@ -6605,6 +6628,87 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested starterpacks for onboarding',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested starterpacks for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
+                },
+              },
             },
           },
         },
@@ -18552,6 +18656,10 @@ export const ids = {
   AppBskyUnspeccedGetAgeAssuranceState:
     'app.bsky.unspecced.getAgeAssuranceState',
   AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacks:
+    'app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton:
+    'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetPostThreadOtherV2:

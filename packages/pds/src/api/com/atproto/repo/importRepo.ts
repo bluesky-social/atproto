@@ -16,6 +16,9 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
+    opts: {
+      blobLimit: ctx.cfg.service.maxImportSize,
+    },
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       scopes: ACCESS_FULL,

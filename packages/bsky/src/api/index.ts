@@ -58,6 +58,7 @@ import registerPush from './app/bsky/notification/registerPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState'
 import getConfig from './app/bsky/unspecced/getConfig'
+import getOnboardingSuggestedStarterPacks from './app/bsky/unspecced/getOnboardingSuggestedStarterPacks'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getPostThreadOtherV2 from './app/bsky/unspecced/getPostThreadOtherV2'
 import getPostThreadV2 from './app/bsky/unspecced/getPostThreadV2'
@@ -133,6 +134,7 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestedFollowsByActor(server, ctx)
   getTrendingTopics(server, ctx)
   getTrends(server, ctx)
+  getOnboardingSuggestedStarterPacks(server, ctx)
   getSuggestedStarterPacks(server, ctx)
   getSuggestedUsers(server, ctx)
   getUnspeccedSuggestedFeeds(server, ctx)

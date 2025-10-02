@@ -19,7 +19,6 @@ import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { LexiconManager } from '../lexicon/lexicon-manager.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
-import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { Sub } from '../oidc/sub.js'
 import { Code, isCode } from '../request/code.js'
@@ -81,7 +80,7 @@ export class TokenManager {
       client_id: client.id,
     }
 
-    const claimsOverride = await callAsync(this.hooks.onCreateToken, {
+    const claimsOverride = await this.hooks.onCreateToken?.call(null, {
       client,
       account,
       parameters,
@@ -158,7 +157,7 @@ export class TokenManager {
     await this.store.createToken(tokenId, tokenData, refreshToken)
 
     try {
-      await callAsync(this.hooks.onTokenCreated, {
+      await this.hooks.onTokenCreated?.call(null, {
         client,
         clientAuth,
         clientMetadata,
@@ -268,7 +267,7 @@ export class TokenManager {
       scope,
     )
 
-    await callAsync(this.hooks.onTokenRefreshed, {
+    await this.hooks.onTokenRefreshed?.call(null, {
       client,
       clientAuth,
       clientMetadata,

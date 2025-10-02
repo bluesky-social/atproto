@@ -74,6 +74,8 @@ import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notificatio
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen.js'
 import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecced/getAgeAssuranceState.js'
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
+import * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacks from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
+import * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
 import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
@@ -1129,6 +1131,30 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getOnboardingSuggestedStarterPacks<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetOnboardingSuggestedStarterPacks.QueryParams,
+      AppBskyUnspeccedGetOnboardingSuggestedStarterPacks.HandlerInput,
+      AppBskyUnspeccedGetOnboardingSuggestedStarterPacks.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getOnboardingSuggestedStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getOnboardingSuggestedStarterPacksSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton.QueryParams,
+      AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton.HandlerInput,
+      AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
