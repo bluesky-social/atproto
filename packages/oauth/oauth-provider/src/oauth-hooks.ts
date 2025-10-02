@@ -8,12 +8,18 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
+import {
+  ResetPasswordConfirmInput,
+  ResetPasswordRequestInput,
+  SignUpData,
+} from './account/account-store.js'
 import { SignInData } from './account/sign-in-data.js'
 import { SignUpInput } from './account/sign-up-input.js'
 import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
+import { DeviceId } from './device/device-id.js'
 import { DpopProof } from './dpop/dpop-proof.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
@@ -26,7 +32,6 @@ import {
 } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable, OmitKey } from './lib/util/type.js'
-import { DeviceId, SignUpData } from './oauth-store.js'
 import { RequestId } from './request/request-id.js'
 import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { TokenClaims } from './token/token-claims.js'
@@ -57,6 +62,8 @@ export {
   type OAuthTokenResponse,
   type OAuthTokenType,
   type RequestMetadata,
+  type ResetPasswordConfirmInput,
+  type ResetPasswordRequestInput,
   type SignInData,
   type SignUpData,
   type SignUpInput,
@@ -96,6 +103,26 @@ export type OAuthHooks = {
     deviceMetadata: RequestMetadata
     tokens: HcaptchaClientTokens
     result: HcaptchaVerifyResult
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests a password reset, before the
+   * reset password request is triggered on the account store.
+   */
+  onResetPasswordRequest?: (data: {
+    input: ResetPasswordRequestInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user confirms a password reset, before the
+   * password is actually reset on the account store.
+   */
+  onResetPasswordConfirm?: (data: {
+    input: ResetPasswordConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
   }) => Awaitable<void>
 
   /**

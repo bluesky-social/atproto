@@ -16,6 +16,8 @@ describe('pds profile views', () => {
   let alice: string
   let bob: string
   let dan: string
+  let eve: string
+  let frank: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -25,10 +27,47 @@ describe('pds profile views', () => {
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+
+    await sc.createAccount('eve', {
+      handle: 'eve.test',
+      email: 'eve@test.com',
+      password: 'eve-pass',
+    })
+    await sc.createProfile(
+      sc.dids.eve,
+      'eve',
+      `It's me, eve`,
+      undefined,
+      undefined,
+      {
+        pronouns: 'They/them',
+        // Not allowing that to go through, even though is a valid URL.
+        website: 'wss://jetstream1.us-east.bsky.network',
+      },
+    )
+
+    await sc.createAccount('frank', {
+      handle: 'frank.test',
+      email: 'frank@test.com',
+      password: 'frank-pass',
+    })
+    await sc.createProfile(
+      sc.dids.frank,
+      'frank',
+      `It's me, frank`,
+      undefined,
+      undefined,
+      {
+        website: 'https://frank.example.com',
+      },
+    )
+
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
+    eve = sc.dids.eve
+    frank = sc.dids.frank
   })
 
   afterAll(async () => {
@@ -100,6 +139,8 @@ describe('pds profile views', () => {
           'did:example:missing',
           'carol.test',
           dan,
+          eve,
+          frank,
           'missing.test',
         ],
       },
@@ -113,6 +154,8 @@ describe('pds profile views', () => {
       'bob.test',
       'carol.test',
       'dan.test',
+      'eve.test',
+      'frank.test',
     ])
 
     expect(forSnapshot(profiles)).toMatchSnapshot()

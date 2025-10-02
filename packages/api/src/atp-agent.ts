@@ -411,14 +411,17 @@ export class CredentialSession implements SessionManager {
     } catch (err) {
       // protect against concurrent session updates
       if (this.session === session) {
-        this.session = undefined
-        this.persistSession?.(
+        if (
           err instanceof XRPCError &&
-            ['ExpiredToken', 'InvalidToken'].includes(err.error)
-            ? 'expired'
-            : 'network-error',
-          undefined,
-        )
+          ['ExpiredToken', 'InvalidToken'].includes(err.error)
+        ) {
+          this.session = undefined
+          this.persistSession?.('expired', undefined)
+        } else {
+          // Assume the problem is transient and the session can be reused later.
+          this.session = session
+          this.persistSession?.('network-error', session)
+        }
       }
 
       throw err

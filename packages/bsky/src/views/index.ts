@@ -265,6 +265,7 @@ export class Views {
 
     return {
       ...baseView,
+      website: this.profileWebsite(did, state),
       viewer: baseView.viewer
         ? {
             ...baseView.viewer,
@@ -343,6 +344,7 @@ export class Views {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
       displayName: actor.profile?.displayName,
+      pronouns: actor.profile?.pronouns,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
@@ -442,6 +444,16 @@ export class Views {
       return activitySubscription
     }
     return undefined
+  }
+
+  profileWebsite(did: string, state: HydrationState): string | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor?.profile?.website) return
+    const { website } = actor.profile
+
+    // The record property accepts any URI, but we don't want
+    // to pass the client any schemes other than HTTPS.
+    return website.startsWith('https://') ? website : undefined
   }
 
   knownFollowers(

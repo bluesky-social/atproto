@@ -255,6 +255,60 @@ Array [
       "muted": false,
     },
   },
+  Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+      "starterPacks": 0,
+    },
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "description": "It's me, eve",
+    "did": "user(6)",
+    "displayName": "eve",
+    "followersCount": 0,
+    "followsCount": 0,
+    "handle": "eve.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "postsCount": 0,
+    "pronouns": "They/them",
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
+  },
+  Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+      "starterPacks": 0,
+    },
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "description": "It's me, frank",
+    "did": "user(8)",
+    "displayName": "frank",
+    "followersCount": 0,
+    "followsCount": 0,
+    "handle": "frank.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "postsCount": 0,
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
+    "website": "https://frank.example.com",
+  },
 ]
 `;
 

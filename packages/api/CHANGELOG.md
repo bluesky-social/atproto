@@ -1,5 +1,29 @@
 # @atproto/api
 
+## 0.17.0
+
+### Minor Changes
+
+- [#4238](https://github.com/bluesky-social/atproto/pull/4238) [`dba2d30e2`](https://github.com/bluesky-social/atproto/commit/dba2d30e2c4ce0eb624f2139b485719d14474940) Thanks [@gaearon](https://github.com/gaearon)! - Don't clear session in resumeSession on transient network errors
+
+### Patch Changes
+
+- [#4232](https://github.com/bluesky-social/atproto/pull/4232) [`7f38ee03c`](https://github.com/bluesky-social/atproto/commit/7f38ee03c01357686a4ce54cdf8eed4e37074a58) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `pronouns` to `profileView` and `profileViewBasic`
+
+## 0.16.11
+
+### Patch Changes
+
+- [#4228](https://github.com/bluesky-social/atproto/pull/4228) [`1a5d7427b`](https://github.com/bluesky-social/atproto/commit/1a5d7427bf5811a019e7b50c7c2af711b8f2dd33) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+
+- [#4228](https://github.com/bluesky-social/atproto/pull/4228) [`1a5d7427b`](https://github.com/bluesky-social/atproto/commit/1a5d7427bf5811a019e7b50c7c2af711b8f2dd33) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton
+
+## 0.16.10
+
+### Patch Changes
+
+- [#4224](https://github.com/bluesky-social/atproto/pull/4224) [`8dc4caf55`](https://github.com/bluesky-social/atproto/commit/8dc4caf55840578c835b4c851d4a599c15627a78) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `pronouns` and `website` to `app.bsky.actor.profile`
+
 ## 0.16.9
 
 ### Patch Changes
