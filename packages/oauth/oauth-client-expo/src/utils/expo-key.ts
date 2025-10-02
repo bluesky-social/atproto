@@ -14,13 +14,13 @@ export class ExpoKey extends Key<NativeJwk> {
     return NativeModule.createJwt(
       JSON.stringify(header),
       JSON.stringify(payload),
-      this.jwk
+      this.jwk,
     )
   }
 
   async verifyJwt<C extends string = never>(
     token: SignedJwt,
-    options: VerifyOptions<C> = {}
+    options: VerifyOptions<C> = {},
   ): Promise<VerifyResult<C>> {
     return NativeModule.verifyJwt(token, this.jwk, options)
   }

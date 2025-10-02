@@ -29,10 +29,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./polyfill": {
-      "types": "./dist/polyfill.d.ts",
-      "default": "./dist/polyfill.js"
     }
   },
   "dependencies": {

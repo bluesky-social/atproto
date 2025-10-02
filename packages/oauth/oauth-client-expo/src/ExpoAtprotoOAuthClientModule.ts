@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import { NativeModule, requireNativeModule } from 'expo'
 import { SignedJwt, VerifyOptions, VerifyResult } from '@atproto/oauth-client'
 import { ExpoAtprotoOAuthClientModuleEvents } from './ExpoAtprotoOAuthClientModule.types'
@@ -25,10 +26,10 @@ declare class ExpoAtprotoOAuthClientModule extends NativeModule<ExpoAtprotoOAuth
   verifyJwt<C extends string = never>(
     token: SignedJwt,
     jwk: NativeJwk,
-    options: VerifyOptions<C>
+    options: VerifyOptions<C>,
   ): Promise<VerifyResult<C>>
 }
 
 export default requireNativeModule<ExpoAtprotoOAuthClientModule>(
-  'ExpoAtprotoOAuthClient'
+  'ExpoAtprotoOAuthClient',
 )
