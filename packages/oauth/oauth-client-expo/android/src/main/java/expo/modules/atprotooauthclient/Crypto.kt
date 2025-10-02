@@ -45,7 +45,6 @@ class Crypto {
 
     return EncodedJWK().apply {
       kty = privateJwk.keyType.value
-      use = "sig"
       crv = privateJwk.curve.toString()
       kid = keyIdString
       x = privateJwk.x.toString()
