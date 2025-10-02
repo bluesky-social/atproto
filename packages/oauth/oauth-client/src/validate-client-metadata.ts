@@ -56,15 +56,28 @@ export function validateClientMetadata(
         )
       }
 
-      const signingKeys = keyset
-        ? Array.from(keyset.list({ use: 'sig' })).filter(
-            (key) => key.isPrivate && key.kid,
-          )
-        : null
-
-      if (!signingKeys?.some((key) => key.algorithms.includes(FALLBACK_ALG))) {
+      if (!keyset) {
         throw new TypeError(
-          `Client authentication method "${method}" requires at least one "${FALLBACK_ALG}" signing key with a "kid" property`,
+          `Client authentication method "${method}" requires a keyset`,
+        )
+      }
+
+      // @NOTE This reproduces the logic from `negotiateClientAuthMethod` at
+      // initialization time to ensure that every key that might end-up being
+      // used is indeed valid & advertised in the metadata.
+      const signingKeys = Array.from(keyset.list({ usage: 'sign' })).filter(
+        (key) => key.kid,
+      )
+
+      if (!signingKeys.length) {
+        throw new TypeError(
+          `Client authentication method "${method}" requires at least one active signing key with a "kid" property`,
+        )
+      }
+
+      if (!signingKeys.some((key) => key.algorithms.includes(FALLBACK_ALG))) {
+        throw new TypeError(
+          `Client authentication method "${method}" requires at least one active "${FALLBACK_ALG}" signing key`,
         )
       }
 
@@ -72,8 +85,12 @@ export function validateClientMetadata(
         // Ensure that all the signing keys that could end-up being used are
         // advertised in the JWKS.
         for (const key of signingKeys) {
-          if (!metadata.jwks.keys.some((k) => k.kid === key.kid)) {
-            throw new TypeError(`Key with kid "${key.kid}" not found in jwks`)
+          if (
+            !metadata.jwks.keys.some((k) => k.kid === key.kid && !k.revoked)
+          ) {
+            throw new TypeError(
+              `Missing or inactive key "${key.kid}" in jwks. Make sure that every signing key of the Keyset is declared as an active key in the Metadata's JWKS.`,
+            )
           }
         }
       } else if (metadata.jwks_uri) {

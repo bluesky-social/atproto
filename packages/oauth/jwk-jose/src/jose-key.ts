@@ -23,6 +23,7 @@ import {
   SignedJwt,
   VerifyOptions,
   VerifyResult,
+  isPrivateJwk,
   jwkSchema,
   jwtHeaderSchema,
   jwtPayloadSchema,
@@ -163,12 +164,12 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     allowedAlgos: string[] = ['ES256'],
     kid?: string,
     options?: Omit<GenerateKeyPairOptions, 'extractable'>,
-  ) {
+  ): Promise<JoseKey> {
     const kp = await this.generateKeyPair(allowedAlgos, {
       ...options,
       extractable: true,
     })
-    return this.fromImportable(kp.privateKey, kid)
+    return this.fromKeyLike(kp.privateKey, kid)
   }
 
   static async fromImportable(
@@ -239,8 +240,16 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     if (!jwk || typeof jwk !== 'object') throw new JwkError('Invalid JWK')
 
     const kid = either(jwk.kid, inputKid)
-    const use = jwk.use || 'sig'
 
-    return new JoseKey(jwkSchema.parse({ ...jwk, kid, use }))
+    // Backwards compatibility with old behavior
+    if (jwk.use != null && isPrivateJwk(jwk)) {
+      console.warn(
+        'Deprecation warning: Private JWK with a "use" property will be rejected in the future. Please remove replace "use" with (valid) "key_ops".',
+      )
+      jwk.key_ops ??= jwk.use === 'sig' ? ['sign'] : ['encrypt']
+      delete jwk.use
+    }
+
+    return new JoseKey<Jwk>(jwkSchema.parse({ ...jwk, kid }))
   }
 }

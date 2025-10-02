@@ -4,13 +4,12 @@ import { ExpoAtprotoOAuthClientModuleEvents } from './ExpoAtprotoOAuthClientModu
 
 export type NativeJwk = {
   kty: 'EC'
-  use: 'sig' | 'enc' | undefined
   crv: 'P-256'
   kid: string
   x: string
   y: string
   d: string
-  alg: string
+  alg: 'ES256'
 }
 
 declare class ExpoAtprotoOAuthClientModule extends NativeModule<ExpoAtprotoOAuthClientModuleEvents> {
