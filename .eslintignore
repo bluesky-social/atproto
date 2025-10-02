@@ -1,5 +1,16 @@
+dist
+
+# buf
+packages/bsky/src/proto
+packages/bsync/src/proto
+
+# codegen
 packages/api/src/client
 packages/lexicon-resolver/src/client
 packages/bsky/src/lexicon
 packages/pds/src/lexicon
 packages/ozone/src/lexicon
+
+# i18n
+packages/oauth/*/src/locales/*/messages.ts
+packages/oauth/oauth-provider-frontend/src/routeTree.gen.ts
