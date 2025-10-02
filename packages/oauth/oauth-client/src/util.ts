@@ -1,9 +1,6 @@
 export type Awaitable<T> = T | PromiseLike<T>
 export type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 
-// @ts-expect-error
-Symbol.dispose ??= Symbol('@@dispose')
-
 export const ifString = <V>(v: V) => (typeof v === 'string' ? v : undefined)
 
 export function contentMime(headers: Headers): string | undefined {

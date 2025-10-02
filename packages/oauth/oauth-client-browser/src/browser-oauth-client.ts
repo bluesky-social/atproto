@@ -242,12 +242,10 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     return super.revoke(sub)
   }
 
-  signIn(
+  async signIn(
     input: string,
-    options: AuthorizeOptions & { display: 'popup' },
-  ): Promise<OAuthSession>
-  signIn(input: string, options?: AuthorizeOptions): Promise<never>
-  async signIn(input: string, options?: AuthorizeOptions) {
+    options?: AuthorizeOptions,
+  ): Promise<OAuthSession> {
     if (options?.display === 'popup') {
       return this.signInPopup(input, options)
     } else {

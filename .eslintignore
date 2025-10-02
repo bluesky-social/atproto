@@ -1,5 +1,18 @@
+dist
+node_modules
+
+# buf
+packages/bsky/src/proto
+packages/bsync/src/proto
+
+# codegen
 packages/api/src/client
 packages/lexicon-resolver/src/client
 packages/bsky/src/lexicon
 packages/pds/src/lexicon
 packages/ozone/src/lexicon
+
+# others
+packages/oauth/*/src/locales/*/messages.ts
+packages/oauth/oauth-provider-frontend/src/routeTree.gen.ts
+packages/oauth/oauth-client-expo/android/build

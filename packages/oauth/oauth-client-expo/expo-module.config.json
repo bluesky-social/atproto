@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["ExpoAtprotoOAuthClientModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.atprotooauthclient.ExpoAtprotoOAuthClientModule"]
+  }
+}
