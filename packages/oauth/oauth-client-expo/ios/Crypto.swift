@@ -25,7 +25,6 @@ class CryptoUtil: NSObject {
 
     let jwk = EncodedJWK()
     jwk.kty = "EC"
-    jwk.use = "sig"
     jwk.crv = "P-256"
     jwk.kid = kid
     jwk.x = x

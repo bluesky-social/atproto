@@ -8,9 +8,6 @@ class EncodedJWK : Record {
   var kty: String = ""
 
   @Field
-  var use: String = ""
-
-  @Field
   var crv: String = ""
 
   @Field

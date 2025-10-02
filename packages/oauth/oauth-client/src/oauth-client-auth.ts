@@ -44,12 +44,10 @@ export function negotiateClientAuthMethod(
     // @NOTE we can't use `keyset.findPrivateKey` here because we can't enforce
     // that the returned key contains a "kid". The following implementation is
     // more robust against keysets containing keys without a "kid" property.
-    for (const key of keyset.list({ use: 'sig', alg })) {
+    for (const key of keyset.list({ alg, usage: 'sign' })) {
       // Return the first key from the key set that matches the server's
       // supported algorithms.
-      if (key.isPrivate && key.kid) {
-        return { method: 'private_key_jwt', kid: key.kid }
-      }
+      if (key.kid) return { method: 'private_key_jwt', kid: key.kid }
     }
 
     throw new Error(
@@ -111,7 +109,7 @@ export function createClientCredentialsFactory(
 
       // @NOTE throws if no matching key can be found
       const { key, alg } = keyset.findPrivateKey({
-        use: 'sig',
+        usage: 'sign',
         kid: authMethod.kid,
         alg: supportedAlgs(serverMetadata),
       })

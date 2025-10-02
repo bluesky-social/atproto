@@ -6,37 +6,34 @@ import {
   JwtCreateError,
   JwtVerifyError,
 } from './errors.js'
-import { Jwk } from './jwk.js'
-import { Jwks, JwksPub } from './jwks.js'
+import { PrivateKeyUsage } from './jwk.js'
+import { JwksPub } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
-import { Key } from './key.js'
+import { ActivityCheckOptions, Key, KeyMatchOptions } from './key.js'
 import {
-  DeepReadonly,
   Override,
-  UnReadonly,
   cachedGetter,
   isDefined,
   matchesAny,
   preferredOrderCmp,
 } from './util.js'
 
-export type JwtSignHeader = Override<JwtHeader, Pick<KeySearch, 'alg' | 'kid'>>
+export type JwtSignHeader = Override<
+  JwtHeader,
+  Pick<KeyMatchOptions, 'alg' | 'kid'>
+>
 
 export type JwtPayloadGetter<P = JwtPayload> = (
   header: JwtHeader,
   key: Key,
 ) => P | PromiseLike<P>
 
-export type KeySearch = {
-  use?: 'sig' | 'enc'
-  kid?: string | string[]
-  alg?: string | string[]
-}
+export type { KeyMatchOptions }
 
-const extractPrivateJwk = (key: Key): Jwk | undefined => key.privateJwk
-const extractPublicJwk = (key: Key): Jwk | undefined => key.publicJwk
+const extractPrivateJwk = (key: Key) => key.privateJwk
+const extractPublicJwk = (key: Key) => key.publicJwk
 
 export class Keyset<K extends Key = Key> implements Iterable<K> {
   private readonly keys: readonly K[]
@@ -67,15 +64,15 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
   ) {
     const keys: K[] = []
 
-    const kids = new Set<string>()
+    const keyIds = new Set<string>()
     for (const key of iterable) {
       if (!key) continue
 
       keys.push(key)
 
       if (key.kid) {
-        if (kids.has(key.kid)) throw new JwkError(`Duplicate key: ${key.kid}`)
-        else kids.add(key.kid)
+        if (keyIds.has(key.kid)) throw new JwkError(`Duplicate key: ${key.kid}`)
+        else keyIds.add(key.kid)
       }
     }
 
@@ -101,66 +98,59 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
   }
 
   @cachedGetter
-  get publicJwks(): DeepReadonly<JwksPub> {
-    return {
-      keys: Array.from(this, extractPublicJwk).filter(isDefined),
-    }
+  get publicJwks() {
+    return Object.freeze({
+      keys: Object.freeze(Array.from(this, extractPublicJwk).filter(isDefined)),
+    })
   }
 
   @cachedGetter
-  get privateJwks(): DeepReadonly<Jwks> {
-    return {
-      keys: Array.from(this, extractPrivateJwk).filter(isDefined),
-    }
+  get privateJwks() {
+    return Object.freeze({
+      keys: Object.freeze(
+        Array.from(this, extractPrivateJwk).filter(isDefined),
+      ),
+    })
   }
 
   has(kid: string): boolean {
     return this.keys.some((key) => key.kid === kid)
   }
 
-  get(search: KeySearch): K {
-    for (const key of this.list(search)) {
+  get(options: KeyMatchOptions & ActivityCheckOptions): K {
+    for (const key of this.list(options)) {
       return key
     }
 
     throw new JwkError(
-      `Key not found ${search.kid || search.alg || '<unknown>'}`,
+      `Key not found ${options.kid ?? options.alg ?? options.usage ?? '<unknown>'}`,
       ERR_JWK_NOT_FOUND,
     )
   }
 
-  *list(search: KeySearch): Generator<K> {
-    // Optimization: Empty string or empty array will not match any key
-    if (search.kid?.length === 0) return
-    if (search.alg?.length === 0) return
-
+  *list<O extends KeyMatchOptions & ActivityCheckOptions>(options: O) {
     for (const key of this) {
-      if (search.use && key.use !== search.use) continue
-
-      if (Array.isArray(search.kid)) {
-        if (!key.kid || !search.kid.includes(key.kid)) continue
-      } else if (search.kid) {
-        if (key.kid !== search.kid) continue
+      if (key.isActive(options) && key.matches(options)) {
+        yield key
       }
-
-      if (Array.isArray(search.alg)) {
-        if (!search.alg.some((a) => key.algorithms.includes(a))) continue
-      } else if (typeof search.alg === 'string') {
-        if (!key.algorithms.includes(search.alg)) continue
-      }
-
-      yield key
     }
   }
 
-  findPrivateKey({ kid, alg, use }: KeySearch): { key: Key; alg: string } {
+  findPrivateKey({
+    kid,
+    alg,
+    usage,
+  }: KeyMatchOptions & { usage: PrivateKeyUsage }): {
+    key: Key
+    alg: string
+  } {
     const matchingKeys: Key[] = []
 
-    for (const key of this.list({ kid, alg, use })) {
-      // Not a private key
-      if (!key.isPrivate) continue
+    // Allow the loop bellow to return early when a single "alg" is provided
+    if (Array.isArray(alg) && alg.length === 1) alg = alg[0]
 
-      // Skip negotiation if a specific "alg" was provided
+    for (const key of this.list({ kid, alg, usage })) {
+      // Skip negotiation if a single "alg" was provided
       if (typeof alg === 'string') return { key, alg }
 
       matchingKeys.push(key)
@@ -188,7 +178,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
 
     throw new JwkError(
-      `No private key found for ${kid || alg || use || '<unknown>'}`,
+      `No private key found for ${kid || alg || usage}`,
       ERR_JWK_NOT_FOUND,
     )
   }
@@ -205,7 +195,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
       const { key, alg } = this.findPrivateKey({
         alg: sAlg,
         kid: sKid,
-        use: 'sig',
+        usage: 'sign',
       })
       const protectedHeader = { ...header, alg, kid: key.kid }
 
@@ -221,14 +211,14 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
 
   async verifyJwt<C extends string = never>(
     token: SignedJwt,
-    options?: VerifyOptions<C>,
+    options?: ActivityCheckOptions & VerifyOptions<C>,
   ): Promise<VerifyResult<C> & { key: K }> {
     const { header } = unsafeDecodeJwt(token)
     const { kid, alg } = header
 
     const errors: unknown[] = []
 
-    for (const key of this.list({ kid, alg })) {
+    for (const key of this.list({ ...options, kid, alg, usage: 'verify' })) {
       try {
         const result = await key.verifyJwt<C>(token, options)
         return { ...result, key }
@@ -247,8 +237,8 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
   }
 
-  toJSON(): JwksPub {
-    // Make a copy to prevent mutation of the original keyset
-    return structuredClone(this.publicJwks) as UnReadonly<JwksPub>
+  toJSON() {
+    // Make a copy to allow mutation of the result
+    return structuredClone(this.publicJwks) as JwksPub
   }
 }
