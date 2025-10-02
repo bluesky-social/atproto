@@ -1,3 +1,5 @@
+import 'core-js/modules/es.symbol.dispose'
+
 export * from '@atproto-labs/did-resolver'
 export {
   FetchError,

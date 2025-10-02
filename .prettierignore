@@ -18,6 +18,7 @@ packages/bsky/src/lexicon
 packages/pds/src/lexicon
 packages/ozone/src/lexicon
 
-# i18n
+# others
 packages/oauth/*/src/locales/*/messages.ts
 packages/oauth/oauth-provider-frontend/src/routeTree.gen.ts
+packages/oauth/oauth-client-expo/android/build
