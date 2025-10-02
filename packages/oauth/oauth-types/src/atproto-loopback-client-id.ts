@@ -45,7 +45,9 @@ export function buildAtprotoLoopbackClientId(
       }
     }
 
-    if (params.size) `${LOOPBACK_CLIENT_ID_ORIGIN}?${params}`
+    if (params.size) {
+      return `${LOOPBACK_CLIENT_ID_ORIGIN}?${params.toString()}`
+    }
   }
 
   return LOOPBACK_CLIENT_ID_ORIGIN
