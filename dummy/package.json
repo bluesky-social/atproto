@@ -1,6 +1,0 @@
-{
-  "name": "dummy",
-  "private": true,
-  "version": "0.0.0",
-  "description": "Dummy package to allow pnpm overrides of expo and react-native"
-}

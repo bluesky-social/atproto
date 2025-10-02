@@ -1,7 +1,6 @@
 {
   "extends": ["../../../tsconfig/expo.json"],
   "compilerOptions": {
-    "types": ["./src/expo.d.ts"],
     "rootDir": "./src",
     "outDir": "./dist"
   },

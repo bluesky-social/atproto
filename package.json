@@ -58,8 +58,6 @@
   },
   "pnpm": {
     "overrides": {
-      "expo": "file:./dummy",
-      "react-native": "file:./dummy",
       "cookie": "^0.7.2"
     }
   },
