@@ -2,12 +2,12 @@ import { OAuthError } from './oauth-error.js'
 
 /**
  * @see
- * {@link https://datatracker.ietf.org/doc/html/rfc6749#section-5.2 | RFC6749 - Issuing an Access Token }
+ * {@link https://github.com/bluesky-social/atproto/blob/main/packages/oauth/oauth-provider-frontend/src/routes/account/_minimalLayout/sign-in.tsx#L123}
  *
- * The provided authorization grant (e.g., authorization code, resource owner
- * credentials) or refresh token is invalid, expired, revoked, does not match
- * the redirection URI used in the authorization request, or was issued to
- * another client.
+ * The credentials supplied are invalid to complete authentication. This occurs when either
+ * the identifier (email or handle), password, or email-based OTP code are incorrect. In the
+ * case of invalid email-based OTP code, we do not inform the requester what actually
+ * caused the error, as to prevent revealing information.
  */
 export class InvalidCredentialsError extends OAuthError {
   constructor(cause?: unknown) {
