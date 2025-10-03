@@ -92,3 +92,5 @@ export const assertProtectedTagAction = ({
     }
   })
 }
+
+export const ScheduledTakedownTag = 'scheduled-takedown'

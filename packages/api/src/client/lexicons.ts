@@ -14309,6 +14309,11 @@ export const schemaDict = {
                 description:
                   'Array of DID subjects to cancel scheduled actions for',
               },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional comment describing the reason for cancellation',
+              },
             },
           },
         },

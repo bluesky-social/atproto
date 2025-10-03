@@ -5,6 +5,7 @@ import { Server } from '../../lexicon'
 import { subjectFromInput } from '../../mod-service/subject'
 import { ExecutionSchedule } from '../../scheduled-action/types'
 import { getScheduledActionType } from '../util'
+import { ScheduledTakedownTag } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.scheduleAction({
@@ -80,6 +81,19 @@ export default function (server: Server, ctx: AppContext) {
                 createdBy: actualCreatedBy,
                 createdAt: now,
                 modTool,
+              })
+              await modService.logEvent({
+                event: {
+                  $type: 'tools.ozone.moderation.defs#modEventTag',
+                  add: [ScheduledTakedownTag],
+                  remove: [],
+                },
+                subject: subjectFromInput({
+                  did: subject,
+                  $type: 'com.atproto.admin.defs#repoRef',
+                }),
+                createdBy,
+                createdAt: now,
               })
             }
             succeeded.push(subject)

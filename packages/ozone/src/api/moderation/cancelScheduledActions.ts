@@ -2,6 +2,7 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { subjectFromInput } from '../../mod-service/subject'
+import { ScheduledTakedownTag } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.cancelScheduledActions({
@@ -9,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { subjects } = input.body
+      const { subjects, comment } = input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError(
@@ -32,6 +33,20 @@ export default function (server: Server, ctx: AppContext) {
           await modService.logEvent({
             event: {
               $type: 'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
+              comment,
+            },
+            subject: subjectFromInput({
+              did: subject,
+              $type: 'com.atproto.admin.defs#repoRef',
+            }),
+            createdBy,
+            createdAt: now,
+          })
+          await modService.logEvent({
+            event: {
+              $type: 'tools.ozone.moderation.defs#modEventTag',
+              remove: [ScheduledTakedownTag],
+              add: [],
             },
             subject: subjectFromInput({
               did: subject,

@@ -20,6 +20,8 @@ export type QueryParams = {}
 export interface InputSchema {
   /** Array of DID subjects to cancel scheduled actions for */
   subjects: string[]
+  /** Optional comment describing the reason for cancellation */
+  comment?: string
 }
 
 export type OutputSchema = CancellationResults
