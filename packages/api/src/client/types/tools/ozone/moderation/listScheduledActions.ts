@@ -26,7 +26,7 @@ export interface InputSchema {
   /** Filter actions for specific DID subjects */
   subjects?: string[]
   /** Filter actions by status */
-  statuses: ('pending' | 'executed' | 'cancelled' | 'failed' | (string & {}))[]
+  statuses?: ('pending' | 'executed' | 'cancelled' | 'failed' | (string & {}))[]
   /** Maximum number of results to return */
   limit?: number
   /** Cursor for pagination */

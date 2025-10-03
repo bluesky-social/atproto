@@ -3,6 +3,8 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
 import { forSnapshot } from './_util'
 
+const allStatuses = ['pending', 'executed', 'cancelled', 'failed']
+
 describe('scheduled action management', () => {
   let network: TestNetwork
   let adminAgent: AtpAgent
@@ -166,7 +168,7 @@ describe('scheduled action management', () => {
     it('allows moderators to list all scheduled actions', async () => {
       const { data: result } =
         await modAgent.tools.ozone.moderation.listScheduledActions(
-          {},
+          { statuses: allStatuses },
           await getModHeaders(ids.ToolsOzoneModerationListScheduledActions),
         )
 
@@ -179,6 +181,7 @@ describe('scheduled action management', () => {
         await adminAgent.tools.ozone.moderation.listScheduledActions(
           {
             subjects: [sc.dids.carol],
+            statuses: allStatuses,
           },
           await getAdminHeaders(ids.ToolsOzoneModerationListScheduledActions),
         )
@@ -214,6 +217,7 @@ describe('scheduled action management', () => {
           {
             startsAfter: oneHourAgo.toISOString(),
             endsBefore: twoHoursFromNow.toISOString(),
+            statuses: allStatuses,
           },
           await getAdminHeaders(ids.ToolsOzoneModerationListScheduledActions),
         )
@@ -227,7 +231,7 @@ describe('scheduled action management', () => {
       )
       const { data: page1 } =
         await adminAgent.tools.ozone.moderation.listScheduledActions(
-          { limit: 2 },
+          { limit: 2, statuses: allStatuses },
           headers,
         )
 
@@ -238,6 +242,7 @@ describe('scheduled action management', () => {
         await adminAgent.tools.ozone.moderation.listScheduledActions(
           {
             limit: 2,
+            statuses: allStatuses,
             cursor: page1.cursor,
           },
           headers,
@@ -286,6 +291,7 @@ describe('scheduled action management', () => {
         data: { actions },
       } = await adminAgent.tools.ozone.moderation.listScheduledActions(
         {
+          statuses: allStatuses,
           subjects: [sc.dids.carol],
         },
         await getAdminHeaders(ids.ToolsOzoneModerationListScheduledActions),

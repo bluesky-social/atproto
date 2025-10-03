@@ -1,4 +1,7 @@
-import { AtpAgent } from '@atproto/api'
+import {
+  AtpAgent,
+  ToolsOzoneModerationListScheduledActions,
+} from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs'
@@ -33,8 +36,8 @@ describe('scheduled action processor', () => {
   }
 
   const getScheduledActions = async (
+    statuses: ToolsOzoneModerationListScheduledActions.InputSchema['statuses'],
     subjects?: string[],
-    statuses?: string[],
   ) => {
     const { data } =
       await adminAgent.tools.ozone.moderation.listScheduledActions(
@@ -74,16 +77,16 @@ describe('scheduled action processor', () => {
       await scheduleTestAction(testSubject, { executeAt: pastTime })
 
       const pendingActions = await getScheduledActions(
-        [testSubject],
         ['pending'],
+        [testSubject],
       )
       expect(pendingActions.length).toBe(1)
 
       await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
 
       const executedActions = await getScheduledActions(
-        [testSubject],
         ['executed'],
+        [testSubject],
       )
       expect(executedActions.length).toBe(1)
       expect(executedActions[0].status).toBe('executed')
@@ -111,14 +114,14 @@ describe('scheduled action processor', () => {
 
       // Verify action is still pending
       const pendingActions = await getScheduledActions(
-        [testSubject],
         ['pending'],
+        [testSubject],
       )
       expect(pendingActions.length).toBe(1)
 
       const executedActions = await getScheduledActions(
-        [testSubject],
         ['executed'],
+        [testSubject],
       )
       expect(executedActions.length).toBe(0)
     })
@@ -139,8 +142,8 @@ describe('scheduled action processor', () => {
       for (let i = 0; i < 20 && !executed; i++) {
         await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
         const executedActions = await getScheduledActions(
-          [testSubject],
           ['executed'],
+          [testSubject],
         )
         if (executedActions.length > 0) {
           executed = true
@@ -149,7 +152,7 @@ describe('scheduled action processor', () => {
       }
 
       // At least verify the action is eligible for processing
-      const actions = await getScheduledActions([testSubject])
+      const actions = await getScheduledActions(['pending'], [testSubject])
       expect(actions.length).toBe(1)
       expect(actions[0].randomizeExecution).toBe(true)
     })
@@ -170,8 +173,8 @@ describe('scheduled action processor', () => {
 
       // Verify action is still pending
       const pendingActions = await getScheduledActions(
-        [testSubject],
         ['pending'],
+        [testSubject],
       )
       expect(pendingActions.length).toBe(1)
     })
@@ -192,8 +195,8 @@ describe('scheduled action processor', () => {
 
       // Verify action is executed (should always execute past deadline)
       const executedActions = await getScheduledActions(
-        [testSubject],
         ['executed'],
+        [testSubject],
       )
       expect(executedActions.length).toBe(1)
       expect(executedActions[0].status).toBe('executed')
@@ -249,8 +252,8 @@ describe('scheduled action processor', () => {
       })
 
       const pendingActions = await getScheduledActions(
-        [testSubject],
         ['pending'],
+        [testSubject],
       )
       expect(pendingActions.length).toBe(1)
       const actionId = pendingActions[0].id
@@ -266,7 +269,7 @@ describe('scheduled action processor', () => {
         actionId,
       )
 
-      const failedActions = await getScheduledActions([testSubject], ['failed'])
+      const failedActions = await getScheduledActions(['failed'], [testSubject])
       expect(failedActions.length).toBe(1)
       expect(failedActions[0].status).toBe('failed')
       expect(failedActions[0].lastFailureReason).toBeDefined()
@@ -286,8 +289,8 @@ describe('scheduled action processor', () => {
       )
 
       const cancelledActions = await getScheduledActions(
-        [testSubject],
         ['cancelled'],
+        [testSubject],
       )
       expect(cancelledActions.length).toBe(1)
       const actionId = cancelledActions[0].id
@@ -313,7 +316,7 @@ describe('scheduled action processor', () => {
 
       await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
 
-      const executedActions = await getScheduledActions(subjects, ['executed'])
+      const executedActions = await getScheduledActions(['executed'], subjects)
       expect(executedActions.length).toBe(3)
 
       for (const subject of subjects) {
@@ -354,7 +357,7 @@ describe('scheduled action processor', () => {
       await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
 
       // Verify the scheduled action failed
-      const failedActions = await getScheduledActions([testSubject], ['failed'])
+      const failedActions = await getScheduledActions(['failed'], [testSubject])
       expect(failedActions.length).toBe(1)
       expect(failedActions[0].status).toBe('failed')
       expect(failedActions[0].lastFailureReason).toContain(
@@ -413,7 +416,7 @@ describe('scheduled action processor', () => {
       await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
 
       // Verify the scheduled action failed due to protected tag restrictions
-      const failedActions = await getScheduledActions([testSubject], ['failed'])
+      const failedActions = await getScheduledActions(['failed'], [testSubject])
       expect(failedActions.length).toBe(1)
       expect(failedActions[0].status).toBe('failed')
       expect(failedActions[0].lastFailureReason).toContain('tag')
@@ -477,8 +480,8 @@ describe('scheduled action processor', () => {
       await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
 
       const executedActions = await getScheduledActions(
-        [testSubject],
         ['executed'],
+        [testSubject],
       )
       expect(executedActions.length).toBe(1)
       expect(executedActions[0].status).toBe('executed')

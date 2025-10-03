@@ -16228,7 +16228,6 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['statuses'],
             properties: {
               startsAfter: {
                 type: 'string',
@@ -16253,6 +16252,7 @@ export const schemaDict = {
               },
               statuses: {
                 type: 'array',
+                minLength: 1,
                 items: {
                   type: 'string',
                   knownValues: ['pending', 'executed', 'cancelled', 'failed'],
