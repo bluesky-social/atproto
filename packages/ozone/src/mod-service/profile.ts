@@ -8,13 +8,14 @@ import {
   REASONSEXUAL,
   REASONSPAM,
   REASONVIOLATION,
+  REASONOTHER,
 } from '../lexicon/types/com/atproto/moderation/defs'
 import { httpLogger } from '../logger'
 
 // Reverse mapping from new ozone namespaced reason types to old com.atproto namespaced reason types
 export const NEW_TO_OLD_REASON_MAPPING: Record<string, string> = {
   'tools.ozone.report.defs#reasonMisleadingSpam': REASONSPAM,
-  'tools.ozone.report.defs#reasonRuleOther': REASONVIOLATION,
+  'tools.ozone.report.defs#reasonRuleOther': REASONOTHER,
   'tools.ozone.report.defs#reasonMisleadingOther': REASONMISLEADING,
   'tools.ozone.report.defs#reasonSexualUnlabeled': REASONSEXUAL,
   'tools.ozone.report.defs#reasonHarassmentOther': REASONRUDE,
