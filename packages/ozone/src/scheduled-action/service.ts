@@ -4,6 +4,7 @@ import { ScheduledActionStatus, ScheduledActionType } from '../api/util'
 import { Database } from '../db'
 import { ScheduledAction } from '../db/schema/scheduled-action'
 import { ScheduledActionView } from '../lexicon/types/tools/ozone/moderation/defs'
+import { dbLogger } from '../logger'
 import { SchedulingParams } from './types'
 
 export type ScheduledActionServiceCreator = (
@@ -126,7 +127,7 @@ export class ScheduledActionService {
     startTime,
     endTime,
     subjects,
-    statuses,
+    statuses = [],
     direction = 'desc',
   }: {
     cursor?: string
@@ -134,20 +135,19 @@ export class ScheduledActionService {
     startTime?: Date
     endTime?: Date
     subjects?: string[]
-    statuses?: ScheduledActionStatus[]
+    statuses: ScheduledActionStatus[]
     direction?: 'asc' | 'desc'
-  } = {}): Promise<{
+  }): Promise<{
     actions: Selectable<ScheduledAction>[]
     cursor?: string
   }> {
-    let query = this.db.db.selectFrom('scheduled_action').selectAll()
+    let query = this.db.db
+      .selectFrom('scheduled_action')
+      .where('status', 'in', statuses)
+      .selectAll()
 
     if (subjects && subjects.length > 0) {
       query = query.where('did', 'in', subjects)
-    }
-
-    if (statuses && statuses.length > 0) {
-      query = query.where('status', 'in', statuses)
     }
 
     if (startTime) {
@@ -215,10 +215,11 @@ export class ScheduledActionService {
             errorCode: 'NoPendingActions',
           })
         }
-      } catch (error) {
+      } catch (err) {
+        dbLogger.error({ err, subjects }, 'Error cancelling scheduled action')
         failed.push({
           did,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: 'Unknown error',
           errorCode: 'DatabaseError',
         })
       }
@@ -246,13 +247,14 @@ export class ScheduledActionService {
     actionId: number,
     executionEventId: number,
   ): Promise<void> {
+    const now = new Date().toISOString()
     await this.db.db
       .updateTable('scheduled_action')
       .set({
         status: 'executed',
-        lastExecutedAt: new Date().toISOString(),
+        lastExecutedAt: now,
         executionEventId,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       })
       .where('id', '=', actionId)
       .execute()
@@ -262,13 +264,14 @@ export class ScheduledActionService {
     actionId: number,
     failureReason: string,
   ): Promise<void> {
+    const now = new Date().toISOString()
     await this.db.db
       .updateTable('scheduled_action')
       .set({
         status: 'failed',
-        lastExecutedAt: new Date().toISOString(),
+        lastExecutedAt: now,
         lastFailureReason: failureReason,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       })
       .where('id', '=', actionId)
       .execute()

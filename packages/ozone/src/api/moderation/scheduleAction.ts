@@ -29,8 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       const succeeded: string[] = []
-      const failed: { subject: string; error: string; errorCode?: string }[] =
-        []
+      const failed: ToolsOzoneModerationScheduleAction.FailedScheduling[] = []
 
       // Defining alternatively required fields is not supported by lexicons so we need to manually validate here
       if (!scheduling.executeAt && !scheduling.executeAfter) {
@@ -48,9 +47,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const eventData = { ...action, modTool }
       const actualCreatedBy =
-        access.type === 'admin_token'
-          ? createdBy || ctx.cfg.service.did
-          : access.iss
+        access.type === 'admin_token' ? createdBy : access.iss
 
       const now = new Date()
       for (const subject of subjects) {

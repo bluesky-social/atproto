@@ -16228,14 +16228,15 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
+            required: ['statuses'],
             properties: {
-              startTime: {
+              startsAfter: {
                 type: 'string',
                 format: 'datetime',
                 description:
                   'Filter actions scheduled to execute after this time',
               },
-              endTime: {
+              endsBefore: {
                 type: 'string',
                 format: 'datetime',
                 description:

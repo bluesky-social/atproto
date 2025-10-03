@@ -8,8 +8,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const db = ctx.db
       const {
-        startTime,
-        endTime,
+        startsAfter,
+        endsBefore,
         subjects,
         statuses,
         limit = 50,
@@ -18,15 +18,15 @@ export default function (server: Server, ctx: AppContext) {
 
       const scheduledActionService = ctx.scheduledActionService(db)
 
-      const parsedStatuses = statuses?.map((status) =>
+      const parsedStatuses = statuses.map((status) =>
         getScheduledActionStatus(status),
       )
 
       const result = await scheduledActionService.listScheduledActions({
         cursor,
         limit,
-        startTime: startTime ? new Date(startTime) : undefined,
-        endTime: endTime ? new Date(endTime) : undefined,
+        startTime: startsAfter ? new Date(startsAfter) : undefined,
+        endTime: endsBefore ? new Date(endsBefore) : undefined,
         subjects,
         statuses: parsedStatuses,
       })

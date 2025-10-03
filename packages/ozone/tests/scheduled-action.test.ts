@@ -212,8 +212,8 @@ describe('scheduled action management', () => {
       const { data: result } =
         await adminAgent.tools.ozone.moderation.listScheduledActions(
           {
-            startTime: oneHourAgo.toISOString(),
-            endTime: twoHoursFromNow.toISOString(),
+            startsAfter: oneHourAgo.toISOString(),
+            endsBefore: twoHoursFromNow.toISOString(),
           },
           await getAdminHeaders(ids.ToolsOzoneModerationListScheduledActions),
         )

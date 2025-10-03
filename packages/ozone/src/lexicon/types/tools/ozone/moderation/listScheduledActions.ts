@@ -19,13 +19,13 @@ export type QueryParams = {}
 
 export interface InputSchema {
   /** Filter actions scheduled to execute after this time */
-  startTime?: string
+  startsAfter?: string
   /** Filter actions scheduled to execute before this time */
-  endTime?: string
+  endsBefore?: string
   /** Filter actions for specific DID subjects */
   subjects?: string[]
   /** Filter actions by status */
-  statuses?: ('pending' | 'executed' | 'cancelled' | 'failed' | (string & {}))[]
+  statuses: ('pending' | 'executed' | 'cancelled' | 'failed' | (string & {}))[]
   /** Maximum number of results to return */
   limit: number
   /** Cursor for pagination */

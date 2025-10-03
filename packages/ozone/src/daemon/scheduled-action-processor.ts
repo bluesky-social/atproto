@@ -55,8 +55,8 @@ export class ScheduledActionProcessor {
   }
 
   async executeScheduledAction(actionId: number) {
-    const settingService = this.settingService(this.db)
     await this.db.transaction(async (dbTxn) => {
+      const settingService = this.settingService(dbTxn)
       const moderationTxn = this.modService(dbTxn)
       const scheduledActionTxn = this.scheduledActionService(dbTxn)
 
