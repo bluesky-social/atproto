@@ -16228,6 +16228,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
+            required: ['statuses'],
             properties: {
               startsAfter: {
                 type: 'string',

@@ -9,6 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
+          "required": ["statuses"],
           "properties": {
             "startsAfter": {
               "type": "string",
