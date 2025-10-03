@@ -10696,6 +10696,7 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonCivicInterference',
           'tools.ozone.report.defs#reasonCivicMisinformation',
           'tools.ozone.report.defs#reasonCivicImpersonation',
+          'tools.ozone.report.defs#reasonCivicOther',
         ],
       },
       reasonSpam: {
@@ -16537,6 +16538,7 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonCivicInterference',
           'tools.ozone.report.defs#reasonCivicMisinformation',
           'tools.ozone.report.defs#reasonCivicImpersonation',
+          'tools.ozone.report.defs#reasonCivicOther',
         ],
       },
       reasonAppeal: {
@@ -16703,7 +16705,7 @@ export const schemaDict = {
       },
       reasonRuleOther: {
         type: 'token',
-        description: 'Other',
+        description: 'Other site rule violations',
       },
       reasonCivicElectoralProcess: {
         type: 'token',
@@ -16724,6 +16726,10 @@ export const schemaDict = {
       reasonCivicImpersonation: {
         type: 'token',
         description: 'Impersonation of electoral officials/entities',
+      },
+      reasonCivicOther: {
+        type: 'token',
+        description: 'Other civic integrity violations',
       },
     },
   },

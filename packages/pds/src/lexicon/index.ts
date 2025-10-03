@@ -360,6 +360,7 @@ export const TOOLS_OZONE_REPORT = {
     'tools.ozone.report.defs#reasonCivicMisinformation',
   DefsReasonCivicImpersonation:
     'tools.ozone.report.defs#reasonCivicImpersonation',
+  DefsReasonCivicOther: 'tools.ozone.report.defs#reasonCivicOther',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
