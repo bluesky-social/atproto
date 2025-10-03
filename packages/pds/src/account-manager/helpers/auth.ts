@@ -43,7 +43,7 @@ export const createAccessToken = (opts: {
     jwtKey,
     serviceDid,
     scope = AuthScope.Access,
-    expiresIn = '120mins',
+    expiresIn = '30s',
   } = opts
   const signer = new jose.SignJWT({ scope })
     .setProtectedHeader({
@@ -69,7 +69,7 @@ export const createRefreshToken = (opts: {
     jwtKey,
     serviceDid,
     jti = getRefreshTokenId(),
-    expiresIn = '90days',
+    expiresIn = '2min',
   } = opts
   const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
     .setProtectedHeader({
