@@ -1,5 +1,11 @@
 # @atproto/did
 
+## 0.2.1
+
+### Patch Changes
+
+- [#4216](https://github.com/bluesky-social/atproto/pull/4216) [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor typing improvements
+
 ## 0.2.0
 
 ### Minor Changes

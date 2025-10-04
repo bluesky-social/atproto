@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "license": "MIT",
   "description": "OAuth client for ATPROTO PDS. This package serves as common base for environment-specific implementations (NodeJS, Browser, React-Native).",
   "keywords": [

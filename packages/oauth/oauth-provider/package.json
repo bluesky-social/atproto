@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "license": "MIT",
   "description": "Generic OAuth2 and OpenID Connect provider for Node.js. Currently only supports features needed for Atproto.",
   "keywords": [

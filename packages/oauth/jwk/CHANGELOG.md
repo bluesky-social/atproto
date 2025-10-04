@@ -1,5 +1,21 @@
 # @atproto/jwk
 
+## 0.6.0
+
+### Minor Changes
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update key matching algorithm to support `key_ops`
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Only allow `"use"` claims in public jwk
+
+### Patch Changes
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Silently ignore invalid JWKs from JSON Web Key Set (as per spec)
+
+- [#4220](https://github.com/bluesky-social/atproto/pull/4220) [`fefe70126`](https://github.com/bluesky-social/atproto/commit/fefe70126d0ea82507ac750f669b3478290f186b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the `jwk` property of `Key` instances public
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid using `revoked` and inactive keys from JWK sets
+
 ## 0.5.0
 
 ### Minor Changes
