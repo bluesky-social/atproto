@@ -65,6 +65,7 @@ export const NEW_TO_OLD_REASON_MAPPING: Record<string, string> = {
   'tools.ozone.report.defs#reasonCivicInterference': REASONMISLEADING,
   'tools.ozone.report.defs#reasonCivicMisinformation': REASONMISLEADING,
   'tools.ozone.report.defs#reasonCivicImpersonation': REASONMISLEADING,
+  'tools.ozone.report.defs#reasonCivicOther': REASONMISLEADING,
 }
 
 interface CacheEntry {

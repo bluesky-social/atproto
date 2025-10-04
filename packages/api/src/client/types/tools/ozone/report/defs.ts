@@ -60,6 +60,7 @@ export type ReasonType =
   | 'tools.ozone.report.defs#reasonCivicInterference'
   | 'tools.ozone.report.defs#reasonCivicMisinformation'
   | 'tools.ozone.report.defs#reasonCivicImpersonation'
+  | 'tools.ozone.report.defs#reasonCivicOther'
   | (string & {})
 
 /** Appeal a previously taken moderation action */
@@ -140,7 +141,7 @@ export const REASONRULESTOLENCONTENT = `${id}#reasonRuleStolenContent`
 export const REASONRULEPROHIBITEDSALES = `${id}#reasonRuleProhibitedSales`
 /** Banned user returning */
 export const REASONRULEBANEVASION = `${id}#reasonRuleBanEvasion`
-/** Other */
+/** Other site rule violations */
 export const REASONRULEOTHER = `${id}#reasonRuleOther`
 /** Electoral process violations */
 export const REASONCIVICELECTORALPROCESS = `${id}#reasonCivicElectoralProcess`
@@ -152,3 +153,5 @@ export const REASONCIVICINTERFERENCE = `${id}#reasonCivicInterference`
 export const REASONCIVICMISINFORMATION = `${id}#reasonCivicMisinformation`
 /** Impersonation of electoral officials/entities */
 export const REASONCIVICIMPERSONATION = `${id}#reasonCivicImpersonation`
+/** Other civic integrity violations */
+export const REASONCIVICOTHER = `${id}#reasonCivicOther`

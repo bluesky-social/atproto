@@ -10696,6 +10696,7 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonCivicInterference',
           'tools.ozone.report.defs#reasonCivicMisinformation',
           'tools.ozone.report.defs#reasonCivicImpersonation',
+          'tools.ozone.report.defs#reasonCivicOther',
         ],
       },
       reasonSpam: {
