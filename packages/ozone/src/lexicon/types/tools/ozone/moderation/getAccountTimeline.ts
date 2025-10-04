@@ -88,6 +88,8 @@ export interface TimelineItemSummary {
     | 'tools.ozone.hosting.getAccountHistory#emailConfirmed'
     | 'tools.ozone.hosting.getAccountHistory#passwordUpdated'
     | 'tools.ozone.hosting.getAccountHistory#handleUpdated'
+    | 'tools.ozone.moderation.defs#scheduleTakedownEvent'
+    | 'tools.ozone.moderation.defs#cancelScheduledTakedownEvent'
     | (string & {})
   count: number
 }

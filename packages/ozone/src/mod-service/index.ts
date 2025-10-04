@@ -39,6 +39,7 @@ import {
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
+  isScheduleTakedownEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
 import { httpLogger as log } from '../logger'
@@ -530,6 +531,18 @@ export class ModerationService {
 
     if (isAgeAssuranceOverrideEvent(event)) {
       meta.status = event.status
+    }
+
+    if (isScheduleTakedownEvent(event)) {
+      if (event.executeAfter) {
+        meta.executeAfter = event.executeAfter
+      }
+      if (event.executeAt) {
+        meta.executeAt = event.executeAt
+      }
+      if (event.executeUntil) {
+        meta.executeUntil = event.executeUntil
+      }
     }
 
     if (

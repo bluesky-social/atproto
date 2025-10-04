@@ -7,11 +7,14 @@ import { BackgroundQueue } from '../background'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { ModerationService } from '../mod-service'
+import { ScheduledActionService } from '../scheduled-action/service'
+import { SettingService } from '../setting/service'
 import { TeamService } from '../team'
 import { getSigningKeyId } from '../util'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
+import { ScheduledActionProcessor } from './scheduled-action-processor'
 import { TeamProfileSynchronizer } from './team-profile-synchronizer'
 import { VerificationListener } from './verification-listener'
 
@@ -24,6 +27,7 @@ export type DaemonContextOptions = {
   eventReverser: EventReverser
   materializedViewRefresher: MaterializedViewRefresher
   teamProfileSynchronizer: TeamProfileSynchronizer
+  scheduledActionProcessor: ScheduledActionProcessor
   verificationListener?: VerificationListener
 }
 
@@ -72,6 +76,8 @@ export class DaemonContext {
       appviewAgent,
       createAuthHeaders,
     )
+    const settingService = SettingService.creator()
+    const scheduledActionService = ScheduledActionService.creator()
     const teamService = TeamService.creator(
       appviewAgent,
       cfg.appview.did,
@@ -88,6 +94,14 @@ export class DaemonContext {
     const materializedViewRefresher = new MaterializedViewRefresher(
       backgroundQueue,
       cfg.db.materializedViewRefreshIntervalMs,
+    )
+
+    const scheduledActionProcessor = new ScheduledActionProcessor(
+      db,
+      cfg.service.did,
+      settingService,
+      modService,
+      scheduledActionService,
     )
 
     // Only spawn the listener if verifier config exists and a jetstream URL is provided
@@ -109,6 +123,7 @@ export class DaemonContext {
       eventReverser,
       materializedViewRefresher,
       teamProfileSynchronizer,
+      scheduledActionProcessor,
       verificationListener,
       ...(overrides ?? {}),
     })
@@ -142,6 +157,10 @@ export class DaemonContext {
     return this.opts.teamProfileSynchronizer
   }
 
+  get scheduledActionProcessor(): ScheduledActionProcessor {
+    return this.opts.scheduledActionProcessor
+  }
+
   get verificationListener(): VerificationListener | undefined {
     return this.opts.verificationListener
   }
@@ -151,6 +170,7 @@ export class DaemonContext {
     this.eventReverser.start()
     this.materializedViewRefresher.start()
     this.teamProfileSynchronizer.start()
+    this.scheduledActionProcessor.start()
     this.verificationListener?.start()
   }
 
@@ -168,6 +188,7 @@ export class DaemonContext {
         this.eventPusher.destroy(),
         this.materializedViewRefresher.destroy(),
         this.teamProfileSynchronizer.destroy(),
+        this.scheduledActionProcessor.destroy(),
         this.verificationListener?.stop(),
       ])
     } finally {

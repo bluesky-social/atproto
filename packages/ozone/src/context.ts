@@ -25,6 +25,10 @@ import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,
 } from './safelink/service'
+import {
+  ScheduledActionService,
+  ScheduledActionServiceCreator,
+} from './scheduled-action/service'
 import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
@@ -52,6 +56,7 @@ export type AppContextOptions = {
   moderationServiceProfile: ModerationServiceProfileCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
   safelinkRuleService: SafelinkRuleServiceCreator
+  scheduledActionService: ScheduledActionServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   teamService: TeamServiceCreator
@@ -141,6 +146,7 @@ export class AppContext {
 
     const communicationTemplateService = CommunicationTemplateService.creator()
     const safelinkRuleService = SafelinkRuleService.creator()
+    const scheduledActionService = ScheduledActionService.creator()
     const teamService = TeamService.creator(
       appviewAgent,
       cfg.appview.did,
@@ -171,6 +177,7 @@ export class AppContext {
         moderationServiceProfile,
         communicationTemplateService,
         safelinkRuleService,
+        scheduledActionService,
         teamService,
         setService,
         settingService,
@@ -223,6 +230,10 @@ export class AppContext {
 
   get safelinkRuleService(): SafelinkRuleServiceCreator {
     return this.opts.safelinkRuleService
+  }
+
+  get scheduledActionService(): ScheduledActionServiceCreator {
+    return this.opts.scheduledActionService
   }
 
   get teamService(): TeamServiceCreator {

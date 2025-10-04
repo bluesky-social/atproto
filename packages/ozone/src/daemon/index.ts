@@ -5,6 +5,7 @@ import { DaemonContext } from './context'
 export { EventPusher } from './event-pusher'
 export { BlobDiverter } from './blob-diverter'
 export { EventReverser } from './event-reverser'
+export { ScheduledActionProcessor } from './scheduled-action-processor'
 
 export class OzoneDaemon {
   constructor(public ctx: DaemonContext) {}

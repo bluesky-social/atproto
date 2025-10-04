@@ -46,6 +46,8 @@ export interface ModEventView {
     | $Typed<AgeAssuranceEvent>
     | $Typed<AgeAssuranceOverrideEvent>
     | $Typed<RevokeAccountCredentialsEvent>
+    | $Typed<ScheduleTakedownEvent>
+    | $Typed<CancelScheduledTakedownEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -96,6 +98,8 @@ export interface ModEventViewDetail {
     | $Typed<AgeAssuranceEvent>
     | $Typed<AgeAssuranceOverrideEvent>
     | $Typed<RevokeAccountCredentialsEvent>
+    | $Typed<ScheduleTakedownEvent>
+    | $Typed<CancelScheduledTakedownEvent>
     | { $type: string }
   subject:
     | $Typed<RepoView>
@@ -701,6 +705,45 @@ export function validateRecordEvent<V>(v: V) {
   return validate<RecordEvent & V>(v, id, hashRecordEvent)
 }
 
+/** Logs a scheduled takedown action for an account. */
+export interface ScheduleTakedownEvent {
+  $type?: 'tools.ozone.moderation.defs#scheduleTakedownEvent'
+  comment?: string
+  executeAt?: string
+  executeAfter?: string
+  executeUntil?: string
+}
+
+const hashScheduleTakedownEvent = 'scheduleTakedownEvent'
+
+export function isScheduleTakedownEvent<V>(v: V) {
+  return is$typed(v, id, hashScheduleTakedownEvent)
+}
+
+export function validateScheduleTakedownEvent<V>(v: V) {
+  return validate<ScheduleTakedownEvent & V>(v, id, hashScheduleTakedownEvent)
+}
+
+/** Logs cancellation of a scheduled takedown action for an account. */
+export interface CancelScheduledTakedownEvent {
+  $type?: 'tools.ozone.moderation.defs#cancelScheduledTakedownEvent'
+  comment?: string
+}
+
+const hashCancelScheduledTakedownEvent = 'cancelScheduledTakedownEvent'
+
+export function isCancelScheduledTakedownEvent<V>(v: V) {
+  return is$typed(v, id, hashCancelScheduledTakedownEvent)
+}
+
+export function validateCancelScheduledTakedownEvent<V>(v: V) {
+  return validate<CancelScheduledTakedownEvent & V>(
+    v,
+    id,
+    hashCancelScheduledTakedownEvent,
+  )
+}
+
 export interface RepoView {
   $type?: 'tools.ozone.moderation.defs#repoView'
   did: string
@@ -1010,3 +1053,48 @@ export const TIMELINEEVENTPLCCREATE = `${id}#timelineEventPlcCreate`
 export const TIMELINEEVENTPLCOPERATION = `${id}#timelineEventPlcOperation`
 /** Moderation event timeline event for a PLC tombstone operation */
 export const TIMELINEEVENTPLCTOMBSTONE = `${id}#timelineEventPlcTombstone`
+
+/** View of a scheduled moderation action */
+export interface ScheduledActionView {
+  $type?: 'tools.ozone.moderation.defs#scheduledActionView'
+  /** Auto-incrementing row ID */
+  id: number
+  /** Type of action to be executed */
+  action: 'takedown' | (string & {})
+  /** Serialized event object that will be propagated to the event when performed */
+  eventData?: { [_ in string]: unknown }
+  /** Subject DID for the action */
+  did: string
+  /** Exact time to execute the action */
+  executeAt?: string
+  /** Earliest time to execute the action (for randomized scheduling) */
+  executeAfter?: string
+  /** Latest time to execute the action (for randomized scheduling) */
+  executeUntil?: string
+  /** Whether execution time should be randomized within the specified range */
+  randomizeExecution?: boolean
+  /** DID of the user who created this scheduled action */
+  createdBy: string
+  /** When the scheduled action was created */
+  createdAt: string
+  /** When the scheduled action was last updated */
+  updatedAt?: string
+  /** Current status of the scheduled action */
+  status: 'pending' | 'executed' | 'cancelled' | 'failed' | (string & {})
+  /** When the action was last attempted to be executed */
+  lastExecutedAt?: string
+  /** Reason for the last execution failure */
+  lastFailureReason?: string
+  /** ID of the moderation event created when action was successfully executed */
+  executionEventId?: number
+}
+
+const hashScheduledActionView = 'scheduledActionView'
+
+export function isScheduledActionView<V>(v: V) {
+  return is$typed(v, id, hashScheduledActionView)
+}
+
+export function validateScheduledActionView<V>(v: V) {
+  return validate<ScheduledActionView & V>(v, id, hashScheduledActionView)
+}
