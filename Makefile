@@ -56,3 +56,7 @@ nvm-setup: ## Use NVM to install and activate node+pnpm
 	nvm use
 	corepack enable
 	corepack install
+
+.PHONY: signing-key
+signing-key:
+	@openssl ecparam --name secp256k1 --genkey --noout --outform DER | tail --bytes=+8 | head --bytes=32 | xxd --plain --cols 32
