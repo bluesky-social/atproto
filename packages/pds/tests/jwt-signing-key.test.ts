@@ -1,11 +1,10 @@
 import { KeyObject } from 'node:crypto'
-import getPort from 'get-port'
 import * as jose from 'jose'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc, mockNetworkUtilities } from '@atproto/dev-env'
-import { createPublicKeyObject } from '../dist/auth-verifier'
+import { createPublicKeyObject } from '../'
 
 const getPublicHex = (key: Secp256k1Keypair) => {
   return key.publicKeyStr('hex')
@@ -25,13 +24,13 @@ describe('jwt-signing-key asymmetrical keys', () => {
   beforeAll(async () => {
     const jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
-    const port = await getPort()
 
     jwtPublicKey = createPublicKeyObject(getPublicHex(jwtSigningKey))
 
     plc = await TestPlc.create({})
     pds = await TestPds.create({
-      port: port,
+      // jwtSecret is defined by default in TestPds, so we need to remove it, as
+      // we're using an asymmetrical JWT Signing Key:
       jwtSecret: undefined,
       jwtSigningKeyK256PrivateKeyHex: await getPrivateHex(jwtSigningKey),
       plcRotationKeyK256PrivateKeyHex: await getPrivateHex(plcRotationKey),

@@ -31,7 +31,12 @@ import { proxyHandler } from './pipethrough'
 import compression from './util/compression'
 import * as wellKnown from './well-known'
 
-export { createSecretKeyObject } from './util/keys'
+export {
+  createPrivateKeyObject,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './util/keys'
+
 export * from './config'
 export { AppContext } from './context'
 export { Database } from './db'
