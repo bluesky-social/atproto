@@ -116,12 +116,12 @@ export abstract class Key<J extends Jwk = Jwk> {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
   }
 
-  get revoked() {
+  get isRevoked() {
     return this.jwk.revoked != null
   }
 
   isActive(options?: ActivityCheckOptions) {
-    if (!options?.allowRevoked && this.revoked) return false
+    if (!options?.allowRevoked && this.isRevoked) return false
 
     const tolerance = options?.clockTolerance ?? 0
     if (tolerance !== Infinity) {
