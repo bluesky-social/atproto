@@ -35,11 +35,7 @@ import { OAuthStore } from './account-manager/oauth-store'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
 import { authPassthru, forwardedFor } from './api/proxy'
-import {
-  AuthVerifier,
-  createPublicKeyObject,
-  createSecretKeyObject,
-} from './auth-verifier'
+import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
 import { BskyAppView } from './bsky-app-view'
 import { ServerConfig, ServerSecrets } from './config'
@@ -53,6 +49,7 @@ import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
+import { createPublicKeyObject, createSecretKeyObject } from './util/keys'
 
 export type AppContextOptions = {
   actorStore: ActorStore
