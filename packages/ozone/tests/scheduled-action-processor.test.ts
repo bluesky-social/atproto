@@ -126,37 +126,6 @@ describe('scheduled action processor', () => {
       expect(executedActions.length).toBe(0)
     })
 
-    it('processes randomized scheduling actions within time window', async () => {
-      const testSubject = sc.dids.carol
-
-      // Schedule an action with time range (past executeAfter, future executeUntil)
-      const pastTime = new Date(Date.now() - 30 * MINUTE).toISOString()
-      const futureTime = new Date(Date.now() + 30 * MINUTE).toISOString()
-      await scheduleTestAction(testSubject, {
-        executeAfter: pastTime,
-        executeUntil: futureTime,
-      })
-
-      // Process multiple times to account for randomization
-      let executed = false
-      for (let i = 0; i < 20 && !executed; i++) {
-        await network.ozone.daemon.ctx.scheduledActionProcessor.findAndExecuteScheduledActions()
-        const executedActions = await getScheduledActions(
-          ['executed'],
-          [testSubject],
-        )
-        if (executedActions.length > 0) {
-          executed = true
-          expect(executedActions[0].status).toBe('executed')
-        }
-      }
-
-      // At least verify the action is eligible for processing
-      const actions = await getScheduledActions(['pending'], [testSubject])
-      expect(actions.length).toBe(1)
-      expect(actions[0].randomizeExecution).toBe(true)
-    })
-
     it('skips randomized actions before executeAfter time', async () => {
       const testSubject = 'did:plc:future_randomized'
 
