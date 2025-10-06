@@ -243,11 +243,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
   async authorize(
     input: string,
-    {
-      signal,
-      pdsUrl,
-      ...options
-    }: AuthorizeOptions & { pdsUrl?: string } = {},
+    { signal, pdsUrl, ...options }: AuthorizeOptions & { pdsUrl?: string } = {},
   ): Promise<URL> {
     const redirectUri =
       options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
