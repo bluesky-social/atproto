@@ -20,17 +20,18 @@ import {
   preferredOrderCmp,
 } from './util.js'
 
+export type { ActivityCheckOptions, KeyMatchOptions }
+export type FindKeyOptions = KeyMatchOptions & ActivityCheckOptions
+
 export type JwtSignHeader = Override<
   JwtHeader,
-  Pick<KeyMatchOptions, 'alg' | 'kid'>
+  Pick<FindKeyOptions, 'alg' | 'kid'>
 >
 
 export type JwtPayloadGetter<P = JwtPayload> = (
   header: JwtHeader,
   key: Key,
 ) => P | PromiseLike<P>
-
-export type { KeyMatchOptions }
 
 const extractPrivateJwk = (key: Key) => key.privateJwk
 const extractPublicJwk = (key: Key) => key.publicJwk
@@ -117,10 +118,9 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     return this.keys.some((key) => key.kid === kid)
   }
 
-  get(options: KeyMatchOptions & ActivityCheckOptions): K {
-    for (const key of this.list(options)) {
-      return key
-    }
+  get(options: FindKeyOptions): K {
+    const key = this.find(options)
+    if (key) return key
 
     throw new JwkError(
       `Key not found ${options.kid ?? options.alg ?? options.usage ?? '<unknown>'}`,
@@ -128,7 +128,15 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     )
   }
 
-  *list<O extends KeyMatchOptions & ActivityCheckOptions>(options: O) {
+  find(options: FindKeyOptions): K | undefined {
+    for (const key of this.list(options)) {
+      return key
+    }
+
+    return undefined
+  }
+
+  *list<O extends FindKeyOptions>(options: O) {
     for (const key of this) {
       if (key.isActive(options) && key.matches(options)) {
         yield key
@@ -140,7 +148,8 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     kid,
     alg,
     usage,
-  }: KeyMatchOptions & { usage: PrivateKeyUsage }): {
+    ...options
+  }: FindKeyOptions & { usage: PrivateKeyUsage }): {
     key: Key
     alg: string
   } {
@@ -149,7 +158,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     // Allow the loop bellow to return early when a single "alg" is provided
     if (Array.isArray(alg) && alg.length === 1) alg = alg[0]
 
-    for (const key of this.list({ kid, alg, usage })) {
+    for (const key of this.list({ ...options, kid, alg, usage })) {
       // Skip negotiation if a single "alg" was provided
       if (typeof alg === 'string') return { key, alg }
 
@@ -196,6 +205,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
         alg: sAlg,
         kid: sKid,
         usage: 'sign',
+        allowRevoked: false, // For explicitness (default value is false)
       })
       const protectedHeader = { ...header, alg, kid: key.kid }
 
