@@ -1,5 +1,12 @@
 # @atproto-labs/did-resolver
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3)]:
+  - @atproto/did@0.2.1
+
 ## 0.2.1
 
 ### Patch Changes

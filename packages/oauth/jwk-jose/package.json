@@ -1,6 +1,6 @@
 {
   "name": "@atproto/jwk-jose",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "license": "MIT",
   "description": "`jose` based implementation of @atproto/jwk Key's",
   "keywords": [

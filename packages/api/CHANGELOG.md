@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.17.1
+
+### Patch Changes
+
+- [#4216](https://github.com/bluesky-social/atproto/pull/4216) [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Create a dedicated type for the `proxy` property
+
+- [#4216](https://github.com/bluesky-social/atproto/pull/4216) [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve validation when setting an `Agent`'s `proxy` property
+
+- [#4241](https://github.com/bluesky-social/atproto/pull/4241) [`591de1952`](https://github.com/bluesky-social/atproto/commit/591de19524639341a7dd64ee75c482c645c186fd) Thanks [@foysalit](https://github.com/foysalit)! - Add scheduled action api to ozone
+
 ## 0.17.0
 
 ### Minor Changes
