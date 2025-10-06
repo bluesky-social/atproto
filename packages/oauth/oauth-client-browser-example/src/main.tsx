@@ -20,9 +20,11 @@ const clientMetadata = buildAtprotoLoopbackClientMetadata({
   redirect_uris: [LOOPBACK_CANONICAL_LOCATION],
 })
 
+const queryClient = new QueryClient()
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider
         clientMetadata={clientMetadata}
         plcDirectoryUrl={PLC_DIRECTORY_URL}

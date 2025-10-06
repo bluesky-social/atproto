@@ -18,7 +18,7 @@ export const jwksSchema = z.object({
   }),
 })
 
-export type Jwks = z.infer<typeof jwksSchema>
+export type Jwks = z.output<typeof jwksSchema>
 
 /**
  * Public JSON Web Key Set schema.
@@ -36,4 +36,4 @@ export const jwksPubSchema = z.object({
   }),
 })
 
-export type JwksPub = z.infer<typeof jwksPubSchema>
+export type JwksPub = z.output<typeof jwksPubSchema>

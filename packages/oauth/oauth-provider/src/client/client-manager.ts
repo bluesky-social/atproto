@@ -176,9 +176,23 @@ export class ClientManager {
       throw new InvalidClientMetadataError('Loopback clients are not allowed')
     }
 
-    const metadata = oauthClientMetadataSchema.parse(
-      await loopbackMetadata(clientId),
+    const metadataRaw = await callAsync(loopbackMetadata, clientId).catch(
+      (err) => {
+        throw InvalidClientMetadataError.from(
+          err,
+          `Invalid loopback client id "${clientId}"`,
+        )
+      },
     )
+
+    const metadata = await oauthClientMetadataSchema
+      .parseAsync(metadataRaw)
+      .catch((err) => {
+        throw InvalidClientMetadataError.from(
+          err,
+          `Invalid loopback client metadata for "${clientId}"`,
+        )
+      })
 
     return this.validateClientMetadata(clientId, metadata)
   }
