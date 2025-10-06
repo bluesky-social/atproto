@@ -7,8 +7,8 @@ import {
   createServer,
 } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { type Browser, type Page, launch } from 'puppeteer'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { type Browser, ElementHandle, type Page, launch } from 'puppeteer'
+import { SeedClientAccount, TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'
 import { ServerMailer } from '../src/mailer'
@@ -62,6 +62,18 @@ class PageHelper implements AsyncDisposable {
     await this.page.waitForSelector(`${tag}::-p-text(${text})`)
   }
 
+  async getByTestId(testId: string) {
+    const selector = `[data-testid="${testId}"]`
+    await this.page.waitForSelector(selector)
+    const element = await this.page.$(selector)
+    assert(element, `Could not locate element with data-testid: ${testId}`)
+    return element
+  }
+
+  async getTextContent(element: ElementHandle) {
+    return await this.page.evaluate((el) => el.textContent, element)
+  }
+
   protected async getVisibleElement(selector: string) {
     const elementHandle = await this.page.waitForSelector(selector)
 
@@ -89,6 +101,7 @@ describe('oauth', () => {
   let mailer: ServerMailer
   let mailCatcher: MailCatcher
   let client: Server
+  let jane: SeedClientAccount
 
   let appUrl: string
 
@@ -121,7 +134,7 @@ describe('oauth', () => {
     })
 
     // Used for 2FA tests:
-    const jane = await sc.createAccount('jane', {
+    jane = await sc.createAccount('jane', {
       email: 'jane@test.com',
       handle: 'jane.test',
       password: 'jane-pass',
@@ -413,6 +426,12 @@ describe('oauth', () => {
     const token = params.token
 
     await page.ensureTextVisibility('Confirmation 2FA', 'legend')
+
+    const signinOptHint = await page.getByTestId('signin-otp-hint')
+    const hintText = await page.getTextContent(signinOptHint)
+
+    // The email address for the account should not be reveal in cleartext:
+    expect(hintText).not.toContain(jane.email)
 
     await page.typeIn('input[placeholder="Ressemble à XXXXX-XXXXX"]', token)
 

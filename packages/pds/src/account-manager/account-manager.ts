@@ -1,6 +1,6 @@
 import { KeyObject } from 'node:crypto'
 import { CID } from 'multiformats/cid'
-import { HOUR, wait } from '@atproto/common'
+import { HOUR, obfuscateEmail, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import {
   InvalidCredentialsError,
@@ -410,7 +410,7 @@ export class AccountManager {
 
           throw new SecondAuthenticationFactorRequiredError(
             'emailOtp',
-            user.email,
+            obfuscateEmail(user.email),
           )
         }
 
