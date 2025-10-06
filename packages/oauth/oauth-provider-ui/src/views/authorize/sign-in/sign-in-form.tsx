@@ -230,7 +230,10 @@ export function SignInForm({
               onToken={setOtp}
             />
 
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p
+              className="text-sm text-slate-600 dark:text-slate-400"
+              data-testid="signin-otp-hint"
+            >
               <Trans>
                 Check your {secondFactor.hint} email for a login code and enter
                 it here.
