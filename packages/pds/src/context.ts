@@ -225,7 +225,7 @@ export class AppContext {
       )
     }
 
-    const jwtSecretKey = await createJwtSecretKey(secrets)
+    const jwtKey = await createJwtKey(secrets)
     const jwtPublicKey = cfg.entryway
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : null
@@ -242,7 +242,7 @@ export class AppContext {
 
     const accountManager = new AccountManager(
       idResolver,
-      jwtSecretKey,
+      jwtKey,
       cfg.service.did,
       cfg.identity.serviceHandleDomains,
       cfg.db,
@@ -373,18 +373,10 @@ export class AppContext {
       }
     }
 
-    const keyset: Key[] = []
-    if (jwtSecretKey.type === 'private') {
-      // This creates an ES256K private key JWK:
-      keyset.push(await JoseKey.fromJWK(jwtSecretKey.export({ format: 'jwk' })))
-    } else if (jwtSecretKey.type === 'secret') {
-      keyset.push(await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'))
-    }
-
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
-          keyset,
+          keyset: await createJwtKeyset(jwtKey),
           store: new OAuthStore(
             accountManager,
             actorStore,
@@ -458,7 +450,7 @@ export class AppContext {
       oauthVerifier,
       {
         publicUrl: cfg.service.publicUrl,
-        jwtKey: jwtPublicKey ?? jwtSecretKey,
+        jwtKey: jwtPublicKey ?? jwtKey,
         adminPass: secrets.adminPassword,
         dids: {
           pds: cfg.service.did,
@@ -545,13 +537,20 @@ const basicAuthHeader = (username: string, password: string) => {
   return `Basic ${encoded}`
 }
 
-const createJwtSecretKey = async (
-  secrets: ServerSecrets,
-): Promise<KeyObject> => {
+const createJwtKey = async (secrets: ServerSecrets): Promise<KeyObject> => {
   if (secrets.jwtSecret.type === 'private') {
     return createPrivateKeyObject(secrets.jwtSecret.privateKeyHex)
   } else {
     return createSecretKeyObject(secrets.jwtSecret.secret)
+  }
+}
+
+const createJwtKeyset = async (jwtKey: KeyObject): Promise<Key[]> => {
+  if (jwtKey.type === 'private') {
+    // This creates an ES256K Private Key JWK, as jwtKey is a ES256K KeyObject:
+    return [await JoseKey.fromJWK(jwtKey.export({ format: 'jwk' }))]
+  } else {
+    return [await JoseKey.fromKeyLike(jwtKey, undefined, 'HS256')]
   }
 }
 
