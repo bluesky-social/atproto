@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:162
+#: src/routes/account/_minimalLayout/sign-in.tsx:170
 msgid "@handle or email"
 msgstr "@ハンドルまたはメールアドレス"
 
@@ -34,7 +34,7 @@ msgstr "新しいパスワードが必要です"
 msgid "Accounts"
 msgstr "アカウント"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:127
+#: src/routes/account/_minimalLayout/sign-in.tsx:135
 #: src/routes/account/_minimalLayout/reset-password.tsx:62
 #: src/routes/account/_minimalLayout/reset-password.tsx:89
 msgid "An error occurred, please try again."
@@ -61,11 +61,15 @@ msgstr "ブランド"
 msgid "Cancel"
 msgstr "キャンセル"
 
+#. placeholder {0}: secondFactor.hint
+#: src/routes/account/_minimalLayout/sign-in.tsx:231
+msgid "Check your {0} email for a login code and enter it here."
+msgstr ""
+
 #: src/routes/account/_minimalLayout/reset-password.tsx:345
 msgid "Click here to send a new code to your email."
 msgstr "ここをクリックして、新しいコードをメールで送信します。"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:204
 #: src/routes/account/_minimalLayout/reset-password.tsx:239
 msgid "Code"
 msgstr "コード"
@@ -74,11 +78,15 @@ msgstr "コード"
 msgid "Code was resent"
 msgstr "コード再送済"
 
+#: src/routes/account/_minimalLayout/sign-in.tsx:212
+msgid "Confirmation Code"
+msgstr ""
+
 #: src/routes/account/_appLayout/$sub.tsx:63
 msgid "Connected apps"
 msgstr "接続済アプリ"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:145
+#: src/routes/account/_minimalLayout/sign-in.tsx:153
 msgid "Credentials"
 msgstr "認証情報"
 
@@ -130,7 +138,7 @@ msgstr "確認コードの再送に失敗しました"
 msgid "Failed to sign out"
 msgstr "サインアウトに失敗しました"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:250
+#: src/routes/account/_minimalLayout/sign-in.tsx:267
 msgid "Forgot password?"
 msgstr "パスワードを忘れた？"
 
@@ -143,7 +151,7 @@ msgstr "リセットコードを取得"
 msgid "Home"
 msgstr "ホーム"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:152
+#: src/routes/account/_minimalLayout/sign-in.tsx:160
 msgid "Identifier"
 msgstr "識別子"
 
@@ -151,11 +159,11 @@ msgstr "識別子"
 msgid "Invalid email"
 msgstr "無効なメールアドレス"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:85
+#: src/routes/account/_minimalLayout/sign-in.tsx:90
 msgid "Invalid handle"
 msgstr "無効なハンドル"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:125
+#: src/routes/account/_minimalLayout/sign-in.tsx:133
 msgid "Invalid identifier or password."
 msgstr "無効な識別子またはパスワード"
 
@@ -188,13 +196,13 @@ msgstr "接続済アプリなし"
 msgid "No devices"
 msgstr "デバイスなし"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:177
-#: src/routes/account/_minimalLayout/sign-in.tsx:187
+#: src/routes/account/_minimalLayout/sign-in.tsx:185
+#: src/routes/account/_minimalLayout/sign-in.tsx:195
 #: src/routes/account/_minimalLayout/reset-password.tsx:278
 msgid "Password"
 msgstr "パスワード"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:90
+#: src/routes/account/_minimalLayout/sign-in.tsx:95
 msgid "Password is required"
 msgstr "パスワードが必要"
 
@@ -238,8 +246,8 @@ msgid "Select the account you would like to manage."
 msgstr "管理したいアカウントを選択してください。"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:32
-#: src/routes/account/_minimalLayout/sign-in.tsx:136
-#: src/routes/account/_minimalLayout/sign-in.tsx:241
+#: src/routes/account/_minimalLayout/sign-in.tsx:144
+#: src/routes/account/_minimalLayout/sign-in.tsx:258
 msgid "Sign in"
 msgstr "サインイン"
 
@@ -310,7 +318,7 @@ msgstr "アカウントを読み込めませんでした。ページを更新し
 msgid "Whoops! An error occurred."
 msgstr "おっと！エラーが発生しました。"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:213
+#: src/routes/account/_minimalLayout/sign-in.tsx:221
 #: src/routes/account/_minimalLayout/reset-password.tsx:249
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"
