@@ -18,7 +18,20 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
     throw new Error('Must configure plc rotation key')
   }
 
-  if (!env.jwtSecret) {
+  let jwtSecret: ServerSecrets['jwtSecret']
+  if (env.jwtSecret && env.jwtSigningKeyK256PrivateKeyHex) {
+    throw new Error('Cannot set both JWT secret & JWT private key')
+  } else if (env.jwtSigningKeyK256PrivateKeyHex) {
+    jwtSecret = {
+      type: 'private',
+      privateKeyHex: env.jwtSigningKeyK256PrivateKeyHex,
+    }
+  } else if (env.jwtSecret) {
+    jwtSecret = {
+      type: 'secret',
+      secret: env.jwtSecret,
+    }
+  } else {
     throw new Error('Must provide a JWT secret')
   }
 
@@ -28,7 +41,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 
   return {
     dpopSecret: env.dpopSecret,
-    jwtSecret: env.jwtSecret,
+    jwtSecret: jwtSecret,
     adminPassword: env.adminPassword,
     plcRotationKey,
     entrywayAdminToken: env.entrywayAdminToken ?? env.adminPassword,
@@ -37,7 +50,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 
 export type ServerSecrets = {
   dpopSecret?: string
-  jwtSecret: string
+  jwtSecret: JwtSecretKey | JwtPrivateKey
   adminPassword: string
   plcRotationKey: SigningKeyKms | SigningKeyMemory
   entrywayAdminToken?: string
@@ -50,5 +63,15 @@ export type SigningKeyKms = {
 
 export type SigningKeyMemory = {
   provider: 'memory'
+  privateKeyHex: string
+}
+
+export type JwtSecretKey = {
+  type: 'secret'
+  secret: string
+}
+
+export type JwtPrivateKey = {
+  type: 'private'
   privateKeyHex: string
 }
