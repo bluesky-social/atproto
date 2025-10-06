@@ -59,20 +59,19 @@ export class RecordRef {
   }
 }
 
+export type SeedClientAccount = {
+  did: string
+  accessJwt: string
+  refreshJwt: string
+  handle: string
+  email: string
+  password: string
+}
+
 export class SeedClient<
   Network extends TestNetworkNoAppView = TestNetworkNoAppView,
 > {
-  accounts: Record<
-    string,
-    {
-      did: string
-      accessJwt: string
-      refreshJwt: string
-      handle: string
-      email: string
-      password: string
-    }
-  >
+  accounts: Record<string, SeedClientAccount>
   profiles: Record<
     string,
     {
