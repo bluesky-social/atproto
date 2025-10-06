@@ -74,21 +74,11 @@ describe('jwt-signing-key asymmetrical keys', () => {
 
     expect(validateJwt(accessToken)).resolves.toMatchObject({
       protectedHeader: { typ: 'at+jwt', alg: 'ES256K' },
+      payload: {
+        scope: 'com.atproto.access',
+        aud: serviceDid,
+        sub: alice,
+      },
     })
-
-    expect(validateJwt(accessToken)).resolves.toHaveProperty(
-      'payload.scope',
-      'com.atproto.access',
-    )
-
-    expect(validateJwt(accessToken)).resolves.toHaveProperty(
-      'payload.aud',
-      serviceDid,
-    )
-
-    expect(validateJwt(accessToken)).resolves.toHaveProperty(
-      'payload.sub',
-      alice,
-    )
   })
 })
