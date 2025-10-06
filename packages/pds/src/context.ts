@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { KeyObject } from 'node:crypto'
 import * as plc from '@did-plc/lib'
 import express from 'express'
 import { Redis } from 'ioredis'
@@ -16,6 +17,7 @@ import {
 import {
   AccessTokenMode,
   JoseKey,
+  Key,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
@@ -49,7 +51,11 @@ import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
-import { createPublicKeyObject, createSecretKeyObject } from './util/keys'
+import {
+  createPrivateKeyObject,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './util/keys'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -219,7 +225,7 @@ export class AppContext {
       )
     }
 
-    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const jwtSecretKey = await createJwtSecretKey(secrets)
     const jwtPublicKey = cfg.entryway
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : null
@@ -367,10 +373,18 @@ export class AppContext {
       }
     }
 
+    const keyset: Key[] = []
+    if (jwtSecretKey.type === 'private') {
+      // This creates an ES256K private key JWK:
+      keyset.push(await JoseKey.fromJWK(jwtSecretKey.export({ format: 'jwk' })))
+    } else if (jwtSecretKey.type === 'secret') {
+      keyset.push(await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'))
+    }
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
-          keyset: [await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256')],
+          keyset,
           store: new OAuthStore(
             accountManager,
             actorStore,
@@ -529,6 +543,16 @@ const basicAuthHeader = (username: string, password: string) => {
     'base64pad',
   )
   return `Basic ${encoded}`
+}
+
+const createJwtSecretKey = async (
+  secrets: ServerSecrets,
+): Promise<KeyObject> => {
+  if (secrets.jwtSecret.type === 'private') {
+    return createPrivateKeyObject(secrets.jwtSecret.privateKeyHex)
+  } else {
+    return createSecretKeyObject(secrets.jwtSecret.secret)
+  }
 }
 
 export default AppContext
