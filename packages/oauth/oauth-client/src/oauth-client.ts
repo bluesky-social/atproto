@@ -243,7 +243,11 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
   async authorize(
     input: string,
-    { signal, ...options }: AuthorizeOptions = {},
+    {
+      signal,
+      pdsUrl,
+      ...options
+    }: AuthorizeOptions & { pdsUrl?: string } = {},
   ): Promise<URL> {
     const redirectUri =
       options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
@@ -252,9 +256,20 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError('Invalid redirect_uri')
     }
 
-    const { identityInfo, metadata } = await this.oauthResolver.resolve(input, {
-      signal,
-    })
+    let metadata
+    let identityInfo
+
+    if (pdsUrl) {
+      metadata =
+        await this.oauthResolver.authorizationServerMetadataResolver.resolve(
+          pdsUrl,
+          { signal },
+        )
+    } else {
+      ;({ identityInfo, metadata } = await this.oauthResolver.resolve(input, {
+        signal,
+      }))
+    }
 
     const pkce = await this.runtime.generatePKCE()
     const dpopKey = await this.runtime.generateKey(
@@ -284,11 +299,13 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       code_challenge: pkce.challenge,
       code_challenge_method: pkce.method,
       state,
-      login_hint: identityInfo
-        ? identityInfo.handle !== HANDLE_INVALID
-          ? identityInfo.handle
-          : identityInfo.did
-        : undefined,
+      login_hint:
+        options.login_hint ??
+        (identityInfo
+          ? identityInfo.handle !== HANDLE_INVALID
+            ? identityInfo.handle
+            : identityInfo.did
+          : undefined),
       response_mode: this.responseMode,
       response_type: 'code' as const,
       scope: options?.scope ?? this.clientMetadata.scope,

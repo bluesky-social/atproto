@@ -253,6 +253,124 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
   }
 
+  async signInWithPds(
+    pdsUrl: string,
+    options?: AuthorizeOptions & { login_hint?: string },
+  ): Promise<OAuthSession> {
+    if (options?.display === 'popup') {
+      return this.signInPopupWithPds(pdsUrl, options)
+    } else {
+      return this.signInRedirectWithPds(pdsUrl, options)
+    }
+  }
+
+  async signInRedirectWithPds(
+    pdsUrl: string,
+    options?: AuthorizeOptions & { login_hint?: string },
+  ): Promise<never> {
+    const url = await this.authorize('', { ...options, pdsUrl })
+
+    window.location.href = url.href
+
+    // back-forward cache
+    return new Promise<never>((resolve, reject) => {
+      setTimeout(
+        (err: Error) => {
+          // Take the opportunity to proactively cancel the pending request
+          this.abortRequest(url).then(
+            () => reject(err),
+            (reason) => reject(new AggregateError([err, reason])),
+          )
+        },
+        5e3,
+        new Error('User navigated back'),
+      )
+    })
+  }
+
+  async signInPopupWithPds(
+    pdsUrl: string,
+    options?: Omit<AuthorizeOptions, 'state'> & { login_hint?: string },
+  ): Promise<OAuthSession> {
+    // Open new window asap to prevent popup busting by browsers
+    const popupFeatures = 'width=600,height=600,menubar=no,toolbar=no'
+    let popup: Window | null = window.open(
+      'about:blank',
+      '_blank',
+      popupFeatures,
+    )
+
+    const stateKey = `${Math.random().toString(36).slice(2)}`
+
+    const url = await this.authorize('', {
+      ...options,
+      pdsUrl,
+      state: `${POPUP_STATE_PREFIX}${stateKey}`,
+      display: options?.display ?? 'popup',
+    })
+
+    options?.signal?.throwIfAborted()
+
+    if (popup) {
+      popup.window.location.href = url.href
+    } else {
+      popup = window.open(url.href, '_blank', popupFeatures)
+    }
+
+    popup?.focus()
+
+    return new Promise<OAuthSession>((resolve, reject) => {
+      const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
+
+      const cleanup = () => {
+        clearTimeout(timeout)
+        popupChannel.removeEventListener('message', onMessage)
+        popupChannel.close()
+        options?.signal?.removeEventListener('abort', cancel)
+        popup?.close()
+      }
+
+      const cancel = () => {
+        // @TODO Store fact that the request was cancelled, allowing any
+        // callback (e.g. in the popup) to revoke the session or credentials.
+
+        reject(new Error(options?.signal?.aborted ? 'Aborted' : 'Timeout'))
+        cleanup()
+      }
+
+      options?.signal?.addEventListener('abort', cancel)
+
+      const timeout = setTimeout(cancel, 5 * 60e3)
+
+      const onMessage = async ({ data }: MessageEvent<PopupChannelData>) => {
+        if (data.key !== stateKey) return
+        if (!('result' in data)) return
+
+        // Send acknowledgment to popup window
+        popupChannel.postMessage({ key: stateKey, ack: true })
+
+        cleanup()
+
+        const { result } = data
+        if (result.status === 'fulfilled') {
+          const sub = result.value
+          try {
+            options?.signal?.throwIfAborted()
+            resolve(await this.restore(sub, false))
+          } catch (err) {
+            reject(err)
+            void this.revoke(sub)
+          }
+        } else {
+          const { message, params } = result.reason
+          reject(new OAuthCallbackError(new URLSearchParams(params), message))
+        }
+      }
+
+      popupChannel.addEventListener('message', onMessage)
+    })
+  }
+
   async signInRedirect(
     input: string,
     options?: AuthorizeOptions,

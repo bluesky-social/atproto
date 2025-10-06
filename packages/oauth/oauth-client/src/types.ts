@@ -17,7 +17,6 @@ export type AuthorizeOptions = Simplify<
     | 'client_id'
     | 'response_mode'
     | 'response_type'
-    | 'login_hint'
     | 'code_challenge'
     | 'code_challenge_method'
   > & {
