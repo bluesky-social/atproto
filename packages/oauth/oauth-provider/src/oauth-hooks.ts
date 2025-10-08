@@ -113,6 +113,7 @@ export type OAuthHooks = {
     input: ResetPasswordRequestInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    account: Account | null
   }) => Awaitable<void>
 
   /**
@@ -123,6 +124,7 @@ export type OAuthHooks = {
     input: ResetPasswordConfirmInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    account: Account | null
   }) => Awaitable<void>
 
   /**

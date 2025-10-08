@@ -251,14 +251,18 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: ResetPasswordRequestInput,
   ) {
+    const account = await constantTime(
+      TIMING_ATTACK_MITIGATION_DELAY,
+      async () => {
+        return this.store.resetPasswordRequest(input)
+      },
+    )
+
     await this.hooks.onResetPasswordRequest?.call(null, {
       input,
       deviceId,
       deviceMetadata,
-    })
-
-    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      await this.store.resetPasswordRequest(input)
+      account,
     })
   }
 
@@ -267,14 +271,18 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: ResetPasswordConfirmInput,
   ) {
+    const account = await constantTime(
+      TIMING_ATTACK_MITIGATION_DELAY,
+      async () => {
+        return this.store.resetPasswordConfirm(input)
+      },
+    )
+
     await this.hooks.onResetPasswordConfirm?.call(null, {
       input,
       deviceId,
       deviceMetadata,
-    })
-
-    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      await this.store.resetPasswordConfirm(input)
+      account,
     })
   }
 
