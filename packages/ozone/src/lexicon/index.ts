@@ -297,12 +297,11 @@ export const TOOLS_OZONE_MODERATION = {
 }
 export const TOOLS_OZONE_REPORT = {
   DefsReasonAppeal: 'tools.ozone.report.defs#reasonAppeal',
-  DefsReasonViolenceAnimalWelfare:
-    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+  DefsReasonOther: 'tools.ozone.report.defs#reasonOther',
+  DefsReasonViolenceAnimal: 'tools.ozone.report.defs#reasonViolenceAnimal',
   DefsReasonViolenceThreats: 'tools.ozone.report.defs#reasonViolenceThreats',
   DefsReasonViolenceGraphicContent:
     'tools.ozone.report.defs#reasonViolenceGraphicContent',
-  DefsReasonViolenceSelfHarm: 'tools.ozone.report.defs#reasonViolenceSelfHarm',
   DefsReasonViolenceGlorification:
     'tools.ozone.report.defs#reasonViolenceGlorification',
   DefsReasonViolenceExtremistContent:
@@ -313,21 +312,16 @@ export const TOOLS_OZONE_REPORT = {
   DefsReasonSexualAbuseContent:
     'tools.ozone.report.defs#reasonSexualAbuseContent',
   DefsReasonSexualNCII: 'tools.ozone.report.defs#reasonSexualNCII',
-  DefsReasonSexualSextortion: 'tools.ozone.report.defs#reasonSexualSextortion',
   DefsReasonSexualDeepfake: 'tools.ozone.report.defs#reasonSexualDeepfake',
   DefsReasonSexualAnimal: 'tools.ozone.report.defs#reasonSexualAnimal',
   DefsReasonSexualUnlabeled: 'tools.ozone.report.defs#reasonSexualUnlabeled',
   DefsReasonSexualOther: 'tools.ozone.report.defs#reasonSexualOther',
   DefsReasonChildSafetyCSAM: 'tools.ozone.report.defs#reasonChildSafetyCSAM',
   DefsReasonChildSafetyGroom: 'tools.ozone.report.defs#reasonChildSafetyGroom',
-  DefsReasonChildSafetyMinorPrivacy:
-    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-  DefsReasonChildSafetyEndangerment:
-    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+  DefsReasonChildSafetyPrivacy:
+    'tools.ozone.report.defs#reasonChildSafetyPrivacy',
   DefsReasonChildSafetyHarassment:
     'tools.ozone.report.defs#reasonChildSafetyHarassment',
-  DefsReasonChildSafetyPromotion:
-    'tools.ozone.report.defs#reasonChildSafetyPromotion',
   DefsReasonChildSafetyOther: 'tools.ozone.report.defs#reasonChildSafetyOther',
   DefsReasonHarassmentTroll: 'tools.ozone.report.defs#reasonHarassmentTroll',
   DefsReasonHarassmentTargeted:
@@ -342,27 +336,20 @@ export const TOOLS_OZONE_REPORT = {
     'tools.ozone.report.defs#reasonMisleadingImpersonation',
   DefsReasonMisleadingSpam: 'tools.ozone.report.defs#reasonMisleadingSpam',
   DefsReasonMisleadingScam: 'tools.ozone.report.defs#reasonMisleadingScam',
-  DefsReasonMisleadingSyntheticContent:
-    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-  DefsReasonMisleadingMisinformation:
-    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+  DefsReasonMisleadingElections:
+    'tools.ozone.report.defs#reasonMisleadingElections',
   DefsReasonMisleadingOther: 'tools.ozone.report.defs#reasonMisleadingOther',
   DefsReasonRuleSiteSecurity: 'tools.ozone.report.defs#reasonRuleSiteSecurity',
-  DefsReasonRuleStolenContent:
-    'tools.ozone.report.defs#reasonRuleStolenContent',
   DefsReasonRuleProhibitedSales:
     'tools.ozone.report.defs#reasonRuleProhibitedSales',
   DefsReasonRuleBanEvasion: 'tools.ozone.report.defs#reasonRuleBanEvasion',
   DefsReasonRuleOther: 'tools.ozone.report.defs#reasonRuleOther',
-  DefsReasonCivicElectoralProcess:
-    'tools.ozone.report.defs#reasonCivicElectoralProcess',
-  DefsReasonCivicDisclosure: 'tools.ozone.report.defs#reasonCivicDisclosure',
-  DefsReasonCivicInterference:
-    'tools.ozone.report.defs#reasonCivicInterference',
-  DefsReasonCivicMisinformation:
-    'tools.ozone.report.defs#reasonCivicMisinformation',
-  DefsReasonCivicImpersonation:
-    'tools.ozone.report.defs#reasonCivicImpersonation',
+  DefsReasonSelfHarmContent: 'tools.ozone.report.defs#reasonSelfHarmContent',
+  DefsReasonSelfHarmED: 'tools.ozone.report.defs#reasonSelfHarmED',
+  DefsReasonSelfHarmStunts: 'tools.ozone.report.defs#reasonSelfHarmStunts',
+  DefsReasonSelfHarmSubstances:
+    'tools.ozone.report.defs#reasonSelfHarmSubstances',
+  DefsReasonSelfHarmOther: 'tools.ozone.report.defs#reasonSelfHarmOther',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
