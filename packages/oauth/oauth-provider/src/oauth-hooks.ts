@@ -116,6 +116,17 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
+   * This hook is called when a user requests a password reset, before the
+   * reset password request is triggered on the account store.
+   */
+  onResetPasswordRequested?: (data: {
+    input: ResetPasswordRequestInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
    * This hook is called when a user confirms a password reset, before the
    * password is actually reset on the account store.
    */
@@ -123,6 +134,17 @@ export type OAuthHooks = {
     input: ResetPasswordConfirmInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user confirms a password reset, and the
+   * password was successfully reset on the account store.
+   */
+  onResetPasswordConfirmed?: (data: {
+    input: ResetPasswordConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
   }) => Awaitable<void>
 
   /**

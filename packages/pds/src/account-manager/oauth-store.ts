@@ -331,13 +331,13 @@ export class OAuthStore
   async resetPasswordRequest({
     locale: _locale,
     email,
-  }: ResetPasswordRequestInput): Promise<void> {
+  }: ResetPasswordRequestInput): Promise<Account | null> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
       includeTakenDown: true,
     })
 
-    if (!account?.email || !account?.handle) return
+    if (!account?.email || !account?.handle) return null
 
     const { handle } = account
     const token = await this.accountManager.createEmailToken(
@@ -350,14 +350,24 @@ export class OAuthStore
       { handle, token },
       { to: account.email },
     )
+
+    return this.buildAccount(account)
   }
 
-  async resetPasswordConfirm(data: ResetPasswordConfirmInput): Promise<void> {
+  async resetPasswordConfirm(
+    data: ResetPasswordConfirmInput,
+  ): Promise<Account | null> {
     try {
-      await this.accountManager.resetPassword(data)
+      const did = await this.accountManager.resetPassword(data)
+      const account = await this.accountManager.getAccount(did, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
+
+      return account ? this.buildAccount(account) : null
     } catch (err) {
       if (err instanceof XrpcInvalidRequestError) {
-        throw new InvalidRequestError(err.message, err)
+        return null
       }
 
       throw err
