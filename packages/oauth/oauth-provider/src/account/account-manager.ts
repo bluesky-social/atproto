@@ -251,6 +251,12 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: ResetPasswordRequestInput,
   ) {
+    await this.hooks.onResetPasswordRequest?.call(null, {
+      input,
+      deviceId,
+      deviceMetadata,
+    })
+
     const account = await constantTime(
       TIMING_ATTACK_MITIGATION_DELAY,
       async () => {
@@ -258,7 +264,11 @@ export class AccountManager {
       },
     )
 
-    await this.hooks.onResetPasswordRequest?.call(null, {
+    if (!account) {
+      return // Silently ignore to prevent user enumeration
+    }
+
+    await this.hooks.onResetPasswordRequested?.call(null, {
       input,
       deviceId,
       deviceMetadata,
@@ -271,6 +281,12 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: ResetPasswordConfirmInput,
   ) {
+    await this.hooks.onResetPasswordConfirm?.call(null, {
+      input,
+      deviceId,
+      deviceMetadata,
+    })
+
     const account = await constantTime(
       TIMING_ATTACK_MITIGATION_DELAY,
       async () => {
@@ -278,7 +294,11 @@ export class AccountManager {
       },
     )
 
-    await this.hooks.onResetPasswordConfirm?.call(null, {
+    if (!account) {
+      throw new InvalidRequestError('Invalid token')
+    }
+
+    await this.hooks.onResetPasswordConfirmed?.call(null, {
       input,
       deviceId,
       deviceMetadata,
