@@ -257,7 +257,7 @@ export class AccountManager {
       deviceMetadata,
     })
 
-    await constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
+    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       const account = await this.store.resetPasswordRequest(input)
 
       if (!account) {
@@ -284,7 +284,7 @@ export class AccountManager {
       deviceMetadata,
     })
 
-    await constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
+    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       const account = await this.store.resetPasswordConfirm(input)
 
       if (!account) {
