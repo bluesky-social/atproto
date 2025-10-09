@@ -43,6 +43,7 @@ export * from './data-plane'
 export { BackgroundQueue } from './data-plane/server/background'
 export { Database } from './data-plane/server/db'
 export { StreamIndexer } from './data-plane/server/indexer'
+export { IndexingService } from './data-plane/server/indexing'
 export {
   BackfillIngester,
   FirehoseIngester,
