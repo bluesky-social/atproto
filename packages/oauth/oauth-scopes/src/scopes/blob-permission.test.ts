@@ -43,6 +43,7 @@ describe('BlobPermission', () => {
         expect(scope).toBe('blob:image/png')
       })
 
+      // XXX: is this in the right place?
       it('should return scope that accepts all MIME types', () => {
         const scope = BlobPermission.scopeNeededFor({
           mime: 'application/json',

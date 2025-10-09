@@ -145,6 +145,7 @@ import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/ident
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle.js'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+import * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites.js'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord.js'
@@ -2228,6 +2229,18 @@ export class ComAtprotoLexiconNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  resolveLexicon<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoLexiconResolveLexicon.QueryParams,
+      ComAtprotoLexiconResolveLexicon.HandlerInput,
+      ComAtprotoLexiconResolveLexicon.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.lexicon.resolveLexicon' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

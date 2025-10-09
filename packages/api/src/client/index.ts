@@ -182,6 +182,7 @@ import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs.js'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+import * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 import * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema.js'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs.js'
@@ -475,6 +476,7 @@ export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs.js'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+export * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 export * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema.js'
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs.js'
@@ -3990,6 +3992,17 @@ export class ComAtprotoLexiconNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.schema = new ComAtprotoLexiconSchemaRecord(client)
+  }
+
+  resolveLexicon(
+    params?: ComAtprotoLexiconResolveLexicon.QueryParams,
+    opts?: ComAtprotoLexiconResolveLexicon.CallOptions,
+  ): Promise<ComAtprotoLexiconResolveLexicon.Response> {
+    return this._client
+      .call('com.atproto.lexicon.resolveLexicon', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoLexiconResolveLexicon.toKnownErr(e)
+      })
   }
 }
 
