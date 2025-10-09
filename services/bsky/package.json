@@ -5,6 +5,8 @@
   "dependencies": {
     "@atproto/bsky": "workspace:^",
     "@atproto/crypto": "workspace:^",
-    "dd-trace": "3.13.2"
+    "@atproto/identity": "workspace:^",
+    "dd-trace": "3.13.2",
+    "prom-client": "^15.1.3"
   }
 }
