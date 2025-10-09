@@ -54,6 +54,7 @@ describe('duplicate record', () => {
         repost,
         WriteOpAction.Create,
         repost.createdAt,
+        TID.nextStr(),
       )
       uris.push(uri)
     }
@@ -61,12 +62,20 @@ describe('duplicate record', () => {
     let count = await countRecords(db, 'repost')
     expect(count).toBe(1)
 
-    await network.bsky.sub.indexingSvc.deleteRecord(uris[0], false)
+    await network.bsky.sub.indexingSvc.deleteRecord(
+      uris[0],
+      TID.nextStr(),
+      false,
+    )
 
     count = await countRecords(db, 'repost')
     expect(count).toBe(1)
 
-    await network.bsky.sub.indexingSvc.deleteRecord(uris[1], true)
+    await network.bsky.sub.indexingSvc.deleteRecord(
+      uris[1],
+      TID.nextStr(),
+      true,
+    )
 
     count = await countRecords(db, 'repost')
     expect(count).toBe(0)
@@ -94,6 +103,7 @@ describe('duplicate record', () => {
         like,
         WriteOpAction.Create,
         like.createdAt,
+        TID.nextStr(),
       )
       uris.push(uri)
     }
@@ -101,7 +111,11 @@ describe('duplicate record', () => {
     let count = await countRecords(db, 'like')
     expect(count).toBe(1)
 
-    await network.bsky.sub.indexingSvc.deleteRecord(uris[0], false)
+    await network.bsky.sub.indexingSvc.deleteRecord(
+      uris[0],
+      TID.nextStr(),
+      false,
+    )
 
     count = await countRecords(db, 'like')
     expect(count).toBe(1)
@@ -112,7 +126,11 @@ describe('duplicate record', () => {
       .executeTakeFirst()
     expect(got?.uri).toEqual(uris[1].toString())
 
-    await network.bsky.sub.indexingSvc.deleteRecord(uris[1], true)
+    await network.bsky.sub.indexingSvc.deleteRecord(
+      uris[1],
+      TID.nextStr(),
+      true,
+    )
 
     count = await countRecords(db, 'like')
     expect(count).toBe(0)
@@ -135,6 +153,7 @@ describe('duplicate record', () => {
         follow,
         WriteOpAction.Create,
         follow.createdAt,
+        TID.nextStr(),
       )
       uris.push(uri)
     }
@@ -142,12 +161,20 @@ describe('duplicate record', () => {
     let count = await countRecords(db, 'follow')
     expect(count).toBe(1)
 
-    await network.bsky.sub.indexingSvc.deleteRecord(uris[0], false)
+    await network.bsky.sub.indexingSvc.deleteRecord(
+      uris[0],
+      TID.nextStr(),
+      false,
+    )
 
     count = await countRecords(db, 'follow')
     expect(count).toBe(1)
 
-    await network.bsky.sub.indexingSvc.deleteRecord(uris[1], true)
+    await network.bsky.sub.indexingSvc.deleteRecord(
+      uris[1],
+      TID.nextStr(),
+      true,
+    )
 
     count = await countRecords(db, 'follow')
     expect(count).toBe(0)

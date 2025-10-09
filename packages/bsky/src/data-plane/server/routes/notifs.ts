@@ -44,7 +44,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             db.db
               .selectFrom('record as subject')
               .selectAll()
-              .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
+              .whereRef('subject.uri', '=', ref('notif.reasonSubject'))
+              .where('json', '!=', ''),
           ),
       )
       .if(priority, (qb) => qb.whereExists(priorityFollowQb))

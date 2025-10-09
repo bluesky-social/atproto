@@ -8,6 +8,7 @@ import { BackgroundQueue } from '../background'
 import { Database } from '../db'
 import { DatabaseSchema } from '../db/database-schema'
 import { Notification } from '../db/tables/notification'
+import { excluded } from '../db/util'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -66,20 +67,34 @@ export class RecordProcessor<T, S> {
     cid: CID,
     obj: unknown,
     timestamp: string,
+    rev: string,
     opts?: { disableNotifs?: boolean },
   ) {
     this.assertValidRecord(obj)
-    await this.db
+    const applied = await this.db
       .insertInto('record')
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
         did: uri.host,
         json: stringifyLex(obj),
+        rev,
         indexedAt: timestamp,
       })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({
+            rev: excluded(this.db, 'rev'),
+            cid: excluded(this.db, 'cid'),
+            json: excluded(this.db, 'json'),
+            indexedAt: excluded(this.db, 'indexedAt'),
+          })
+          .where('record.rev', '<=', excluded(this.db, 'rev')),
+      )
+      .returning('uri')
+      .executeTakeFirst()
+    if (!applied) return // stale write
     const inserted = await this.params.insertFn(
       this.db,
       uri,
@@ -119,18 +134,34 @@ export class RecordProcessor<T, S> {
     cid: CID,
     obj: unknown,
     timestamp: string,
+    rev: string,
     opts?: { disableNotifs?: boolean },
   ) {
     this.assertValidRecord(obj)
-    await this.db
-      .updateTable('record')
-      .where('uri', '=', uri.toString())
-      .set({
+    const applied = await this.db
+      .insertInto('record')
+      .values({
+        uri: uri.toString(),
         cid: cid.toString(),
+        did: uri.host,
         json: stringifyLex(obj),
+        rev,
         indexedAt: timestamp,
       })
-      .execute()
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({
+            rev: excluded(this.db, 'rev'),
+            cid: excluded(this.db, 'cid'),
+            json: excluded(this.db, 'json'),
+            indexedAt: excluded(this.db, 'indexedAt'),
+          })
+          .where('record.rev', '<=', excluded(this.db, 'rev')),
+      )
+      .returning('uri')
+      .executeTakeFirst()
+    if (!applied) return // stale write
     // If the updated record was a dupe, update dupe info for it
     const dupe = await this.params.findDuplicate(this.db, uri, obj)
     if (dupe) {
@@ -153,7 +184,7 @@ export class RecordProcessor<T, S> {
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) {
       // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
-      return this.insertRecord(uri, cid, obj, timestamp)
+      return this.insertRecord(uri, cid, obj, timestamp, rev, opts)
     }
     this.aggregateOnCommit(deleted)
     const inserted = await this.params.insertFn(
@@ -174,11 +205,16 @@ export class RecordProcessor<T, S> {
     }
   }
 
-  async deleteRecord(uri: AtUri, cascading = false) {
-    await this.db
-      .deleteFrom('record')
+  async deleteRecord(uri: AtUri, rev: string, cascading = false) {
+    // @TODO track timestamp from deletion. periodically cleanup tombstones?
+    const applied = await this.db
+      .updateTable('record')
       .where('uri', '=', uri.toString())
-      .execute()
+      .where('rev', '<=', rev)
+      .set({ rev, json: '', cid: '' })
+      .returning('uri')
+      .executeTakeFirst()
+    if (!applied) return // stale write
     await this.db
       .deleteFrom('duplicate_record')
       .where('uri', '=', uri.toString())

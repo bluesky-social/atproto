@@ -10,6 +10,14 @@ export type { DatabaseSchema }
 
 export { RepoSubscription } from './subscription'
 
+export { StreamIndexer } from './indexer'
+
+export {
+  BackfillIngester,
+  FirehoseIngester,
+  type IngesterOptions,
+} from './ingester'
+
 export class DataPlaneServer {
   constructor(
     public server: http.Server,

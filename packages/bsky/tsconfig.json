@@ -3,5 +3,11 @@
   "references": [
     { "path": "./tsconfig.build.json" },
     { "path": "./tsconfig.tests.json" }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "target": "ES2015",
+      "esModuleInterop": true
+    }
+  }
 }

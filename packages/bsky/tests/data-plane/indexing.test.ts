@@ -428,6 +428,38 @@ describe('indexing', () => {
     await network.bsky.sub.indexingSvc.deleteRecord(...del(follow[0]))
   })
 
+  it('skips over stale writes based on rev.', async () => {
+    const now = new Date().toISOString()
+    const create = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedPost,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'hi',
+        createdAt: now,
+      } as AppBskyFeedPost.Record,
+    })
+    const update = await prepareUpdate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedPost,
+      rkey: create[0].rkey,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'bye',
+        createdAt: now,
+      } as AppBskyFeedPost.Record,
+    })
+    update[5] = create[5] // same rev
+    await network.bsky.sub.indexingSvc.indexRecord(...create)
+    await network.bsky.sub.indexingSvc.indexRecord(...update)
+    const record = await network.bsky.sub.indexingSvc.db.db
+      .selectFrom('record')
+      .selectAll()
+      .where('uri', '=', create[0].toString())
+      .executeTakeFirstOrThrow()
+    expect(JSON.parse(record.json).text).toBe('hi')
+  })
+
   describe('indexRepo', () => {
     beforeAll(async () => {
       await network.bsky.sub.restart()
@@ -787,7 +819,7 @@ async function prepareCreate(opts: {
   rkey?: string
   record: unknown
   timestamp?: string
-}): Promise<[AtUri, CID, unknown, WriteOpAction.Create, string]> {
+}): Promise<[AtUri, CID, unknown, WriteOpAction.Create, string, string]> {
   const rkey = opts.rkey ?? TID.nextStr()
   return [
     AtUri.make(opts.did, opts.collection, rkey),
@@ -795,6 +827,7 @@ async function prepareCreate(opts: {
     opts.record,
     WriteOpAction.Create,
     opts.timestamp ?? new Date().toISOString(),
+    TID.nextStr(),
   ]
 }
 
@@ -804,13 +837,14 @@ async function prepareUpdate(opts: {
   rkey: string
   record: unknown
   timestamp?: string
-}): Promise<[AtUri, CID, unknown, WriteOpAction.Update, string]> {
+}): Promise<[AtUri, CID, unknown, WriteOpAction.Update, string, string]> {
   return [
     AtUri.make(opts.did, opts.collection, opts.rkey),
     await cidForCbor(opts.record),
     opts.record,
     WriteOpAction.Update,
     opts.timestamp ?? new Date().toISOString(),
+    TID.nextStr(),
   ]
 }
 
@@ -818,6 +852,6 @@ function prepareDelete(opts: {
   did: string
   collection: string
   rkey: string
-}): [AtUri] {
-  return [AtUri.make(opts.did, opts.collection, opts.rkey)]
+}): [AtUri, string] {
+  return [AtUri.make(opts.did, opts.collection, opts.rkey), TID.nextStr()]
 }

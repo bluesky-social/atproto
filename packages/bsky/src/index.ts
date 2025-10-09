@@ -34,12 +34,21 @@ import { createStashClient } from './stash'
 import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
 
+export { createMetricsServer } from './api'
+export { httpLogger } from './logger'
 export { ServerConfig } from './config'
 export type { ServerConfigValues } from './config'
 export { AppContext } from './context'
 export * from './data-plane'
 export { BackgroundQueue } from './data-plane/server/background'
 export { Database } from './data-plane/server/db'
+export { StreamIndexer } from './data-plane/server/indexer'
+export {
+  BackfillIngester,
+  FirehoseIngester,
+  type IngesterOptions,
+  RepoBackfiller,
+} from './data-plane/server/ingester'
 export { Redis } from './redis'
 
 export class BskyAppView {

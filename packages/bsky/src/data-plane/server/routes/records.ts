@@ -43,6 +43,7 @@ export const getRecords =
           .selectFrom('record')
           .selectAll()
           .where('uri', 'in', validUris)
+          .where('json', '!=', '')
           .execute()
       : []
     const byUri = keyBy(res, 'uri')

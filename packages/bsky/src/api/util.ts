@@ -1,3 +1,6 @@
+import http from 'node:http'
+import { Registry } from 'prom-client'
+import { httpLogger } from '../logger'
 import { ParsedLabelers, formatLabelerHeader } from '../util'
 
 export const BSKY_USER_AGENT = 'BskyAppView'
@@ -25,4 +28,24 @@ export const resHeaders = (
 export const clearlyBadCursor = (cursor?: string) => {
   // hallmark of v1 cursor, highly unlikely in v2 cursors based on time or rkeys
   return !!cursor?.includes('::')
+}
+
+export const createMetricsServer = (registry: Registry) => {
+  return http.createServer(async (req, res) => {
+    try {
+      if (req.url === '/metrics') {
+        res.statusCode = 200
+        res.setHeader('content-type', registry.contentType)
+        return res.end(await registry.metrics())
+      }
+      res.statusCode = 404
+      res.setHeader('content-type', 'text/plain')
+      return res.end('not found')
+    } catch (err) {
+      httpLogger.error({ err }, 'internal server error')
+      res.statusCode = 500
+      res.setHeader('content-type', 'text/plain')
+      return res.end('internal server error')
+    }
+  })
 }

@@ -85,6 +85,8 @@ export * as blobResolver from './blob-resolver'
 
 export * as external from './external'
 
+export { createMetricsServer } from './util'
+
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
   getTimeline(server, ctx)

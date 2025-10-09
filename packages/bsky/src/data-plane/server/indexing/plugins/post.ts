@@ -567,6 +567,7 @@ async function getThreadgateRecord(db: DatabaseSchema, postUri: string) {
   const results = await db
     .selectFrom('record')
     .where('record.uri', '=', threadgateRecordUri)
+    .where('json', '!=', '')
     .selectAll()
     .execute()
   const threadgateRecord = results.find(
@@ -586,6 +587,7 @@ async function validatePostEmbed(
   const postgateRecord = await db
     .selectFrom('record')
     .where('record.uri', '=', postgateRecordUri)
+    .where('json', '!=', '')
     .selectAll()
     .executeTakeFirst()
   if (!postgateRecord) {
@@ -617,6 +619,7 @@ async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
   const results = await db
     .selectFrom('record')
     .where('record.uri', 'in', [replyRoot, replyGate, replyParent])
+    .where('record.json', '!=', '')
     .leftJoin('post', 'post.uri', 'record.uri')
     .selectAll('post')
     .select(['record.uri', 'json'])
