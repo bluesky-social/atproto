@@ -119,27 +119,27 @@ export class LabelIndexer {
   }
   static metrics = {
     processed: new Counter({
-      name: 'messages_processed_total',
+      name: 'label_indexer_messages_processed_total',
       help: 'total processed label stream messages',
       labelNames: ['stream', 'group', 'consumer'],
     }),
     failed: new Counter({
-      name: 'messages_failed_total',
+      name: 'label_indexer_messages_failed_total',
       help: 'total failed label stream messages',
       labelNames: ['stream', 'group', 'consumer'],
     }),
     waiting: new Gauge({
-      name: 'messages_waiting_count',
+      name: 'label_indexer_messages_waiting_count',
       help: 'count of waiting label stream messages',
       labelNames: ['stream', 'group', 'consumer'],
     }),
     running: new Gauge({
-      name: 'messages_running_count',
+      name: 'label_indexer_messages_running_count',
       help: 'count of running label stream messages',
       labelNames: ['stream', 'group', 'consumer'],
     }),
     timing: new Histogram({
-      name: 'message_processing_time',
+      name: 'label_indexer_message_processing_time',
       help: 'time to process each message',
       labelNames: ['stream', 'group', 'consumer'],
     }),

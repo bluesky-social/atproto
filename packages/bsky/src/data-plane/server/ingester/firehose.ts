@@ -92,12 +92,12 @@ export class FirehoseIngester {
   }
   static metrics = {
     firehoseEvent: new Counter({
-      name: 'firehose_events_total',
+      name: 'firehose_ingester_incoming_events_total',
       help: 'total ingested firehose events',
       labelNames: ['stream', 'host'],
     }),
     streamEvent: new Counter({
-      name: 'stream_events_total',
+      name: 'firehose_ingester_stream_events_total',
       help: 'total ingested stream events',
       labelNames: ['stream', 'host'],
     }),

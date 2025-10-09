@@ -98,12 +98,12 @@ export class LabelerIngester {
   }
   static metrics = {
     labelerEvent: new Counter({
-      name: 'labeler_events_total',
+      name: 'labeler_ingester_incoming_events_total',
       help: 'total ingested labeler events',
       labelNames: ['stream', 'host'],
     }),
     streamEvent: new Counter({
-      name: 'label_stream_events_total',
+      name: 'labeler_ingester_stream_events_total',
       help: 'total ingested label stream events',
       labelNames: ['stream', 'host'],
     }),
