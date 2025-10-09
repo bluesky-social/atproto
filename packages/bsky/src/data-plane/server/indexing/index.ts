@@ -223,6 +223,7 @@ export class IndexingService {
 
   async indexLabels(labels: Label[]) {
     this.db.assertNotTransaction()
+    if (!labels.length) return
     await this.db.db
       .insertInto('label')
       .values(
@@ -244,7 +245,7 @@ export class IndexingService {
             cts: excluded(this.db.db, 'cts'),
             exp: excluded(this.db.db, 'exp'),
           })
-          .where('cts', '<', excluded(this.db.db, 'cts')),
+          .where('label.cts', '<', excluded<string>(this.db.db, 'cts')),
       )
       .execute()
   }
