@@ -10,7 +10,7 @@ const {
   httpLogger,
 } = require('@atproto/bsky')
 
-export async function main() {
+async function main() {
   const group = process.env.BACKFILLER_GROUP || 'repo_backfill_group'
   const consumer = process.env.BACKFILLER_CONSUMER
   const concurrency = process.env.BACKFILLER_CONCURRENCY

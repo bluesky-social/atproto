@@ -11,7 +11,7 @@ const {
   httpLogger,
 } = require('@atproto/bsky')
 
-export async function main() {
+async function main() {
   const hosts = process.env.INGESTER_HOSTS
   const firehoseStream = process.env.INGESTER_FIREHOSE_STREAM || 'firehose_live'
   const repoStream = process.env.INGESTER_REPO_STREAM || 'repo_backfill'
