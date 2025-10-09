@@ -12,11 +12,13 @@ import {
   verifyRepo,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
+import { Label } from '../../../lexicon/types/com/atproto/label/defs'
 import { subLogger } from '../../../logger'
 import { retryXrpc } from '../../../util/retry'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'
 import { Actor } from '../db/tables/actor'
+import { excluded } from '../db/util'
 import * as Block from './plugins/block'
 import * as ChatDeclaration from './plugins/chat-declaration'
 import * as FeedGenerator from './plugins/feed-generator'
@@ -217,6 +219,34 @@ export class IndexingService {
         }
       }),
     )
+  }
+
+  async indexLabels(labels: Label[]) {
+    this.db.assertNotTransaction()
+    await this.db.db
+      .insertInto('label')
+      .values(
+        labels.map((l) => ({
+          src: l.src,
+          uri: l.uri,
+          cid: l.cid ?? '',
+          val: l.val,
+          neg: !!l.neg,
+          cts: l.cts,
+          exp: l.exp,
+        })),
+      )
+      .onConflict((oc) =>
+        oc
+          .constraint('label_pkey')
+          .doUpdateSet({
+            neg: excluded(this.db.db, 'neg'),
+            cts: excluded(this.db.db, 'cts'),
+            exp: excluded(this.db.db, 'exp'),
+          })
+          .where('cts', '<', excluded(this.db.db, 'cts')),
+      )
+      .execute()
   }
 
   async getCurrentRecords(did: string) {

@@ -1,3 +1,8 @@
+import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import {
+  Info as LabelInfoEvent,
+  Labels as LabelsEvent,
+} from '../../lexicon/types/com/atproto/label/subscribeLabels'
 import {
   Account as AccountEvent,
   Commit as CommitEvent,
@@ -6,12 +11,19 @@ import {
 
 export type FirehoseEvent = CommitEvent | AccountEvent | IdentityEvent
 
+export type LabelerEvent = LabelsEvent | LabelInfoEvent
+
 export type StreamEvent =
   | ({ type: 'create'; record: unknown; cid: string } & BaseOpEvent)
   | ({ type: 'update'; record: unknown; cid: string } & BaseOpEvent)
   | ({ type: 'delete' } & BaseOpEvent)
   | ({ type: 'account' } & AccountEvent)
   | ({ type: 'identity' } & IdentityEvent)
+
+export type LabelStreamEvent = {
+  type: 'label'
+  label: Label
+}
 
 export type BackfillEvent = {
   did: string

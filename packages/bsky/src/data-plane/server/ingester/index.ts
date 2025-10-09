@@ -1,4 +1,5 @@
 export * from './types'
 export { FirehoseIngester } from './firehose'
+export { LabelerIngester } from './labels'
 export { BackfillIngester } from './backfill'
 export { RepoBackfiller } from './repo-backfiller'

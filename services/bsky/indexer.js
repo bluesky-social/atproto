@@ -7,6 +7,7 @@ const {
   BackgroundQueue,
   Database,
   IndexingService,
+  LabelIndexer,
   Redis,
   StreamIndexer,
   createMetricsServer,
@@ -17,7 +18,9 @@ const { IdResolver } = require('@atproto/identity')
 async function main() {
   const streams =
     process.env.INDEXER_STREAMS || 'firehose_live,firehose_backfill'
+  const labelStream = process.env.INDEXER_LABEL_STREAM || 'label_live'
   const group = process.env.INDEXER_GROUP || 'firehose_group'
+  const labelGroup = process.env.INDEXER_LABEL_GROUP || 'label_group'
   const consumer = process.env.INDEXER_CONSUMER
   const concurrency = parseInt(process.env.INDEXER_CONCURRENCY || '10', 10)
   const redisHost = process.env.REDIS_HOST
@@ -51,14 +54,31 @@ async function main() {
       ),
     })
   })
+  const labelRedis = new Redis({ host: redisHost })
+  const labelIndexer = new LabelIndexer({
+    stream: labelStream,
+    group: labelGroup,
+    consumer,
+    redis: labelRedis,
+    concurrency,
+    indexingService: new IndexingService(
+      db,
+      new IdResolver(), // @TODO redis-cached
+      new BackgroundQueue(db),
+    ),
+  })
   StreamIndexer.metrics.register(metricsRegistry)
+  LabelIndexer.metrics.register(metricsRegistry)
   // start
   await once(server.listen(metricsPort), 'listening')
   httpLogger.info({ address: server.address() }, 'server listening')
   indexers.map((indexer) => indexer.run())
+  labelIndexer.run()
   // stop
   process.on('SIGINT', async () => {
     httpLogger.info('stopping')
+    await labelIndexer.stop()
+    await labelRedis.destroy()
     await Promise.all(indexers.map((indexer) => indexer.stop()))
     await Promise.all(redises.map((redis) => redis.destroy()))
     await db.close()
