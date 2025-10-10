@@ -1,4 +1,4 @@
-/* eslint-env node */
+'use strict' /* eslint-env node */
 
 const assert = require('node:assert')
 const { once } = require('node:events')
@@ -21,7 +21,7 @@ async function main() {
     process.env.BACKFILLER_FIREHOSE_STREAM || 'firehose_backfill'
   const redisHost = process.env.REDIS_HOST
   const metricsPort = parseInt(process.env.METRICS_PORT || '4010', 10)
-  assert(redisHost, 'must set REDIS_HOST, e.g. redis://localhost:6380')
+  assert(redisHost, 'must set REDIS_HOST, e.g. localhost:6380')
   assert(consumer, 'must set BACKFILLER_CONSUMER, e.g. one')
   const metricsRegistry = new Registry()
   collectDefaultMetrics({ register: metricsRegistry })
@@ -41,7 +41,7 @@ async function main() {
   httpLogger.info({ address: server.address() }, 'server listening')
   ingester.run()
   // stop
-  process.on('SIGINT', async () => {
+  process.on('SIGTERM', async () => {
     httpLogger.info('stopping')
     await ingester.stop()
     await redis.destroy()

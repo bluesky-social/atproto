@@ -1,4 +1,4 @@
-/* eslint-env node */
+'use strict' /* eslint-env node */
 
 const assert = require('node:assert')
 const { once } = require('node:events')
@@ -28,7 +28,7 @@ async function main() {
   const postgresUrl = process.env.DB_POSTGRES_URL
   const metricsPort = parseInt(process.env.METRICS_PORT || '4020', 10)
   assert(consumer, 'must set INDEXER_CONSUMER, e.g. one')
-  assert(redisHost, 'must set REDIS_HOST, e.g. redis://localhost:6380')
+  assert(redisHost, 'must set REDIS_HOST, e.g. localhost:6380')
   assert(
     postgresUrl,
     'must set DB_POSTGRES_URL, e.g. postgres://user:pass@localhost:5432/postgres',
@@ -80,7 +80,7 @@ async function main() {
   indexers.map((indexer) => indexer.run())
   labelIndexer.run()
   // stop
-  process.on('SIGINT', async () => {
+  process.on('SIGTERM', async () => {
     httpLogger.info('stopping')
     await labelIndexer.stop()
     await labelRedis.destroy()

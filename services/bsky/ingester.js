@@ -1,4 +1,4 @@
-/* eslint-env node */
+'use strict' /* eslint-env node */
 
 const assert = require('node:assert')
 const { once } = require('node:events')
@@ -24,7 +24,7 @@ async function main() {
     hosts,
     'must set INGESTER_HOSTS, e.g. https://morel.us-east.host.bsky.network',
   )
-  assert(redisHost, 'must set REDIS_HOST, e.g. redis://localhost:6380')
+  assert(redisHost, 'must set REDIS_HOST, e.g. localhost:6380')
   const metricsRegistry = new Registry()
   collectDefaultMetrics({ register: metricsRegistry })
   const server = createMetricsServer(metricsRegistry)
@@ -62,7 +62,7 @@ async function main() {
   labelerIngesters.forEach((ingester) => ingester.run())
   backfillIngesters.forEach((ingester) => ingester.run())
   // stop
-  process.on('SIGINT', async () => {
+  process.on('SIGTERM', async () => {
     httpLogger.info('stopping')
     await Promise.all([
       ...firehoseIngesters.map((ingester) => ingester.stop()),
