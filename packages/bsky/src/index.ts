@@ -51,6 +51,7 @@ export {
   LabelerIngester,
   RepoBackfiller,
 } from './data-plane/server/ingester'
+export { RedisDidCache } from './data-plane/server'
 export { Redis } from './redis'
 
 export class BskyAppView {

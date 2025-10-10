@@ -9,6 +9,7 @@ const {
   IndexingService,
   LabelIndexer,
   Redis,
+  RedisDidCache,
   StreamIndexer,
   createMetricsServer,
   httpLogger,
@@ -37,6 +38,10 @@ async function main() {
   const server = createMetricsServer(metricsRegistry)
   const db = new Database({ url: postgresUrl })
   await db.migrateToLatestOrThrow()
+  const didCacheRedis = new Redis({ host: redisHost, namespace: 'identity' })
+  const idResolver = new IdResolver({
+    didCache: new RedisDidCache(didCacheRedis),
+  })
   // redis stream indexers
   // need separate redises for separate blocking stream reads
   const redises = streams.split(',').map(() => new Redis({ host: redisHost }))
@@ -49,7 +54,7 @@ async function main() {
       concurrency,
       indexingService: new IndexingService(
         db,
-        new IdResolver(), // @TODO redis-cached
+        idResolver,
         new BackgroundQueue(db),
       ),
     })
@@ -63,7 +68,7 @@ async function main() {
     concurrency,
     indexingService: new IndexingService(
       db,
-      new IdResolver(), // @TODO redis-cached
+      idResolver,
       new BackgroundQueue(db),
     ),
   })
@@ -81,6 +86,7 @@ async function main() {
     await labelRedis.destroy()
     await Promise.all(indexers.map((indexer) => indexer.stop()))
     await Promise.all(redises.map((redis) => redis.destroy()))
+    await didCacheRedis.destroy()
     await db.close()
     server.close()
     await once(server, 'close')

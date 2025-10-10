@@ -2,7 +2,7 @@ import events from 'node:events'
 import http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
-import { IdResolver, MemoryCache } from '@atproto/identity'
+import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { Database, DatabaseSchema } from './db'
 import createRoutes from './routes'
 
@@ -11,6 +11,8 @@ export type { DatabaseSchema }
 export { RepoSubscription } from './subscription'
 
 export { StreamIndexer } from './indexer'
+
+export { RedisDidCache } from './redis-did-cache'
 
 export {
   BackfillIngester,
@@ -24,9 +26,13 @@ export class DataPlaneServer {
     public idResolver: IdResolver,
   ) {}
 
-  static async create(db: Database, port: number, plcUrl?: string) {
+  static async create(
+    db: Database,
+    port: number,
+    plcUrl?: string,
+    didCache: DidCache = new MemoryCache(),
+  ) {
     const app = express()
-    const didCache = new MemoryCache()
     const idResolver = new IdResolver({ plcUrl, didCache })
     const routes = createRoutes(db, idResolver)
     app.use(expressConnectMiddleware({ routes }))
