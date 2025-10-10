@@ -67,7 +67,7 @@ export class StreamIndexer {
     })()
   }
   private async process(event: StreamEvent) {
-    // @TODO index handles, account, and identity events
+    // @TODO account deletions, better handle refreshes
     const { indexingService } = this.opts
     if (
       event.type === 'create' ||
@@ -105,6 +105,18 @@ export class StreamIndexer {
         CID.parse(event.commit),
         event.rev,
       )
+      if (event.collection === 'app.bsky.actor.profile') {
+        await indexingService.indexHandle(event.did, event.time)
+      }
+    } else if (event.type === 'account') {
+      await indexingService.updateActorStatus(
+        event.did,
+        event.active,
+        event.status,
+      )
+      await indexingService.indexHandle(event.did, event.time)
+    } else if (event.type === 'identity') {
+      await indexingService.indexHandle(event.did, event.time)
     }
   }
   private async handleMessage(msg: StreamOutputMessage) {
