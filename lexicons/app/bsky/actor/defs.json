@@ -405,7 +405,7 @@
         },
         "prioritizeFollowedUsers": {
           "type": "boolean",
-          "description": "Show followed users at the top of all replies."
+          "description": "DEPRECATED: Show followed users at the top of all replies."
         }
       }
     },

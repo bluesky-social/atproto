@@ -35,7 +35,7 @@
           },
           "prioritizeFollowedUsers": {
             "type": "boolean",
-            "description": "Whether to prioritize posts from followed users. It only has effect when the user is authenticated.",
+            "description": "DEPRECATED: Whether to prioritize posts from followed users. It only has effect when the user is authenticated.",
             "default": false
           },
           "sort": {

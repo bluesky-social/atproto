@@ -545,7 +545,8 @@ export const schemaDict = {
           },
           prioritizeFollowedUsers: {
             type: 'boolean',
-            description: 'Show followed users at the top of all replies.',
+            description:
+              'DEPRECATED: Show followed users at the top of all replies.',
           },
         },
       },
@@ -6869,7 +6870,7 @@ export const schemaDict = {
             prioritizeFollowedUsers: {
               type: 'boolean',
               description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
+                'DEPRECATED: Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
               default: false,
             },
             sort: {
