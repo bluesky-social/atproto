@@ -181,12 +181,7 @@ function applyBumping(
     return null
   }
 
-  const {
-    opDid,
-    viewer,
-    threadTagsBumpDown,
-    threadTagsHide,
-  } = opts
+  const { opDid, viewer, threadTagsBumpDown, threadTagsHide } = opts
 
   type BumpDirection = 'up' | 'down'
   type BumpPredicateFn = (i: ThreadMaybeOtherPostNode) => boolean
@@ -225,9 +220,7 @@ function applyBumping(
     // Followers posts.
     [
       'up',
-      (i) =>
-        i.type === 'post' &&
-        !!i.item.value.post.author.viewer?.following,
+      (i) => i.type === 'post' && !!i.item.value.post.author.viewer?.following,
     ],
     // Bump-down tags.
     [

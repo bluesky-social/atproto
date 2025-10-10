@@ -1108,10 +1108,7 @@ describe('appview thread views v2', () => {
           await network.processAll()
         })
 
-        const threadForPostAndViewer = async (
-          post: string,
-          viewer: string,
-        ) => {
+        const threadForPostAndViewer = async (post: string, viewer: string) => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
               anchor: post,
