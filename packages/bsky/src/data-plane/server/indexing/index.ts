@@ -286,7 +286,7 @@ export class IndexingService {
             commitCid: sql`${excluded('commitCid')}`,
             repoRev: sql`${excluded('repoRev')}`,
           })
-          .whereRef('actor_sync.repoRev', '<=', excluded('repoRev'))
+          .whereRef('actor_sync.repoRev', '<', excluded('repoRev'))
       })
       .execute()
   }
