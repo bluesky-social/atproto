@@ -220,6 +220,7 @@ const insertFn = async (
             uri: record.uri.toString(),
             quoteCount: db
               .selectFrom('quote')
+              .where('quote.subject', '=', record.uri.toString())
               .where('quote.subjectCid', '=', record.cid.toString())
               .select(countAll.as('count')),
           })
