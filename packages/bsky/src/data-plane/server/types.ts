@@ -9,6 +9,8 @@ import {
   Identity as IdentityEvent,
 } from '../../lexicon/types/com/atproto/sync/subscribeRepos'
 
+export const SEQ_BACKFILL = -1
+
 export type FirehoseEvent = CommitEvent | AccountEvent | IdentityEvent
 
 export type LabelerEvent = LabelsEvent | LabelInfoEvent
@@ -17,6 +19,7 @@ export type StreamEvent =
   | ({ type: 'create'; record: unknown; cid: string } & BaseOpEvent)
   | ({ type: 'update'; record: unknown; cid: string } & BaseOpEvent)
   | ({ type: 'delete' } & BaseOpEvent)
+  | { type: 'repo'; time: string; commit: string; rev: string; did: string }
   | ({ type: 'account' } & AccountEvent)
   | ({ type: 'identity' } & IdentityEvent)
 

@@ -9,7 +9,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { dataplaneLogger } from '../../../logger'
 import { Redis, StreamOutputMessage } from '../../../redis'
 import { IndexingService } from '../indexing'
-import { StreamEvent } from '../types'
+import { SEQ_BACKFILL, StreamEvent } from '../types'
 
 export class StreamIndexer {
   started = false
@@ -100,14 +100,23 @@ export class StreamIndexer {
           event.rev,
         )
       }
+      if (event.seq !== SEQ_BACKFILL) {
+        // track commit via "repo" event instead, to avoid lots of duplicate setCommitLastSeen() during backfill
+        await indexingService.setCommitLastSeen(
+          event.did,
+          CID.parse(event.commit),
+          event.rev,
+        )
+      }
+      if (event.collection === 'app.bsky.actor.profile') {
+        await indexingService.indexHandle(event.did, event.time)
+      }
+    } else if (event.type === 'repo') {
       await indexingService.setCommitLastSeen(
         event.did,
         CID.parse(event.commit),
         event.rev,
       )
-      if (event.collection === 'app.bsky.actor.profile') {
-        await indexingService.indexHandle(event.did, event.time)
-      }
     } else if (event.type === 'account') {
       await indexingService.updateActorStatus(
         event.did,

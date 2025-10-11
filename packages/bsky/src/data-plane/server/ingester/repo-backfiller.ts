@@ -4,7 +4,7 @@ import { chunkArray } from '@atproto/common'
 import { getAndParseRecord, readCarWithRoot, verifyRepo } from '@atproto/repo'
 import { dataplaneLogger } from '../../../logger'
 import { Redis, StreamOutputMessage } from '../../../redis'
-import { BackfillEvent, StreamEvent } from '../types'
+import { BackfillEvent, SEQ_BACKFILL, StreamEvent } from '../types'
 import { streamLengthBackpressure } from './util'
 // import { Counter, Gauge, Registry } from 'prom-client'
 
@@ -91,10 +91,17 @@ export class RepoBackfiller {
           record: (await getAndParseRecord(blocks, op.cid)).record,
           commit: root.toString(),
           rev: repo.commit.rev,
-          seq: -1,
+          seq: SEQ_BACKFILL,
           time: now,
         })),
       )
+      streamEvents.push({
+        type: 'repo',
+        did: event.did,
+        rev: repo.commit.rev,
+        commit: repo.commit.cid.toString(),
+        time: now,
+      })
       await this.opts.redis.addMultiToStream(
         streamEvents.map((evt) => ({
           id: '*',
