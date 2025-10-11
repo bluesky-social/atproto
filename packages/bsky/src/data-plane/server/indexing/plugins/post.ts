@@ -437,6 +437,7 @@ const deleteFn = async (
           uri: deletedPosts.embedUri,
           quoteCount: db
             .selectFrom('quote')
+            .where('quote.subject', '=', deletedPosts.embedUri)
             .where('quote.subjectCid', '=', deletedPosts.embedCid.toString())
             .select(countAll.as('count')),
         })
