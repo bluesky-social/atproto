@@ -5,6 +5,7 @@ import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../../../lexicon/lexicons'
 import { BackgroundQueue } from '../background'
+import { Coalescer } from '../coalescer'
 import { Database } from '../db'
 import { DatabaseSchema } from '../db/database-schema'
 import { Notification } from '../db/tables/notification'
@@ -32,7 +33,11 @@ type RecordProcessorParams<T, S> = {
     prev: S,
     replacedBy: S | null,
   ) => { notifs: Notif[]; toDelete: string[] }
-  updateAggregates?: (db: DatabaseSchema, obj: S) => Promise<void>
+  updateAggregates?: (
+    db: DatabaseSchema,
+    obj: S,
+    coalescer: Coalescer,
+  ) => Promise<void>
 }
 
 type Notif = Insertable<Notification>
@@ -40,12 +45,14 @@ type Notif = Insertable<Notification>
 export class RecordProcessor<T, S> {
   collection: string
   db: DatabaseSchema
+  coalescer: Coalescer
   constructor(
     private appDb: Database,
     private background: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
+    this.coalescer = new Coalescer()
     this.collection = this.params.lexId
   }
 
@@ -324,7 +331,9 @@ export class RecordProcessor<T, S> {
     const { updateAggregates } = this.params
     if (!updateAggregates) return
     this.appDb.onCommit(() => {
-      this.background.add((db) => updateAggregates(db.db, indexed))
+      this.background.add((db) =>
+        updateAggregates(db.db, indexed, this.coalescer),
+      )
     })
   }
 }
