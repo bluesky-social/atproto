@@ -27,7 +27,6 @@ import {
 import { RecordWithMedia } from '../../../../views/types'
 import { parsePostgate } from '../../../../views/util'
 import { BackgroundQueue } from '../../background'
-import { Coalescer } from '../../coalescer'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { Notification } from '../../db/tables/notification'
@@ -470,11 +469,7 @@ const notifsForDelete = (
   }
 }
 
-const updateAggregates = async (
-  db: DatabaseSchema,
-  postIdx: IndexedPost,
-  coalescer: Coalescer,
-) => {
+const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
   const replyCountQb = postIdx.post.replyParent
     ? db
         .insertInto('post_agg')
@@ -496,26 +491,19 @@ const updateAggregates = async (
             .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
         )
     : null
-  const postsCountPromise = coalescer.run(
-    `profile_agg.postsCount:${postIdx.post.creator}`,
-    () =>
-      db
-        .insertInto('profile_agg')
-        .values({
-          did: postIdx.post.creator,
-          postsCount: db
-            .selectFrom('post')
-            .where('post.creator', '=', postIdx.post.creator)
-            .select(countAll.as('count')),
-        })
-        .onConflict((oc) =>
-          oc
-            .column('did')
-            .doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
-        )
-        .execute(),
-  )
-  await Promise.all([replyCountQb?.execute(), postsCountPromise])
+  const postsCountQb = db
+    .insertInto('profile_agg')
+    .values({
+      did: postIdx.post.creator,
+      postsCount: db
+        .selectFrom('post')
+        .where('post.creator', '=', postIdx.post.creator)
+        .select(countAll.as('count')),
+    })
+    .onConflict((oc) =>
+      oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
+    )
+  await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>

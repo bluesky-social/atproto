@@ -4,7 +4,6 @@ import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
 import { BackgroundQueue } from '../../background'
-import { Coalescer } from '../../coalescer'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { countAll, excluded } from '../../db/util'
@@ -84,11 +83,7 @@ const notifsForDelete = (
   return { notifs: [], toDelete }
 }
 
-const updateAggregates = async (
-  db: DatabaseSchema,
-  follow: IndexedFollow,
-  coalescer: Coalescer,
-) => {
+const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
   const followersCountQb = db
     .insertInto('profile_agg')
     .values({
@@ -103,26 +98,21 @@ const updateAggregates = async (
         followersCount: excluded(db, 'followersCount'),
       }),
     )
-  const followsCountPromise = coalescer.run(
-    `profile_agg.followsCount:${follow.creator}`,
-    () =>
-      db
-        .insertInto('profile_agg')
-        .values({
-          did: follow.creator,
-          followsCount: db
-            .selectFrom('follow')
-            .where('follow.creator', '=', follow.creator)
-            .select(countAll.as('count')),
-        })
-        .onConflict((oc) =>
-          oc.column('did').doUpdateSet({
-            followsCount: excluded(db, 'followsCount'),
-          }),
-        )
-        .execute(),
-  )
-  await Promise.all([followersCountQb.execute(), followsCountPromise])
+  const followsCountQb = db
+    .insertInto('profile_agg')
+    .values({
+      did: follow.creator,
+      followsCount: db
+        .selectFrom('follow')
+        .where('follow.creator', '=', follow.creator)
+        .select(countAll.as('count')),
+    })
+    .onConflict((oc) =>
+      oc.column('did').doUpdateSet({
+        followsCount: excluded(db, 'followsCount'),
+      }),
+    )
+  await Promise.all([followersCountQb.execute(), followsCountQb.execute()])
 }
 
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
