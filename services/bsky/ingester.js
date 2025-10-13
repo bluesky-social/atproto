@@ -16,8 +16,20 @@ async function main() {
   const hosts = process.env.INGESTER_HOSTS
   const labelerHosts = process.env.INGESTER_LABELER_HOSTS
   const firehoseStream = process.env.INGESTER_FIREHOSE_STREAM || 'firehose_live'
+  const firehoseStreamHighWaterMark = parseInt(
+    process.env.INGESTER_FIREHOSE_STREAM_HIGH_WATER_MARK || '100000',
+    10,
+  )
   const labelStream = process.env.INGESTER_LABEL_STREAM || 'label_live'
+  const labelStreamHighWaterMark = parseInt(
+    process.env.INGESTER_LABEL_STREAM_HIGH_WATER_MARK || '100000',
+    10,
+  )
   const repoStream = process.env.INGESTER_REPO_STREAM || 'repo_backfill'
+  const repoStreamHighWaterMark = parseInt(
+    process.env.INGESTER_REPO_STREAM_HIGH_WATER_MARK || '100000',
+    10,
+  )
   const redisHost = process.env.REDIS_HOST
   const metricsPort = parseInt(process.env.METRICS_PORT || '4000', 10)
   assert(
@@ -35,21 +47,26 @@ async function main() {
       redis,
       host,
       stream: firehoseStream,
+      highWaterMark: firehoseStreamHighWaterMark,
     })
   })
-  const labelerIngesters = labelerHosts.split(',').map((host) => {
-    return new LabelerIngester({
-      redis,
-      host,
-      stream: labelStream,
-    })
-  })
+  const labelerIngesters = labelerHosts
+    ? labelerHosts.split(',').map((host) => {
+        return new LabelerIngester({
+          redis,
+          host,
+          stream: labelStream,
+          highWaterMark: labelStreamHighWaterMark,
+        })
+      })
+    : []
   // backfill ingesters
   const backfillIngesters = hosts.split(',').map((host) => {
     return new BackfillIngester({
       redis,
       host,
       stream: repoStream,
+      highWaterMark: repoStreamHighWaterMark,
     })
   })
   FirehoseIngester.metrics.register(metricsRegistry)

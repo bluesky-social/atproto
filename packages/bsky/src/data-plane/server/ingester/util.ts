@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { dataplaneLogger as logger } from '../../../logger'
 import { Redis } from '../../../redis'
 
@@ -19,16 +18,33 @@ export function streamLengthBackpressure(opts: {
     }
     try {
       const [len] = await redis.streamLengths([stream])
-      assert(
-        len < highWaterMark,
-        `stream length hit high water mark: ${len} (${highWaterMark})`,
-      )
+      if (len >= highWaterMark) {
+        throw new HighWaterMarkError({ stream, len, highWaterMark })
+      }
       lastLengthCheck = now
     } catch (err) {
-      logger.error({ err }, 'stream length check failed')
+      if (err instanceof HighWaterMarkError) {
+        logger.warn(err.data, 'stream length hit high water mark')
+      } else {
+        logger.error({ err }, 'stream length check failed')
+      }
       await wait(5000, signal)
       await checkLength(signal)
     }
+  }
+}
+
+class HighWaterMarkError extends Error {
+  name = 'HighWaterMarkError'
+  constructor(
+    public data: { stream: string; len: number; highWaterMark: number },
+    options?: ErrorOptions,
+  ) {
+    const { stream, len, highWaterMark } = data
+    super(
+      `stream length hit high water mark: ${stream} ${len} (${highWaterMark})`,
+      options,
+    )
   }
 }
 
