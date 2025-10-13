@@ -9,7 +9,7 @@ import {
   Identity as IdentityEvent,
 } from '../../lexicon/types/com/atproto/sync/subscribeRepos'
 
-export const SEQ_BACKFILL = -1
+export const SEQ_BACKFILL = -2
 
 export type FirehoseEvent = CommitEvent | AccountEvent | IdentityEvent
 
