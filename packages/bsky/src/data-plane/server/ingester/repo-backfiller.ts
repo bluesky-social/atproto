@@ -80,8 +80,6 @@ export class RepoBackfiller {
     const { root, blocks } = await readCarWithRoot(car)
     const repo = await verifyRepo(blocks, root, event.did)
     const now = new Date().toISOString()
-    // sorting evens out indexer utilization, reduces some contention
-    repo.creates.sort((c1, c2) => c1.rkey.localeCompare(c2.rkey))
     for (const chunk of chunkArray(repo.creates, 500)) {
       const streamEvents: StreamEvent[] = await Promise.all(
         chunk.map(async (op) => ({
