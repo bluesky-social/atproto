@@ -49,6 +49,7 @@ import {
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
 } from './status'
+import { StrikeService, StrikeServiceCreator } from './strike'
 import {
   ModSubject,
   RecordSubject,
@@ -89,6 +90,7 @@ export class ModerationService {
       aud: string,
       method: string,
     ) => Promise<AuthHeaders>,
+    public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
   ) {}
 
@@ -101,10 +103,12 @@ export class ModerationService {
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
+    strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
   ) {
-    return (db: Database) =>
-      new ModerationService(
+    return (db: Database) => {
+      const strikeService = strikeServiceCreator(db)
+      return new ModerationService(
         db,
         signingKey,
         signingKeyId,
@@ -114,8 +118,10 @@ export class ModerationService {
         eventPusher,
         appviewAgent,
         createAuthHeaders,
+        strikeService,
         imgInvalidator,
       )
+    }
   }
 
   views = new ModerationViews(
@@ -190,6 +196,7 @@ export class ModerationService {
     modTool?: string[]
     ageAssuranceState?: string
     batchId?: string
+    minStrikeCount?: number
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -214,6 +221,7 @@ export class ModerationService {
       modTool,
       ageAssuranceState,
       batchId,
+      minStrikeCount,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -331,6 +339,11 @@ export class ModerationService {
           'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
         ])
         .where(sql`meta->>'status'`, '=', ageAssuranceState)
+    }
+    if (minStrikeCount !== undefined) {
+      builder = builder
+        .where('strikeCount', 'is not', null)
+        .where('strikeCount', '>=', minStrikeCount)
     }
 
     const keyset = new TimeIdKeyset(
@@ -484,6 +497,9 @@ export class ModerationService {
       if (event.content) {
         meta.content = event.content
       }
+      if (event.policies?.length) {
+        meta.policies = event.policies.join(',')
+      }
     }
 
     if (isAccountEvent(event)) {
@@ -566,6 +582,28 @@ export class ModerationService {
 
     const subjectInfo = subject.info()
 
+    // Store severityLevel, strikeCount, and strikeExpiresAt if provided
+    // These values should be calculated by the client based on configuration
+    // processNewEvent will update the account_strike table with the new strike count
+    let severityLevel: string | null = null
+    let strikeCount: number | null = null
+    let strikeExpiresAt: string | null = null
+
+    if (isModEventTakedown(event) || isModEventEmail(event)) {
+      // Store severityLevel if provided (for display/tracking)
+      if (event.severityLevel) {
+        severityLevel = event.severityLevel
+      }
+      // Store explicit strikeCount if provided
+      if (event.strikeCount !== undefined) {
+        strikeCount = event.strikeCount
+      }
+      // Store strikeExpiresAt if provided by client
+      if (event.strikeExpiresAt) {
+        strikeExpiresAt = event.strikeExpiresAt
+      }
+    }
+
     const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
@@ -599,6 +637,9 @@ export class ModerationService {
         subjectMessageId: subjectInfo.subjectMessageId,
         modTool: modTool ? jsonb(modTool) : null,
         externalId: externalId ?? null,
+        severityLevel,
+        strikeCount,
+        strikeExpiresAt,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -608,6 +649,19 @@ export class ModerationService {
       modEvent,
       subject.blobCids,
     )
+
+    // Process strikes if strikeCount is set - update the account_strike table
+    if (modEvent.strikeCount !== null && modEvent.strikeCount !== undefined) {
+      try {
+        await this.strikeService.processNewEvent(modEvent)
+      } catch (error) {
+        // Log error but don't fail the entire operation
+        log.error(
+          { err: error, modEventId: modEvent.id },
+          'Error processing strikes for moderation event',
+        )
+      }
+    }
 
     return { event: modEvent, subjectStatus }
   }
@@ -959,6 +1013,7 @@ export class ModerationService {
     minReportedRecordsCount,
     minTakendownRecordsCount,
     minPriorityScore,
+    minStrikeCount,
     ageAssuranceState,
   }: QueryStatusParams): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
@@ -1221,6 +1276,14 @@ export class ModerationService {
         'moderation_subject_status.priorityScore',
         '>=',
         minPriorityScore,
+      )
+    }
+
+    if (minStrikeCount != null && minStrikeCount >= 0) {
+      builder = builder.where(
+        'account_strike.activeStrikeCount',
+        '>=',
+        minStrikeCount,
       )
     }
 

@@ -14635,6 +14635,12 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#recordsStats',
           },
+          accountStrike: {
+            description:
+              'Strike information for the account (account-level only)',
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#accountStrike',
+          },
           ageAssuranceState: {
             type: 'string',
             description: 'Current age assurance state of the subject.',
@@ -14747,6 +14753,32 @@ export const schemaDict = {
           },
         },
       },
+      accountStrike: {
+        description: 'Strike information for an account',
+        type: 'object',
+        properties: {
+          activeStrikeCount: {
+            description:
+              'Current number of active strikes (excluding expired strikes)',
+            type: 'integer',
+          },
+          totalStrikeCount: {
+            description:
+              'Total number of strikes ever received (including expired strikes)',
+            type: 'integer',
+          },
+          firstStrikeAt: {
+            description: 'Timestamp of the first strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+          lastStrikeAt: {
+            description: 'Timestamp of the most recent strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       subjectReviewState: {
         type: 'string',
         knownValues: [
@@ -14801,6 +14833,22 @@ export const schemaDict = {
             },
             description:
               'Names/Keywords of the policies that drove the decision.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
           },
         },
       },
@@ -15054,6 +15102,31 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about the outgoing comm.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that necessitated the email.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. normally 'sev-1' that adds strike on repeat offense",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation. Normally 0 as indicator of warning and only added as strike on repeat offense.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
           },
         },
       },
@@ -16453,6 +16526,12 @@ export const schemaDict = {
                 'blocked',
               ],
             },
+            minStrikeCount: {
+              type: 'integer',
+              minimum: 1,
+              description:
+                'If specified, only events where the strikeCount is greater than or equal to this value are returned',
+            },
             cursor: {
               type: 'string',
             },
@@ -16682,6 +16761,12 @@ export const schemaDict = {
               type: 'integer',
               description:
                 'If specified, only subjects that have priority score value above the given value will be returned.',
+            },
+            minStrikeCount: {
+              type: 'integer',
+              minimum: 1,
+              description:
+                'If specified, only subjects that belong to an account that has at least this many active strikes will be returned.',
             },
             ageAssuranceState: {
               type: 'string',

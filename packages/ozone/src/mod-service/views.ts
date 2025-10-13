@@ -177,12 +177,14 @@ export class ModerationViews {
       event.score = ifNumber(meta?.priorityScore) ?? 0
     }
 
-    if (
-      isModEventTakedown(event) &&
-      typeof meta.policies === 'string' &&
-      meta.policies.length > 0
-    ) {
-      event.policies = meta.policies.split(',')
+    if (isModEventTakedown(event) || isModEventEmail(event)) {
+      if (typeof meta.policies === 'string' && meta.policies.length > 0) {
+        event.policies = meta.policies.split(',')
+      }
+
+      event.strikeCount = ifNumber(row.strikeCount)
+      event.severityLevel = ifString(row.severityLevel)
+      event.strikeExpiresAt = ifString(row.strikeExpiresAt)
     }
 
     if (isModEventLabel(event)) {
@@ -744,6 +746,17 @@ export class ModerationViews {
         processedCount: status.processedCount ?? undefined,
         takendownCount: status.takendownCount ?? undefined,
       },
+
+      accountStrike:
+        status.strikeCount !== null || status.totalStrikeCount !== null
+          ? {
+              $type: 'tools.ozone.moderation.defs#accountStrike',
+              activeStrikeCount: status.strikeCount ?? undefined,
+              totalStrikeCount: status.totalStrikeCount ?? undefined,
+              firstStrikeAt: status.firstStrikeAt ?? undefined,
+              lastStrikeAt: status.lastStrikeAt ?? undefined,
+            }
+          : undefined,
     }
 
     if (status.recordPath !== '') {

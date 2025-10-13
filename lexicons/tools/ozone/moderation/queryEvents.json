@@ -129,6 +129,11 @@
             "description": "If specified, only events where the age assurance state matches the given value are returned",
             "knownValues": ["pending", "assured", "unknown", "reset", "blocked"]
           },
+          "minStrikeCount": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "If specified, only events where the strikeCount is greater than or equal to this value are returned"
+          },
           "cursor": {
             "type": "string"
           }
