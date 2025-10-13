@@ -1,11 +1,11 @@
-import { Selectable, sql } from 'kysely'
+import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { v3 as murmurV3 } from 'murmurhash'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
+import { coalesceWithLock } from '../../db/coalesce'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
@@ -101,35 +101,24 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
     )
     .execute()
   // explicit locking avoids thrash on single did during backfills
-  const runLockId = getLockParam(`followsCount.run:${follow.creator}`)
-  const waitLockId = getLockParam(`followsCount.wait:${follow.creator}`)
-  const updateFollowsCount = (txn: DatabaseSchema) =>
-    txn
-      .insertInto('profile_agg')
-      .values({
-        did: follow.creator,
-        followsCount: txn
-          .selectFrom('follow')
-          .where('follow.creator', '=', follow.creator)
-          .select(countAll.as('count')),
-      })
-      .onConflict((oc) =>
-        oc.column('did').doUpdateSet({
-          followsCount: excluded(txn, 'followsCount'),
-        }),
-      )
-      .execute()
-  await db.transaction().execute(async (txn) => {
-    const runlocked = await tryAdvisoryLock(txn, runLockId)
-    if (runlocked) {
-      await updateFollowsCount(txn)
-      return
-    }
-    const waitlocked = await tryAdvisoryLock(txn, waitLockId)
-    if (waitlocked) {
-      await acquireAdvisoryLock(txn, runLockId)
-      await updateFollowsCount(txn)
-    }
+  await db.transaction().execute((txn) => {
+    return coalesceWithLock(`followsCount:${follow.creator}`, txn, () =>
+      txn
+        .insertInto('profile_agg')
+        .values({
+          did: follow.creator,
+          followsCount: txn
+            .selectFrom('follow')
+            .where('follow.creator', '=', follow.creator)
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({
+            followsCount: excluded(txn, 'followsCount'),
+          }),
+        )
+        .execute(),
+    )
   })
 }
 
@@ -151,30 +140,3 @@ export const makePlugin = (
 }
 
 export default makePlugin
-
-function getLockParam(key: string) {
-  return murmurV3(key)
-}
-
-/**
- * Try to acquire a transaction-level advisory lock (non-blocking)
- */
-async function tryAdvisoryLock(
-  txn: DatabaseSchema,
-  lockId: number,
-): Promise<boolean> {
-  const result = await sql<{ locked: boolean }>`
-    SELECT pg_try_advisory_xact_lock(${lockId}) as locked
-  `.execute(txn)
-  return result.rows[0].locked
-}
-
-/**
- * Acquire a transaction-level advisory lock (blocking)
- */
-async function acquireAdvisoryLock(
-  txn: DatabaseSchema,
-  lockId: number,
-): Promise<void> {
-  await sql`SELECT pg_advisory_xact_lock(${lockId})`.execute(txn)
-}

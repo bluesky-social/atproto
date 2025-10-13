@@ -1,6 +1,5 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { v3 as murmurV3 } from 'murmurhash'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
@@ -29,6 +28,7 @@ import { RecordWithMedia } from '../../../../views/types'
 import { parsePostgate } from '../../../../views/util'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
+import { coalesceWithLock } from '../../db/coalesce'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
@@ -494,35 +494,24 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
       .execute()
   }
   // explicit locking avoids thrash on single did during backfills
-  const runLockId = getLockParam(`postCount.run:${postIdx.post.creator}`)
-  const waitLockId = getLockParam(`postCount.wait:${postIdx.post.creator}`)
-  const updatePostsCount = (txn: DatabaseSchema) =>
-    txn
-      .insertInto('profile_agg')
-      .values({
-        did: postIdx.post.creator,
-        postsCount: txn
-          .selectFrom('post')
-          .where('post.creator', '=', postIdx.post.creator)
-          .select(countAll.as('count')),
-      })
-      .onConflict((oc) =>
-        oc
-          .column('did')
-          .doUpdateSet({ postsCount: excluded(txn, 'postsCount') }),
-      )
-      .execute()
-  await db.transaction().execute(async (txn) => {
-    const runlocked = await tryAdvisoryLock(txn, runLockId)
-    if (runlocked) {
-      await updatePostsCount(txn)
-      return
-    }
-    const waitlocked = await tryAdvisoryLock(txn, waitLockId)
-    if (waitlocked) {
-      await acquireAdvisoryLock(txn, runLockId)
-      await updatePostsCount(txn)
-    }
+  await db.transaction().execute((txn) => {
+    return coalesceWithLock(`postCount:${postIdx.post.creator}`, txn, () =>
+      txn
+        .insertInto('profile_agg')
+        .values({
+          did: postIdx.post.creator,
+          postsCount: txn
+            .selectFrom('post')
+            .where('post.creator', '=', postIdx.post.creator)
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc
+            .column('did')
+            .doUpdateSet({ postsCount: excluded(txn, 'postsCount') }),
+        )
+        .execute(),
+    )
   })
 }
 
@@ -665,31 +654,4 @@ async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
       record: jsonStringToLex(gate.json) as GateRecord,
     },
   }
-}
-
-function getLockParam(key: string) {
-  return murmurV3(key)
-}
-
-/**
- * Try to acquire a transaction-level advisory lock (non-blocking)
- */
-async function tryAdvisoryLock(
-  txn: DatabaseSchema,
-  lockId: number,
-): Promise<boolean> {
-  const result = await sql<{ locked: boolean }>`
-    SELECT pg_try_advisory_xact_lock(${lockId}) as locked
-  `.execute(txn)
-  return result.rows[0].locked
-}
-
-/**
- * Acquire a transaction-level advisory lock (blocking)
- */
-async function acquireAdvisoryLock(
-  txn: DatabaseSchema,
-  lockId: number,
-): Promise<void> {
-  await sql`SELECT pg_advisory_xact_lock(${lockId})`.execute(txn)
 }
