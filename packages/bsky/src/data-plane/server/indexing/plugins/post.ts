@@ -1,5 +1,6 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
+import { v3 as murmurV3 } from 'murmurhash'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
@@ -470,40 +471,58 @@ const notifsForDelete = (
 }
 
 const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
-  const replyCountQb = postIdx.post.replyParent
-    ? db
-        .insertInto('post_agg')
-        .values({
-          uri: postIdx.post.replyParent,
-          replyCount: db
-            .selectFrom('post')
-            .where('post.replyParent', '=', postIdx.post.replyParent)
-            .where((qb) =>
-              qb
-                .where('post.violatesThreadGate', 'is', null)
-                .orWhere('post.violatesThreadGate', '=', false),
-            )
-            .select(countAll.as('count')),
-        })
-        .onConflict((oc) =>
-          oc
-            .column('uri')
-            .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
-        )
-    : null
-  const postsCountQb = db
-    .insertInto('profile_agg')
-    .values({
-      did: postIdx.post.creator,
-      postsCount: db
-        .selectFrom('post')
-        .where('post.creator', '=', postIdx.post.creator)
-        .select(countAll.as('count')),
-    })
-    .onConflict((oc) =>
-      oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
-    )
-  await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
+  if (postIdx.post.replyParent) {
+    await db
+      .insertInto('post_agg')
+      .values({
+        uri: postIdx.post.replyParent,
+        replyCount: db
+          .selectFrom('post')
+          .where('post.replyParent', '=', postIdx.post.replyParent)
+          .where((qb) =>
+            qb
+              .where('post.violatesThreadGate', 'is', null)
+              .orWhere('post.violatesThreadGate', '=', false),
+          )
+          .select(countAll.as('count')),
+      })
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+      )
+      .execute()
+  }
+  // explicit locking avoids thrash on single did during backfills
+  const didLock = getLockParam(postIdx.post.creator)
+  const updatePostsCount = (txn: DatabaseSchema) =>
+    txn
+      .insertInto('profile_agg')
+      .values({
+        did: postIdx.post.creator,
+        postsCount: db
+          .selectFrom('post')
+          .where('post.creator', '=', postIdx.post.creator)
+          .select(countAll.as('count')),
+      })
+      .onConflict((oc) =>
+        oc
+          .column('did')
+          .doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
+      )
+      .execute()
+  await db.transaction().execute(async (txn) => {
+    const runlocked = await tryAdvisoryLock(txn, LOCK_POSTCOUNT_RUN, didLock)
+    if (runlocked) {
+      await updatePostsCount(txn)
+      return
+    }
+    const waitlock = await tryAdvisoryLock(txn, LOCK_POSTCOUNT_WAIT, didLock)
+    if (waitlock) {
+      await acquireAdvisoryLock(txn, LOCK_POSTCOUNT_RUN, didLock)
+      await updatePostsCount(txn)
+    }
+  })
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
@@ -645,4 +664,35 @@ async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
       record: jsonStringToLex(gate.json) as GateRecord,
     },
   }
+}
+
+const LOCK_POSTCOUNT_RUN = 1010
+const LOCK_POSTCOUNT_WAIT = 1011
+function getLockParam(key: string) {
+  return murmurV3(key)
+}
+
+/**
+ * Try to acquire a transaction-level advisory lock (non-blocking)
+ */
+async function tryAdvisoryLock(
+  txn: DatabaseSchema,
+  lockId: number,
+  lockParam: number,
+): Promise<boolean> {
+  const result = await sql<{ locked: boolean }>`
+    SELECT pg_try_advisory_xact_lock(${lockId}, ${lockParam}) as locked
+  `.execute(txn)
+  return result.rows[0].locked
+}
+
+/**
+ * Acquire a transaction-level advisory lock (blocking)
+ */
+async function acquireAdvisoryLock(
+  txn: DatabaseSchema,
+  lockId: number,
+  lockParam: number,
+): Promise<void> {
+  await sql`SELECT pg_advisory_xact_lock(${lockId}, ${lockParam})`.execute(txn)
 }
