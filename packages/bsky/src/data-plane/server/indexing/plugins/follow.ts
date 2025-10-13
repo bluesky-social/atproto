@@ -101,33 +101,34 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
     )
     .execute()
   // explicit locking avoids thrash on single did during backfills
-  const didLock = getLockParam(follow.creator)
-  const updatePostsCount = (txn: DatabaseSchema) =>
+  const runLockId = getLockParam(`followsCount.run:${follow.creator}`)
+  const waitLockId = getLockParam(`followsCount.wait:${follow.creator}`)
+  const updateFollowsCount = (txn: DatabaseSchema) =>
     txn
       .insertInto('profile_agg')
       .values({
         did: follow.creator,
-        followsCount: db
+        followsCount: txn
           .selectFrom('follow')
           .where('follow.creator', '=', follow.creator)
           .select(countAll.as('count')),
       })
       .onConflict((oc) =>
         oc.column('did').doUpdateSet({
-          followsCount: excluded(db, 'followsCount'),
+          followsCount: excluded(txn, 'followsCount'),
         }),
       )
       .execute()
   await db.transaction().execute(async (txn) => {
-    const runlocked = await tryAdvisoryLock(txn, LOCK_FOLLOWCOUNT_RUN, didLock)
+    const runlocked = await tryAdvisoryLock(txn, runLockId)
     if (runlocked) {
-      await updatePostsCount(txn)
+      await updateFollowsCount(txn)
       return
     }
-    const waitlock = await tryAdvisoryLock(txn, LOCK_FOLLOWCOUNT_WAIT, didLock)
-    if (waitlock) {
-      await acquireAdvisoryLock(txn, LOCK_FOLLOWCOUNT_RUN, didLock)
-      await updatePostsCount(txn)
+    const waitlocked = await tryAdvisoryLock(txn, waitLockId)
+    if (waitlocked) {
+      await acquireAdvisoryLock(txn, runLockId)
+      await updateFollowsCount(txn)
     }
   })
 }
@@ -151,8 +152,6 @@ export const makePlugin = (
 
 export default makePlugin
 
-const LOCK_FOLLOWCOUNT_RUN = 1020
-const LOCK_FOLLOWCOUNT_WAIT = 1021
 function getLockParam(key: string) {
   return murmurV3(key)
 }
@@ -163,10 +162,9 @@ function getLockParam(key: string) {
 async function tryAdvisoryLock(
   txn: DatabaseSchema,
   lockId: number,
-  lockParam: number,
 ): Promise<boolean> {
   const result = await sql<{ locked: boolean }>`
-    SELECT pg_try_advisory_xact_lock(${lockId}, ${lockParam}) as locked
+    SELECT pg_try_advisory_xact_lock(${lockId}) as locked
   `.execute(txn)
   return result.rows[0].locked
 }
@@ -177,7 +175,6 @@ async function tryAdvisoryLock(
 async function acquireAdvisoryLock(
   txn: DatabaseSchema,
   lockId: number,
-  lockParam: number,
 ): Promise<void> {
-  await sql`SELECT pg_advisory_xact_lock(${lockId}, ${lockParam})`.execute(txn)
+  await sql`SELECT pg_advisory_xact_lock(${lockId})`.execute(txn)
 }
