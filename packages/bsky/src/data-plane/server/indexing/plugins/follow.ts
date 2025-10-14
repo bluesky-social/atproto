@@ -5,6 +5,7 @@ import * as lex from '../../../../lexicon/lexicons'
 import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
+import { coalesceWithLock } from '../../db/coalesce'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
@@ -84,7 +85,7 @@ const notifsForDelete = (
 }
 
 const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
-  const followersCountQb = db
+  await db
     .insertInto('profile_agg')
     .values({
       did: follow.subjectDid,
@@ -98,21 +99,27 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
         followersCount: excluded(db, 'followersCount'),
       }),
     )
-  const followsCountQb = db
-    .insertInto('profile_agg')
-    .values({
-      did: follow.creator,
-      followsCount: db
-        .selectFrom('follow')
-        .where('follow.creator', '=', follow.creator)
-        .select(countAll.as('count')),
-    })
-    .onConflict((oc) =>
-      oc.column('did').doUpdateSet({
-        followsCount: excluded(db, 'followsCount'),
-      }),
+    .execute()
+  // explicit locking avoids thrash on single did during backfills
+  await db.transaction().execute((txn) => {
+    return coalesceWithLock(`followsCount:${follow.creator}`, txn, () =>
+      txn
+        .insertInto('profile_agg')
+        .values({
+          did: follow.creator,
+          followsCount: txn
+            .selectFrom('follow')
+            .where('follow.creator', '=', follow.creator)
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({
+            followsCount: excluded(txn, 'followsCount'),
+          }),
+        )
+        .execute(),
     )
-  await Promise.all([followersCountQb.execute(), followsCountQb.execute()])
+  })
 }
 
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>

@@ -28,6 +28,7 @@ import { RecordWithMedia } from '../../../../views/types'
 import { parsePostgate } from '../../../../views/util'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
+import { coalesceWithLock } from '../../db/coalesce'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
@@ -470,40 +471,48 @@ const notifsForDelete = (
 }
 
 const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
-  const replyCountQb = postIdx.post.replyParent
-    ? db
-        .insertInto('post_agg')
+  if (postIdx.post.replyParent) {
+    await db
+      .insertInto('post_agg')
+      .values({
+        uri: postIdx.post.replyParent,
+        replyCount: db
+          .selectFrom('post')
+          .where('post.replyParent', '=', postIdx.post.replyParent)
+          .where((qb) =>
+            qb
+              .where('post.violatesThreadGate', 'is', null)
+              .orWhere('post.violatesThreadGate', '=', false),
+          )
+          .select(countAll.as('count')),
+      })
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+      )
+      .execute()
+  }
+  // explicit locking avoids thrash on single did during backfills
+  await db.transaction().execute((txn) => {
+    return coalesceWithLock(`postCount:${postIdx.post.creator}`, txn, () =>
+      txn
+        .insertInto('profile_agg')
         .values({
-          uri: postIdx.post.replyParent,
-          replyCount: db
+          did: postIdx.post.creator,
+          postsCount: txn
             .selectFrom('post')
-            .where('post.replyParent', '=', postIdx.post.replyParent)
-            .where((qb) =>
-              qb
-                .where('post.violatesThreadGate', 'is', null)
-                .orWhere('post.violatesThreadGate', '=', false),
-            )
+            .where('post.creator', '=', postIdx.post.creator)
             .select(countAll.as('count')),
         })
         .onConflict((oc) =>
           oc
-            .column('uri')
-            .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+            .column('did')
+            .doUpdateSet({ postsCount: excluded(txn, 'postsCount') }),
         )
-    : null
-  const postsCountQb = db
-    .insertInto('profile_agg')
-    .values({
-      did: postIdx.post.creator,
-      postsCount: db
-        .selectFrom('post')
-        .where('post.creator', '=', postIdx.post.creator)
-        .select(countAll.as('count')),
-    })
-    .onConflict((oc) =>
-      oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
+        .execute(),
     )
-  await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
+  })
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
