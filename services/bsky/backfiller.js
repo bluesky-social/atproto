@@ -19,6 +19,10 @@ async function main() {
   const repoStream = process.env.BACKFILLER_BACKFILL_STREAM || 'repo_backfill'
   const firehoseStream =
     process.env.BACKFILLER_FIREHOSE_STREAM || 'firehose_backfill'
+  const firehoseStreamHighWaterMark = parseInt(
+    process.env.BACKFILLER_FIREHOSE_STREAM_HIGH_WATER_MARK || '100000',
+    10,
+  )
   const redisHost = process.env.REDIS_HOST
   const metricsPort = parseInt(process.env.METRICS_PORT || '4010', 10)
   assert(redisHost, 'must set REDIS_HOST, e.g. localhost:6380')
@@ -35,6 +39,7 @@ async function main() {
     group,
     consumer,
     concurrency,
+    highWaterMark: firehoseStreamHighWaterMark,
   })
   // start
   await once(server.listen(metricsPort), 'listening')

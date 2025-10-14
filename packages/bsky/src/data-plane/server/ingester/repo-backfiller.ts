@@ -26,6 +26,7 @@ export class RepoBackfiller {
       group: string
       consumer: string
       concurrency?: number
+      highWaterMark?: number
     },
   ) {
     this.queue = new PQueue({
@@ -34,6 +35,7 @@ export class RepoBackfiller {
     this.backpressure = streamLengthBackpressure({
       redis: opts.redis,
       stream: opts.streamOut,
+      highWaterMark: opts.highWaterMark,
     })
   }
   run() {
