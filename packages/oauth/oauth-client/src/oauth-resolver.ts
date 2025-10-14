@@ -158,7 +158,7 @@ export class OAuthResolver {
         options,
       )
 
-      // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+      // https://www.rfc-editor.org/rfc/rfc9728.html#section-4
       if (asMetadata.protected_resources) {
         if (!asMetadata.protected_resources.includes(rsMetadata.resource)) {
           throw new OAuthResolverError(
