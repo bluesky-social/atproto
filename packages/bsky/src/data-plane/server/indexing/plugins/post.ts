@@ -176,7 +176,9 @@ const insertFn = async (
         alt: img.alt,
       }))
       embeds.push(imagesEmbed)
-      await db.insertInto('post_embed_image').values(imagesEmbed).execute()
+      if (imagesEmbed.length !== 0) {
+        await db.insertInto('post_embed_image').values(imagesEmbed).execute()
+      }
     } else if (isEmbedExternal(postEmbed)) {
       const { external } = postEmbed
       const externalEmbed = {

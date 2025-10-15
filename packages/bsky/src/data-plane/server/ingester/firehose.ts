@@ -1,7 +1,10 @@
 import assert from 'node:assert'
 import { Counter, Registry } from 'prom-client'
 import { lexToJson } from '@atproto/api'
-import { parseCommitUnauthenticated } from '@atproto/sync'
+import {
+  CommitEvt as SyncCommitEvt,
+  parseCommitUnauthenticated,
+} from '@atproto/sync'
 import { Subscription } from '@atproto/xrpc-server'
 import { ids } from '../../../lexicon/lexicons'
 import {
@@ -118,7 +121,20 @@ async function firehoseToStreamEvents(
   evt: FirehoseEvent,
 ): Promise<StreamEvent[]> {
   if (isCommitEvent(evt)) {
-    const ops = await parseCommitUnauthenticated(evt as any)
+    const ops = await parseCommitUnauthenticated(evt as any).catch((err) => {
+      logger.warn(
+        {
+          err,
+          repo: evt.repo,
+          rev: evt.rev,
+          seq: evt.seq,
+          time: evt.time,
+          ops: evt.ops,
+        },
+        'commit event skipped by ingester',
+      )
+      return [] as SyncCommitEvt[]
+    })
     return ops.map((op) => {
       const base = {
         seq: op.seq,
