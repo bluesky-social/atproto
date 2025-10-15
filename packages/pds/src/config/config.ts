@@ -27,6 +27,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     acceptingImports: env.acceptingImports ?? true,
     maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
+    hostnameAlt: env.hostnameAlt, // used by ActivityPub
     devMode: env.devMode ?? false,
   }
 
@@ -383,6 +384,7 @@ export type ServiceConfig = {
   maxImportSize?: number
   blobUploadLimit: number
   contactEmailAddress?: string
+  hostnameAlt?: string // used by ActivityPub
   devMode: boolean
 }
 
