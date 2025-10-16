@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { KeyObject } from 'node:crypto'
 import * as plc from '@did-plc/lib'
 import express from 'express'
 import { Redis } from 'ioredis'
@@ -16,6 +17,7 @@ import {
 import {
   AccessTokenMode,
   JoseKey,
+  Key,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
@@ -35,11 +37,7 @@ import { OAuthStore } from './account-manager/oauth-store'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
 import { authPassthru, forwardedFor } from './api/proxy'
-import {
-  AuthVerifier,
-  createPublicKeyObject,
-  createSecretKeyObject,
-} from './auth-verifier'
+import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
 import { BskyAppView } from './bsky-app-view'
 import { ServerConfig, ServerSecrets } from './config'
@@ -53,6 +51,11 @@ import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
+import {
+  createPrivateKeyObject,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './util/keys'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -222,7 +225,7 @@ export class AppContext {
       )
     }
 
-    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const jwtKey = await createJwtKey(secrets)
     const jwtPublicKey = cfg.entryway
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : null
@@ -239,7 +242,7 @@ export class AppContext {
 
     const accountManager = new AccountManager(
       idResolver,
-      jwtSecretKey,
+      jwtKey,
       cfg.service.did,
       cfg.identity.serviceHandleDomains,
       cfg.db,
@@ -373,7 +376,7 @@ export class AppContext {
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
-          keyset: [await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256')],
+          keyset: await createJwtKeyset(jwtKey),
           store: new OAuthStore(
             accountManager,
             actorStore,
@@ -447,7 +450,7 @@ export class AppContext {
       oauthVerifier,
       {
         publicUrl: cfg.service.publicUrl,
-        jwtKey: jwtPublicKey ?? jwtSecretKey,
+        jwtKey: jwtPublicKey ?? jwtKey,
         adminPass: secrets.adminPassword,
         dids: {
           pds: cfg.service.did,
@@ -532,6 +535,23 @@ const basicAuthHeader = (username: string, password: string) => {
     'base64pad',
   )
   return `Basic ${encoded}`
+}
+
+const createJwtKey = async (secrets: ServerSecrets): Promise<KeyObject> => {
+  if (secrets.jwtSecret.type === 'private') {
+    return createPrivateKeyObject(secrets.jwtSecret.privateKeyHex)
+  } else {
+    return createSecretKeyObject(secrets.jwtSecret.secret)
+  }
+}
+
+const createJwtKeyset = async (jwtKey: KeyObject): Promise<Key[]> => {
+  if (jwtKey.type === 'private') {
+    // This creates an ES256K Private Key JWK, as jwtKey is a ES256K KeyObject:
+    return [await JoseKey.fromJWK(jwtKey.export({ format: 'jwk' }))]
+  } else {
+    return [await JoseKey.fromKeyLike(jwtKey, undefined, 'HS256')]
+  }
 }
 
 export default AppContext

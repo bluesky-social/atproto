@@ -1,7 +1,6 @@
-import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+import { KeyObject } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
@@ -653,16 +652,6 @@ const parseBasicAuth = (
   } catch (err) {
     return null
   }
-}
-
-export const createSecretKeyObject = (secret: string): KeyObject => {
-  return createSecretKey(Buffer.from(secret))
-}
-
-const keyEncoder = new KeyEncoder('secp256k1')
-export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
-  const key = keyEncoder.encodePublic(publicKeyHex, 'raw', 'pem')
-  return createPublicKey({ format: 'pem', key })
 }
 
 function setAuthHeaders(res: ServerResponse) {
