@@ -156,6 +156,14 @@ export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
 // actor DID -> stash key -> bookmark
 export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
 
+/**
+ * Additional config passed from `ServerConfig` to the `Hydrator` instance.
+ * Values within this config object may be passed to other sub-hydrators.
+ */
+export type HydratorConfig = {
+  debugFieldAllowedDIDs: readonly string[]
+}
+
 export class Hydrator {
   actor: ActorHydrator
   feed: FeedHydrator
@@ -166,9 +174,14 @@ export class Hydrator {
   constructor(
     public dataplane: DataPlaneClient,
     serviceLabelers: string[] = [],
+    config: {
+      debugFieldAllowedDIDs: readonly string[]
+    },
   ) {
     this.actor = new ActorHydrator(dataplane)
-    this.feed = new FeedHydrator(dataplane)
+    this.feed = new FeedHydrator(dataplane, {
+      debugFieldAllowedDIDs: config.debugFieldAllowedDIDs,
+    })
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
     this.serviceLabelers = new Set(serviceLabelers)
@@ -447,6 +460,7 @@ export class Hydrator {
       uris,
       ctx.includeTakedowns,
       state.posts,
+      ctx.viewer,
     )
     addPostsToHydrationState(postsLayer0)
 

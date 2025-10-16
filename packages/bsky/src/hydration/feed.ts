@@ -26,6 +26,10 @@ export type Post = RecordInfo<PostRecord> & {
   hasThreadGate: boolean
   hasPostGate: boolean
   tags: Set<string>
+  /**
+   * Debug information for internal Bluesky development purposes only
+   */
+  debug?: string
 }
 export type Posts = HydrationMap<Post>
 
@@ -95,13 +99,28 @@ export type FeedItem = {
   authorPinned?: boolean
 }
 
+/**
+ * Additional config passed from `ServerConfig` to the `FeedHydrator` instance.
+ */
+export type FeedHydratorConfig = {
+  debugFieldAllowedDIDs: readonly string[]
+}
+
 export class FeedHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  private config: FeedHydratorConfig
+
+  constructor(
+    public dataplane: DataPlaneClient,
+    config: FeedHydratorConfig,
+  ) {
+    this.config = config
+  }
 
   async getPosts(
     uris: string[],
     includeTakedowns = false,
     given = new HydrationMap<Post>(),
+    viewer?: string | null,
   ): Promise<Posts> {
     const [have, need] = split(uris, (uri) => given.has(uri))
     const base = have.reduce(
@@ -117,6 +136,9 @@ export class FeedHydrator {
       const hasThreadGate = res.meta[i].hasThreadGate
       const hasPostGate = res.meta[i].hasPostGate
       const tags = new Set<string>(res.records[i].tags ?? [])
+      const isDebugAllowed =
+        viewer && this.config.debugFieldAllowedDIDs.includes(viewer)
+      const debug = isDebugAllowed ? res.records[i].debug : undefined
       return acc.set(
         uri,
         record
@@ -127,6 +149,7 @@ export class FeedHydrator {
               hasThreadGate,
               hasPostGate,
               tags,
+              debug,
             }
           : null,
       )
