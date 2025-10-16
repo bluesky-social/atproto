@@ -1846,6 +1846,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
           },
+          debug: {
+            type: 'string',
+            description:
+              'Debug information for internal Bluesky development purposes only',
+          },
         },
       },
       viewerState: {

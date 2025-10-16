@@ -45,6 +45,8 @@ export interface PostView {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   threadgate?: ThreadgateView
+  /** Debug information for internal Bluesky development purposes only */
+  debug?: string
 }
 
 const hashPostView = 'postView'

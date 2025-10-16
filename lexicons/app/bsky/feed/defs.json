@@ -34,7 +34,11 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
-        "threadgate": { "type": "ref", "ref": "#threadgateView" }
+        "threadgate": { "type": "ref", "ref": "#threadgateView" },
+        "debug": {
+          "type": "string",
+          "description": "Debug information for internal Bluesky development purposes only"
+        }
       }
     },
     "viewerState": {
