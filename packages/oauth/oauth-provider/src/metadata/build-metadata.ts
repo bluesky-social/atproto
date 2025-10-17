@@ -122,10 +122,10 @@ export function buildMetadata(
     authorization_details_types_supported:
       customMetadata?.authorization_details_types_supported,
 
-    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+    // https://www.rfc-editor.org/rfc/rfc9728.html#section-4
     protected_resources: customMetadata?.protected_resources,
 
-    // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+    // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
     client_id_metadata_document_supported: true,
   })
 }

@@ -21,6 +21,7 @@ import {
   ModerationServiceProfile,
   ModerationServiceProfileCreator,
 } from './mod-service/profile'
+import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
 import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,
@@ -32,7 +33,6 @@ import {
 import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
-import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
 import { TeamService, TeamServiceCreator } from './team'
 import {
   LABELER_HEADER_NAME,

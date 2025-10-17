@@ -3694,7 +3694,7 @@ export const schemaDict = {
             },
             hiddenReplies: {
               type: 'array',
-              maxLength: 50,
+              maxLength: 300,
               items: {
                 type: 'string',
                 format: 'at-uri',
@@ -10652,27 +10652,24 @@ export const schemaDict = {
           'com.atproto.moderation.defs#reasonOther',
           'com.atproto.moderation.defs#reasonAppeal',
           'tools.ozone.report.defs#reasonAppeal',
-          'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+          'tools.ozone.report.defs#reasonOther',
+          'tools.ozone.report.defs#reasonViolenceAnimal',
           'tools.ozone.report.defs#reasonViolenceThreats',
           'tools.ozone.report.defs#reasonViolenceGraphicContent',
-          'tools.ozone.report.defs#reasonViolenceSelfHarm',
           'tools.ozone.report.defs#reasonViolenceGlorification',
           'tools.ozone.report.defs#reasonViolenceExtremistContent',
           'tools.ozone.report.defs#reasonViolenceTrafficking',
           'tools.ozone.report.defs#reasonViolenceOther',
           'tools.ozone.report.defs#reasonSexualAbuseContent',
           'tools.ozone.report.defs#reasonSexualNCII',
-          'tools.ozone.report.defs#reasonSexualSextortion',
           'tools.ozone.report.defs#reasonSexualDeepfake',
           'tools.ozone.report.defs#reasonSexualAnimal',
           'tools.ozone.report.defs#reasonSexualUnlabeled',
           'tools.ozone.report.defs#reasonSexualOther',
           'tools.ozone.report.defs#reasonChildSafetyCSAM',
           'tools.ozone.report.defs#reasonChildSafetyGroom',
-          'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-          'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+          'tools.ozone.report.defs#reasonChildSafetyPrivacy',
           'tools.ozone.report.defs#reasonChildSafetyHarassment',
-          'tools.ozone.report.defs#reasonChildSafetyPromotion',
           'tools.ozone.report.defs#reasonChildSafetyOther',
           'tools.ozone.report.defs#reasonHarassmentTroll',
           'tools.ozone.report.defs#reasonHarassmentTargeted',
@@ -10683,19 +10680,17 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonMisleadingImpersonation',
           'tools.ozone.report.defs#reasonMisleadingSpam',
           'tools.ozone.report.defs#reasonMisleadingScam',
-          'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-          'tools.ozone.report.defs#reasonMisleadingMisinformation',
+          'tools.ozone.report.defs#reasonMisleadingElections',
           'tools.ozone.report.defs#reasonMisleadingOther',
           'tools.ozone.report.defs#reasonRuleSiteSecurity',
-          'tools.ozone.report.defs#reasonRuleStolenContent',
           'tools.ozone.report.defs#reasonRuleProhibitedSales',
           'tools.ozone.report.defs#reasonRuleBanEvasion',
           'tools.ozone.report.defs#reasonRuleOther',
-          'tools.ozone.report.defs#reasonCivicElectoralProcess',
-          'tools.ozone.report.defs#reasonCivicDisclosure',
-          'tools.ozone.report.defs#reasonCivicInterference',
-          'tools.ozone.report.defs#reasonCivicMisinformation',
-          'tools.ozone.report.defs#reasonCivicImpersonation',
+          'tools.ozone.report.defs#reasonSelfHarmContent',
+          'tools.ozone.report.defs#reasonSelfHarmED',
+          'tools.ozone.report.defs#reasonSelfHarmStunts',
+          'tools.ozone.report.defs#reasonSelfHarmSubstances',
+          'tools.ozone.report.defs#reasonSelfHarmOther',
         ],
       },
       reasonSpam: {
@@ -10726,7 +10721,7 @@ export const schemaDict = {
       reasonOther: {
         type: 'token',
         description:
-          'Reports not falling under another report category. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`.',
+          'Reports not falling under another report category. Prefer new lexicon definition `tools.ozone.report.defs#reasonOther`.',
       },
       reasonAppeal: {
         type: 'token',
@@ -17003,27 +16998,24 @@ export const schemaDict = {
         type: 'string',
         knownValues: [
           'tools.ozone.report.defs#reasonAppeal',
-          'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+          'tools.ozone.report.defs#reasonOther',
+          'tools.ozone.report.defs#reasonViolenceAnimal',
           'tools.ozone.report.defs#reasonViolenceThreats',
           'tools.ozone.report.defs#reasonViolenceGraphicContent',
-          'tools.ozone.report.defs#reasonViolenceSelfHarm',
           'tools.ozone.report.defs#reasonViolenceGlorification',
           'tools.ozone.report.defs#reasonViolenceExtremistContent',
           'tools.ozone.report.defs#reasonViolenceTrafficking',
           'tools.ozone.report.defs#reasonViolenceOther',
           'tools.ozone.report.defs#reasonSexualAbuseContent',
           'tools.ozone.report.defs#reasonSexualNCII',
-          'tools.ozone.report.defs#reasonSexualSextortion',
           'tools.ozone.report.defs#reasonSexualDeepfake',
           'tools.ozone.report.defs#reasonSexualAnimal',
           'tools.ozone.report.defs#reasonSexualUnlabeled',
           'tools.ozone.report.defs#reasonSexualOther',
           'tools.ozone.report.defs#reasonChildSafetyCSAM',
           'tools.ozone.report.defs#reasonChildSafetyGroom',
-          'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-          'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+          'tools.ozone.report.defs#reasonChildSafetyPrivacy',
           'tools.ozone.report.defs#reasonChildSafetyHarassment',
-          'tools.ozone.report.defs#reasonChildSafetyPromotion',
           'tools.ozone.report.defs#reasonChildSafetyOther',
           'tools.ozone.report.defs#reasonHarassmentTroll',
           'tools.ozone.report.defs#reasonHarassmentTargeted',
@@ -17034,26 +17026,28 @@ export const schemaDict = {
           'tools.ozone.report.defs#reasonMisleadingImpersonation',
           'tools.ozone.report.defs#reasonMisleadingSpam',
           'tools.ozone.report.defs#reasonMisleadingScam',
-          'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-          'tools.ozone.report.defs#reasonMisleadingMisinformation',
+          'tools.ozone.report.defs#reasonMisleadingElections',
           'tools.ozone.report.defs#reasonMisleadingOther',
           'tools.ozone.report.defs#reasonRuleSiteSecurity',
-          'tools.ozone.report.defs#reasonRuleStolenContent',
           'tools.ozone.report.defs#reasonRuleProhibitedSales',
           'tools.ozone.report.defs#reasonRuleBanEvasion',
           'tools.ozone.report.defs#reasonRuleOther',
-          'tools.ozone.report.defs#reasonCivicElectoralProcess',
-          'tools.ozone.report.defs#reasonCivicDisclosure',
-          'tools.ozone.report.defs#reasonCivicInterference',
-          'tools.ozone.report.defs#reasonCivicMisinformation',
-          'tools.ozone.report.defs#reasonCivicImpersonation',
+          'tools.ozone.report.defs#reasonSelfHarmContent',
+          'tools.ozone.report.defs#reasonSelfHarmED',
+          'tools.ozone.report.defs#reasonSelfHarmStunts',
+          'tools.ozone.report.defs#reasonSelfHarmSubstances',
+          'tools.ozone.report.defs#reasonSelfHarmOther',
         ],
       },
       reasonAppeal: {
         type: 'token',
         description: 'Appeal a previously taken moderation action',
       },
-      reasonViolenceAnimalWelfare: {
+      reasonOther: {
+        type: 'token',
+        description: 'An issue not included in these options',
+      },
+      reasonViolenceAnimal: {
         type: 'token',
         description: 'Animal welfare violations',
       },
@@ -17064,10 +17058,6 @@ export const schemaDict = {
       reasonViolenceGraphicContent: {
         type: 'token',
         description: 'Graphic violent content',
-      },
-      reasonViolenceSelfHarm: {
-        type: 'token',
-        description: 'Self harm',
       },
       reasonViolenceGlorification: {
         type: 'token',
@@ -17093,10 +17083,6 @@ export const schemaDict = {
       reasonSexualNCII: {
         type: 'token',
         description: 'Non-consensual intimate imagery',
-      },
-      reasonSexualSextortion: {
-        type: 'token',
-        description: 'Sextortion',
       },
       reasonSexualDeepfake: {
         type: 'token',
@@ -17124,23 +17110,13 @@ export const schemaDict = {
         description:
           "Grooming or predatory behavior. These reports will be sent only be sent to the application's Moderation Authority.",
       },
-      reasonChildSafetyMinorPrivacy: {
+      reasonChildSafetyPrivacy: {
         type: 'token',
         description: 'Privacy violation involving a minor',
-      },
-      reasonChildSafetyEndangerment: {
-        type: 'token',
-        description:
-          "Child endangerment. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyHarassment: {
         type: 'token',
         description: 'Harassment or bullying of minors',
-      },
-      reasonChildSafetyPromotion: {
-        type: 'token',
-        description:
-          "Promotion of child exploitation. These reports will be sent only be sent to the application's Moderation Authority.",
       },
       reasonChildSafetyOther: {
         type: 'token',
@@ -17183,13 +17159,9 @@ export const schemaDict = {
         type: 'token',
         description: 'Scam',
       },
-      reasonMisleadingSyntheticContent: {
+      reasonMisleadingElections: {
         type: 'token',
-        description: 'Unlabelled gen-AI or synthetic content',
-      },
-      reasonMisleadingMisinformation: {
-        type: 'token',
-        description: 'Harmful false claims',
+        description: 'False information about elections',
       },
       reasonMisleadingOther: {
         type: 'token',
@@ -17198,10 +17170,6 @@ export const schemaDict = {
       reasonRuleSiteSecurity: {
         type: 'token',
         description: 'Hacking or system attacks',
-      },
-      reasonRuleStolenContent: {
-        type: 'token',
-        description: 'Stolen content',
       },
       reasonRuleProhibitedSales: {
         type: 'token',
@@ -17215,25 +17183,25 @@ export const schemaDict = {
         type: 'token',
         description: 'Other',
       },
-      reasonCivicElectoralProcess: {
+      reasonSelfHarmContent: {
         type: 'token',
-        description: 'Electoral process violations',
+        description: 'Content promoting or depicting self-harm',
       },
-      reasonCivicDisclosure: {
+      reasonSelfHarmED: {
         type: 'token',
-        description: 'Disclosure & transparency violations',
+        description: 'Eating disorders',
       },
-      reasonCivicInterference: {
+      reasonSelfHarmStunts: {
         type: 'token',
-        description: 'Voter intimidation or interference',
+        description: 'Dangerous challenges or activities',
       },
-      reasonCivicMisinformation: {
+      reasonSelfHarmSubstances: {
         type: 'token',
-        description: 'Election misinformation',
+        description: 'Dangerous substances or drug abuse',
       },
-      reasonCivicImpersonation: {
+      reasonSelfHarmOther: {
         type: 'token',
-        description: 'Impersonation of electoral officials/entities',
+        description: 'Other dangerous content',
       },
     },
   },

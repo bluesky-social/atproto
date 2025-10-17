@@ -580,8 +580,8 @@ export class ModerationViews {
           'moderation_subject_status.blobCids',
         )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
-      .selectAll()
       .executeTakeFirst()
+
     const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
       (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
       {},
@@ -594,6 +594,7 @@ export class ModerationViews {
       const subjectStatus = statusByCid[cid]
         ? this.formatSubjectStatus(statusByCid[cid])
         : undefined
+
       return {
         cid,
         mimeType: blob.mimeType,

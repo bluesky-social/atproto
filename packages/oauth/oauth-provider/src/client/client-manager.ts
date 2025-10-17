@@ -36,7 +36,7 @@ import { Client } from './client.js'
 
 const fetchMetadataHandler = pipe(
   fetchOkProcessor(),
-  // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
+  // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-4.1
   fetchJsonProcessor('application/json', true),
   fetchJsonZodProcessor(oauthClientMetadataSchema),
 )
@@ -724,7 +724,7 @@ export class ClientManager {
     metadata: OAuthClientMetadata,
   ): OAuthClientMetadata {
     if (!metadata.client_id) {
-      // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+      // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
       throw new InvalidClientMetadataError(
         `client_id is required for discoverable clients`,
       )
@@ -733,7 +733,7 @@ export class ClientManager {
     const clientIdUrl = parseDiscoverableClientId(clientId)
 
     if (metadata.client_uri) {
-      // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+      // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
       //
       // The client_uri must be a parent of the client_id URL. This might be
       // relaxed in the future.
@@ -773,7 +773,7 @@ export class ClientManager {
         // > where two apps claim the same private-use URI scheme (where one
         // > app is acting maliciously).
 
-        // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+        // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
         //
         // Fully qualified domain name (FQDN) of the client_id, in reverse
         // order. This could be relaxed to allow same apex domain names, or

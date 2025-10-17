@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.17.3
+
+### Patch Changes
+
+- [#4268](https://github.com/bluesky-social/atproto/pull/4268) [`386f583cf`](https://github.com/bluesky-social/atproto/commit/386f583cffa2c596a12be4e98dde498f3b8670f6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Bump threadgate `hiddenReplies` field `maxLength` to 300.
+
+## 0.17.2
+
+### Patch Changes
+
+- [#4262](https://github.com/bluesky-social/atproto/pull/4262) [`1cb5b9b80`](https://github.com/bluesky-social/atproto/commit/1cb5b9b80c20a054f7fbacd89d0d440dc2241d81) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Finalize report reason lexicons, update migration map in Ozone
+
 ## 0.17.1
 
 ### Patch Changes
