@@ -1,6 +1,6 @@
 {
   "extends": ["../../tsconfig/isomorphic.json"],
-  "include": ["./src/lexicons"],
+  "include": ["./src/main.ts", "./src/lexicons"],
   "compilerOptions": {
     "paths": {
       "@atproto/lex": ["./src/lex/lex.ts"]

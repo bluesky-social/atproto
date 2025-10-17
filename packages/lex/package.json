@@ -1,12 +1,15 @@
 {
   "name": "@atproto/lex",
   "private": true,
-  "type": "commonjs",
-  "sideEffects": false,
   "files": [
     "./dist",
-    "./doc",
-    "./bin.js"
+    "./com.js",
+    "./com.d.ts",
+    "./doc.js",
+    "./doc.d.ts",
+    "./lex.js",
+    "./lex.d.ts",
+    "./lex"
   ],
   "bin": {
     "lex": "./bin.js"
@@ -25,22 +28,31 @@
     "@types/yargs": "^17.0.33"
   },
   "scripts": {
-    "build:schemas": "node bin.js build --clear --no-import-atproto --pure-annotations --in ../../lexicons/com/atproto",
+    "build:lib": "tsc --build tsconfig.lib.json --preserveWatchOutput",
     "build:bin": "tsc --build tsconfig.bin.json --preserveWatchOutput",
-    "build:lex": "tsc --build tsconfig.lex.json --preserveWatchOutput",
-    "prebuild": "pnpm run build:lex && pnpm run build:bin && pnpm run build:schemas",
-    "build": "tsc --build tsconfig.json --preserveWatchOutput"
+    "build:lexicons": "./lex build --clear --no-import-atproto --pure-annotations --in ../../lexicons/com/atproto",
+    "build": "pnpm run build:lib && pnpm run build:bin && pnpm run build:lexicons"
   },
-  "main": "./main.js",
-  "types": "./main.d.ts",
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
   "exports": {
     ".": {
+      "require": "./dist/main.js",
+      "types": "./dist/main.d.ts"
+    },
+    "./lex": {
       "require": "./dist/lex/lex.js",
       "types": "./dist/lex/lex.d.ts"
     },
     "./doc": {
       "require": "./dist/doc/doc.js",
       "types": "./dist/doc/doc.d.ts"
+    },
+    "./com": {
+      "require": "./dist/lexicons/com.js",
+      "types": "./dist/lexicons/com.d.ts"
     },
     "./com.atproto": {
       "require": "./dist/lexicons/com/atproto.js",

@@ -1,6 +1,6 @@
 {
   "extends": ["../../tsconfig/isomorphic.json"],
-  "include": ["./src/lex"],
+  "include": ["./src/lex", "./src/doc"],
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,

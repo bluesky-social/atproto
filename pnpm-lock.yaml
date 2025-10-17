@@ -86,6 +86,9 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
