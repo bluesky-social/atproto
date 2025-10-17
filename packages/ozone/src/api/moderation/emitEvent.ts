@@ -130,11 +130,7 @@ const handleModerationEvent = async ({
       throw new InvalidRequestError(`Subject is already taken down`)
     }
 
-    if (
-      isReverseTakedownEvent &&
-      !status?.takendown &&
-      isReverseTakedownEvent
-    ) {
+    if (!status?.takendown && isReverseTakedownEvent) {
       throw new InvalidRequestError(`Subject is not taken down`)
     }
 
