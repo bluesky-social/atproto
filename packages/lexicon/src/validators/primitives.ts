@@ -31,6 +31,8 @@ export function validate(
       return cidLink(lexicons, path, def, value)
     case 'unknown':
       return unknown(lexicons, path, def, value)
+    case 'union':
+      return union(lexicons, path, def, value)
     default:
       return {
         success: false,
@@ -409,6 +411,31 @@ function unknown(
     return {
       success: false,
       error: new ValidationError(`${path} must be an object`),
+    }
+  }
+
+  return { success: true, value }
+}
+
+function union(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  // type
+  if (!value || typeof value !== 'object') {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be an object`),
+    }
+  }
+
+  // union type
+  if (!value['$type'] || typeof value['$type'] !== 'string') {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be an object with a $type property`),
     }
   }
 

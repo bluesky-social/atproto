@@ -454,6 +454,24 @@ describe('Record validation', () => {
     )
   })
 
+  it('Handles unions as definitions correctly', () => {
+    const result = lex.assertValidRecord('com.example.union2', {
+      $type:'com.example.union2',
+      object:{
+        $type:'com.example.union2#concrete1',
+        string:'string'
+      }
+    })
+    console.log(result)
+    expect(result).toEqual({
+      $type: 'com.example.union2',
+      object: {
+        $type:'com.example.union2#concrete1',
+        string:'string'
+      }
+    })
+  })
+
   it('Handles unknowns correctly', () => {
     lex.assertValidRecord('com.example.unknown', {
       $type: 'com.example.unknown',

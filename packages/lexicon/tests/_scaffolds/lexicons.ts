@@ -184,6 +184,47 @@ const lexicons: LexiconDoc[] = [
   },
   {
     lexicon: 1,
+    id: 'com.example.union2',
+    defs: {
+        main: {
+            type: 'record',
+            record: {
+                type: 'object',
+                properties: {
+                    object:{
+                        type:'ref',
+                        ref:'#generic'
+                    }
+                }
+            }
+        },
+        generic: {
+            type: 'union',
+            refs: [
+                '#concrete1',
+                '#concrete2'
+            ]
+        },
+        concrete1: {
+            type: 'object',
+            properties: {
+                string: {
+                    type: 'string'
+                }
+            }
+        },
+        concrete2: {
+            type: 'object',
+            properties: {
+                integer: {
+                    type: 'integer'
+                }
+            }
+        }
+    }
+  },
+  {
+    lexicon: 1,
     id: 'com.example.unknown',
     defs: {
       main: {

@@ -343,6 +343,7 @@ export const lexUserType = z.custom<
   | LexBytes
   | LexCidLink
   | LexUnknown
+  | LexRefUnion
 >(
   (val) => {
     if (!val || typeof val !== 'object') {
