@@ -20,7 +20,6 @@ export class LexiconStreamIndexer
     readonly source: AsyncIterable<LexiconDoc> | Iterable<LexiconDoc>,
   ) {
     super()
-
     this.#stream =
       source instanceof Readable
         ? source

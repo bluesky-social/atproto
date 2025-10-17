@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
 import { LexiconDoc } from '../../doc/lexicon-document.js'
@@ -64,28 +65,18 @@ export class TsRefResolver {
 
   private resolveAtproto = memoize(
     async (fullRef: string): Promise<ResolvedRef> => {
+      assert(fullRef.startsWith('com.atproto.'))
+
       const [nsid, hash] = fullRef.split('#')
 
-      // Lets first make sure the referenced def exists (we already know the
-      // lexicon exists since it's part of the atproto package)
-      const module = await import(`@atproto/lex/${nsid}`).catch((cause) => {
-        throw new Error(
-          `Failed to import @atproto/lex/${nsid} (referenced from ${this.doc.id})`,
-          { cause },
-        )
-      })
-      if (!l.hasOwn(module, hash)) {
-        throw new Error(
-          `Lexicon reference ${hash} not found in @atproto/lex/${nsid} (referenced from ${this.doc.id})`,
-        )
-      }
+      // import * as <comId> from '@atproto/lex/com'
+      const comId = this.getNsIdentifier('com', `@atproto/lex/com`)
 
-      const nsIdentifier = this.getNsIdentifier(nsid, `@atproto/lex/${nsid}`)
+      // <comId>.atproto...
+      const nsIdentifier = `${comId}.${nsid.slice(4)}`
 
       return {
         varName: `${nsIdentifier}.${hash}`,
-        // @NOTE Prefer the .Record export (instead of .Main) when referencing a
-        // record definition:
         typeName: `${nsIdentifier}.${ucFirst(hash)}`,
       }
     },
@@ -114,6 +105,7 @@ export class TsRefResolver {
         )
       }
 
+      // import * as <nsIdentifier> from './<moduleSpecifier>'
       const nsIdentifier = this.getNsIdentifier(nsid, moduleSpecifier)
 
       return {
@@ -238,11 +230,11 @@ function nsidToIdentifier(nsid: string) {
   // Keep only the last two segments of the nsid for brevity (while keeping
   // some "context"). This will work particularly well for lexicons build with
   // two levels of nsid "grouping" (like app.bsky.*.*, com.atproto.*.*).
-  const identifier = nsid
-    .split('.')
-    .slice(-2)
-    .map(nsidSegmentToIdentifier)
-    .join('')
+  const identifier =
+    nsid.includes('.') || nsid.includes('-')
+      ? nsid.split('.').slice(-2).map(nsidSegmentToIdentifier).join('')
+      : nsid
+
   if (startsWithDigit(identifier)) {
     return `N${identifier}`
   }
