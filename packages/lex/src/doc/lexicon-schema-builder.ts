@@ -44,7 +44,7 @@ export class LexiconSchemaBuilder {
   ): Promise<Map<string, l.LexValidator<unknown>>> {
     const builder = new LexiconSchemaBuilder(indexer, options)
     const schemas = new Map<string, l.LexValidator<unknown>>()
-    if (!l.isAsyncIterableObject(indexer) && !l.isIterableObject(indexer)) {
+    if (!l.isAsyncIterableObject(indexer)) {
       throw new Error('An iterable indexer is required to build all schemas')
     }
     try {

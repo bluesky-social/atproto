@@ -1,11 +1,11 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { LexiconDoc, lexiconDoc } from '../../doc/index.js'
-import { LexiconStreamIndexer } from './lexicon-stream-indexer.js'
+import { LexiconIterableIndexer } from './lexicon-iterable-indexer.js'
 
 export type LexiconDirectoryIndexerOptions = ReadLexiconsOptions
 
-export class LexiconDirectoryIndexer extends LexiconStreamIndexer {
+export class LexiconDirectoryIndexer extends LexiconIterableIndexer {
   constructor(options: LexiconDirectoryIndexerOptions) {
     super(readLexicons(options))
   }

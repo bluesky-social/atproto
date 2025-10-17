@@ -97,9 +97,9 @@ export function hasOwn<T extends object, K extends PropertyKey>(
   return Object.hasOwn(obj, key)
 }
 
-export function isIterableObject(
-  obj: unknown,
-): obj is object & Iterable<unknown> {
+export function isIterableObject<T>(
+  obj: T,
+): obj is T & object & Iterable<unknown> {
   return (
     isObject(obj) &&
     Symbol.iterator in obj &&
@@ -107,9 +107,9 @@ export function isIterableObject(
   )
 }
 
-export function isAsyncIterableObject(
-  obj: unknown,
-): obj is object & AsyncIterable<unknown> {
+export function isAsyncIterableObject<T>(
+  obj: T,
+): obj is T & object & AsyncIterable<unknown> {
   return (
     isObject(obj) &&
     Symbol.asyncIterator in obj &&

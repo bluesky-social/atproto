@@ -7,7 +7,7 @@ import { Filter } from './filter.js'
  * If a document was filtered out but later requested via `get()`, the filter
  * will be bypassed for that document.
  */
-export class FilteredIndexer implements LexiconIndexer {
+export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
   readonly #returned = new Set<string>()
 
   constructor(
@@ -47,5 +47,9 @@ export class FilteredIndexer implements LexiconIndexer {
         }
       }
     } while (returnedAny)
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.indexer[Symbol.asyncDispose]?.()
   }
 }
