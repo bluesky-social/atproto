@@ -1,0 +1,10 @@
+{
+  "extends": ["../../tsconfig/isomorphic.json"],
+  "include": ["./src/lex"],
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "importHelpers": true,
+    "rootDir": "./src",
+    "outDir": "dist"
+  }
+}

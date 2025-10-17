@@ -1,0 +1,11 @@
+{
+  "extends": ["../../tsconfig/node.json"],
+  "include": ["./src/bin"],
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "importHelpers": true,
+    "types": ["node"],
+    "rootDir": "./src",
+    "outDir": "dist"
+  }
+}

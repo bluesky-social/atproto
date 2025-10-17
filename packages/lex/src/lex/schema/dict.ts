@@ -1,0 +1,55 @@
+import {
+  Infer,
+  LexValidator,
+  ValidationContext,
+  ValidationResult,
+  isPureObject,
+} from '../core.js'
+
+export type LexDictOutput<
+  KeySchema extends LexValidator<string>,
+  ValueSchema extends LexValidator<unknown>,
+> = Record<Infer<KeySchema>, Infer<ValueSchema>>
+
+/**
+ * @note There is no dictionary in Lexicon schemas. This is a custom extension
+ * to allow map-like objects when using the lex library programmatically (i.e.
+ * not code generated from a lexicon schema).
+ */
+export class LexDict<
+  const KeySchema extends LexValidator<string> = any,
+  const ValueSchema extends LexValidator<unknown> = any,
+> extends LexValidator<LexDictOutput<KeySchema, ValueSchema>> {
+  constructor(
+    readonly $keySchema: KeySchema,
+    readonly $valueSchema: ValueSchema,
+  ) {
+    super()
+  }
+
+  protected override $validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<LexDictOutput<KeySchema, ValueSchema>> {
+    if (!isPureObject(input)) {
+      return ctx.issueInvalidType(input, 'dict')
+    }
+
+    let copy: undefined | Record<string, unknown>
+
+    for (const key in input) {
+      const keyResult = ctx.validate(key, this.$keySchema)
+      if (!keyResult.success) return keyResult
+
+      const valueResult = ctx.validateChild(input, key, this.$valueSchema)
+      if (!valueResult.success) return valueResult
+
+      if (valueResult.value !== input[key]) {
+        copy ??= { ...input }
+        copy[key] = valueResult.value
+      }
+    }
+
+    return ctx.success((copy ?? input) as LexDictOutput<KeySchema, ValueSchema>)
+  }
+}

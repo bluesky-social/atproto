@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+/* eslint-env node */
+
+const yargs = require('yargs')
+const { hideBin } = require('yargs/helpers')
+const { build } = require('./dist/bin/build.js')
+
+yargs(hideBin(process.argv))
+  //
+  .strict()
+  .command(
+    'build',
+    'Generate TypeScript lexicon schema files from JSON lexicon definitions',
+    (yargs) => {
+      return yargs.strict().options({
+        in: {
+          type: 'string',
+          demandOption: true,
+          describe: 'directory containing lexicon JSON files',
+          default: './lexicons',
+        },
+        out: {
+          type: 'string',
+          demandOption: true,
+          describe: 'output directory for generated TS files',
+          default: './src/lexicons',
+        },
+        clear: {
+          type: 'boolean',
+          default: false,
+          describe: 'clear output directory before generating files',
+        },
+        override: {
+          type: 'boolean',
+          default: false,
+          describe: 'override existing files (has no effect with --clear)',
+        },
+        format: {
+          type: 'boolean',
+          default: true,
+          describe: 'run prettier on generated files',
+        },
+        'ignore-errors': {
+          type: 'boolean',
+          default: false,
+          describe: 'how to handle errors when processing input files',
+        },
+        'import-atproto': {
+          type: 'boolean',
+          default: true,
+          describe:
+            'also generate lexicons from the "com.atproto.*" namespace instead of importing them from "@atproto/lex/com.atproto*"',
+        },
+        'pure-annotations': {
+          type: 'boolean',
+          default: false,
+          describe: 'adds `/*#__PURE__*/` annotations for tree-shaking tools',
+        },
+      })
+    },
+    (argv) => build(argv),
+  )
+  .parse()
