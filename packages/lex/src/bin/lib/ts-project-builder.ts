@@ -11,7 +11,8 @@ import { TsDocBuilder, TsDocBuilderOptions } from './ts-doc-builder.js'
 import { TsFormatter, TsFormatterOptions } from './ts-formatter.js'
 
 export type TsProjectBuilderLoadOptions = TsDocBuilderOptions &
-  LexiconDirectoryIndexerOptions
+  LexiconDirectoryIndexerOptions &
+  FilterOptions
 
 export type TsProjectBuilderSaveOptions = TsFormatterOptions & {
   out: string
@@ -27,8 +28,11 @@ export class TsProjectBuilder {
 
   public async load(options: TsProjectBuilderLoadOptions) {
     const indexer = new LexiconDirectoryIndexer(options)
+    const filter = createFilter(options)
 
     for await (const doc of indexer) {
+      if (!filter(doc.id)) continue
+
       // Skip com.atproto lexicons
       if (options.importAtproto && isAtprotoLexicon(doc.id)) continue
 
@@ -134,4 +138,37 @@ async function assertNotFileExists(file: string): Promise<void> {
     if ((err as any)?.['code'] === 'ENOENT') return
     throw err
   }
+}
+
+type FilterOptions = {
+  include?: string | string[]
+  exclude?: string | string[]
+}
+
+function createFilter(options: FilterOptions): Matcher {
+  const include = options.include ? createMatcher(options.include) : () => true
+  const exclude = options.exclude ? createMatcher(options.exclude) : () => false
+
+  return (id) => include(id) && !exclude(id)
+}
+
+type Matcher = (input: string) => boolean
+
+function createMatcher(pattern: string | string[]): Matcher {
+  if (Array.isArray(pattern)) {
+    const matchers = pattern.map(buildMatcher)
+    return (input) => matchers.some((matcher) => matcher(input))
+  } else {
+    return buildMatcher(pattern)
+  }
+}
+
+function buildMatcher(pattern: string): Matcher {
+  if (pattern.startsWith('/') && pattern.endsWith('/')) {
+    const regexBody = pattern.slice(1, -1)
+    const regex = new RegExp(regexBody)
+    return (input: string) => regex.test(input)
+  }
+
+  return (input: string) => pattern === input
 }

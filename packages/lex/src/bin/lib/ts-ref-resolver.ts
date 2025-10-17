@@ -68,7 +68,12 @@ export class TsRefResolver {
 
       // Lets first make sure the referenced def exists (we already know the
       // lexicon exists since it's part of the atproto package)
-      const module = await import(`@atproto/lex/${nsid}`)
+      const module = await import(`@atproto/lex/${nsid}`).catch((cause) => {
+        throw new Error(
+          `Failed to import @atproto/lex/${nsid} (referenced from ${this.doc.id})`,
+          { cause },
+        )
+      })
       if (!l.hasOwn(module, hash)) {
         throw new Error(
           `Lexicon reference ${hash} not found in @atproto/lex/${nsid} (referenced from ${this.doc.id})`,

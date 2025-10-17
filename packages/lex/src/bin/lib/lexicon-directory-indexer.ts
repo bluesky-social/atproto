@@ -3,10 +3,7 @@ import { join } from 'node:path'
 import { LexiconDoc, lexiconDoc } from '../../doc/index.js'
 import { LexiconStreamIndexer } from './lexicon-stream-indexer.js'
 
-export type LexiconDirectoryIndexerOptions = {
-  in: string
-  ignoreErrors?: boolean
-}
+export type LexiconDirectoryIndexerOptions = ReadLexiconsOptions
 
 export class LexiconDirectoryIndexer extends LexiconStreamIndexer {
   constructor(options: LexiconDirectoryIndexerOptions) {
@@ -14,8 +11,13 @@ export class LexiconDirectoryIndexer extends LexiconStreamIndexer {
   }
 }
 
+type ReadLexiconsOptions = {
+  in: string
+  ignoreErrors?: boolean
+}
+
 async function* readLexicons(
-  options: LexiconDirectoryIndexerOptions,
+  options: ReadLexiconsOptions,
 ): AsyncGenerator<LexiconDoc, void, unknown> {
   for await (const filePath of listFiles(options.in)) {
     if (filePath.endsWith('.json')) {

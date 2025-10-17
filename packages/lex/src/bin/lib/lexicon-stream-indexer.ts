@@ -27,6 +27,13 @@ export class LexiconStreamIndexer
         : Readable.from(source, { objectMode: true })
     this.#stream.pause()
     this.#stream.on('data', (doc: LexiconDoc) => {
+      if (this.#lexicons.has(doc.id)) {
+        this.#stream.destroy(
+          new Error(`Duplicate lexicon document ID encountered: ${doc.id}`),
+        )
+        return
+      }
+
       this.#lexicons.set(doc.id, doc)
       this.emit('add', doc)
     })

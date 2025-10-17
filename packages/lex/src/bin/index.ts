@@ -53,6 +53,18 @@ export async function main() {
             default: false,
             describe: 'adds `/*#__PURE__*/` annotations for tree-shaking tools',
           },
+          exclude: {
+            array: true,
+            type: 'string',
+            describe:
+              'list of strings or regex patterns to exclude lexicon documents by their IDs',
+          },
+          include: {
+            array: true,
+            type: 'string',
+            describe:
+              'list of strings or regex patterns to include lexicon documents by their IDs',
+          },
         })
       },
       (argv) => build(argv),
