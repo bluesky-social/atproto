@@ -18,15 +18,21 @@ export type TsProjectBuilderLoadOptions = TsDocBuilderOptions &
 
 export type TsProjectBuilderSaveOptions = TsFormatterOptions & {
   out: string
+  manifest?: string
   clear?: boolean
   override?: boolean
 }
 
 export class TsProjectBuilder {
+  readonly #imported = new Set<string>()
   readonly #project = new Project({
     useInMemoryFileSystem: true,
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
+
+  get imported() {
+    return Array.from(this.#imported)
+  }
 
   public async load(options: TsProjectBuilderLoadOptions) {
     const indexer = new FilteredIndexer(
@@ -35,6 +41,12 @@ export class TsProjectBuilder {
     )
 
     for await (const doc of indexer) {
+      if (!this.#imported.has(doc.id)) {
+        this.#imported.add(doc.id)
+      } else {
+        throw new Error(`Duplicate lexicon document id: ${doc.id}`)
+      }
+
       // Skip com.atproto lexicons
       if (options.importAtproto && isAtprotoLexicon(doc.id)) continue
 
@@ -69,6 +81,17 @@ export class TsProjectBuilder {
         await writeFile(filePath, content, 'utf8')
       }),
     )
+
+    if (options.manifest) {
+      const manifestPath = resolve(options.manifest)
+      const manifestContent = JSON.stringify(
+        { lexicons: this.imported.sort() },
+        null,
+        2,
+      )
+      await mkdir(join(manifestPath, '..'), { recursive: true })
+      await writeFile(manifestPath, manifestContent, 'utf8')
+    }
   }
 
   private createFile(path: string) {

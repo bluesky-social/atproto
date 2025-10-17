@@ -32,9 +32,10 @@
   "scripts": {
     "build:lib": "tsc --build tsconfig.lib.json --preserveWatchOutput",
     "build:bin": "tsc --build tsconfig.bin.json --preserveWatchOutput",
-    "prebuild:lexicons": "./lex build --clear --no-import-atproto --format --pure-annotations --in ../../lexicons/com/atproto --exclude '*.temp.*'",
+    "prebuild:lexicons": "./lex build --clear --no-import-atproto --format --pure-annotations --in ../../lexicons/com/atproto --exclude '*.temp.*' --manifest ./src/manifest.json",
     "build:lexicons": "tsc --build tsconfig.lexicons.json --preserveWatchOutput",
-    "build": "pnpm run build:lib && pnpm run build:bin && pnpm run build:lexicons"
+    "build": "pnpm run build:lib && pnpm run build:bin && pnpm run build:lexicons",
+    "postbuild": "cp ./src/manifest.json ./dist/manifest.json"
   },
   "sideEffects": false,
   "type": "commonjs",

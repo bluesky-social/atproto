@@ -22,6 +22,10 @@ export async function main() {
             describe: 'output directory for generated TS files',
             default: './src/lexicons',
           },
+          manifest: {
+            type: 'string',
+            describe: 'output path for generated manifest file',
+          },
           clear: {
             type: 'boolean',
             default: false,
