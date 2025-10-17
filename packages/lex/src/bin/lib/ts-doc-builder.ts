@@ -21,8 +21,8 @@ import {
   LexiconString,
   LexiconSubscription,
   LexiconToken,
-} from '../../doc/doc.js'
-import { l } from '../../lex/lex.js'
+} from '../../doc/index.js'
+import { l } from '../../lex/index.js'
 import {
   TsRefResolver,
   TsRefResolverOptions,
@@ -67,7 +67,7 @@ export class TsDocBuilder {
     const defs = Object.keys(this.doc.defs)
     if (defs.length) {
       this.file
-        .addImportDeclaration({ moduleSpecifier: '@atproto/lex' })
+        .addImportDeclaration({ moduleSpecifier: '@atproto/lex/lex' })
         .addNamedImports([{ name: 'l' }])
 
       for (const hash of defs) {

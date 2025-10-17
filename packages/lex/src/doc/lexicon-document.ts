@@ -1,4 +1,4 @@
-import { l } from '../lex/lex.js'
+import { l } from '../lex/index.js'
 
 // Scalar Types
 

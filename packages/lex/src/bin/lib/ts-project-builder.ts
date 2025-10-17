@@ -1,14 +1,17 @@
-import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { IndentationText, Project } from 'ts-morph'
-import { LexiconDoc, LexiconIndexer, lexiconDoc } from '../../doc/doc.js'
+import { LexiconDoc, LexiconIndexer } from '../../doc/index.js'
 import { isAtprotoLexicon } from './atproto.js'
-import { LexiconStreamIndexer } from './lexicon-stream-indexer.js'
+import {
+  LexiconDirectoryIndexer,
+  LexiconDirectoryIndexerOptions,
+} from './lexicon-directory-indexer.js'
 import { TsDocBuilder, TsDocBuilderOptions } from './ts-doc-builder.js'
 import { TsFormatter, TsFormatterOptions } from './ts-formatter.js'
 
 export type TsProjectBuilderLoadOptions = TsDocBuilderOptions &
-  ReadLexiconsOptions
+  LexiconDirectoryIndexerOptions
 
 export type TsProjectBuilderSaveOptions = TsFormatterOptions & {
   out: string
@@ -23,15 +26,7 @@ export class TsProjectBuilder {
   })
 
   public async load(options: TsProjectBuilderLoadOptions) {
-    const lexicons = readLexicons(options)
-    await this.import(lexicons, options)
-  }
-
-  public async import(
-    lexicons: AsyncIterable<LexiconDoc>,
-    options: TsDocBuilderOptions = {},
-  ) {
-    const indexer = new LexiconStreamIndexer(lexicons)
+    const indexer = new LexiconDirectoryIndexer(options)
 
     for await (const doc of indexer) {
       // Skip com.atproto lexicons
@@ -128,40 +123,6 @@ export class TsProjectBuilder {
 
     const fileBuilder = new TsDocBuilder(options, file, doc, indexer)
     await fileBuilder.build()
-  }
-}
-
-export type ReadLexiconsOptions = {
-  in: string
-  ignoreErrors?: boolean
-}
-
-async function* readLexicons(
-  options: ReadLexiconsOptions,
-): AsyncGenerator<LexiconDoc, void, unknown> {
-  for await (const filePath of listFiles(options.in)) {
-    if (filePath.endsWith('.json')) {
-      try {
-        const data = await readFile(filePath, 'utf8')
-        yield lexiconDoc.$parse(JSON.parse(data))
-      } catch (cause) {
-        const message = `Error parsing lexicon document ${filePath}`
-        if (options.ignoreErrors) console.error(`${message}:`, cause)
-        else throw new Error(message, { cause })
-      }
-    }
-  }
-}
-
-async function* listFiles(dir: string): AsyncGenerator<string> {
-  const dirents = await readdir(dir, { withFileTypes: true })
-  for (const dirent of dirents) {
-    const res = join(dir, dirent.name)
-    if (dirent.isDirectory()) {
-      yield* listFiles(res)
-    } else if (dirent.isFile() || dirent.isSymbolicLink()) {
-      yield res
-    }
   }
 }
 

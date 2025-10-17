@@ -1,6 +1,6 @@
 import EventEmitter, { on } from 'node:events'
 import { Readable } from 'node:stream'
-import { LexiconDoc, LexiconIndexer } from '../../doc/doc.js'
+import { LexiconDoc, LexiconIndexer } from '../../doc/index.js'
 
 /**
  * (Lazily) indexes lexicon documents from an iterable source.

@@ -1,1 +1,1 @@
-export * from './dist/lex/lex.js'
+export * from './dist/lex/index.js'

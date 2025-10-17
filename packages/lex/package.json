@@ -3,6 +3,8 @@
   "private": true,
   "files": [
     "./dist",
+    "./index.js",
+    "./index.d.ts",
     "./com.js",
     "./com.d.ts",
     "./doc.js",
@@ -30,17 +32,18 @@
   "scripts": {
     "build:lib": "tsc --build tsconfig.lib.json --preserveWatchOutput",
     "build:bin": "tsc --build tsconfig.bin.json --preserveWatchOutput",
-    "build:lexicons": "./lex build --clear --no-import-atproto --pure-annotations --in ../../lexicons/com/atproto",
+    "prebuild:lexicons": "./lex build --clear --no-import-atproto --pure-annotations --in ../../lexicons/com/atproto",
+    "build:lexicons": "tsc --build tsconfig.lexicons.json --preserveWatchOutput",
     "build": "pnpm run build:lib && pnpm run build:bin && pnpm run build:lexicons"
   },
   "sideEffects": false,
   "type": "commonjs",
-  "main": "./dist/main.js",
-  "types": "./dist/main.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/main.js",
-      "types": "./dist/main.d.ts"
+      "require": "./index.js",
+      "types": "./index.d.ts"
     },
     "./lex": {
       "require": "./dist/lex/lex.js",

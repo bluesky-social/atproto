@@ -3,63 +3,14 @@
 /* eslint-env node */
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-const yargs = require('yargs')
-const { hideBin } = require('yargs/helpers')
-const { build } = require('./dist/bin/build.js')
+// This file is referenced by the "bin" field in package.json. Because of that,
+// we need this file to exist on disk even before the project is built, so it is
+// written in plain JS. This allows package managers to properly link the CLI
+// command when the monorepo is being setup (during initial "pnpm install").
 
-yargs(hideBin(process.argv))
-  //
-  .strict()
-  .command(
-    'build',
-    'Generate TypeScript lexicon schema files from JSON lexicon definitions',
-    (yargs) => {
-      return yargs.strict().options({
-        in: {
-          type: 'string',
-          demandOption: true,
-          describe: 'directory containing lexicon JSON files',
-          default: './lexicons',
-        },
-        out: {
-          type: 'string',
-          demandOption: true,
-          describe: 'output directory for generated TS files',
-          default: './src/lexicons',
-        },
-        clear: {
-          type: 'boolean',
-          default: false,
-          describe: 'clear output directory before generating files',
-        },
-        override: {
-          type: 'boolean',
-          default: false,
-          describe: 'override existing files (has no effect with --clear)',
-        },
-        format: {
-          type: 'boolean',
-          default: true,
-          describe: 'run prettier on generated files',
-        },
-        'ignore-errors': {
-          type: 'boolean',
-          default: false,
-          describe: 'how to handle errors when processing input files',
-        },
-        'import-atproto': {
-          type: 'boolean',
-          default: true,
-          describe:
-            'also generate lexicons from the "com.atproto.*" namespace instead of importing them from "@atproto/lex/com.atproto*"',
-        },
-        'pure-annotations': {
-          type: 'boolean',
-          default: false,
-          describe: 'adds `/*#__PURE__*/` annotations for tree-shaking tools',
-        },
-      })
-    },
-    (argv) => build(argv),
-  )
-  .parse()
+const { main } = require('./dist/bin/index.js')
+
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

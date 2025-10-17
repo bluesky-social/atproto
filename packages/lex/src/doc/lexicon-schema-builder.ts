@@ -1,4 +1,4 @@
-import { l } from '../lex/lex.js'
+import { l } from '../lex/index.js'
 import {
   LexiconArray,
   LexiconBase,
@@ -17,7 +17,7 @@ export type LexiconSchemaBuilderOptions = {
  * @example
  *
  * ```ts
- * import { LexiconSchemaBuilder } from '@atproto/lex'
+ * import { LexiconSchemaBuilder } from '@atproto/lex/doc'
  * import { LexiconStreamIndexer } from '@atproto/lex/doc'
  *
  * const indexer = new LexiconStreamIndexer(lexiconDocs)
