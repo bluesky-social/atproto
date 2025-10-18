@@ -17,7 +17,6 @@ export type TsProjectBuilderLoadOptions = TsDocBuilderOptions &
 
 export type TsProjectBuilderSaveOptions = TsFormatterOptions & {
   out: string
-  manifest?: string
   clear?: boolean
   override?: boolean
 }
@@ -28,10 +27,6 @@ export class TsProjectBuilder {
     useInMemoryFileSystem: true,
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
-
-  get imported() {
-    return Array.from(this.#imported)
-  }
 
   public async load(options: TsProjectBuilderLoadOptions) {
     const indexer = new FilteredIndexer(
@@ -77,17 +72,6 @@ export class TsProjectBuilder {
         await writeFile(filePath, content, 'utf8')
       }),
     )
-
-    if (options.manifest) {
-      const manifestPath = resolve(options.manifest)
-      const manifestContent = JSON.stringify(
-        { lexicons: this.imported.sort() },
-        null,
-        2,
-      )
-      await mkdir(join(manifestPath, '..'), { recursive: true })
-      await writeFile(manifestPath, manifestContent, 'utf8')
-    }
   }
 
   private createFile(path: string) {
