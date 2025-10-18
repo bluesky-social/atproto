@@ -82,6 +82,8 @@ export type QueryParams = {
   minTakendownRecordsCount?: number
   /** If specified, only subjects that have priority score value above the given value will be returned. */
   minPriorityScore?: number
+  /** If specified, only subjects that belong to an account that has at least this many active strikes will be returned. */
+  minStrikeCount?: number
   /** If specified, only subjects with the given age assurance state will be returned. */
   ageAssuranceState?:
     | 'pending'

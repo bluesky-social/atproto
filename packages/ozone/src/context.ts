@@ -21,6 +21,7 @@ import {
   ModerationServiceProfile,
   ModerationServiceProfileCreator,
 } from './mod-service/profile'
+import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
 import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,
@@ -59,6 +60,7 @@ export type AppContextOptions = {
   scheduledActionService: ScheduledActionServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
+  strikeService: StrikeServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
@@ -132,17 +134,6 @@ export class AppContext {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
-    const modService = ModerationService.creator(
-      signingKey,
-      signingKeyId,
-      cfg,
-      backgroundQueue,
-      idResolver,
-      eventPusher,
-      appviewAgent,
-      createAuthHeaders,
-      overrides?.imgInvalidator,
-    )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
     const safelinkRuleService = SafelinkRuleService.creator()
@@ -154,11 +145,24 @@ export class AppContext {
     )
     const setService = SetService.creator()
     const settingService = SettingService.creator()
+    const strikeService = StrikeService.creator()
     const verificationService = VerificationService.creator()
     const verificationIssuer = VerificationIssuer.creator()
     const moderationServiceProfile = ModerationServiceProfile.creator(
       cfg,
       appviewAgent,
+    )
+    const modService = ModerationService.creator(
+      signingKey,
+      signingKeyId,
+      cfg,
+      backgroundQueue,
+      idResolver,
+      eventPusher,
+      appviewAgent,
+      createAuthHeaders,
+      strikeService,
+      overrides?.imgInvalidator,
     )
 
     const sequencer = new Sequencer(modService(db))
@@ -181,6 +185,7 @@ export class AppContext {
         teamService,
         setService,
         settingService,
+        strikeService,
         appviewAgent,
         pdsAgent,
         chatAgent,
@@ -246,6 +251,10 @@ export class AppContext {
 
   get settingService(): SettingServiceCreator {
     return this.opts.settingService
+  }
+
+  get strikeService(): StrikeServiceCreator {
+    return this.opts.strikeService
   }
 
   get verificationService(): VerificationServiceCreator {

@@ -48,6 +48,9 @@ export interface ModerationEvent {
   legacyRefId: number | null
   modTool: { name: string; meta?: { [_ in string]: unknown } } | null
   externalId: string | null
+  severityLevel: string | null
+  strikeCount: number | null
+  strikeExpiresAt: string | null
 }
 
 export type PartialDB = {

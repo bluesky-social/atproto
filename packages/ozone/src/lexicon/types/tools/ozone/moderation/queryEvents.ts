@@ -59,6 +59,8 @@ export type QueryParams = {
     | 'reset'
     | 'blocked'
     | (string & {})
+  /** If specified, only events where the strikeCount is greater than or equal to this value are returned */
+  minStrikeCount?: number
   cursor?: string
 }
 export type InputSchema = undefined

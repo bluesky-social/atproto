@@ -2,9 +2,11 @@ import { Kysely } from 'kysely'
 import * as accountEventsStats from './account_events_stats'
 import * as accountRecordEventsStats from './account_record_events_stats'
 import * as accountRecordStatusStats from './account_record_status_stats'
+import * as accountStrike from './account_strike'
 import * as blobPushEvent from './blob_push_event'
 import * as communicationTemplate from './communication_template'
 import * as firehoseCursor from './firehose_cursor'
+import * as jobCursor from './job_cursor'
 import * as label from './label'
 import * as member from './member'
 import * as modEvent from './moderation_event'
@@ -34,8 +36,10 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   recordEventsStats.PartialDB &
   accountRecordEventsStats.PartialDB &
   accountRecordStatusStats.PartialDB &
+  accountStrike.PartialDB &
   verification.PartialDB &
   firehoseCursor.PartialDB &
+  jobCursor.PartialDB &
   safelink.PartialDB &
   scheduledAction.PartialDB
 

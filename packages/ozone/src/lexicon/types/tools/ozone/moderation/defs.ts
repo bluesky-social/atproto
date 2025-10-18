@@ -157,6 +157,7 @@ export interface SubjectStatusView {
   tags?: string[]
   accountStats?: AccountStats
   recordsStats?: RecordsStats
+  accountStrike?: AccountStrike
   /** Current age assurance state of the subject. */
   ageAssuranceState?:
     | 'pending'
@@ -256,6 +257,29 @@ export function validateRecordsStats<V>(v: V) {
   return validate<RecordsStats & V>(v, id, hashRecordsStats)
 }
 
+/** Strike information for an account */
+export interface AccountStrike {
+  $type?: 'tools.ozone.moderation.defs#accountStrike'
+  /** Current number of active strikes (excluding expired strikes) */
+  activeStrikeCount?: number
+  /** Total number of strikes ever received (including expired strikes) */
+  totalStrikeCount?: number
+  /** Timestamp of the first strike received */
+  firstStrikeAt?: string
+  /** Timestamp of the most recent strike received */
+  lastStrikeAt?: string
+}
+
+const hashAccountStrike = 'accountStrike'
+
+export function isAccountStrike<V>(v: V) {
+  return is$typed(v, id, hashAccountStrike)
+}
+
+export function validateAccountStrike<V>(v: V) {
+  return validate<AccountStrike & V>(v, id, hashAccountStrike)
+}
+
 export type SubjectReviewState =
   | 'lex:tools.ozone.moderation.defs#reviewOpen'
   | 'lex:tools.ozone.moderation.defs#reviewEscalated'
@@ -282,6 +306,12 @@ export interface ModEventTakedown {
   acknowledgeAccountSubjects?: boolean
   /** Names/Keywords of the policies that drove the decision. */
   policies?: string[]
+  /** Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.). */
+  severityLevel?: string
+  /** Number of strikes to assign to the user for this violation. */
+  strikeCount?: number
+  /** When the strike should expire. If not provided, the strike never expires. */
+  strikeExpiresAt?: string
 }
 
 const hashModEventTakedown = 'modEventTakedown'
@@ -590,6 +620,14 @@ export interface ModEventEmail {
   content?: string
   /** Additional comment about the outgoing comm. */
   comment?: string
+  /** Names/Keywords of the policies that necessitated the email. */
+  policies?: string[]
+  /** Severity level of the violation. normally 'sev-1' that adds strike on repeat offense */
+  severityLevel?: string
+  /** Number of strikes to assign to the user for this violation. Normally 0 as indicator of warning and only added as strike on repeat offense. */
+  strikeCount?: number
+  /** When the strike should expire. If not provided, the strike never expires. */
+  strikeExpiresAt?: string
 }
 
 const hashModEventEmail = 'modEventEmail'

@@ -37,6 +37,12 @@ export type ModerationSubjectStatusRowWithStats = ModerationSubjectStatusRow & {
   pendingCount: number | null
   processedCount: number | null
   takendownCount: number | null
+
+  // account_strike
+  strikeCount: number | null
+  totalStrikeCount: number | null
+  firstStrikeAt: string | null
+  lastStrikeAt: string | null
 }
 
 export type ModerationSubjectStatusRowWithHandle =

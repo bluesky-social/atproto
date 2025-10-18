@@ -6,6 +6,7 @@ export { EventPusher } from './event-pusher'
 export { BlobDiverter } from './blob-diverter'
 export { EventReverser } from './event-reverser'
 export { ScheduledActionProcessor } from './scheduled-action-processor'
+export { StrikeExpiryProcessor } from './strike-expiry-processor'
 
 export class OzoneDaemon {
   constructor(public ctx: DaemonContext) {}
