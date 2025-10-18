@@ -121,7 +121,9 @@ const handleModerationEvent = async ({
     ])
   }
 
-  if (isTakedownEvent || isReverseTakedownEvent) {
+  const isTakedownOrReverseTakedownEvent =
+    isTakedownEvent || isReverseTakedownEvent
+  if (isTakedownOrReverseTakedownEvent || isLabelEvent) {
     const status = await moderationService.getStatus(subject)
 
     if (status?.takendown && isTakedownEvent) {
