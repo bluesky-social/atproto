@@ -456,20 +456,43 @@ describe('Record validation', () => {
 
   it('Handles unions as definitions correctly', () => {
     const result = lex.assertValidRecord('com.example.union2', {
-      $type:'com.example.union2',
-      object:{
-        $type:'com.example.union2#concrete1',
-        string:'string'
+      $type: 'com.example.union2',
+      object: {
+        $type: 'com.example.union2#concrete1',
+        string: 'string'
       }
     })
-    console.log(result)
     expect(result).toEqual({
       $type: 'com.example.union2',
       object: {
-        $type:'com.example.union2#concrete1',
-        string:'string'
+        $type: 'com.example.union2#concrete1',
+        string: 'string'
       }
     })
+  })
+
+  it('Fails union as main definition', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'com.example.unionmain',
+      defs: {
+        main: {
+          type: 'union',
+          refs: ['object']
+        },
+        type1: {
+          object: 'object',
+          properties: {
+            string: {
+              type: 'string'
+            }
+          }
+        }
+      },
+    }
+    expect(() => {
+      parseLexiconDoc(schema)
+    }).toThrow()
   })
 
   it('Handles unknowns correctly', () => {
