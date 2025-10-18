@@ -1242,13 +1242,11 @@ export class Views {
       above,
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
       sort,
     }: {
       above: number
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
     },
   ): { hasOtherReplies: boolean; thread: ThreadItem[] } {
@@ -1343,7 +1341,6 @@ export class Views {
                 below,
                 depth: 1,
                 branchingFactor,
-                prioritizeFollowedUsers,
               },
               state,
             )
@@ -1370,7 +1367,6 @@ export class Views {
       opDid,
       branchingFactor,
       sort,
-      prioritizeFollowedUsers,
       viewer: state.ctx?.viewer ?? null,
       threadTagsBumpDown: this.threadTagsBumpDown,
       threadTagsHide: this.threadTagsHide,
@@ -1509,7 +1505,6 @@ export class Views {
       below,
       depth,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       isOPThread: boolean
@@ -1519,7 +1514,6 @@ export class Views {
       below: number
       depth: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): { replies: ThreadTreeVisible[] | undefined; hasOtherReplies: boolean } {
@@ -1543,7 +1537,7 @@ export class Views {
 
       // Hidden.
       const { isOther } = this.isOtherThreadPost(
-        { post, postView, prioritizeFollowedUsers, rootUri, uri },
+        { post, postView, rootUri, uri },
         state,
       )
       if (isOther) {
@@ -1566,7 +1560,6 @@ export class Views {
           below,
           depth: depth + 1,
           branchingFactor,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1695,11 +1688,9 @@ export class Views {
     {
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
   ): ThreadOtherItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1734,7 +1725,6 @@ export class Views {
           childrenByParentUri,
           below,
           depth: 1,
-          prioritizeFollowedUsers,
         },
         state,
       ),
@@ -1743,7 +1733,6 @@ export class Views {
     return sortTrimFlattenThreadTree(anchorTree, {
       opDid,
       branchingFactor,
-      prioritizeFollowedUsers: false,
       viewer: state.ctx?.viewer ?? null,
       threadTagsBumpDown: this.threadTagsBumpDown,
       threadTagsHide: this.threadTagsHide,
@@ -1757,14 +1746,12 @@ export class Views {
       childrenByParentUri,
       below,
       depth,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
       below: number
       depth: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): ThreadOtherPostNode[] | undefined {
@@ -1787,10 +1774,7 @@ export class Views {
 
       // Other posts to pull out
       const { isOther, hiddenByThreadgate, mutedByViewer } =
-        this.isOtherThreadPost(
-          { post, postView, rootUri, prioritizeFollowedUsers, uri },
-          state,
-        )
+        this.isOtherThreadPost({ post, postView, rootUri, uri }, state)
       if (isOther) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
@@ -1809,7 +1793,6 @@ export class Views {
           childrenByParentUri,
           below,
           depth: depth + 1,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1928,13 +1911,11 @@ export class Views {
     {
       post,
       postView,
-      prioritizeFollowedUsers,
       rootUri,
       uri,
     }: {
       post: Post
       postView: PostView
-      prioritizeFollowedUsers: boolean
       rootUri: string
       uri: string
     },
@@ -1948,8 +1929,7 @@ export class Views {
     const opDid = creatorFromUri(rootUri)
     const authorDid = creatorFromUri(uri)
 
-    const showBecauseFollowing =
-      prioritizeFollowedUsers && !!postView.author.viewer?.following
+    const showBecauseFollowing = !!postView.author.viewer?.following
     const hiddenByTag =
       authorDid !== opDid &&
       authorDid !== state.ctx?.viewer &&
