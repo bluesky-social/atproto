@@ -478,10 +478,10 @@ describe('Record validation', () => {
       defs: {
         main: {
           type: 'union',
-          refs: ['object']
+          refs: ['type1']
         },
         type1: {
-          object: 'object',
+          type: 'object',
           properties: {
             string: {
               type: 'string'
