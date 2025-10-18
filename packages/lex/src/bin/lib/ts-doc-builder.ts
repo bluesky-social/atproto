@@ -23,13 +23,9 @@ import {
   LexiconToken,
 } from '../../doc/index.js'
 import { l } from '../../lex/index.js'
-import {
-  TsRefResolver,
-  TsRefResolverOptions,
-  useRecordExport,
-} from './ts-ref-resolver.js'
+import { TsRefResolver, useRecordExport } from './ts-ref-resolver.js'
 
-export type TsDocBuilderOptions = TsRefResolverOptions & {
+export type TsDocBuilderOptions = {
   pureAnnotations?: boolean
 }
 
@@ -45,7 +41,7 @@ export class TsDocBuilder {
     private readonly doc: LexiconDoc,
     indexer: LexiconIndexer,
   ) {
-    this.refResolver = new TsRefResolver(options, doc, file, indexer)
+    this.refResolver = new TsRefResolver(doc, file, indexer)
   }
 
   private pure(code: string) {

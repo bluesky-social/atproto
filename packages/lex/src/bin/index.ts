@@ -46,16 +46,11 @@ export async function main() {
             default: false,
             describe: 'how to handle errors when processing input files',
           },
-          'import-atproto': {
-            type: 'boolean',
-            default: true,
-            describe:
-              'also generate lexicons from the "com.atproto.*" namespace instead of importing them from "@atproto/lex/com.atproto*"',
-          },
           'pure-annotations': {
             type: 'boolean',
             default: false,
-            describe: 'adds `/*#__PURE__*/` annotations for tree-shaking tools',
+            describe:
+              'adds `/*#__PURE__*/` annotations for tree-shaking tools. Set this to true if you are using generated lexicons in a library.',
           },
           exclude: {
             array: true,

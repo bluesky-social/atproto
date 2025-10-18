@@ -2,7 +2,6 @@ import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { IndentationText, Project } from 'ts-morph'
 import { LexiconDoc, LexiconIndexer } from '../../doc/index.js'
-import { isAtprotoLexicon } from './atproto.js'
 import { BuildFilterOptions, buildFilter } from './filter.js'
 import { FilteredIndexer } from './filtered-indexer.js'
 import {
@@ -46,9 +45,6 @@ export class TsProjectBuilder {
       } else {
         throw new Error(`Duplicate lexicon document id: ${doc.id}`)
       }
-
-      // Skip com.atproto lexicons
-      if (options.importAtproto && isAtprotoLexicon(doc.id)) continue
 
       await this.createDefsFile(doc, indexer, options)
       await this.createExportTree(doc)

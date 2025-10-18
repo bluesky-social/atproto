@@ -7,10 +7,6 @@ import {
 } from './lexicon-document.js'
 import { LexiconIndexer } from './lexicon-indexer.js'
 
-export type LexiconSchemaBuilderOptions = {
-  importAtproto?: boolean
-}
-
 /**
  * Builds a validator for a given lexicon "ref" from a lexicon indexer.
  *
@@ -28,9 +24,8 @@ export class LexiconSchemaBuilder {
   static async build(
     indexer: LexiconIndexer,
     fullRef: string,
-    options?: LexiconSchemaBuilderOptions,
   ): Promise<l.LexValidator<unknown>> {
-    const ctx = new LexiconSchemaBuilder(indexer, options)
+    const ctx = new LexiconSchemaBuilder(indexer)
     try {
       return await ctx.buildRef(fullRef)
     } finally {
@@ -40,9 +35,8 @@ export class LexiconSchemaBuilder {
 
   static async buildAll(
     indexer: LexiconIndexer,
-    options?: LexiconSchemaBuilderOptions,
   ): Promise<Map<string, l.LexValidator<unknown>>> {
-    const builder = new LexiconSchemaBuilder(indexer, options)
+    const builder = new LexiconSchemaBuilder(indexer)
     const schemas = new Map<string, l.LexValidator<unknown>>()
     if (!l.isAsyncIterableObject(indexer)) {
       throw new Error('An iterable indexer is required to build all schemas')
@@ -63,10 +57,7 @@ export class LexiconSchemaBuilder {
 
   #asyncTasks = new AsyncTasks()
 
-  constructor(
-    protected indexer: LexiconIndexer,
-    protected options?: LexiconSchemaBuilderOptions,
-  ) {}
+  constructor(protected indexer: LexiconIndexer) {}
 
   async done(): Promise<void> {
     await this.#asyncTasks.done()
@@ -75,16 +66,6 @@ export class LexiconSchemaBuilder {
   buildRef = memoize(
     async (fullRef: string): Promise<l.LexValidator<unknown>> => {
       const { nsid, hash } = parseRef(fullRef)
-
-      if (this.options?.importAtproto && nsid.startsWith('com.atproto.')) {
-        const schema = await import(`@atproto/lex/${nsid}`).then(
-          (m) => m[hash],
-          () => null,
-        )
-        if (schema) {
-          return schema
-        }
-      }
 
       const doc = await this.indexer.get(nsid)
       if (!doc) throw new Error(`No lexicon found for NSID: ${nsid}`)

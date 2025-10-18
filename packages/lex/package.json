@@ -3,10 +3,8 @@
   "private": true,
   "files": [
     "./dist",
-    "./index.js",
-    "./index.d.ts",
-    "./com.js",
-    "./com.d.ts",
+    "./lib.js",
+    "./lib.d.ts",
     "./doc.js",
     "./doc.d.ts",
     "./lex.js",
@@ -30,21 +28,16 @@
     "@types/yargs": "^17.0.33"
   },
   "scripts": {
-    "build:lib": "tsc --build tsconfig.lib.json --preserveWatchOutput",
-    "build:bin": "tsc --build tsconfig.bin.json --preserveWatchOutput",
-    "prebuild:lexicons": "./lex build --clear --no-import-atproto --format --pure-annotations --in ../../lexicons/com/atproto --exclude '*.temp.*' --manifest ./src/manifest.json",
-    "build:lexicons": "tsc --build tsconfig.lexicons.json --preserveWatchOutput",
-    "build": "pnpm run build:lib && pnpm run build:bin && pnpm run build:lexicons",
-    "postbuild": "cp ./src/manifest.json ./dist/manifest.json"
+    "build": "tsc --build tsconfig.json"
   },
   "sideEffects": false,
   "type": "commonjs",
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./lib.js",
+  "types": "./lib.d.ts",
   "exports": {
     ".": {
-      "require": "./index.js",
-      "types": "./index.d.ts"
+      "require": "./lib.js",
+      "types": "./lib.d.ts"
     },
     "./lex": {
       "require": "./dist/lex/lex.js",
@@ -53,10 +46,6 @@
     "./doc": {
       "require": "./dist/doc/doc.js",
       "types": "./dist/doc/doc.d.ts"
-    },
-    "./com": {
-      "require": "./dist/lexicons/com.js",
-      "types": "./dist/lexicons/com.d.ts"
     }
   }
 }

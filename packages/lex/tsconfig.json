@@ -2,7 +2,6 @@
   "include": [],
   "references": [
     { "path": "./tsconfig.bin.json" },
-    { "path": "./tsconfig.lib.json" },
-    { "path": "./tsconfig.lexicons.json" }
+    { "path": "./tsconfig.lib.json" }
   ]
 }

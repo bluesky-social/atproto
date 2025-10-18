@@ -1,10 +1,8 @@
-import assert from 'node:assert'
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
 import { LexiconDoc } from '../../doc/lexicon-document.js'
 import { LexiconIndexer } from '../../doc/lexicon-indexer.js'
 import { l } from '../../lex/index.js'
-import { isAtprotoLexicon } from './atproto.js'
 import { isReservedWord, isSafeIdentifier } from './ts-lang.js'
 import { asRelativePath, memoize, ucFirst } from './util.js'
 
@@ -13,17 +11,12 @@ export type ResolvedRef = {
   typeName: string
 }
 
-export type TsRefResolverOptions = {
-  importAtproto?: boolean
-}
-
 /**
  * Utility class to resolve lexicon references to TypeScript identifiers,
  * generating import statements as needed.
  */
 export class TsRefResolver {
   constructor(
-    private options: TsRefResolverOptions,
     private doc: LexiconDoc,
     private file: SourceFile,
     private indexer: LexiconIndexer,
@@ -38,8 +31,6 @@ export class TsRefResolver {
 
       if (nsid === '' || nsid === this.doc.id) {
         return this.resolveLocal(hash)
-      } else if (this.options.importAtproto && isAtprotoLexicon(nsid)) {
-        return this.resolveAtproto(fullRef)
       } else {
         return this.resolveExternal(fullRef)
       }
@@ -60,25 +51,6 @@ export class TsRefResolver {
       }
       const varName = `loc$${this.#locCounter++}`
       return { varName, typeName: ucFirst(varName) }
-    },
-  )
-
-  private resolveAtproto = memoize(
-    async (fullRef: string): Promise<ResolvedRef> => {
-      assert(fullRef.startsWith('com.atproto.'))
-
-      const [nsid, hash] = fullRef.split('#')
-
-      // import * as <comId> from '@atproto/lex/com'
-      const comId = this.getNsIdentifier('com', `@atproto/lex/com`)
-
-      // <comId>.atproto...
-      const nsIdentifier = `${comId}.${nsid.slice(4)}`
-
-      return {
-        varName: `${nsIdentifier}.${hash}`,
-        typeName: `${nsIdentifier}.${ucFirst(hash)}`,
-      }
     },
   )
 
