@@ -609,6 +609,7 @@ export class ModerationService {
       subject.blobCids,
     )
 
+    log.info('test')
     return { event: modEvent, subjectStatus }
   }
 
