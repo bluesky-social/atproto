@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.149
+
+### Patch Changes
+
+- [#4274](https://github.com/bluesky-social/atproto/pull/4274) [`ca768fe1b`](https://github.com/bluesky-social/atproto/commit/ca768fe1b0ba1662140b6eea550683d8675fa56e) Thanks [@foysalit](https://github.com/foysalit)! - Fix fetching event detail for subject with blob
+
+- Updated dependencies [[`386f583cf`](https://github.com/bluesky-social/atproto/commit/386f583cffa2c596a12be4e98dde498f3b8670f6)]:
+  - @atproto/api@0.17.3
+
 ## 0.1.148
 
 ### Patch Changes

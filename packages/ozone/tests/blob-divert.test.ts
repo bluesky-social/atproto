@@ -95,6 +95,9 @@ describe('blob divert', () => {
       })
 
       expect(subjectStatuses[0].takendown).toBe(true)
+
+      const event = await modClient.getEvent(divertEvent.id)
+      expect(forSnapshot(event)).toMatchSnapshot()
     } finally {
       reportServiceRequest.mockRestore()
     }

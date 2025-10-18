@@ -3694,7 +3694,7 @@ export const schemaDict = {
             },
             hiddenReplies: {
               type: 'array',
-              maxLength: 50,
+              maxLength: 300,
               items: {
                 type: 'string',
                 format: 'at-uri',
