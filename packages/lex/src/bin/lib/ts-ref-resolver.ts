@@ -13,7 +13,7 @@ export type ResolvedRef = {
 
 /**
  * Utility class to resolve lexicon references to TypeScript identifiers,
- * generating import statements as needed.
+ * generating "import" statements as needed.
  */
 export class TsRefResolver {
   constructor(
@@ -128,6 +128,10 @@ export class TsRefResolver {
   }
 
   private conflictsWithKeywords(name: string) {
+    return isReservedWord(name)
+  }
+
+  private conflictsWithUtils(name: string) {
     // Do not allow "Main" as imported ns identifier since it has a special
     // meaning in the context of lexicon definitions.
     if (name === 'Main') return true
@@ -137,10 +141,6 @@ export class TsRefResolver {
     // names are not conflicting with local variables.
     if (name === 'Record') return true
 
-    return isReservedWord(name)
-  }
-
-  private conflictsWithUtils(name: string) {
     // Namespace escape hatch (in case a lexicon group name has the same name as
     // a parent namespace definition fragment).
     if (name === '$defs') return true

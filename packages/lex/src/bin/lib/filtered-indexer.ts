@@ -24,6 +24,11 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
     const returned = new Set<string>()
 
     for await (const doc of this.indexer) {
+      if (returned.add(doc.id)) {
+        // Should never happen
+        throw new Error(`Duplicate lexicon document id: ${doc.id}`)
+      }
+
       if (this.#returned.has(doc.id) || this.filter(doc.id)) {
         this.#returned.add(doc.id)
         returned.add(doc.id)
@@ -33,8 +38,8 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
 
     // When we yield control back to the caller, there may be requests (.get())
     // for documents that were initially ignored (filtered out). We won't be
-    // done iterating until every document that has been requested has been
-    // yielded.
+    // done iterating until every document that may have been requested when the
+    // control was yielded to the caller has been returned.
 
     let returnedAny: boolean
     do {

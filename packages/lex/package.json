@@ -2,14 +2,15 @@
   "name": "@atproto/lex",
   "private": true,
   "files": [
-    "./dist",
     "./lib.js",
     "./lib.d.ts",
     "./doc.js",
     "./doc.d.ts",
     "./lex.js",
     "./lex.d.ts",
-    "./lex"
+    "./lex",
+    "./src",
+    "./dist"
   ],
   "bin": {
     "lex": "./bin.js"

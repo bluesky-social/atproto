@@ -3,7 +3,7 @@ import { hideBin } from 'yargs/helpers'
 import { build } from './commands.js'
 
 export async function main() {
-  const result = yargs(hideBin(process.argv))
+  await yargs(hideBin(process.argv))
     .strict()
     .command(
       'build',
@@ -66,9 +66,7 @@ export async function main() {
           },
         })
       },
-      (argv) => build(argv),
+      async (argv) => build(argv),
     )
     .parse()
-
-  return result
 }
