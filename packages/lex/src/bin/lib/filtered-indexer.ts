@@ -24,7 +24,7 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
     const returned = new Set<string>()
 
     for await (const doc of this.indexer) {
-      if (returned.add(doc.id)) {
+      if (returned.has(doc.id)) {
         // Should never happen
         throw new Error(`Duplicate lexicon document id: ${doc.id}`)
       }
