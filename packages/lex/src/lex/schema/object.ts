@@ -20,9 +20,9 @@ export type ObjectSchemaOptions = {
   nullable?: readonly string[]
 }
 
-export type ObjectSchemaNullProp<
-  K extends string,
+export type ObjectSchemaNullValue<
   O extends ObjectSchemaOptions,
+  K extends string,
 > = O extends { nullable: readonly (infer N extends string)[] }
   ? K extends N
     ? null
@@ -37,17 +37,17 @@ export type ObjectSchemaOutput<
       {
         -readonly [K in string & keyof P & R]-?:
           | Infer<P[K]>
-          | ObjectSchemaNullProp<K, O>
+          | ObjectSchemaNullValue<O, K>
       } & {
-        -readonly [K in string & Exclude<keyof P, R>]?:
+        -readonly [K in Exclude<string & keyof P, R>]?:
           | Infer<P[K]>
-          | ObjectSchemaNullProp<K, O>
+          | ObjectSchemaNullValue<O, K>
       }
     >
   : {
       -readonly [K in string & keyof P]?:
         | Infer<P[K]>
-        | ObjectSchemaNullProp<K, O>
+        | ObjectSchemaNullValue<O, K>
     }
 
 export class ObjectSchema<

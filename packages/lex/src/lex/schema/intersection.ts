@@ -61,7 +61,8 @@ export class IntersectionSchema<
     let copy: undefined | Record<string, unknown>
 
     for (const key in value) {
-      if (this.knownProps.knownKeys.has(key)) continue
+      // Ignore properties validated through this.knownProps before
+      if (this.knownProps.validatorsMap.has(key)) continue
 
       const keyResult = ctx.validate(key, this.extraProps.keySchema)
       if (!keyResult.success) return keyResult
