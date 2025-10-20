@@ -1,16 +1,16 @@
-import { LexiconDoc, LexiconIndexer } from '../../doc/index.js'
+import { LexiconDocument, LexiconIndexer } from '../../doc/index.js'
 
 /**
  * (Lazily) indexes lexicon documents from an iterable source.
  */
 export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
-  readonly #lexicons: Map<string, LexiconDoc> = new Map()
+  readonly #lexicons: Map<string, LexiconDocument> = new Map()
   readonly #iterator:
-    | AsyncIterator<LexiconDoc, void, unknown>
-    | Iterator<LexiconDoc, void, unknown>
+    | AsyncIterator<LexiconDocument, void, unknown>
+    | Iterator<LexiconDocument, void, unknown>
 
   constructor(
-    readonly source: AsyncIterable<LexiconDoc> | Iterable<LexiconDoc>,
+    readonly source: AsyncIterable<LexiconDocument> | Iterable<LexiconDocument>,
   ) {
     this.#iterator =
       Symbol.asyncIterator in source
@@ -18,7 +18,7 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
         : source[Symbol.iterator]()
   }
 
-  async get(id: string): Promise<LexiconDoc> {
+  async get(id: string): Promise<LexiconDocument> {
     const cached = this.#lexicons.get(id)
     if (cached) return cached
 
@@ -29,7 +29,11 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
     throw new Error(`Lexicon ${id} not found`)
   }
 
-  async *[Symbol.asyncIterator](): AsyncIterator<LexiconDoc, void, undefined> {
+  async *[Symbol.asyncIterator](): AsyncIterator<
+    LexiconDocument,
+    void,
+    undefined
+  > {
     const returned = new Set<string>()
 
     for (const doc of this.#lexicons.values()) {

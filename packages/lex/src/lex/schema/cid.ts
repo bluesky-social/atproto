@@ -1,13 +1,13 @@
 import { CID } from 'multiformats/cid'
 import {
-  LexValidator,
   ValidationContext,
   ValidationResult,
+  Validator,
   parseIpldLink,
 } from '../core.js'
 
-export class LexCidLink extends LexValidator<CID> {
-  protected override $validateInContext(
+export class CidSchema extends Validator<CID> {
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<CID> {
@@ -17,6 +17,6 @@ export class LexCidLink extends LexValidator<CID> {
     const parsed = parseIpldLink(input)
     if (parsed) return ctx.success(parsed)
 
-    return ctx.issueInvalidType(input, 'cid-link')
+    return ctx.issueInvalidType(input, 'cid')
   }
 }

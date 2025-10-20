@@ -1,6 +1,6 @@
-export type LexRecordKey = 'any' | 'nsid' | 'tid' | `literal:${string}`
+export type RecordKey = 'any' | 'nsid' | 'tid' | `literal:${string}`
 
-export function isLexRecordKey(key: unknown): key is LexRecordKey {
+export function isRecordKey<T>(key: T): key is T & RecordKey {
   return (
     key === 'any' ||
     key === 'nsid' ||
@@ -9,7 +9,12 @@ export function isLexRecordKey(key: unknown): key is LexRecordKey {
   )
 }
 
-export function asLexRecordKey(key: unknown): LexRecordKey {
-  if (isLexRecordKey(key)) return key
+export function asRecordKey(key: unknown): RecordKey {
+  if (isRecordKey(key)) return key
   throw new Error(`Invalid record key: ${String(key)}`)
+}
+
+export function ifRecordKey(key: unknown): RecordKey | undefined {
+  if (isRecordKey(key)) return key
+  return undefined
 }

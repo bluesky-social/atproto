@@ -1,23 +1,23 @@
 import { Infer } from '../core.js'
-import { LexParams } from './params.js'
-import { InferLexPayloadBody, LexPayload } from './payload.js'
+import { ParamsSchema } from './params.js'
+import { InferPayloadSchemaBody, PayloadSchema } from './payload.js'
 
-export type InferLexQueryParams<Q extends LexQuery> =
-  Q extends LexQuery<any, any, infer P extends LexParams> ? Infer<P> : never
+export type InferQueryParams<Q extends Query> =
+  Q extends Query<any, any, infer P extends ParamsSchema> ? Infer<P> : never
 
-export type InferLexQueryOutput<Q extends LexQuery> =
-  Q extends LexQuery<any, infer O extends LexPayload, any>
-    ? InferLexPayloadBody<O>
+export type InferQueryOutput<Q extends Query> =
+  Q extends Query<any, infer O extends PayloadSchema, any>
+    ? InferPayloadSchemaBody<O>
     : never
 
-export class LexQuery<
+export class Query<
   N extends string = any,
-  O extends LexPayload = any,
-  P extends LexParams = any,
+  O extends PayloadSchema = any,
+  P extends ParamsSchema = any,
 > {
   constructor(
-    readonly $nsid: N,
-    readonly $output: O,
-    readonly $parameters: P,
+    readonly nsid: N,
+    readonly outputSchema: O,
+    readonly parametersSchema: P,
   ) {}
 }

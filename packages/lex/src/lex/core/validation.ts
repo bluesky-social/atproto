@@ -6,8 +6,8 @@ export type FailureResult = { success: false; error: ValidationError }
 
 export type ValidationResult<Value = any> = SuccessResult<Value> | FailureResult
 
-export type Infer<T extends LexValidator> =
-  T extends LexValidator<infer V> ? V : never
+export type Infer<T extends Validator> =
+  T extends Validator<infer V> ? V : never
 
 export class ValidationError extends Error {
   name = 'ValidationError'
@@ -29,7 +29,7 @@ function extractFailureIssues(result: FailureResult): Issue[] {
   return result.error.issues
 }
 
-export abstract class LexValidator<V = any> {
+export abstract class Validator<V = any> {
   /**
    * @internal
    *
@@ -49,33 +49,63 @@ export abstract class LexValidator<V = any> {
    * transformations), by checking if the returned value is strictly equal to
    * the input.
    */
-  protected abstract $validateInContext(
+  protected abstract validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<V>
 
-  $is<T>(input: T): input is T & V {
+  is<T>(input: T): input is T & V {
     const result = ValidationContext.validate(input, this, {
       allowTransform: false,
     })
     return result.success
   }
 
-  $parse(input: unknown, options?: ValidationOptions): V {
+  parse(input: unknown, options?: ValidationOptions): V {
     const result = ValidationContext.validate(input, this, options)
     if (!result.success) throw result.error
     return result.value
   }
 
-  $assert(input: unknown): asserts input is V {
+  assert(input: unknown): asserts input is V {
     const result = ValidationContext.validate(input, this, {
       allowTransform: false,
     })
     if (!result.success) throw result.error
   }
 
-  $validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
+  validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
     return ValidationContext.validate(input, this, options)
+  }
+
+  // @NOTE The built lexicons namespaces will export utility functions that
+  // allow accessing the schema's methods without the need to specify ".main."
+  // as part of the namespace. This way, a utility for a particular record type
+  // can be called like "app.bsky.feed.post.<utility>()" instead of
+  // "app.bsky.feed.post.main.<utility>()". Because those utilities could
+  // conflict with other schemas (e.g. if there is a lexicon definition at
+  // "#<utility>"), those exported utilities will be prefixed with "$". In order
+  // to be able to consistently call the utilities, when using the "main" and
+  // non "main" definitions, we also expose the same methods with a "$" prefix.
+  // Thanks to this, both of the following call will be possible:
+  //
+  // - "app.bsky.feed.post.$parse(...)" // calls a utility function created by "lex build"
+  // - "app.bsky.feed.defs.postView.$parse(...)" // uses the alias defined below on the schema instance
+
+  $is<T>(input: T): input is T & V {
+    return this.is<T>(input)
+  }
+
+  $parse(input: unknown, options?: ValidationOptions): V {
+    return this.parse(input, options)
+  }
+
+  $assert(input: unknown): asserts input is V {
+    this.assert(input)
+  }
+
+  $validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
+    return this.validate(input, options)
   }
 }
 
@@ -89,7 +119,7 @@ type ValidationOptions = {
 export class ValidationContext {
   static validate<V>(
     input: unknown,
-    validator: LexValidator<V>,
+    validator: Validator<V>,
     options?: ValidationOptions,
   ): ValidationResult<V> {
     const context = new ValidationContext(options)
@@ -111,10 +141,10 @@ export class ValidationContext {
     return this.options?.allowTransform !== false
   }
 
-  validate<V>(input: unknown, validator: LexValidator<V>): ValidationResult<V> {
-    // @ts-expect-error $validateInContext is abstract because it is @internal
+  validate<V>(input: unknown, validator: Validator<V>): ValidationResult<V> {
+    // @ts-expect-error validateInContext is abstract because it is @internal
     // (and meant to be called only from here).
-    const result = validator.$validateInContext(input, this)
+    const result = validator.validateInContext(input, this)
 
     // If the value changed, it means that a default or transformation was
     // applied, meaning that the original value did *not* match the (output)
@@ -129,7 +159,7 @@ export class ValidationContext {
   validateChild<I extends object, K extends PropertyKey & keyof I, V>(
     input: I,
     key: K,
-    validator: LexValidator<V>,
+    validator: Validator<V>,
   ): ValidationResult<V> {
     // Instead of creating a new context, we just push/pop the path segment.
     this.#path.push(key)

@@ -1,16 +1,16 @@
-import { LexPermission } from './permission.js'
+import { Permission } from './permission.js'
 
-export type LexPermissionSetOptions = {
+export type PermissionSetOptions = {
   title?: string
   'title:lang'?: Record<string, undefined | string>
   detail?: string
   'detail:lang'?: Record<string, undefined | string>
 }
 
-export class LexPermissionSet<
+export class PermissionSet<
   const Nsid extends string = any,
-  const Permissions extends readonly LexPermission[] = any,
-  const Options extends LexPermissionSetOptions = any,
+  const Permissions extends readonly Permission[] = any,
+  const Options extends PermissionSetOptions = any,
 > {
   constructor(
     readonly nsid: Nsid,

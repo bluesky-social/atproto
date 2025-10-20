@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { LexiconDoc, lexiconDoc } from '../../doc/index.js'
+import { LexiconDocument, lexiconDocumentSchema } from '../../doc/index.js'
 import { LexiconIterableIndexer } from './lexicon-iterable-indexer.js'
 
 export type LexiconDirectoryIndexerOptions = ReadLexiconsOptions
@@ -18,12 +18,12 @@ type ReadLexiconsOptions = {
 
 async function* readLexicons(
   options: ReadLexiconsOptions,
-): AsyncGenerator<LexiconDoc, void, unknown> {
+): AsyncGenerator<LexiconDocument, void, unknown> {
   for await (const filePath of listFiles(options.in)) {
     if (filePath.endsWith('.json')) {
       try {
         const data = await readFile(filePath, 'utf8')
-        yield lexiconDoc.$parse(JSON.parse(data))
+        yield lexiconDocumentSchema.$parse(JSON.parse(data))
       } catch (cause) {
         const message = `Error parsing lexicon document ${filePath}`
         if (options.ignoreErrors) console.error(`${message}:`, cause)

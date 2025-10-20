@@ -1,13 +1,13 @@
-import { LexParameterValue } from './_parameters.js'
+import { Parameter } from './_parameters.js'
 
-export type LexPermissionOptions = Record<string, LexParameterValue>
+export type PermissionOptions = Record<string, Parameter>
 
-export class LexPermission<
+export class Permission<
   const Resource extends string = any,
-  const Options extends LexPermissionOptions = any,
+  const Options extends PermissionOptions = any,
 > {
   constructor(
-    readonly $resource: Resource,
-    readonly $options: Options,
+    readonly resource: Resource,
+    readonly options: Options,
   ) {}
 }

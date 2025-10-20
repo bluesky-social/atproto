@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
-import { LexiconDoc } from '../../doc/lexicon-document.js'
+import { LexiconDocument } from '../../doc/lexicon-document.js'
 import { LexiconIndexer } from '../../doc/lexicon-indexer.js'
 import { l } from '../../lex/index.js'
 import { isReservedWord, isSafeIdentifier } from './ts-lang.js'
@@ -17,7 +17,7 @@ export type ResolvedRef = {
  */
 export class TsRefResolver {
   constructor(
-    private doc: LexiconDoc,
+    private doc: LexiconDocument,
     private file: SourceFile,
     private indexer: LexiconIndexer,
   ) {}
@@ -222,7 +222,7 @@ function nsidSegmentToIdentifier(segment: string) {
   return segment.split('-').map(ucFirst).join('')
 }
 
-export function useRecordExport(doc: LexiconDoc, hash: string) {
+export function useRecordExport(doc: LexiconDocument, hash: string) {
   return (
     hash === 'main' &&
     !l.hasOwn(doc.defs, 'record') &&

@@ -1,21 +1,21 @@
 import {
   Infer,
-  LexValidator,
   Simplify,
   ValidationContext,
   ValidationResult,
+  Validator,
 } from '../core.js'
 
-export class LexTypedObject<
+export class TypedObjectSchema<
   Type extends string = any,
-  Schema extends LexValidator<object> = any,
+  Schema extends Validator<object> = any,
   Output extends Infer<Schema> & { $type?: Type } = Infer<Schema> & {
     $type?: Type
   },
-> extends LexValidator<Output> {
+> extends Validator<Output> {
   constructor(
     readonly $type: Type,
-    readonly $schema: Schema,
+    readonly schema: Schema,
   ) {
     super()
   }
@@ -32,11 +32,11 @@ export class LexTypedObject<
     return { ...input, $type: this.$type }
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Output> {
-    const result = ctx.validate(input, this.$schema)
+    const result = ctx.validate(input, this.schema)
 
     if (!result.success) {
       return result

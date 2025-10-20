@@ -1,134 +1,127 @@
 import {
   Infer,
-  LexValidator,
   Simplify,
   ValidationContext,
   ValidationResult,
+  Validator,
   hasOwn,
   isObject,
 } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
 
-export type LexObjectUnknownKeysOption = 'strict' | 'strip' | 'passthrough'
+export type ObjectSchemaUnknownKeysOption = 'strict' | 'passthrough'
 
-export type LexObjectProperties = Record<string, LexValidator>
-export type LexObjectOptions = {
+export type ObjectSchemaProperties = Record<string, Validator>
+export type ObjectSchemaOptions = {
   /** @default "passthrough" */
-  unknownKeys?: LexObjectUnknownKeysOption
+  unknownKeys?: ObjectSchemaUnknownKeysOption
 
   required?: readonly string[]
   nullable?: readonly string[]
 }
 
-export type LexObjectNullProp<
+export type ObjectSchemaNullProp<
   K extends string,
-  O extends LexObjectOptions,
+  O extends ObjectSchemaOptions,
 > = O extends { nullable: readonly (infer N extends string)[] }
   ? K extends N
     ? null
     : never
   : never
 
-export type LexObjectOutput<
-  P extends LexObjectProperties,
-  O extends LexObjectOptions,
+export type ObjectSchemaOutput<
+  P extends ObjectSchemaProperties,
+  O extends ObjectSchemaOptions,
 > = O extends { required: readonly (infer R extends string)[] }
   ? Simplify<
       {
         -readonly [K in string & keyof P & R]-?:
           | Infer<P[K]>
-          | LexObjectNullProp<K, O>
+          | ObjectSchemaNullProp<K, O>
       } & {
         -readonly [K in string & Exclude<keyof P, R>]?:
           | Infer<P[K]>
-          | LexObjectNullProp<K, O>
+          | ObjectSchemaNullProp<K, O>
       }
     >
   : {
-      -readonly [K in string & keyof P]?: Infer<P[K]> | LexObjectNullProp<K, O>
+      -readonly [K in string & keyof P]?:
+        | Infer<P[K]>
+        | ObjectSchemaNullProp<K, O>
     }
 
-export class LexObject<
-  const Properties extends LexObjectProperties = any,
-  const Options extends LexObjectOptions = any,
-> extends LexValidator<LexObjectOutput<Properties, Options>> {
+export class ObjectSchema<
+  const Validators extends ObjectSchemaProperties = any,
+  const Options extends ObjectSchemaOptions = any,
+> extends Validator<ObjectSchemaOutput<Validators, Options>> {
   constructor(
-    readonly $properties: Properties,
-    readonly $options: Options,
+    readonly validators: Validators,
+    readonly options: Options,
   ) {
     super()
   }
 
   @cachedGetter
-  get $propertyEntries(): [string, LexValidator][] {
-    return Object.entries(this.$properties)
+  get validatorsMap(): Map<string, Validator> {
+    return new Map(Object.entries(this.validators))
   }
 
   @cachedGetter
-  get $propertyKeys(): Set<string> {
-    return new Set(Object.keys(this.$properties))
+  get knownKeys(): Set<string> {
+    return new Set(Object.keys(this.validators))
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
-  ): ValidationResult<LexObjectOutput<Properties, Options>> {
+  ): ValidationResult<ObjectSchemaOutput<Validators, Options>> {
     if (!isObject(input)) {
       return ctx.issueInvalidType(input, 'object')
+    }
+
+    if (this.options.required) {
+      for (const prop in this.options.required) {
+        if (!hasOwn(input, prop)) {
+          return ctx.issueRequiredKey(input, prop)
+        }
+      }
+    }
+
+    if (this.options.unknownKeys === 'strict') {
+      for (const key in input) {
+        if (this.knownKeys.has(key)) continue
+
+        return ctx.issueInvalidPropertyType(
+          input,
+          key as keyof typeof input,
+          'undefined',
+        )
+      }
     }
 
     // Lazily copy value
     let copy: undefined | Record<string, unknown>
 
-    const { unknownKeys } = this.$options
-    if (unknownKeys === 'strict' || unknownKeys === 'strip') {
-      for (const key in input) {
-        if (this.$propertyKeys.has(key)) continue
-
-        if (unknownKeys === 'strict') {
-          return ctx.issueInvalidPropertyType(
-            input,
-            key as keyof typeof input,
-            'undefined',
-          )
-        }
-
-        // Optimization: avoid copying & validating the rest if the context
-        // doesn't allow transformation.
-        if (!ctx.allowTransform) {
-          return ctx.issueInvalidPropertyType(
-            input,
-            key as keyof typeof input,
-            'undefined',
-          )
-        }
-
-        // Strip unknown keys
-        copy ??= { ...input }
-        delete copy[key]
-      }
-    }
-
-    for (const [key, propDef] of this.$propertyEntries) {
+    for (const [key, propDef] of this.validatorsMap) {
       if (!hasOwn(input, key)) {
-        if (this.$options.required?.includes(key)) {
-          return ctx.issueRequiredKey(input, key)
-        }
-      } else if (input[key] === null) {
-        if (!this.$options.nullable?.includes(key)) {
-          return ctx.issueInvalidPropertyType(input, key, 'non-null')
-        }
-      } else {
-        const result = ctx.validateChild(input, key, propDef)
-        if (!result.success) return result
+        continue
+      }
 
-        if (result.value !== input[key]) {
-          copy ??= { ...input }
-          copy[key] = result.value
-        }
+      if (input[key] === null && this.options.nullable?.includes(key)) {
+        continue
+      }
+
+      const result = ctx.validateChild(input, key, propDef)
+      if (!result.success) return result
+
+      if (result.value !== input[key]) {
+        copy ??= { ...input }
+        copy[key] = result.value
       }
     }
 
-    return ctx.success((copy ?? input) as LexObjectOutput<Properties, Options>)
+    return ctx.success(
+      (copy ?? input) as ObjectSchemaOutput<Validators, Options>,
+    )
   }
 }

@@ -1,7 +1,7 @@
-import { LexValidator, ValidationContext, ValidationResult } from '../core.js'
+import { ValidationContext, ValidationResult, Validator } from '../core.js'
 
-export class LexUnknown extends LexValidator<unknown> {
-  protected override $validateInContext(
+export class UnknownSchema extends Validator<unknown> {
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<unknown> {

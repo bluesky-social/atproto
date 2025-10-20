@@ -1,17 +1,17 @@
-import { LexValidator, ValidationContext, ValidationResult } from '../core.js'
+import { ValidationContext, ValidationResult, Validator } from '../core.js'
 import { BlobRef } from './_blob-ref.js'
 
-export type LexBlobOptions = {
+export type BlobSchemaOptions = {
   accept?: string[] // List of accepted mime types
   maxSize?: number // Maximum size in bytes
 }
 
-export class LexBlob extends LexValidator<BlobRef> {
-  constructor(readonly $options: LexBlobOptions) {
+export class BlobSchema extends Validator<BlobRef> {
+  constructor(readonly options: BlobSchemaOptions) {
     super()
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<BlobRef> {

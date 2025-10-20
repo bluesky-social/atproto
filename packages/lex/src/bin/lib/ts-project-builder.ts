@@ -1,7 +1,7 @@
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { IndentationText, Project } from 'ts-morph'
-import { LexiconDoc, LexiconIndexer } from '../../doc/index.js'
+import { LexiconDocument, LexiconIndexer } from '../../doc/index.js'
 import { BuildFilterOptions, buildFilter } from './filter.js'
 import { FilteredIndexer } from './filtered-indexer.js'
 import {
@@ -82,7 +82,7 @@ export class TsProjectBuilder {
     return this.#project.getSourceFile(path) || this.createFile(path)
   }
 
-  private async createExportTree(doc: LexiconDoc) {
+  private async createExportTree(doc: LexiconDocument) {
     const namespaces = doc.id.split('.')
 
     // First create the parent namespaces
@@ -123,7 +123,7 @@ export class TsProjectBuilder {
   }
 
   private async createDefsFile(
-    doc: LexiconDoc,
+    doc: LexiconDocument,
     indexer: LexiconIndexer,
     options: TsDocBuilderOptions,
   ): Promise<void> {

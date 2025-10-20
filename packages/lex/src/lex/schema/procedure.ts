@@ -1,23 +1,23 @@
-import { InferLexPayloadBody, LexPayload } from './payload.js'
+import { InferPayloadSchemaBody, PayloadSchema } from './payload.js'
 
-export type InferLexProcedureInput<Q extends LexProcedure> =
-  Q extends LexProcedure<any, infer I extends LexPayload, any>
-    ? InferLexPayloadBody<I>
+export type InferProcedureInput<Q extends Procedure> =
+  Q extends Procedure<any, infer I extends PayloadSchema, any>
+    ? InferPayloadSchemaBody<I>
     : never
 
-export type InferLexProcedureOutput<Q extends LexProcedure> =
-  Q extends LexProcedure<any, any, infer O extends LexPayload>
-    ? InferLexPayloadBody<O>
+export type InferProcedureOutput<Q extends Procedure> =
+  Q extends Procedure<any, any, infer O extends PayloadSchema>
+    ? InferPayloadSchemaBody<O>
     : never
 
-export class LexProcedure<
+export class Procedure<
   N extends string = any,
-  I extends LexPayload = any,
-  O extends LexPayload = any,
+  I extends PayloadSchema = any,
+  O extends PayloadSchema = any,
 > {
   constructor(
-    readonly $nsid: N,
-    readonly $input: I,
-    readonly $output: O,
+    readonly nsid: N,
+    readonly inputSchema: I,
+    readonly outputSchema: O,
   ) {}
 }

@@ -1,19 +1,18 @@
 // Utilities (that depend on *and* are used by schemas)
 export * from './schema/_blob-ref.js'
 export * from './schema/_parameters.js'
-export * from './schema/_permission.js'
 export * from './schema/_serialize.js'
 
 // IPLD Types
 export * from './schema/array.js'
 export * from './schema/boolean.js'
 export * from './schema/bytes.js'
-export * from './schema/cid-link.js'
+export * from './schema/cid.js'
 export * from './schema/dict.js'
 export * from './schema/enum.js'
 export * from './schema/integer.js'
-export * from './schema/never.js'
 export * from './schema/literal.js'
+export * from './schema/never.js'
 export * from './schema/object.js'
 export * from './schema/string.js'
 export * from './schema/unknown.js'

@@ -1,19 +1,20 @@
 import { Infer } from '../core.js'
-import { LexArray } from './array.js'
-import { LexBoolean } from './boolean.js'
-import { LexInteger } from './integer.js'
-import { LexString } from './string.js'
-import { LexUnion } from './union.js'
+import { ArraySchema } from './array.js'
+import { BooleanSchema } from './boolean.js'
+import { IntegerSchema } from './integer.js'
+import { StringSchema } from './string.js'
+import { UnionSchema } from './union.js'
 
-const lexParameterScalarSchema = new LexUnion([
-  new LexBoolean({}),
-  new LexInteger({}),
-  new LexString({}),
+const parameterScalarSchema = new UnionSchema([
+  new BooleanSchema({}),
+  new IntegerSchema({}),
+  new StringSchema({}),
 ])
 
-export const lexParameterSchema = new LexUnion([
-  lexParameterScalarSchema,
-  new LexArray(lexParameterScalarSchema, {}),
+export const parameterSchema = new UnionSchema([
+  parameterScalarSchema,
+  new ArraySchema(parameterScalarSchema, {}),
 ])
 
-export type LexParameterValue = Infer<typeof lexParameterSchema>
+export type Parameter = Infer<typeof parameterSchema>
+export type Parameters = Record<string, Parameter>

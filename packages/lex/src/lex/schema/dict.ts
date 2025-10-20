@@ -1,14 +1,14 @@
 import {
   Infer,
-  LexValidator,
   ValidationContext,
   ValidationResult,
+  Validator,
   isPureObject,
 } from '../core.js'
 
-export type LexDictOutput<
-  KeySchema extends LexValidator<string>,
-  ValueSchema extends LexValidator<unknown>,
+export type DictSchemaOutput<
+  KeySchema extends Validator<string>,
+  ValueSchema extends Validator<unknown>,
 > = Record<Infer<KeySchema>, Infer<ValueSchema>>
 
 /**
@@ -16,21 +16,21 @@ export type LexDictOutput<
  * to allow map-like objects when using the lex library programmatically (i.e.
  * not code generated from a lexicon schema).
  */
-export class LexDict<
-  const KeySchema extends LexValidator<string> = any,
-  const ValueSchema extends LexValidator<unknown> = any,
-> extends LexValidator<LexDictOutput<KeySchema, ValueSchema>> {
+export class DictSchema<
+  const KeySchema extends Validator<string> = any,
+  const ValueSchema extends Validator<unknown> = any,
+> extends Validator<DictSchemaOutput<KeySchema, ValueSchema>> {
   constructor(
-    readonly $keySchema: KeySchema,
-    readonly $valueSchema: ValueSchema,
+    readonly keySchema: KeySchema,
+    readonly valueSchema: ValueSchema,
   ) {
     super()
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
-  ): ValidationResult<LexDictOutput<KeySchema, ValueSchema>> {
+  ): ValidationResult<DictSchemaOutput<KeySchema, ValueSchema>> {
     if (!isPureObject(input)) {
       return ctx.issueInvalidType(input, 'dict')
     }
@@ -38,10 +38,10 @@ export class LexDict<
     let copy: undefined | Record<string, unknown>
 
     for (const key in input) {
-      const keyResult = ctx.validate(key, this.$keySchema)
+      const keyResult = ctx.validate(key, this.keySchema)
       if (!keyResult.success) return keyResult
 
-      const valueResult = ctx.validateChild(input, key, this.$valueSchema)
+      const valueResult = ctx.validateChild(input, key, this.valueSchema)
       if (!valueResult.success) return valueResult
 
       if (valueResult.value !== input[key]) {
@@ -50,6 +50,8 @@ export class LexDict<
       }
     }
 
-    return ctx.success((copy ?? input) as LexDictOutput<KeySchema, ValueSchema>)
+    return ctx.success(
+      (copy ?? input) as DictSchemaOutput<KeySchema, ValueSchema>,
+    )
   }
 }

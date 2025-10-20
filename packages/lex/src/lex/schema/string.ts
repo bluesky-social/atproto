@@ -1,15 +1,15 @@
 import {
   InferStringFormat,
-  LexValidator,
   StringFormat,
   UnknownString,
   ValidationContext,
   ValidationResult,
+  Validator,
   coerceToString,
   validateStringFormat,
 } from '../core.js'
 
-export type LexStringOptions = {
+export type StringSchemaOptions = {
   default?: string
   knownValues?: readonly string[]
   format?: StringFormat
@@ -19,7 +19,7 @@ export type LexStringOptions = {
   maxGraphemes?: number
 }
 
-export type LexStringOutput<Options> =
+export type StringSchemaOutput<Options> =
   //
   Options extends { format: infer F extends StringFormat }
     ? InferStringFormat<F>
@@ -27,19 +27,19 @@ export type LexStringOutput<Options> =
       ? K | UnknownString
       : string
 
-export class LexString<
-  const Options extends LexStringOptions = any,
-> extends LexValidator<LexStringOutput<Options>> {
-  constructor(readonly $options: Options) {
+export class StringSchema<
+  const Options extends StringSchemaOptions = any,
+> extends Validator<StringSchemaOutput<Options>> {
+  constructor(readonly options: Options) {
     super()
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     // @NOTE validation will be applied on the default value as well
-    input: unknown = this.$options.default,
+    input: unknown = this.options.default,
     ctx: ValidationContext,
-  ): ValidationResult<LexStringOutput<Options>> {
-    const { $options } = this
+  ): ValidationResult<StringSchemaOutput<Options>> {
+    const { options: $options } = this
 
     const str = coerceToString(input, $options.format)
     if (str == null) {
@@ -74,7 +74,7 @@ export class LexString<
     }
 
     return validateStringFormat(str, ctx, $options.format) as ValidationResult<
-      LexStringOutput<Options>
+      StringSchemaOutput<Options>
     >
   }
 }

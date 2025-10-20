@@ -7,7 +7,7 @@ import {
   LexiconBoolean,
   LexiconBytes,
   LexiconCid,
-  LexiconDoc,
+  LexiconDocument,
   LexiconIndexer,
   LexiconInteger,
   LexiconObject,
@@ -40,7 +40,7 @@ export class TsDocBuilder {
   constructor(
     private readonly options: TsDocBuilderOptions,
     private readonly file: SourceFile,
-    private readonly doc: LexiconDoc,
+    private readonly doc: LexiconDocument,
     indexer: LexiconIndexer,
   ) {
     this.refResolver = new TsRefResolver(doc, file, indexer)
@@ -152,7 +152,7 @@ export class TsDocBuilder {
     const inputTypeStmt = this.file.addTypeAlias({
       isExported: true,
       name: 'Input',
-      type: `l.InferLexProcedureInput<typeof ${ref.varName}>`,
+      type: `l.InferProcedureInput<typeof ${ref.varName}>`,
     })
 
     addJsDoc(inputTypeStmt, def.input)
@@ -160,7 +160,7 @@ export class TsDocBuilder {
     const outputTypeStmt = this.file.addTypeAlias({
       isExported: true,
       name: 'Output',
-      type: `l.InferLexProcedureOutput<typeof ${ref.varName}>`,
+      type: `l.InferProcedureOutput<typeof ${ref.varName}>`,
     })
 
     addJsDoc(outputTypeStmt, def.output)
@@ -191,13 +191,13 @@ export class TsDocBuilder {
     this.file.addTypeAlias({
       isExported: true,
       name: 'Params',
-      type: `l.InferLexQueryParams<typeof ${ref.varName}>`,
+      type: `l.InferQueryParams<typeof ${ref.varName}>`,
     })
 
     this.file.addTypeAlias({
       isExported: true,
       name: 'Output',
-      type: `l.InferLexQueryOutput<typeof ${ref.varName}>`,
+      type: `l.InferQueryOutput<typeof ${ref.varName}>`,
     })
   }
 
@@ -226,13 +226,13 @@ export class TsDocBuilder {
     this.file.addTypeAlias({
       isExported: true,
       name: 'Params',
-      type: `l.InferLexSubscriptionParameters<typeof ${ref.varName}>`,
+      type: `l.InferSubscriptionParameters<typeof ${ref.varName}>`,
     })
 
     this.file.addTypeAlias({
       isExported: true,
       name: 'Message',
-      type: `l.InferLexSubscriptionMessage<typeof ${ref.varName}>`,
+      type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
     })
   }
 
@@ -417,7 +417,14 @@ export class TsDocBuilder {
 
   private async compilePropertiesSchemas(options: {
     properties: Record<string, LexiconBase | LexiconArray>
+    required?: readonly string[]
   }) {
+    for (const prop of options.required || []) {
+      if (!l.hasOwn(options.properties, prop)) {
+        throw new Error(`Required property "${prop}" not found in properties`)
+      }
+    }
+
     return Promise.all(
       Object.entries(options.properties).map(
         this.compilePropertyEntrySchema,
@@ -689,7 +696,7 @@ export class TsDocBuilder {
     // infer the type of a value that depends on its initializer type
     return this.pure(
       // @TODO Only add the "as" if there is a circular ref
-      `l.ref((() => ${varName}) as l.LexRefGetter<${typeName}>)`,
+      `l.ref((() => ${varName}) as l.RefSchemaGetter<${typeName}>)`,
     )
   }
 
@@ -710,7 +717,7 @@ export class TsDocBuilder {
         // infer the type of a value that depends on its initializer type
         return this.pure(
           // @TODO Only add the "as" if there is a circular ref
-          `l.typedRef((() => ${varName}) as l.LexTypedRefGetter<${typeName}>)`,
+          `l.typedRef((() => ${varName}) as l.TypedRefSchemaGetter<${typeName}>)`,
         )
       }),
     )

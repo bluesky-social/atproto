@@ -19,6 +19,7 @@ export type IpldObject = { [key: string]: Ipld }
 
 export type LexScalar = IpldScalar | BlobRef
 export type Lex = LexScalar | Lex[] | { [key: string]: Lex }
+export type LexObject = { [key: string]: Lex }
 
 export function stringifyLex(input: Lex): string {
   return JSON.stringify(input, lexJsonReplacer)
@@ -49,7 +50,7 @@ function lexJsonReviver(key: string, value: Json): unknown {
     case 'object':
       if (value === null) return null
       if (isArray(value)) return value
-      return reviveSpecialLexObject(value) || value
+      return reviveSpecialObjectSchema(value) || value
     case 'number':
       if (Number.isInteger(value)) return value
       throw new TypeError(`Invalid non-integer number: ${value}`)
@@ -58,7 +59,7 @@ function lexJsonReviver(key: string, value: Json): unknown {
   }
 }
 
-function reviveSpecialLexObject(
+function reviveSpecialObjectSchema(
   input: JsonObject,
 ): CID | Uint8Array | BlobRef | undefined {
   // Hot path: use hints to avoid expensive "$validate()" checks
@@ -87,7 +88,7 @@ export function jsonToLex(value: Json): Lex {
     case 'object': {
       if (value === null) return null
       if (isArray(value)) return jsonArrayToLex(value)
-      return reviveSpecialLexObject(value) || jsonOjectToLex(value)
+      return reviveSpecialObjectSchema(value) || jsonOjectToLex(value)
     }
     case 'number':
       if (Number.isInteger(value)) return value
@@ -111,9 +112,9 @@ function jsonArrayToLex(input: Json[]): Lex[] {
   return copy ?? input
 }
 
-function jsonOjectToLex(input: JsonObject): Record<string, Lex> {
+function jsonOjectToLex(input: JsonObject): LexObject {
   // Lazily copy value
-  let copy: Record<string, Lex> | undefined = undefined
+  let copy: LexObject | undefined = undefined
   for (const [key, inputValue] of Object.entries(input)) {
     const value = jsonToLex(inputValue)
     if (value !== inputValue) {

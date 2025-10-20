@@ -1,16 +1,16 @@
-import { LexValidator, ValidationContext, ValidationResult } from '../core.js'
+import { ValidationContext, ValidationResult, Validator } from '../core.js'
 
-export type LexBooleanOptions = {
+export type BooleanSchemaOptions = {
   default?: boolean
 }
 
-export class LexBoolean extends LexValidator<boolean> {
-  constructor(readonly $options: LexBooleanOptions) {
+export class BooleanSchema extends Validator<boolean> {
+  constructor(readonly options: BooleanSchemaOptions) {
     super()
   }
 
-  protected override $validateInContext(
-    input: unknown = this.$options.default,
+  protected override validateInContext(
+    input: unknown = this.options.default,
     ctx: ValidationContext,
   ): ValidationResult<boolean> {
     if (typeof input !== 'boolean') {

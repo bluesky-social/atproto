@@ -1,7 +1,7 @@
-import { FailureResult, LexValidator, ValidationContext } from '../core.js'
+import { FailureResult, ValidationContext, Validator } from '../core.js'
 
-export class LexNever extends LexValidator<never> {
-  protected override $validateInContext(
+export class NeverSchema extends Validator<never> {
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): FailureResult {

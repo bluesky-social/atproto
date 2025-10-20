@@ -1,39 +1,39 @@
 import {
   ArrayContaining,
   FailureResult,
-  LexValidator,
   ValidationContext,
   ValidationError,
   ValidationResult,
+  Validator,
   hasOwn,
   isObject,
 } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
-import { LexEnum } from './enum.js'
-import { LexLiteral } from './literal.js'
-import { LexObject } from './object.js'
+import { EnumSchema } from './enum.js'
+import { LiteralSchema } from './literal.js'
+import { ObjectSchema } from './object.js'
 
-export type LexDiscriminatedUnionVariant<Discriminator extends string> =
-  LexObject<
-    { [_ in Discriminator]: LexValidator },
+export type DiscriminatedUnionSchemaVariant<Discriminator extends string> =
+  ObjectSchema<
+    { [_ in Discriminator]: Validator },
     { required: ArrayContaining<Discriminator, string> }
   >
 
-export type LexDiscriminatedUnionVariants<Discriminator extends string> =
+export type DiscriminatedUnionSchemaVariants<Discriminator extends string> =
   readonly [
-    LexDiscriminatedUnionVariant<Discriminator>,
-    ...LexDiscriminatedUnionVariant<Discriminator>[],
+    DiscriminatedUnionSchemaVariant<Discriminator>,
+    ...DiscriminatedUnionSchemaVariant<Discriminator>[],
   ]
 
-export type LexDiscriminatedUnionOutput<
-  Options extends readonly LexValidator[],
-> = Options extends readonly [LexValidator<infer V>]
+export type DiscriminatedUnionSchemaOutput<
+  Options extends readonly Validator[],
+> = Options extends readonly [Validator<infer V>]
   ? V
   : Options extends readonly [
-        LexValidator<infer V>,
-        ...infer Rest extends LexValidator[],
+        Validator<infer V>,
+        ...infer Rest extends Validator[],
       ]
-    ? V | LexDiscriminatedUnionOutput<Rest>
+    ? V | DiscriminatedUnionSchemaOutput<Rest>
     : never
 
 /**
@@ -41,13 +41,13 @@ export type LexDiscriminatedUnionOutput<
  * extension to allow optimized validation of union of objects when using the
  * lex library programmatically (i.e. not code generated from a lexicon schema).
  */
-export class LexDiscriminatedUnion<
+export class DiscriminatedUnionSchema<
   const Discriminator extends string = any,
-  const Options extends LexDiscriminatedUnionVariants<Discriminator> = any,
-> extends LexValidator<LexDiscriminatedUnionOutput<Options>> {
+  const Options extends DiscriminatedUnionSchemaVariants<Discriminator> = any,
+> extends Validator<DiscriminatedUnionSchemaOutput<Options>> {
   constructor(
-    readonly $discriminator: Discriminator,
-    readonly $variants: Options,
+    readonly discriminator: Discriminator,
+    readonly variants: Options,
   ) {
     super()
   }
@@ -58,15 +58,18 @@ export class LexDiscriminatedUnion<
    * to variants. Otherwise, returns null.
    */
   @cachedGetter
-  protected get $variantsMap() {
-    const map = new Map<unknown, LexDiscriminatedUnionVariant<Discriminator>>()
-    for (const variant of this.$variants) {
-      const schema = variant.$properties[this.$discriminator]
-      if (schema instanceof LexLiteral) {
-        if (map.has(schema.$value)) return null // overlapping value
-        map.set(schema.$value, variant)
-      } else if (schema instanceof LexEnum) {
-        for (const val of schema.$values) {
+  protected get variantsMap() {
+    const map = new Map<
+      unknown,
+      DiscriminatedUnionSchemaVariant<Discriminator>
+    >()
+    for (const variant of this.variants) {
+      const schema = variant.validators[this.discriminator]
+      if (schema instanceof LiteralSchema) {
+        if (map.has(schema.value)) return null // overlapping value
+        map.set(schema.value, variant)
+      } else if (schema instanceof EnumSchema) {
+        for (const val of schema.values) {
           if (map.has(val)) return null // overlapping value
           map.set(val, variant)
         }
@@ -77,31 +80,31 @@ export class LexDiscriminatedUnion<
     return map
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
-  ): ValidationResult<LexDiscriminatedUnionOutput<Options>> {
+  ): ValidationResult<DiscriminatedUnionSchemaOutput<Options>> {
     if (!isObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
 
-    if (!hasOwn(input, this.$discriminator)) {
-      return ctx.issueRequiredKey(input, this.$discriminator)
+    if (!hasOwn(input, this.discriminator)) {
+      return ctx.issueRequiredKey(input, this.discriminator)
     }
 
     // Fast path: if we have a mapping of discriminator values to variants,
     // we can directly select the correct variant to validate against. This also
     // outputs a better error (with a single failure issue) when the discriminator.
-    if (this.$variantsMap) {
-      const variant = this.$variantsMap.get(input[this.$discriminator])
+    if (this.variantsMap) {
+      const variant = this.variantsMap.get(input[this.discriminator])
       if (!variant) {
-        return ctx.issueInvalidPropertyValue(input, this.$discriminator, [
-          ...this.$variantsMap.keys(),
+        return ctx.issueInvalidPropertyValue(input, this.discriminator, [
+          ...this.variantsMap.keys(),
         ])
       }
 
       return ctx.validate(input, variant) as ValidationResult<
-        LexDiscriminatedUnionOutput<Options>
+        DiscriminatedUnionSchemaOutput<Options>
       >
     }
 
@@ -109,11 +112,11 @@ export class LexDiscriminatedUnion<
     // successful one (or aggregate all failures if none match).
     const failures: FailureResult[] = []
 
-    for (const variant of this.$variants) {
-      const discSchema = variant.$properties[this.$discriminator]
+    for (const variant of this.variants) {
+      const discSchema = variant.validators[this.discriminator]
       const discResult = ctx.validateChild(
         input,
-        this.$discriminator,
+        this.discriminator,
         discSchema,
       )
 
@@ -123,7 +126,7 @@ export class LexDiscriminatedUnion<
       }
 
       return ctx.validate(input, variant) as ValidationResult<
-        LexDiscriminatedUnionOutput<Options>
+        DiscriminatedUnionSchemaOutput<Options>
       >
     }
 

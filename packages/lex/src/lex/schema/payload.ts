@@ -1,4 +1,4 @@
-import { LexValidator } from '../core.js'
+import { Validator } from '../core.js'
 import { TypedJsonBlobRef } from './_blob-ref.js'
 import { Lex, jsonStringToLex } from './_serialize.js'
 
@@ -12,16 +12,16 @@ export type Body<E extends string = any> = E extends `text/${string}`
 
 export type ParsedBody<
   E extends string | undefined,
-  S extends LexValidator | undefined,
+  S extends Validator | undefined,
 > = E extends string
-  ? Body<E> & (S extends LexValidator<infer V> ? V : unknown)
+  ? Body<E> & (S extends Validator<infer V> ? V : unknown)
   : never // No encoding means no payload
 
 export type Payload<
   E extends string | undefined = any,
-  S extends LexValidator | undefined = any,
+  S extends Validator | undefined = any,
 > = E extends string
-  ? S extends LexValidator<infer V>
+  ? S extends Validator<infer V>
     ? {
         encoding: E
         body: V
@@ -32,34 +32,34 @@ export type Payload<
       }
   : void
 
-export type InferLexPayloadEncoding<P extends LexPayload> =
-  P extends LexPayload<infer E, any> ? E : never
+export type InferPayloadSchemaEncoding<P extends PayloadSchema> =
+  P extends PayloadSchema<infer E, any> ? E : never
 
-export type InferLexPayloadBody<P extends LexPayload> =
-  P extends LexPayload<any, infer S>
-    ? S extends LexValidator<infer V>
+export type InferPayloadSchemaBody<P extends PayloadSchema> =
+  P extends PayloadSchema<any, infer S>
+    ? S extends Validator<infer V>
       ? V
-      : P extends LexPayload<infer E extends string>
+      : P extends PayloadSchema<infer E extends string>
         ? Body<E>
-        : P extends LexPayload<undefined>
+        : P extends PayloadSchema<undefined>
           ? void
           : never
     : never
 
-export class LexPayload<
+export class PayloadSchema<
   const Encoding extends string | undefined = any,
-  const Schema extends LexValidator | undefined = any,
+  const Schema extends Validator | undefined = any,
   Output extends ParsedBody<Encoding, Schema> = ParsedBody<Encoding, Schema>,
 > {
   constructor(
-    readonly $encoding: Encoding,
-    readonly $body: Schema,
+    readonly encoding: Encoding,
+    readonly schema: Schema,
   ) {}
 
-  async $parseResponseBody(response: Response): Promise<Output> {
+  async parseResponseBody(response: Response): Promise<Output> {
     const encoding = response.headers.get('content-type')?.split(';')[0].trim()
 
-    if (!this.$encoding) {
+    if (!this.encoding) {
       if (encoding || response.body) {
         await response.body?.cancel()
         // @TODO Errors
@@ -71,19 +71,19 @@ export class LexPayload<
       return undefined as Output
     }
 
-    if (encoding !== this.$encoding) {
+    if (encoding !== this.encoding) {
       await response.body?.cancel()
 
       // @TODO Errors
       throw new Error(
-        `Expected response with content-type ${this.$encoding}, got ${encoding}`,
+        `Expected response with content-type ${this.encoding}, got ${encoding}`,
       )
     }
 
-    if (this.$encoding === 'application/json') {
-      if (this.$body) {
+    if (this.encoding === 'application/json') {
+      if (this.schema) {
         // @NOTE JSON will automatically be coerced into IPLD/Lex structures
-        return this.$body.$parse(await response.json())
+        return this.schema.$parse(await response.json())
       }
 
       // @NOTE Using stringToLex (instead of `jsonToLex(await response.json())`)
@@ -93,14 +93,14 @@ export class LexPayload<
       return jsonStringToLex(await response.text()) as Output
     }
 
-    if (this.$encoding.startsWith('text/')) {
+    if (this.encoding.startsWith('text/')) {
       const text = await response.text()
-      return this.$body ? this.$body.$parse(text) : (text as Output)
+      return this.schema ? this.schema.$parse(text) : (text as Output)
     }
 
     const data = response.body
       ? await response.arrayBuffer()
       : new ArrayBuffer(0)
-    return this.$body ? this.$body.$parse(data) : (data as Output)
+    return this.schema ? this.schema.$parse(data) : (data as Output)
   }
 }

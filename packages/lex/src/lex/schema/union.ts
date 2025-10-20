@@ -1,32 +1,32 @@
 import {
   FailureResult,
   Infer,
-  LexValidator,
   ValidationContext,
   ValidationError,
   ValidationResult,
+  Validator,
 } from '../core.js'
 
-export type LexUnionOptions = readonly [LexValidator, ...LexValidator[]]
-export type LexUnionOutput<V extends readonly LexValidator[]> = Infer<V[number]>
+export type UnionSchemaOptions = readonly [Validator, ...Validator[]]
+export type UnionSchemaOutput<V extends readonly Validator[]> = Infer<V[number]>
 
-export class LexUnion<
-  Options extends LexUnionOptions = any,
-> extends LexValidator<LexUnionOutput<Options>> {
-  constructor(readonly $options: Options) {
+export class UnionSchema<
+  Options extends UnionSchemaOptions = any,
+> extends Validator<UnionSchemaOutput<Options>> {
+  constructor(readonly options: Options) {
     super()
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
-  ): ValidationResult<LexUnionOutput<Options>> {
+  ): ValidationResult<UnionSchemaOutput<Options>> {
     const failures: FailureResult[] = []
 
-    for (const validator of this.$options) {
+    for (const validator of this.options) {
       const result = ctx.validate(input, validator)
       if (result.success) {
-        return result as ValidationResult<LexUnionOutput<Options>>
+        return result as ValidationResult<UnionSchemaOutput<Options>>
       } else {
         failures.push(result)
       }

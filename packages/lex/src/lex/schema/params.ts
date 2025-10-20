@@ -1,71 +1,62 @@
 import {
-  LexValidator,
   ValidationContext,
   ValidationResult,
+  Validator,
   hasOwn,
   isPureObject,
 } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
-import { LexParameterValue, lexParameterSchema } from './_parameters.js'
-import { LexObjectOutput, LexObjectUnknownKeysOption } from './object.js'
+import { Parameter, parameterSchema } from './_parameters.js'
+import { ObjectSchemaOutput, ObjectSchemaUnknownKeysOption } from './object.js'
 
-export type LexParamsProperties = Record<
-  string,
-  LexValidator<LexParameterValue>
->
+export type ParamsSchemaProperties = Record<string, Validator<Parameter>>
 
-export type LexParamsOptions = {
+export type ParamsSchemaOptions = {
   /** @default "passthrough" */
-  unknownKeys?: LexObjectUnknownKeysOption
+  unknownKeys?: ObjectSchemaUnknownKeysOption
 
   required?: readonly string[]
 }
 
-export type InferLexParamsOptions<
-  P extends LexParamsProperties,
-  O extends LexParamsOptions,
-> = LexObjectOutput<P, O>
+export type InferParamsSchemaOptions<
+  P extends ParamsSchemaProperties,
+  O extends ParamsSchemaOptions,
+> = ObjectSchemaOutput<P, O>
 
-export type InferLexParams<T> =
-  T extends LexParams<infer P, infer O>
+export type InferParamsSchema<T> =
+  T extends ParamsSchema<infer P, infer O>
     ? // TODO verify this still works as intended (used to be "{}" instead of "Record<string, never>")
-      Record<string, never> extends InferLexParamsOptions<P, O>
-      ? InferLexParamsOptions<P, O> | undefined
-      : InferLexParamsOptions<P, O>
+      Record<string, never> extends InferParamsSchemaOptions<P, O>
+      ? InferParamsSchemaOptions<P, O> | undefined
+      : InferParamsSchemaOptions<P, O>
     : never
 
-export class LexParams<
-  const Validators extends LexParamsProperties = any,
-  const Options extends LexParamsOptions = any,
-  Output extends InferLexParamsOptions<
+export class ParamsSchema<
+  const Validators extends ParamsSchemaProperties = any,
+  const Options extends ParamsSchemaOptions = any,
+  Output extends InferParamsSchemaOptions<
     Validators,
     Options
-  > = InferLexParamsOptions<Validators, Options>,
-> extends LexValidator<Output> {
+  > = InferParamsSchemaOptions<Validators, Options>,
+> extends Validator<Output> {
   constructor(
-    readonly $properties: Validators,
-    readonly $options: Options,
+    readonly validators: Validators,
+    readonly options: Options,
   ) {
     super()
   }
 
   @cachedGetter
-  get $propertyEntries(): [string, LexValidator][] {
-    const entries = Object.entries(this.$properties)
-
-    // Optimization: sort required keys first for faster failure
-    const { required } = this.$options
-    if (required?.length) entries.sort(requiredEntriesCmp.bind(required))
-
-    return entries
+  get validatorsMap(): Map<string, Validator<Parameter>> {
+    return new Map(Object.entries(this.validators))
   }
 
   @cachedGetter
-  get $propertyKeys(): Set<string> {
-    return new Set(Object.keys(this.$properties))
+  get knownKeys(): Set<string> {
+    return new Set(Object.keys(this.validators))
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown = {},
     ctx: ValidationContext,
   ): ValidationResult<Output> {
@@ -73,21 +64,25 @@ export class LexParams<
       return ctx.issueInvalidType(input, 'object')
     }
 
+    if (this.options.required) {
+      for (const prop in this.options.required) {
+        if (!hasOwn(input, prop)) {
+          return ctx.issueRequiredKey(input, prop)
+        }
+      }
+    }
+
     // Lazily copy value
     let copy: undefined | Record<string, unknown>
 
-    const { unknownKeys } = this.$options
     for (const key in input) {
-      if (this.$propertyKeys.has(key)) continue
+      if (this.knownKeys.has(key)) continue
 
-      if (unknownKeys === 'strict') {
+      if (this.options.unknownKeys === 'strict') {
         return ctx.issueInvalidPropertyType(input, key, 'undefined')
-      } else if (unknownKeys === 'strip') {
-        copy ??= { ...input }
-        delete copy[key]
       } else {
-        // "passthrough", ensure that params are valid
-        const result = ctx.validateChild(input, key, lexParameterSchema)
+        // In "passthrough" mode we still need to ensure that params are valid
+        const result = ctx.validateChild(input, key, parameterSchema)
         if (!result.success) return result
 
         if (result.value !== input[key]) {
@@ -97,30 +92,28 @@ export class LexParams<
       }
     }
 
-    for (const [key, propDef] of this.$propertyEntries) {
+    for (const [key, propDef] of this.validatorsMap) {
       if (!hasOwn(input, key)) {
-        if (this.$options.required?.includes(key)) {
-          return ctx.issueRequiredKey(input, key)
-        }
-      } else {
-        const result = ctx.validateChild(input, key, propDef)
-        if (!result.success) return result
+        continue
+      }
 
-        if (result.value !== input[key]) {
-          // Copy on write
-          copy ??= { ...input }
-          copy[key] = result.value
-        }
+      const result = ctx.validateChild(input, key, propDef)
+      if (!result.success) return result
+
+      if (result.value !== input[key]) {
+        // Copy on write
+        copy ??= { ...input }
+        copy[key] = result.value
       }
     }
 
     return ctx.success((copy ?? input) as Output)
   }
 
-  $stringify(input: unknown): string {
+  stringify(input: unknown): string {
     const urlSearchParams = new URLSearchParams()
 
-    for (const [key, value] of Object.entries(this.$parse(input))) {
+    for (const [key, value] of Object.entries(this.parse(input))) {
       if (Array.isArray(value)) {
         for (const v of value) {
           urlSearchParams.append(key, String(v))
@@ -132,16 +125,4 @@ export class LexParams<
 
     return urlSearchParams.toString()
   }
-}
-
-function requiredEntriesCmp(
-  this: readonly string[],
-  a: [string, unknown],
-  b: [string, unknown],
-) {
-  return boolCmp(this.includes(a[0]), this.includes(b[0]))
-}
-
-function boolCmp(a: boolean, b: boolean) {
-  return (a === b ? 0 : a ? -1 : 1) as -1 | 0 | 1
 }

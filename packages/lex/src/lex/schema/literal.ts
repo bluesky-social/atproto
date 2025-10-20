@@ -1,20 +1,20 @@
-import { LexValidator, ValidationContext, ValidationResult } from '../core.js'
+import { ValidationContext, ValidationResult, Validator } from '../core.js'
 
-export class LexLiteral<
+export class LiteralSchema<
   Output extends null | string | number | boolean = any,
-> extends LexValidator<Output> {
-  constructor(readonly $value: Output) {
+> extends Validator<Output> {
+  constructor(readonly value: Output) {
     super()
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Output> {
-    if (input !== this.$value) {
-      return ctx.issueInvalidValue(input, [this.$value])
+    if (input !== this.value) {
+      return ctx.issueInvalidValue(input, [this.value])
     }
 
-    return ctx.success(this.$value)
+    return ctx.success(this.value)
   }
 }

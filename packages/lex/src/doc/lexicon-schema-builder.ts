@@ -2,7 +2,7 @@ import { l } from '../lex/index.js'
 import {
   LexiconArray,
   LexiconBase,
-  LexiconDoc,
+  LexiconDocument,
   LexiconObject,
 } from './lexicon-document.js'
 import { LexiconIndexer } from './lexicon-indexer.js'
@@ -24,7 +24,7 @@ export class LexiconSchemaBuilder {
   static async build(
     indexer: LexiconIndexer,
     fullRef: string,
-  ): Promise<l.LexValidator<unknown>> {
+  ): Promise<l.Validator<unknown>> {
     const ctx = new LexiconSchemaBuilder(indexer)
     try {
       return await ctx.buildRef(fullRef)
@@ -35,9 +35,9 @@ export class LexiconSchemaBuilder {
 
   static async buildAll(
     indexer: LexiconIndexer,
-  ): Promise<Map<string, l.LexValidator<unknown>>> {
+  ): Promise<Map<string, l.Validator<unknown>>> {
     const builder = new LexiconSchemaBuilder(indexer)
-    const schemas = new Map<string, l.LexValidator<unknown>>()
+    const schemas = new Map<string, l.Validator<unknown>>()
     if (!l.isAsyncIterableObject(indexer)) {
       throw new Error('An iterable indexer is required to build all schemas')
     }
@@ -63,19 +63,17 @@ export class LexiconSchemaBuilder {
     await this.#asyncTasks.done()
   }
 
-  buildRef = memoize(
-    async (fullRef: string): Promise<l.LexValidator<unknown>> => {
-      const { nsid, hash } = parseRef(fullRef)
+  buildRef = memoize(async (fullRef: string): Promise<l.Validator<unknown>> => {
+    const { nsid, hash } = parseRef(fullRef)
 
-      const doc = await this.indexer.get(nsid)
-      if (!doc) throw new Error(`No lexicon found for NSID: ${nsid}`)
+    const doc = await this.indexer.get(nsid)
+    if (!doc) throw new Error(`No lexicon found for NSID: ${nsid}`)
 
-      return this.buildDef(doc, hash)
-    },
-  )
+    return this.buildDef(doc, hash)
+  })
 
-  protected ref(fullRef: string): () => l.LexValidator<unknown> {
-    let validator: l.LexValidator<unknown>
+  protected ref(fullRef: string): () => l.Validator<unknown> {
+    let validator: l.Validator<unknown>
 
     this.#asyncTasks.add(
       this.buildRef(fullRef).then((v) => {
@@ -86,12 +84,14 @@ export class LexiconSchemaBuilder {
     return () => validator
   }
 
-  protected typedRef(fullRef: string): () => l.LexTypedObject | l.LexRecord {
-    let validator: l.LexTypedObject | l.LexRecord
+  protected typedRef(
+    fullRef: string,
+  ): () => l.TypedObjectSchema | l.RecordSchema {
+    let validator: l.TypedObjectSchema | l.RecordSchema
 
     this.#asyncTasks.add(
       this.buildRef(fullRef).then((v) => {
-        if (v instanceof l.LexTypedObject || v instanceof l.LexRecord) {
+        if (v instanceof l.TypedObjectSchema || v instanceof l.RecordSchema) {
           validator = v
         } else {
           throw new Error(
@@ -104,7 +104,7 @@ export class LexiconSchemaBuilder {
     return () => validator
   }
 
-  protected buildDef(doc: LexiconDoc, hash: string): l.LexValidator<unknown> {
+  protected buildDef(doc: LexiconDocument, hash: string): l.Validator<unknown> {
     const def = Object.hasOwn(doc.defs, hash) ? doc.defs[hash] : null
     if (!def) {
       throw new Error(`No definition found for hash: ${hash} in ${doc.id}`)
@@ -119,7 +119,7 @@ export class LexiconSchemaBuilder {
         return l.token(doc.id, hash)
       case 'record':
         return l.record(
-          l.asLexRecordKey(def.key),
+          l.asRecordKey(def.key),
           doc.id,
           this.buildObject(doc, def.record),
         )
@@ -131,9 +131,9 @@ export class LexiconSchemaBuilder {
   }
 
   protected buildLeaf(
-    doc: LexiconDoc,
+    doc: LexiconDocument,
     def: LexiconBase | LexiconArray,
-  ): l.LexValidator<unknown> {
+  ): l.Validator<unknown> {
     switch (def.type) {
       case 'string':
         return l.string(def)
@@ -164,8 +164,11 @@ export class LexiconSchemaBuilder {
     }
   }
 
-  protected buildObject(doc: LexiconDoc, def: LexiconObject): l.LexObject {
-    const props: Record<string, l.LexValidator> = {}
+  protected buildObject(
+    doc: LexiconDocument,
+    def: LexiconObject,
+  ): l.ObjectSchema {
+    const props: Record<string, l.Validator> = {}
     for (const [key, propDef] of Object.entries(def.properties ?? {})) {
       if (propDef === undefined) continue
       props[key] = this.buildLeaf(doc, propDef)
@@ -201,7 +204,7 @@ function parseRef(fullRef: string) {
   return { nsid, hash }
 }
 
-function buildFullRef(from: LexiconDoc, ref: string) {
+function buildFullRef(from: LexiconDocument, ref: string) {
   if (ref.startsWith('#')) return `${from.id}${ref}`
   return ref
 }

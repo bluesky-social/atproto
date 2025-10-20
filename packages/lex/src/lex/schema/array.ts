@@ -1,26 +1,26 @@
 import {
-  LexValidator,
   ValidationContext,
   ValidationResult,
+  Validator,
   isArray,
   isArrayLike,
   isIterableObject,
 } from '../core.js'
 
-export type LexArrayOptions = {
+export type ArraySchemaOptions = {
   minLength?: number
   maxLength?: number
 }
 
-export class LexArray<Item = any> extends LexValidator<Array<Item>> {
+export class ArraySchema<Item = any> extends Validator<Array<Item>> {
   constructor(
-    readonly $items: LexValidator<Item>,
-    readonly $options: LexArrayOptions,
+    readonly items: Validator<Item>,
+    readonly options: ArraySchemaOptions,
   ) {
     super()
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Array<Item>> {
@@ -34,7 +34,7 @@ export class LexArray<Item = any> extends LexValidator<Array<Item>> {
       return ctx.issueInvalidType(input, 'array')
     }
 
-    const { minLength, maxLength } = this.$options
+    const { minLength, maxLength } = this.options
 
     if (minLength != null && array.length < minLength) {
       return ctx.issueTooSmall(array, 'array', minLength, array.length)
@@ -47,7 +47,7 @@ export class LexArray<Item = any> extends LexValidator<Array<Item>> {
     let copy: undefined | Array<Item>
 
     for (let i = 0; i < array.length; i++) {
-      const result = ctx.validateChild(array, i, this.$items)
+      const result = ctx.validateChild(array, i, this.items)
       if (!result.success) return result
 
       if (result.value !== array[i]) {

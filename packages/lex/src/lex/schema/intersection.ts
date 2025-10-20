@@ -1,11 +1,11 @@
 import {
   Infer,
-  LexValidator,
   ValidationContext,
   ValidationResult,
+  Validator,
 } from '../core.js'
-import { LexDict } from './dict.js'
-import { LexObject, LexObjectOptions } from './object.js'
+import { DictSchema } from './dict.js'
+import { ObjectSchema, ObjectSchemaOptions } from './object.js'
 
 /**
  * Allows to more accurately represent the intersection of two object types
@@ -24,52 +24,52 @@ export type Intersect<
     // index signature could return a value from either A or B
     A & { [K in keyof B]: B[K] | A[keyof A & K] }
 
-// There is no point in using "intersect" with non-passthrough LexObjects so we
+// There is no point in using "intersect" with non-passthrough ObjectSchemas so we
 // enforce that here.
-export type LexIntersectionObject = LexObject<
+export type IntersectionSchemaObject = ObjectSchema<
   any,
-  LexObjectOptions & { unknownKeys?: 'passthrough' }
+  ObjectSchemaOptions & { unknownKeys?: 'passthrough' }
 >
 
-export type LexIntersectionOutput<
-  KnownProps extends LexObject,
-  ExtraProps extends LexDict,
+export type IntersectionSchemaOutput<
+  KnownProps extends ObjectSchema,
+  ExtraProps extends DictSchema,
 > = Intersect<Infer<KnownProps>, Infer<ExtraProps>>
 
-export class LexIntersection<
-  KnownProps extends LexIntersectionObject = any,
-  ExtraProps extends LexDict = any,
-> extends LexValidator<LexIntersectionOutput<KnownProps, ExtraProps>> {
+export class IntersectionSchema<
+  KnownProps extends IntersectionSchemaObject = any,
+  ExtraProps extends DictSchema = any,
+> extends Validator<IntersectionSchemaOutput<KnownProps, ExtraProps>> {
   constructor(
-    readonly $knownProps: KnownProps,
-    readonly $extraProps: ExtraProps,
+    readonly knownProps: KnownProps,
+    readonly extraProps: ExtraProps,
   ) {
     super()
   }
 
-  protected override $validateInContext(
+  protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
-  ): ValidationResult<LexIntersectionOutput<KnownProps, ExtraProps>> {
-    const propsResult = ctx.validate(input, this.$knownProps)
+  ): ValidationResult<IntersectionSchemaOutput<KnownProps, ExtraProps>> {
+    const propsResult = ctx.validate(input, this.knownProps)
     if (!propsResult.success) return propsResult
 
     const { value } = propsResult
 
-    // The code bellow is similar to the one in LexDict, but we need to
+    // The code bellow is similar to the one in DictSchema, but we need to
     // validate only the keys that are not part of the known props.
     let copy: undefined | Record<string, unknown>
 
     for (const key in value) {
-      if (this.$knownProps.$propertyKeys.has(key)) continue
+      if (this.knownProps.knownKeys.has(key)) continue
 
-      const keyResult = ctx.validate(key, this.$extraProps.$keySchema)
+      const keyResult = ctx.validate(key, this.extraProps.keySchema)
       if (!keyResult.success) return keyResult
 
       const valueResult = ctx.validateChild(
         value,
         key,
-        this.$extraProps.$valueSchema,
+        this.extraProps.valueSchema,
       )
       if (!valueResult.success) return valueResult
 
@@ -80,7 +80,7 @@ export class LexIntersection<
     }
 
     return ctx.success(
-      (copy ?? value) as LexIntersectionOutput<KnownProps, ExtraProps>,
+      (copy ?? value) as IntersectionSchemaOutput<KnownProps, ExtraProps>,
     )
   }
 }

@@ -1,4 +1,4 @@
-import { LexiconDoc, LexiconIndexer } from '../../doc/index.js'
+import { LexiconDocument, LexiconIndexer } from '../../doc/index.js'
 import { Filter } from './filter.js'
 
 /**
@@ -11,11 +11,11 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
   readonly #returned = new Set<string>()
 
   constructor(
-    readonly indexer: LexiconIndexer & AsyncIterable<LexiconDoc>,
+    readonly indexer: LexiconIndexer & AsyncIterable<LexiconDocument>,
     readonly filter: Filter,
   ) {}
 
-  async get(id: string): Promise<LexiconDoc> {
+  async get(id: string): Promise<LexiconDocument> {
     this.#returned.add(id)
     return this.indexer.get(id)
   }

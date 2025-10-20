@@ -1,38 +1,41 @@
 import { CID } from 'multiformats/cid'
 import { Infer, encodeIpldLink } from '../core.js'
-import { LexCidLink } from './cid-link.js'
-import { LexInteger } from './integer.js'
-import { LexLiteral } from './literal.js'
-import { LexObject } from './object.js'
-import { LexString } from './string.js'
-import { LexUnion } from './union.js'
+import { CidSchema } from './cid.js'
+import { IntegerSchema } from './integer.js'
+import { LiteralSchema } from './literal.js'
+import { ObjectSchema } from './object.js'
+import { StringSchema } from './string.js'
+import { UnionSchema } from './union.js'
 
 // @NOTE Since the JsonBlobRef definition depends on various schemas (object,
 // integer, etc.), we cannot place this file in ../core to avoid a circular
 // dependency. An alternative would be to manually define the validator
 // utilities bellow without using the other Lex* classes.
 
-export const typedJsonBlobRef = new LexObject(
+export const typedJsonBlobRef = new ObjectSchema(
   {
-    $type: new LexLiteral('blob'),
-    ref: new LexCidLink(),
-    mimeType: new LexString({}),
-    size: new LexInteger({ minimum: 0 }),
+    $type: new LiteralSchema('blob'),
+    ref: new CidSchema(),
+    mimeType: new StringSchema({}),
+    size: new IntegerSchema({ minimum: 0 }),
   },
   { unknownKeys: 'strict', required: ['$type', 'ref', 'mimeType', 'size'] },
 )
 export type TypedJsonBlobRef = Infer<typeof typedJsonBlobRef>
 
-export const untypedJsonBlobRef = new LexObject(
+export const untypedJsonBlobRef = new ObjectSchema(
   {
-    cid: new LexString({ format: 'cid' }),
-    mimeType: new LexString({}),
+    cid: new StringSchema({ format: 'cid' }),
+    mimeType: new StringSchema({}),
   },
   { unknownKeys: 'strict', required: ['cid', 'mimeType'] },
 )
 export type UntypedJsonBlobRef = Infer<typeof untypedJsonBlobRef>
 
-export const jsonBlobRef = new LexUnion([typedJsonBlobRef, untypedJsonBlobRef])
+export const jsonBlobRef = new UnionSchema([
+  typedJsonBlobRef,
+  untypedJsonBlobRef,
+])
 export type JsonBlobRef = Infer<typeof jsonBlobRef>
 
 export class BlobRef {
