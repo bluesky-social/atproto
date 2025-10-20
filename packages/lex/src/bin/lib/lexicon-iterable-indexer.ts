@@ -37,17 +37,21 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
       yield doc
     }
 
-    while (true) {
+    do {
       const { value, done } = await this.#iterator.next()
+
       if (done) break
+
       if (returned.has(value.id)) {
-        throw new Error(`Duplicate lexicon document id: ${value.id}`)
+        const err = new Error(`Duplicate lexicon document id: ${value.id}`)
+        this.#iterator.throw?.(err)
+        throw err // In case iterator.throw does not exist or does not throw
       }
 
       this.#lexicons.set(value.id, value)
       returned.add(value.id)
       yield value
-    }
+    } while (true)
 
     // At this point, the underlying iterator is done. However, there may have
     // been requests (.get()) for documents that caused the iterator to yield

@@ -53,6 +53,9 @@ const RESERVED_WORDS = new Set([
   'get',
   'require',
   'set',
+  // common js
+  'module',
+  'exports',
 ])
 export function isReservedWord(word: string) {
   return RESERVED_WORDS.has(word)

@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { SourceFile, VariableDeclarationKind } from 'ts-morph'
 import {
   LexiconArray,
@@ -21,6 +22,7 @@ import {
   LexiconString,
   LexiconSubscription,
   LexiconToken,
+  LexiconUnknown,
 } from '../../doc/index.js'
 import { l } from '../../lex/index.js'
 import { TsRefResolver, useRecordExport } from './ts-ref-resolver.js'
@@ -470,7 +472,7 @@ export class TsDocBuilder {
   ): Promise<string> {
     switch (def.type) {
       case 'unknown':
-        return this.compileUnknownSchema()
+        return this.compileUnknownSchema(def)
       case 'boolean':
         return this.compileBooleanSchema(def)
       case 'integer':
@@ -500,7 +502,7 @@ export class TsDocBuilder {
   ): Promise<string> {
     switch (def.type) {
       case 'unknown':
-        return this.compileUnknownType()
+        return this.compileUnknownType(def)
       case 'boolean':
         return this.compileBooleanType(def)
       case 'integer':
@@ -549,20 +551,12 @@ export class TsDocBuilder {
     return `Array<${itemType}>`
   }
 
-  private async compileUnknownSchema(): Promise<string> {
+  private async compileUnknownSchema(_def: LexiconUnknown): Promise<string> {
     return this.pure(`l.unknown()`)
   }
 
-  private async compileUnknownType(): Promise<string> {
+  private async compileUnknownType(_def: LexiconUnknown): Promise<string> {
     return `unknown`
-  }
-
-  private async compileNeverSchema(): Promise<string> {
-    return this.pure(`l.never()`)
-  }
-
-  private async compileNeverType(): Promise<string> {
-    return `never`
   }
 
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
@@ -578,6 +572,21 @@ export class TsDocBuilder {
   }
 
   private async compileIntegerSchema(def: LexiconInteger): Promise<string> {
+    if (hasConst(def)) {
+      const schema = l.integer(def)
+      assert(
+        schema.$is(def.const),
+        `Integer const ${def.const} is out of bounds`,
+      )
+    }
+
+    if (hasEnum(def)) {
+      const schema = l.integer(def)
+      for (const val of def.enum) {
+        assert(schema.$is(val), `Integer enum value ${val} is out of bounds`)
+      }
+    }
+
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
@@ -593,6 +602,22 @@ export class TsDocBuilder {
   }
 
   private async compileStringSchema(def: LexiconString): Promise<string> {
+    if (hasConst(def)) {
+      const schema = l.string(def)
+      assert(
+        schema.$is(def.const),
+        `String const "${def.const}" does not match format`,
+      )
+    } else if (hasEnum(def)) {
+      const schema = l.string(def)
+      for (const val of def.enum) {
+        assert(
+          schema.$is(val),
+          `String enum value "${val}" does not match format`,
+        )
+      }
+    }
+
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
@@ -674,6 +699,10 @@ export class TsDocBuilder {
   }
 
   private async compileRefUnionSchema(def: LexiconRefUnion): Promise<string> {
+    if (def.refs.length === 0 && def.closed) {
+      return this.pure(`l.never()`)
+    }
+
     const refs = await Promise.all(
       def.refs.map(async (ref: string) => {
         const { varName, typeName } = await this.refResolver.resolve(ref)
@@ -693,52 +722,39 @@ export class TsDocBuilder {
 
   private async compileRefUnionType(def: LexiconRefUnion): Promise<string> {
     const types = await Promise.all(
-      def.refs.map((r) => this.refResolver.resolve(r).then((v) => v.typeName)),
+      def.refs.map(async (r) => (await this.refResolver.resolve(r)).typeName),
     )
     if (!def.closed) types.push('l.UnknownTypedObject')
-    if (!types.length) return 'never'
-    return types.join(' | ')
+    return types.join(' | ') || 'never'
   }
 
   private async compileConstSchema<
     T extends null | number | string | boolean,
   >(def: { const: T; enum?: readonly T[] }): Promise<string> {
     if (hasEnum(def) && !def.enum.includes(def.const)) {
-      return this.compileNeverSchema()
+      return this.pure(`l.never()`)
     }
 
-    return this.compileLiteralSchema(def.const)
+    return this.pure(`l.literal(${JSON.stringify(def.const)})`)
   }
 
   private async compileConstType<
     T extends null | number | string | boolean,
   >(def: { const: T; enum?: readonly T[] }): Promise<string> {
     if (hasEnum(def) && !def.enum.includes(def.const)) {
-      return this.compileNeverType()
+      return 'never'
     }
-    return this.compileLiteralType(def.const)
-  }
-
-  private async compileLiteralSchema<
-    T extends null | number | string | boolean,
-  >(value: T): Promise<string> {
-    return this.pure(`l.literal(${JSON.stringify(value)})`)
-  }
-
-  private async compileLiteralType<T extends null | number | string | boolean>(
-    value: T,
-  ): Promise<string> {
-    return JSON.stringify(value)
+    return JSON.stringify(def.const)
   }
 
   private async compileEnumSchema<T extends null | number | string>(def: {
     enum: readonly T[]
   }): Promise<string> {
     if (def.enum.length === 0) {
-      return this.compileNeverSchema()
+      return this.pure(`l.never()`)
     }
     if (def.enum.length === 1) {
-      return this.compileLiteralSchema(def.enum[0])
+      return this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
     }
     return this.pure(`l.enum(${JSON.stringify(def.enum)})`)
   }
@@ -747,10 +763,10 @@ export class TsDocBuilder {
     enum: readonly T[]
   }): Promise<string> {
     if (def.enum.length === 0) {
-      return this.compileNeverType()
+      return 'never'
     }
     if (def.enum.length === 1) {
-      return this.compileLiteralType(def.enum[0])
+      return JSON.stringify(def.enum[0])
     }
 
     return def.enum.map((v) => JSON.stringify(v)).join(' | ')

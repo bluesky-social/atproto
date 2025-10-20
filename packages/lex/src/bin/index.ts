@@ -1,6 +1,6 @@
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { build } from './commands.js'
+import { TsProjectBuilder } from './lib/ts-project-builder.js'
 
 export async function main() {
   await yargs(hideBin(process.argv))
@@ -62,7 +62,11 @@ export async function main() {
           },
         })
       },
-      async (argv) => build(argv),
+      async (argv) => {
+        const generator = new TsProjectBuilder()
+        await generator.load(argv)
+        await generator.save(argv)
+      },
     )
     .parse()
 }

@@ -23,17 +23,25 @@ export function asUint8Array(input: unknown): Uint8Array | null {
   return null
 }
 
-export function parseIpldBytes(input: unknown): Uint8Array | null {
+export function parseIpldBytes(input: unknown): Uint8Array | undefined {
   if (
     isPureObject(input) &&
     '$bytes' in input &&
     typeof input.$bytes === 'string' &&
     Object.keys(input).length === 1
   ) {
-    return ui8FromBase64(input.$bytes)
+    try {
+      return ui8FromBase64(input.$bytes)
+    } catch {
+      // ignore
+    }
   }
 
-  return null
+  return undefined
+}
+
+export function encodeIpldBytes(bytes: Uint8Array): { $bytes: string } {
+  return { $bytes: ui8ToBase64(bytes) }
 }
 
 interface NodeJSBuffer extends Uint8Array {
@@ -61,7 +69,22 @@ export function ui8FromBase64(b64: string): Uint8Array {
   }
 
   if (NodeJSBuffer) {
-    return NodeJSBuffer.from(b64, 'base64')
+    const bytes = NodeJSBuffer.from(b64, 'base64')
+
+    // NodeJS Buffer will silently ignore invalid base64 characters, so we will
+    // verify the length to ensure the input was valid.
+    const numberOfPaddingChars = b64.endsWith('==')
+      ? 2
+      : b64.endsWith('=')
+        ? 1
+        : 0
+    const expectedByteLength = 3 * (b64.length / 4) - numberOfPaddingChars
+
+    if (bytes.length !== expectedByteLength) {
+      throw new Error('Invalid base64 string')
+    }
+
+    return bytes
   }
 
   throw new Error('Unsupported environment: no base64 decoder available')

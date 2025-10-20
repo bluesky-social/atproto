@@ -32,7 +32,7 @@ export type Uri = `${string}://${string}`
 export type Datetime = `${string}T${string}Z`
 export type Handle = `${string}.${string}`
 export type AtIdentifier = Did | Handle
-export type Nsid = `${string}.${string}`
+export type Nsid = `${string}.${string}.${string}`
 export type AtUri = `at://${AtIdentifier}/${Nsid}/${string}`
 
 export type InferStringFormat<F> =

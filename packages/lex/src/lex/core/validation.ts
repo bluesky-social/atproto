@@ -54,7 +54,7 @@ export abstract class LexValidator<V = any> {
     ctx: ValidationContext,
   ): ValidationResult<V>
 
-  $is(input: unknown): input is V {
+  $is<T>(input: T): input is T & V {
     const result = ValidationContext.validate(input, this, {
       allowTransform: false,
     })

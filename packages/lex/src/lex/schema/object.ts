@@ -85,7 +85,7 @@ export class LexObject<
       for (const key in input) {
         if (this.$propertyKeys.has(key)) continue
 
-        if (unknownKeys === 'strict' || !ctx.allowTransform) {
+        if (unknownKeys === 'strict') {
           return ctx.issueInvalidPropertyType(
             input,
             key as keyof typeof input,
@@ -93,6 +93,17 @@ export class LexObject<
           )
         }
 
+        // Optimization: avoid copying & validating the rest if the context
+        // doesn't allow transformation.
+        if (!ctx.allowTransform) {
+          return ctx.issueInvalidPropertyType(
+            input,
+            key as keyof typeof input,
+            'undefined',
+          )
+        }
+
+        // Strip unknown keys
         copy ??= { ...input }
         delete copy[key]
       }

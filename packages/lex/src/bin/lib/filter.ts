@@ -6,20 +6,27 @@ export type BuildFilterOptions = {
 export type Filter = (input: string) => boolean
 
 export function buildFilter(options: BuildFilterOptions): Filter {
-  const include = options.include ? createMatcher(options.include) : () => true
-  const exclude = options.exclude ? createMatcher(options.exclude) : () => false
+  const include = createMatcher(options.include, () => true)
+  const exclude = createMatcher(options.exclude, () => false)
 
   return (id) => include(id) && !exclude(id)
 }
 
-function createMatcher(pattern: string | string[]): Filter {
-  if (Array.isArray(pattern)) {
-    return pattern.map(buildMatcher).reduce((a, b) => {
-      return (input) => a(input) || b(input)
-    })
+function createMatcher(
+  pattern: undefined | string | string[],
+  fallback: Filter,
+): Filter {
+  if (!pattern?.length) {
+    return fallback
+  } else if (Array.isArray(pattern)) {
+    return pattern.map(buildMatcher).reduce(combineFilters)
   } else {
     return buildMatcher(pattern)
   }
+}
+
+function combineFilters(a: Filter, b: Filter): Filter {
+  return (input: string) => a(input) || b(input)
 }
 
 function buildMatcher(pattern: string): Filter {

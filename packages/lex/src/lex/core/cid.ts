@@ -3,7 +3,7 @@ import { isPureObject } from '../core.js'
 
 export { CID }
 
-export function parseIpldLink(input: unknown): CID | null {
+export function parseIpldLink(input: unknown): CID | undefined {
   if (
     isPureObject(input) &&
     typeof input.$link === 'string' &&
@@ -16,5 +16,9 @@ export function parseIpldLink(input: unknown): CID | null {
     }
   }
 
-  return null
+  return undefined
+}
+
+export function encodeIpldLink(cid: CID): { $link: string } {
+  return { $link: cid.toString() }
 }
