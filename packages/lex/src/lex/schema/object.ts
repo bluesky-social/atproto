@@ -66,11 +66,6 @@ export class ObjectSchema<
     return new Map(Object.entries(this.validators))
   }
 
-  @cachedGetter
-  get knownKeys(): Set<string> {
-    return new Set(Object.keys(this.validators))
-  }
-
   protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
@@ -89,7 +84,7 @@ export class ObjectSchema<
 
     if (this.options.unknownKeys === 'strict') {
       for (const key in input) {
-        if (this.knownKeys.has(key)) continue
+        if (this.validatorsMap.has(key)) continue
 
         return ctx.issueInvalidPropertyType(
           input,

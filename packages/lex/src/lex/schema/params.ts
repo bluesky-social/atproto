@@ -51,11 +51,6 @@ export class ParamsSchema<
     return new Map(Object.entries(this.validators))
   }
 
-  @cachedGetter
-  get knownKeys(): Set<string> {
-    return new Set(Object.keys(this.validators))
-  }
-
   protected override validateInContext(
     input: unknown = {},
     ctx: ValidationContext,
@@ -76,7 +71,7 @@ export class ParamsSchema<
     let copy: undefined | Record<string, unknown>
 
     for (const key in input) {
-      if (this.knownKeys.has(key)) continue
+      if (this.validatorsMap.has(key)) continue
 
       if (this.options.unknownKeys === 'strict') {
         return ctx.issueInvalidPropertyType(input, key, 'undefined')
