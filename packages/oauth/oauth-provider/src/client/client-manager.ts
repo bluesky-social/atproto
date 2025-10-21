@@ -5,6 +5,7 @@ import {
   OAuthClientIdLoopback,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
+  isLocalHostname,
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
   oauthClientMetadataSchema,
@@ -16,7 +17,6 @@ import {
   fetchJsonZodProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
-import { isLocalHostname } from '@atproto-labs/fetch-node'
 import { pipe } from '@atproto-labs/pipe'
 import {
   CachedGetter,

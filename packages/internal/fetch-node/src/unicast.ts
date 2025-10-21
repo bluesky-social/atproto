@@ -229,7 +229,7 @@ export function unicastLookup(
  * @returns whether the hostname is a name typically used for on locale area networks.
  * @note **DO NOT** use for security reasons. Only as heuristic.
  */
-export function isLocalHostname(hostname: string): boolean {
+function isLocalHostname(hostname: string): boolean {
   const parts = hostname.split('.')
   if (parts.length < 2) return true
 
