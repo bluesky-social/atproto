@@ -33,6 +33,8 @@ channel.on('event', async (evt) => {
   // Unless acks are disabled in Nexus, every event must be acked after processing.
   // If left unacked, Nexus will retry sending.
   await evt.ack()
+  // alternately, you can send the ack on the channel using just the event id
+  await channel.ackEvent(evt.id)
 })
 
 // If the websocket connection drops, the client will attempt to reconnect automatically.
