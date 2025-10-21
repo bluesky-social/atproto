@@ -1,6 +1,7 @@
 {
   "extends": ["../../tsconfig/isomorphic.json"],
   "include": ["./src/lex", "./src/doc"],
+  "exclude": ["./src/tests", "**/*.test.ts"],
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,

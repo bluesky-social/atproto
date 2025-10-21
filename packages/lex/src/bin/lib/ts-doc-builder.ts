@@ -545,17 +545,7 @@ export class TsDocBuilder {
   }
 
   private async compileArrayType(def: LexiconArray): Promise<string> {
-    const itemType = await this.compileBaseType(def.items)
-
-    if (def.minLength != null && def.minLength > 0) {
-      const rest =
-        def.maxLength == null || def.maxLength > def.minLength
-          ? `, ...(${itemType})[]`
-          : ''
-      return `[${Array(def.minLength).fill(itemType).join(',')}${rest}]`
-    }
-
-    return `Array<${itemType}>`
+    return `Array<${await this.compileBaseType(def.items)}>`
   }
 
   private async compileUnknownSchema(_def: LexiconUnknown): Promise<string> {

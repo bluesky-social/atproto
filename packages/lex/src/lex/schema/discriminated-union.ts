@@ -6,7 +6,7 @@ import {
   ValidationResult,
   Validator,
   hasOwn,
-  isObject,
+  isPureObject,
 } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
 import { EnumSchema } from './enum.js'
@@ -84,7 +84,7 @@ export class DiscriminatedUnionSchema<
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<DiscriminatedUnionSchemaOutput<Options>> {
-    if (!isObject(input)) {
+    if (!isPureObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
 

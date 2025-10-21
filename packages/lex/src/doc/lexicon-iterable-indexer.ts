@@ -1,4 +1,4 @@
-import { LexiconDocument, LexiconIndexer } from '../../doc/index.js'
+import { LexiconDocument, LexiconIndexer } from './index.js'
 
 /**
  * (Lazily) indexes lexicon documents from an iterable source.

@@ -25,6 +25,17 @@ export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 
 export type PropertyKey = string | number
 
+export function comparePropertyPaths(
+  a: readonly PropertyKey[],
+  b: readonly PropertyKey[],
+) {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
+}
+
 // @NOTE there is no way to express "array containing at least one P", so we use
 // "array that contains P at first or last position" as a workaround.
 export type ArrayContaining<T, Items = unknown> =

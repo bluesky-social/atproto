@@ -50,8 +50,8 @@ export class TypedUnionSchema<
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<TypedUnionSchemaOutput<TypedRefs, Closed>> {
-    if (!isPureObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
+    if (!isPureObject(input) || !('$type' in input)) {
+      return ctx.issueInvalidType(input, '$typed')
     }
 
     const { $type } = input

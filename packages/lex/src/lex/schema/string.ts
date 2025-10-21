@@ -39,41 +39,53 @@ export class StringSchema<
     input: unknown = this.options.default,
     ctx: ValidationContext,
   ): ValidationResult<StringSchemaOutput<Options>> {
-    const { options: $options } = this
+    const { options } = this
 
-    const str = coerceToString(input, $options.format)
+    const str = coerceToString(input, options.format)
     if (str == null) {
       return ctx.issueInvalidType(input, 'string')
     }
 
-    if ($options.minLength != null && str.length < $options.minLength) {
-      return ctx.issueTooSmall(str, 'string', $options.minLength, str.length)
-    }
+    // If the JavaScript string length * 3 is within the maximum limit,
+    // its UTF8 length (which <= .length * 3) will also be within.
+    // When there's no minimal length, this lets us skip the UTF8 length check.
+    const canSkipUtf8LenChecks =
+      typeof options.minLength === 'undefined' &&
+      typeof options.maxLength === 'number' &&
+      str.length * 3 <= options.maxLength
 
-    if ($options.maxLength != null && str.length > $options.maxLength) {
-      return ctx.issueTooBig(str, 'string', $options.maxLength, str.length)
+    if (!canSkipUtf8LenChecks) {
+      const len = utf8Len(str)
+
+      if (options.minLength != null && len < options.minLength) {
+        return ctx.issueTooSmall(str, 'string', options.minLength, len)
+      }
+
+      if (options.maxLength != null && len > options.maxLength) {
+        return ctx.issueTooBig(str, 'string', options.maxLength, len)
+      }
     }
 
     let lazyGraphLen: number
 
-    const { minGraphemes } = $options
+    const { minGraphemes } = options
     if (minGraphemes != null) {
       // Optimization: avoid counting graphemes if the length check already fails
       if (str.length < minGraphemes) {
-        return ctx.issueTooSmall(str, 'string', minGraphemes, str.length)
+        return ctx.issueTooSmall(str, 'grapheme', minGraphemes, str.length)
       } else if ((lazyGraphLen ??= graphemeLen(str)) < minGraphemes) {
         return ctx.issueTooSmall(str, 'grapheme', minGraphemes, lazyGraphLen)
       }
     }
 
-    const { maxGraphemes } = $options
+    const { maxGraphemes } = options
     if (maxGraphemes != null) {
       if ((lazyGraphLen ??= graphemeLen(str)) > maxGraphemes) {
         return ctx.issueTooBig(str, 'grapheme', maxGraphemes, lazyGraphLen)
       }
     }
 
-    return validateStringFormat(str, ctx, $options.format) as ValidationResult<
+    return validateStringFormat(str, ctx, options.format) as ValidationResult<
       StringSchemaOutput<Options>
     >
   }
@@ -84,4 +96,9 @@ function graphemeLen(str: string) {
   let length = 0
   for (const _ of segmenter.segment(str)) length++
   return length
+}
+
+const textEncoder = /*#__PURE__*/ new TextEncoder()
+export function utf8Len(str: string): number {
+  return textEncoder.encode(str).byteLength
 }

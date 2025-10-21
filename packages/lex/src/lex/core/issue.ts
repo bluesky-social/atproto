@@ -1,5 +1,10 @@
 import { CID } from 'multiformats/cid'
-import { PropertyKey, isArray, isPureObject } from './util.js'
+import {
+  PropertyKey,
+  comparePropertyPaths,
+  isArray,
+  isPureObject,
+} from './util.js'
 
 export interface IssueBase<I = unknown> {
   readonly input: I
@@ -15,7 +20,7 @@ export interface IssueInvalidFormat extends IssueBase {
 
 export interface IssueInvalidType extends IssueBase {
   readonly code: 'invalid_type'
-  readonly expected: string
+  readonly expected: readonly string[]
 }
 
 export interface IssueInvalidValue extends IssueBase {
@@ -55,21 +60,29 @@ export function stringifyIssue(issue: Issue): string {
 
   switch (issue.code) {
     case 'invalid_format':
-      return `Invalid ${stringifyStringFormat(issue.format)} format${issue.message ? ` (${issue.message})` : ''} ${stringifyInputValue(issue.input)}${pathStr}`
+      return `Invalid ${stringifyStringFormat(issue.format)} format${issue.message ? ` (${issue.message})` : ''}${pathStr} (got ${stringifyValue(issue.input)})`
     case 'invalid_type':
-      return `Invalid value type ${stringifyInputType(issue.input)} (expected ${issue.expected})${pathStr}`
+      return `Expected ${oneOf(issue.expected.map(stringifyExpectedType))} value type${pathStr} (got ${stringifyType(issue.input)})`
     case 'invalid_value':
-      return `Invalid value ${stringifyInputValue(issue.input)} (expected ${oneOf(issue.values)})${pathStr}`
+      return `Expected ${oneOf(issue.values.map(stringifyValue))}${pathStr} (got ${stringifyValue(issue.input)})`
     case 'required_key':
       return `Missing required key "${String(issue.key)}"${pathStr}`
     case 'too_big':
-      return `${issue.type} too big (got ${issue.actual}, maximum ${issue.maximum})${pathStr}`
+      return `${issue.type} too big (maximum ${issue.maximum})${pathStr} (got ${issue.actual})`
     case 'too_small':
-      return `${issue.type} too small (got ${issue.actual}, minimum ${issue.minimum})${pathStr}`
+      return `${issue.type} too small (minimum ${issue.minimum})${pathStr} (got ${issue.actual})`
     default:
       // @ts-expect-error fool-proofing
       return `${issue.code} validation error${pathStr}`
   }
+}
+
+function stringifyExpectedType(expected: string): string {
+  if (expected === '$typed') {
+    return 'an object or record which includes a "$type" property'
+  }
+
+  return expected
 }
 
 function buildJsonPath(path: readonly PropertyKey[]): string {
@@ -77,7 +90,7 @@ function buildJsonPath(path: readonly PropertyKey[]): string {
   for (const segment of path) {
     if (typeof segment === 'number') {
       jsonPath += `[${segment}]`
-    } else if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(segment as string)) {
+    } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(segment as string)) {
       jsonPath += `.${segment}`
     } else {
       jsonPath += `[${JSON.stringify(segment)}]`
@@ -86,10 +99,10 @@ function buildJsonPath(path: readonly PropertyKey[]): string {
   return jsonPath
 }
 
-function oneOf(arr: readonly unknown[]): string {
+function oneOf(arr: readonly string[]): string {
   if (arr.length === 0) return ''
-  if (arr.length === 1) return stringifyInputValue(arr[0])
-  return `one of ${arr.slice(0, -1).map(stringifyInputValue).join(', ')} or ${stringifyInputValue(arr.at(-1))}`
+  if (arr.length === 1) return arr[0]
+  return `one of ${arr.slice(0, -1).join(', ')} or ${arr.at(-1)}`
 }
 
 function stringifyStringFormat(format: string): string {
@@ -117,7 +130,7 @@ function stringifyStringFormat(format: string): string {
   }
 }
 
-function stringifyInputType(value: unknown): string {
+function stringifyType(value: unknown): string {
   switch (typeof value) {
     case 'object':
       if (value === null) return 'null'
@@ -128,12 +141,16 @@ function stringifyInputType(value: unknown): string {
       if (value instanceof Map) return 'map'
       if (value instanceof Set) return 'set'
       return 'object'
+    case 'number':
+      if (Number.isInteger(value)) return 'integer'
+      if (Number.isNaN(value)) return 'NaN'
+      return 'float'
     default:
       return typeof value
   }
 }
 
-function stringifyInputValue(value: unknown): string {
+function stringifyValue(value: unknown): string {
   switch (typeof value) {
     case 'bigint':
       return `${value}n`
@@ -143,14 +160,14 @@ function stringifyInputValue(value: unknown): string {
       return JSON.stringify(value)
     case 'object':
       if (isArray(value)) {
-        return `[${stringifyArray(value, stringifyInputValue)}]`
+        return `[${stringifyArray(value, stringifyValue)}]`
       }
       if (isPureObject(value)) {
         return `{${stringifyArray(Object.entries(value), stringifyObjectEntry)}}`
       }
     // fallthrough
     default:
-      return stringifyInputType(value)
+      return stringifyType(value)
   }
 }
 
@@ -164,4 +181,62 @@ function stringifyArray<T>(
   n = 2,
 ): string {
   return arr.slice(0, n).map(fn).join(', ') + (arr.length > n ? ', ...' : '')
+}
+
+export function aggregateIssues(issues: Issue[]): Issue[] {
+  // Quick path for common cases
+  if (issues.length <= 1) return issues
+  if (issues.length === 2 && issues[0].code !== issues[1].code) return issues
+
+  return [
+    // Aggregate invalid_type on the same path
+    ...arrayAgg(
+      issues.filter((issue) => issue.code === 'invalid_type'),
+      (a, b) => comparePropertyPaths(a.path, b.path),
+      (issues) => ({
+        ...issues[0],
+        expected: Array.from(new Set(issues.flatMap((iss) => iss.expected))),
+      }),
+    ),
+    // Aggregate invalid_value on the same path
+    ...arrayAgg(
+      issues.filter((issue) => issue.code === 'invalid_value'),
+      (a, b) => comparePropertyPaths(a.path, b.path),
+      (issues) => ({
+        ...issues[0],
+        values: Array.from(new Set(issues.flatMap((iss) => iss.values))),
+      }),
+    ),
+    // Pass through other issues
+    ...issues.filter(
+      (issue) =>
+        issue.code !== 'invalid_type' && issue.code !== 'invalid_value',
+    ),
+  ]
+}
+
+function arrayAgg<T>(
+  arr: readonly T[],
+  cmp: (a: T, b: T) => boolean,
+  agg: (items: [T, ...T[]]) => T,
+): T[] {
+  if (arr.length === 0) return []
+
+  const groups: [T, ...T[]][] = [[arr[0]]]
+  const skipped = Array<undefined | boolean>(arr.length)
+
+  outer: for (let i = 1; i < arr.length; i++) {
+    if (skipped[i]) continue
+    const item = arr[i]
+    for (let j = 0; j < groups.length; j++) {
+      if (cmp(item, groups[j][0])) {
+        groups[j].push(item)
+        skipped[i] = true
+        continue outer
+      }
+    }
+    groups.push([item])
+  }
+
+  return groups.map(agg)
 }

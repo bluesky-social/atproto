@@ -4,6 +4,10 @@ import {
   LexiconBase,
   LexiconDocument,
   LexiconObject,
+  LexiconParameters,
+  LexiconPayload,
+  LexiconRef,
+  LexiconRefUnion,
 } from './lexicon-document.js'
 import { LexiconIndexer } from './lexicon-indexer.js'
 
@@ -27,17 +31,26 @@ export class LexiconSchemaBuilder {
   ): Promise<l.Validator<unknown>> {
     const ctx = new LexiconSchemaBuilder(indexer)
     try {
-      return await ctx.buildRef(fullRef)
+      const result = await ctx.buildFullRef(fullRef)
+      if (!(result instanceof l.Validator)) {
+        throw new Error(`Ref ${fullRef} is not a validator schema type`)
+      }
+      return result
     } finally {
       await ctx.done()
     }
   }
 
-  static async buildAll(
-    indexer: LexiconIndexer,
-  ): Promise<Map<string, l.Validator<unknown>>> {
+  static async buildAll(indexer: LexiconIndexer) {
     const builder = new LexiconSchemaBuilder(indexer)
-    const schemas = new Map<string, l.Validator<unknown>>()
+    const schemas = new Map<
+      string,
+      | l.Validator<unknown>
+      | l.Query
+      | l.Subscription
+      | l.Procedure
+      | l.PermissionSet
+    >()
     if (!l.isAsyncIterableObject(indexer)) {
       throw new Error('An iterable indexer is required to build all schemas')
     }
@@ -45,7 +58,7 @@ export class LexiconSchemaBuilder {
       for await (const doc of indexer) {
         for (const hash of Object.keys(doc.defs)) {
           const fullRef = `${doc.id}#${hash}`
-          const schema = await builder.buildRef(fullRef)
+          const schema = await builder.buildFullRef(fullRef)
           schemas.set(fullRef, schema)
         }
       }
@@ -63,34 +76,40 @@ export class LexiconSchemaBuilder {
     await this.#asyncTasks.done()
   }
 
-  buildRef = memoize(async (fullRef: string): Promise<l.Validator<unknown>> => {
+  buildFullRef = memoize(async (fullRef: string) => {
     const { nsid, hash } = parseRef(fullRef)
 
     const doc = await this.indexer.get(nsid)
     if (!doc) throw new Error(`No lexicon found for NSID: ${nsid}`)
 
-    return this.buildDef(doc, hash)
+    return this.compileDef(doc, hash)
   })
 
-  protected ref(fullRef: string): () => l.Validator<unknown> {
+  protected buildRefGetter(fullRef: string): () => l.Validator<unknown> {
     let validator: l.Validator<unknown>
 
     this.#asyncTasks.add(
-      this.buildRef(fullRef).then((v) => {
+      this.buildFullRef(fullRef).then((v) => {
+        if (!(v instanceof l.Validator)) {
+          throw new Error(`Only refs to validator schema types are allowed`)
+        }
         validator = v
       }),
     )
 
-    return () => validator
+    return () => {
+      if (validator) return validator
+      throw new Error('Validator not yet built. Did you await done()?')
+    }
   }
 
-  protected typedRef(
+  protected buildTypedRefGetter(
     fullRef: string,
   ): () => l.TypedObjectSchema | l.RecordSchema {
     let validator: l.TypedObjectSchema | l.RecordSchema
 
     this.#asyncTasks.add(
-      this.buildRef(fullRef).then((v) => {
+      this.buildFullRef(fullRef).then((v) => {
         if (v instanceof l.TypedObjectSchema || v instanceof l.RecordSchema) {
           validator = v
         } else {
@@ -101,36 +120,62 @@ export class LexiconSchemaBuilder {
       }),
     )
 
-    return () => validator
+    return () => {
+      if (validator) return validator
+      throw new Error('Validator not yet built. Did you await done()?')
+    }
   }
 
-  protected buildDef(doc: LexiconDocument, hash: string): l.Validator<unknown> {
+  protected compileDef(doc: LexiconDocument, hash: string) {
     const def = Object.hasOwn(doc.defs, hash) ? doc.defs[hash] : null
     if (!def) {
-      throw new Error(`No definition found for hash: ${hash} in ${doc.id}`)
+      throw new Error(
+        `No definition found for hash "${JSON.stringify(hash)}" in ${doc.id}`,
+      )
     }
     switch (def.type) {
-      case 'query':
-      case 'procedure':
-      case 'subscription':
       case 'permission-set':
-        throw new Error(`${def.type} definitions cannot be built into a schema`)
+        return l.permissionSet(
+          doc.id,
+          def.permissions.map(({ resource, type, ...p }) =>
+            l.permission(resource, p),
+          ),
+          def,
+        )
+      case 'procedure':
+        return l.procedure(
+          doc.id,
+          this.compilePayload(doc, def.input),
+          this.compilePayload(doc, def.output),
+        )
+      case 'query':
+        return l.query(
+          doc.id,
+          this.compilePayload(doc, def.output),
+          this.compileParameters(doc, def.parameters),
+        )
+      case 'subscription':
+        return l.subscription(
+          doc.id,
+          this.compileParameters(doc, def.parameters),
+          this.compilePayloadSchema(doc, def.message?.schema),
+        )
       case 'token':
         return l.token(doc.id, hash)
       case 'record':
         return l.record(
-          l.asRecordKey(def.key),
+          def.key ? l.asRecordKey(def.key) : 'any',
           doc.id,
-          this.buildObject(doc, def.record),
+          this.compileObject(doc, def.record),
         )
       case 'object':
-        return l.typedObject(doc.id, hash, this.buildObject(doc, def))
+        return l.typedObject(doc.id, hash, this.compileObject(doc, def))
       default:
-        return this.buildLeaf(doc, def)
+        return this.compileLeaf(doc, def)
     }
   }
 
-  protected buildLeaf(
+  protected compileLeaf(
     doc: LexiconDocument,
     def: LexiconBase | LexiconArray,
   ): l.Validator<unknown> {
@@ -150,12 +195,24 @@ export class LexiconSchemaBuilder {
       case 'unknown':
         return l.unknown()
       case 'array':
-        return l.array(this.buildLeaf(doc, def.items), def)
+        return l.array(this.compileLeaf(doc, def.items), def)
+      default:
+        return this.compileRef(doc, def)
+    }
+  }
+
+  protected compileRef(
+    doc: LexiconDocument,
+    def: LexiconRef | LexiconRefUnion,
+  ) {
+    switch (def.type) {
       case 'ref':
-        return l.ref(this.ref(buildFullRef(doc, def.ref)))
+        return l.ref(this.buildRefGetter(buildFullRef(doc, def.ref)))
       case 'union':
         return l.typedUnion(
-          def.refs.map((r) => l.typedRef(this.typedRef(buildFullRef(doc, r)))),
+          def.refs.map((r) =>
+            l.typedRef(this.buildTypedRefGetter(buildFullRef(doc, r))),
+          ),
           def.closed ?? false,
         )
       default:
@@ -164,16 +221,50 @@ export class LexiconSchemaBuilder {
     }
   }
 
-  protected buildObject(
+  protected compileObject(
     doc: LexiconDocument,
     def: LexiconObject,
   ): l.ObjectSchema {
     const props: Record<string, l.Validator> = {}
-    for (const [key, propDef] of Object.entries(def.properties ?? {})) {
+    for (const [key, propDef] of Object.entries(def.properties)) {
       if (propDef === undefined) continue
-      props[key] = this.buildLeaf(doc, propDef)
+      props[key] = this.compileLeaf(doc, propDef)
     }
     return l.object(props, def)
+  }
+
+  protected compilePayload(
+    doc: LexiconDocument,
+    def: LexiconPayload | undefined,
+  ): l.PayloadSchema {
+    return l.payload(
+      def?.encoding,
+      def?.schema ? this.compilePayloadSchema(doc, def.schema) : undefined,
+    )
+  }
+
+  protected compilePayloadSchema(
+    doc: LexiconDocument,
+    def?: LexiconObject | LexiconRef | LexiconRefUnion,
+  ) {
+    if (!def) return undefined
+    switch (def.type) {
+      case 'object':
+        return this.compileObject(doc, def)
+      default:
+        return this.compileRef(doc, def)
+    }
+  }
+
+  protected compileParameters(doc: LexiconDocument, def?: LexiconParameters) {
+    if (!def) return l.params()
+
+    const props: Record<string, l.Validator> = {}
+    for (const [key, propDef] of Object.entries(def.properties)) {
+      if (propDef === undefined) continue
+      props[key] = this.compileLeaf(doc, propDef)
+    }
+    return l.params(props, def)
   }
 }
 
@@ -181,25 +272,35 @@ class AsyncTasks {
   #promises = new Set<Promise<void>>()
 
   async done(): Promise<void> {
-    await Promise.all(this.#promises)
+    const awaited = new Set<Promise<void>>()
+    for (const p of this.#promises) {
+      awaited.add(p)
+      await p
+    }
+
+    // If new promises were added while awaiting, wait for those too
+    for (const p of this.#promises) {
+      if (!awaited.has(p)) return this.done()
+    }
   }
 
   add(p: Promise<void>) {
-    const promise = Promise.resolve(p).then(
-      () => {
-        // No need to keep the promise any longer
-        this.#promises.delete(promise)
-      },
-      () => {
-        // ignore errors here, they should be caught though done()
-      },
-    )
+    const promise = Promise.resolve(p).then(() => {
+      // No need to keep the promise any longer
+      this.#promises.delete(promise)
+    })
+
+    void promise.catch((_err) => {
+      // ignore errors here, they should be caught though done()
+    })
+
     this.#promises.add(promise)
   }
 }
 
 function parseRef(fullRef: string) {
-  const { 0: nsid, 1: hash } = fullRef.split('#')
+  const { length, 0: nsid, 1: hash } = fullRef.split('#')
+  if (length !== 2) throw new Error('Uri can only have one hash segment')
   if (!nsid || !hash) throw new Error('Invalid ref, missing hash')
   return { nsid, hash }
 }

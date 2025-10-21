@@ -2,7 +2,6 @@ import {
   ValidationContext,
   ValidationResult,
   Validator,
-  hasOwn,
   isPureObject,
 } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
@@ -59,14 +58,6 @@ export class ParamsSchema<
       return ctx.issueInvalidType(input, 'object')
     }
 
-    if (this.options.required) {
-      for (const prop in this.options.required) {
-        if (!hasOwn(input, prop)) {
-          return ctx.issueRequiredKey(input, prop)
-        }
-      }
-    }
-
     // Lazily copy value
     let copy: undefined | Record<string, unknown>
 
@@ -88,12 +79,23 @@ export class ParamsSchema<
     }
 
     for (const [key, propDef] of this.validatorsMap) {
-      if (!hasOwn(input, key)) {
-        continue
-      }
-
       const result = ctx.validateChild(input, key, propDef)
-      if (!result.success) return result
+      if (!result.success) {
+        // Because default values are provided by child validators, we need to
+        // run the validator to get the default value and, in case of failure,
+        // ignore validation error that were caused by missing keys.
+        if (!(key in input)) {
+          if (!this.options.required?.includes(key)) {
+            // Ignore missing non-required key
+            continue
+          } else {
+            // Transform into "required key" issue
+            return ctx.issueRequiredKey(input, key)
+          }
+        }
+
+        return result
+      }
 
       if (result.value !== input[key]) {
         // Copy on write

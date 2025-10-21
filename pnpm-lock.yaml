@@ -791,6 +791,9 @@ importers:
       '@types/yargs':
         specifier: ^17.0.33
         version: 17.0.33
+      jest:
+        specifier: ^28.1.2
+        version: 28.1.2(@types/node@22.18.11)
 
   packages/lex-cli:
     dependencies:
@@ -3299,7 +3302,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-bigint@7.8.3(@babel/core@7.18.6):
     resolution: {integrity: sha512-wnTnFlG+YxQm3vDxpGE57Pj0srRU4sHE/mDkt1qv2YJJSeUAec2ma4WLUnUPeKjyrfntVwe/N6dCXpU+zL3Npg==}
@@ -3317,7 +3319,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-class-properties@7.12.13(@babel/core@7.18.6):
     resolution: {integrity: sha512-fm4idjKla0YahUNgFNLCB0qySdsoPiZP3iQE3rky0mBUtMZ23yDJ9SJdg6dXTSDnulOVqiF3Hgr9nbXvXTQZYA==}
@@ -3335,7 +3336,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-decorators@7.27.1(@babel/core@7.26.9):
     resolution: {integrity: sha512-YMq8Z87Lhl8EGkmb0MwYkt36QnxC+fzCgrl66ereamPlYToRpIk5nUjKUY3QKLWq8mwUB1BgbeXcTJhZOCDg5A==}
@@ -3392,7 +3392,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-json-strings@7.8.3(@babel/core@7.18.6):
     resolution: {integrity: sha512-lY6kdGpWHvjoe2vk4WrAapEuBR69EMxZl+RoGRhrFGNYVK8mOPAW8VfbT/ZgrFbXlDNiiaxQnAtgVCZ6jv30EA==}
@@ -3410,7 +3409,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-jsx@7.25.9(@babel/core@7.26.9):
     resolution: {integrity: sha512-ld6oezHQMZsZfp6pWtbjaNDF2tiiCYYDqQszHt5VV437lewP9aSi2Of99CK0D0XB21k7FLgnLcmQKyKzynfeAA==}
@@ -3448,7 +3446,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-nullish-coalescing-operator@7.8.3(@babel/core@7.18.6):
     resolution: {integrity: sha512-aSff4zPII1u2QD7y+F8oDsz19ew4IGEJg9SVW+bqwpwtfFleiQDMdzA/R+UlWDzfnHFCxxleFT0PMIrR36XLNQ==}
@@ -3466,7 +3463,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-numeric-separator@7.10.4(@babel/core@7.18.6):
     resolution: {integrity: sha512-9H6YdfkcK/uOnY/K7/aA2xpzaAgkQn37yzWUMRK7OaPOqOpGS1+n0H5hxT9AUw9EsSjPW8SVyMJwYRtWs3X3ug==}
@@ -3484,7 +3480,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-object-rest-spread@7.8.3(@babel/core@7.18.6):
     resolution: {integrity: sha512-XoqMijGZb9y3y2XskN+P1wUGiVwWZ5JmoDRwx5+3GmEplNyVM2s2Dg8ILFQm8rWM48orGy5YpI5Bl8U1y7ydlA==}
@@ -3502,7 +3497,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-optional-catch-binding@7.8.3(@babel/core@7.18.6):
     resolution: {integrity: sha512-6VPD0Pc1lpTqw0aKoeRTMiB+kWhAoT24PA+ksWSBrFtl5SIRVpZlwN3NNPQjehA2E/91FV3RjLWoVTglWcSV3Q==}
@@ -3520,7 +3514,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-optional-chaining@7.8.3(@babel/core@7.18.6):
     resolution: {integrity: sha512-KoK9ErH1MBlCPxV0VANkXW2/dw4vlbGDrFgz8bmUsBGYkFRcbRwMh6cIJubdPrkxRwuGdtCk0v/wPTKbQgBjkg==}
@@ -3538,7 +3531,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-top-level-await@7.14.5(@babel/core@7.18.6):
     resolution: {integrity: sha512-hx++upLv5U1rgYfwe1xBQUhRmU41NEvpUvrp8jkrSCdvGSnM5/qdRMtylJ6PG5OFkBaHkbTAKTnd3/YyESRHFw==}
@@ -3558,7 +3550,6 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-plugin-utils': 7.22.5
-    dev: false
 
   /@babel/plugin-syntax-typescript@7.22.5(@babel/core@7.18.6):
     resolution: {integrity: sha512-1mS2o03i7t1c6VzH6fdQ3OA8tcEIxwG18zIPRp+UY1Ihv6W+XZzBCVxExF9upussPXJ0xE9XRHwMoNs1ep/nRQ==}
@@ -5979,7 +5970,7 @@ packages:
       slash: 3.0.0
     dev: true
 
-  /@jest/core@28.1.3(ts-node@10.8.2):
+  /@jest/core@28.1.3:
     resolution: {integrity: sha512-CIKBrlaKOzA7YG19BEqCw3SLIsEwjZkeJzf5bdooVnW4bH5cktqe3JX+G2YV1aK5vP8N9na1IGWFzYaTp6k6NA==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     peerDependencies:
@@ -6000,7 +5991,7 @@ packages:
       exit: 0.1.2
       graceful-fs: 4.2.11
       jest-changed-files: 28.1.3
-      jest-config: 28.1.3(@types/node@18.19.67)(ts-node@10.8.2)
+      jest-config: 28.1.3(@types/node@18.19.67)
       jest-haste-map: 28.1.3
       jest-message-util: 28.1.3
       jest-regex-util: 28.0.2
@@ -6013,6 +6004,49 @@ packages:
       jest-validate: 28.1.3
       jest-watcher: 28.1.3
       micromatch: 4.0.5
+      pretty-format: 28.1.3
+      rimraf: 3.0.2
+      slash: 3.0.0
+      strip-ansi: 6.0.1
+    transitivePeerDependencies:
+      - supports-color
+      - ts-node
+    dev: true
+
+  /@jest/core@28.1.3(ts-node@10.8.2):
+    resolution: {integrity: sha512-CIKBrlaKOzA7YG19BEqCw3SLIsEwjZkeJzf5bdooVnW4bH5cktqe3JX+G2YV1aK5vP8N9na1IGWFzYaTp6k6NA==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    peerDependencies:
+      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
+    peerDependenciesMeta:
+      node-notifier:
+        optional: true
+    dependencies:
+      '@jest/console': 28.1.3
+      '@jest/reporters': 28.1.3
+      '@jest/test-result': 28.1.3
+      '@jest/transform': 28.1.3
+      '@jest/types': 28.1.3
+      '@types/node': 22.18.11
+      ansi-escapes: 4.3.2
+      chalk: 4.1.2
+      ci-info: 3.8.0
+      exit: 0.1.2
+      graceful-fs: 4.2.11
+      jest-changed-files: 28.1.3
+      jest-config: 28.1.3(@types/node@22.18.11)(ts-node@10.8.2)
+      jest-haste-map: 28.1.3
+      jest-message-util: 28.1.3
+      jest-regex-util: 28.0.2
+      jest-resolve: 28.1.3
+      jest-resolve-dependencies: 28.1.3
+      jest-runner: 28.1.3
+      jest-runtime: 28.1.3
+      jest-snapshot: 28.1.3
+      jest-util: 28.1.3
+      jest-validate: 28.1.3
+      jest-watcher: 28.1.3
+      micromatch: 4.0.8
       pretty-format: 28.1.3
       rimraf: 3.0.2
       slash: 3.0.0
@@ -9928,6 +9962,24 @@ packages:
       - supports-color
     dev: true
 
+  /babel-jest@28.1.3(@babel/core@7.26.9):
+    resolution: {integrity: sha512-epUaPOEWMk3cWX0M/sPvCHHCe9fMFAa/9hXEgKP8nFfNl/jlGkE9ucq9NqkZGXLDduCJYS0UvSlPUwC0S+rH6Q==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    peerDependencies:
+      '@babel/core': ^7.8.0
+    dependencies:
+      '@babel/core': 7.26.9
+      '@jest/transform': 28.1.3
+      '@types/babel__core': 7.20.1
+      babel-plugin-istanbul: 6.1.1
+      babel-preset-jest: 28.1.3(@babel/core@7.26.9)
+      chalk: 4.1.2
+      graceful-fs: 4.2.11
+      slash: 3.0.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /babel-jest@29.7.0(@babel/core@7.26.9):
     resolution: {integrity: sha512-BrvGY3xZSwEcCzKvKsCi2GgHqDqsYkOP4/by5xCgIwGXQxIEh+8ew3gmrE1y7XRR6LHZIj6yLYnUi/mm2KXKBg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -10085,7 +10137,6 @@ packages:
       '@babel/plugin-syntax-optional-catch-binding': 7.8.3(@babel/core@7.26.9)
       '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.26.9)
       '@babel/plugin-syntax-top-level-await': 7.14.5(@babel/core@7.26.9)
-    dev: false
 
   /babel-preset-expo@54.0.3(@babel/core@7.26.9)(@babel/runtime@7.22.10)(expo@54.0.12)(react-refresh@0.14.2):
     resolution: {integrity: sha512-zC6g96Mbf1bofnCI8yI0VKAp8/ER/gpfTsWOpQvStbHU+E4jFZ294n3unW8Hf6nNP4NoeNq9Zc6Prp0vwhxbow==}
@@ -10138,6 +10189,17 @@ packages:
       '@babel/core': 7.18.6
       babel-plugin-jest-hoist: 28.1.3
       babel-preset-current-node-syntax: 1.0.1(@babel/core@7.18.6)
+    dev: true
+
+  /babel-preset-jest@28.1.3(@babel/core@7.26.9):
+    resolution: {integrity: sha512-L+fupJvlWAHbQfn74coNX3zf60LXMJsezNvvx8eIh7iOR1luJ1poxYgQk1F8PYtNq/6QODDHCqsSnTFSWC491A==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    peerDependencies:
+      '@babel/core': ^7.0.0
+    dependencies:
+      '@babel/core': 7.26.9
+      babel-plugin-jest-hoist: 28.1.3
+      babel-preset-current-node-syntax: 1.0.1(@babel/core@7.26.9)
     dev: true
 
   /babel-preset-jest@29.6.3(@babel/core@7.26.9):
@@ -14423,14 +14485,42 @@ packages:
       node-notifier:
         optional: true
     dependencies:
-      '@jest/core': 28.1.3(ts-node@10.8.2)
+      '@jest/core': 28.1.3
       '@jest/test-result': 28.1.3
       '@jest/types': 28.1.3
       chalk: 4.1.2
       exit: 0.1.2
       graceful-fs: 4.2.11
       import-local: 3.1.0
-      jest-config: 28.1.3(@types/node@18.19.67)(ts-node@10.8.2)
+      jest-config: 28.1.3(@types/node@18.19.67)
+      jest-util: 28.1.3
+      jest-validate: 28.1.3
+      prompts: 2.4.2
+      yargs: 17.7.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - supports-color
+      - ts-node
+    dev: true
+
+  /jest-cli@28.1.3(@types/node@22.18.11):
+    resolution: {integrity: sha512-roY3kvrv57Azn1yPgdTebPAXvdR2xfezaKKYzVxZ6It/5NCxzJym6tUI5P1zkdWhfUYkxEI9uZWcQdaFLo8mJQ==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    hasBin: true
+    peerDependencies:
+      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
+    peerDependenciesMeta:
+      node-notifier:
+        optional: true
+    dependencies:
+      '@jest/core': 28.1.3
+      '@jest/test-result': 28.1.3
+      '@jest/types': 28.1.3
+      chalk: 4.1.2
+      exit: 0.1.2
+      graceful-fs: 4.2.11
+      import-local: 3.1.0
+      jest-config: 28.1.3(@types/node@22.18.11)(ts-node@10.8.2)
       jest-util: 28.1.3
       jest-validate: 28.1.3
       prompts: 2.4.2
@@ -14469,7 +14559,7 @@ packages:
       - ts-node
     dev: true
 
-  /jest-config@28.1.3(@types/node@18.19.67)(ts-node@10.8.2):
+  /jest-config@28.1.3(@types/node@18.19.67):
     resolution: {integrity: sha512-MG3INjByJ0J4AsNBm7T3hsuxKQqFIiRo/AUqb1q9LRKI5UU6Aar9JHbr9Ivn1TVwfUD9KirRoM/T6u8XlcQPHQ==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     peerDependencies:
@@ -14504,7 +14594,6 @@ packages:
       pretty-format: 28.1.3
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2(@swc/core@1.11.18)(@types/node@22.18.11)(typescript@5.8.2)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -14521,11 +14610,11 @@ packages:
       ts-node:
         optional: true
     dependencies:
-      '@babel/core': 7.18.6
+      '@babel/core': 7.26.9
       '@jest/test-sequencer': 28.1.3
       '@jest/types': 28.1.3
       '@types/node': 22.18.11
-      babel-jest: 28.1.3(@babel/core@7.18.6)
+      babel-jest: 28.1.3(@babel/core@7.26.9)
       chalk: 4.1.2
       ci-info: 3.8.0
       deepmerge: 4.3.1
@@ -14539,7 +14628,7 @@ packages:
       jest-runner: 28.1.3
       jest-util: 28.1.3
       jest-validate: 28.1.3
-      micromatch: 4.0.5
+      micromatch: 4.0.8
       parse-json: 5.2.0
       pretty-format: 28.1.3
       slash: 3.0.0
@@ -14776,7 +14865,7 @@ packages:
       '@jest/test-result': 28.1.3
       '@jest/transform': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.19.67
+      '@types/node': 22.18.11
       chalk: 4.1.2
       emittery: 0.10.2
       graceful-fs: 4.2.11
@@ -14947,10 +15036,30 @@ packages:
       node-notifier:
         optional: true
     dependencies:
-      '@jest/core': 28.1.3(ts-node@10.8.2)
+      '@jest/core': 28.1.3
       '@jest/types': 28.1.3
       import-local: 3.1.0
       jest-cli: 28.1.3(@types/node@18.19.67)
+    transitivePeerDependencies:
+      - '@types/node'
+      - supports-color
+      - ts-node
+    dev: true
+
+  /jest@28.1.2(@types/node@22.18.11):
+    resolution: {integrity: sha512-Tuf05DwLeCh2cfWCQbcz9UxldoDyiR1E9Igaei5khjonKncYdc6LDfynKCEWozK0oLE3GD+xKAo2u8x/0s6GOg==}
+    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
+    hasBin: true
+    peerDependencies:
+      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
+    peerDependenciesMeta:
+      node-notifier:
+        optional: true
+    dependencies:
+      '@jest/core': 28.1.3
+      '@jest/types': 28.1.3
+      import-local: 3.1.0
+      jest-cli: 28.1.3(@types/node@22.18.11)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color

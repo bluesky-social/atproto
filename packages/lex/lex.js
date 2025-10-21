@@ -9,4 +9,4 @@ Object.defineProperty(exports, '__esModule', { value: true })
 
 const tslib = require('tslib')
 
-tslib.__exportStar(require('./dist/lex/lex.js'), exports)
+tslib.__exportStar(require('./dist/lex/index.js'), exports)

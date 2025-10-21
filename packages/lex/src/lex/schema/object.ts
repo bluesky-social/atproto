@@ -4,8 +4,7 @@ import {
   ValidationContext,
   ValidationResult,
   Validator,
-  hasOwn,
-  isObject,
+  isPureObject,
 } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
 
@@ -70,27 +69,15 @@ export class ObjectSchema<
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<ObjectSchemaOutput<Validators, Options>> {
-    if (!isObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
-    }
-
-    if (this.options.required) {
-      for (const prop in this.options.required) {
-        if (!hasOwn(input, prop)) {
-          return ctx.issueRequiredKey(input, prop)
-        }
-      }
+    if (!isPureObject(input)) {
+      return ctx.issueInvalidType(input, ['object'])
     }
 
     if (this.options.unknownKeys === 'strict') {
       for (const key in input) {
         if (this.validatorsMap.has(key)) continue
 
-        return ctx.issueInvalidPropertyType(
-          input,
-          key as keyof typeof input,
-          'undefined',
-        )
+        return ctx.issueInvalidPropertyType(input, key, ['undefined'])
       }
     }
 
@@ -98,16 +85,44 @@ export class ObjectSchema<
     let copy: undefined | Record<string, unknown>
 
     for (const [key, propDef] of this.validatorsMap) {
-      if (!hasOwn(input, key)) {
-        continue
-      }
-
       if (input[key] === null && this.options.nullable?.includes(key)) {
         continue
       }
 
       const result = ctx.validateChild(input, key, propDef)
-      if (!result.success) return result
+      if (!result.success) {
+        // Because default values are provided by child validators, we need to
+        // run the validator to get the default value and, in case of failure,
+        // ignore validation error that were caused by missing keys.
+        if (!(key in input)) {
+          if (this.options.required?.includes(key)) {
+            // Transform into "required key" issue
+            return ctx.issueRequiredKey(input, key)
+          }
+
+          // Ignore missing non-required key
+          continue
+        }
+
+        return result
+      } else if (result.value === undefined) {
+        // Special case for validators that output "undefined" values (typically
+        // UnknownSchema) since they cannot differentiate between "missing key"
+        // and "key with undefined value"
+
+        if (!(key in input)) {
+          // Input was missing the key (was "undefined")
+          if (this.options.required?.includes(key)) {
+            return ctx.issueRequiredKey(input, key)
+          }
+
+          // Ignore missing non-required key
+          continue
+        }
+
+        // if "key" existed in input (would typically be "undefined"), we keep
+        // it as-is by continuing processing as if it was any other value.
+      }
 
       if (result.value !== input[key]) {
         copy ??= { ...input }
@@ -115,8 +130,8 @@ export class ObjectSchema<
       }
     }
 
-    return ctx.success(
-      (copy ?? input) as ObjectSchemaOutput<Validators, Options>,
-    )
+    const output = (copy ?? input) as ObjectSchemaOutput<Validators, Options>
+
+    return ctx.success(output)
   }
 }

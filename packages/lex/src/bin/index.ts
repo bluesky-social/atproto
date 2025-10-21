@@ -68,5 +68,5 @@ export async function main() {
         await generator.save(argv)
       },
     )
-    .parse()
+    .parseAsync()
 }

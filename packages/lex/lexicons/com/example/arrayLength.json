@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.example.arrayLength",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "properties": {
+          "array": {
+            "type": "array",
+            "minLength": 2,
+            "maxLength": 4,
+            "items": { "type": "integer" }
+          }
+        }
+      }
+    }
+  }
+}

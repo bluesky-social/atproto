@@ -1,4 +1,10 @@
-import { Issue, IssueTooBig, IssueTooSmall, stringifyIssue } from './issue.js'
+import {
+  Issue,
+  IssueTooBig,
+  IssueTooSmall,
+  aggregateIssues,
+  stringifyIssue,
+} from './issue.js'
 import { PropertyKey } from './util.js'
 
 export type SuccessResult<V = any> = { success: true; value: V }
@@ -21,7 +27,8 @@ export class ValidationError extends Error {
 
   static fromFailures(failures: FailureResult[]): ValidationError {
     if (failures.length === 1) return failures[0].error
-    return new ValidationError(failures.flatMap(extractFailureIssues))
+    const issues = failures.flatMap(extractFailureIssues)
+    return new ValidationError(aggregateIssues(issues))
   }
 }
 
@@ -197,11 +204,11 @@ export class ValidationContext {
     })
   }
 
-  issueInvalidType(input: unknown, expected: string) {
+  issueInvalidType(input: unknown, expected: string | readonly string[]) {
     return this.failure({
       code: 'invalid_type',
       input,
-      expected,
+      expected: Array.isArray(expected) ? expected : [expected],
       path: [...this.#path],
     })
   }
@@ -222,11 +229,11 @@ export class ValidationContext {
   issueInvalidPropertyType<I>(
     input: I,
     property: keyof I & PropertyKey,
-    expected: string,
+    expected: string | readonly string[],
   ): FailureResult {
     return this.failure({
       code: 'invalid_type',
-      expected,
+      expected: Array.isArray(expected) ? expected : [expected],
       input: input[property],
       path: [...this.#path, property],
     })

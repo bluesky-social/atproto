@@ -136,7 +136,7 @@ function datetime(
     ensureValidDatetime(input)
     return ctx.success(input as Datetime)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Invalid datetime'
+    const message = err instanceof Error ? err.message : undefined
     return ctx.issueInvalidFormat(input, 'datetime', message)
   }
 }
@@ -154,7 +154,7 @@ function atUri(ctx: ValidationContext, input: string): ValidationResult<AtUri> {
     ensureValidAtUri(input)
     return ctx.success(input as AtUri)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Invalid at-uri'
+    const message = err instanceof Error ? err.message : undefined
     return ctx.issueInvalidFormat(input, 'at-uri', message)
   }
 }
@@ -177,7 +177,7 @@ function handle(
     ensureValidHandle(input)
     return ctx.success(input as Handle)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Invalid handle'
+    const message = err instanceof Error ? err.message : undefined
     return ctx.issueInvalidFormat(input, 'handle', message)
   }
 }
@@ -206,7 +206,7 @@ function nsid(ctx: ValidationContext, input: string): ValidationResult<Nsid> {
   if (result.success) {
     return ctx.success(input as Nsid)
   } else {
-    return ctx.issueInvalidFormat(input, 'nsid', 'Invalid NSID')
+    return ctx.issueInvalidFormat(input, 'nsid')
   }
 }
 
@@ -247,7 +247,7 @@ function recordKey(
     ensureValidRecordKey(input)
     return ctx.success(input)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Invalid record key'
+    const message = err instanceof Error ? err.message : undefined
     return ctx.issueInvalidFormat(input, 'record-key', message)
   }
 }

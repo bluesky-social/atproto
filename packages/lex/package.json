@@ -26,10 +26,16 @@
   "devDependencies": {
     "@ts-morph/common": "^0.28.0",
     "@types/node": "^22.18.6",
-    "@types/yargs": "^17.0.33"
+    "@types/yargs": "^17.0.33",
+    "jest": "^28.1.2"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build:lib": "tsc --build tsconfig.lib.json",
+    "build:bin": "tsc --build tsconfig.bin.json",
+    "build": "pnpm run build:lib && pnpm run build:bin",
+    "test:build": "./lex build --clear --out ./src/tests/lexicons --include com.example.*",
+    "test:run": "jest",
+    "test": "pnpm run test:build && pnpm run test:run"
   },
   "sideEffects": false,
   "type": "commonjs",
@@ -41,8 +47,8 @@
       "types": "./lib.d.ts"
     },
     "./lex": {
-      "require": "./dist/lex/lex.js",
-      "types": "./dist/lex/lex.d.ts"
+      "require": "./dist/lex/index.js",
+      "types": "./dist/lex/index.d.ts"
     },
     "./doc": {
       "require": "./dist/doc/doc.js",
