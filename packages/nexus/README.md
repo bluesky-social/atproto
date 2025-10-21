@@ -29,8 +29,6 @@ channel.on('event', async (evt) => {
       console.log(`record deleted at ${evt.uri.toString()}`)
     }
     console.log(`${evt.data.did}`)
-  } else {
-    console.error('unrecognized event', evt)
   }
   // Unless acks are disabled in Nexus, every event must be acked after processing.
   // If left unacked, Nexus will retry sending.
