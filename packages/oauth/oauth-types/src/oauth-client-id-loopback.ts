@@ -1,7 +1,7 @@
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
   OAuthLoopbackRedirectURI,
-  oauthLoopbackRedirectURISchema,
+  oauthLoopbackClientRedirectUriSchema,
 } from './oauth-redirect-uri.js'
 import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 
@@ -138,7 +138,7 @@ export function safeParseOAuthLoopbackClientIdQueryString(
 
       params.scope = res.data
     } else if (key === 'redirect_uri') {
-      const res = oauthLoopbackRedirectURISchema.safeParse(value)
+      const res = oauthLoopbackClientRedirectUriSchema.safeParse(value)
       if (!res.success) {
         const reason = res.error.issues.map((i) => i.message).join(', ')
         return {

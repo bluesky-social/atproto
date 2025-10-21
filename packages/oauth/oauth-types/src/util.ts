@@ -1,3 +1,16 @@
+export const canParseUrl =
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  URL.canParse?.bind(URL) ??
+  // URL.canParse is not available in Node.js < 18.7.0
+  ((urlStr: string): boolean => {
+    try {
+      new URL(urlStr)
+      return true
+    } catch {
+      return false
+    }
+  })
+
 export function isHostnameIP(hostname: string) {
   // IPv4
   if (hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) return true
@@ -14,9 +27,18 @@ export function isLoopbackHost(host: unknown): host is LoopbackHost {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
 }
 
-export function isLoopbackUrl(input: URL | string): boolean {
-  const url = typeof input === 'string' ? new URL(input) : input
-  return isLoopbackHost(url.hostname)
+export function isLocalHostname(hostname: string): boolean {
+  const parts = hostname.split('.')
+  if (parts.length < 2) return true
+
+  const tld = parts.at(-1)!.toLowerCase()
+  return (
+    tld === 'test' ||
+    tld === 'local' ||
+    tld === 'localhost' ||
+    tld === 'invalid' ||
+    tld === 'example'
+  )
 }
 
 export function safeUrl(input: URL | string): URL | null {
