@@ -4,7 +4,7 @@ Library for connecting with [Nexus](#), a utility for syncing subsets of the AT 
 
 ## Usage
 
-Before you get started you'll need to get an instance of Nexus running for your app. See more in the Nexus project...
+Before you get started you'll need to get an instance of Nexus running for your app. See more in the [Nexus project](#).
 
 ```ts
 import { Nexus } from '@atproto/nexus'
@@ -47,15 +47,16 @@ channel.on('error', (err) => {
   console.error('Error on channel', err)
 })
 
+// dyanmically add/remove repos from the channel
+// as you add repos, they will be backfilled and all existing records will be sent over the channel
 await nexus.addRepos(['did:example:alice'])
-
 await nexus.removeRepos(['did:example:bob'])
 
 // on shutdown
 channel.close()
 ```
 
-### Usage with webhooks
+## Usage with webhooks
 If you don't want to maintain a persistent websocket connection, you can register a webhook with Nexus. The same events will be sent to the webhook URL you provide.
 
 ```ts
