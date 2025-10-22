@@ -13,7 +13,7 @@ packages/bsync/src/proto
 
 # codegen
 packages/api/src/client
-packages/lex/src/lexicons
+packages/lex/src/tests/lexicons
 packages/lexicon-resolver/src/client
 packages/bsky/src/lexicon
 packages/pds/src/lexicon
