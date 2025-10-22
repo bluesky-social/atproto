@@ -28,19 +28,33 @@ export class ValidationError extends Error {
   static fromFailures(failures: FailureResult[]): ValidationError {
     if (failures.length === 1) return failures[0].error
     const issues = failures.flatMap(extractFailureIssues)
-    return new ValidationError(aggregateIssues(issues))
+    return new ValidationError(aggregateIssues(issues), {
+      // Keep the original errors as the cause chain
+      cause: failures.map(extractFailureError),
+    })
   }
+}
+
+function extractFailureError(result: FailureResult): ValidationError {
+  return result.error
 }
 
 function extractFailureIssues(result: FailureResult): Issue[] {
   return result.error.issues
 }
 
+type ValidationOptions = {
+  path?: PropertyKey[]
+
+  /** @default true */
+  allowTransform?: boolean
+}
+
 export abstract class Validator<V = any> {
   /**
-   * @internal
+   * @internal **DO NOT CALL THIS METHOD DIRECTLY**
    *
-   * Do not call directly. Use `$is`,`$parse`, `$assert` or `$validate` instead.
+   * Use `is`,`parse`, `assert` or `validate` instead.
    *
    * This method should be implemented by subclasses to perform validation and
    * transformation of the input value.
@@ -51,7 +65,7 @@ export abstract class Validator<V = any> {
    * other transformation was applied, the returned value should be the new
    * value.
    *
-   * This convention allows the `$is` and `$assert` methods to check whether the
+   * This convention allows the `is` and `assert` methods to check whether the
    * input value exactly matches the schema (without defaults or
    * transformations), by checking if the returned value is strictly equal to
    * the input.
@@ -114,13 +128,6 @@ export abstract class Validator<V = any> {
   $validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
     return this.validate(input, options)
   }
-}
-
-type ValidationOptions = {
-  path?: PropertyKey[]
-
-  /** @default true */
-  allowTransform?: boolean
 }
 
 export class ValidationContext {
