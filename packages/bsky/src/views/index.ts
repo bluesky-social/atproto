@@ -945,7 +945,21 @@ export class Views {
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
         : undefined,
-      debug: post.debug,
+      debug: this.debugField(post.debug),
+    }
+  }
+
+  debugField(...debugs: Post['debug'][]) {
+    try {
+      const merged = debugs.reduce<Post['debug']>((acc, debug) => {
+        if (debug) {
+          acc = { ...acc, ...debug }
+        }
+        return acc
+      }, {})
+      return JSON.stringify(merged)
+    } catch {
+      return undefined
     }
   }
 

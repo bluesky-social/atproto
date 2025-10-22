@@ -29,7 +29,11 @@ export type Post = RecordInfo<PostRecord> & {
   /**
    * Debug information for internal Bluesky development purposes only
    */
-  debug?: string
+  debug?: {
+    tags?: string[]
+    pagerank?: number
+    [key: string]: unknown
+  }
 }
 export type Posts = HydrationMap<Post>
 
@@ -138,7 +142,7 @@ export class FeedHydrator {
       const tags = new Set<string>(res.records[i].tags ?? [])
       const isDebugAllowed =
         viewer && this.config.debugFieldAllowedDIDs.includes(viewer)
-      const debug = isDebugAllowed ? res.records[i].debug : undefined
+      const debug = isDebugAllowed ? {tags: Array.from(tags)} : undefined
       return acc.set(
         uri,
         record
