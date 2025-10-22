@@ -1,5 +1,4 @@
 import { Database } from '../db'
-import { ModerationEventRow } from './types'
 
 export type StrikeServiceCreator = (db: Database) => StrikeService
 
