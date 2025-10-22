@@ -1,7 +1,6 @@
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
-import { LexiconDocument } from '../../doc/lexicon-document.js'
-import { LexiconIndexer } from '../../doc/lexicon-indexer.js'
+import { LexiconDocument, LexiconIndexer } from '../../doc/index.js'
 import { asSafeIdentifier, isReservedWord } from './ts-lang.js'
 import { asRelativePath, memoize, ucFirst } from './util.js'
 

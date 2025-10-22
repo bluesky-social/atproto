@@ -1,12 +1,12 @@
 {
   "extends": ["../../tsconfig/node.json"],
-  "include": ["./src/bin", "src/doc/lexicon-iterable-indexer.ts"],
-  "exclude": ["./src/tests", "**/*.test.ts"],
+  "include": ["./src/bin"],
+  "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,
     "types": ["node"],
     "rootDir": "./src",
-    "outDir": "dist"
+    "outDir": "./dist"
   }
 }

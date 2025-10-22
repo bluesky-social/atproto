@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig/tests.json",
+  "include": ["./src", "./tests"],
   "compilerOptions": {
-    "rootDir": "./src",
-    "baseUrl": "./src",
+    "rootDir": "./",
+    "baseUrl": "./",
     "paths": {
-      "@atproto/lex/lex": ["./lex/index.ts"]
+      "@atproto/lex/lex": ["./src/lex/index.ts"]
     }
-  },
-  "include": ["src"]
+  }
 }
