@@ -85,17 +85,48 @@ export const settingValidators = new Map<
      *   "harassment": {
      *     "name": "Anti-Harassment",
      *     "description": "Content that harasses, intimidates, or bullies users",
-     *     "severityLevels": ["sev-1", "sev-2", "sev-4"]
+     *     "severityLevels": {
+     *       "sev-1": {
+     *         "description": "Minor harassment",
+     *         "isDefault": true
+     *       },
+     *       "sev-2": {
+     *         "description": "Moderate harassment",
+     *         "isDefault": false
+     *       },
+     *       "sev-4": {
+     *         "description": "Severe harassment",
+     *         "isDefault": false
+     *       }
+     *     }
      *   },
      *   "death-threats": {
      *     "name": "Death Threats",
      *     "description": "Threats of violence or death against individuals",
-     *     "severityLevels": ["death-threat"]
+     *     "severityLevels": {
+     *       "death-threat": {
+     *         "description": "Death threat violation",
+     *         "isDefault": true
+     *       }
+     *     }
      *   },
      *   "spam": {
      *     "name": "Spam",
      *     "description": "Unsolicited or repetitive content",
-     *     "severityLevels": ["sev-0", "sev-1", "sev-2"]
+     *     "severityLevels": {
+     *       "sev-0": {
+     *         "description": "Minor spam",
+     *         "isDefault": false
+     *       },
+     *       "sev-1": {
+     *         "description": "Moderate spam",
+     *         "isDefault": true
+     *       },
+     *       "sev-2": {
+     *         "description": "Severe spam",
+     *         "isDefault": false
+     *       }
+     *     }
      *   },
      *   "minimal-policy": {
      *     "name": "Basic Policy",
@@ -127,17 +158,45 @@ export const settingValidators = new Map<
         }
 
         if (val['severityLevels'] !== undefined) {
-          if (!Array.isArray(val['severityLevels'])) {
+          if (typeof val['severityLevels'] !== 'object') {
             throw new InvalidRequestError(
-              `Severity levels must be an array for policy ${key}`,
+              `Severity levels must be an object for policy ${key}`,
             )
           }
 
-          for (const severity of val['severityLevels']) {
-            if (typeof severity !== 'string') {
+          let hasDefault = false
+          for (const [severityKey, severityVal] of Object.entries(
+            val['severityLevels'],
+          )) {
+            if (!severityVal || typeof severityVal !== 'object') {
               throw new InvalidRequestError(
-                `Severity levels must be strings for policy ${key}`,
+                `Invalid configuration for severity level ${severityKey} in policy ${key}`,
               )
+            }
+
+            if (
+              severityVal['description'] !== undefined &&
+              typeof severityVal['description'] !== 'string'
+            ) {
+              throw new InvalidRequestError(
+                `Description must be a string for severity level ${severityKey} in policy ${key}`,
+              )
+            }
+
+            if (severityVal['isDefault'] !== undefined) {
+              if (typeof severityVal['isDefault'] !== 'boolean') {
+                throw new InvalidRequestError(
+                  `isDefault must be a boolean for severity level ${severityKey} in policy ${key}`,
+                )
+              }
+              if (severityVal['isDefault']) {
+                if (hasDefault) {
+                  throw new InvalidRequestError(
+                    `Only one severity level can be the default for policy ${key}`,
+                  )
+                }
+                hasDefault = true
+              }
             }
           }
         }
