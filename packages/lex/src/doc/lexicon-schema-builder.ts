@@ -145,19 +145,20 @@ export class LexiconSchemaBuilder {
       case 'procedure':
         return l.procedure(
           doc.id,
+          this.compileParams(doc, def.parameters),
           this.compilePayload(doc, def.input),
           this.compilePayload(doc, def.output),
         )
       case 'query':
         return l.query(
           doc.id,
+          this.compileParams(doc, def.parameters),
           this.compilePayload(doc, def.output),
-          this.compileParameters(doc, def.parameters),
         )
       case 'subscription':
         return l.subscription(
           doc.id,
-          this.compileParameters(doc, def.parameters),
+          this.compileParams(doc, def.parameters),
           this.compilePayloadSchema(doc, def.message?.schema),
         )
       case 'token':
@@ -256,7 +257,7 @@ export class LexiconSchemaBuilder {
     }
   }
 
-  protected compileParameters(doc: LexiconDocument, def?: LexiconParameters) {
+  protected compileParams(doc: LexiconDocument, def?: LexiconParameters) {
     if (!def) return l.params()
 
     const props: Record<string, l.Validator> = {}

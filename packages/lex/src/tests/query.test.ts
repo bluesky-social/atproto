@@ -3,7 +3,7 @@ import * as com from './lexicons/com.js'
 describe('com.example.query', () => {
   describe('parameters', () => {
     it('passes valid parameters', () => {
-      const queryResult = com.example.query.main.parametersSchema.$parse({
+      const queryResult = com.example.query.$params.$parse({
         boolean: true,
         integer: 123,
         string: 'string',
@@ -19,7 +19,7 @@ describe('com.example.query', () => {
     })
 
     it('preserves unknown parameters', () => {
-      const queryResult = com.example.query.main.parametersSchema.$parse({
+      const queryResult = com.example.query.$params.$parse({
         boolean: true,
         integer: 123,
         unknown: 'property',
@@ -33,7 +33,7 @@ describe('com.example.query', () => {
     })
 
     it('passes valid parameters', () => {
-      com.example.query.main.parametersSchema.$parse({
+      com.example.query.$params.$parse({
         boolean: true,
         integer: 123,
       })
@@ -41,7 +41,7 @@ describe('com.example.query', () => {
 
     it('rejects missing parameters', () => {
       expect(() =>
-        com.example.query.main.parametersSchema.$parse({
+        com.example.query.$params.$parse({
           boolean: true,
         }),
       ).toThrow('Missing required key "integer" at $.integer')
@@ -49,7 +49,7 @@ describe('com.example.query', () => {
 
     it('rejects undefined parameters', () => {
       expect(() =>
-        com.example.query.main.parametersSchema.$parse({
+        com.example.query.$params.$parse({
           boolean: true,
           integer: undefined,
         }),
@@ -58,7 +58,7 @@ describe('com.example.query', () => {
 
     it('rejects invalid parameter value', () => {
       expect(() =>
-        com.example.query.main.parametersSchema.$parse({
+        com.example.query.$params.$parse({
           boolean: 'string',
           integer: 123,
           string: 'string',
@@ -68,7 +68,7 @@ describe('com.example.query', () => {
 
     it('rejects invalid parameter type', () => {
       expect(() =>
-        com.example.query.main.parametersSchema.$parse({
+        com.example.query.$params.$parse({
           boolean: true,
           float: 123.45,
           integer: 123,
@@ -83,7 +83,7 @@ describe('com.example.query', () => {
 
   describe('output', () => {
     it('Passes valid outputs', () => {
-      com.example.query.main.outputSchema.schema.$parse({
+      com.example.query.$output.schema.$parse({
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
@@ -94,16 +94,16 @@ describe('com.example.query', () => {
     })
 
     it('Rejects invalid output', () => {
-      expect(() =>
-        com.example.query.main.outputSchema.schema.$parse({
+      expect(() => {
+        com.example.query.$output.schema.$parse({
           object: { boolean: 'string' },
           array: ['one', 'two'],
           boolean: true,
           float: 123.45,
           integer: 123,
           string: 'string',
-        }),
-      ).toThrow('Expected boolean value type at $.object.boolean (got string)')
+        })
+      }).toThrow('Expected boolean value type at $.object.boolean (got string)')
     })
   })
 })

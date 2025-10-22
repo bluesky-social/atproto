@@ -1,23 +1,34 @@
-import { Validator } from '../core.js'
+import {
+  ValidationContext,
+  ValidationResult,
+  Validator,
+  coerceToString,
+  isPureObject,
+} from '../core.js'
 import { TypedJsonBlobRef } from './_blob-ref.js'
-import { Lex, jsonStringToLex } from './_serialize.js'
+import { Lex } from './_serialize.js'
 
 export type { TypedJsonBlobRef }
 
-export type Body<E extends string = any> = E extends `text/${string}`
+export type LexBody<E extends string = any> = E extends `text/${string}`
   ? string // Text encodings always yield string bodies
   : E extends 'application/json'
     ? Lex
-    : ArrayBuffer
+    : Uint8Array
 
-export type ParsedBody<
-  E extends string | undefined,
-  S extends Validator | undefined,
-> = E extends string
-  ? Body<E> & (S extends Validator<infer V> ? V : unknown)
-  : never // No encoding means no payload
+export type InferPayloadSchemaEncoding<P extends PayloadSchema> =
+  P extends PayloadSchema<infer E, any> ? E : never
 
-export type Payload<
+export type InferPayloadSchemaBody<P extends PayloadSchema> =
+  P extends PayloadSchema<any, infer S>
+    ? S extends Validator<infer V>
+      ? V
+      : P extends PayloadSchema<infer E extends string>
+        ? LexBody<E>
+        : never
+    : never
+
+export type PayloadOutput<
   E extends string | undefined = any,
   S extends Validator | undefined = any,
 > = E extends string
@@ -28,79 +39,87 @@ export type Payload<
       }
     : {
         encoding: E
-        body: Body<E>
+        body: LexBody<E>
       }
   : void
-
-export type InferPayloadSchemaEncoding<P extends PayloadSchema> =
-  P extends PayloadSchema<infer E, any> ? E : never
-
-export type InferPayloadSchemaBody<P extends PayloadSchema> =
-  P extends PayloadSchema<any, infer S>
-    ? S extends Validator<infer V>
-      ? V
-      : P extends PayloadSchema<infer E extends string>
-        ? Body<E>
-        : P extends PayloadSchema<undefined>
-          ? void
-          : never
-    : never
 
 export class PayloadSchema<
   const Encoding extends string | undefined = any,
   const Schema extends Validator | undefined = any,
-  Output extends ParsedBody<Encoding, Schema> = ParsedBody<Encoding, Schema>,
-> {
+> extends Validator<PayloadOutput<Encoding, Schema>> {
   constructor(
     readonly encoding: Encoding,
     readonly schema: Schema,
-  ) {}
+  ) {
+    if (encoding === undefined && schema !== undefined) {
+      throw new TypeError('schema cannot be defined when encoding is undefined')
+    }
 
-  async parseResponseBody(response: Response): Promise<Output> {
-    const encoding = response.headers.get('content-type')?.split(';')[0].trim()
+    super()
+  }
 
-    if (!this.encoding) {
-      if (encoding || response.body) {
-        await response.body?.cancel()
-        // @TODO Errors
-        throw new Error(
-          `Expected empty response with no content, got ${response.status}`,
-        )
+  protected override validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<PayloadOutput<Encoding, Schema>> {
+    if (this.encoding == null) {
+      if (input !== undefined && !isPureObject(input)) {
+        return ctx.issueInvalidType(input, ['object', 'undefined'])
       }
 
-      return undefined as Output
-    }
-
-    if (encoding !== this.encoding) {
-      await response.body?.cancel()
-
-      // @TODO Errors
-      throw new Error(
-        `Expected response with content-type ${this.encoding}, got ${encoding}`,
-      )
-    }
-
-    if (this.encoding === 'application/json') {
-      if (this.schema) {
-        // @NOTE JSON will automatically be coerced into IPLD/Lex structures
-        return this.schema.$parse(await response.json())
+      if (input?.encoding != null) {
+        return ctx.issueInvalidPropertyValue(input, 'encoding', [undefined])
       }
 
-      // @NOTE Using stringToLex (instead of `jsonToLex(await response.json())`)
-      // here as it should be more efficient than parsing to JSON first then
-      // converting to Lex (fewer intermediate objects created, fewer need to
-      // check to typeof)
-      return jsonStringToLex(await response.text()) as Output
+      if (input?.body != null) {
+        return ctx.issueInvalidPropertyValue(input, 'body', [undefined])
+      }
+
+      return ctx.success(undefined as PayloadOutput<Encoding, Schema>)
     }
 
-    if (this.encoding.startsWith('text/')) {
-      const text = await response.text()
-      return this.schema ? this.schema.$parse(text) : (text as Output)
+    // this.encoding is defined beyond this point, a payload is expected
+
+    if (!isPureObject(input)) {
+      return ctx.issueInvalidType(input, 'object')
     }
 
-    const data = response.body
-      ? await response.arrayBuffer()
-      : new ArrayBuffer(0)
-    return this.schema ? this.schema.$parse(data) : (data as Output)
+    if (this.encoding !== input.encoding) {
+      return ctx.issueInvalidPropertyValue(input, 'encoding', [this.encoding])
+    }
+
+    if (this.schema) {
+      const result = ctx.validateChild(input, 'body', this.schema)
+      if (!result.success) return result
+
+      // Create a new output only if the validation transformed the body
+      const output =
+        result.value === input.body
+          ? input
+          : { ...input, encoding: this.encoding, body: result.value }
+
+      return ctx.success(output as PayloadOutput<Encoding, Schema>)
+    }
+
+    if (this.encoding.startsWith('text/') && typeof input.body !== 'string') {
+      const body = coerceToString(input.body)
+      if (body != null) {
+        const output = { ...input, encoding: this.encoding, body }
+        return ctx.success(output as PayloadOutput<Encoding, Schema>)
+      }
+
+      return ctx.issueInvalidType(input.body, 'string')
+    }
+
+    if (input.body instanceof ArrayBuffer) {
+      const body = new Uint8Array(input.body)
+      const output = { ...input, encoding: this.encoding, body }
+      return ctx.success(output as PayloadOutput<Encoding, Schema>)
+    }
+
+    // Note we assume that input.body is a valid Lex value at this point (though
+    // we don't verify it)
+
+    return ctx.success(input as PayloadOutput<Encoding, Schema>)
   }
 }

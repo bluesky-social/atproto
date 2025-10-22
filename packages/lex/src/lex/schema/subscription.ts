@@ -4,6 +4,11 @@ import { ParamsSchema } from './params.js'
 import { RefSchema } from './ref.js'
 import { TypedUnionSchema } from './typed-union.js'
 
+export type InferSubscriptionParameters<S extends Subscription> =
+  S extends Subscription<any, infer P extends ParamsSchema, any>
+    ? Infer<P>
+    : never
+
 export type InferSubscriptionMessage<S extends Subscription> =
   S extends Subscription<
     any,
@@ -13,11 +18,6 @@ export type InferSubscriptionMessage<S extends Subscription> =
     ? Infer<M>
     : unknown
 
-export type InferSubscriptionParameters<S extends Subscription> =
-  S extends Subscription<any, infer P extends ParamsSchema, any>
-    ? Infer<P>
-    : never
-
 export class Subscription<
   N extends string = any,
   P extends ParamsSchema = any,
@@ -25,7 +25,7 @@ export class Subscription<
 > {
   constructor(
     readonly nsid: N,
-    readonly parametersSchema: P,
-    readonly messagesSchema: S,
+    readonly parameters: P,
+    readonly message: S,
   ) {}
 }

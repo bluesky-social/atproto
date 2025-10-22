@@ -41,7 +41,7 @@ export class StringSchema<
   ): ValidationResult<StringSchemaOutput<Options>> {
     const { options } = this
 
-    const str = coerceToString(input, options.format)
+    const str = coerceToString(input)
     if (str == null) {
       return ctx.issueInvalidType(input, 'string')
     }

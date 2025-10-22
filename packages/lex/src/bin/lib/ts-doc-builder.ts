@@ -74,6 +74,33 @@ export class TsDocBuilder {
     }
   }
 
+  private addUtils(definitions: Record<string, string>) {
+    this.file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: Object.entries(definitions).map(([name, initializer]) => ({
+        name,
+        initializer,
+      })),
+    })
+  }
+
+  private addObjectUtils(varName: string) {
+    this.addUtils({
+      $typed: markPure(`${varName}.$typed.bind(${varName})`),
+      $build: markPure(`${varName}.$build.bind(${varName})`),
+    })
+  }
+
+  private addValidationUtils(varName: string) {
+    this.addUtils({
+      $is: markPure(`${varName}.$is.bind(${varName})`),
+      $parse: markPure(`${varName}.$parse.bind(${varName})`),
+      $assert: markPure(`${varName}.$assert.bind(${varName})`),
+      $validate: markPure(`${varName}.$validate.bind(${varName})`),
+    })
+  }
+
   private async addDef(hash: string) {
     const def = l.hasOwn(this.doc.defs, hash) ? this.doc.defs[hash] : null
     if (def == null) return
@@ -143,27 +170,44 @@ export class TsDocBuilder {
       schema: this.pure(`
         l.procedure(
           $nsid,
+          ${await this.compileParamsSchema(def.parameters)},
           ${await this.compilePayloadSchema(def.input)},
           ${await this.compilePayloadSchema(def.output)}
         )
       `),
     })
 
-    const inputTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Input',
-      type: `l.InferProcedureInput<typeof ${ref.varName}>`,
-    })
+    if (hash === 'main') {
+      this.addUtils({
+        $params: `${ref.varName}.parameters`,
+        $input: `${ref.varName}.input`,
+        $output: `${ref.varName}.output`,
+      })
 
-    addJsDoc(inputTypeStmt, def.input)
+      const parametersTypeStmt = this.file.addTypeAlias({
+        isExported: true,
+        name: 'Parameters',
+        type: `l.InferProcedureParameters<typeof ${ref.varName}>`,
+      })
 
-    const outputTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Output',
-      type: `l.InferProcedureOutput<typeof ${ref.varName}>`,
-    })
+      addJsDoc(parametersTypeStmt, def.parameters)
 
-    addJsDoc(outputTypeStmt, def.output)
+      const inputTypeStmt = this.file.addTypeAlias({
+        isExported: true,
+        name: 'Input',
+        type: `l.InferProcedureInput<typeof ${ref.varName}>`,
+      })
+
+      addJsDoc(inputTypeStmt, def.input)
+
+      const outputTypeStmt = this.file.addTypeAlias({
+        isExported: true,
+        name: 'Output',
+        type: `l.InferProcedureOutput<typeof ${ref.varName}>`,
+      })
+
+      addJsDoc(outputTypeStmt, def.output)
+    }
   }
 
   private async compilePayloadSchema(def: LexiconPayload | undefined) {
@@ -181,27 +225,37 @@ export class TsDocBuilder {
   private async addQuery(hash: string, def: LexiconQuery) {
     const ref = await this.refResolver.resolveLocal(hash)
 
-    const output = await this.compilePayloadSchema(def.output)
-    const params = await this.compileParametersSchema(def.parameters)
-
     await this.addSchema(hash, def, {
-      schema: this.pure(`l.query($nsid, ${output}, ${params})`),
+      schema: this.pure(`
+        l.query(
+          $nsid,
+          ${await this.compileParamsSchema(def.parameters)},
+          ${await this.compilePayloadSchema(def.output)}
+        )
+      `),
     })
 
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Params',
-      type: `l.InferQueryParams<typeof ${ref.varName}>`,
-    })
+    if (hash === 'main') {
+      this.addUtils({
+        $params: `${ref.varName}.parameters`,
+        $output: `${ref.varName}.output`,
+      })
 
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Output',
-      type: `l.InferQueryOutput<typeof ${ref.varName}>`,
-    })
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Params',
+        type: `l.InferQueryParameters<typeof ${ref.varName}>`,
+      })
+
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Output',
+        type: `l.InferQueryOutput<typeof ${ref.varName}>`,
+      })
+    }
   }
 
-  private async compileParametersSchema(def: LexiconParameters | undefined) {
+  private async compileParamsSchema(def: undefined | LexiconParameters) {
     if (!def) return this.pure(`l.params({})`)
 
     const properties = await this.compilePropertiesSchemas(def)
@@ -216,24 +270,34 @@ export class TsDocBuilder {
   private async addSubscription(hash: string, def: LexiconSubscription) {
     const ref = await this.refResolver.resolveLocal(hash)
 
-    const params = await this.compileParametersSchema(def.parameters)
-    const message = await this.compileBodySchema(def.message?.schema)
-
     await this.addSchema(hash, def, {
-      schema: this.pure(`l.subscription($nsid, ${params}, ${message})`),
+      schema: this.pure(`
+        l.subscription(
+          $nsid,
+          ${await this.compileParamsSchema(def.parameters)},
+          ${await this.compileBodySchema(def.message?.schema)}
+        )
+      `),
     })
 
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Params',
-      type: `l.InferSubscriptionParameters<typeof ${ref.varName}>`,
-    })
+    if (hash === 'main') {
+      this.addUtils({
+        $params: `${ref.varName}.parameters`,
+        $message: `${ref.varName}.message`,
+      })
 
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Message',
-      type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
-    })
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Params',
+        type: `l.InferSubscriptionParameters<typeof ${ref.varName}>`,
+      })
+
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Message',
+        type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
+      })
+    }
   }
 
   private async compileBodySchema(
@@ -297,52 +361,6 @@ export class TsDocBuilder {
     }
   }
 
-  private async addObjectUtils(varName: string) {
-    // @NOTE we must not use this.pure() here because the fn.bind() *must* be
-    // marked as pure for tree-shaking to work properly
-    this.file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: '$typed',
-          initializer: markPure(`${varName}.$typed.bind(${varName})`),
-        },
-        {
-          name: '$build',
-          initializer: markPure(`${varName}.$build.bind(${varName})`),
-        },
-      ],
-    })
-  }
-
-  private async addValidationUtils(varName: string) {
-    // @NOTE we must not use this.pure() here because the fn.bind() *must* be
-    // marked as pure for tree-shaking to work properly
-    this.file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: '$is',
-          initializer: markPure(`${varName}.$is.bind(${varName})`),
-        },
-        {
-          name: '$parse',
-          initializer: markPure(`${varName}.$parse.bind(${varName})`),
-        },
-        {
-          name: '$assert',
-          initializer: markPure(`${varName}.$assert.bind(${varName})`),
-        },
-        {
-          name: '$validate',
-          initializer: markPure(`${varName}.$validate.bind(${varName})`),
-        },
-      ],
-    })
-  }
-
   private async addToken(hash: string, def: LexiconToken) {
     const ref = await this.refResolver.resolveLocal(hash)
 
@@ -351,7 +369,9 @@ export class TsDocBuilder {
       type: JSON.stringify(l.$type(this.doc.id, hash)),
     })
 
-    if (hash === 'main') this.addValidationUtils(ref.varName)
+    if (hash === 'main') {
+      this.addValidationUtils(ref.varName)
+    }
   }
 
   private async addBaseDef(hash: string, def: LexiconBase | LexiconArray) {
@@ -362,7 +382,9 @@ export class TsDocBuilder {
       schema: await this.compileBaseSchema(def),
     })
 
-    if (hash === 'main') this.addValidationUtils(ref.varName)
+    if (hash === 'main') {
+      this.addValidationUtils(ref.varName)
+    }
   }
 
   private async addSchema(

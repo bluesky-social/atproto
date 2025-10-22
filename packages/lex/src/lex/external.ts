@@ -311,19 +311,20 @@ export function payload<
 /*@__NO_SIDE_EFFECTS__*/
 export function query<
   const N extends string,
-  const O extends PayloadSchema,
   const P extends ParamsSchema,
->(nsid: N, output: O, parameters: P) {
-  return new Query<N, O, P>(nsid, output, parameters)
+  const O extends PayloadSchema,
+>(nsid: N, parameters: P, output: O) {
+  return new Query<N, P, O>(nsid, parameters, output)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function procedure<
   const N extends string,
+  const P extends ParamsSchema,
   const I extends PayloadSchema,
   const O extends PayloadSchema,
->(nsid: N, input: I, output: O) {
-  return new Procedure<N, I, O>(nsid, input, output)
+>(nsid: N, parameters: P, input: I, output: O) {
+  return new Procedure<N, P, I, O>(nsid, parameters, input, output)
 }
 
 /*@__NO_SIDE_EFFECTS__*/

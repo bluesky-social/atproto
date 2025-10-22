@@ -93,41 +93,6 @@ export function validateStringFormat(
   }
 }
 
-export function coerceToString(
-  input: unknown,
-  format: undefined | StringFormat,
-): string | null {
-  switch (typeof input) {
-    case 'string':
-      return input
-    case 'object':
-      if (input === null) return null
-
-      // Cast specific object types to matching format
-      switch (format) {
-        // @TODO AtUri ?
-        case 'datetime':
-          if (input instanceof Date) return input.toISOString()
-          break
-        case 'uri':
-          if (input instanceof URL) return input.toString()
-          break
-        case 'cid': {
-          const cid = CID.asCID(input)
-          if (cid) return cid.toString()
-          break
-        }
-      }
-
-      // Also accept String objects
-      if (input instanceof String) return input.valueOf()
-
-    // falls through
-    default:
-      return null
-  }
-}
-
 function datetime(
   ctx: ValidationContext,
   input: string,

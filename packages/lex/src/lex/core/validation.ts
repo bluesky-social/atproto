@@ -185,31 +185,29 @@ export class ValidationContext {
     return { success: false, error: new ValidationError([issue]) }
   }
 
-  issueInvalidFormat(input: unknown, format: string, message?: string) {
-    return this.failure({
-      code: 'invalid_format',
-      message,
-      format,
-      input,
-      path: [...this.#path],
-    })
-  }
-
-  issueInvalidValue(input: unknown, values: readonly unknown[]) {
+  issueInvalidValue(
+    input: unknown,
+    values: readonly unknown[],
+    path?: PropertyKey | readonly PropertyKey[],
+  ) {
     return this.failure({
       code: 'invalid_value',
       input,
       values,
-      path: [...this.#path],
+      path: path ? this.#path.concat(path) : [...this.#path],
     })
   }
 
-  issueInvalidType(input: unknown, expected: string | readonly string[]) {
+  issueInvalidType(
+    input: unknown,
+    expected: string | readonly string[],
+    path?: PropertyKey | readonly PropertyKey[],
+  ) {
     return this.failure({
       code: 'invalid_type',
       input,
       expected: Array.isArray(expected) ? expected : [expected],
-      path: [...this.#path],
+      path: path ? this.#path.concat(path) : [...this.#path],
     })
   }
 
@@ -218,12 +216,7 @@ export class ValidationContext {
     property: keyof I & PropertyKey,
     values: readonly unknown[],
   ): FailureResult {
-    return this.failure({
-      code: 'invalid_value',
-      values,
-      input: input[property],
-      path: [...this.#path, property],
-    })
+    return this.issueInvalidValue(input[property], values, property)
   }
 
   issueInvalidPropertyType<I>(
@@ -231,12 +224,7 @@ export class ValidationContext {
     property: keyof I & PropertyKey,
     expected: string | readonly string[],
   ): FailureResult {
-    return this.failure({
-      code: 'invalid_type',
-      expected: Array.isArray(expected) ? expected : [expected],
-      input: input[property],
-      path: [...this.#path, property],
-    })
+    return this.issueInvalidType(input[property], expected, property)
   }
 
   issueRequiredKey(input: object, key: PropertyKey) {
@@ -245,6 +233,16 @@ export class ValidationContext {
       key,
       input,
       path: [...this.#path, key],
+    })
+  }
+
+  issueInvalidFormat(input: unknown, format: string, message?: string) {
+    return this.failure({
+      code: 'invalid_format',
+      message,
+      format,
+      input,
+      path: [...this.#path],
     })
   }
 

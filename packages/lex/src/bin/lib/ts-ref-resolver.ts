@@ -154,6 +154,11 @@ export class TsRefResolver {
     if (name === '$is') return true
     if (name === '$parse') return true
     if (name === '$validate') return true
+    // Method utils
+    if (name === '$input') return true
+    if (name === '$output') return true
+    if (name === '$params') return true
+    if (name === '$message') return true
 
     return false
   }
