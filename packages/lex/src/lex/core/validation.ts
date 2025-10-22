@@ -1,6 +1,10 @@
 import { PropertyKey } from './property-key.js'
 import { FailureResult, ValidationError } from './validation-error.js'
-import { Issue, IssueTooBig, IssueTooSmall } from './validation-issue.js'
+import {
+  IssueTooBig,
+  IssueTooSmall,
+  ValidationIssue,
+} from './validation-issue.js'
 
 export type SuccessResult<V = any> = { success: true; value: V }
 
@@ -154,7 +158,7 @@ export class ValidationContext {
     return { success: true, value }
   }
 
-  failure(issue: Issue): FailureResult {
+  failure(issue: ValidationIssue): FailureResult {
     return { success: false, error: new ValidationError([issue]) }
   }
 

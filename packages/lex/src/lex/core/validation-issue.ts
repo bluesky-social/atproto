@@ -1,49 +1,50 @@
 import { CID } from 'multiformats/cid'
+import { arrayAgg } from '../lib/array-agg.js'
 import { isPureObject } from '../lib/is-object.js'
 import { PropertyKey } from './property-key.js'
 
-export interface ValidationIssue<I = unknown> {
+export interface Issue<I = unknown> {
   readonly input: I
   readonly code: string
   readonly message?: string
   readonly path: readonly PropertyKey[]
 }
 
-export interface IssueInvalidFormat extends ValidationIssue {
+export interface IssueInvalidFormat extends Issue {
   readonly code: 'invalid_format'
   readonly format: string
 }
 
-export interface IssueInvalidType extends ValidationIssue {
+export interface IssueInvalidType extends Issue {
   readonly code: 'invalid_type'
   readonly expected: readonly string[]
 }
 
-export interface IssueInvalidValue extends ValidationIssue {
+export interface IssueInvalidValue extends Issue {
   readonly code: 'invalid_value'
   readonly values: readonly unknown[]
 }
 
-export interface IssueRequiredKey extends ValidationIssue {
+export interface IssueRequiredKey extends Issue {
   readonly code: 'required_key'
   readonly key: PropertyKey
 }
 
-export interface IssueTooBig extends ValidationIssue {
+export interface IssueTooBig extends Issue {
   readonly code: 'too_big'
   readonly maximum: number
   readonly type: 'array' | 'string' | 'integer' | 'grapheme' | 'bytes' | 'blob'
   readonly actual: number
 }
 
-export interface IssueTooSmall extends ValidationIssue {
+export interface IssueTooSmall extends Issue {
   readonly code: 'too_small'
   readonly minimum: number
   readonly type: 'array' | 'string' | 'integer' | 'grapheme' | 'bytes'
   readonly actual: number
 }
 
-export type Issue =
+export type ValidationIssue =
   | IssueInvalidFormat
   | IssueInvalidType
   | IssueInvalidValue
@@ -51,7 +52,7 @@ export type Issue =
   | IssueTooBig
   | IssueTooSmall
 
-export function stringifyIssue(issue: Issue): string {
+export function stringifyIssue(issue: ValidationIssue): string {
   const pathStr = issue.path.length ? ` at ${buildJsonPath(issue.path)}` : ''
 
   switch (issue.code) {
@@ -126,7 +127,7 @@ function stringifyStringFormat(format: string): string {
   }
 }
 
-function stringifyType(value: unknown): string {
+export function stringifyType(value: unknown): string {
   switch (typeof value) {
     case 'object':
       if (value === null) return 'null'
@@ -146,7 +147,7 @@ function stringifyType(value: unknown): string {
   }
 }
 
-function stringifyValue(value: unknown): string {
+export function stringifyValue(value: unknown): string {
   switch (typeof value) {
     case 'bigint':
       return `${value}n`
@@ -179,13 +180,13 @@ function stringifyArray<T>(
   return arr.slice(0, n).map(fn).join(', ') + (arr.length > n ? ', ...' : '')
 }
 
-export function aggregateIssues(issues: Issue[]): Issue[] {
+export function aggregateIssues(issues: ValidationIssue[]): ValidationIssue[] {
   // Quick path for common cases
   if (issues.length <= 1) return issues
   if (issues.length === 2 && issues[0].code !== issues[1].code) return issues
 
   return [
-    // Aggregate invalid_type on the same path
+    // Aggregate invalid_type with identical paths
     ...arrayAgg(
       issues.filter((issue) => issue.code === 'invalid_type'),
       (a, b) => comparePropertyPaths(a.path, b.path),
@@ -194,7 +195,7 @@ export function aggregateIssues(issues: Issue[]): Issue[] {
         expected: Array.from(new Set(issues.flatMap((iss) => iss.expected))),
       }),
     ),
-    // Aggregate invalid_value on the same path
+    // Aggregate invalid_value with identical paths
     ...arrayAgg(
       issues.filter((issue) => issue.code === 'invalid_value'),
       (a, b) => comparePropertyPaths(a.path, b.path),
@@ -209,32 +210,6 @@ export function aggregateIssues(issues: Issue[]): Issue[] {
         issue.code !== 'invalid_type' && issue.code !== 'invalid_value',
     ),
   ]
-}
-
-function arrayAgg<T>(
-  arr: readonly T[],
-  cmp: (a: T, b: T) => boolean,
-  agg: (items: [T, ...T[]]) => T,
-): T[] {
-  if (arr.length === 0) return []
-
-  const groups: [T, ...T[]][] = [[arr[0]]]
-  const skipped = Array<undefined | boolean>(arr.length)
-
-  outer: for (let i = 1; i < arr.length; i++) {
-    if (skipped[i]) continue
-    const item = arr[i]
-    for (let j = 0; j < groups.length; j++) {
-      if (cmp(item, groups[j][0])) {
-        groups[j].push(item)
-        skipped[i] = true
-        continue outer
-      }
-    }
-    groups.push([item])
-  }
-
-  return groups.map(agg)
 }
 
 function comparePropertyPaths(

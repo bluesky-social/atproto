@@ -1,4 +1,8 @@
-import { Issue, aggregateIssues, stringifyIssue } from './validation-issue.js'
+import {
+  ValidationIssue,
+  aggregateIssues,
+  stringifyIssue,
+} from './validation-issue.js'
 
 export type FailureResult = { success: false; error: ValidationError }
 
@@ -6,7 +10,7 @@ export class ValidationError extends Error {
   name = 'ValidationError'
 
   constructor(
-    readonly issues: Issue[],
+    readonly issues: ValidationIssue[],
     options?: ErrorOptions,
   ) {
     super(issues.map(stringifyIssue).join(', '), options)
@@ -26,6 +30,6 @@ function extractFailureError(result: FailureResult): ValidationError {
   return result.error
 }
 
-function extractFailureIssues(result: FailureResult): Issue[] {
+function extractFailureIssues(result: FailureResult): ValidationIssue[] {
   return result.error.issues
 }
