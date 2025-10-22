@@ -32,6 +32,10 @@
         "status": {
           "type": "ref",
           "ref": "#statusView"
+        },
+        "debug": {
+          "type": "string",
+          "description": "Debug information for internal Bluesky development purposes only"
         }
       }
     },
@@ -71,6 +75,10 @@
         "status": {
           "type": "ref",
           "ref": "#statusView"
+        },
+        "debug": {
+          "type": "string",
+          "description": "Debug information for internal Bluesky development purposes only"
         }
       }
     },
@@ -123,6 +131,10 @@
         "status": {
           "type": "ref",
           "ref": "#statusView"
+        },
+        "debug": {
+          "type": "string",
+          "description": "Debug information for internal Bluesky development purposes only"
         }
       }
     },

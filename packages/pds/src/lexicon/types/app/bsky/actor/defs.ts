@@ -34,6 +34,8 @@ export interface ProfileViewBasic {
   createdAt?: string
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal Bluesky development purposes only */
+  debug?: string
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -61,6 +63,8 @@ export interface ProfileView {
   labels?: ComAtprotoLabelDefs.Label[]
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal Bluesky development purposes only */
+  debug?: string
 }
 
 const hashProfileView = 'profileView'
@@ -95,6 +99,8 @@ export interface ProfileViewDetailed {
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal Bluesky development purposes only */
+  debug?: string
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'

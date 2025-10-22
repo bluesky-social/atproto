@@ -65,6 +65,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
+          debug: {
+            type: 'string',
+            description:
+              'Debug information for internal Bluesky development purposes only',
+          },
         },
       },
       profileView: {
@@ -126,6 +131,11 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'string',
+            description:
+              'Debug information for internal Bluesky development purposes only',
           },
         },
       },
@@ -213,6 +223,11 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'string',
+            description:
+              'Debug information for internal Bluesky development purposes only',
           },
         },
       },
