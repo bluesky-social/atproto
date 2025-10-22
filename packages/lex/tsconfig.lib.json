@@ -6,6 +6,10 @@
     "noImplicitAny": true,
     "importHelpers": true,
     "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@atproto/lex/lex": ["./lex/index.ts"]
+    },
     "outDir": "dist"
   }
 }
