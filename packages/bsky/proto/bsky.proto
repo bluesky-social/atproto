@@ -18,7 +18,6 @@ message Record {
   google.protobuf.Timestamp sorted_at = 7;
   string takedown_ref = 8;
   repeated string tags = 9;
-  optional string debug = 10;
 }
 
 message GetBlockRecordsRequest {

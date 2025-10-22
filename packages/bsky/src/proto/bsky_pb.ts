@@ -140,11 +140,6 @@ export class Record extends Message<Record> {
    */
   tags: string[] = [];
 
-  /**
-   * @generated from field: optional string debug = 10;
-   */
-  debug?: string;
-
   constructor(data?: PartialMessage<Record>) {
     super();
     proto3.util.initPartial(data, this);
@@ -161,7 +156,6 @@ export class Record extends Message<Record> {
     { no: 7, name: "sorted_at", kind: "message", T: Timestamp },
     { no: 8, name: "takedown_ref", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 9, name: "tags", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    { no: 10, name: "debug", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Record {
