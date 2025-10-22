@@ -25,7 +25,9 @@ import {
   LexiconUnknown,
 } from '../../doc/index.js'
 import { l } from '../../lex/index.js'
+import { isSafeIdentifier } from './ts-lang.js'
 import { TsRefResolver, useRecordExport } from './ts-ref-resolver.js'
+import { ucFirst } from './util.js'
 
 export type TsDocBuilderOptions = {
   pureAnnotations?: boolean
@@ -327,10 +329,9 @@ export class TsDocBuilder {
     // Also export a "Record" type alias for the record definition, if not
     // already defined in the lexicon (to avoid conflicts)
     if (useRecordExport(this.doc, hash)) {
-      this.file.addTypeAlias({
-        isExported: true,
-        name: 'Record',
-        type: ref.typeName,
+      this.file.addExportDeclaration({
+        isTypeOnly: true,
+        namedExports: [{ name: ref.typeName, alias: 'Record' }],
       })
     }
 
@@ -395,36 +396,54 @@ export class TsDocBuilder {
       schema,
     }: {
       type?: string
-      schema: string
+      schema?: string
     },
   ) {
     const ref = await this.refResolver.resolveLocal(hash)
 
     if (type) {
       const typeStmt = this.file.addTypeAlias({
-        isExported: true,
         name: ref.typeName,
         type,
       })
 
       addJsDoc(typeStmt, def)
+
+      const alias = ucFirst(hash)
+      this.file.addExportDeclaration({
+        isTypeOnly: true,
+        namedExports: [
+          {
+            name: ref.typeName,
+            alias:
+              ref.typeName === alias || !isSafeIdentifier(alias)
+                ? undefined
+                : alias,
+          },
+        ],
+      })
     }
 
-    const constStmt = this.file.addVariableStatement({
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [{ name: ref.varName, initializer: schema }],
-    })
+    if (schema) {
+      const constStmt = this.file.addVariableStatement({
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [{ name: ref.varName, initializer: schema }],
+      })
 
-    addJsDoc(constStmt, def)
+      addJsDoc(constStmt, def)
 
-    this.file.addExportDeclaration({
-      namedExports: [
-        {
-          name: ref.varName,
-          alias: ref.varName === hash ? undefined : hash,
-        },
-      ],
-    })
+      this.file.addExportDeclaration({
+        namedExports: [
+          {
+            name: ref.varName,
+            alias:
+              ref.varName === hash || !isSafeIdentifier(hash)
+                ? undefined
+                : hash,
+          },
+        ],
+      })
+    }
   }
 
   private async compileObjectSchema(def: LexiconObject): Promise<string> {

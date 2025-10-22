@@ -42,14 +42,18 @@ export class TsRefResolver {
       if (!Object.hasOwn(this.doc.defs, hash)) {
         throw new Error(`Definition ${hash} not found in ${this.doc.id}`)
       }
-      if (isSafeIdentifier(hash)) {
-        return { varName: hash, typeName: ucFirst(hash) }
+
+      if (!isSafeIdentifier(hash)) {
+        const varName = `loc$${this.#locCounter++}`
+        return { varName, typeName: ucFirst(varName) }
       }
-      if (isReservedWord(hash)) {
-        return { varName: `_${hash}`, typeName: ucFirst(hash) }
-      }
-      const varName = `loc$${this.#locCounter++}`
-      return { varName, typeName: ucFirst(varName) }
+
+      const varName = isReservedWord(hash) ? `_${hash}` : hash
+      const typeName = isReservedWord(ucFirst(hash))
+        ? `_${ucFirst(hash)}`
+        : ucFirst(hash)
+
+      return { varName, typeName }
     },
   )
 
