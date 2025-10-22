@@ -622,9 +622,9 @@ export interface ModEventEmail {
   comment?: string
   /** Names/Keywords of the policies that necessitated the email. */
   policies?: string[]
-  /** Severity level of the violation. normally 'sev-1' that adds strike on repeat offense */
+  /** Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense */
   severityLevel?: string
-  /** Number of strikes to assign to the user for this violation. Normally 0 as indicator of warning and only added as strike on repeat offense. */
+  /** Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense. */
   strikeCount?: number
   /** When the strike should expire. If not provided, the strike never expires. */
   strikeExpiresAt?: string

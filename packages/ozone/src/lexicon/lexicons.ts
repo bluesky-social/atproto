@@ -15110,12 +15110,12 @@ export const schemaDict = {
           severityLevel: {
             type: 'string',
             description:
-              "Severity level of the violation. normally 'sev-1' that adds strike on repeat offense",
+              "Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense",
           },
           strikeCount: {
             type: 'integer',
             description:
-              'Number of strikes to assign to the user for this violation. Normally 0 as indicator of warning and only added as strike on repeat offense.',
+              'Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense.',
           },
           strikeExpiresAt: {
             type: 'string',

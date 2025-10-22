@@ -94,13 +94,4 @@ export class StrikeService {
 
     return await query.execute()
   }
-
-  async processNewEvent(event: ModerationEventRow): Promise<void> {
-    // Updates are only needed if strikeCount is numeric (in some cases even 0)
-    if (event.strikeCount === null || event.strikeCount === undefined) {
-      return
-    }
-
-    await this.updateSubjectStrikeCount(event.subjectDid)
-  }
 }

@@ -650,12 +650,12 @@ export class ModerationService {
       subject.blobCids,
     )
 
-    // Process strikes if strikeCount is set - update the account_strike table
-    if (modEvent.strikeCount !== null && modEvent.strikeCount !== undefined) {
+    // Updates are only needed if strikeCount is numeric (in some cases even 0)
+    if (modEvent.strikeCount !== null) {
       try {
-        await this.strikeService.processNewEvent(modEvent)
+        await this.strikeService.updateSubjectStrikeCount(modEvent.subjectDid)
       } catch (error) {
-        // Log error but don't fail the entire operation
+        // Log error but don't fail the entire operation to ensure that events are logged even if updating strike count fails
         log.error(
           { err: error, modEventId: modEvent.id },
           'Error processing strikes for moderation event',

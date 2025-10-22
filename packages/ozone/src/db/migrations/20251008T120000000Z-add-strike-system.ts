@@ -45,7 +45,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   // This supports fast lookup in the background job that needs to find strikes that have expired
   await sql`
-    CREATE INDEX moderation_event_strike_expires_at_strike_countidx
+    CREATE INDEX moderation_event_strike_expires_at_strike_count_idx
     ON moderation_event ("strikeExpiresAt", "strikeCount")
     WHERE "strikeExpiresAt" IS NOT NULL AND "strikeCount" IS NOT NULL
   `.execute(db)
@@ -63,7 +63,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     .dropIndex('moderation_event_subject_did_strike_count_idx')
     .execute()
   await db.schema
-    .dropIndex('moderation_event_strike_expires_at_strike_countidx')
+    .dropIndex('moderation_event_strike_expires_at_strike_count_idx')
     .execute()
   await db.schema.dropIndex('account_strike_active_count_idx').execute()
 
