@@ -132,3 +132,8 @@ export function isReservedWord(word: string) {
 export function isSafeIdentifier(name: string) {
   return /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
 }
+
+export function asSafeIdentifier(name: string): string | undefined {
+  if (isSafeIdentifier(name)) return name
+  return name.replaceAll(/[^a-zA-Z0-9_$]/g, '_') || undefined
+}

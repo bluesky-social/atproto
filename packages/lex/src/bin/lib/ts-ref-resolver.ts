@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
 import { LexiconDocument } from '../../doc/lexicon-document.js'
 import { LexiconIndexer } from '../../doc/lexicon-indexer.js'
-import { isReservedWord, isSafeIdentifier } from './ts-lang.js'
+import { asSafeIdentifier, isReservedWord } from './ts-lang.js'
 import { asRelativePath, memoize, ucFirst } from './util.js'
 
 export type ResolvedRef = {
@@ -36,24 +36,41 @@ export class TsRefResolver {
     },
   )
 
-  #locCounter = 0
+  #defCounters = new Map<string, number>()
+  private nextSafeDefinitionIdentifier(safeIdentifier: string) {
+    const count = this.#defCounters.get(safeIdentifier) ?? 0
+    this.#defCounters.set(safeIdentifier, count + 1)
+    // @NOTE We don't need to check against local declarations in the file here
+    // since we are using a naming system that should guarantee no other
+    // identifier has a <safeIdentifier>$<number> format.
+    return `${safeIdentifier}$${count}`
+  }
+
   public readonly resolveLocal = memoize(
     async (hash: string): Promise<ResolvedRef> => {
       if (!Object.hasOwn(this.doc.defs, hash)) {
         throw new Error(`Definition ${hash} not found in ${this.doc.id}`)
       }
 
-      if (!isSafeIdentifier(hash)) {
-        const varName = `loc$${this.#locCounter++}`
-        return { varName, typeName: ucFirst(varName) }
+      const identifier = asSafeDefinitionIdentifier(hash)
+
+      const varName = identifier
+        ? identifier === hash || !Object.hasOwn(this.doc.defs, identifier)
+          ? // Safe identifier can be used as-is as it does not conflict with
+            // other definition names
+            identifier
+          : // In order to keep identifiers stable, we use the safe identifier
+            // as base, and append a counter to avoid conflicts
+            this.nextSafeDefinitionIdentifier(identifier)
+        : // hash only contained unsafe characters, generate a safe one
+          this.nextSafeDefinitionIdentifier('def')
+
+      const typeName = ucFirst(varName)
+
+      return {
+        varName: isReservedWord(varName) ? `_${varName}` : varName,
+        typeName: isReservedWord(typeName) ? `_${typeName}` : typeName,
       }
-
-      const varName = isReservedWord(hash) ? `_${hash}` : hash
-      const typeName = isReservedWord(ucFirst(hash))
-        ? `_${ucFirst(hash)}`
-        : ucFirst(hash)
-
-      return { varName, typeName }
     },
   )
 
@@ -114,7 +131,7 @@ export class TsRefResolver {
 
     let name = baseName
     while (this.isConflictingIdentifier(name)) {
-      name = `${baseName}$${this.#aliasCounter++}`
+      name = `${baseName}$$${this.#aliasCounter++}`
     }
 
     return name
@@ -144,32 +161,26 @@ export class TsRefResolver {
     // names are not conflicting with local variables.
     if (name === 'Record') return true
 
-    // Namespace escape hatch (in case a lexicon group name has the same name as
-    // a parent namespace definition fragment).
-    if (name === '$defs') return true
-    // Lexicon metadata
-    if (name === '$nsid') return true
-    // Object utils
-    if (name === '$typed') return true
-    if (name === '$build') return true
-    // Validation utils
-    if (name === '$assert') return true
-    if (name === '$is') return true
-    if (name === '$parse') return true
-    if (name === '$validate') return true
-    // Method utils
-    if (name === '$input') return true
-    if (name === '$output') return true
-    if (name === '$params') return true
-    if (name === '$message') return true
-
-    return false
+    // Utility functions generated for lexicon schemas are prefixed with "$"
+    return name.startsWith('$')
   }
 
   private conflictsWithLocalDefs(name: string) {
-    return Object.keys(this.doc.defs).some(
-      (hash) => ucFirst(hash) === name || hash === `_${name}`,
-    )
+    return Object.keys(this.doc.defs).some((hash) => {
+      const identifier = asSafeDefinitionIdentifier(hash)
+
+      // A safe identifier will be generated, no risk of conflict.
+      if (!identifier) return false
+
+      // The imported name conflicts with a local definition name
+      if (identifier === name || `_${identifier}` === name) return true
+
+      // The imported name conflicts with the type name of a local definition
+      const typeName = ucFirst(identifier)
+      if (typeName === name || `_${typeName}` === name) return true
+
+      return false
+    })
   }
 
   private conflictsWithLocalDeclarations(name: string) {
@@ -236,4 +247,16 @@ export function useRecordExport(doc: LexiconDocument, hash: string) {
     !Object.hasOwn(doc.defs, 'record') &&
     doc.defs[hash]?.type === 'record'
   )
+}
+
+function asSafeDefinitionIdentifier(hash: string) {
+  // - We don't want leading $ to avoid conflicts with generated utilities
+  // - We don't want leading _ to avoid conflicts with names generated to escape
+  //   reserved words
+  // - We don't want $ in definition names to avoid confusion with generated
+  //   safe definition identifiers
+  return asSafeIdentifier(hash)
+    ?.replace(/^[_$]+/, '') // Remove leading $ and _
+    .replaceAll(/[$]+/g, '_') // Remove $ in the middle
+    .replaceAll(/_+/g, '_') // collapse multiple underscores (for readability)
 }
