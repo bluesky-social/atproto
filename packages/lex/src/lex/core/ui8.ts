@@ -1,3 +1,4 @@
+import { NodeJSBuffer } from '../lib/nodejs-buffer.js'
 import { isPureObject } from './util.js'
 
 // @NOTE: Add missing lib types for Uint8Array base64 methods. These are marked
@@ -59,25 +60,6 @@ export function parseIpldBytes(input: unknown): Uint8Array | undefined {
 export function encodeIpldBytes(bytes: Uint8Array): { $bytes: string } {
   return { $bytes: ui8ToBase64(bytes) }
 }
-
-interface NodeJSBuffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>
-  extends Uint8Array<TArrayBuffer> {
-  toString(encoding?: 'base64'): string
-}
-interface NodeJSBufferConstructor {
-  from(input: Uint8Array | ArrayBuffer | ArrayBufferView): NodeJSBuffer
-  from(input: string, encoding?: 'base64'): NodeJSBuffer
-  prototype: NodeJSBuffer
-}
-
-// Avoids a direct reference to Node.js Buffer, which might not exist in some
-// environments (e.g. browsers, Deno, Bun) to prevent bundlers from trying to
-// include polyfills.
-const BUFFER = /*#__PURE__*/ (() => 'Bu' + 'f'.repeat(2) + 'er')() as 'Buffer'
-const NodeJSBuffer: NodeJSBufferConstructor | null =
-  (globalThis as any)?.[BUFFER]?.prototype instanceof Uint8Array
-    ? ((globalThis as any)[BUFFER] as NodeJSBufferConstructor)
-    : null
 
 /**
  * Decodes a base64 string into a Uint8Array.

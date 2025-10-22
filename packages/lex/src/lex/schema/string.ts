@@ -6,6 +6,8 @@ import {
   ValidationResult,
   Validator,
   coerceToString,
+  graphemeLen,
+  utf8Len,
   validateStringFormat,
 } from '../core.js'
 
@@ -46,23 +48,24 @@ export class StringSchema<
       return ctx.issueInvalidType(input, 'string')
     }
 
-    // If the JavaScript string length * 3 is within the maximum limit,
-    // its UTF8 length (which <= .length * 3) will also be within.
-    // When there's no minimal length, this lets us skip the UTF8 length check.
-    const canSkipUtf8LenChecks =
-      typeof options.minLength === 'undefined' &&
-      typeof options.maxLength === 'number' &&
-      str.length * 3 <= options.maxLength
+    let lazyUtf8Len: number
 
-    if (!canSkipUtf8LenChecks) {
-      const len = utf8Len(str)
-
-      if (options.minLength != null && len < options.minLength) {
-        return ctx.issueTooSmall(str, 'string', options.minLength, len)
+    const { minLength } = options
+    if (minLength != null) {
+      if ((lazyUtf8Len ??= utf8Len(str)) < minLength) {
+        return ctx.issueTooSmall(str, 'string', minLength, lazyUtf8Len)
       }
+    }
 
-      if (options.maxLength != null && len > options.maxLength) {
-        return ctx.issueTooBig(str, 'string', options.maxLength, len)
+    const { maxLength } = options
+    if (maxLength != null) {
+      // Optimization: we can avoid computing the UTF-8 length if the maximum
+      // possible length, in bytes, of the input JS string is smaller than the
+      // maxLength (in UTF-8 string bytes).
+      if (str.length * 3 <= maxLength) {
+        // Input string so small it can't possibly exceed maxLength
+      } else if ((lazyUtf8Len ??= utf8Len(str)) > maxLength) {
+        return ctx.issueTooBig(str, 'string', maxLength, lazyUtf8Len)
       }
     }
 
@@ -89,16 +92,4 @@ export class StringSchema<
       StringSchemaOutput<Options>
     >
   }
-}
-
-const segmenter = /*#__PURE__*/ new Intl.Segmenter()
-function graphemeLen(str: string) {
-  let length = 0
-  for (const _ of segmenter.segment(str)) length++
-  return length
-}
-
-const textEncoder = /*#__PURE__*/ new TextEncoder()
-export function utf8Len(str: string): number {
-  return textEncoder.encode(str).byteLength
 }
