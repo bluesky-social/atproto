@@ -9,7 +9,7 @@ describe('com.example.query', () => {
         string: 'string',
         array: ['x', 'y'],
       })
-      expect(queryResult).toEqual({
+      expect(queryResult).toStrictEqual({
         boolean: true,
         integer: 123,
         string: 'string',
@@ -24,7 +24,7 @@ describe('com.example.query', () => {
         integer: 123,
         unknown: 'property',
       })
-      expect(queryResult).toEqual({
+      expect(queryResult).toStrictEqual({
         boolean: true,
         integer: 123,
         def: 0,

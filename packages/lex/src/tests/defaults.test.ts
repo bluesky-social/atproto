@@ -6,7 +6,7 @@ describe('defaults', () => {
       $type: 'com.example.default',
       object: {},
     })
-    expect(result).toEqual({
+    expect(result).toStrictEqual({
       $type: 'com.example.default',
       boolean: false,
       integer: 0,

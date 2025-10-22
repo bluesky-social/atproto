@@ -9,7 +9,7 @@ describe('com.example.procedure', () => {
       array: ['x', 'y'],
       def: 1,
     })
-    expect(paramResult).toEqual({
+    expect(paramResult).toStrictEqual({
       boolean: true,
       integer: 123,
       string: 'string',
