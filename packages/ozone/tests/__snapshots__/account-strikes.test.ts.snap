@@ -18,7 +18,7 @@ Object {
     "$type": "tools.ozone.moderation.defs#accountHosting",
     "status": "unknown",
   },
-  "id": 79,
+  "id": 9,
   "lastReviewedAt": "1970-01-01T00:00:00.000Z",
   "lastReviewedBy": "user(0)",
   "priorityScore": 0,
@@ -51,7 +51,7 @@ Array [
       "severityLevel": "sev-2",
       "strikeCount": 2,
     },
-    "id": 73,
+    "id": 3,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -69,7 +69,7 @@ Array [
       "severityLevel": "sev-2",
       "strikeCount": 2,
     },
-    "id": 71,
+    "id": 1,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(1)",
