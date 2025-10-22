@@ -39,12 +39,12 @@
   },
   "sideEffects": false,
   "type": "commonjs",
-  "main": "./lib.js",
-  "types": "./lib.d.ts",
+  "main": "./dist/lib.js",
+  "types": "./dist/lib.d.ts",
   "exports": {
     ".": {
-      "require": "./lib.js",
-      "types": "./lib.d.ts"
+      "require": "./dist/lib.js",
+      "types": "./dist/lib.d.ts"
     },
     "./lex": {
       "require": "./dist/lex/index.js",
