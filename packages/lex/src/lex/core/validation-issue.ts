@@ -2,41 +2,41 @@ import { CID } from 'multiformats/cid'
 import { isPureObject } from '../lib/is-object.js'
 import { PropertyKey } from './property-key.js'
 
-export interface IssueBase<I = unknown> {
+export interface ValidationIssue<I = unknown> {
   readonly input: I
   readonly code: string
   readonly message?: string
   readonly path: readonly PropertyKey[]
 }
 
-export interface IssueInvalidFormat extends IssueBase {
+export interface IssueInvalidFormat extends ValidationIssue {
   readonly code: 'invalid_format'
   readonly format: string
 }
 
-export interface IssueInvalidType extends IssueBase {
+export interface IssueInvalidType extends ValidationIssue {
   readonly code: 'invalid_type'
   readonly expected: readonly string[]
 }
 
-export interface IssueInvalidValue extends IssueBase {
+export interface IssueInvalidValue extends ValidationIssue {
   readonly code: 'invalid_value'
   readonly values: readonly unknown[]
 }
 
-export interface IssueRequiredKey extends IssueBase {
+export interface IssueRequiredKey extends ValidationIssue {
   readonly code: 'required_key'
   readonly key: PropertyKey
 }
 
-export interface IssueTooBig extends IssueBase {
+export interface IssueTooBig extends ValidationIssue {
   readonly code: 'too_big'
   readonly maximum: number
   readonly type: 'array' | 'string' | 'integer' | 'grapheme' | 'bytes' | 'blob'
   readonly actual: number
 }
 
-export interface IssueTooSmall extends IssueBase {
+export interface IssueTooSmall extends ValidationIssue {
   readonly code: 'too_small'
   readonly minimum: number
   readonly type: 'array' | 'string' | 'integer' | 'grapheme' | 'bytes'

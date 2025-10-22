@@ -32,7 +32,8 @@
   "scripts": {
     "build:lib": "tsc --build tsconfig.lib.json",
     "build:bin": "tsc --build tsconfig.bin.json",
-    "build:tests": "./lex build --clear --out ./src/tests/lexicons --include com.example.*",
+    "prebuild:tests": "./lex build --clear --out ./src/tests/lexicons --include com.example.*",
+    "build:tests": "tsc --build tsconfig.tests.json --noEmit",
     "build": "pnpm run build:lib && pnpm run build:bin && pnpm run build:tests",
     "test": "jest"
   },
