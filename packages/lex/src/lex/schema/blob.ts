@@ -1,5 +1,9 @@
-import { ValidationContext, ValidationResult, Validator } from '../core.js'
-import { BlobRef } from './_blob-ref.js'
+import {
+  BlobRef,
+  ValidationContext,
+  ValidationResult,
+  Validator,
+} from '../core.js'
 
 export type BlobSchemaOptions = {
   accept?: string[] // List of accepted mime types
@@ -15,8 +19,8 @@ export class BlobSchema extends Validator<BlobRef> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<BlobRef> {
-    const blob = BlobRef.asBlobRef(input)
-    if (!blob) return ctx.issueInvalidType(input, 'blob')
+    const blobRef = BlobRef.asBlobRef(input)
+    if (!blobRef) return ctx.issueInvalidType(input, 'blob')
 
     // @NOTE Historically, we did not enforce constraints on blob references
     // https://github.com/bluesky-social/atproto/blob/4c15fb47cec26060bff2e710e95869a90c9d7fdd/packages/lexicon/src/validators/blob.ts#L5-L19
@@ -31,6 +35,6 @@ export class BlobSchema extends Validator<BlobRef> {
     //   return ctx.issueTooBig(input, 'blob', maxSize, blob.size)
     // }
 
-    return ctx.success(blob)
+    return ctx.success(blobRef)
   }
 }

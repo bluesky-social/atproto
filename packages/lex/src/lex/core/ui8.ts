@@ -1,5 +1,4 @@
 import { NodeJSBuffer } from '../lib/nodejs-buffer.js'
-import { isPureObject } from './util.js'
 
 // @NOTE: Add missing lib types for Uint8Array base64 methods. These are marked
 // as optional since they were very recently added and may not be available in
@@ -37,28 +36,7 @@ export function asUint8Array(input: unknown): Uint8Array | null {
     )
   }
 
-  const bytes = parseIpldBytes(input)
-  if (bytes) return bytes
-
   return null
-}
-
-export function parseIpldBytes(input: unknown): Uint8Array | undefined {
-  if (
-    isPureObject(input) &&
-    '$bytes' in input &&
-    typeof input.$bytes === 'string' &&
-    Object.keys(input).length === 1
-  ) {
-    const value = decodeBase64(input.$bytes)
-    if (value) return value
-  }
-
-  return undefined
-}
-
-export function encodeIpldBytes(bytes: Uint8Array): { $bytes: string } {
-  return { $bytes: ui8ToBase64(bytes) }
 }
 
 /**

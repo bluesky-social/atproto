@@ -3,8 +3,8 @@ import {
   ValidationContext,
   ValidationResult,
   Validator,
-  isPureObject,
 } from '../core.js'
+import { isPureObject } from '../lib/is-object.js'
 
 export type DictSchemaOutput<
   KeySchema extends Validator<string>,

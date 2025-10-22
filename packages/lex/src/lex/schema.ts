@@ -1,7 +1,6 @@
 // Utilities (that depend on *and* are used by schemas)
-export * from './schema/_blob-ref.js'
+export * from './core/lex.js'
 export * from './schema/_parameters.js'
-export * from './schema/_serialize.js'
 
 // IPLD Types
 export * from './schema/array.js'

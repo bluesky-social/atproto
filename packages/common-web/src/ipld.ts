@@ -60,10 +60,9 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
       }
     }
     // convert cids
-    if (CID.asCID(val)) {
-      return {
-        $link: (val as CID).toString(),
-      }
+    const cid = CID.asCID(val)
+    if (cid) {
+      return { $link: cid.toString() }
     }
     // walk plain objects
     const toReturn = {}

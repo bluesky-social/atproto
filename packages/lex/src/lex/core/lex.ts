@@ -1,28 +1,44 @@
+import { CID } from 'multiformats/cid'
+import { isObject } from '../lib/is-object.js'
 import {
-  CID,
+  BlobRef,
+  parseTypedJsonBlobRef,
+  parseUntypedJsonBlobRef,
+} from './blob-ref.js'
+import {
+  IpldScalar,
   encodeIpldBytes,
   encodeIpldLink,
-  isArray,
-  isObject,
   parseIpldBytes,
   parseIpldLink,
-} from '../core.js'
-import { BlobRef, typedJsonBlobRef, untypedJsonBlobRef } from './_blob-ref.js'
-
-export type JsonScalar = number | string | boolean | null
-export type Json = JsonScalar | Json[] | { [key: string]: Json }
-export type JsonObject = { [key: string]: Json }
-
-export type IpldScalar = JsonScalar | CID | Uint8Array
-export type Ipld = IpldScalar | Ipld[] | { [key: string]: Ipld }
-export type IpldObject = { [key: string]: Ipld }
+} from './ipld.js'
+import { Json, JsonObject } from './json.js'
 
 export type LexScalar = IpldScalar | BlobRef
 export type Lex = LexScalar | Lex[] | { [key: string]: Lex }
 export type LexObject = { [key: string]: Lex }
 
-export function stringifyLex(input: Lex): string {
+export function lexStringify(input: Lex): string {
   return JSON.stringify(input, lexJsonReplacer)
+}
+
+export function lexParse(input: string): Lex {
+  return JSON.parse(input, lexJsonReviver)
+}
+
+export function jsonToLex(value: Json): Lex {
+  switch (typeof value) {
+    case 'object': {
+      if (value === null) return null
+      if (Array.isArray(value)) return jsonArrayToLex(value)
+      return reviveSpecialObjectSchema(value) || jsonOjectToLex(value)
+    }
+    case 'number':
+      if (Number.isInteger(value)) return value
+      throw new TypeError(`Invalid non-integer number: ${value}`)
+    default:
+      return value
+  }
 }
 
 function lexJsonReplacer(key: string, value: unknown): unknown {
@@ -41,15 +57,11 @@ function lexJsonReplacer(key: string, value: unknown): unknown {
   return value
 }
 
-export function jsonStringToLex(input: string): Lex {
-  return JSON.parse(input, lexJsonReviver)
-}
-
 function lexJsonReviver(key: string, value: Json): unknown {
   switch (typeof value) {
     case 'object':
       if (value === null) return null
-      if (isArray(value)) return value
+      if (Array.isArray(value)) return value
       return reviveSpecialObjectSchema(value) || value
     case 'number':
       if (Number.isInteger(value)) return value
@@ -62,7 +74,7 @@ function lexJsonReviver(key: string, value: Json): unknown {
 function reviveSpecialObjectSchema(
   input: JsonObject,
 ): CID | Uint8Array | BlobRef | undefined {
-  // Hot path: use hints to avoid expensive "$validate()" checks
+  // Hot path: use hints to avoid parsing when possible
 
   if (input.$link !== undefined) {
     const cid = parseIpldLink(input)
@@ -71,31 +83,14 @@ function reviveSpecialObjectSchema(
     const bytes = parseIpldBytes(input)
     if (bytes) return bytes
   } else if (input.$type === 'blob') {
-    // Using "$validate()" here to coercively parse BlobRef
-    const parsed = typedJsonBlobRef.$validate(input)
-    if (parsed.success) return BlobRef.fromTypedJsonRef(parsed.value)
+    const blobRef = parseTypedJsonBlobRef(input)
+    if (blobRef) return blobRef
   } else if (input.cid !== undefined && input.mimeType !== undefined) {
-    // Using "$validate()" here to coercively parse BlobRef
-    const parsed = untypedJsonBlobRef.$validate(input)
-    if (parsed.success) return BlobRef.fromUntypedJsonRef(parsed.value)
+    const blobRef = parseUntypedJsonBlobRef(input)
+    if (blobRef) return blobRef
   }
 
   return undefined
-}
-
-export function jsonToLex(value: Json): Lex {
-  switch (typeof value) {
-    case 'object': {
-      if (value === null) return null
-      if (isArray(value)) return jsonArrayToLex(value)
-      return reviveSpecialObjectSchema(value) || jsonOjectToLex(value)
-    }
-    case 'number':
-      if (Number.isInteger(value)) return value
-      throw new TypeError(`Invalid non-integer number: ${value}`)
-    default:
-      return value
-  }
 }
 
 function jsonArrayToLex(input: Json[]): Lex[] {

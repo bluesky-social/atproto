@@ -1,14 +1,11 @@
+import { Lex } from '../core/lex.js'
 import {
   ValidationContext,
   ValidationResult,
   Validator,
   coerceToString,
-  isPureObject,
 } from '../core.js'
-import { TypedJsonBlobRef } from './_blob-ref.js'
-import { Lex } from './_serialize.js'
-
-export type { TypedJsonBlobRef }
+import { isPureObject } from '../lib/is-object.js'
 
 export type LexBody<E extends string = any> = E extends `text/${string}`
   ? string // Text encodings always yield string bodies

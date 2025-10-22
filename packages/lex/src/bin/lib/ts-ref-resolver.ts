@@ -2,7 +2,6 @@ import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
 import { LexiconDocument } from '../../doc/lexicon-document.js'
 import { LexiconIndexer } from '../../doc/lexicon-indexer.js'
-import { l } from '../../lex/index.js'
 import { isReservedWord, isSafeIdentifier } from './ts-lang.js'
 import { asRelativePath, memoize, ucFirst } from './util.js'
 
@@ -40,7 +39,7 @@ export class TsRefResolver {
   #locCounter = 0
   public readonly resolveLocal = memoize(
     async (hash: string): Promise<ResolvedRef> => {
-      if (!l.hasOwn(this.doc.defs, hash)) {
+      if (!Object.hasOwn(this.doc.defs, hash)) {
         throw new Error(`Definition ${hash} not found in ${this.doc.id}`)
       }
       if (isSafeIdentifier(hash)) {
@@ -70,7 +69,7 @@ export class TsRefResolver {
 
       // Lets first make sure the referenced lexicon exists
       const srcDoc = await this.indexer.get(nsid)
-      const srcDef = l.hasOwn(srcDoc.defs, hash) ? srcDoc.defs[hash] : null
+      const srcDef = Object.hasOwn(srcDoc.defs, hash) ? srcDoc.defs[hash] : null
       if (!srcDef) {
         throw new Error(
           `Lexicon reference ${hash} not found (referenced from ${this.doc.id})`,
@@ -230,7 +229,7 @@ function nsidSegmentToIdentifier(segment: string) {
 export function useRecordExport(doc: LexiconDocument, hash: string) {
   return (
     hash === 'main' &&
-    !l.hasOwn(doc.defs, 'record') &&
+    !Object.hasOwn(doc.defs, 'record') &&
     doc.defs[hash]?.type === 'record'
   )
 }

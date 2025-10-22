@@ -5,10 +5,9 @@ import {
   ValidationError,
   ValidationResult,
   Validator,
-  hasOwn,
-  isPureObject,
 } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
+import { isPureObject } from '../lib/is-object.js'
 import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
 import { ObjectSchema } from './object.js'
@@ -88,7 +87,7 @@ export class DiscriminatedUnionSchema<
       return ctx.issueInvalidType(input, 'object')
     }
 
-    if (!hasOwn(input, this.discriminator)) {
+    if (!Object.hasOwn(input, this.discriminator)) {
       return ctx.issueRequiredKey(input, this.discriminator)
     }
 

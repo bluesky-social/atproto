@@ -1,10 +1,6 @@
 import { CID } from 'multiformats/cid'
-import {
-  PropertyKey,
-  comparePropertyPaths,
-  isArray,
-  isPureObject,
-} from './util.js'
+import { isPureObject } from '../lib/is-object.js'
+import { PropertyKey } from './property-key.js'
 
 export interface IssueBase<I = unknown> {
   readonly input: I
@@ -134,7 +130,7 @@ function stringifyType(value: unknown): string {
   switch (typeof value) {
     case 'object':
       if (value === null) return 'null'
-      if (isArray(value)) return 'array'
+      if (Array.isArray(value)) return 'array'
       if (CID.asCID(value)) return 'cid'
       if (value instanceof Date) return 'date'
       if (value instanceof RegExp) return 'regexp'
@@ -159,7 +155,7 @@ function stringifyValue(value: unknown): string {
     case 'boolean':
       return JSON.stringify(value)
     case 'object':
-      if (isArray(value)) {
+      if (Array.isArray(value)) {
         return `[${stringifyArray(value, stringifyValue)}]`
       }
       if (isPureObject(value)) {
@@ -239,4 +235,15 @@ function arrayAgg<T>(
   }
 
   return groups.map(agg)
+}
+
+function comparePropertyPaths(
+  a: readonly PropertyKey[],
+  b: readonly PropertyKey[],
+) {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }

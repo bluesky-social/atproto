@@ -1,10 +1,6 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-  isPureObject,
-} from '../core.js'
+import { ValidationContext, ValidationResult, Validator } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
+import { isPureObject } from '../lib/is-object.js'
 import { Parameter, parameterSchema } from './_parameters.js'
 import { ObjectSchemaOutput, ObjectSchemaUnknownKeysOption } from './object.js'
 

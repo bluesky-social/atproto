@@ -55,21 +55,11 @@ export class BlobRef {
     }
   }
 
-  ipld(): TypedJsonBlobRef {
-    return {
-      $type: 'blob',
-      ref: this.ref,
-      mimeType: this.mimeType,
-      size: this.size,
-    }
+  ipld(): JsonBlobRef {
+    return this.original
   }
 
   toJSON() {
-    return ipldToJson(this.ipld()) as {
-      $type: 'blob'
-      ref: { $link: string }
-      mimeType: string
-      size: number
-    }
+    return ipldToJson(this.ipld())
   }
 }

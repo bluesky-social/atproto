@@ -5,7 +5,7 @@ import {
   aggregateIssues,
   stringifyIssue,
 } from './issue.js'
-import { PropertyKey } from './util.js'
+import { PropertyKey } from './property-key.js'
 
 export type SuccessResult<V = any> = { success: true; value: V }
 export type FailureResult = { success: false; error: ValidationError }

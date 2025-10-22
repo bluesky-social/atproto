@@ -102,7 +102,7 @@ export class TsDocBuilder {
   }
 
   private async addDef(hash: string) {
-    const def = l.hasOwn(this.doc.defs, hash) ? this.doc.defs[hash] : null
+    const def = Object.hasOwn(this.doc.defs, hash) ? this.doc.defs[hash] : null
     if (def == null) return
 
     if (hash === 'main') {
@@ -442,7 +442,7 @@ export class TsDocBuilder {
     required?: readonly string[]
   }) {
     for (const prop of options.required || []) {
-      if (!l.hasOwn(options.properties, prop)) {
+      if (!Object.hasOwn(options.properties, prop)) {
         throw new Error(`Required property "${prop}" not found in properties`)
       }
     }

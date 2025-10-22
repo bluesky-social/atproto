@@ -1,11 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-  isArray,
-  isArrayLike,
-  isIterableObject,
-} from '../core.js'
+import { ValidationContext, ValidationResult, Validator } from '../core.js'
 
 export type ArraySchemaOptions = {
   minLength?: number
@@ -24,39 +17,33 @@ export class ArraySchema<Item = any> extends Validator<Array<Item>> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Array<Item>> {
-    const array = isArray(input)
-      ? input
-      : isArrayLike(input) || isIterableObject(input)
-        ? Array.from(input) // Convert to array
-        : null
-
-    if (!array) {
+    if (!Array.isArray(input)) {
       return ctx.issueInvalidType(input, 'array')
     }
 
     const { minLength, maxLength } = this.options
 
-    if (minLength != null && array.length < minLength) {
-      return ctx.issueTooSmall(array, 'array', minLength, array.length)
+    if (minLength != null && input.length < minLength) {
+      return ctx.issueTooSmall(input, 'array', minLength, input.length)
     }
 
-    if (maxLength != null && array.length > maxLength) {
-      return ctx.issueTooBig(array, 'array', maxLength, array.length)
+    if (maxLength != null && input.length > maxLength) {
+      return ctx.issueTooBig(input, 'array', maxLength, input.length)
     }
 
     let copy: undefined | Array<Item>
 
-    for (let i = 0; i < array.length; i++) {
-      const result = ctx.validateChild(array, i, this.items)
+    for (let i = 0; i < input.length; i++) {
+      const result = ctx.validateChild(input, i, this.items)
       if (!result.success) return result
 
-      if (result.value !== array[i]) {
+      if (result.value !== input[i]) {
         // Copy on write (but only if we did not already make a copy)
-        copy ??= (array === input ? Array.from(array) : array) as Array<Item>
+        copy ??= Array.from(input)
         copy[i] = result.value
       }
     }
 
-    return ctx.success(copy ?? array) as ValidationResult<Array<Item>>
+    return ctx.success(copy ?? input) as ValidationResult<Array<Item>>
   }
 }

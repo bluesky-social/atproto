@@ -1,9 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-  isInteger,
-} from '../core.js'
+import { ValidationContext, ValidationResult, Validator } from '../core.js'
 
 export type IntegerSchemaOptions = {
   default?: number
@@ -34,4 +29,11 @@ export class IntegerSchema extends Validator<number> {
 
     return ctx.success(input)
   }
+}
+
+/**
+ * Simple wrapper around {@link Number.isInteger} that acts as a type guard.
+ */
+function isInteger(input: unknown): input is number {
+  return Number.isInteger(input)
 }

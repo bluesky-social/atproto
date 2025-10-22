@@ -51,7 +51,7 @@ export class LexiconSchemaBuilder {
       | l.Procedure
       | l.PermissionSet
     >()
-    if (!l.isAsyncIterableObject(indexer)) {
+    if (!isAsyncIterableObject(indexer)) {
       throw new Error('An iterable indexer is required to build all schemas')
     }
     try {
@@ -319,4 +319,15 @@ export function memoize<Fn extends (arg: string) => unknown>(fn: Fn): Fn {
     cache.set(arg, result)
     return result
   }) as Fn
+}
+
+function isAsyncIterableObject<T>(
+  obj: T,
+): obj is T & object & AsyncIterable<unknown> {
+  return (
+    obj != null &&
+    typeof obj === 'object' &&
+    Symbol.asyncIterator in obj &&
+    typeof obj[Symbol.asyncIterator] === 'function'
+  )
 }
