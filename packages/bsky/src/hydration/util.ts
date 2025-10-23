@@ -177,12 +177,12 @@ export function isDebugFieldAllowed(
 
 export type DebugFieldObject = Post['debug'] | Actor['debug'] | undefined
 
-export function mergeAndSerializeDebugFieldObjects(debugs: DebugFieldObject[]) {
+export function mergeDebugFieldObjects(debugs: DebugFieldObject[]) {
   const merged: Post['debug'] & Actor['debug'] = {}
   for (const debug of debugs) {
     if (!!debug && typeof debug === 'object') {
       Object.assign(merged, debug)
     }
   }
-  return JSON.stringify(merged)
+  return merged
 }

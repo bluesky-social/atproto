@@ -36,7 +36,7 @@
         },
         "threadgate": { "type": "ref", "ref": "#threadgateView" },
         "debug": {
-          "type": "string",
+          "type": "unknown",
           "description": "Debug information for internal development"
         }
       }

@@ -66,7 +66,7 @@ export const schemaDict = {
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
           debug: {
-            type: 'string',
+            type: 'unknown',
             description: 'Debug information for internal development',
           },
         },
@@ -132,7 +132,7 @@ export const schemaDict = {
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
           debug: {
-            type: 'string',
+            type: 'unknown',
             description: 'Debug information for internal development',
           },
         },
@@ -223,7 +223,7 @@ export const schemaDict = {
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
           debug: {
-            type: 'string',
+            type: 'unknown',
             description: 'Debug information for internal development',
           },
         },
@@ -1859,7 +1859,7 @@ export const schemaDict = {
             ref: 'lex:app.bsky.feed.defs#threadgateView',
           },
           debug: {
-            type: 'string',
+            type: 'unknown',
             description: 'Debug information for internal development',
           },
         },

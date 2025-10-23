@@ -46,7 +46,7 @@ export interface PostView {
   labels?: ComAtprotoLabelDefs.Label[]
   threadgate?: ThreadgateView
   /** Debug information for internal development */
-  debug?: string
+  debug?: { [_ in string]: unknown }
 }
 
 const hashPostView = 'postView'

@@ -8,7 +8,7 @@ import { Label } from '../hydration/label'
 import {
   type DebugFieldObject,
   RecordInfo,
-  mergeAndSerializeDebugFieldObjects,
+  mergeDebugFieldObjects,
 } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
@@ -962,7 +962,7 @@ export class Views {
     if (!opts.viewer) return undefined
     if (!opts.viewer.extra?.isDebugFieldAllowed) return undefined
     try {
-      return mergeAndSerializeDebugFieldObjects(debugs)
+      return mergeDebugFieldObjects(debugs)
     } catch {
       return undefined
     }

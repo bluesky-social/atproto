@@ -34,7 +34,7 @@
           "ref": "#statusView"
         },
         "debug": {
-          "type": "string",
+          "type": "unknown",
           "description": "Debug information for internal development"
         }
       }
@@ -77,7 +77,7 @@
           "ref": "#statusView"
         },
         "debug": {
-          "type": "string",
+          "type": "unknown",
           "description": "Debug information for internal development"
         }
       }
@@ -133,7 +133,7 @@
           "ref": "#statusView"
         },
         "debug": {
-          "type": "string",
+          "type": "unknown",
           "description": "Debug information for internal development"
         }
       }

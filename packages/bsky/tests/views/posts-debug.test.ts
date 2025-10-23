@@ -51,6 +51,6 @@ describe('post views w/ debug field', () => {
 
     const post = posts.data.posts.at(0)
     expect(post?.debug).toBeDefined()
-    expect(typeof post?.debug).toBe('string')
+    expect(typeof post?.debug).toBe('object')
   })
 })

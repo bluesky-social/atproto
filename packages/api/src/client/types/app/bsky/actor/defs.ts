@@ -35,7 +35,7 @@ export interface ProfileViewBasic {
   verification?: VerificationState
   status?: StatusView
   /** Debug information for internal development */
-  debug?: string
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -64,7 +64,7 @@ export interface ProfileView {
   verification?: VerificationState
   status?: StatusView
   /** Debug information for internal development */
-  debug?: string
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileView = 'profileView'
@@ -100,7 +100,7 @@ export interface ProfileViewDetailed {
   verification?: VerificationState
   status?: StatusView
   /** Debug information for internal development */
-  debug?: string
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
