@@ -2,14 +2,11 @@ import { ValidationContext, ValidationResult, Validator } from '../core.js'
 import { cachedGetter } from '../lib/decorators.js'
 import { isPureObject } from '../lib/is-object.js'
 import { Parameter, parameterSchema } from './_parameters.js'
-import { ObjectSchemaOutput, ObjectSchemaUnknownKeysOption } from './object.js'
+import { ObjectSchemaOutput } from './object.js'
 
 export type ParamsSchemaProperties = Record<string, Validator<Parameter>>
 
 export type ParamsSchemaOptions = {
-  /** @default "passthrough" */
-  unknownKeys?: ObjectSchemaUnknownKeysOption
-
   required?: readonly string[]
 }
 
@@ -60,17 +57,13 @@ export class ParamsSchema<
     for (const key in input) {
       if (this.validatorsMap.has(key)) continue
 
-      if (this.options.unknownKeys === 'strict') {
-        return ctx.issueInvalidPropertyType(input, key, 'undefined')
-      } else {
-        // In "passthrough" mode we still need to ensure that params are valid
-        const result = ctx.validateChild(input, key, parameterSchema)
-        if (!result.success) return result
+      // In "passthrough" mode we still need to ensure that params are valid
+      const result = ctx.validateChild(input, key, parameterSchema)
+      if (!result.success) return result
 
-        if (result.value !== input[key]) {
-          copy ??= { ...input }
-          copy[key] = result.value
-        }
+      if (result.value !== input[key]) {
+        copy ??= { ...input }
+        copy[key] = result.value
       }
     }
 
