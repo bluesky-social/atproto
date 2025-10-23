@@ -117,7 +117,7 @@ export type ProfileAgg = {
 export type ProfileAggs = HydrationMap<ProfileAgg>
 
 /**
- * Additional config passed from `ServerConfig` to the `FeedHydrator` instance.
+ * Additional config passed from `ServerConfig` to the sub-hydrator instance.
  */
 export type ActorHydratorConfig = {
   debugFieldAllowedDids: Set<string>

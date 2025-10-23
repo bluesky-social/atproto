@@ -110,7 +110,7 @@ export type FeedItem = {
 }
 
 /**
- * Additional config passed from `ServerConfig` to the `FeedHydrator` instance.
+ * Additional config passed from `ServerConfig` to the sub-hydrator instance.
  */
 export type FeedHydratorConfig = {
   debugFieldAllowedDids: Set<string>
