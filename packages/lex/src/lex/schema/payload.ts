@@ -25,7 +25,7 @@ export type InferPayloadSchemaBody<P extends PayloadSchema> =
         : never
     : never
 
-export type PayloadOutput<
+export type PayloadSchemaOutput<
   E extends string | undefined = any,
   S extends Validator | undefined = any,
 > = E extends string
@@ -43,7 +43,7 @@ export type PayloadOutput<
 export class PayloadSchema<
   const Encoding extends string | undefined = any,
   const Schema extends Validator | undefined = any,
-> extends Validator<PayloadOutput<Encoding, Schema>> {
+> extends Validator<PayloadSchemaOutput<Encoding, Schema>> {
   constructor(
     readonly encoding: Encoding,
     readonly schema: Schema,
@@ -58,7 +58,7 @@ export class PayloadSchema<
   protected override validateInContext(
     input: unknown,
     ctx: ValidationContext,
-  ): ValidationResult<PayloadOutput<Encoding, Schema>> {
+  ): ValidationResult<PayloadSchemaOutput<Encoding, Schema>> {
     if (this.encoding == null) {
       if (input !== undefined && !isPureObject(input)) {
         return ctx.issueInvalidType(input, ['object', 'undefined'])
@@ -72,7 +72,7 @@ export class PayloadSchema<
         return ctx.issueInvalidPropertyValue(input, 'body', [undefined])
       }
 
-      return ctx.success(undefined as PayloadOutput<Encoding, Schema>)
+      return ctx.success(undefined as PayloadSchemaOutput<Encoding, Schema>)
     }
 
     // this.encoding is defined beyond this point, a payload is expected
@@ -95,14 +95,14 @@ export class PayloadSchema<
           ? input
           : { ...input, encoding: this.encoding, body: result.value }
 
-      return ctx.success(output as PayloadOutput<Encoding, Schema>)
+      return ctx.success(output as PayloadSchemaOutput<Encoding, Schema>)
     }
 
     if (this.encoding.startsWith('text/') && typeof input.body !== 'string') {
       const body = coerceToString(input.body)
       if (body != null) {
         const output = { ...input, encoding: this.encoding, body }
-        return ctx.success(output as PayloadOutput<Encoding, Schema>)
+        return ctx.success(output as PayloadSchemaOutput<Encoding, Schema>)
       }
 
       return ctx.issueInvalidType(input.body, 'string')
@@ -111,12 +111,12 @@ export class PayloadSchema<
     if (input.body instanceof ArrayBuffer) {
       const body = new Uint8Array(input.body)
       const output = { ...input, encoding: this.encoding, body }
-      return ctx.success(output as PayloadOutput<Encoding, Schema>)
+      return ctx.success(output as PayloadSchemaOutput<Encoding, Schema>)
     }
 
     // Note we assume that input.body is a valid Lex value at this point (though
     // we don't verify it)
 
-    return ctx.success(input as PayloadOutput<Encoding, Schema>)
+    return ctx.success(input as PayloadSchemaOutput<Encoding, Schema>)
   }
 }
