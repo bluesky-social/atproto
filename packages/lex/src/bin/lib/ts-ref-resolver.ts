@@ -1,8 +1,15 @@
+import assert from 'node:assert'
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
 import { LexiconDocument, LexiconIndexer } from '../../doc/index.js'
-import { asSafeIdentifier, isReservedWord } from './ts-lang.js'
-import { asRelativePath, memoize, ucFirst } from './util.js'
+import { isReservedWord, isSafeIdentifier } from './ts-lang.js'
+import {
+  asRelativePath,
+  memoize,
+  toCamelCase,
+  toPascalCase,
+  ucFirst,
+} from './util.js'
 
 export type ResolvedRef = {
   varName: string
@@ -45,31 +52,64 @@ export class TsRefResolver {
     return `${safeIdentifier}$${count}`
   }
 
+  /**
+   * @note The returned `typeName` and `varName` are *both* guaranteed to be
+   * valid TypeScript identifiers.
+   */
   public readonly resolveLocal = memoize(
     async (hash: string): Promise<ResolvedRef> => {
-      if (!Object.hasOwn(this.doc.defs, hash)) {
+      const hashes = Object.keys(this.doc.defs)
+
+      if (!hashes.includes(hash)) {
         throw new Error(`Definition ${hash} not found in ${this.doc.id}`)
       }
 
-      const identifier = asSafeDefinitionIdentifier(hash)
+      // Because we are using predictable "public" identifiers for type names,
+      // we need to ensure there are no conflicts between different definitions
+      // in the same lexicon document.
+      //
+      // @NOTE It should be possible to implement a way to generate
+      // non-conflicting type names for all public identifiers in a lexicon
+      // document, even in the presence of conflicts. However, this would add a
+      // lot of complexity to the code generation process, and the likelihood of
+      // such conflicts happening in practice is very low, so we opt for a
+      // simpler approach of just throwing an error if a conflict is detected.
+      const pub = getPublicIdentifiers(hash)
+      for (const otherHash of hashes) {
+        if (otherHash === hash) continue
+        const otherPub = getPublicIdentifiers(otherHash)
+        if (otherPub.typeName === pub.typeName) {
+          throw new Error(
+            `Conflicting type names for definitions #${hash} and #${otherHash} in ${this.doc.id}`,
+          )
+        }
+      }
 
-      const varName = identifier
-        ? identifier === hash || !Object.hasOwn(this.doc.defs, identifier)
+      // Try to keep and identifier that resembles the original hash as identifier
+      const safeIdentifier = asSafeDefinitionIdentifier(hash)
+
+      // If the safe identifier is not conflicting with other definition names,
+      // or reserved words, we can use it as-is. Otherwise, we need to generate
+      // a unique safe identifier.
+      const varName = safeIdentifier
+        ? !hashes.some((otherHash) => {
+            if (otherHash === hash) return false
+            const otherIdentifier = asSafeDefinitionIdentifier(otherHash)
+            return otherIdentifier === safeIdentifier
+          })
           ? // Safe identifier can be used as-is as it does not conflict with
             // other definition names
-            identifier
+            safeIdentifier
           : // In order to keep identifiers stable, we use the safe identifier
             // as base, and append a counter to avoid conflicts
-            this.nextSafeDefinitionIdentifier(identifier)
+            this.nextSafeDefinitionIdentifier(safeIdentifier)
         : // hash only contained unsafe characters, generate a safe one
           this.nextSafeDefinitionIdentifier('def')
 
       const typeName = ucFirst(varName)
+      assert(varName !== typeName, 'Variable and type name should be different')
 
-      return {
-        varName: isReservedWord(varName) ? `_${varName}` : varName,
-        typeName: isReservedWord(typeName) ? `_${typeName}` : typeName,
-      }
+      return { varName, typeName }
     },
   )
 
@@ -99,9 +139,13 @@ export class TsRefResolver {
       // import * as <nsIdentifier> from './<moduleSpecifier>'
       const nsIdentifier = this.getNsIdentifier(nsid, moduleSpecifier)
 
+      const publicIds = getPublicIdentifiers(hash)
+
       return {
-        varName: `${nsIdentifier}.${hash}`,
-        typeName: `${nsIdentifier}.${ucFirst(hash)}`,
+        varName: isSafeIdentifier(publicIds.varName)
+          ? `${nsIdentifier}.${publicIds.varName}`
+          : `${nsIdentifier}[${JSON.stringify(publicIds.varName)}]`,
+        typeName: `${nsIdentifier}.${publicIds.typeName}`,
       }
     },
   )
@@ -122,13 +166,15 @@ export class TsRefResolver {
     return namespaceImportDeclaration.getNamespaceImport()!.getText()
   }
 
-  #aliasCounter = 0
+  #nsIdentifiersCounters = new Map<string, number>()
   private computeSafeNamespaceIdentifierFor(nsid: string) {
-    const baseName = nsidToIdentifier(nsid)
+    const baseName = nsidToIdentifier(nsid) || 'NS'
 
     let name = baseName
     while (this.isConflictingIdentifier(name)) {
-      name = `${baseName}$$${this.#aliasCounter++}`
+      const count = this.#nsIdentifiersCounters.get(baseName) ?? 0
+      this.#nsIdentifiersCounters.set(baseName, count + 1)
+      name = `${baseName}$$${count}`
     }
 
     return name
@@ -164,7 +210,7 @@ export class TsRefResolver {
 
   private conflictsWithLocalDefs(name: string) {
     return Object.keys(this.doc.defs).some((hash) => {
-      const identifier = asSafeDefinitionIdentifier(hash)
+      const identifier = toCamelCase(hash)
 
       // A safe identifier will be generated, no risk of conflict.
       if (!identifier) return false
@@ -215,37 +261,42 @@ export class TsRefResolver {
  * @see {@link https://atproto.com/specs/nsid NSID syntax spec}
  */
 function nsidToIdentifier(nsid: string) {
-  // Keep only the last two segments of the nsid for brevity (while keeping
-  // some "context"). This will work particularly well for lexicons build with
-  // two levels of nsid "grouping" (like app.bsky.*.*, com.atproto.*.*).
-  const identifier =
-    nsid.includes('.') || nsid.includes('-')
-      ? nsid.split('.').slice(-2).map(nsidSegmentToIdentifier).join('')
-      : nsid
+  const parts = nsid.split('.')
 
-  if (startsWithDigit(identifier)) {
-    return `N${identifier}`
+  // By default, try to keep only to the last two segments of the NSID as
+  // contextual information. If those do not form a safe identifier (typically
+  // because they start with a digit), try with more segments until we reach the
+  // full NSID.
+  for (let i = 2; i < parts.length; i++) {
+    const identifier = toPascalCase(parts.slice(-i).join('.'))
+    if (isSafeIdentifier(identifier)) return identifier
   }
-  return identifier
+
+  return undefined
 }
 
-function startsWithDigit(str: string) {
-  const code = str.charCodeAt(0)
-  return code >= 48 && code <= 57 // '0' to '9'
+/**
+ * Generates predictable public identifiers for a given definition hash.
+ *
+ * @note The returned `typeName` is guaranteed to be a valid TypeScript
+ * identifier. `varName` may not be a valid identifier (eg. if the hash contains
+ * unsafe characters), and may need to be accessed using string indexing.
+ */
+export function getPublicIdentifiers(hash: string): ResolvedRef {
+  const varName = hash
+  // @NOTE Type names *must* be valid TypeScript identifiers (this is because,
+  // unlike variable names, we cannot use string indexing to access exported
+  // types).
+  const typeName = toPascalCase(hash)
+  if (!typeName || varName === typeName || !isSafeIdentifier(typeName)) {
+    return { varName, typeName: `Def${typeName}` }
+  }
+  return { varName, typeName }
 }
 
-function nsidSegmentToIdentifier(segment: string) {
-  return segment.split('-').map(ucFirst).join('')
-}
-
-function asSafeDefinitionIdentifier(hash: string) {
-  // - We don't want leading $ to avoid conflicts with generated utilities
-  // - We don't want leading _ to avoid conflicts with names generated to escape
-  //   reserved words
-  // - We don't want $ in definition names to avoid confusion with generated
-  //   safe definition identifiers
-  return asSafeIdentifier(hash)
-    ?.replace(/^[_$]+/, '') // Remove leading $ and _
-    .replaceAll(/[$]+/g, '_') // Remove $ in the middle
-    .replaceAll(/_+/g, '_') // collapse multiple underscores (for readability)
+function asSafeDefinitionIdentifier(name: string) {
+  if (isSafeIdentifier(name) && isSafeIdentifier(ucFirst(name))) return name
+  const camel = toCamelCase(name)
+  if (isSafeIdentifier(camel) && isSafeIdentifier(ucFirst(camel))) return camel
+  return undefined
 }

@@ -10,6 +10,7 @@ import {
 } from './lexicon-directory-indexer.js'
 import { TsDocBuilder, TsDocBuilderOptions } from './ts-doc-builder.js'
 import { TsFormatter, TsFormatterOptions } from './ts-formatter.js'
+import { isSafeIdentifier } from './ts-lang.js'
 
 export type TsProjectBuilderLoadOptions = TsDocBuilderOptions &
   LexiconDirectoryIndexerOptions &
@@ -98,7 +99,9 @@ export class TsProjectBuilder {
       if (!dec) {
         file.addExportDeclaration({
           moduleSpecifier: childModuleSpecifier,
-          namespaceExport: childNs,
+          namespaceExport: isSafeIdentifier(childNs)
+            ? childNs
+            : JSON.stringify(childNs),
         })
       }
     }

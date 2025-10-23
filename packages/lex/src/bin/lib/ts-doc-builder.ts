@@ -26,8 +26,7 @@ import {
 } from '../../doc/index.js'
 import { l } from '../../lex/index.js'
 import { isSafeIdentifier } from './ts-lang.js'
-import { TsRefResolver } from './ts-ref-resolver.js'
-import { ucFirst } from './util.js'
+import { TsRefResolver, getPublicIdentifiers } from './ts-ref-resolver.js'
 
 export type TsDocBuilderOptions = {
   pureAnnotations?: boolean
@@ -391,6 +390,12 @@ export class TsDocBuilder {
     },
   ) {
     const ref = await this.refResolver.resolveLocal(hash)
+    const pub = getPublicIdentifiers(hash)
+
+    // Fool-proofing
+    assert(isSafeIdentifier(ref.varName), 'Expected safe type identifier')
+    assert(isSafeIdentifier(ref.typeName), 'Expected safe type identifier')
+    assert(isSafeIdentifier(pub.typeName), 'Expected safe type identifier')
 
     if (type) {
       const typeStmt = this.file.addTypeAlias({
@@ -400,16 +405,12 @@ export class TsDocBuilder {
 
       addJsDoc(typeStmt, def)
 
-      const alias = ucFirst(hash)
       this.file.addExportDeclaration({
         isTypeOnly: true,
         namedExports: [
           {
             name: ref.typeName,
-            alias:
-              ref.typeName === alias || !isSafeIdentifier(alias)
-                ? undefined
-                : alias,
+            alias: ref.typeName === pub.typeName ? undefined : pub.typeName,
           },
         ],
       })
@@ -427,10 +428,11 @@ export class TsDocBuilder {
         namedExports: [
           {
             name: ref.varName,
-            alias:
-              ref.varName === hash || !isSafeIdentifier(hash)
+            alias: isSafeIdentifier(pub.varName)
+              ? ref.varName === pub.varName
                 ? undefined
-                : hash,
+                : pub.varName
+              : JSON.stringify(pub.varName),
           },
         ],
       })

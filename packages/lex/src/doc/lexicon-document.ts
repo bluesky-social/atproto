@@ -417,7 +417,10 @@ export const lexiconDocumentSchema = l.object(
     description: l.string(),
     defs: l.intersection(
       l.object({ main: l.discriminatedUnion('type', MAIN_LEXICON_SCHEMAS) }),
-      l.dict(l.string(), l.discriminatedUnion('type', USER_LEXICON_SCHEMAS)),
+      l.dict(
+        l.string({ minLength: 1 }),
+        l.discriminatedUnion('type', USER_LEXICON_SCHEMAS),
+      ),
     ),
   },
   {
