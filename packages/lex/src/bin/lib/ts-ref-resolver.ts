@@ -69,11 +69,11 @@ export class TsRefResolver {
       // in the same lexicon document.
       //
       // @NOTE It should be possible to implement a way to generate
-      // non-conflicting type names for all public identifiers in a lexicon
-      // document, even in the presence of conflicts. However, this would add a
-      // lot of complexity to the code generation process, and the likelihood of
-      // such conflicts happening in practice is very low, so we opt for a
-      // simpler approach of just throwing an error if a conflict is detected.
+      // non-conflicting type names for all public (type) identifiers in a
+      // project. However, this would add a lot of complexity to the code
+      // generation process, and the likelihood of such conflicts happening in
+      // practice is very low, so we opt for a simpler approach of just throwing
+      // an error if a conflict is detected.
       const pub = getPublicIdentifiers(hash)
       for (const otherHash of hashes) {
         if (otherHash === hash) continue
