@@ -4,8 +4,6 @@ import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
-import { Actor } from './actor'
-import { Post } from './feed'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
   merge(map: HydrationMap<T>): this {
@@ -175,10 +173,10 @@ export function isDebugFieldAllowed(
   return allowedDids.has(did)
 }
 
-export type DebugFieldObject = Post['debug'] | Actor['debug'] | undefined
+export type DebugFieldObject = { [key: string]: unknown } | undefined
 
 export function mergeDebugFieldObjects(debugs: DebugFieldObject[]) {
-  const merged: Post['debug'] & Actor['debug'] = {}
+  const merged: DebugFieldObject = {}
   for (const debug of debugs) {
     if (!!debug && typeof debug === 'object') {
       Object.assign(merged, debug)
