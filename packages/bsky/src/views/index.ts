@@ -910,7 +910,7 @@ export class Views {
     const authorDid = parsedUri.hostname
     const actor = state.actors?.get(authorDid)
     const author = this.profileBasic(authorDid, state)
-    if (!author || !actor) return
+    if (!author) return
     const aggs = state.postAggs?.get(uri)
     const viewer = state.postViewers?.get(uri)
     const threadgateUri = postUriToThreadgateUri(uri)
@@ -952,7 +952,7 @@ export class Views {
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
         : undefined,
-      debug: this.debugField([post.debug, actor.debug], { viewer }),
+      debug: this.debugField([post.debug, actor?.debug], { viewer }),
     }
   }
 
