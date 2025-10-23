@@ -1,118 +1,121 @@
-import { EventEmitter } from 'node:events'
-import TypedEmitter from 'typed-emitter'
-import { Data as WsData, WebSocket } from 'ws'
+import { ClientOptions } from 'ws'
+import { Deferrable, createDeferrable } from '@atproto/common'
 import { NexusEvent, parseNexusEvent } from './events'
+import { WebSocketKeepAlive } from './websocket-keepalive'
 
-export interface NexusChannelOptions {
-  reconnect?: boolean
-  reconnectDelay?: number
+export interface NexusHandlers {
+  onEvent: (evt: NexusEvent) => void | Promise<void>
+  onError?: (err: Error) => void
 }
 
-type NexusEvents = {
-  open: () => void
-  event: (evt: NexusEvent) => void
-  error: (err: Error) => void
-  reconnecting: (code: number, reason: string) => void
-  close: () => void
+export type NexusWebsocketOptions = ClientOptions & {
+  maxReconnectSeconds?: number
+  heartbeatIntervalMs?: number
+  onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
 }
 
-export type NexusEmitter = TypedEmitter<NexusEvents>
+export class NexusChannel {
+  private ws: WebSocketKeepAlive
+  private abortController: AbortController
+  private destroyDefer: Deferrable
 
-export class NexusChannel extends (EventEmitter as new () => NexusEmitter) {
-  ws: WebSocket | null = null
-  url: string
-  reconnect: boolean
-  reconnectDelay: number
-  closed = false
-  reconnectTimer?: NodeJS.Timeout
-  bufferedAcks: number[] = []
+  private bufferedAcks: number[] = []
 
-  constructor(url: string, options: NexusChannelOptions = {}) {
-    super()
-    this.url = url
-    this.reconnect = options.reconnect ?? true
-    this.reconnectDelay = options.reconnectDelay ?? 1000
+  private onEvent: (evt: NexusEvent) => void | Promise<void>
+  private onError: (err: Error) => void
+
+  constructor(
+    url: string,
+    handlers: NexusHandlers,
+    wsOpts: NexusWebsocketOptions = {},
+  ) {
+    this.onEvent = handlers.onEvent
+    this.onError = handlers.onError ?? defaultErrorHandler
+    this.abortController = new AbortController()
+    this.destroyDefer = createDeferrable()
+    this.ws = new WebSocketKeepAlive({
+      getUrl: async () => url,
+      onReconnect: () => {
+        this.flushBufferedAcks()
+      },
+      signal: this.abortController.signal,
+      ...wsOpts,
+    })
   }
 
-  ackEvent = (id: number): Promise<boolean> => {
-    return new Promise((resolve, reject) => {
-      if (this.ws && this.isConnected()) {
-        this.ws.send(JSON.stringify({ id }), (err) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve(true)
-          }
-        })
-      } else {
+  async ackEvent(id: number): Promise<boolean> {
+    if (this.ws.isConnected()) {
+      try {
+        await this.ws.send(JSON.stringify({ id }))
+        return true
+      } catch (err) {
         this.bufferedAcks.push(id)
-        resolve(true)
+        return false
       }
-    })
+    } else {
+      this.bufferedAcks.push(id)
+      return false
+    }
   }
 
   private async flushBufferedAcks() {
     while (this.bufferedAcks.length > 0) {
-      const id = this.bufferedAcks.shift()
-      if (!id) {
-        return
-      }
-      const success = await this.ackEvent(id)
-      if (!success) {
-        return
-      }
-    }
-  }
-
-  async connect(): Promise<void> {
-    this.ws = new WebSocket(this.url)
-
-    this.ws.on('open', () => {
-      this.emit('open')
-      this.flushBufferedAcks().catch((err) => {
-        this.emit('error', new Error(`Failed to flush buffered acks: ${err}`))
-      })
-    })
-
-    this.ws.on('message', (data: WsData) => {
       try {
-        const evt = parseNexusEvent(JSON.parse(data.toString()), this.ackEvent)
-        this.emit('event', evt)
+        const success = await this.ackEvent(this.bufferedAcks[0])
+        if (success) {
+          this.bufferedAcks = this.bufferedAcks.slice(1)
+        }
       } catch (err) {
-        this.emit('error', new Error(`Failed to parse message: ${err}`))
+        this.onError(
+          new Error(`failed to send ack for event ${this.bufferedAcks[0]}`, {
+            cause: err,
+          }),
+        )
+        return
       }
-    })
+    }
+  }
 
-    this.ws.on('close', (code: number, reason: Buffer) => {
-      this.ws = null
-      if (this.reconnect && !this.closed) {
-        this.emit('reconnecting', code, reason.toString())
-        this.reconnectTimer = setTimeout(() => {
-          this.connect()
-        }, this.reconnectDelay)
+  async start() {
+    try {
+      for await (const chunk of this.ws) {
+        await this.processWsEvent(chunk)
+      }
+    } catch (err) {
+      if (err && err['name'] === 'AbortError') {
+        this.destroyDefer.resolve()
       } else {
-        this.emit('close')
+        throw err
       }
-    })
-
-    this.ws.on('error', (err: Error) => {
-      this.emit('error', err)
-    })
-  }
-
-  disconnect(): void {
-    this.closed = true
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer)
-      this.reconnectTimer = undefined
-    }
-    if (this.ws) {
-      this.ws.close()
-      this.ws = null
     }
   }
 
-  isConnected(): boolean {
-    return this.ws !== null && this.ws.readyState === WebSocket.OPEN
+  private async processWsEvent(chunk: Uint8Array) {
+    let evt: NexusEvent
+    try {
+      const data = chunk.toString()
+      evt = parseNexusEvent(JSON.parse(data), this.ackEvent)
+    } catch (err) {
+      this.onError(new Error(`Failed to parse message: ${err}`))
+      return
+    }
+
+    try {
+      await this.onEvent(evt)
+      await this.ackEvent(evt.id)
+    } catch (err) {
+      // Don't ack on error - let Nexus retry
+      this.onError(new Error(`Failed to prcoess event ${evt.id}: ${err}`))
+      return
+    }
   }
+
+  async destroy(): Promise<void> {
+    this.abortController.abort()
+    await this.destroyDefer.complete
+  }
+}
+
+const defaultErrorHandler = (err: Error) => {
+  throw err
 }
