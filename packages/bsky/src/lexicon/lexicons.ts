@@ -10541,7 +10541,7 @@ export const schemaDict = {
               },
               schema: {
                 type: 'ref',
-                ref: 'lex:com.atproto.lexicon.schema',
+                ref: 'lex:com.atproto.lexicon.schema#main',
                 description: 'The resolved lexicon schema record.',
               },
               uri: {
