@@ -94,7 +94,7 @@ export class NexusChannel {
     let evt: NexusEvent
     try {
       const data = chunk.toString()
-      evt = parseNexusEvent(JSON.parse(data), this.ackEvent)
+      evt = parseNexusEvent(JSON.parse(data))
     } catch (err) {
       this.onError(new Error(`Failed to parse message: ${err}`))
       return

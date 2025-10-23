@@ -23,9 +23,9 @@ export class SimpleRouter implements NexusHandlers {
   }
 
   async onEvent(evt: NexusEvent): Promise<void> {
-    if (evt.isRecordEvt()) {
-      return this.recordHandler?.(evt)
-    } else if (evt.isUserEvt()) {
+    if (evt.type === 'record') {
+      this.recordHandler?.(evt)
+    } else {
       return this.userHandler?.(evt)
     }
   }
