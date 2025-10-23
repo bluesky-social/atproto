@@ -178,7 +178,9 @@ export class Hydrator {
       debugFieldAllowedDIDs: readonly string[]
     },
   ) {
-    this.actor = new ActorHydrator(dataplane)
+    this.actor = new ActorHydrator(dataplane, {
+      debugFieldAllowedDIDs: config.debugFieldAllowedDIDs,
+    })
     this.feed = new FeedHydrator(dataplane, {
       debugFieldAllowedDIDs: config.debugFieldAllowedDIDs,
     })
@@ -229,6 +231,7 @@ export class Hydrator {
       this.actor.getActors(dids, {
         includeTakedowns,
         skipCacheForDids: ctx.skipCacheForViewer,
+        viewer: ctx.viewer,
       }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
@@ -358,6 +361,7 @@ export class Hydrator {
       this.actor.getActors(includeAuthorDids, {
         includeTakedowns: ctx.includeTakedowns,
         skipCacheForDids: ctx.skipCacheForViewer,
+        viewer: ctx.viewer,
       }),
     ])
 

@@ -4,6 +4,8 @@ import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
+import { Post } from './feed'
+import { Actor } from './actor'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
   merge(map: HydrationMap<T>): this {
@@ -164,3 +166,23 @@ export const isActivitySubscriptionEnabled = ({
   post: boolean
   reply: boolean
 }): boolean => post || reply
+
+export function isDebugFieldAllowed(
+  allowedDids: readonly string[],
+  did?: string | null,
+) {
+  if (!did) return false
+  return allowedDids.includes(did)
+}
+
+export type DebugFieldObject = Post['debug'] | Actor['debug']
+
+export function mergeAndSerializeDebugFieldObjects(debugs: DebugFieldObject[]) {
+  const merged: Post['debug'] & Actor['debug'] = {}
+  for (const debug of debugs) {
+    if (typeof debug === 'object' && debug !== null) {
+      Object.assign(merged, debug)
+    }
+  }
+  return JSON.stringify(merged)
+}

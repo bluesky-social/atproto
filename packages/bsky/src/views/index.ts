@@ -5,7 +5,11 @@ import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
-import { RecordInfo } from '../hydration/util'
+import {
+  RecordInfo,
+  mergeAndSerializeDebugFieldObjects,
+  type DebugFieldObject,
+} from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
@@ -340,6 +344,7 @@ export class Views {
         record: actor.profile,
       }),
     ]
+    const viewerState = state.profileViewers?.get(did)
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -367,6 +372,7 @@ export class Views {
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
+      debug: this.debugField([actor.debug], { viewer: viewerState }),
     }
   }
 
@@ -902,8 +908,9 @@ export class Views {
     if (!post) return
     const parsedUri = new AtUri(uri)
     const authorDid = parsedUri.hostname
+    const actor = state.actors?.get(authorDid)
     const author = this.profileBasic(authorDid, state)
-    if (!author) return
+    if (!author || !actor) return
     const aggs = state.postAggs?.get(uri)
     const viewer = state.postViewers?.get(uri)
     const threadgateUri = postUriToThreadgateUri(uri)
@@ -945,19 +952,17 @@ export class Views {
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
         : undefined,
-      debug: this.debugField(post.debug),
+      debug: this.debugField([post.debug, actor.debug], { viewer }),
     }
   }
 
-  debugField(...debugs: Post['debug'][]) {
+  debugField<
+    AnyViewerState extends { extra?: { isDebugFieldAllowed?: boolean } },
+  >(debugs: DebugFieldObject[], opts: { viewer?: AnyViewerState | null }) {
+    if (!opts.viewer) return undefined
+    if (!opts.viewer.extra?.isDebugFieldAllowed) return undefined
     try {
-      const merged = debugs.reduce<Post['debug']>((acc, debug) => {
-        if (debug) {
-          acc = { ...acc, ...debug }
-        }
-        return acc
-      }, {})
-      return JSON.stringify(merged)
+      return mergeAndSerializeDebugFieldObjects(debugs)
     } catch {
       return undefined
     }

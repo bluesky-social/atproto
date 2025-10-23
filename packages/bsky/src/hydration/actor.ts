@@ -13,6 +13,7 @@ import {
   parseRecord,
   parseString,
   safeTakedownRef,
+  isDebugFieldAllowed,
 } from './util'
 
 type AllowActivitySubscriptions = Extract<
@@ -38,6 +39,13 @@ export type Actor = {
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
   allowActivitySubscriptionsFrom: AllowActivitySubscriptions
+  /**
+   * Debug information for internal Bluesky development purposes only
+   */
+  debug?: {
+    pagerank?: number
+    [key: string]: unknown
+  }
 }
 
 export type VerificationHydrationState = {
@@ -71,6 +79,12 @@ export type ProfileViewerState = {
   blockingByList?: string
   following?: string
   followedBy?: string
+  /**
+   * Extra data associated with the viewer
+   */
+  extra?: {
+    isDebugFieldAllowed?: boolean
+  }
 }
 
 export type ProfileViewerStates = HydrationMap<ProfileViewerState>
@@ -102,8 +116,22 @@ export type ProfileAgg = {
 
 export type ProfileAggs = HydrationMap<ProfileAgg>
 
+/**
+ * Additional config passed from `ServerConfig` to the `FeedHydrator` instance.
+ */
+export type ActorHydratorConfig = {
+  debugFieldAllowedDIDs: readonly string[]
+}
+
 export class ActorHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  private config: ActorHydratorConfig
+
+  constructor(
+    public dataplane: DataPlaneClient,
+    config: ActorHydratorConfig,
+  ) {
+    this.config = config
+  }
 
   async getRepoRevSafe(did: string | null): Promise<string | null> {
     if (!did) return null
@@ -152,6 +180,7 @@ export class ActorHydrator {
     opts: {
       includeTakedowns?: boolean
       skipCacheForDids?: string[]
+      viewer?: string | null
     } = {},
   ): Promise<Actors> {
     const { includeTakedowns = false, skipCacheForDids } = opts
@@ -213,6 +242,13 @@ export class ActorHydrator {
         }
       }
 
+      const debug = isDebugFieldAllowed(
+        this.config.debugFieldAllowedDIDs,
+        opts.viewer,
+      )
+        ? { pagerank: actor.pagerank }
+        : undefined
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -233,6 +269,7 @@ export class ActorHydrator {
         allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
           actor.allowActivitySubscriptionsFrom,
         ),
+        debug,
       })
     }, new HydrationMap<Actor>())
   }
@@ -304,6 +341,12 @@ export class ActorHydrator {
         blockingByList: parseString(rels.blockingByList),
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
+        extra: {
+          isDebugFieldAllowed: isDebugFieldAllowed(
+            this.config.debugFieldAllowedDIDs,
+            viewer,
+          ),
+        }
       })
     }, new HydrationMap<ProfileViewerState>())
   }

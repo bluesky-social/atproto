@@ -18,6 +18,7 @@ import {
   parseRecord,
   parseString,
   split,
+  isDebugFieldAllowed,
 } from './util'
 
 export type Post = RecordInfo<PostRecord> & {
@@ -31,7 +32,6 @@ export type Post = RecordInfo<PostRecord> & {
    */
   debug?: {
     tags?: string[]
-    pagerank?: number
     [key: string]: unknown
   }
 }
@@ -42,6 +42,12 @@ export type PostViewerState = {
   repost?: string
   bookmarked?: boolean
   threadMuted?: boolean
+  /**
+   * Extra data associated with the viewer
+   */
+  extra?: {
+    isDebugFieldAllowed?: boolean
+  }
 }
 
 export type PostViewerStates = HydrationMap<PostViewerState>
@@ -142,7 +148,7 @@ export class FeedHydrator {
       const tags = new Set<string>(res.records[i].tags ?? [])
       const isDebugAllowed =
         viewer && this.config.debugFieldAllowedDIDs.includes(viewer)
-      const debug = isDebugAllowed ? {tags: Array.from(tags)} : undefined
+      const debug = isDebugAllowed ? { tags: Array.from(tags) } : undefined
       return acc.set(
         uri,
         record
@@ -189,6 +195,12 @@ export class FeedHydrator {
         // but the optional chaining is to ensure it works regardless of the dataplane being update to provide the data.
         bookmarked: !!bookmarks.bookmarks.at(i)?.ref?.key,
         threadMuted: threadMutesMap.get(threadRoot) ?? false,
+        extra: {
+          isDebugFieldAllowed: isDebugFieldAllowed(
+            this.config.debugFieldAllowedDIDs,
+            viewer,
+          ),
+        },
       })
     }, new HydrationMap<PostViewerState>())
   }
