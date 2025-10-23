@@ -468,6 +468,10 @@ describe('pds profile views', () => {
     )
   }
 
+  /*
+   * Default case here, and we test the inclusion of the debug field
+   * in profile-debug.test.ts
+   */
   describe('debug field', () => {
     it('does not include debug field by default', async () => {
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
