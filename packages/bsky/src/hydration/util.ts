@@ -180,7 +180,7 @@ export type DebugFieldObject = Post['debug'] | Actor['debug']
 export function mergeAndSerializeDebugFieldObjects(debugs: DebugFieldObject[]) {
   const merged: Post['debug'] & Actor['debug'] = {}
   for (const debug of debugs) {
-    if (typeof debug === 'object' && debug !== null) {
+    if (!!debug && typeof debug === 'object') {
       Object.assign(merged, debug)
     }
   }
