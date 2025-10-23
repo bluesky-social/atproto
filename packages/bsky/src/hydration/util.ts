@@ -4,8 +4,8 @@ import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
-import { Post } from './feed'
 import { Actor } from './actor'
+import { Post } from './feed'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
   merge(map: HydrationMap<T>): this {

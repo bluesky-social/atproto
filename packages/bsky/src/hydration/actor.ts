@@ -10,10 +10,10 @@ import {
   HydrationMap,
   RecordInfo,
   isActivitySubscriptionEnabled,
+  isDebugFieldAllowed,
   parseRecord,
   parseString,
   safeTakedownRef,
-  isDebugFieldAllowed,
 } from './util'
 
 type AllowActivitySubscriptions = Extract<
@@ -346,7 +346,7 @@ export class ActorHydrator {
             this.config.debugFieldAllowedDIDs,
             viewer,
           ),
-        }
+        },
       })
     }, new HydrationMap<ProfileViewerState>())
   }

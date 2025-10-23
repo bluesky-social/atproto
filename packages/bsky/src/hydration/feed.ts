@@ -15,10 +15,10 @@ import {
   HydrationMap,
   ItemRef,
   RecordInfo,
+  isDebugFieldAllowed,
   parseRecord,
   parseString,
   split,
-  isDebugFieldAllowed,
 } from './util'
 
 export type Post = RecordInfo<PostRecord> & {

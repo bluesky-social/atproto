@@ -6,9 +6,9 @@ import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
 import {
+  type DebugFieldObject,
   RecordInfo,
   mergeAndSerializeDebugFieldObjects,
-  type DebugFieldObject,
 } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
