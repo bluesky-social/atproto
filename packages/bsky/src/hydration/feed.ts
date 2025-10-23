@@ -146,9 +146,12 @@ export class FeedHydrator {
       const hasThreadGate = res.meta[i].hasThreadGate
       const hasPostGate = res.meta[i].hasPostGate
       const tags = new Set<string>(res.records[i].tags ?? [])
-      const isDebugAllowed =
-        viewer && this.config.debugFieldAllowedDIDs.includes(viewer)
-      const debug = isDebugAllowed ? { tags: Array.from(tags) } : undefined
+      const debug = isDebugFieldAllowed(
+        this.config.debugFieldAllowedDIDs,
+        viewer,
+      )
+        ? { tags: Array.from(tags) }
+        : undefined
       return acc.set(
         uri,
         record
