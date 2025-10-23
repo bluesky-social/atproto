@@ -9,7 +9,6 @@ export const recordEventDataSchema = z.object({
   record: z.record(z.string(), z.unknown()).optional(),
   cid: z.string().optional(),
 })
-export type RecordEventData = z.infer<typeof recordEventDataSchema>
 
 export const userEventDataSchema = z.object({
   did: z.string(),
@@ -23,25 +22,66 @@ export const userEventDataSchema = z.object({
     'deleted',
   ]),
 })
-export type UserEventData = z.infer<typeof userEventDataSchema>
 
 export const recordEventSchema = z.object({
   id: z.number(),
   type: z.literal('record'),
   record: recordEventDataSchema,
 })
-export type RecordEvent = z.infer<typeof recordEventSchema>
 
 export const userEventSchema = z.object({
   id: z.number(),
   type: z.literal('user'),
   user: userEventDataSchema,
 })
-export type UserEvent = z.infer<typeof userEventSchema>
 
 export const nexusEventSchema = z.union([recordEventSchema, userEventSchema])
-export type NexusEvent = z.infer<typeof nexusEventSchema>
+
+export type RecordEvent = {
+  id: number
+  type: 'record'
+  action: 'create' | 'update' | 'delete'
+  did: string
+  rev: string
+  collection: string
+  rkey: string
+  record?: Record<string, unknown>
+  cid?: string
+}
+
+export type UserEvent = {
+  id: number
+  type: 'user'
+  did: string
+  handle: string
+  isActive: boolean
+  status: 'active' | 'takendown' | 'suspended' | 'deactivated' | 'deleted'
+}
+
+export type NexusEvent = UserEvent | RecordEvent
 
 export const parseNexusEvent = (data: unknown): NexusEvent => {
-  return nexusEventSchema.parse(data)
+  const parsed = nexusEventSchema.parse(data)
+  if (parsed.type === 'user') {
+    return {
+      id: parsed.id,
+      type: parsed.type,
+      did: parsed.user.did,
+      handle: parsed.user.handle,
+      isActive: parsed.user.is_active,
+      status: parsed.user.status,
+    }
+  } else {
+    return {
+      id: parsed.id,
+      type: parsed.type,
+      action: parsed.record.action,
+      did: parsed.record.did,
+      rev: parsed.record.rev,
+      collection: parsed.record.collection,
+      rkey: parsed.record.rkey,
+      record: parsed.record.record,
+      cid: parsed.record.cid,
+    }
+  }
 }

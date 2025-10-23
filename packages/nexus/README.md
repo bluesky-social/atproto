@@ -7,19 +7,19 @@ Library for connecting with [Nexus](#), a utility for syncing subsets of the AT 
 Before you get started you'll need to get an instance of Nexus running for your app. See more in the [Nexus project](#).
 
 ```ts
-import { Nexus } from '@atproto/nexus'
+import { Nexus, SimpleIndexer } from '@atproto/nexus'
 
 const nexus = new Nexus('http://localhost:8080')
 
-const router = new SimpleRouter()
+const indexer = new SimpleIndexer()
 // handle events pertaining to a repo's account or identity
-router.user(async (evt) => {
+indexer.user(async (evt) => {
   console.log(
     `${evt.user.did} updated identity. handle: ${evt.user.handle}. status: ${evt.user.status}`,
   )
 })
 // handle events pertaining to a the creation, update, or deletion of a record
-router.record(async (evt) => {
+indexer.record(async (evt) => {
   const uri = `at://${evt.record.did}/${evt.record.collection}/${evt.record.rkey}`
   if (evt.record.action === 'create' || evt.record.action === 'update') {
     console.log(
@@ -30,9 +30,9 @@ router.record(async (evt) => {
   }
 })
 // without a handler, errors will end up as unhandled exceptions
-router.error((err) => console.error(err))
+indexer.error((err) => console.error(err))
 
-const channel = nexus.channel(router)
+const channel = nexus.channel(indexer)
 channel.start()
 
 // Open websocket connection. Note that only one connection can be open at a time.

@@ -1,4 +1,4 @@
-import { NexusChannel, NexusHandlers, NexusWebsocketOptions } from './channel'
+import { NexusChannel, NexusHandler, NexusWebsocketOptions } from './channel'
 
 export class Nexus {
   url: string
@@ -7,11 +7,11 @@ export class Nexus {
     this.url = url
   }
 
-  channel(handlers: NexusHandlers, opts?: NexusWebsocketOptions): NexusChannel {
+  channel(handler: NexusHandler, opts?: NexusWebsocketOptions): NexusChannel {
     const url = new URL(this.url)
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
     url.pathname = '/listen'
-    return new NexusChannel(url.toString(), handlers, opts)
+    return new NexusChannel(url.toString(), handler, opts)
   }
 
   async addRepos(dids: string[]) {

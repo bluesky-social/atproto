@@ -7,9 +7,9 @@ export interface HandlerOpts {
   signal: AbortSignal
 }
 
-export interface NexusHandlers {
+export interface NexusHandler {
   onEvent: (evt: NexusEvent, opts?: HandlerOpts) => void | Promise<void>
-  onError?: (err: Error) => void
+  onError: (err: Error) => void
 }
 
 export type NexusWebsocketOptions = ClientOptions & {
@@ -20,23 +20,21 @@ export type NexusWebsocketOptions = ClientOptions & {
 
 export class NexusChannel {
   private ws: WebSocketKeepAlive
+  private handler: NexusHandler
+
   private abortController: AbortController
   private destroyDefer: Deferrable
 
   private bufferedAcks: number[] = []
 
-  private onEvent: (evt: NexusEvent, opts?: HandlerOpts) => void | Promise<void>
-  private onError: (err: Error) => void
-
   constructor(
     url: string,
-    handlers: NexusHandlers,
+    handler: NexusHandler,
     wsOpts: NexusWebsocketOptions = {},
   ) {
-    this.onEvent = handlers.onEvent
-    this.onError = handlers.onError ?? defaultErrorHandler
     this.abortController = new AbortController()
     this.destroyDefer = createDeferrable()
+    this.handler = handler
     this.ws = new WebSocketKeepAlive({
       getUrl: async () => url,
       onReconnect: () => {
@@ -70,7 +68,7 @@ export class NexusChannel {
           this.bufferedAcks = this.bufferedAcks.slice(1)
         }
       } catch (err) {
-        this.onError(
+        this.handler.onError(
           new Error(`failed to send ack for event ${this.bufferedAcks[0]}`, {
             cause: err,
           }),
@@ -100,16 +98,18 @@ export class NexusChannel {
       const data = chunk.toString()
       evt = parseNexusEvent(JSON.parse(data))
     } catch (err) {
-      this.onError(new Error(`Failed to parse message: ${err}`))
+      this.handler.onError(new Error(`Failed to parse message: ${err}`))
       return
     }
 
     try {
-      await this.onEvent(evt, { signal: this.abortController.signal })
+      await this.handler.onEvent(evt, { signal: this.abortController.signal })
       await this.ackEvent(evt.id)
     } catch (err) {
       // Don't ack on error - let Nexus retry
-      this.onError(new Error(`Failed to prcoess event ${evt.id}: ${err}`))
+      this.handler.onError(
+        new Error(`Failed to prcoess event ${evt.id}: ${err}`),
+      )
       return
     }
   }
@@ -118,8 +118,4 @@ export class NexusChannel {
     this.abortController.abort()
     await this.destroyDefer.complete
   }
-}
-
-const defaultErrorHandler = (err: Error) => {
-  throw err
 }
