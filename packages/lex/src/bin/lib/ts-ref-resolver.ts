@@ -101,9 +101,7 @@ export class TsRefResolver {
 
       return {
         varName: `${nsIdentifier}.${hash}`,
-        // @NOTE Prefer the .Record export (instead of .Main) when referencing a
-        // record definition:
-        typeName: `${nsIdentifier}.${useRecordExport(srcDoc, hash) ? 'Record' : ucFirst(hash)}`,
+        typeName: `${nsIdentifier}.${ucFirst(hash)}`,
       }
     },
   )
@@ -238,14 +236,6 @@ function startsWithDigit(str: string) {
 
 function nsidSegmentToIdentifier(segment: string) {
   return segment.split('-').map(ucFirst).join('')
-}
-
-export function useRecordExport(doc: LexiconDocument, hash: string) {
-  return (
-    hash === 'main' &&
-    !Object.hasOwn(doc.defs, 'record') &&
-    doc.defs[hash]?.type === 'record'
-  )
 }
 
 function asSafeDefinitionIdentifier(hash: string) {

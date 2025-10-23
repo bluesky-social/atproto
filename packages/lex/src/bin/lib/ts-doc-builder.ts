@@ -26,7 +26,7 @@ import {
 } from '../../doc/index.js'
 import { l } from '../../lex/index.js'
 import { isSafeIdentifier } from './ts-lang.js'
-import { TsRefResolver, useRecordExport } from './ts-ref-resolver.js'
+import { TsRefResolver } from './ts-ref-resolver.js'
 import { ucFirst } from './util.js'
 
 export type TsDocBuilderOptions = {
@@ -325,15 +325,6 @@ export class TsDocBuilder {
         `l.record<${key}, ${ref.typeName}>(${key}, $nsid, ${objectSchema})`,
       ),
     })
-
-    // Also export a "Record" type alias for the record definition, if not
-    // already defined in the lexicon (to avoid conflicts)
-    if (useRecordExport(this.doc, hash)) {
-      this.file.addExportDeclaration({
-        isTypeOnly: true,
-        namedExports: [{ name: ref.typeName, alias: 'Record' }],
-      })
-    }
 
     if (hash === 'main') {
       this.addObjectUtils(ref.varName)
