@@ -22,7 +22,7 @@ export class SimpleRouter implements NexusHandlers {
     this.errorHandler = fn
   }
 
-  async onEvent(evt: NexusEvent, opts: HandlerOpts): Promise<void> {
+  async onEvent(evt: NexusEvent, opts?: HandlerOpts): Promise<void> {
     if (evt.type === 'record') {
       this.recordHandler?.(evt, opts)
     } else {
