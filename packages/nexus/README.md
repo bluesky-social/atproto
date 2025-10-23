@@ -11,41 +11,35 @@ import { Nexus } from '@atproto/nexus'
 
 const nexus = new Nexus('http://localhost:8080')
 
+const router = new SimpleRouter()
+// handle events pertaining to a repo's account or identity
+router.user(async (evt) => {
+  console.log(
+    `${evt.user.did} updated identity. handle: ${evt.user.handle}. status: ${evt.user.status}`,
+  )
+})
+// handle events pertaining to a the creation, update, or deletion of a record
+router.record(async (evt) => {
+  const uri = `at://${evt.record.did}/${evt.record.collection}/${evt.record.rkey}`
+  if (evt.record.action === 'create' || evt.record.action === 'update') {
+    console.log(
+      `record created/updated at ${uri}: ${JSON.stringify(evt.record.record)}`,
+    )
+  } else {
+    console.log(`record deleted at ${uri}`)
+  }
+})
+// without a handler, errors will end up as unhandled exceptions
+router.error((err) => console.error(err))
+
+const channel = nexus.channel(router)
+channel.start()
+
 // Open websocket connection. Note that only one connection can be open at a time.
+// The library will handle reconnects and keeping the websocket alive
 const channel = nexus.connect()
 
-// Process incoming events
-channel.on('event', async (evt) => {
-  if (evt.isUserEvt()) {
-    console.log(
-      `${evt.data.did} updated identity. handle: ${evt.data.handle}. status: ${evt.data.status}`,
-    )
-  } else if (evt.isRecordEvt()) {
-    if (evt.data.action === 'create' || evt.data.action === 'update') {
-      console.log(
-        `record created/updated at ${evt.uri.toString()}: ${JSON.stringify(evt.data.record)}`,
-      )
-    } else {
-      console.log(`record deleted at ${evt.uri.toString()}`)
-    }
-    console.log(`${evt.data.did}`)
-  }
-  // Unless acks are disabled in Nexus, every event must be acked after processing.
-  // If left unacked, Nexus will retry sending.
-  await evt.ack()
-  // alternately, you can send the ack on the channel using just the event id
-  await channel.ackEvent(evt.id)
-})
-
-// If the websocket connection drops, the client will attempt to reconnect automatically.
-channel.on('reconnecting', (_code, reason) => {
-  console.info(`Channel reconnecting: ${reason}`)
-})
-
-// Log errors that occur on the channel
-channel.on('error', (err) => {
-  console.error('Error on channel', err)
-})
+channel.start()
 
 // dyanmically add/remove repos from the channel
 // as you add repos, they will be backfilled and all existing records will be sent over the channel
@@ -53,7 +47,7 @@ await nexus.addRepos(['did:example:alice'])
 await nexus.removeRepos(['did:example:bob'])
 
 // on shutdown
-channel.close()
+await channel.destory()
 ```
 
 ## Usage with webhooks
@@ -66,7 +60,6 @@ import { Nexus, parseNexusEvent } from '@atproto/nexus'
 const app = express()
 app.use(express.json())
 
-// Set up webhook endpoint
 app.post('/webhook', async (req, res) => {
   try {
     const evt = parseNexusEvent(req.body)
