@@ -467,4 +467,20 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(did), encoding: 'application/json' },
     )
   }
+
+  describe('debug field', () => {
+    it('does not include debug field by default', async () => {
+      const { data: profile } = await agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+
+      expect(profile.debug).not.toBeDefined()
+    })
+  })
 })
