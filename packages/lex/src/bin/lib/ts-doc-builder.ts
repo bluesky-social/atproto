@@ -428,11 +428,12 @@ export class TsDocBuilder {
         namedExports: [
           {
             name: ref.varName,
-            alias: isSafeIdentifier(pub.varName)
-              ? ref.varName === pub.varName
+            alias:
+              ref.varName === pub.varName
                 ? undefined
-                : pub.varName
-              : JSON.stringify(pub.varName),
+                : isSafeIdentifier(pub.varName)
+                  ? pub.varName
+                  : JSON.stringify(pub.varName),
           },
         ],
       })
