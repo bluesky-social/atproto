@@ -51,8 +51,8 @@
       "types": "./dist/lex/index.d.ts"
     },
     "./doc": {
-      "require": "./dist/doc/doc.js",
-      "types": "./dist/doc/doc.d.ts"
+      "require": "./dist/doc/index.js",
+      "types": "./dist/doc/index.d.ts"
     }
   }
 }
