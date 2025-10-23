@@ -84,7 +84,7 @@ export interface ServerConfigValues {
   proxyMaxRetries?: number
   proxyPreferCompressed?: boolean
   kws?: KwsConfig
-  debugFieldAllowedDIDs: Set<string>
+  debugFieldAllowedDids: Set<string>
 }
 
 export class ServerConfig {
@@ -277,7 +277,7 @@ export class ServerConfig {
       }
     }
 
-    const debugFieldAllowedDIDs = new Set(
+    const debugFieldAllowedDids = new Set(
       envList(process.env.BSKY_DEBUG_FIELD_ALLOWED_DIDS),
     )
 
@@ -339,7 +339,7 @@ export class ServerConfig {
       proxyMaxRetries,
       proxyPreferCompressed,
       kws,
-      debugFieldAllowedDIDs,
+      debugFieldAllowedDids,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -579,8 +579,8 @@ export class ServerConfig {
     return this.cfg.kws
   }
 
-  get debugFieldAllowedDIDs() {
-    return this.cfg.debugFieldAllowedDIDs
+  get debugFieldAllowedDids() {
+    return this.cfg.debugFieldAllowedDids
   }
 }
 

@@ -120,7 +120,7 @@ export type ProfileAggs = HydrationMap<ProfileAgg>
  * Additional config passed from `ServerConfig` to the `FeedHydrator` instance.
  */
 export type ActorHydratorConfig = {
-  debugFieldAllowedDIDs: readonly string[]
+  debugFieldAllowedDids: Set<string>
 }
 
 export class ActorHydrator {
@@ -243,7 +243,7 @@ export class ActorHydrator {
       }
 
       const debug = isDebugFieldAllowed(
-        this.config.debugFieldAllowedDIDs,
+        this.config.debugFieldAllowedDids,
         opts.viewer,
       )
         ? { pagerank: actor.pagerank }
@@ -343,7 +343,7 @@ export class ActorHydrator {
         followedBy: parseString(rels.followedBy),
         extra: {
           isDebugFieldAllowed: isDebugFieldAllowed(
-            this.config.debugFieldAllowedDIDs,
+            this.config.debugFieldAllowedDids,
             viewer,
           ),
         },

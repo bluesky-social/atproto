@@ -161,7 +161,7 @@ export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
  * Values within this config object may be passed to other sub-hydrators.
  */
 export type HydratorConfig = {
-  debugFieldAllowedDIDs: readonly string[]
+  debugFieldAllowedDids: Set<string>
 }
 
 export class Hydrator {
@@ -174,15 +174,13 @@ export class Hydrator {
   constructor(
     public dataplane: DataPlaneClient,
     serviceLabelers: string[] = [],
-    config: {
-      debugFieldAllowedDIDs: readonly string[]
-    },
+    config: HydratorConfig,
   ) {
     this.actor = new ActorHydrator(dataplane, {
-      debugFieldAllowedDIDs: config.debugFieldAllowedDIDs,
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
     })
     this.feed = new FeedHydrator(dataplane, {
-      debugFieldAllowedDIDs: config.debugFieldAllowedDIDs,
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
     })
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)

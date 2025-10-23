@@ -113,7 +113,7 @@ export type FeedItem = {
  * Additional config passed from `ServerConfig` to the `FeedHydrator` instance.
  */
 export type FeedHydratorConfig = {
-  debugFieldAllowedDIDs: readonly string[]
+  debugFieldAllowedDids: Set<string>
 }
 
 export class FeedHydrator {
@@ -147,7 +147,7 @@ export class FeedHydrator {
       const hasPostGate = res.meta[i].hasPostGate
       const tags = new Set<string>(res.records[i].tags ?? [])
       const debug = isDebugFieldAllowed(
-        this.config.debugFieldAllowedDIDs,
+        this.config.debugFieldAllowedDids,
         viewer,
       )
         ? { tags: Array.from(tags) }
@@ -200,7 +200,7 @@ export class FeedHydrator {
         threadMuted: threadMutesMap.get(threadRoot) ?? false,
         extra: {
           isDebugFieldAllowed: isDebugFieldAllowed(
-            this.config.debugFieldAllowedDIDs,
+            this.config.debugFieldAllowedDids,
             viewer,
           ),
         },

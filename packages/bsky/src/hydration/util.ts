@@ -168,11 +168,11 @@ export const isActivitySubscriptionEnabled = ({
 }): boolean => post || reply
 
 export function isDebugFieldAllowed(
-  allowedDids: readonly string[],
+  allowedDids: Set<string>,
   did?: string | null,
 ) {
   if (!did) return false
-  return allowedDids.includes(did)
+  return allowedDids.has(did)
 }
 
 export type DebugFieldObject = Post['debug'] | Actor['debug'] | undefined

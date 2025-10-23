@@ -124,7 +124,7 @@ export class BskyAppView {
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
-      debugFieldAllowedDIDs: [...config.debugFieldAllowedDIDs],
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
     })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,

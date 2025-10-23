@@ -85,7 +85,7 @@ export class TestBsky {
       disableSsrfProtection: true,
       threadTagsBumpDown: new Set(),
       threadTagsHide: new Set(),
-      debugFieldAllowedDIDs: new Set(),
+      debugFieldAllowedDids: new Set(),
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
       etcdHosts: [],
