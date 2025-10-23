@@ -175,7 +175,7 @@ export function isDebugFieldAllowed(
   return allowedDids.includes(did)
 }
 
-export type DebugFieldObject = Post['debug'] | Actor['debug']
+export type DebugFieldObject = Post['debug'] | Actor['debug'] | undefined
 
 export function mergeAndSerializeDebugFieldObjects(debugs: DebugFieldObject[]) {
   const merged: Post['debug'] & Actor['debug'] = {}
