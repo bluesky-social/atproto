@@ -347,15 +347,15 @@ const lexiconLanguageDict = l.dict(lexiconLanguageSchema, l.string())
 
 export type LexiconLanguageDict = l.Infer<typeof lexiconLanguageDict>
 
-const lexiconPermissionSchema = l.intersection(
-  l.object(
-    {
-      type: l.literal('permission'),
-      resource: l.string({ minLength: 1 }),
-    },
-    { required: ['type', 'resource'] },
-  ),
-  l.dict(l.string(), l.parameterSchema),
+const lexiconPermissionSchema = l.object(
+  {
+    type: l.literal('permission'),
+    resource: l.string({ minLength: 1 }),
+  },
+  {
+    required: ['type', 'resource'],
+    unknownProperties: l.dict(l.string(), l.parameterSchema),
+  },
 )
 
 export type LexiconPermission = l.Infer<typeof lexiconPermissionSchema>
@@ -415,12 +415,14 @@ export const lexiconDocumentSchema = l.object(
     id: l.string({ format: 'nsid' }),
     revision: l.integer(),
     description: l.string(),
-    defs: l.intersection(
-      l.object({ main: l.discriminatedUnion('type', MAIN_LEXICON_SCHEMAS) }),
-      l.dict(
-        l.string({ minLength: 1 }),
-        l.discriminatedUnion('type', USER_LEXICON_SCHEMAS),
-      ),
+    defs: l.object(
+      { main: l.discriminatedUnion('type', MAIN_LEXICON_SCHEMAS) },
+      {
+        unknownProperties: l.dict(
+          l.string({ minLength: 1 }),
+          l.discriminatedUnion('type', USER_LEXICON_SCHEMAS),
+        ),
+      },
     ),
   },
   {

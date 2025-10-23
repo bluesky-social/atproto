@@ -1,8 +1,4 @@
 import { $Type, $type, Infer, RecordKey, Validator } from './core.js'
-import {
-  IntersectionSchema,
-  IntersectionSchemaObject,
-} from './schema/intersection.js'
 import { LiteralSchema } from './schema/literal.js'
 import { Subscription } from './schema/subscription.js'
 import {
@@ -131,7 +127,7 @@ export function object<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function dict<const K extends StringSchema, const V extends Validator>(
+export function dict<const K extends Validator, const V extends Validator>(
   key: K,
   value: V,
 ) {
@@ -152,14 +148,6 @@ export function union<const Options extends UnionSchemaOptions>(
   validators: Options,
 ) {
   return new UnionSchema<Options>(validators)
-}
-
-/*@__NO_SIDE_EFFECTS__*/
-export function intersection<
-  const Props extends IntersectionSchemaObject,
-  const Extra extends DictSchema,
->(props: Props, extra: Extra) {
-  return new IntersectionSchema<Props, Extra>(props, extra)
 }
 
 /*@__NO_SIDE_EFFECTS__*/

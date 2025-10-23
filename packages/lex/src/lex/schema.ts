@@ -18,7 +18,6 @@ export * from './schema/unknown.js'
 
 // Composite Types
 export * from './schema/discriminated-union.js'
-export * from './schema/intersection.js'
 export * from './schema/ref.js'
 export * from './schema/union.js'
 
