@@ -1,0 +1,40 @@
+{
+  "name": "@atproto/nexus",
+  "version": "0.1.35",
+  "license": "MIT",
+  "description": "atproto nexus client",
+  "keywords": [
+    "atproto",
+    "nexus",
+    "sync",
+    "firehose",
+    "relay"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/sync"
+  },
+  "engines": {
+    "node": ">=18.7.0"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "../dev-infra/with-test-redis-and-db.sh jest"
+  },
+  "dependencies": {
+    "@atproto/common": "workspace:^",
+    "@atproto/syntax": "workspace:^",
+    "typed-emitter": "^2.1.0",
+    "ws": "^8.12.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.4",
+    "jest": "^28.1.2",
+    "typescript": "^5.6.3"
+  }
+}
