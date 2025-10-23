@@ -952,7 +952,9 @@ export class Views {
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
         : undefined,
-      debug: this.debugField([post.debug, actor?.debug], { viewer }),
+      debug: this.debugField([{ post: post.debug }, { author: actor?.debug }], {
+        viewer,
+      }),
     }
   }
 
