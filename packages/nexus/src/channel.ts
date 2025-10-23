@@ -3,8 +3,12 @@ import { Deferrable, createDeferrable } from '@atproto/common'
 import { NexusEvent, parseNexusEvent } from './events'
 import { WebSocketKeepAlive } from './websocket-keepalive'
 
+export interface HandlerOpts {
+  signal: AbortSignal
+}
+
 export interface NexusHandlers {
-  onEvent: (evt: NexusEvent) => void | Promise<void>
+  onEvent: (evt: NexusEvent, opts?: HandlerOpts) => void | Promise<void>
   onError?: (err: Error) => void
 }
 
@@ -21,7 +25,7 @@ export class NexusChannel {
 
   private bufferedAcks: number[] = []
 
-  private onEvent: (evt: NexusEvent) => void | Promise<void>
+  private onEvent: (evt: NexusEvent, opts?: HandlerOpts) => void | Promise<void>
   private onError: (err: Error) => void
 
   constructor(
@@ -101,7 +105,7 @@ export class NexusChannel {
     }
 
     try {
-      await this.onEvent(evt)
+      await this.onEvent(evt, { signal: this.abortController.signal })
       await this.ackEvent(evt.id)
     } catch (err) {
       // Don't ack on error - let Nexus retry
