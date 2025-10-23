@@ -45,7 +45,7 @@ export interface PostView {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   threadgate?: ThreadgateView
-  /** Debug information for internal Bluesky development purposes only */
+  /** Debug information for internal development */
   debug?: string
 }
 

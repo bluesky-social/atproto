@@ -34,7 +34,7 @@ export interface ProfileViewBasic {
   createdAt?: string
   verification?: VerificationState
   status?: StatusView
-  /** Debug information for internal Bluesky development purposes only */
+  /** Debug information for internal development */
   debug?: string
 }
 
@@ -63,7 +63,7 @@ export interface ProfileView {
   labels?: ComAtprotoLabelDefs.Label[]
   verification?: VerificationState
   status?: StatusView
-  /** Debug information for internal Bluesky development purposes only */
+  /** Debug information for internal development */
   debug?: string
 }
 
@@ -99,7 +99,7 @@ export interface ProfileViewDetailed {
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   verification?: VerificationState
   status?: StatusView
-  /** Debug information for internal Bluesky development purposes only */
+  /** Debug information for internal development */
   debug?: string
 }
 

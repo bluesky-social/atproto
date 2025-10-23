@@ -35,7 +35,7 @@
         },
         "debug": {
           "type": "string",
-          "description": "Debug information for internal Bluesky development purposes only"
+          "description": "Debug information for internal development"
         }
       }
     },
@@ -78,7 +78,7 @@
         },
         "debug": {
           "type": "string",
-          "description": "Debug information for internal Bluesky development purposes only"
+          "description": "Debug information for internal development"
         }
       }
     },
@@ -134,7 +134,7 @@
         },
         "debug": {
           "type": "string",
-          "description": "Debug information for internal Bluesky development purposes only"
+          "description": "Debug information for internal development"
         }
       }
     },

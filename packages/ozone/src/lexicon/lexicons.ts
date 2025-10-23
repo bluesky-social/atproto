@@ -67,8 +67,7 @@ export const schemaDict = {
           },
           debug: {
             type: 'string',
-            description:
-              'Debug information for internal Bluesky development purposes only',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -134,8 +133,7 @@ export const schemaDict = {
           },
           debug: {
             type: 'string',
-            description:
-              'Debug information for internal Bluesky development purposes only',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -226,8 +224,7 @@ export const schemaDict = {
           },
           debug: {
             type: 'string',
-            description:
-              'Debug information for internal Bluesky development purposes only',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -1863,8 +1860,7 @@ export const schemaDict = {
           },
           debug: {
             type: 'string',
-            description:
-              'Debug information for internal Bluesky development purposes only',
+            description: 'Debug information for internal development',
           },
         },
       },

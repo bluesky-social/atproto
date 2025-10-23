@@ -28,7 +28,7 @@ export type Post = RecordInfo<PostRecord> & {
   hasPostGate: boolean
   tags: Set<string>
   /**
-   * Debug information for internal Bluesky development purposes only
+   * Debug information for internal development
    */
   debug?: {
     tags?: string[]

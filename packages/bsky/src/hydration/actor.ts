@@ -40,7 +40,7 @@ export type Actor = {
   status?: RecordInfo<StatusRecord>
   allowActivitySubscriptionsFrom: AllowActivitySubscriptions
   /**
-   * Debug information for internal Bluesky development purposes only
+   * Debug information for internal development
    */
   debug?: {
     pagerank?: number
