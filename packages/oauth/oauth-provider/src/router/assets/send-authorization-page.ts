@@ -54,6 +54,9 @@ export function sendAuthorizePageFactory(customization: Customization) {
     return sendWebPage(res, {
       meta: [{ name: 'robots', content: 'noindex' }],
       body: html`<div id="root"></div>`,
+      bodyAttrs: {
+        class: 'bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
+      },
       csp,
       coep,
       scripts: [script, ...scripts],
