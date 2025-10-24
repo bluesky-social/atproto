@@ -29,7 +29,7 @@
         "val": {
           "type": "string",
           "maxLength": 128,
-          "description": "The short string name of the value or type of this label."
+          "description": "The identifier for this label, see labelValueDefintion's identifier property."
         },
         "neg": {
           "type": "boolean",
@@ -71,7 +71,7 @@
         "val": {
           "type": "string",
           "maxLength": 128,
-          "description": "The short string name of the value or type of this label."
+          "description": "The identifier for this label, see labelValueDefintion's identifier property."
         }
       }
     },
