@@ -9,7 +9,7 @@ describe('profile views w/ debug field', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_profile',
+      dbPostgresSchema: 'bsky_views_profile_debug',
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
