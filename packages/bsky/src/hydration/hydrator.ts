@@ -229,7 +229,6 @@ export class Hydrator {
       this.actor.getActors(dids, {
         includeTakedowns,
         skipCacheForDids: ctx.skipCacheForViewer,
-        viewer: ctx.viewer,
       }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
@@ -359,7 +358,6 @@ export class Hydrator {
       this.actor.getActors(includeAuthorDids, {
         includeTakedowns: ctx.includeTakedowns,
         skipCacheForDids: ctx.skipCacheForViewer,
-        viewer: ctx.viewer,
       }),
     ])
 

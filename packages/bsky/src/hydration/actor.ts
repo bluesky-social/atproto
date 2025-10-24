@@ -159,7 +159,6 @@ export class ActorHydrator {
     opts: {
       includeTakedowns?: boolean
       skipCacheForDids?: string[]
-      viewer?: string | null
     } = {},
   ): Promise<Actors> {
     const { includeTakedowns = false, skipCacheForDids } = opts
