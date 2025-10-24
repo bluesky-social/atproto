@@ -8,7 +8,10 @@ import {
 import { isPureObject } from '../lib/is-object.js'
 import { TypedRefSchema } from './typed-ref.js'
 
-export type UnknownTypedObject = { $type: UnknownString }
+export type UnknownTypedObject = { $type: UnknownString } & Record<
+  string,
+  never
+>
 
 type TypedRefSchemasToUnion<T extends readonly TypedRefSchema[]> = {
   [K in keyof T]: Infer<T[K]>
