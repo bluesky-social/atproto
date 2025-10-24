@@ -1299,7 +1299,8 @@ export class Hydrator {
       dids: availableDids,
       redact: vals.labelers.redact,
     }
-    const includeDebugField = !!vals.viewer && this.config.debugFieldAllowedDids.has(vals.viewer)
+    const includeDebugField =
+      !!vals.viewer && this.config.debugFieldAllowedDids.has(vals.viewer)
     return new HydrateCtx({
       labelers: availableLabelers,
       viewer: vals.viewer,

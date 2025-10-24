@@ -962,8 +962,9 @@ export class Views {
           Object.assign(merged, debug)
         }
       }
-    } catch {}
-    return merged
+    } finally {
+      return merged
+    }
   }
 
   feedViewPost(

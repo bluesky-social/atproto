@@ -103,10 +103,7 @@ export type FeedItem = {
 }
 
 export class FeedHydrator {
-  constructor(
-    public dataplane: DataPlaneClient,
-  ) {
-  }
+  constructor(public dataplane: DataPlaneClient) {}
 
   async getPosts(
     uris: string[],
