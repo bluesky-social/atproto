@@ -15,7 +15,6 @@ import {
   HydrationMap,
   ItemRef,
   RecordInfo,
-  isDebugFieldAllowed,
   parseRecord,
   parseString,
   split,
@@ -42,12 +41,6 @@ export type PostViewerState = {
   repost?: string
   bookmarked?: boolean
   threadMuted?: boolean
-  /**
-   * Extra data associated with the viewer
-   */
-  extra?: {
-    isDebugFieldAllowed?: boolean
-  }
 }
 
 export type PostViewerStates = HydrationMap<PostViewerState>
@@ -109,28 +102,16 @@ export type FeedItem = {
   authorPinned?: boolean
 }
 
-/**
- * Additional config passed from `ServerConfig` to the sub-hydrator instance.
- */
-export type FeedHydratorConfig = {
-  debugFieldAllowedDids: Set<string>
-}
-
 export class FeedHydrator {
-  private config: FeedHydratorConfig
-
   constructor(
     public dataplane: DataPlaneClient,
-    config: FeedHydratorConfig,
   ) {
-    this.config = config
   }
 
   async getPosts(
     uris: string[],
     includeTakedowns = false,
     given = new HydrationMap<Post>(),
-    viewer?: string | null,
   ): Promise<Posts> {
     const [have, need] = split(uris, (uri) => given.has(uri))
     const base = have.reduce(
@@ -146,12 +127,7 @@ export class FeedHydrator {
       const hasThreadGate = res.meta[i].hasThreadGate
       const hasPostGate = res.meta[i].hasPostGate
       const tags = new Set<string>(res.records[i].tags ?? [])
-      const debug = isDebugFieldAllowed(
-        this.config.debugFieldAllowedDids,
-        viewer,
-      )
-        ? { tags: Array.from(tags) }
-        : undefined
+      const debug = { tags: Array.from(tags) }
       return acc.set(
         uri,
         record
@@ -198,12 +174,6 @@ export class FeedHydrator {
         // but the optional chaining is to ensure it works regardless of the dataplane being update to provide the data.
         bookmarked: !!bookmarks.bookmarks.at(i)?.ref?.key,
         threadMuted: threadMutesMap.get(threadRoot) ?? false,
-        extra: {
-          isDebugFieldAllowed: isDebugFieldAllowed(
-            this.config.debugFieldAllowedDids,
-            viewer,
-          ),
-        },
       })
     }, new HydrationMap<PostViewerState>())
   }

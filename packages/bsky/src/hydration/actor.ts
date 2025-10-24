@@ -10,7 +10,6 @@ import {
   HydrationMap,
   RecordInfo,
   isActivitySubscriptionEnabled,
-  isDebugFieldAllowed,
   parseRecord,
   parseString,
   safeTakedownRef,
@@ -79,12 +78,6 @@ export type ProfileViewerState = {
   blockingByList?: string
   following?: string
   followedBy?: string
-  /**
-   * Extra data associated with the viewer
-   */
-  extra?: {
-    isDebugFieldAllowed?: boolean
-  }
 }
 
 export type ProfileViewerStates = HydrationMap<ProfileViewerState>
@@ -116,22 +109,8 @@ export type ProfileAgg = {
 
 export type ProfileAggs = HydrationMap<ProfileAgg>
 
-/**
- * Additional config passed from `ServerConfig` to the sub-hydrator instance.
- */
-export type ActorHydratorConfig = {
-  debugFieldAllowedDids: Set<string>
-}
-
 export class ActorHydrator {
-  private config: ActorHydratorConfig
-
-  constructor(
-    public dataplane: DataPlaneClient,
-    config: ActorHydratorConfig,
-  ) {
-    this.config = config
-  }
+  constructor( public dataplane: DataPlaneClient,) { }
 
   async getRepoRevSafe(did: string | null): Promise<string | null> {
     if (!did) return null
@@ -242,12 +221,7 @@ export class ActorHydrator {
         }
       }
 
-      const debug = isDebugFieldAllowed(
-        this.config.debugFieldAllowedDids,
-        opts.viewer,
-      )
-        ? { pagerank: actor.pagerank }
-        : undefined
+      const debug = { pagerank: actor.pagerank }
 
       return acc.set(did, {
         did,
@@ -341,12 +315,6 @@ export class ActorHydrator {
         blockingByList: parseString(rels.blockingByList),
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
-        extra: {
-          isDebugFieldAllowed: isDebugFieldAllowed(
-            this.config.debugFieldAllowedDids,
-            viewer,
-          ),
-        },
       })
     }, new HydrationMap<ProfileViewerState>())
   }

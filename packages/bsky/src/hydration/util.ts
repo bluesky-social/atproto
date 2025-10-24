@@ -164,23 +164,3 @@ export const isActivitySubscriptionEnabled = ({
   post: boolean
   reply: boolean
 }): boolean => post || reply
-
-export function isDebugFieldAllowed(
-  allowedDids: Set<string>,
-  did?: string | null,
-) {
-  if (!did) return false
-  return allowedDids.has(did)
-}
-
-export type DebugFieldObject = { [key: string]: unknown } | undefined
-
-export function mergeDebugFieldObjects(debugs: DebugFieldObject[]) {
-  const merged: DebugFieldObject = {}
-  for (const debug of debugs) {
-    if (!!debug && typeof debug === 'object') {
-      Object.assign(merged, debug)
-    }
-  }
-  return merged
-}

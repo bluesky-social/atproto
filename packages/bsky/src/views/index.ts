@@ -5,11 +5,7 @@ import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
-import {
-  type DebugFieldObject,
-  RecordInfo,
-  mergeDebugFieldObjects,
-} from '../hydration/util'
+import { RecordInfo } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
@@ -344,7 +340,6 @@ export class Views {
         record: actor.profile,
       }),
     ]
-    const viewerState = state.profileViewers?.get(did)
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -372,7 +367,9 @@ export class Views {
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
-      debug: this.debugField([actor.debug], { viewer: viewerState }),
+      debug: state.ctx?.includeDebugField
+        ? this.debugField([actor.debug])
+        : undefined,
     }
   }
 
@@ -908,7 +905,6 @@ export class Views {
     if (!post) return
     const parsedUri = new AtUri(uri)
     const authorDid = parsedUri.hostname
-    const actor = state.actors?.get(authorDid)
     const author = this.profileBasic(authorDid, state)
     if (!author) return
     const aggs = state.postAggs?.get(uri)
@@ -952,22 +948,22 @@ export class Views {
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
         : undefined,
-      debug: this.debugField([{ post: post.debug }, { author: actor?.debug }], {
-        viewer,
-      }),
+      debug: state.ctx?.includeDebugField
+        ? this.debugField([{ post: post.debug }, { author: author.debug }])
+        : undefined,
     }
   }
 
-  debugField<
-    AnyViewerState extends { extra?: { isDebugFieldAllowed?: boolean } },
-  >(debugs: DebugFieldObject[], opts: { viewer?: AnyViewerState | null }) {
-    if (!opts.viewer) return undefined
-    if (!opts.viewer.extra?.isDebugFieldAllowed) return undefined
+  debugField<D = { [key: string]: unknown } | undefined>(debugs: D[]) {
+    const merged: { [key: string]: unknown } = {}
     try {
-      return mergeDebugFieldObjects(debugs)
-    } catch {
-      return undefined
-    }
+      for (const debug of debugs) {
+        if (!!debug && typeof debug === 'object') {
+          Object.assign(merged, debug)
+        }
+      }
+    } catch {}
+    return merged
   }
 
   feedViewPost(

@@ -80,6 +80,7 @@ export class HydrateCtx {
   includeTakedowns = this.vals.includeTakedowns
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
+  includeDebugField = this.vals.includeDebugField
   constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
@@ -97,6 +98,7 @@ export type HydrateCtxVals = {
   includeTakedowns?: boolean
   includeActorTakedowns?: boolean
   include3pBlocks?: boolean
+  includeDebugField?: boolean
 }
 
 export type HydrationState = {
@@ -170,18 +172,16 @@ export class Hydrator {
   graph: GraphHydrator
   label: LabelHydrator
   serviceLabelers: Set<string>
+  config: HydratorConfig
 
   constructor(
     public dataplane: DataPlaneClient,
     serviceLabelers: string[] = [],
     config: HydratorConfig,
   ) {
-    this.actor = new ActorHydrator(dataplane, {
-      debugFieldAllowedDids: config.debugFieldAllowedDids,
-    })
-    this.feed = new FeedHydrator(dataplane, {
-      debugFieldAllowedDids: config.debugFieldAllowedDids,
-    })
+    this.config = config
+    this.actor = new ActorHydrator(dataplane)
+    this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
     this.serviceLabelers = new Set(serviceLabelers)
@@ -1299,11 +1299,13 @@ export class Hydrator {
       dids: availableDids,
       redact: vals.labelers.redact,
     }
+    const includeDebugField = !!vals.viewer && this.config.debugFieldAllowedDids.has(vals.viewer)
     return new HydrateCtx({
       labelers: availableLabelers,
       viewer: vals.viewer,
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
+      includeDebugField,
     })
   }
 
