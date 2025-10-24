@@ -14,19 +14,25 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.notification.declaration'
 
-export interface Record {
+export interface Main {
   $type: 'app.bsky.notification.declaration'
   /** A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'. */
   allowSubscriptions: 'followers' | 'mutuals' | 'none' | (string & {})
   [k: string]: unknown
 }
 
-const hashRecord = 'main'
+const hashMain = 'main'
 
-export function isRecord<V>(v: V) {
-  return is$typed(v, id, hashRecord)
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
 }
 
-export function validateRecord<V>(v: V) {
-  return validate<Record & V>(v, id, hashRecord, true)
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true)
+}
+
+export {
+  type Main as Record,
+  isMain as isRecord,
+  validateMain as validateRecord,
 }

@@ -14,19 +14,25 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.lexicon.schema'
 
-export interface Record {
+export interface Main {
   $type: 'com.atproto.lexicon.schema'
   /** Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system. */
   lexicon: number
   [k: string]: unknown
 }
 
-const hashRecord = 'main'
+const hashMain = 'main'
 
-export function isRecord<V>(v: V) {
-  return is$typed(v, id, hashRecord)
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
 }
 
-export function validateRecord<V>(v: V) {
-  return validate<Record & V>(v, id, hashRecord, true)
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true)
+}
+
+export {
+  type Main as Record,
+  isMain as isRecord,
+  validateMain as validateRecord,
 }
