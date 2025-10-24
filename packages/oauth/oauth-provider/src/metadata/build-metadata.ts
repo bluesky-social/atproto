@@ -106,8 +106,8 @@ export function buildMetadata(
 
     revocation_endpoint: new URL('/oauth/revoke', issuer).href,
 
-    introspection_endpoint: new URL('/oauth/introspect', issuer).href,
-
+    // @TODO Should we implement these endpoints?
+    // introspection_endpoint: new URL('/oauth/introspect', issuer).href,
     // end_session_endpoint: new URL('/oauth/logout', issuer).href,
 
     // https://datatracker.ietf.org/doc/html/rfc9126#section-5
