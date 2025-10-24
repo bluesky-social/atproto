@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.17.4
+
+### Patch Changes
+
+- [#4299](https://github.com/bluesky-social/atproto/pull/4299) [`a8e307ef4`](https://github.com/bluesky-social/atproto/commit/a8e307ef4851b164ee38bb5149343631e329f143) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Record types are now exported as both `.Record` (as they used to) and `.Main` (for consistency)
+
 ## 0.17.3
 
 ### Patch Changes
