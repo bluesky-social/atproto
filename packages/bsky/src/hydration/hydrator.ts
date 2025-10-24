@@ -462,7 +462,6 @@ export class Hydrator {
       uris,
       ctx.includeTakedowns,
       state.posts,
-      ctx.viewer,
     )
     addPostsToHydrationState(postsLayer0)
 
