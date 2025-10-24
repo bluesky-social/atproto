@@ -957,12 +957,11 @@ export class Views {
   debugField<D = { [key: string]: unknown } | undefined>(debugs: D[]) {
     const merged: { [key: string]: unknown } = {}
     try {
-      for (const debug of debugs) {
-        if (!!debug && typeof debug === 'object') {
-          Object.assign(merged, debug)
-        }
-      }
-    } finally {
+      return debugs.reduce(
+        (acc, debug) => ({ ...acc, ...(debug || {}) }),
+        merged,
+      )
+    } catch {
       return merged
     }
   }
