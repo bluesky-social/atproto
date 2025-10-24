@@ -5,7 +5,6 @@ import {
   ValidationResult,
   Validator,
 } from '../core.js'
-import { cachedGetter } from '../lib/decorators.js'
 import { isPureObject } from '../lib/is-object.js'
 import { DictSchema } from './dict.js'
 
@@ -85,9 +84,18 @@ export class ObjectSchema<
     super()
   }
 
-  @cachedGetter
   get validatorsMap(): Map<string, Validator> {
-    return new Map(Object.entries(this.validators))
+    const map = new Map(Object.entries(this.validators))
+
+    // Cache the map on the instance (to avoid re-creating it)
+    Object.defineProperty(this, 'validatorsMap', {
+      value: map,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
+    return map
   }
 
   protected override validateInContext(

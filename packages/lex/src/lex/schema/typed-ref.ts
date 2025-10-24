@@ -1,5 +1,4 @@
 import { ValidationContext, ValidationResult, Validator } from '../core.js'
-import { cachedGetter } from '../lib/decorators.js'
 
 // Basically a RecordSchema or TypedObjectSchema
 export type TypedRefSchemaValidator<V extends { $type?: string } = any> =
@@ -11,24 +10,37 @@ export type TypedRefSchemaGetter<V extends { $type?: string } = any> =
   () => TypedRefSchemaValidator<V>
 
 export type TypedRefSchemaOutput<V extends { $type?: string } = any> =
-  V extends {
-    $type?: infer T extends string
-  }
-    ? V & { $type: T }
-    : never
+  V extends { $type?: infer T extends string } ? V & { $type: T } : never
 
 export class TypedRefSchema<
   V extends { $type?: string } = any,
 > extends Validator<TypedRefSchemaOutput<V>> {
-  constructor(readonly getter: TypedRefSchemaGetter<V>) {
+  #getter: TypedRefSchemaGetter<V>
+
+  constructor(getter: TypedRefSchemaGetter<V>) {
+    // @NOTE In order to avoid circular dependency issues, we don't resolve
+    // the schema here. Instead, we resolve it lazily when first accessed.
+
     super()
+
+    this.#getter = getter
   }
 
-  // Computed lazily to avoid resolving circular deps during init (would be undefined)
-  @cachedGetter
   get schema(): TypedRefSchemaValidator<V> {
-    const value = this.getter.call(null)
-    if (value === undefined) throw new Error('Undefined ref')
+    const value = this.#getter.call(null)
+
+    // Prevents a getter from depending on itself recursively, also allows GC to
+    // clean up the getter function.
+    this.#getter = throwAlreadyCalled
+
+    // Cache the resolved schema on the instance
+    Object.defineProperty(this, 'schema', {
+      value,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
     return value
   }
 
@@ -49,4 +61,8 @@ export class TypedRefSchema<
 
     return result as ValidationResult<TypedRefSchemaOutput<V>>
   }
+}
+
+function throwAlreadyCalled(): never {
+  throw new Error('TypedRefSchema getter called multiple times')
 }

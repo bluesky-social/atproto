@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "@atproto/syntax": "workspace:*",
+    "@formatjs/intl-segmenter": "^11.7.12",
+    "core-js": "^3",
     "multiformats": "^9.9.0",
     "prettier": "^3.2.5",
     "ts-morph": "^27.0.0",
@@ -45,6 +47,10 @@
     ".": {
       "require": "./dist/lib.js",
       "types": "./dist/lib.d.ts"
+    },
+    "./polyfills": {
+      "require": "./polyfills.js",
+      "types": "./polyfills.d.ts"
     },
     "./lex": {
       "require": "./dist/lex/index.js",

@@ -3,7 +3,7 @@ import {
   ValidationResult,
   Validator,
   asUint8Array,
-  parseIpldBytes,
+  parseLexBytes,
 } from '../core.js'
 
 export type BytesSchemaOptions = {
@@ -20,7 +20,7 @@ export class BytesSchema extends Validator<Uint8Array> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Uint8Array> {
-    const bytes = asUint8Array(input) ?? parseIpldBytes(input)
+    const bytes = asUint8Array(input) ?? parseLexBytes(input)
     if (!bytes) return ctx.issueInvalidType(input, 'bytes')
 
     const { minLength } = this.options

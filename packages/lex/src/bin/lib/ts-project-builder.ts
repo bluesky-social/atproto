@@ -30,7 +30,7 @@ export class TsProjectBuilder {
   })
 
   public async load(options: TsProjectBuilderLoadOptions) {
-    const indexer = new FilteredIndexer(
+    await using indexer = new FilteredIndexer(
       new LexiconDirectoryIndexer(options),
       buildFilter(options),
     )
@@ -143,7 +143,7 @@ async function assertNotFileExists(file: string): Promise<void> {
     await stat(file)
     throw new Error(`File already exists: ${file}`)
   } catch (err) {
-    if ((err as any)?.['code'] === 'ENOENT') return
+    if (err instanceof Error && 'code' in err && err.code === 'ENOENT') return
     throw err
   }
 }

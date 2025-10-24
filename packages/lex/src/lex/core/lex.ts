@@ -1,24 +1,21 @@
 import { CID } from 'multiformats/cid'
 import { isObject } from '../lib/is-object.js'
-import {
-  BlobRef,
-  parseTypedJsonBlobRef,
-  parseUntypedJsonBlobRef,
-} from './blob-ref.js'
-import {
-  IpldScalar,
-  encodeIpldBytes,
-  encodeIpldLink,
-  parseIpldBytes,
-  parseIpldLink,
-} from './ipld.js'
-import { Json, JsonObject } from './json.js'
+import { BlobRef } from './blob-ref.js'
+import { encodeLexBytes, parseLexBytes } from './bytes.js'
+import { encodeLexLink, parseLexLink } from './cid.js'
+import { Json, JsonObject, JsonScalar } from './json.js'
 
-export type LexScalar = IpldScalar | BlobRef
+export type LexScalar = JsonScalar | CID | Uint8Array | BlobRef
 export type Lex = LexScalar | Lex[] | { [key: string]: Lex }
 export type LexObject = { [key: string]: Lex }
 
 export function lexStringify(input: Lex): string {
+  // @NOTE This check is necessary because JSON.stringify silently returns
+  // undefined when given undefined as input, making the returned value not type
+  // safe (not a string).
+  if (input === undefined) {
+    throw new TypeError('Cannot stringify undefined value as Lex')
+  }
   return JSON.stringify(input, lexJsonReplacer)
 }
 
@@ -44,9 +41,9 @@ export function jsonToLex(value: Json): Lex {
 function lexJsonReplacer(key: string, value: unknown): unknown {
   if (isObject(value)) {
     if (value instanceof CID) {
-      return encodeIpldLink(value)
+      return encodeLexLink(value)
     } else if (value instanceof Uint8Array) {
-      return encodeIpldBytes(value)
+      return encodeLexBytes(value)
     }
     // @NOTE If the object being stringified has a toJSON() method,
     // JSON.stringify() will call it and use the result instead of the original
@@ -77,16 +74,16 @@ function reviveSpecialObjectSchema(
   // Hot path: use hints to avoid parsing when possible
 
   if (input.$link !== undefined) {
-    const cid = parseIpldLink(input)
+    const cid = parseLexLink(input)
     if (cid) return cid
   } else if (input.$bytes !== undefined) {
-    const bytes = parseIpldBytes(input)
+    const bytes = parseLexBytes(input)
     if (bytes) return bytes
   } else if (input.$type === 'blob') {
-    const blobRef = parseTypedJsonBlobRef(input)
+    const blobRef = BlobRef.asBlobRef(input)
     if (blobRef) return blobRef
   } else if (input.cid !== undefined && input.mimeType !== undefined) {
-    const blobRef = parseUntypedJsonBlobRef(input)
+    const blobRef = BlobRef.asBlobRef(input)
     if (blobRef) return blobRef
   }
 

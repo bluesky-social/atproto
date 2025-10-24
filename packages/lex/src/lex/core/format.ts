@@ -27,9 +27,9 @@ export const STRING_FORMATS = Object.freeze([
 export type StringFormat = (typeof STRING_FORMATS)[number]
 
 export type Did = `did:${string}:${string}`
-export type Uri = `${string}://${string}`
+export type Uri = `${string}:${string}`
 /** An ISO 8601 formatted datetime string (YYYY-MM-DDTHH:mm:ss.sssZ) */
-export type Datetime = `${string}T${string}Z`
+export type Datetime = `${string}T${string}`
 export type Handle = `${string}.${string}`
 export type AtIdentifier = Did | Handle
 export type Nsid = `${string}.${string}.${string}`

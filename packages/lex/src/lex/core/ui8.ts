@@ -88,7 +88,7 @@ export function ui8ToBase64(bytes: Uint8Array): string {
 function base64NotSupportedError(): never {
   throw new Error(
     'Uint8Array.fromBase64() / Uint8Array.prototype.toBase64() not supported in this environment. ' +
-      'Consider including a polyfill such as core-js or es-shims. ' +
+      'Consider including "@atproto/lex/polyfill" in your project or a custom polyfill (such as core-js or es-shims). ' +
       'See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64#browser_compatibility for more information.',
   )
 }

@@ -3,7 +3,7 @@ import {
   ValidationContext,
   ValidationResult,
   Validator,
-  parseIpldLink,
+  parseLexLink,
 } from '../core.js'
 
 export class CidSchema extends Validator<CID> {
@@ -14,7 +14,7 @@ export class CidSchema extends Validator<CID> {
     const cid = CID.asCID(input)
     if (cid) return ctx.success(cid)
 
-    const parsed = parseIpldLink(input)
+    const parsed = parseLexLink(input)
     if (parsed) return ctx.success(parsed)
 
     return ctx.issueInvalidType(input, 'cid')

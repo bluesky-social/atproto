@@ -794,14 +794,7 @@ export class TsDocBuilder {
   private async compileEnumType<T extends null | number | string>(def: {
     enum: readonly T[]
   }): Promise<string> {
-    if (def.enum.length === 0) {
-      return 'never'
-    }
-    if (def.enum.length === 1) {
-      return JSON.stringify(def.enum[0])
-    }
-
-    return def.enum.map((v) => JSON.stringify(v)).join(' | ')
+    return def.enum.map((v) => JSON.stringify(v)).join(' | ') || 'never'
   }
 }
 

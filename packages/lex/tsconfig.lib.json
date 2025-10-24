@@ -5,6 +5,8 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,
+    "emitDecoratorMetadata": false,
+    "target": "ES2023",
     "rootDir": "./src",
     "baseUrl": "./src",
     "paths": {

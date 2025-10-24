@@ -270,19 +270,20 @@ export class LexiconSchemaBuilder {
 }
 
 class AsyncTasks {
+  /**
+   * A set that, eventually, contains only rejected promises.
+   */
   #promises = new Set<Promise<void>>()
 
   async done(): Promise<void> {
-    const awaited = new Set<Promise<void>>()
-    for (const p of this.#promises) {
-      awaited.add(p)
-      await p
-    }
-
-    // If new promises were added while awaiting, wait for those too
-    for (const p of this.#promises) {
-      if (!awaited.has(p)) return this.done()
-    }
+    do {
+      // @NOTE this is going to throw on the first rejected promise (which is
+      // what we want)
+      for (const p of this.#promises) await p
+      // At this point, all settled promises should have been removed. If
+      // this.#promises is not empty, it means new promises were added during
+      // the awaiting process, so we loop again.
+    } while (this.#promises.size > 0)
   }
 
   add(p: Promise<void>) {

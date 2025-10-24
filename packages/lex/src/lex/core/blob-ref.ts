@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { isPureObject } from '../lib/is-object.js'
-import { encodeIpldLink, parseIpldLink } from './ipld.js'
+import { isObject, isPureObject } from '../lib/is-object.js'
+import { encodeLexLink, parseLexLink } from './cid.js'
 import { Json } from './json.js'
 
 export type JsonBlobRef = TypedJsonBlobRef | UntypedJsonBlobRef
@@ -12,27 +12,29 @@ export type TypedJsonBlobRef = {
   size: number
 }
 
-export function parseTypedJsonBlobRef(input: unknown): BlobRef | undefined {
+export function parseTypedJsonBlobRef(
+  input: unknown,
+): TypedJsonBlobRef | undefined {
   if (
     isPureObject(input) &&
     input.$type === 'blob' &&
-    typeof input.ref === 'object' &&
+    isObject(input.ref) &&
     typeof input.mimeType === 'string' &&
     typeof input.size === 'number' &&
     input.size >= 0 &&
     Number.isInteger(input.size) &&
     Object.keys(input).length === 4
   ) {
-    const ref = CID.asCID(input.ref) || parseIpldLink(input.ref)
+    const ref = CID.asCID(input.ref) || parseLexLink(input.ref)
 
     if (ref === input.ref) {
       // Already a TypedJsonBlobRef (keep input as is)
-      return BlobRef.fromTypedJsonRef(input as TypedJsonBlobRef)
+      return input as TypedJsonBlobRef
     }
 
-    if (ref) {
+    if (ref != null) {
       // Coerce to TypedJsonBlobRef
-      return BlobRef.fromTypedJsonRef({ ...input, ref } as TypedJsonBlobRef)
+      return { ...input, ref } as TypedJsonBlobRef
     }
   }
 
@@ -44,19 +46,18 @@ export type UntypedJsonBlobRef = {
   mimeType: string
 }
 
-export function parseUntypedJsonBlobRef(input: unknown): BlobRef | undefined {
+export function parseUntypedJsonBlobRef(
+  input: unknown,
+): UntypedJsonBlobRef | undefined {
   if (
     isPureObject(input) &&
     typeof input.cid === 'string' &&
     typeof input.mimeType === 'string' &&
     Object.keys(input).length === 2
   ) {
-    try {
-      return BlobRef.fromUntypedJsonRef(input as UntypedJsonBlobRef)
-    } catch {
-      return undefined
-    }
+    return input as UntypedJsonBlobRef
   }
+
   return undefined
 }
 
@@ -74,7 +75,7 @@ export class BlobRef {
     if (original) {
       if ('ref' in original) {
         const copy = { ...original } as Record<string, unknown>
-        copy.ref = encodeIpldLink(original.ref)
+        copy.ref = encodeLexLink(original.ref)
         return copy as Json
       }
 
@@ -83,30 +84,34 @@ export class BlobRef {
 
     return {
       $type: 'blob',
-      ref: encodeIpldLink(this.ref),
+      ref: encodeLexLink(this.ref),
       mimeType: this.mimeType,
       size: this.size,
     }
   }
 
-  static asBlobRef(input: unknown): BlobRef | null {
-    if (!input || typeof input !== 'object') {
-      return null
-    }
-
+  static asBlobRef(input: unknown): BlobRef | undefined {
     if (input instanceof BlobRef) {
       return input
     }
 
-    if ('$type' in input) {
-      const blobRef = parseTypedJsonBlobRef(input)
-      if (blobRef) return blobRef
-    } else if ('cid' in input && 'mimeType' in input) {
-      const blobRef = parseUntypedJsonBlobRef(input)
-      if (blobRef) return blobRef
+    if (isPureObject(input)) {
+      if ('$type' in input) {
+        const blobRef = parseTypedJsonBlobRef(input)
+        if (blobRef) return BlobRef.fromTypedJsonRef(blobRef)
+      } else if ('cid' in input && 'mimeType' in input) {
+        const blobRef = parseUntypedJsonBlobRef(input)
+        if (blobRef) {
+          try {
+            return BlobRef.fromUntypedJsonRef(blobRef)
+          } catch {
+            return undefined
+          }
+        }
+      }
     }
 
-    return null
+    return undefined
   }
 
   static fromTypedJsonRef(json: TypedJsonBlobRef): BlobRef {

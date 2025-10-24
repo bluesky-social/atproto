@@ -5,7 +5,6 @@ import {
   ValidationResult,
   Validator,
 } from '../core.js'
-import { cachedGetter } from '../lib/decorators.js'
 import { isPureObject } from '../lib/is-object.js'
 import { TypedRefSchema } from './typed-ref.js'
 
@@ -30,20 +29,30 @@ export class TypedUnionSchema<
     readonly refs: TypedRefs,
     readonly closed: Closed,
   ) {
+    // @NOTE In order to avoid circular dependency issues, we don't access the
+    // refs's schema (or $type) here. Instead, we access them lazily when first
+    // needed.
+
     super()
   }
 
-  // Computed lazily to avoid resolving circular deps during init (would be undefined)
-  @cachedGetter
-  protected get $refsMap() {
+  protected get refsMap() {
     const map = new Map<unknown, TypedRefs[number]>()
     for (const ref of this.refs) map.set(ref.$type, ref)
+
+    // Cache the map on the instance
+    Object.defineProperty(this, 'refsMap', {
+      value: map,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
     return map
   }
 
-  @cachedGetter
   get $types() {
-    return Array.from(this.$refsMap.keys())
+    return Array.from(this.refsMap.keys())
   }
 
   protected override validateInContext(
@@ -56,7 +65,7 @@ export class TypedUnionSchema<
 
     const { $type } = input
 
-    const def = this.$refsMap.get($type)
+    const def = this.refsMap.get($type)
     if (def) {
       const result = ctx.validate(input, def)
       return result as ValidationResult<

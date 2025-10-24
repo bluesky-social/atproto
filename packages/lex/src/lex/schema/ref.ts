@@ -1,17 +1,35 @@
 import { ValidationContext, ValidationResult, Validator } from '../core.js'
-import { cachedGetter } from '../lib/decorators.js'
 
 export type RefSchemaGetter<V> = () => Validator<V>
 
 export class RefSchema<V = any> extends Validator<V> {
-  constructor(readonly getter: RefSchemaGetter<V>) {
+  #getter: RefSchemaGetter<V>
+
+  constructor(getter: RefSchemaGetter<V>) {
+    // @NOTE In order to avoid circular dependency issues, we don't resolve
+    // the schema here. Instead, we resolve it lazily when first accessed.
+
     super()
+
+    this.#getter = getter
   }
 
-  // Computed lazily to avoid resolving circular deps during init (would be undefined)
-  @cachedGetter
   get schema(): Validator<V> {
-    return this.getter.call(null)
+    const value = this.#getter.call(null)
+
+    // Prevents a getter from depending on itself recursively, also allows GC to
+    // clean up the getter function.
+    this.#getter = throwAlreadyCalled
+
+    // Disable the getter and cache the resolved schema on the instance
+    Object.defineProperty(this, 'schema', {
+      value,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
+    return value
   }
 
   protected override validateInContext(
@@ -20,4 +38,8 @@ export class RefSchema<V = any> extends Validator<V> {
   ): ValidationResult<V> {
     return ctx.validate(input, this.schema)
   }
+}
+
+function throwAlreadyCalled(): never {
+  throw new Error('RefSchema getter called multiple times')
 }

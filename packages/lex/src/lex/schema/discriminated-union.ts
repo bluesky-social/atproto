@@ -6,7 +6,6 @@ import {
   ValidationResult,
   Validator,
 } from '../core.js'
-import { cachedGetter } from '../lib/decorators.js'
 import { isPureObject } from '../lib/is-object.js'
 import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
@@ -56,7 +55,6 @@ export class DiscriminatedUnionSchema<
    * and there are no overlapping values, returns a map of discriminator values
    * to variants. Otherwise, returns null.
    */
-  @cachedGetter
   protected get variantsMap() {
     const map = new Map<
       unknown,
@@ -76,6 +74,15 @@ export class DiscriminatedUnionSchema<
         return null // not a literal or enum
       }
     }
+
+    // Cache the map on the instance (to avoid re-computing)
+    Object.defineProperty(this, 'variantsMap', {
+      value: map,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
     return map
   }
 
