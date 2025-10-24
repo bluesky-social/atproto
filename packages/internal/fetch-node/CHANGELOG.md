@@ -1,5 +1,11 @@
 # @atproto-labs/fetch-node
 
+## 0.2.0
+
+### Minor Changes
+
+- [#4289](https://github.com/bluesky-social/atproto/pull/4289) [`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `isLocalHostname` export
+
 ## 0.1.10
 
 ### Patch Changes

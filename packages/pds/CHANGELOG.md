@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.4.187
+
+### Patch Changes
+
+- Updated dependencies [[`8c03d75b6`](https://github.com/bluesky-social/atproto/commit/8c03d75b6c11bed15b58bfa7ff4bf68199fc6511), [`a8e307ef4`](https://github.com/bluesky-social/atproto/commit/a8e307ef4851b164ee38bb5149343631e329f143), [`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58), [`1e702ea67`](https://github.com/bluesky-social/atproto/commit/1e702ea675e3697e050be1f28e54bb1298b56436)]:
+  - @atproto/oauth-provider@0.13.3
+  - @atproto/api@0.17.4
+  - @atproto-labs/fetch-node@0.2.0
+  - @atproto/lexicon-resolver@0.2.3
+
 ## 0.4.186
 
 ### Patch Changes
