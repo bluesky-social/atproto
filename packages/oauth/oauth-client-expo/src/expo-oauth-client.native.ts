@@ -1,5 +1,3 @@
-import './polyfill'
-
 import { openAuthSessionAsync } from 'expo-web-browser'
 import {
   AuthorizeOptions,
