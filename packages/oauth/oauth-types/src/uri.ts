@@ -1,18 +1,10 @@
 import { TypeOf, ZodIssueCode, z } from 'zod'
-import { isHostnameIP, isLoopbackHost } from './util.js'
-
-const canParseUrl =
-  // eslint-disable-next-line n/no-unsupported-features/node-builtins
-  URL.canParse?.bind(URL) ??
-  // URL.canParse is not available in Node.js < 18.7.0
-  ((urlStr: string): boolean => {
-    try {
-      new URL(urlStr)
-      return true
-    } catch {
-      return false
-    }
-  })
+import {
+  canParseUrl,
+  isHostnameIP,
+  isLocalHostname,
+  isLoopbackHost,
+} from './util.js'
 
 /**
  * Valid, but potentially dangerous URL (`data:`, `file:`, `javascript:`, etc.).
@@ -167,12 +159,56 @@ export const privateUseUriSchema = dangerousUriSchema.superRefine(
       return false
     }
 
-    if (url.hostname) {
-      // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
+    // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
+    //
+    // > When choosing a URI scheme to associate with the app, apps MUST use a
+    // > URI scheme based on a domain name under their control, expressed in
+    // > reverse order
+    //
+    // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
+    //
+    // > In addition to the collision-resistant properties, requiring a URI
+    // > scheme based on a domain name that is under the control of the app can
+    // > help to prove ownership in the event of a dispute where two apps claim
+    // > the same private-use URI scheme (where one app is acting maliciously).
+    //
+    // We can't check for ownership here (as there is no concept of proven
+    // ownership in a generic validation logic), besides excluding local domains
+    // as they can't be controlled/owned by the app.
+    //
+    // https://atproto.com/specs/oauth
+    //
+    // > Any custom scheme must match the `client_id` hostname in reverse-domain
+    // > order.
+    //
+    // This ATPROTO specific requirement cannot be enforced here, (as there is
+    // no concept of `client_id` in this context).
+
+    const uriScheme = url.protocol.slice(0, -1) // remove trailing ":"
+    const urlDomain = uriScheme.split('.').reverse().join('.')
+
+    if (isLocalHostname(urlDomain)) {
       ctx.addIssue({
         code: ZodIssueCode.custom,
-        message:
-          'Private-use URI schemes must not include a hostname (only one "/" is allowed after the protocol, as per RFC 8252)',
+        message: `Private-use URI Scheme redirect URI must not be a local hostname`,
+      })
+    }
+
+    // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
+    //
+    // > Following the requirements of Section 3.2 of [RFC3986], as there is no
+    // > naming authority for private-use URI scheme redirects, only a single
+    // > slash ("/") appears after the scheme component.
+    if (
+      url.href.startsWith(`${url.protocol}//`) ||
+      url.username ||
+      url.password ||
+      url.hostname ||
+      url.port
+    ) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `Private-Use URI Scheme must be in the form ${url.protocol}/<path> (as per RFC 8252)`,
       })
       return false
     }

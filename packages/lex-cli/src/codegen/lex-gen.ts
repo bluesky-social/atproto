@@ -520,18 +520,44 @@ export function genRecord(
   lexicons: Lexicons,
   lexUri: string,
 ) {
+  const hash = getHash(lexUri)
+  const ifaceName: string = toTitleCase(hash)
   const def = lexicons.getDefOrThrow(lexUri, ['record'])
 
-  //= export interface Record {...}
-  genObject(file, imports, lexUri, def.record, 'Record', {
+  //= export interface {X} {...}
+  genObject(file, imports, lexUri, def.record, ifaceName, {
     defaultsArePresent: true,
     allowUnknownProperties: true,
     typeProperty: 'required',
   })
 
-  //= export function isRecord(v: unknown): v is Record {...}
-  genObjHelpers(file, lexUri, 'Record', {
+  //= export function is{X}(v: unknown): v is {X} {...}
+  genObjHelpers(file, lexUri, ifaceName, {
     requireTypeProperty: true,
+  })
+
+  // For convenience, we re-export the type and the type guard under the generic
+  // names "Record", "isRecord" and "validateRecord".
+  // @NOTE This does not account for potential name clashes with a potential
+  // "#record" def.
+
+  //= export { {X} as Record, is{X} as isRecord }
+  file.addExportDeclaration({
+    namedExports: [
+      {
+        isTypeOnly: true,
+        name: ifaceName,
+        alias: 'Record',
+      },
+      {
+        name: `is${ifaceName}`,
+        alias: 'isRecord',
+      },
+      {
+        name: `validate${ifaceName}`,
+        alias: 'validateRecord',
+      },
+    ],
   })
 }
 

@@ -12,7 +12,7 @@ import {
 } from './oauth-client-id-loopback.js'
 import {
   OAuthLoopbackRedirectURI,
-  oauthLoopbackRedirectURISchema,
+  oauthLoopbackClientRedirectUriSchema,
 } from './oauth-redirect-uri.js'
 import { arrayEquivalent, asArray } from './util.js'
 
@@ -41,7 +41,10 @@ export function buildAtprotoLoopbackClientId(
         throw new TypeError(`Unexpected empty "redirect_uris" config`)
       }
       for (const uri of redirectUris) {
-        params.append('redirect_uri', oauthLoopbackRedirectURISchema.parse(uri))
+        params.append(
+          'redirect_uri',
+          oauthLoopbackClientRedirectUriSchema.parse(uri),
+        )
       }
     }
 

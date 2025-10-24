@@ -6,19 +6,23 @@ import {
   privateUseUriSchema,
 } from './uri.js'
 
-export const oauthLoopbackRedirectURISchema = loopbackUriSchema.superRefine(
+/**
+ * This is a {@link loopbackUriSchema} with the additional restriction that
+ * the hostname `localhost` is not allowed.
+ *
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc8252#section-8.3 Loopback Redirect Considerations} RFC8252
+ *
+ * > While redirect URIs using localhost (i.e.,
+ * > "http://localhost:{port}/{path}") function similarly to loopback IP
+ * > redirects described in Section 7.3, the use of localhost is NOT
+ * > RECOMMENDED. Specifying a redirect URI with the loopback IP literal rather
+ * > than localhost avoids inadvertently listening on network interfaces other
+ * > than the loopback interface.  It is also less susceptible to client-side
+ * > firewalls and misconfigured host name resolution on the user's device.
+ */
+export const loopbackRedirectURISchema = loopbackUriSchema.superRefine(
   (value, ctx): value is Exclude<LoopbackUri, `http://localhost${string}`> => {
     if (value.startsWith('http://localhost')) {
-      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
-      //
-      // > While redirect URIs using localhost (i.e.,
-      // > "http://localhost:{port}/{path}") function similarly to loopback IP
-      // > redirects described in Section 7.3, the use of localhost is NOT
-      // > RECOMMENDED.  Specifying a redirect URI with the loopback IP literal
-      // > rather than localhost avoids inadvertently listening on network
-      // > interfaces other than the loopback interface.  It is also less
-      // > susceptible to client-side firewalls and misconfigured host name
-      // > resolution on the user's device.
       ctx.addIssue({
         code: ZodIssueCode.custom,
         message:
@@ -30,27 +34,17 @@ export const oauthLoopbackRedirectURISchema = loopbackUriSchema.superRefine(
     return true
   },
 )
+export type LoopbackRedirectURI = TypeOf<typeof loopbackRedirectURISchema>
+
+export const oauthLoopbackClientRedirectUriSchema = loopbackRedirectURISchema
 export type OAuthLoopbackRedirectURI = TypeOf<
-  typeof oauthLoopbackRedirectURISchema
->
-
-export const oauthHttpsRedirectURISchema = httpsUriSchema
-export type OAuthHttpsRedirectURI = TypeOf<typeof oauthHttpsRedirectURISchema>
-
-export const oauthPrivateUseRedirectURISchema = privateUseUriSchema
-export type OAuthPrivateUseRedirectURI = TypeOf<
-  typeof oauthPrivateUseRedirectURISchema
+  typeof oauthLoopbackClientRedirectUriSchema
 >
 
 export const oauthRedirectUriSchema = z.union(
-  [
-    oauthLoopbackRedirectURISchema,
-    oauthHttpsRedirectURISchema,
-    oauthPrivateUseRedirectURISchema,
-  ],
+  [loopbackRedirectURISchema, httpsUriSchema, privateUseUriSchema],
   {
     message: `URL must use the "https:" or "http:" protocol, or a private-use URI scheme (RFC 8252)`,
   },
 )
-
 export type OAuthRedirectUri = TypeOf<typeof oauthRedirectUriSchema>
