@@ -754,7 +754,12 @@ export class TsDocBuilder {
 
   private async compileRefUnionType(def: LexiconRefUnion): Promise<string> {
     const types = await Promise.all(
-      def.refs.map(async (r) => (await this.refResolver.resolve(r)).typeName),
+      def.refs.map(async (ref) => {
+        const [nsid, hash = 'main'] = ref.split('#')
+        const $type = l.$type(nsid, hash)
+        const { typeName } = await this.refResolver.resolve(ref)
+        return `(${typeName} & { $type: ${JSON.stringify($type)} })`
+      }),
     )
     if (!def.closed) types.push('l.UnknownTypedObject')
     return types.join(' | ') || 'never'
