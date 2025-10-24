@@ -219,17 +219,23 @@ export const settingValidators = new Map<
      *     "strikeCount": 2
      *   },
      *   "sev-4": {
-     *     "strikeCount": 4
+     *     "strikeCount": 4,
+     *     "expiresInDays": 365
      *   },
      *   "sev-5": {
      *     "needsTakedown": true
      *   },
      *   "death-threat": {
-     *     "strikeCount": 8
+     *     "strikeCount": 4,
+     *     "firstOccurrenceStrikeCount": 4,
      *   },
      *   "custom-severity": {
      *     "strikeCount": 3,
      *     "strikeOnOccurrence": 1,
+     *   },
+     *   "escalating-severity": {
+     *     "firstOccurrenceStrikeCount": 2,
+     *     "repeatOccurrenceStrikeCount": 5
      *   }
      * }
      */
@@ -291,6 +297,18 @@ export const settingValidators = new Map<
           ) {
             throw new InvalidRequestError(
               `Expires in days must be a non-negative integer for severity level ${key}`,
+            )
+          }
+        }
+
+        if (val['firstOccurrenceStrikeCount'] !== undefined) {
+          if (
+            typeof val['firstOccurrenceStrikeCount'] !== 'number' ||
+            !Number.isInteger(val['firstOccurrenceStrikeCount']) ||
+            val['firstOccurrenceStrikeCount'] < 0
+          ) {
+            throw new InvalidRequestError(
+              `First occurrence strike count must be a non-negative integer for severity level ${key}`,
             )
           }
         }

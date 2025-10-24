@@ -41,6 +41,7 @@ import {
   isModEventMuteReporter,
   isModEventPriorityScore,
   isModEventReport,
+  isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
@@ -177,14 +178,21 @@ export class ModerationViews {
       event.score = ifNumber(meta?.priorityScore) ?? 0
     }
 
-    if (isModEventTakedown(event) || isModEventEmail(event)) {
+    if (
+      isModEventTakedown(event) ||
+      isModEventEmail(event) ||
+      isModEventReverseTakedown(event)
+    ) {
       if (typeof meta.policies === 'string' && meta.policies.length > 0) {
         event.policies = meta.policies.split(',')
       }
 
       event.strikeCount = ifNumber(row.strikeCount)
       event.severityLevel = ifString(row.severityLevel)
-      event.strikeExpiresAt = ifString(row.strikeExpiresAt)
+
+      if (isModEventTakedown(event) || isModEventEmail(event)) {
+        event.strikeExpiresAt = ifString(row.strikeExpiresAt)
+      }
     }
 
     if (isModEventLabel(event)) {

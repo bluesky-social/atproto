@@ -36,6 +36,7 @@ import {
   isModEventMute,
   isModEventPriorityScore,
   isModEventReport,
+  isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
@@ -196,7 +197,7 @@ export class ModerationService {
     modTool?: string[]
     ageAssuranceState?: string
     batchId?: string
-    minStrikeCount?: number
+    withStrike?: boolean
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -221,7 +222,7 @@ export class ModerationService {
       modTool,
       ageAssuranceState,
       batchId,
-      minStrikeCount,
+      withStrike,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
@@ -340,10 +341,9 @@ export class ModerationService {
         ])
         .where(sql`meta->>'status'`, '=', ageAssuranceState)
     }
-    if (minStrikeCount !== undefined) {
-      builder = builder
-        .where('strikeCount', 'is not', null)
-        .where('strikeCount', '>=', minStrikeCount)
+
+    if (withStrike !== undefined) {
+      builder = builder.where('strikeCount', 'is not', null)
     }
 
     const keyset = new TimeIdKeyset(
@@ -589,7 +589,11 @@ export class ModerationService {
     let strikeCount: number | null = null
     let strikeExpiresAt: string | null = null
 
-    if (isModEventTakedown(event) || isModEventEmail(event)) {
+    if (
+      isModEventTakedown(event) ||
+      isModEventEmail(event) ||
+      isModEventReverseTakedown(event)
+    ) {
       // Store severityLevel if provided (for display/tracking)
       if (event.severityLevel) {
         severityLevel = event.severityLevel
@@ -599,7 +603,7 @@ export class ModerationService {
         strikeCount = event.strikeCount
       }
       // Store strikeExpiresAt if provided by client
-      if (event.strikeExpiresAt) {
+      if ('strikeExpiresAt' in event && event.strikeExpiresAt) {
         strikeExpiresAt = event.strikeExpiresAt
       }
     }

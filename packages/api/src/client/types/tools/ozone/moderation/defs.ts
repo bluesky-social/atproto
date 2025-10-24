@@ -329,6 +329,12 @@ export interface ModEventReverseTakedown {
   $type?: 'tools.ozone.moderation.defs#modEventReverseTakedown'
   /** Describe reasoning behind the reversal. */
   comment?: string
+  /** Names/Keywords of the policy infraction for which takedown is being reversed. */
+  policies?: string[]
+  /** Severity level of the violation. Usually set from the last policy infraction's severity. */
+  severityLevel?: string
+  /** Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity. */
+  strikeCount?: number
 }
 
 const hashModEventReverseTakedown = 'modEventReverseTakedown'

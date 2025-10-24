@@ -14855,6 +14855,25 @@ export const schemaDict = {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
           },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policy infraction for which takedown is being reversed.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Usually set from the last policy infraction's severity.",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              "Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity.",
+          },
         },
       },
       modEventResolveAppeal: {
@@ -16521,11 +16540,10 @@ export const schemaDict = {
                 'blocked',
               ],
             },
-            minStrikeCount: {
-              type: 'integer',
-              minimum: 1,
+            withStrike: {
+              type: 'boolean',
               description:
-                'If specified, only events where the strikeCount is greater than or equal to this value are returned',
+                'If specified, only events where strikeCount value is set are returned.',
             },
             cursor: {
               type: 'string',

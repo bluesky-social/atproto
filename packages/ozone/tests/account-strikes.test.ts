@@ -144,20 +144,41 @@ describe('account-strikes', () => {
       subject: aliceSubject,
     })
 
-    const statusResult = await modClient.queryStatuses({
+    let statusResult = await modClient.queryStatuses({
       subject: sc.dids.alice,
     })
 
     expect(statusResult.subjectStatuses.length).toBeGreaterThan(0)
     expect(forSnapshot(statusResult.subjectStatuses[0])).toMatchSnapshot()
+    const strikeCountBefore =
+      statusResult.subjectStatuses[0].accountStrike?.activeStrikeCount
 
-    // Filter for events with at least 2 strikes
-    const eventsWithMinStrikes = await modClient.queryEvents({
+    // Reverse one of the takedowns with negative strikeCount
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
+        severityLevel: 'sev-2',
+        strikeCount: -2, // Negative to reverse strikes
+        comment: 'Appeal granted - reversing first takedown',
+      },
+      subject: alicePost,
+    })
+
+    // Verify strikes were reduced (if strikeCount tracking is implemented)
+    statusResult = await modClient.queryStatuses({
+      subject: sc.dids.alice,
+    })
+    const strikeCountAfter =
+      statusResult.subjectStatuses[0].accountStrike?.activeStrikeCount
+    expect(strikeCountAfter).toBe(3)
+    expect(strikeCountAfter).toBeLessThan(strikeCountBefore!)
+
+    const eventsWithStrikes = await modClient.queryEvents({
       subject: sc.dids.alice,
       includeAllUserRecords: true,
-      types: ['tools.ozone.moderation.defs#modEventTakedown'],
-      minStrikeCount: 2,
+      withStrike: true,
     })
-    expect(forSnapshot(eventsWithMinStrikes.events)).toMatchSnapshot()
+
+    expect(forSnapshot(eventsWithStrikes.events)).toMatchSnapshot()
   })
 })

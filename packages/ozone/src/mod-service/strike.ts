@@ -22,7 +22,7 @@ export class StrikeService {
     const events = await this.db.db
       .selectFrom('moderation_event')
       .where('subjectDid', '=', subjectDid)
-      .where('strikeCount', '>', 0)
+      .where('strikeCount', '<>', 0)
       .select(['strikeCount', 'strikeExpiresAt', 'createdAt'])
       .orderBy('createdAt', 'asc')
       .execute()
@@ -82,7 +82,7 @@ export class StrikeService {
       .selectFrom('moderation_event')
       .where('strikeExpiresAt', 'is not', null)
       .where('strikeExpiresAt', '<=', now)
-      .where('strikeCount', '>', 0)
+      .where('strikeCount', '<>', 0)
       .select('subjectDid')
       .distinct()
 
