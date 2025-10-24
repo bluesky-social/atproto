@@ -159,6 +159,12 @@ export const privateUseUriSchema = dangerousUriSchema.superRefine(
       return false
     }
 
+    // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
+    //
+    // > When choosing a URI scheme to associate with the app, apps MUST use a
+    // > URI scheme based on a domain name under their control, expressed in
+    // > reverse order
+    //
     // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
     //
     // > In addition to the collision-resistant properties, requiring a URI
@@ -167,10 +173,19 @@ export const privateUseUriSchema = dangerousUriSchema.superRefine(
     // > the same private-use URI scheme (where one app is acting maliciously).
     //
     // We can't check for ownership here (as there is no concept of proven
-    // ownership in a generic validation logic), but we can check that the
-    // domain is not local.
+    // ownership in a generic validation logic), besides excluding local domains
+    // as they can't be controlled/owned by the app.
+    //
+    // https://atproto.com/specs/oauth
+    //
+    // > Any custom scheme must match the `client_id` hostname in reverse-domain
+    // > order.
+    //
+    // This ATPROTO specific requirement cannot be enforced here, (as there is
+    // no concept of `client_id` in this context).
 
-    const urlDomain = url.protocol.slice(0, -1).split('.').reverse().join('.')
+    const uriScheme = url.protocol.slice(0, -1) // remove trailing ":"
+    const urlDomain = uriScheme.split('.').reverse().join('.')
 
     if (isLocalHostname(urlDomain)) {
       ctx.addIssue({
