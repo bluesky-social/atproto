@@ -756,7 +756,7 @@ export class TsDocBuilder {
     const types = await Promise.all(
       def.refs.map(async (ref) => {
         const [nsid, hash = 'main'] = ref.split('#')
-        const $type = l.$type(nsid, hash)
+        const $type = l.$type(nsid || this.doc.id, hash)
         const { typeName } = await this.refResolver.resolve(ref)
         return `(${typeName} & { $type: ${JSON.stringify($type)} })`
       }),

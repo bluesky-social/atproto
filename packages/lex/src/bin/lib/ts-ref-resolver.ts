@@ -31,12 +31,11 @@ export class TsRefResolver {
     async (ref: string): Promise<ResolvedRef> => {
       const [nsid, hash = 'main'] = ref.split('#')
 
-      // @NOTE: Normalize to ensure proper memoization
-      const fullRef = `${nsid}#${hash}`
-
       if (nsid === '' || nsid === this.doc.id) {
         return this.resolveLocal(hash)
       } else {
+        // @NOTE: Normalize (#main fragment) to ensure proper memoization
+        const fullRef = `${nsid}#${hash}`
         return this.resolveExternal(fullRef)
       }
     },
