@@ -189,26 +189,4 @@ describe('pds posts views', () => {
     expect(data.posts.length).toBe(1)
     expect(forSnapshot(data.posts[0])).toMatchSnapshot()
   })
-
-  /*
-   * Default case here, and we test the inclusion of the debug field
-   * in posts-debug.test.ts
-   */
-  describe('debug field', () => {
-    it('does not include debug field by default', async () => {
-      const uris = [sc.posts[sc.dids.alice][0].ref.uriStr]
-      const posts = await agent.api.app.bsky.feed.getPosts(
-        { uris },
-        {
-          headers: await network.serviceHeaders(
-            sc.dids.alice,
-            ids.AppBskyFeedGetPosts,
-          ),
-        },
-      )
-
-      const post = posts.data.posts.at(0)
-      expect(post?.debug).not.toBeDefined()
-    })
-  })
 })

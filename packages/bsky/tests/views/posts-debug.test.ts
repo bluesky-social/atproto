@@ -2,14 +2,6 @@ import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 
-jest.mock('../../dist/hydration/util.js', () => {
-  const originalModule = jest.requireActual('../../src/hydration/util.ts')
-  return {
-    ...originalModule,
-    isDebugFieldAllowed: jest.fn(() => true),
-  }
-})
-
 describe('post views w/ debug field', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -25,11 +17,17 @@ describe('post views w/ debug field', () => {
     await network.processAll()
   })
 
+  afterEach(() => {
+    network.bsky.ctx.cfg.debugFieldAllowedDids.clear()
+  })
+
   afterAll(async () => {
     await network.close()
   })
 
-  it('does not include debug field for unauthed requests', async () => {
+  it(`does not include debug field for unauthed requests`, async () => {
+    network.bsky.ctx.cfg.debugFieldAllowedDids.add(sc.dids.bob)
+
     const uris = [sc.posts[sc.dids.alice][0].ref.uriStr]
     const posts = await agent.api.app.bsky.feed.getPosts({ uris })
 
@@ -37,13 +35,15 @@ describe('post views w/ debug field', () => {
     expect(post?.debug).not.toBeDefined()
   })
 
-  it('includes debug field', async () => {
+  it(`includes debug field for configured user`, async () => {
+    network.bsky.ctx.cfg.debugFieldAllowedDids.add(sc.dids.bob)
+
     const uris = [sc.posts[sc.dids.alice][0].ref.uriStr]
     const posts = await agent.api.app.bsky.feed.getPosts(
       { uris },
       {
         headers: await network.serviceHeaders(
-          sc.dids.alice,
+          sc.dids.bob,
           ids.AppBskyFeedGetPosts,
         ),
       },
@@ -52,5 +52,23 @@ describe('post views w/ debug field', () => {
     const post = posts.data.posts.at(0)
     expect(post?.debug).toBeDefined()
     expect(typeof post?.debug).toBe('object')
+  })
+
+  it(`doesn't include debug field for other users`, async () => {
+    network.bsky.ctx.cfg.debugFieldAllowedDids.add(sc.dids.carol)
+
+    const uris = [sc.posts[sc.dids.alice][0].ref.uriStr]
+    const posts = await agent.api.app.bsky.feed.getPosts(
+      { uris },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetPosts,
+        ),
+      },
+    )
+
+    const post = posts.data.posts.at(0)
+    expect(post?.debug).not.toBeDefined()
   })
 })
