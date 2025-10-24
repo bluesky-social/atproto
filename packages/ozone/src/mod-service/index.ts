@@ -1329,7 +1329,6 @@ export class ModerationService {
     )
     const dbVals = signedLabels.map((l) => formatLabelRow(l, this.signingKeyId))
     const { ref } = this.db.db.dynamic
-    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)
     const res = await this.db.db
       .insertInto('label')
@@ -1346,6 +1345,7 @@ export class ModerationService {
       )
       .returningAll()
       .execute()
+    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     return res.map((row) => formatLabel(row))
   }
 
