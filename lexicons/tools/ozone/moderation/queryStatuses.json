@@ -183,6 +183,11 @@
             "type": "integer",
             "description": "If specified, only subjects that have priority score value above the given value will be returned."
           },
+          "minStrikeCount": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "If specified, only subjects that belong to an account that has at least this many active strikes will be returned."
+          },
           "ageAssuranceState": {
             "type": "string",
             "description": "If specified, only subjects with the given age assurance state will be returned.",

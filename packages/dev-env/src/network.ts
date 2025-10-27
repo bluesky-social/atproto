@@ -118,6 +118,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await lexiconAuthorityProfile.createRecords()
 
     await ozone.addAdminDid(ozoneServiceProfile.did)
+    await ozone.createPolicies()
 
     await thirdPartyPds.processAll()
     await pds.processAll()

@@ -29,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         modTool,
         ageAssuranceState,
         batchId,
+        withStrike,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -55,6 +56,7 @@ export default function (server: Server, ctx: AppContext) {
         modTool,
         ageAssuranceState,
         batchId,
+        withStrike,
       })
       return {
         encoding: 'application/json',

@@ -32,3 +32,4 @@ export * as _20250715T000000000Z from './20250715T000000000Z-add-mod-event-exter
 export * as _20250718T150931000Z from './20250718T150931000Z-update-appeal-reason-stats'
 export * as _20250813T000000000Z from './20250813T000000000Z-mod-tool-batch-id-index'
 export * as _20250923T000000000Z from './20250923T000000000Z-scheduled-actions'
+export * as _20251008T120000000Z from './20251008T120000000Z-add-strike-system'
