@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.3.4
+
+### Patch Changes
+
+- [#4301](https://github.com/bluesky-social/atproto/pull/4301) [`f496fa2c4`](https://github.com/bluesky-social/atproto/commit/f496fa2c4d9316229523454c691c75c269aba21e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Set dark background on authorization page's `<body>` in dark mode
+
 ## 0.3.3
 
 ## 0.3.2
