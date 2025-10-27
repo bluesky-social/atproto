@@ -43,6 +43,8 @@ export type Actor = {
    */
   debug?: {
     pagerank?: number
+    accountTags?: string[]
+    profileTags?: string[]
     [key: string]: unknown
   }
 }
@@ -220,7 +222,11 @@ export class ActorHydrator {
         }
       }
 
-      const debug = { pagerank: actor.pagerank }
+      const debug = {
+        pagerank: actor.pagerank,
+        accountTags: actor.tags,
+        profileTags: actor.profileTags,
+      }
 
       return acc.set(did, {
         did,
