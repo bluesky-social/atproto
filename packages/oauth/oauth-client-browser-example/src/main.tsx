@@ -3,7 +3,7 @@ import './index.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { buildAtprotoLoopbackClientMetadata } from '@atproto/oauth-types'
+import { buildAtprotoLoopbackClientMetadata } from '@atproto/oauth-client-browser'
 import App from './app.tsx'
 import { AuthProvider } from './auth/auth-provider.tsx'
 import {

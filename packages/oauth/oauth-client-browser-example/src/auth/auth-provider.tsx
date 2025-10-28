@@ -2,7 +2,7 @@
 
 import { ReactNode, createContext, useContext, useMemo } from 'react'
 import { Agent } from '@atproto/api'
-import { OAuthSession } from '@atproto/oauth-client'
+import { OAuthSession } from '@atproto/oauth-client-browser'
 import { OAuthSignIn, UseOAuthOptions, useOAuth } from './use-oauth.ts'
 
 export type AuthContextValueSignedIn = {
