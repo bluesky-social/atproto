@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.193
+
+### Patch Changes
+
+- [#4297](https://github.com/bluesky-social/atproto/pull/4297) [`cdb6b27fc`](https://github.com/bluesky-social/atproto/commit/cdb6b27fc6be1e858476d8c55fd0c37561b972b4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `debug` field to `PostView` and `ProfileView*`s
+
+- Updated dependencies [[`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee)]:
+  - @atproto/api@0.17.6
+
 ## 0.0.192
 
 ### Patch Changes

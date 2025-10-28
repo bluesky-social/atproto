@@ -1,5 +1,11 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.7
+
+### Patch Changes
+
+- [#4311](https://github.com/bluesky-social/atproto/pull/4311) [`d764c54fe`](https://github.com/bluesky-social/atproto/commit/d764c54fe4ffaccb9ed9580c153373fc6e12f803) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor improvements
+
 ## 0.0.6
 
 ### Patch Changes
