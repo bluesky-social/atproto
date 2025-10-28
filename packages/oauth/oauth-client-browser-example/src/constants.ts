@@ -26,19 +26,31 @@ export const OAUTH_SCOPE_DEFAULT: string =
     ? [
         'atproto',
         'account:email',
-        'identity:*',
-        'include:com.atproto.moderation.basePermissions',
-        'include:com.example.calendar.basePermissions?aud=did:web:api.bsky.app#calendar_service',
-      ].join(' ')
-    : [
-        'atproto',
-        'account:email',
         'account:status',
+        'identity:*',
         'blob:*/*',
         'repo:*',
         'rpc:*?aud=did:web:api.bsky.app#bsky_appview',
-        'include:directory.lexicon.calendar.basePermissions?aud=did:web:api.bsky.app#calendar_service',
+        'include:com.example.calendar.basePermissions?aud=did:web:api.bsky.app#calendar_service',
       ].join(' ')
+    : ENV === 'production'
+      ? [
+          'atproto',
+          'account:email',
+          'account:status',
+          'blob:*/*',
+          'repo:*',
+          'rpc:*?aud=did:web:api.bsky.app#bsky_appview',
+          'include:directory.lexicon.calendar.basePermissions?aud=did:web:api.bsky.app#calendar_service',
+        ].join(' ')
+      : [
+          'atproto',
+          'account:email',
+          'account:status',
+          'blob:*/*',
+          'repo:*',
+          'rpc:*?aud=did:web:api.bsky.app#bsky_appview',
+        ].join(' ')
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ?? OAUTH_SCOPE_DEFAULT
 

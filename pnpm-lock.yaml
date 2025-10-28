@@ -984,18 +984,9 @@ importers:
       '@atproto/api':
         specifier: workspace:*
         version: link:../../api
-      '@atproto/oauth-client':
-        specifier: workspace:*
-        version: link:../oauth-client
       '@atproto/oauth-client-browser':
         specifier: workspace:*
         version: link:../oauth-client-browser
-      '@atproto/oauth-types':
-        specifier: workspace:*
-        version: link:../oauth-types
-      '@atproto/xrpc':
-        specifier: workspace:*
-        version: link:../../xrpc
       '@rollup/plugin-commonjs':
         specifier: ^25.0.7
         version: 25.0.8(rollup@4.34.9)
@@ -4125,7 +4116,7 @@ packages:
       '@babel/parser': 7.28.4
       '@babel/template': 7.27.2
       '@babel/types': 7.28.4
-      debug: 4.3.7
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -6299,7 +6290,7 @@ packages:
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.5
     dev: false
 
   /@jridgewell/trace-mapping@0.3.9:
