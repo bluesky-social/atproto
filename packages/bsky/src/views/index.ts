@@ -367,9 +367,7 @@ export class Views {
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
-      debug: state.ctx?.includeDebugField
-        ? this.debugField([actor.debug])
-        : undefined,
+      debug: state.ctx?.includeDebugField ? actor.debug : undefined,
     }
   }
 
@@ -949,20 +947,8 @@ export class Views {
         ? this.threadgate(threadgateUri, state)
         : undefined,
       debug: state.ctx?.includeDebugField
-        ? this.debugField([{ post: post.debug }, { author: author.debug }])
+        ? { post: post.debug, author: author.debug }
         : undefined,
-    }
-  }
-
-  debugField<D = { [key: string]: unknown } | undefined>(debugs: D[]) {
-    const merged: { [key: string]: unknown } = {}
-    try {
-      return debugs.reduce(
-        (acc, debug) => ({ ...acc, ...(debug || {}) }),
-        merged,
-      )
-    } catch {
-      return merged
     }
   }
 
