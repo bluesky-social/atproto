@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
@@ -101,9 +102,14 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, skeleton, hydration } = inputs
-  const posts = mapDefined(skeleton.posts, (uri) =>
-    ctx.views.post(uri, hydration),
-  )
+  const posts = mapDefined(skeleton.posts, (uri) => {
+    const post = hydration.posts?.get(uri)
+    if (!post) return
+
+    if ([...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))) return
+
+    return ctx.views.post(uri, hydration)
+  })
   return {
     posts,
     cursor: skeleton.cursor,
@@ -112,6 +118,7 @@ const presentation = (
 }
 
 type Context = {
+  cfg: ServerConfig
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
