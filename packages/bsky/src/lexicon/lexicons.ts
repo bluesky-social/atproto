@@ -65,6 +65,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
+          },
         },
       },
       profileView: {
@@ -126,6 +130,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -213,6 +221,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -1845,6 +1857,10 @@ export const schemaDict = {
           threadgate: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },

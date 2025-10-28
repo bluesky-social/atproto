@@ -26,6 +26,13 @@ export type Post = RecordInfo<PostRecord> & {
   hasThreadGate: boolean
   hasPostGate: boolean
   tags: Set<string>
+  /**
+   * Debug information for internal development
+   */
+  debug?: {
+    tags?: string[]
+    [key: string]: unknown
+  }
 }
 export type Posts = HydrationMap<Post>
 
@@ -117,6 +124,7 @@ export class FeedHydrator {
       const hasThreadGate = res.meta[i].hasThreadGate
       const hasPostGate = res.meta[i].hasPostGate
       const tags = new Set<string>(res.records[i].tags ?? [])
+      const debug = { tags: Array.from(tags) }
       return acc.set(
         uri,
         record
@@ -127,6 +135,7 @@ export class FeedHydrator {
               hasThreadGate,
               hasPostGate,
               tags,
+              debug,
             }
           : null,
       )

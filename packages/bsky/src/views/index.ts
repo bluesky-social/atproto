@@ -367,6 +367,7 @@ export class Views {
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
+      debug: state.ctx?.includeDebugField ? actor.debug : undefined,
     }
   }
 
@@ -944,6 +945,9 @@ export class Views {
       labels,
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
+        : undefined,
+      debug: state.ctx?.includeDebugField
+        ? { post: post.debug, author: author.debug }
         : undefined,
     }
   }

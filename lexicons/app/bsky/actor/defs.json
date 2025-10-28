@@ -32,6 +32,10 @@
         "status": {
           "type": "ref",
           "ref": "#statusView"
+        },
+        "debug": {
+          "type": "unknown",
+          "description": "Debug information for internal development"
         }
       }
     },
@@ -71,6 +75,10 @@
         "status": {
           "type": "ref",
           "ref": "#statusView"
+        },
+        "debug": {
+          "type": "unknown",
+          "description": "Debug information for internal development"
         }
       }
     },
@@ -123,6 +131,10 @@
         "status": {
           "type": "ref",
           "ref": "#statusView"
+        },
+        "debug": {
+          "type": "unknown",
+          "description": "Debug information for internal development"
         }
       }
     },
