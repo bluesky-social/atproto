@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.17.7
+
+### Patch Changes
+
+- [#4317](https://github.com/bluesky-social/atproto/pull/4317) [`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `via` to `follow` record to mirror `like` records and provide a way to reference the starter pack that the follow originated from.
+
 ## 0.17.6
 
 ### Patch Changes
