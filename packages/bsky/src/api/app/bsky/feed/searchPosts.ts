@@ -33,6 +33,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
+
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const results = await searchPosts(

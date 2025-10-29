@@ -135,12 +135,17 @@ describe('appview search', () => {
     })
 
     it('mod service finds even tagged posts', async () => {
-      const res = await ozoneAgent.app.bsky.feed.searchPosts(
-        { q: 'doggo' },
+      const resTop = await ozoneAgent.app.bsky.feed.searchPosts(
+        { q: 'doggo', sort: 'top' },
+        { headers: await network.ozone.modHeaders(ids.AppBskyFeedSearchPosts) },
+      )
+      const resLatest = await ozoneAgent.app.bsky.feed.searchPosts(
+        { q: 'doggo', sort: 'latest' },
         { headers: await network.ozone.modHeaders(ids.AppBskyFeedSearchPosts) },
       )
 
-      expect(res.data.posts.map((p) => p.uri)).toStrictEqual(allResults)
+      expect(resTop.data.posts.map((p) => p.uri)).toStrictEqual(allResults)
+      expect(resLatest.data.posts.map((p) => p.uri)).toStrictEqual(allResults)
     })
   })
 })
