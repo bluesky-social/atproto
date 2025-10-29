@@ -1,8 +1,8 @@
 import { AtpAgent } from '@atproto/api'
+import { QueryParams as SearchPostsQueryParams } from '@atproto/api/src/client/types/app/bsky/feed/searchPosts'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { DatabaseSchema } from '../../src'
 import { ids } from '../../src/lexicon/lexicons'
-import { forSnapshot } from '../_util'
 
 const TAG_HIDE = 'hide'
 
@@ -13,7 +13,8 @@ describe('appview search', () => {
   let post0: Awaited<ReturnType<SeedClient['post']>>
   let post1: Awaited<ReturnType<SeedClient['post']>>
   let post2: Awaited<ReturnType<SeedClient['post']>>
-  let posts: Awaited<ReturnType<SeedClient['post']>>[]
+  let allResults: string[]
+  let nonTaggedResults: string[]
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -29,83 +30,106 @@ describe('appview search', () => {
     post0 = await sc.post(sc.dids.alice, 'good doggo')
     post1 = await sc.post(sc.dids.alice, 'bad doggo')
     post2 = await sc.post(sc.dids.alice, 'cute doggo')
-    posts = [post0, post1, post2]
     await network.processAll()
+
+    await createTag(network.bsky.db.db, {
+      uri: post1.ref.uriStr,
+      val: TAG_HIDE,
+    })
+
+    allResults = [post2.ref.uriStr, post1.ref.uriStr, post0.ref.uriStr]
+    nonTaggedResults = [post2.ref.uriStr, post0.ref.uriStr]
   })
 
   afterAll(async () => {
+    await deleteTags(network.bsky.db.db, {
+      uri: post1.ref.uriStr,
+    })
+
     await network.close()
   })
 
-  it('finds posts by search term and top sort', async () => {
-    const res = await agent.app.bsky.feed.searchPosts(
-      { q: 'doggo', sort: 'top' },
+  describe(`post search with 'top' sort`, () => {
+    type TestCase = {
+      name: string
+      queryParams: () => SearchPostsQueryParams
+      expectedPostUris: () => string[]
+    }
+
+    const tests: TestCase[] = [
+      // 'top' cases
       {
+        name: `with 'top' sort, finds only non-tagged posts`,
+        queryParams: () => ({ q: 'doggo', sort: 'top' }),
+        expectedPostUris: () => nonTaggedResults,
+      },
+      {
+        name: `with 'top' sort, finds only non-tagged posts, even specifying author`,
+        queryParams: () => ({ q: `doggo`, author: sc.dids.alice, sort: 'top' }),
+        expectedPostUris: () => nonTaggedResults,
+      },
+      {
+        name: `with 'top' sort, finds only non-tagged posts, even specifying from:`,
+        queryParams: () => ({
+          q: `doggo from:${sc.accounts[sc.dids.alice].handle}`,
+          sort: 'top',
+        }),
+        expectedPostUris: () => nonTaggedResults,
+      },
+      {
+        name: `with 'top' sort, finds only non-tagged posts, even specifying DID`,
+        queryParams: () => ({ q: `doggo ${sc.dids.alice}`, sort: 'top' }),
+        expectedPostUris: () => nonTaggedResults,
+      },
+      {
+        name: `with 'top' sort, finds no posts if specifying user who didn't post the term`,
+        queryParams: () => ({ q: `doggo ${sc.dids.bob}`, sort: 'top' }),
+        expectedPostUris: () => [],
+      },
+
+      // 'latest' cases
+      {
+        name: `with 'latest' sort, finds only non-tagged posts`,
+        queryParams: () => ({ q: 'doggo', sort: 'latest' }),
+        expectedPostUris: () => nonTaggedResults,
+      },
+      {
+        name: `with 'latest' sort, finds all posts if specifying author`,
+        queryParams: () => ({
+          q: `doggo`,
+          author: sc.dids.alice,
+          sort: 'latest',
+        }),
+        expectedPostUris: () => allResults,
+      },
+      {
+        name: `with 'latest' sort, finds all posts if specifying from:`,
+        queryParams: () => ({
+          q: `doggo from:${sc.accounts[sc.dids.alice].handle}`,
+          sort: 'latest',
+        }),
+        expectedPostUris: () => allResults,
+      },
+      {
+        name: `with 'latest' sort, finds all posts if specifying DID`,
+        queryParams: () => ({ q: `doggo ${sc.dids.alice}`, sort: 'latest' }),
+        expectedPostUris: () => allResults,
+      },
+      {
+        name: `with 'latest' sort, finds no posts if specifying user who didn't post the term`,
+        queryParams: () => ({ q: `doggo ${sc.dids.bob}`, sort: 'latest' }),
+        expectedPostUris: () => [],
+      },
+    ]
+
+    it.each(tests)('$name', async ({ queryParams, expectedPostUris }) => {
+      const res = await agent.app.bsky.feed.searchPosts(queryParams(), {
         headers: await network.serviceHeaders(
           sc.dids.alice,
           ids.AppBskyFeedSearchPosts,
         ),
-      },
-    )
-
-    expect(res.data.posts.length).toBe(posts.length)
-    expect(forSnapshot(res.data.posts)).toMatchSnapshot()
-  })
-
-  it('finds posts by search term and latest sort', async () => {
-    const res = await agent.app.bsky.feed.searchPosts(
-      { q: 'doggo', sort: 'latest' },
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.alice,
-          ids.AppBskyFeedSearchPosts,
-        ),
-      },
-    )
-
-    expect(res.data.posts.length).toBe(posts.length)
-    expect(forSnapshot(res.data.posts)).toMatchSnapshot()
-  })
-
-  describe('hiding results', () => {
-    const visiblePosts = [post0, post2]
-
-    beforeAll(async () => {
-      await createTag(network.bsky.db.db, {
-        uri: post1.ref.uriStr,
-        val: TAG_HIDE,
       })
-      await network.processAll()
-    })
-
-    it('finds posts by search term and top sort', async () => {
-      const res = await agent.app.bsky.feed.searchPosts(
-        { q: 'doggo', sort: 'top' },
-        {
-          headers: await network.serviceHeaders(
-            sc.dids.alice,
-            ids.AppBskyFeedSearchPosts,
-          ),
-        },
-      )
-
-      expect(res.data.posts.length).toBe(visiblePosts.length)
-      expect(forSnapshot(res.data.posts)).toMatchSnapshot()
-    })
-
-    it('finds posts by search term and latest sort', async () => {
-      const res = await agent.app.bsky.feed.searchPosts(
-        { q: 'doggo', sort: 'latest' },
-        {
-          headers: await network.serviceHeaders(
-            sc.dids.alice,
-            ids.AppBskyFeedSearchPosts,
-          ),
-        },
-      )
-
-      expect(res.data.posts.length).toBe(visiblePosts.length)
-      expect(forSnapshot(res.data.posts)).toMatchSnapshot()
+      expect(res.data.posts.map((p) => p.uri)).toStrictEqual(expectedPostUris())
     })
   })
 })
@@ -121,6 +145,22 @@ const createTag = async (
     .updateTable('record')
     .set({
       tags: JSON.stringify([opts.val]),
+    })
+    .where('uri', '=', opts.uri)
+    .returningAll()
+    .execute()
+}
+
+const deleteTags = async (
+  db: DatabaseSchema,
+  opts: {
+    uri: string
+  },
+) => {
+  await db
+    .updateTable('record')
+    .set({
+      tags: JSON.stringify([]),
     })
     .where('uri', '=', opts.uri)
     .returningAll()

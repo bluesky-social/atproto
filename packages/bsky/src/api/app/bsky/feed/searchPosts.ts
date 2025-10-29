@@ -3,6 +3,10 @@ import { mapDefined } from '@atproto/common'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
+import {
+  PostSearchQuery,
+  parsePostSearchQuery,
+} from '../../../../data-plane/server/util'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
@@ -43,6 +47,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
+  const parsedQuery = parsePostSearchQuery(params.q, {
+    author: params.author,
+  })
 
   if (ctx.searchAgent) {
     // @NOTE cursors won't change on appview swap
@@ -65,6 +72,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     return {
       posts: res.posts.map(({ uri }) => uri),
       cursor: parseString(res.cursor),
+      parsedQuery,
     }
   }
 
@@ -76,6 +84,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   return {
     posts: res.uris,
     cursor: parseString(res.cursor),
+    parsedQuery,
   }
 }
 
@@ -101,12 +110,16 @@ const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, skeleton, hydration } = inputs
+  const { ctx, params, skeleton, hydration } = inputs
   const posts = mapDefined(skeleton.posts, (uri) => {
     const post = hydration.posts?.get(uri)
     if (!post) return
 
-    if ([...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))) return
+    const { author } = skeleton.parsedQuery
+    const isCuratedSearch = params.sort === 'top'
+    const isTagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    if (isCuratedSearch && isTagged) return
+    if (!author && isTagged) return
 
     return ctx.views.post(uri, hydration)
   })
@@ -131,4 +144,5 @@ type Skeleton = {
   posts: string[]
   hitsTotal?: number
   cursor?: string
+  parsedQuery: PostSearchQuery
 }
