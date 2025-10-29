@@ -237,7 +237,16 @@ const handleModerationEvent = async ({
     if (subject.isRepo()) {
       if (isTakedownEvent) {
         const isSuspend = !!result.event.durationInHours
-        await moderationTxn.takedownRepo(subject, result.event.id, isSuspend)
+        await moderationTxn.takedownRepo(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+          isSuspend,
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRepo(subject)
       }
@@ -245,7 +254,15 @@ const handleModerationEvent = async ({
 
     if (subject.isRecord()) {
       if (isTakedownEvent) {
-        await moderationTxn.takedownRecord(subject, result.event.id)
+        await moderationTxn.takedownRecord(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRecord(subject)
       }

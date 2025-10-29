@@ -190,7 +190,15 @@ export class ScheduledActionProcessor {
     })
 
     // register the takedown in event pusher
-    await moderationTxn.takedownRepo(subject, moderationEvent.event.id)
+    await moderationTxn.takedownRepo(
+      subject,
+      moderationEvent.event.id,
+      new Set(
+        moderationEvent.event.meta?.targetServices
+          ? `${moderationEvent.event.meta.targetServices}`.split(',')
+          : undefined,
+      ),
+    )
 
     return moderationEvent
   }

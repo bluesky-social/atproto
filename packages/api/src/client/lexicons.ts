@@ -14850,6 +14850,15 @@ export const schemaDict = {
             description:
               "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
           },
+          targetServices: {
+            type: 'array',
+            items: {
+              type: 'string',
+              knownValues: ['appview', 'pds'],
+            },
+            description:
+              'List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services.',
+          },
           strikeCount: {
             type: 'integer',
             description:
