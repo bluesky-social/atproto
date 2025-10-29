@@ -32,10 +32,13 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
+      const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const results = await searchPosts({ ...params, hydrateCtx }, ctx)
+      const results = await searchPosts(
+        { ...params, hydrateCtx, isModService },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: results,
@@ -118,8 +121,7 @@ const presentation = (
     const { author } = skeleton.parsedQuery
     const isCuratedSearch = params.sort === 'top'
     const isTagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
-    if (isCuratedSearch && isTagged) return
-    if (!author && isTagged) return
+    if (!params.isModService && isTagged && (isCuratedSearch || !author)) return
 
     return ctx.views.post(uri, hydration)
   })
@@ -138,7 +140,10 @@ type Context = {
   searchAgent?: AtpAgent
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams & {
+  hydrateCtx: HydrateCtx
+  isModService: boolean
+}
 
 type Skeleton = {
   posts: string[]

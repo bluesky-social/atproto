@@ -9,6 +9,7 @@ const TAG_HIDE = 'hide'
 describe('appview search', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let ozoneAgent: AtpAgent
   let sc: SeedClient
   let post0: Awaited<ReturnType<SeedClient['post']>>
   let post1: Awaited<ReturnType<SeedClient['post']>>
@@ -25,6 +26,7 @@ describe('appview search', () => {
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
+    ozoneAgent = network.ozone.getClient()
     await basicSeed(sc)
 
     post0 = await sc.post(sc.dids.alice, 'good doggo')
@@ -130,6 +132,15 @@ describe('appview search', () => {
         ),
       })
       expect(res.data.posts.map((p) => p.uri)).toStrictEqual(expectedPostUris())
+    })
+
+    it('mod service finds even tagged posts', async () => {
+      const res = await ozoneAgent.app.bsky.feed.searchPosts(
+        { q: 'doggo' },
+        { headers: await network.ozone.modHeaders(ids.AppBskyFeedSearchPosts) },
+      )
+
+      expect(res.data.posts.map((p) => p.uri)).toStrictEqual(allResults)
     })
   })
 })
