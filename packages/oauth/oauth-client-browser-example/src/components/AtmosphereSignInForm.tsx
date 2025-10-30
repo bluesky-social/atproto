@@ -1,51 +1,69 @@
-import { useMutation } from '@tanstack/react-query'
 import { FormEvent, JSX, useEffect, useRef, useState } from 'react'
-import { Button } from '../components/button.tsx'
-import { OAuthSignIn } from './use-oauth.ts'
+import { Button } from './_button.tsx'
 
-export type OAuthLoginHandleProps = JSX.IntrinsicElements['form'] & {
+export type AtmosphereSignInFormProps = JSX.IntrinsicElements['form'] & {
   placeholder?: string
   autoFocus?: boolean
-  signIn: OAuthSignIn
+  disabled?: boolean
+  loading?: boolean
+  signIn: (input: string) => Promise<void>
 }
 
 /**
  * @returns Nice tailwind css form asking to enter either a handle or the host
  *   to use to login.
  */
-export function OAuthLoginForm({
+export function AtmosphereSignInForm({
   signIn,
   autoFocus = true,
-  placeholder = 'Login with a @handle or custom PDS',
+  placeholder,
+  loading: forceLoading,
 
   // form
   className,
   onSubmit,
   ...props
-}: OAuthLoginHandleProps) {
+}: AtmosphereSignInFormProps) {
   const [value, setValue] = useState('')
+  const [error, setError] = useState<Error | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const { isPending, mutateAsync, error, reset } = useMutation({
-    mutationFn: async (event: FormEvent<HTMLFormElement>) => {
-      onSubmit?.(event)
-      if (event.defaultPrevented) return
+  const disabled = props.disabled || forceLoading || loading
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    if (disabled) return
+
+    onSubmit?.(event)
+    if (!event.defaultPrevented) {
       event.preventDefault()
 
-      if (!formRef.current?.reportValidity()) return
+      const invalid = !formRef.current?.reportValidity()
+      if (invalid) return
 
-      return signIn(value.replace('@', '').toLowerCase())
-    },
-  })
+      try {
+        setLoading(true)
 
-  useEffect(reset, [value])
+        await signIn(value.replace('@', '').toLowerCase())
+      } catch (err) {
+        console.warn('Error during sign-in:', err)
+        setError(err as Error)
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  useEffect(() => {
+    setError(undefined)
+  }, [value])
 
   return (
     <form
       {...props}
       ref={formRef}
       className={`${className || ''} w-full`}
-      onSubmit={mutateAsync}
+      onSubmit={handleSubmit}
     >
       <fieldset className="rounded-md border border-solid border-slate-200 text-neutral-700 dark:border-slate-700 dark:text-neutral-100">
         <div className="relative flex flex-wrap items-center justify-stretch space-x-2 p-1">
@@ -55,7 +73,7 @@ export function OAuthLoginForm({
             className="relative mx-1 block w-[1px] min-w-0 flex-auto bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder={placeholder}
             aria-label={placeholder}
-            disabled={isPending}
+            disabled={disabled}
             required
             min={3}
             max={2048}
@@ -75,7 +93,7 @@ export function OAuthLoginForm({
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
-          <Button type="submit" loading={isPending} transparent>
+          <Button type="submit" loading={loading || forceLoading} transparent>
             Login
           </Button>
         </div>

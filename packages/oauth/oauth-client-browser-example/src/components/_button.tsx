@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { JSX } from 'react'
-import { Spinner } from './spinner.tsx'
+import { Spinner } from './_spinner.tsx'
 
 export type ButtonProps = {
   action?: () => Promise<void>
@@ -24,12 +24,12 @@ export function Button({
   const actionable =
     props.type === 'submit' || onClick != null || action != null
 
-  const { isPending, mutateAsync } = useMutation({
+  const mutation = useMutation({
     mutationFn: action,
     onError: (error) => console.error(error),
   })
 
-  const showProgress = loading || isPending
+  const isLoading = loading || mutation.isPending
   const sizeClass =
     size === 'small'
       ? 'px-1 py-0'
@@ -44,11 +44,11 @@ export function Button({
         onClick?.(event)
         if (action != null && !event.defaultPrevented) {
           event.preventDefault()
-          void mutateAsync()
+          void mutation.mutateAsync()
         }
       }}
       tabIndex={props?.tabIndex ?? (actionable ? 0 : -1)}
-      disabled={disabled || showProgress}
+      disabled={disabled || isLoading}
       className={[
         'relative overflow-hidden',
         'inline-block rounded-md',
@@ -61,13 +61,13 @@ export function Button({
         className,
       ].join(' ')}
     >
-      {showProgress && (
+      {isLoading && (
         <span className="absolute inset-0 z-10 flex items-center justify-center">
           <Spinner size={size} />
         </span>
       )}
 
-      <span className={showProgress ? 'invisible' : 'visible'}>{children}</span>
+      <span className={isLoading ? 'invisible' : 'visible'}>{children}</span>
     </button>
   )
 }

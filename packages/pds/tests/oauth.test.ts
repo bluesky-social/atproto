@@ -142,7 +142,9 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      await page.clickOnButton('Login or signup')
+      await page.clickOnButton(
+        `Login or signup with ${new URL(network.pds.url).host}`,
+      )
     })
 
     await page.checkTitle('Authentification')
