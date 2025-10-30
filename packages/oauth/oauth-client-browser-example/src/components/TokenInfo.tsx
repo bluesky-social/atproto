@@ -1,6 +1,6 @@
 import { useGetTokenInfoQuery } from '../queries/use-get-token-info-query.ts'
-import { Button } from './button.tsx'
-import { JsonQueryResult } from './json-query-result.tsx'
+import { JsonQueryResult } from './JsonQueryResult.tsx'
+import { Button } from './_button.tsx'
 
 export function TokenInfo() {
   const result = useGetTokenInfoQuery()
