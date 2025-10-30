@@ -68,12 +68,32 @@ export class Firehose {
   private sub: Subscription<RepoEvent>
   private abortController: AbortController
   private destoryDefer: Deferrable
+  private matchCollection: ((col: string) => boolean) | null = null
 
   constructor(public opts: FirehoseOptions) {
     this.destoryDefer = createDeferrable()
     this.abortController = new AbortController()
     if (this.opts.getCursor && this.opts.runner) {
       throw new Error('Must set only `getCursor` or `runner`')
+    }
+    if (opts.filterCollections) {
+      const exact = new Set<string>()
+      const prefixes: string[] = []
+
+      for (const pattern of opts.filterCollections) {
+        if (pattern.endsWith('.*')) {
+          prefixes.push(pattern.slice(0, -2))
+        } else {
+          exact.add(pattern)
+        }
+      }
+      this.matchCollection = (col: string): boolean => {
+        if (exact.has(col)) return true
+        for (const prefix of prefixes) {
+          if (col.startsWith(prefix)) return true
+        }
+        return false
+      }
     }
     this.sub = new Subscription({
       ...opts,
@@ -136,11 +156,11 @@ export class Firehose {
     try {
       if (isCommit(evt) && !this.opts.excludeCommit) {
         return this.opts.unauthenticatedCommits
-          ? await parseCommitUnauthenticated(evt, this.opts.filterCollections)
+          ? await parseCommitUnauthenticated(evt, this.matchCollection)
           : await parseCommitAuthenticated(
               this.opts.idResolver,
               evt,
-              this.opts.filterCollections,
+              this.matchCollection,
             )
       } else if (isAccount(evt) && !this.opts.excludeAccount) {
         const parsed = parseAccount(evt)
@@ -184,11 +204,11 @@ export class Firehose {
 export const parseCommitAuthenticated = async (
   idResolver: IdResolver,
   evt: Commit,
-  filterCollections?: string[],
+  matchCollection?: ((col: string) => boolean) | null,
   forceKeyRefresh = false,
 ): Promise<CommitEvt[]> => {
   const did = evt.repo
-  const ops = maybeFilterOps(evt.ops, filterCollections)
+  const ops = maybeFilterOps(evt.ops, matchCollection)
   if (ops.length === 0) {
     return []
   }
@@ -210,7 +230,7 @@ export const parseCommitAuthenticated = async (
     })
   } catch (err) {
     if (err instanceof RepoVerificationError && !forceKeyRefresh) {
-      return parseCommitAuthenticated(idResolver, evt, filterCollections, true)
+      return parseCommitAuthenticated(idResolver, evt, matchCollection, true)
     }
     throw err
   }
@@ -228,20 +248,20 @@ export const parseCommitAuthenticated = async (
 
 export const parseCommitUnauthenticated = async (
   evt: Commit,
-  filterCollections?: string[],
+  matchCollection?: ((col: string) => boolean) | null,
 ): Promise<CommitEvt[]> => {
-  const ops = maybeFilterOps(evt.ops, filterCollections)
+  const ops = maybeFilterOps(evt.ops, matchCollection)
   return formatCommitOps(evt, ops)
 }
 
 const maybeFilterOps = (
   ops: RepoOp[],
-  filterCollections?: string[],
+  matchCollection?: ((col: string) => boolean) | null,
 ): RepoOp[] => {
-  if (!filterCollections) return ops
+  if (!matchCollection) return ops
   return ops.filter((op) => {
     const { collection } = parseDataKey(op.path)
-    return filterCollections.includes(collection)
+    return matchCollection(collection)
   })
 }
 
