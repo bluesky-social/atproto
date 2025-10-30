@@ -1,6 +1,6 @@
 import { useGetActorProfileQuery } from '../queries/use-get-actor-profile-query.ts'
-import { Button } from './button.tsx'
-import { JsonQueryResult } from './json-query-result.tsx'
+import { JsonQueryResult } from './JsonQueryResult.tsx'
+import { Button } from './_button.tsx'
 
 export function ProfileInfo() {
   const result = useGetActorProfileQuery()
