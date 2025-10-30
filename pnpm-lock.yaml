@@ -1024,18 +1024,9 @@ importers:
       '@atproto/api':
         specifier: workspace:*
         version: link:../../api
-      '@atproto/oauth-client':
-        specifier: workspace:*
-        version: link:../oauth-client
       '@atproto/oauth-client-browser':
         specifier: workspace:*
         version: link:../oauth-client-browser
-      '@atproto/oauth-types':
-        specifier: workspace:*
-        version: link:../oauth-types
-      '@atproto/xrpc':
-        specifier: workspace:*
-        version: link:../../xrpc
       '@rollup/plugin-commonjs':
         specifier: ^25.0.7
         version: 25.0.8(rollup@4.34.9)

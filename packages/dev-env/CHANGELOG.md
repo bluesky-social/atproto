@@ -1,5 +1,46 @@
 # @atproto/dev-env
 
+## 0.3.188
+
+### Patch Changes
+
+- Updated dependencies [[`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6)]:
+  - @atproto/api@0.17.7
+  - @atproto/bsky@0.0.194
+  - @atproto/ozone@0.1.153
+  - @atproto/pds@0.4.191
+
+## 0.3.187
+
+### Patch Changes
+
+- Updated dependencies [[`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee), [`cdb6b27fc`](https://github.com/bluesky-social/atproto/commit/cdb6b27fc6be1e858476d8c55fd0c37561b972b4)]:
+  - @atproto/api@0.17.6
+  - @atproto/bsky@0.0.193
+  - @atproto/ozone@0.1.152
+  - @atproto/pds@0.4.190
+
+## 0.3.186
+
+### Patch Changes
+
+- [#4279](https://github.com/bluesky-social/atproto/pull/4279) [`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031) Thanks [@foysalit](https://github.com/foysalit)! - Add strike system to ozone
+
+- Updated dependencies [[`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031)]:
+  - @atproto/ozone@0.1.151
+  - @atproto/api@0.17.5
+  - @atproto/pds@0.4.189
+  - @atproto/bsky@0.0.192
+
+## 0.3.185
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.188
+  - @atproto/bsky@0.0.191
+  - @atproto/ozone@0.1.150
+
 ## 0.3.184
 
 ### Patch Changes

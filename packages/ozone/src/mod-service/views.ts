@@ -41,6 +41,7 @@ import {
   isModEventMuteReporter,
   isModEventPriorityScore,
   isModEventReport,
+  isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
@@ -178,11 +179,20 @@ export class ModerationViews {
     }
 
     if (
-      isModEventTakedown(event) &&
-      typeof meta.policies === 'string' &&
-      meta.policies.length > 0
+      isModEventTakedown(event) ||
+      isModEventEmail(event) ||
+      isModEventReverseTakedown(event)
     ) {
-      event.policies = meta.policies.split(',')
+      if (typeof meta.policies === 'string' && meta.policies.length > 0) {
+        event.policies = meta.policies.split(',')
+      }
+
+      event.strikeCount = ifNumber(row.strikeCount)
+      event.severityLevel = ifString(row.severityLevel)
+
+      if (isModEventTakedown(event) || isModEventEmail(event)) {
+        event.strikeExpiresAt = ifString(row.strikeExpiresAt)
+      }
     }
 
     if (isModEventLabel(event)) {
@@ -745,6 +755,17 @@ export class ModerationViews {
         processedCount: status.processedCount ?? undefined,
         takendownCount: status.takendownCount ?? undefined,
       },
+
+      accountStrike:
+        status.strikeCount !== null || status.totalStrikeCount !== null
+          ? {
+              $type: 'tools.ozone.moderation.defs#accountStrike',
+              activeStrikeCount: status.strikeCount ?? undefined,
+              totalStrikeCount: status.totalStrikeCount ?? undefined,
+              firstStrikeAt: status.firstStrikeAt ?? undefined,
+              lastStrikeAt: status.lastStrikeAt ?? undefined,
+            }
+          : undefined,
     }
 
     if (status.recordPath !== '') {

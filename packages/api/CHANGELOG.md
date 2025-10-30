@@ -1,5 +1,23 @@
 # @atproto/api
 
+## 0.17.7
+
+### Patch Changes
+
+- [#4317](https://github.com/bluesky-social/atproto/pull/4317) [`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `via` to `follow` record to mirror `like` records and provide a way to reference the starter pack that the follow originated from.
+
+## 0.17.6
+
+### Patch Changes
+
+- [#4314](https://github.com/bluesky-social/atproto/pull/4314) [`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add debug field to `PostView` and `ProfileView*` (see cdb6b27fc6be1e858476d8c55fd0c37561b972b4)
+
+## 0.17.5
+
+### Patch Changes
+
+- [#4279](https://github.com/bluesky-social/atproto/pull/4279) [`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031) Thanks [@foysalit](https://github.com/foysalit)! - Add strike system to ozone
+
 ## 0.17.4
 
 ### Patch Changes

@@ -163,6 +163,7 @@ describe('ozone query labels', () => {
         modSrvc.eventPusher,
         modSrvc.appviewAgent,
         ctx.serviceAuthHeaders,
+        ctx.strikeService,
       ),
     })
 
