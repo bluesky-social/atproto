@@ -40,6 +40,7 @@ import {
 import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
 import { softDeleted } from './db'
 import { appendVary } from './util/http'
+import { timingSafeStringEqual } from './util/strings'
 import { WithRequired } from './util/types'
 
 export type VerifiedOptions = {
@@ -131,7 +132,12 @@ export class AuthVerifier {
       throw new AuthRequiredError()
     }
     const { username, password } = parsed
-    if (username !== 'admin' || password !== this._adminPass) {
+    if (
+      !(
+        timingSafeStringEqual(username, 'admin') &&
+        timingSafeStringEqual(password, this._adminPass)
+      )
+    ) {
       throw new AuthRequiredError()
     }
 
