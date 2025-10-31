@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
     skeleton,
     hydration,
-    noBlocks,
+    noBlocksOrTagged,
     presentation,
   )
   server.app.bsky.feed.searchPosts({
@@ -102,11 +102,31 @@ const hydration = async (
   )
 }
 
-const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, skeleton, hydration } = inputs
+const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, params, skeleton, hydration } = inputs
   skeleton.posts = skeleton.posts.filter((uri) => {
+    const post = hydration.posts?.get(uri)
+    if (!post) return
+
     const creator = creatorFromUri(uri)
-    return !ctx.views.viewerBlockExists(creator, hydration)
+
+    if (ctx.views.viewerBlockExists(creator, hydration)) {
+      return false
+    }
+
+    const { author } = skeleton.parsedQuery
+    const isCuratedSearch = params.sort === 'top'
+    const isPostByViewer = creator === params.hydrateCtx.viewer
+    if (
+      !isPostByViewer &&
+      !params.isModService &&
+      (isCuratedSearch || !author) &&
+      [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    ) {
+      return false
+    }
+
+    return true
   })
   return skeleton
 }
@@ -114,15 +134,10 @@ const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
-  const { ctx, params, skeleton, hydration } = inputs
+  const { ctx, skeleton, hydration } = inputs
   const posts = mapDefined(skeleton.posts, (uri) => {
     const post = hydration.posts?.get(uri)
     if (!post) return
-
-    const { author } = skeleton.parsedQuery
-    const isCuratedSearch = params.sort === 'top'
-    const isTagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
-    if (!params.isModService && isTagged && (isCuratedSearch || !author)) return
 
     return ctx.views.post(uri, hydration)
   })

@@ -17,6 +17,11 @@ describe('appview search', () => {
   let allResults: string[]
   let nonTaggedResults: string[]
 
+  // account dids, for convenience
+  let alice: string
+  let bob: string
+  let carol: string
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_search',
@@ -29,9 +34,13 @@ describe('appview search', () => {
     ozoneAgent = network.ozone.getClient()
     await basicSeed(sc)
 
-    post0 = await sc.post(sc.dids.alice, 'good doggo')
-    post1 = await sc.post(sc.dids.alice, 'bad doggo')
-    post2 = await sc.post(sc.dids.alice, 'cute doggo')
+    alice = sc.dids.alice
+    bob = sc.dids.bob
+    carol = sc.dids.carol
+
+    post0 = await sc.post(alice, 'good doggo')
+    post1 = await sc.post(alice, 'bad doggo')
+    post2 = await sc.post(alice, 'cute doggo')
     await network.processAll()
 
     await createTag(network.bsky.db.db, {
@@ -54,6 +63,7 @@ describe('appview search', () => {
   describe(`post search with 'top' sort`, () => {
     type TestCase = {
       name: string
+      viewer: () => string
       queryParams: () => SearchPostsQueryParams
       expectedPostUris: () => string[]
     }
@@ -62,77 +72,104 @@ describe('appview search', () => {
       // 'top' cases
       {
         name: `with 'top' sort, finds only non-tagged posts`,
+        viewer: () => carol,
         queryParams: () => ({ q: 'doggo', sort: 'top' }),
         expectedPostUris: () => nonTaggedResults,
       },
       {
+        name: `with 'top' sort, includes tagged posts from the viewer`,
+        viewer: () => alice,
+        queryParams: () => ({ q: 'doggo', sort: 'top' }),
+        expectedPostUris: () => allResults,
+      },
+      {
         name: `with 'top' sort, finds only non-tagged posts, even specifying author`,
-        queryParams: () => ({ q: `doggo`, author: sc.dids.alice, sort: 'top' }),
+        viewer: () => carol,
+        queryParams: () => ({ q: `doggo`, author: alice, sort: 'top' }),
         expectedPostUris: () => nonTaggedResults,
       },
       {
         name: `with 'top' sort, finds only non-tagged posts, even specifying from:`,
+        viewer: () => carol,
         queryParams: () => ({
-          q: `doggo from:${sc.accounts[sc.dids.alice].handle}`,
+          q: `doggo from:${sc.accounts[alice].handle}`,
           sort: 'top',
         }),
         expectedPostUris: () => nonTaggedResults,
       },
       {
         name: `with 'top' sort, finds only non-tagged posts, even specifying DID`,
-        queryParams: () => ({ q: `doggo ${sc.dids.alice}`, sort: 'top' }),
+        viewer: () => carol,
+        queryParams: () => ({ q: `doggo ${alice}`, sort: 'top' }),
         expectedPostUris: () => nonTaggedResults,
       },
       {
         name: `with 'top' sort, finds no posts if specifying user who didn't post the term`,
-        queryParams: () => ({ q: `doggo ${sc.dids.bob}`, sort: 'top' }),
+        viewer: () => carol,
+        queryParams: () => ({ q: `doggo ${bob}`, sort: 'top' }),
         expectedPostUris: () => [],
       },
 
       // 'latest' cases
       {
         name: `with 'latest' sort, finds only non-tagged posts`,
+        viewer: () => carol,
         queryParams: () => ({ q: 'doggo', sort: 'latest' }),
         expectedPostUris: () => nonTaggedResults,
       },
       {
+        name: `with 'latest' sort, includes tagged posts from the viewer`,
+        viewer: () => alice,
+        queryParams: () => ({ q: 'doggo', sort: 'latest' }),
+        expectedPostUris: () => allResults,
+      },
+      {
         name: `with 'latest' sort, finds all posts if specifying author`,
+        viewer: () => carol,
         queryParams: () => ({
           q: `doggo`,
-          author: sc.dids.alice,
+          author: alice,
           sort: 'latest',
         }),
         expectedPostUris: () => allResults,
       },
       {
         name: `with 'latest' sort, finds all posts if specifying from:`,
+        viewer: () => carol,
         queryParams: () => ({
-          q: `doggo from:${sc.accounts[sc.dids.alice].handle}`,
+          q: `doggo from:${sc.accounts[alice].handle}`,
           sort: 'latest',
         }),
         expectedPostUris: () => allResults,
       },
       {
         name: `with 'latest' sort, finds all posts if specifying DID`,
-        queryParams: () => ({ q: `doggo ${sc.dids.alice}`, sort: 'latest' }),
+        viewer: () => carol,
+        queryParams: () => ({ q: `doggo ${alice}`, sort: 'latest' }),
         expectedPostUris: () => allResults,
       },
       {
         name: `with 'latest' sort, finds no posts if specifying user who didn't post the term`,
-        queryParams: () => ({ q: `doggo ${sc.dids.bob}`, sort: 'latest' }),
+        viewer: () => carol,
+        queryParams: () => ({ q: `doggo ${bob}`, sort: 'latest' }),
         expectedPostUris: () => [],
       },
     ]
 
-    it.each(tests)('$name', async ({ queryParams, expectedPostUris }) => {
-      const res = await agent.app.bsky.feed.searchPosts(queryParams(), {
-        headers: await network.serviceHeaders(
-          sc.dids.alice,
-          ids.AppBskyFeedSearchPosts,
-        ),
-      })
-      expect(res.data.posts.map((p) => p.uri)).toStrictEqual(expectedPostUris())
-    })
+    it.each(tests)(
+      '$name',
+      async ({ viewer, queryParams, expectedPostUris }) => {
+        const res = await agent.app.bsky.feed.searchPosts(queryParams(), {
+          headers: await network.serviceHeaders(
+            viewer(),
+            ids.AppBskyFeedSearchPosts,
+          ),
+        })
+        expect(res.data.posts.map((p) => p.uri)).toStrictEqual(
+          expectedPostUris(),
+        )
+      },
+    )
 
     it('mod service finds even tagged posts', async () => {
       const resTop = await ozoneAgent.app.bsky.feed.searchPosts(
