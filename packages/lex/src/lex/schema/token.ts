@@ -1,11 +1,13 @@
 import { ValidationContext, ValidationResult, Validator } from '../core.js'
 
 export class TokenSchema<V extends string = any> extends Validator<V> {
+  readonly lexiconType = 'token' as const
+
   constructor(readonly value: V) {
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<V> {

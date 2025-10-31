@@ -23,6 +23,8 @@ export class Subscription<
   P extends ParamsSchema = any,
   S extends undefined | RefSchema | TypedUnionSchema | ObjectSchema = any,
 > {
+  readonly type = 'subscription' as const
+
   constructor(
     readonly nsid: N,
     readonly parameters: P,

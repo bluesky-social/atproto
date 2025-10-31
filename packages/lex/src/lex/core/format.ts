@@ -1,14 +1,21 @@
-import { CID } from 'multiformats/cid'
 import {
   ensureValidAtUri,
   ensureValidDatetime,
-  ensureValidDid,
   ensureValidHandle,
   ensureValidRecordKey,
   isValidTid,
   validateNsidRegex,
 } from '@atproto/syntax'
+import { parseCidString } from './cid.js'
+import { Did, asDid } from './did.js'
 import { ValidationContext, ValidationResult } from './validation.js'
+
+// Allow (date as Date).toISOString() to be used where datetime format is expected
+declare global {
+  interface Date {
+    toISOString(): `${string}T${string}Z`
+  }
+}
 
 export const STRING_FORMATS = Object.freeze([
   'datetime',
@@ -26,7 +33,6 @@ export const STRING_FORMATS = Object.freeze([
 
 export type StringFormat = (typeof STRING_FORMATS)[number]
 
-export type Did = `did:${string}:${string}`
 export type Uri = `${string}:${string}`
 /** An ISO 8601 formatted datetime string (YYYY-MM-DDTHH:mm:ss.sssZ) */
 export type Datetime = `${string}T${string}`
@@ -126,8 +132,7 @@ function atUri(ctx: ValidationContext, input: string): ValidationResult<AtUri> {
 
 function did(ctx: ValidationContext, input: string): ValidationResult<Did> {
   try {
-    ensureValidDid(input)
-    return ctx.success(input as Did)
+    return ctx.success(asDid(input))
   } catch (err) {
     const message = err instanceof Error ? err.message : undefined
     return ctx.issueInvalidFormat(input, 'did', message)
@@ -176,10 +181,9 @@ function nsid(ctx: ValidationContext, input: string): ValidationResult<Nsid> {
 }
 
 function cid(ctx: ValidationContext, input: string): ValidationResult<string> {
-  try {
-    CID.parse(input)
+  if (typeof input === 'string' && parseCidString(input)) {
     return ctx.success(input)
-  } catch {
+  } else {
     return ctx.issueInvalidFormat(input, 'cid')
   }
 }

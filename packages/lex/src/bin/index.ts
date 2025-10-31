@@ -11,6 +11,7 @@ export async function main() {
       (yargs) => {
         return yargs.strict().options({
           in: {
+            array: true,
             type: 'string',
             demandOption: true,
             describe: 'directory containing lexicon JSON files',

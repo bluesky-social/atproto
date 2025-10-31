@@ -12,11 +12,13 @@ export type BytesSchemaOptions = {
 }
 
 export class BytesSchema extends Validator<Uint8Array> {
+  readonly lexiconType = 'bytes' as const
+
   constructor(readonly options: BytesSchemaOptions) {
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Uint8Array> {

@@ -6,6 +6,8 @@ export type ArraySchemaOptions = {
 }
 
 export class ArraySchema<Item = any> extends Validator<Array<Item>> {
+  readonly lexiconType = 'array' as const
+
   constructor(
     readonly items: Validator<Item>,
     readonly options: ArraySchemaOptions,
@@ -13,7 +15,7 @@ export class ArraySchema<Item = any> extends Validator<Array<Item>> {
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Array<Item>> {

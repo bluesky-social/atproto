@@ -6,7 +6,7 @@ export type TypedRefSchemaValidator<V extends { $type?: string } = any> =
     ? { $type: T } & Validator<V & { $type?: T }>
     : never
 
-export type TypedRefSchemaGetter<V extends { $type?: string } = any> =
+export type TypedRefGetter<V extends { $type?: string } = any> =
   () => TypedRefSchemaValidator<V>
 
 export type TypedRefSchemaOutput<V extends { $type?: string } = any> =
@@ -15,9 +15,9 @@ export type TypedRefSchemaOutput<V extends { $type?: string } = any> =
 export class TypedRefSchema<
   V extends { $type?: string } = any,
 > extends Validator<TypedRefSchemaOutput<V>> {
-  #getter: TypedRefSchemaGetter<V>
+  #getter: TypedRefGetter<V>
 
-  constructor(getter: TypedRefSchemaGetter<V>) {
+  constructor(getter: TypedRefGetter<V>) {
     // @NOTE In order to avoid circular dependency issues, we don't resolve
     // the schema here. Instead, we resolve it lazily when first accessed.
 
@@ -48,7 +48,7 @@ export class TypedRefSchema<
     return this.schema.$type
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<TypedRefSchemaOutput<V>> {

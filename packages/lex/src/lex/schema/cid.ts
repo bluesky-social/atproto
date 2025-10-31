@@ -7,7 +7,9 @@ import {
 } from '../core.js'
 
 export class CidSchema extends Validator<CID> {
-  protected override validateInContext(
+  readonly lexiconType = 'cid-link' as const
+
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<CID> {

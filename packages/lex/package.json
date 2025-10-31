@@ -1,19 +1,60 @@
 {
   "name": "@atproto/lex",
-  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Lexicon tooling for AT",
+  "keywords": [
+    "atproto",
+    "lexicon",
+    "lex"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/lex"
+  },
   "files": [
-    "./lib.js",
-    "./lib.d.ts",
+    "./index.js",
+    "./index.d.ts",
     "./doc.js",
     "./doc.d.ts",
     "./lex.js",
     "./lex.d.ts",
-    "./lex",
+    "./polyfills.js",
+    "./polyfills.d.ts",
+    "./bin",
     "./src",
     "./dist"
   ],
   "bin": {
-    "lex": "./bin.js"
+    "lex": "./bin/lex"
+  },
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "browser": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./lex": {
+      "require": "./dist/lex/index.js",
+      "browser": "./dist/lex/index.js",
+      "types": "./dist/lex/index.d.ts"
+    },
+    "./doc": {
+      "require": "./dist/doc/index.js",
+      "browser": "./dist/doc/index.js",
+      "types": "./dist/doc/index.d.ts"
+    },
+    "./polyfills": {
+      "require": "./polyfills.js",
+      "import": "./polyfills.mjs",
+      "types": "./polyfills.d.ts"
+    }
   },
   "dependencies": {
     "@atproto/syntax": "workspace:*",
@@ -32,33 +73,8 @@
     "jest": "^28.1.2"
   },
   "scripts": {
-    "build:lib": "tsc --build tsconfig.lib.json",
-    "build:bin": "tsc --build tsconfig.bin.json",
-    "prebuild:tests": "./lex build --clear --out ./tests/lexicons --include com.example.*",
-    "build:tests": "tsc --build tsconfig.tests.json --noEmit",
-    "build": "pnpm run build:lib && pnpm run build:bin && pnpm run build:tests",
+    "build": "tsc --build tsconfig.build.json",
+    "postbuild": "./bin/lex build --override --in ./lexicons --out ./tests/lexicons",
     "test": "jest"
-  },
-  "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/lib.js",
-  "types": "./dist/lib.d.ts",
-  "exports": {
-    ".": {
-      "require": "./dist/lib.js",
-      "types": "./dist/lib.d.ts"
-    },
-    "./polyfills": {
-      "require": "./polyfills.js",
-      "types": "./polyfills.d.ts"
-    },
-    "./lex": {
-      "require": "./dist/lex/index.js",
-      "types": "./dist/lex/index.d.ts"
-    },
-    "./doc": {
-      "require": "./dist/doc/index.js",
-      "types": "./dist/doc/index.d.ts"
-    }
   }
 }

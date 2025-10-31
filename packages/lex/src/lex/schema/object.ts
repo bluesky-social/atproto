@@ -5,10 +5,10 @@ import {
   ValidationResult,
   Validator,
 } from '../core.js'
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 import { DictSchema } from './dict.js'
 
-export type ObjectSchemaProperties = Record<string, Validator>
+export type ObjectSchemaProperties = { [_ in string]: Validator<any> }
 export type ObjectSchemaOptions = {
   required?: readonly string[]
   nullable?: readonly string[]
@@ -98,11 +98,11 @@ export class ObjectSchema<
     return map
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<ObjectSchemaOutput<Validators, Options>> {
-    if (!isPureObject(input)) {
+    if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, ['object'])
     }
 

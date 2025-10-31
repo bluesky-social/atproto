@@ -32,11 +32,13 @@ export type StringSchemaOutput<Options> =
 export class StringSchema<
   const Options extends StringSchemaOptions = any,
 > extends Validator<StringSchemaOutput<Options>> {
+  readonly lexiconType = 'string' as const
+
   constructor(readonly options: Options) {
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     // @NOTE validation will be applied on the default value as well
     input: unknown = this.options.default,
     ctx: ValidationContext,

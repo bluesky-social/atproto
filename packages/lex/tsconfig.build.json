@@ -1,12 +1,13 @@
 {
   "extends": ["../../tsconfig/node.json"],
-  "include": ["./src/bin"],
+  "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,
-    "types": ["node"],
+    "target": "ES2023",
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "types": ["node"]
   }
 }

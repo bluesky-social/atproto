@@ -6,7 +6,7 @@ import {
   ValidationResult,
   Validator,
 } from '../core.js'
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
 import { ObjectSchema } from './object.js'
@@ -86,11 +86,11 @@ export class DiscriminatedUnionSchema<
     return map
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<DiscriminatedUnionSchemaOutput<Options>> {
-    if (!isPureObject(input)) {
+    if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
 

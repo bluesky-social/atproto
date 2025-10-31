@@ -1,7 +1,7 @@
 import { FailureResult, ValidationContext, Validator } from '../core.js'
 
 export class NeverSchema extends Validator<never> {
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): FailureResult {

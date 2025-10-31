@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { isObject, isPureObject } from '../lib/is-object.js'
+import { isObject, isPlainObject } from '../lib/is-object.js'
 import { encodeLexLink, parseLexLink } from './cid.js'
 import { Json } from './json.js'
 
@@ -16,7 +16,7 @@ export function parseTypedJsonBlobRef(
   input: unknown,
 ): TypedJsonBlobRef | undefined {
   if (
-    isPureObject(input) &&
+    isPlainObject(input) &&
     input.$type === 'blob' &&
     isObject(input.ref) &&
     typeof input.mimeType === 'string' &&
@@ -50,7 +50,7 @@ export function parseUntypedJsonBlobRef(
   input: unknown,
 ): UntypedJsonBlobRef | undefined {
   if (
-    isPureObject(input) &&
+    isPlainObject(input) &&
     typeof input.cid === 'string' &&
     typeof input.mimeType === 'string' &&
     Object.keys(input).length === 2
@@ -95,7 +95,7 @@ export class BlobRef {
       return input
     }
 
-    if (isPureObject(input)) {
+    if (isPlainObject(input)) {
       if ('$type' in input) {
         const blobRef = parseTypedJsonBlobRef(input)
         if (blobRef) return BlobRef.fromTypedJsonRef(blobRef)
@@ -119,7 +119,8 @@ export class BlobRef {
   }
 
   static fromUntypedJsonRef(json: UntypedJsonBlobRef): BlobRef {
-    return new BlobRef(CID.parse(json.cid), json.mimeType, -1, json)
+    const ref = CID.parse(json.cid) // throws
+    return new BlobRef(ref, json.mimeType, -1, json)
   }
 }
 

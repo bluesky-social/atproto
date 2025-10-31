@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { arrayAgg } from '../lib/array-agg.js'
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 import { PropertyKey } from './property-key.js'
 
 export interface Issue<I = unknown> {
@@ -159,7 +159,7 @@ export function stringifyValue(value: unknown): string {
       if (Array.isArray(value)) {
         return `[${stringifyArray(value, stringifyValue)}]`
       }
-      if (isPureObject(value)) {
+      if (isPlainObject(value)) {
         return `{${stringifyArray(Object.entries(value), stringifyObjectEntry)}}`
       }
     // fallthrough

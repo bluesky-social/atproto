@@ -237,7 +237,7 @@ export class LexiconSchemaBuilder {
   protected compilePayload(
     doc: LexiconDocument,
     def: LexiconPayload | undefined,
-  ): l.PayloadSchema {
+  ): l.Payload {
     return l.payload(
       def?.encoding,
       def?.schema ? this.compilePayloadSchema(doc, def.schema) : undefined,

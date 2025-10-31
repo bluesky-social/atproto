@@ -1,10 +1,19 @@
-import { ValidationContext, ValidationResult, Validator } from '../core.js'
+import {
+  Json,
+  ValidationContext,
+  ValidationResult,
+  Validator,
+  jsonToLex,
+} from '../core.js'
 
 export class UnknownSchema extends Validator<unknown> {
-  protected override validateInContext(
+  readonly lexiconType = 'unknown' as const
+
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<unknown> {
-    return ctx.success(input)
+    // By convention, the output of schemas is always coerced into Lex format.
+    return ctx.success(jsonToLex(input as Json))
   }
 }

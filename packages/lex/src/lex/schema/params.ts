@@ -1,35 +1,36 @@
 import { ValidationContext, ValidationResult, Validator } from '../core.js'
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 import { Parameter, parameterSchema } from './_parameters.js'
 import { ObjectSchemaOutput } from './object.js'
 
-export type ParamsSchemaProperties = Record<string, Validator<Parameter>>
+export type ParamsSchemaProperties = { [_ in string]: Validator<Parameter> }
 
 export type ParamsSchemaOptions = {
   required?: readonly string[]
 }
 
-export type InferParamsSchemaOptions<
+export type ParamsSchemaOutput<
   P extends ParamsSchemaProperties,
   O extends ParamsSchemaOptions,
 > = ObjectSchemaOutput<P, O>
 
 export type InferParamsSchema<T> =
   T extends ParamsSchema<infer P, infer O>
-    ? // TODO verify this still works as intended (used to be "{}" instead of "Record<string, never>")
-      Record<string, never> extends InferParamsSchemaOptions<P, O>
-      ? InferParamsSchemaOptions<P, O> | undefined
-      : InferParamsSchemaOptions<P, O>
+    ? NonNullable<unknown> extends ParamsSchemaOutput<P, O>
+      ? ParamsSchemaOutput<P, O> | undefined
+      : ParamsSchemaOutput<P, O>
     : never
 
 export class ParamsSchema<
-  const Validators extends ParamsSchemaProperties = any,
-  const Options extends ParamsSchemaOptions = any,
-  Output extends InferParamsSchemaOptions<
+  const Validators extends ParamsSchemaProperties = ParamsSchemaProperties,
+  const Options extends ParamsSchemaOptions = ParamsSchemaOptions,
+  Output extends ParamsSchemaOutput<Validators, Options> = ParamsSchemaOutput<
     Validators,
     Options
-  > = InferParamsSchemaOptions<Validators, Options>,
+  >,
 > extends Validator<Output> {
+  readonly lexiconType = 'params' as const
+
   constructor(
     readonly validators: Validators,
     readonly options: Options,
@@ -51,11 +52,11 @@ export class ParamsSchema<
     return map
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown = {},
     ctx: ValidationContext,
   ): ValidationResult<Output> {
-    if (!isPureObject(input)) {
+    if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
 

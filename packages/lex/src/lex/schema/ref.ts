@@ -3,6 +3,8 @@ import { ValidationContext, ValidationResult, Validator } from '../core.js'
 export type RefSchemaGetter<V> = () => Validator<V>
 
 export class RefSchema<V = any> extends Validator<V> {
+  readonly lexiconType = 'ref' as const
+
   #getter: RefSchemaGetter<V>
 
   constructor(getter: RefSchemaGetter<V>) {
@@ -32,7 +34,7 @@ export class RefSchema<V = any> extends Validator<V> {
     return value
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<V> {

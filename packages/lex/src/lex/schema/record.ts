@@ -1,41 +1,58 @@
 import {
   Infer,
+  Nsid,
   RecordKey,
   Simplify,
   ValidationContext,
   ValidationResult,
   Validator,
 } from '../core.js'
+import { LiteralSchema } from './literal.js'
+import { StringSchema } from './string.js'
+
+export type InferRecordKey<R extends RecordSchema> =
+  R extends RecordSchema<infer K, any, any, any>
+    ? RecordKeySchemaOutput<K>
+    : never
 
 export class RecordSchema<
   Key extends RecordKey = any,
-  Type extends string = any,
+  Type extends Nsid = any,
   Schema extends Validator<object> = any,
   Output extends Infer<Schema> & { $type: Type } = Infer<Schema> & {
     $type: Type
   },
 > extends Validator<Output> {
+  readonly lexiconType = 'record' as const
+
+  keySchema: RecordKeySchema<Key>
+
   constructor(
     readonly key: Key,
     readonly $type: Type,
     readonly schema: Schema,
   ) {
     super()
+    this.keySchema = recordKey(key)
   }
 
-  $typed<X extends { $type?: unknown }>(
-    value: X,
-  ): value is X & { $type: Type } {
+  typed<X extends { $type?: unknown }>(value: X): value is X & { $type: Type } {
     return value.$type === this.$type
   }
 
-  $build<const X extends Omit<Output, '$type'>>(
-    input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: Type }> {
+  build<X>(input: X): Simplify<Omit<X, '$type'> & { $type: Type }> {
     return { ...input, $type: this.$type }
   }
 
-  protected override validateInContext(
+  $typed<X extends { $type?: unknown }>(value: X) {
+    return this.typed<X>(value)
+  }
+
+  $build<X extends Omit<Output, '$type'>>(input: X) {
+    return this.build<X>(input)
+  }
+
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Output> {
@@ -51,4 +68,37 @@ export class RecordSchema<
 
     return result
   }
+}
+
+export type RecordKeySchemaOutput<Key extends RecordKey> = Key extends 'any'
+  ? string
+  : Key extends 'tid'
+    ? string
+    : Key extends 'nsid'
+      ? Nsid
+      : Key extends `literal:${infer L extends string}`
+        ? L
+        : never
+
+export type RecordKeySchema<Key extends RecordKey> = Validator<
+  RecordKeySchemaOutput<Key>
+>
+
+const keySchema = new StringSchema({ minLength: 1 })
+const tidSchema = new StringSchema({ format: 'tid' })
+const nsidSchema = new StringSchema({ format: 'nsid' })
+const selfLiteralSchema = new LiteralSchema('self')
+
+function recordKey<Key extends RecordKey>(key: Key): RecordKeySchema<Key> {
+  // @NOTE Use cached instances for common schemas
+  if (key === 'any') return keySchema as any
+  if (key === 'tid') return tidSchema as any
+  if (key === 'nsid') return nsidSchema as any
+  if (key.startsWith('literal:')) {
+    const value = key.slice(8) as RecordKeySchemaOutput<Key>
+    if (value === 'self') return selfLiteralSchema as any
+    return new LiteralSchema(value)
+  }
+
+  throw new Error(`Unsupported record key type: ${key}`)
 }

@@ -11,11 +11,13 @@ export type BlobSchemaOptions = {
 }
 
 export class BlobSchema extends Validator<BlobRef> {
+  readonly lexiconType = 'blob' as const
+
   constructor(readonly options: BlobSchemaOptions) {
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<BlobRef> {

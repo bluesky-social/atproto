@@ -15,22 +15,25 @@ export class LexiconDirectoryIndexer extends LexiconIterableIndexer {
 }
 
 type ReadLexiconsOptions = {
-  in: string
+  in: string | string[]
   ignoreErrors?: boolean
 }
 
 async function* readLexicons(
   options: ReadLexiconsOptions,
 ): AsyncGenerator<LexiconDocument, void, unknown> {
-  for await (const filePath of listFiles(options.in)) {
-    if (filePath.endsWith('.json')) {
-      try {
-        const data = await readFile(filePath, 'utf8')
-        yield lexiconDocumentSchema.$parse(JSON.parse(data))
-      } catch (cause) {
-        const message = `Error parsing lexicon document ${filePath}`
-        if (options.ignoreErrors) console.error(`${message}:`, cause)
-        else throw new Error(message, { cause })
+  const inputDirs = Array.isArray(options.in) ? options.in : [options.in]
+  for (const inputDir of inputDirs) {
+    for await (const filePath of listFiles(inputDir)) {
+      if (filePath.endsWith('.json')) {
+        try {
+          const data = await readFile(filePath, 'utf8')
+          yield lexiconDocumentSchema.$parse(JSON.parse(data))
+        } catch (cause) {
+          const message = `Error parsing lexicon document ${filePath}`
+          if (options.ignoreErrors) console.error(`${message}:`, cause)
+          else throw new Error(message, { cause })
+        }
       }
     }
   }

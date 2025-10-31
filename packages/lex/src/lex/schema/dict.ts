@@ -4,7 +4,7 @@ import {
   ValidationResult,
   Validator,
 } from '../core.js'
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 
 export type DictSchemaOutput<
   KeySchema extends Validator,
@@ -36,7 +36,7 @@ export class DictSchema<
     ctx: ValidationContext,
     options?: { ignoredKeys?: { has(k: string): boolean } },
   ): ValidationResult<DictSchemaOutput<KeySchema, ValueSchema>> {
-    if (!isPureObject(input)) {
+    if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'dict')
     }
 

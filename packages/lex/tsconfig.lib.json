@@ -1,17 +1,12 @@
 {
   "extends": ["../../tsconfig/isomorphic.json"],
-  "include": ["./src/lex", "./src/doc", "./src/lib.ts"],
+  "include": ["./src/lex", "./src/doc"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,
-    "emitDecoratorMetadata": false,
     "target": "ES2023",
     "rootDir": "./src",
-    "baseUrl": "./src",
-    "paths": {
-      "@atproto/lex/lex": ["./lex/index.ts"]
-    },
-    "outDir": "dist"
+    "noEmit": true // Covered by tsconfig.build.json
   }
 }

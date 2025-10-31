@@ -1,17 +1,33 @@
 import {
   Infer,
+  Restricted,
   UnknownString,
   ValidationContext,
   ValidationResult,
   Validator,
 } from '../core.js'
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 import { TypedRefSchema } from './typed-ref.js'
 
-export type UnknownTypedObject = { $type: UnknownString } & Record<
-  string,
-  never
->
+export type UnknownProperty = Restricted<'Unknown property'>
+export type UnknownTypedObject = { $type: UnknownString } & {
+  // In order to prevent places that expect an open union from accepting an
+  // invalid version of the known typed objects, we need to prevent any other
+  // properties from being present.
+  //
+  // For example, if an open union expects:
+  // ```ts
+  // UnknownTypedObject | { $type: 'A'; a: number }
+  // ```
+  // we don't want it to accept:
+  // ```ts
+  // { $type: 'A' }
+  // ```
+  // Which would be the case as `{ $type: 'A' }` is a valid
+  // `UnknownTypedObject`. By adding an index signature that forbids any
+  // property, we ensure that only valid known typed objects can be used.
+  [K in string]: UnknownProperty
+}
 
 type TypedRefSchemasToUnion<T extends readonly TypedRefSchema[]> = {
   [K in keyof T]: Infer<T[K]>
@@ -28,6 +44,8 @@ export class TypedUnionSchema<
   TypedRefs extends readonly TypedRefSchema[] = any,
   Closed extends boolean = any,
 > extends Validator<TypedUnionSchemaOutput<TypedRefs, Closed>> {
+  readonly lexiconType = 'union' as const
+
   constructor(
     readonly refs: TypedRefs,
     readonly closed: Closed,
@@ -58,11 +76,11 @@ export class TypedUnionSchema<
     return Array.from(this.refsMap.keys())
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<TypedUnionSchemaOutput<TypedRefs, Closed>> {
-    if (!isPureObject(input) || !('$type' in input)) {
+    if (!isPlainObject(input) || !('$type' in input)) {
       return ctx.issueInvalidType(input, '$typed')
     }
 

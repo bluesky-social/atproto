@@ -45,7 +45,7 @@ export abstract class Validator<V = any> {
     ctx: ValidationContext,
   ): ValidationResult<V>
 
-  is<T>(input: T): input is T & V {
+  is(input: unknown): input is V {
     const result = ValidationContext.validate(input, this, {
       allowTransform: false,
     })
@@ -83,8 +83,8 @@ export abstract class Validator<V = any> {
   // - "app.bsky.feed.post.$parse(...)" // calls a utility function created by "lex build"
   // - "app.bsky.feed.defs.postView.$parse(...)" // uses the alias defined below on the schema instance
 
-  $is<T>(input: T): input is T & V {
-    return this.is<T>(input)
+  $is(input: unknown): input is V {
+    return this.is(input)
   }
 
   $parse(input: unknown, options?: ValidationOptions): V {

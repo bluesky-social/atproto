@@ -24,7 +24,7 @@ import {
   LexiconToken,
   LexiconUnknown,
 } from '../../doc/index.js'
-import { l } from '../../lex/index.js'
+import { Nsid, l } from '../../lex/index.js'
 import { isSafeIdentifier } from './ts-lang.js'
 import { TsRefResolver, getPublicIdentifiers } from './ts-ref-resolver.js'
 
@@ -66,7 +66,7 @@ export class TsDocBuilder {
     const defs = Object.keys(this.doc.defs)
     if (defs.length) {
       this.file
-        .addImportDeclaration({ moduleSpecifier: '@atproto/lex/lex' })
+        .addImportDeclaration({ moduleSpecifier: '@atproto/lex' })
         .addNamedImports([{ name: 'l' }])
 
       for (const hash of defs) {
@@ -172,8 +172,8 @@ export class TsDocBuilder {
         l.procedure(
           $nsid,
           ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compilePayloadSchema(def.input)},
-          ${await this.compilePayloadSchema(def.output)}
+          ${await this.compilePayload(def.input)},
+          ${await this.compilePayload(def.output)}
         )
       `),
     })
@@ -196,7 +196,7 @@ export class TsDocBuilder {
       const inputTypeStmt = this.file.addTypeAlias({
         isExported: true,
         name: 'Input',
-        type: `l.InferProcedureInput<typeof ${ref.varName}>`,
+        type: `l.InferProcedureInputBody<typeof ${ref.varName}>`,
       })
 
       addJsDoc(inputTypeStmt, def.input)
@@ -204,14 +204,14 @@ export class TsDocBuilder {
       const outputTypeStmt = this.file.addTypeAlias({
         isExported: true,
         name: 'Output',
-        type: `l.InferProcedureOutput<typeof ${ref.varName}>`,
+        type: `l.InferProcedureOutputBody<typeof ${ref.varName}>`,
       })
 
       addJsDoc(outputTypeStmt, def.output)
     }
   }
 
-  private async compilePayloadSchema(def: LexiconPayload | undefined) {
+  private async compilePayload(def: LexiconPayload | undefined) {
     if (!def) return this.pure(`l.payload()`)
 
     const encodedEncoding = JSON.stringify(def.encoding)
@@ -231,7 +231,7 @@ export class TsDocBuilder {
         l.query(
           $nsid,
           ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compilePayloadSchema(def.output)}
+          ${await this.compilePayload(def.output)}
         )
       `),
     })
@@ -251,7 +251,7 @@ export class TsDocBuilder {
       this.file.addTypeAlias({
         isExported: true,
         name: 'Output',
-        type: `l.InferQueryOutput<typeof ${ref.varName}>`,
+        type: `l.InferQueryOutputBody<typeof ${ref.varName}>`,
       })
     }
   }
@@ -742,7 +742,7 @@ export class TsDocBuilder {
         // infer the type of a value that depends on its initializer type
         return this.pure(
           // @TODO Only add the "as" if there is a circular ref
-          `l.typedRef((() => ${varName}) as l.TypedRefSchemaGetter<${typeName}>)`,
+          `l.typedRef((() => ${varName}) as l.TypedRefGetter<${typeName}>)`,
         )
       }),
     )
@@ -755,7 +755,10 @@ export class TsDocBuilder {
   private async compileRefUnionType(def: LexiconRefUnion): Promise<string> {
     const types = await Promise.all(
       def.refs.map(async (ref) => {
-        const [nsid, hash = 'main'] = ref.split('#')
+        const [nsid, hash = 'main'] = ref.split('#') as [
+          '' | Nsid,
+          string | undefined,
+        ]
         const $type = l.$type(nsid || this.doc.id, hash)
         const { typeName } = await this.refResolver.resolve(ref)
         return `(${typeName} & { $type: ${JSON.stringify($type)} })`

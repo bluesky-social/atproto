@@ -17,7 +17,7 @@ export class UnionSchema<
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<UnionSchemaOutput<Options>> {

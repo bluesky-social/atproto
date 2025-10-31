@@ -6,8 +6,9 @@ import { encodeLexLink, parseLexLink } from './cid.js'
 import { Json, JsonObject, JsonScalar } from './json.js'
 
 export type LexScalar = JsonScalar | CID | Uint8Array | BlobRef
-export type Lex = LexScalar | Lex[] | { [key: string]: Lex }
-export type LexObject = { [key: string]: Lex }
+export type Lex = LexScalar | Lex[] | { [_ in string]?: Lex }
+export type LexObject = { [_ in string]?: Lex }
+export type LexArray = Lex[]
 
 export function lexStringify(input: Lex): string {
   // @NOTE This check is necessary because JSON.stringify silently returns

@@ -1,4 +1,4 @@
-import { $Type, $type, Infer, RecordKey, Validator } from './core.js'
+import { $Type, $type, Infer, Nsid, RecordKey, Validator } from './core.js'
 import { LiteralSchema } from './schema/literal.js'
 import { Subscription } from './schema/subscription.js'
 import {
@@ -24,7 +24,8 @@ import {
   ParamsSchema,
   ParamsSchemaOptions,
   ParamsSchemaProperties,
-  PayloadSchema,
+  Payload,
+  PayloadBody,
   Permission,
   PermissionOptions,
   PermissionSet,
@@ -38,8 +39,8 @@ import {
   StringSchemaOptions,
   TokenSchema,
   TypedObjectSchema,
+  TypedRefGetter,
   TypedRefSchema,
-  TypedRefSchemaGetter,
   TypedUnionSchema,
   UnionSchema,
   UnionSchemaOptions,
@@ -171,16 +172,16 @@ export function blob(options: BlobSchemaOptions = {}) {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function token<const Nsid extends string, const Hash extends string>(
-  nsid: Nsid,
-  hash: Hash,
+export function token<const N extends Nsid, const H extends string>(
+  nsid: N,
+  hash: H,
 ) {
   return new TokenSchema($type(nsid, hash))
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function typedRef<const V extends { $type?: string }>(
-  get: TypedRefSchemaGetter<V>,
+  get: TypedRefGetter<V>,
 ) {
   return new TypedRefSchema<V>(get)
 }
@@ -205,15 +206,11 @@ export function typedUnion<
  *   schemas that work even if they contain circular references.
  */
 export function typedObject<
-  const Nsid extends string,
-  const Hash extends string,
-  const Schema extends Validator<object>,
->(
-  nsid: Nsid,
-  hash: Hash,
-  schema: Schema,
-): TypedObjectSchema<$Type<Nsid, Hash>, Schema>
-export function typedObject<const V extends { $type?: string }>(
+  const N extends Nsid,
+  const H extends string,
+  const Schema extends Validator<{ [_ in string]?: unknown }>,
+>(nsid: N, hash: H, schema: Schema): TypedObjectSchema<$Type<N, H>, Schema>
+export function typedObject<const V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
     ? T extends `${infer N}#${string}`
       ? N
@@ -228,14 +225,11 @@ export function typedObject<const V extends { $type?: string }>(
 ): TypedObjectSchema<NonNullable<V['$type']>, typeof schema, V>
 /*@__NO_SIDE_EFFECTS__*/
 export function typedObject<
-  const Nsid extends string,
-  const Hash extends string,
-  const Schema extends Validator<object>,
->(nsid: Nsid, hash: Hash, schema: Schema) {
-  return new TypedObjectSchema<$Type<Nsid, Hash>, Schema>(
-    $type(nsid, hash),
-    schema,
-  )
+  const N extends Nsid,
+  const H extends string,
+  const Schema extends Validator<{ [_ in string]?: unknown }>,
+>(nsid: N, hash: H, schema: Schema) {
+  return new TypedObjectSchema<$Type<N, H>, Schema>($type(nsid, hash), schema)
 }
 
 /**
@@ -256,8 +250,8 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
  */
 export function record<
   const K extends RecordKey,
-  const T extends string,
-  const S extends Validator<object>,
+  const T extends Nsid,
+  const S extends Validator<{ [_ in string]?: unknown }>,
 >(
   key: K,
   type: AsNsid<T>,
@@ -265,7 +259,7 @@ export function record<
 ): RecordSchema<K, T, S, Infer<S> & { $type: T }>
 export function record<
   const K extends RecordKey,
-  const V extends { $type: string },
+  const V extends { $type: Nsid },
 >(
   key: K,
   type: AsNsid<V['$type']>,
@@ -274,8 +268,8 @@ export function record<
 /*@__NO_SIDE_EFFECTS__*/
 export function record<
   const K extends RecordKey,
-  const T extends string,
-  const S extends Validator<object>,
+  const T extends Nsid,
+  const S extends Validator<{ [_ in string]?: unknown }>,
 >(key: K, type: T, schema: S) {
   return new RecordSchema<K, T, S, Infer<S> & { $type: T }>(key, type, schema)
 }
@@ -291,26 +285,26 @@ export function params<
 /*@__NO_SIDE_EFFECTS__*/
 export function payload<
   const E extends string | undefined = undefined,
-  const S extends Validator | undefined = undefined,
+  const S extends PayloadBody<E> = undefined,
 >(encoding: E = undefined as E, schema: S = undefined as S) {
-  return new PayloadSchema<E, S>(encoding, schema)
+  return new Payload<E, S>(encoding, schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function query<
-  const N extends string,
+  const N extends Nsid,
   const P extends ParamsSchema,
-  const O extends PayloadSchema,
+  const O extends Payload,
 >(nsid: N, parameters: P, output: O) {
   return new Query<N, P, O>(nsid, parameters, output)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function procedure<
-  const N extends string,
+  const N extends Nsid,
   const P extends ParamsSchema,
-  const I extends PayloadSchema,
-  const O extends PayloadSchema,
+  const I extends Payload,
+  const O extends Payload,
 >(nsid: N, parameters: P, input: I, output: O) {
   return new Procedure<N, P, I, O>(nsid, parameters, input, output)
 }

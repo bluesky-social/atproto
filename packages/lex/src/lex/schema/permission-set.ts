@@ -12,6 +12,8 @@ export class PermissionSet<
   const Permissions extends readonly Permission[] = any,
   const Options extends PermissionSetOptions = any,
 > {
+  readonly lexiconType = 'permission-set' as const
+
   constructor(
     readonly nsid: Nsid,
     readonly permissions: Permissions,

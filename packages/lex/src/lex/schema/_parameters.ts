@@ -17,4 +17,4 @@ export const parameterSchema = new UnionSchema([
 ])
 
 export type Parameter = Infer<typeof parameterSchema>
-export type Parameters = Record<string, Parameter>
+export type Parameters = { [_ in string]?: Parameter }

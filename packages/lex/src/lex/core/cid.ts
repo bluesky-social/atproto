@@ -1,20 +1,24 @@
 import { CID } from 'multiformats/cid'
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 import { Json } from './json.js'
 
 export { CID }
 
+export function parseCidString(input: string): CID | undefined {
+  try {
+    return CID.parse(input)
+  } catch {
+    return undefined
+  }
+}
+
 export function parseLexLink(input: unknown): CID | undefined {
   if (
-    isPureObject(input) &&
+    isPlainObject(input) &&
     typeof input.$link === 'string' &&
     Object.keys(input).length === 1
   ) {
-    try {
-      return CID.parse(input.$link)
-    } catch {
-      // ignore
-    }
+    return parseCidString(input.$link)
   }
 
   return undefined

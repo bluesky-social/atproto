@@ -1,10 +1,10 @@
-import { isPureObject } from '../lib/is-object.js'
+import { isPlainObject } from '../lib/is-object.js'
 import { Json } from './json.js'
 import { decodeBase64, ui8ToBase64 } from './ui8.js'
 
 export function parseLexBytes(input: unknown): Uint8Array | undefined {
   if (
-    isPureObject(input) &&
+    isPlainObject(input) &&
     '$bytes' in input &&
     typeof input.$bytes === 'string' &&
     Object.keys(input).length === 1

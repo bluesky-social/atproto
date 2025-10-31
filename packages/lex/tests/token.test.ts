@@ -2,7 +2,7 @@ import { l } from '@atproto/lex/lex'
 import * as com from './lexicons/com.js'
 
 describe('com.example.token', () => {
-  for (const hash of ['main', 'myToken', 'anotherToken']) {
+  for (const hash of ['main', 'myToken', 'anotherToken'] as const) {
     const token = l.$type(`com.example.token`, hash)
     describe(token, () => {
       it('identifies the token correctly', () => {

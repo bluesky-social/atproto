@@ -7,7 +7,7 @@ export class LiteralSchema<
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Output> {

@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import kitchenSink from '../../lexicons/com/example/kitchenSink.json'
 import { l } from '../lex/index.js'
 import { LexiconDocument, lexiconDocumentSchema } from './lexicon-document.js'
 import { LexiconIterableIndexer } from './lexicon-iterable-indexer.js'
@@ -27,7 +26,56 @@ describe('LexiconSchemaBuilder', () => {
 
   beforeAll(async () => {
     const indexer = new LexiconIterableIndexer([
-      lexiconDocumentSchema.parse(kitchenSink),
+      lexiconDocumentSchema.parse({
+        lexicon: 1,
+        id: 'com.example.kitchenSink',
+        defs: {
+          main: {
+            type: 'record',
+            description: 'A record',
+            key: 'tid',
+            record: {
+              type: 'object',
+              required: [
+                'object',
+                'array',
+                'boolean',
+                'integer',
+                'string',
+                'bytes',
+                'cidLink',
+              ],
+              properties: {
+                object: { type: 'ref', ref: '#object' },
+                array: { type: 'array', items: { type: 'string' } },
+                boolean: { type: 'boolean' },
+                integer: { type: 'integer' },
+                string: { type: 'string' },
+                bytes: { type: 'bytes' },
+                cidLink: { type: 'cid-link' },
+              },
+            },
+          },
+          object: {
+            type: 'object',
+            required: ['object', 'array', 'boolean', 'integer', 'string'],
+            properties: {
+              object: { type: 'ref', ref: '#subobject' },
+              array: { type: 'array', items: { type: 'string' } },
+              boolean: { type: 'boolean' },
+              integer: { type: 'integer' },
+              string: { type: 'string' },
+            },
+          },
+          subobject: {
+            type: 'object',
+            required: ['boolean'],
+            properties: {
+              boolean: { type: 'boolean' },
+            },
+          },
+        },
+      }),
     ])
     schemas = await LexiconSchemaBuilder.buildAll(indexer)
   })

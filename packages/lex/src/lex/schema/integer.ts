@@ -7,11 +7,13 @@ export type IntegerSchemaOptions = {
 }
 
 export class IntegerSchema extends Validator<number> {
+  readonly lexiconType = 'integer' as const
+
   constructor(readonly options: IntegerSchemaOptions) {
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown = this.options.default,
     ctx: ValidationContext,
   ): ValidationResult<number> {

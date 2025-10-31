@@ -1,18 +1,22 @@
 import {
+  $Type,
   Infer,
   Simplify,
   ValidationContext,
   ValidationResult,
   Validator,
 } from '../core.js'
+import { isPlainObject } from '../lib/is-object.js'
 
 export class TypedObjectSchema<
-  Type extends string = any,
-  Schema extends Validator<object> = any,
+  Type extends $Type = any,
+  Schema extends Validator<Record<string, unknown>> = any,
   Output extends Infer<Schema> & { $type?: Type } = Infer<Schema> & {
     $type?: Type
   },
 > extends Validator<Output> {
+  readonly lexiconType = 'object' as const
+
   constructor(
     readonly $type: Type,
     readonly schema: Schema,
@@ -20,36 +24,40 @@ export class TypedObjectSchema<
     super()
   }
 
-  $typed<X extends { $type?: unknown }>(
+  typed<X extends { $type?: unknown }>(
     value: X,
   ): value is X & { $type?: Type } {
     return value.$type === undefined || value.$type === this.$type
   }
 
-  $build<const X extends Omit<Output, '$type'>>(
-    input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: Type }> {
+  build<X>(input: X): Simplify<Omit<X, '$type'> & { $type: Type }> {
     return { ...input, $type: this.$type }
   }
 
-  protected override validateInContext(
+  $typed<X extends { $type?: unknown }>(value: X) {
+    return this.typed<X>(value)
+  }
+
+  $build<X extends Omit<Output, '$type'>>(input: X) {
+    return this.build<X>(input)
+  }
+
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Output> {
-    const result = ctx.validate(input, this.schema)
-
-    if (!result.success) {
-      return result
+    if (!isPlainObject(input)) {
+      return ctx.issueInvalidType(input, 'object')
     }
 
     if (
-      '$type' in result.value &&
-      result.value.$type !== undefined &&
-      result.value.$type !== this.$type
+      '$type' in input &&
+      input.$type !== undefined &&
+      input.$type !== this.$type
     ) {
-      return ctx.issueInvalidPropertyValue(result.value, '$type', [this.$type])
+      return ctx.issueInvalidPropertyValue(input, '$type', [this.$type])
     }
 
-    return result as ValidationResult<Output>
+    return ctx.validate(input, this.schema as Validator<Output>)
   }
 }

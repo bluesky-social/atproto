@@ -1,26 +1,28 @@
-import { Infer } from '../core.js'
+import { Infer, Nsid } from '../core.js'
 import { ParamsSchema } from './params.js'
-import { InferPayloadSchemaBody, PayloadSchema } from './payload.js'
+import { InferPayloadBody, Payload } from './payload.js'
 
 export type InferProcedureParameters<Q extends Procedure> =
   Q extends Procedure<any, infer P extends ParamsSchema, any> ? Infer<P> : never
 
-export type InferProcedureInput<Q extends Procedure> =
-  Q extends Procedure<any, any, infer I extends PayloadSchema, any>
-    ? InferPayloadSchemaBody<I>
+export type InferProcedureInputBody<Q extends Procedure> =
+  Q extends Procedure<any, any, infer I extends Payload, any>
+    ? InferPayloadBody<I>
     : never
 
-export type InferProcedureOutput<Q extends Procedure> =
-  Q extends Procedure<any, any, any, infer O extends PayloadSchema>
-    ? InferPayloadSchemaBody<O>
+export type InferProcedureOutputBody<Q extends Procedure> =
+  Q extends Procedure<any, any, any, infer O extends Payload>
+    ? InferPayloadBody<O>
     : never
 
 export class Procedure<
-  N extends string = any,
-  P extends ParamsSchema = any,
-  I extends PayloadSchema = any,
-  O extends PayloadSchema = any,
+  N extends Nsid = Nsid,
+  P extends ParamsSchema = ParamsSchema,
+  I extends Payload = Payload,
+  O extends Payload = Payload,
 > {
+  readonly lexiconType = 'procedure' as const
+
   constructor(
     readonly nsid: N,
     readonly parameters: P,

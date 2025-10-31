@@ -5,11 +5,13 @@ export type BooleanSchemaOptions = {
 }
 
 export class BooleanSchema extends Validator<boolean> {
+  readonly lexiconType = 'boolean' as const
+
   constructor(readonly options: BooleanSchemaOptions) {
     super()
   }
 
-  protected override validateInContext(
+  override validateInContext(
     input: unknown = this.options.default,
     ctx: ValidationContext,
   ): ValidationResult<boolean> {

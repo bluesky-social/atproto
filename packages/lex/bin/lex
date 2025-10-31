@@ -8,7 +8,7 @@
 // written in plain JS. This allows package managers to properly link the CLI
 // command when the monorepo is being setup (during initial "pnpm install").
 
-const { main } = require('./dist/bin/index.js')
+const { main } = require('../dist/bin/index.js')
 
 void main().catch((err) => {
   console.error(err)
