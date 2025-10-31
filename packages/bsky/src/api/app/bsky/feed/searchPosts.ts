@@ -104,28 +104,27 @@ const hydration = async (
 
 const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
   const { ctx, params, skeleton, hydration } = inputs
+  const { parsedQuery } = skeleton
+
   skeleton.posts = skeleton.posts.filter((uri) => {
     const post = hydration.posts?.get(uri)
     if (!post) return
 
     const creator = creatorFromUri(uri)
-
-    if (ctx.views.viewerBlockExists(creator, hydration)) {
-      return false
-    }
-
-    const { author } = skeleton.parsedQuery
     const isCuratedSearch = params.sort === 'top'
     const isPostByViewer = creator === params.hydrateCtx.viewer
-    if (
-      !isPostByViewer &&
-      !params.isModService &&
-      (isCuratedSearch || !author) &&
-      [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
-    ) {
-      return false
-    }
 
+    // Cases to always show.
+    if (isPostByViewer) return true
+    if (params.isModService) return true
+
+    // Cases to never show.
+    if (ctx.views.viewerBlockExists(creator, hydration)) return false
+
+    // Cases to conditionally show based on tagging.
+    const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    if (isCuratedSearch && tagged) return false
+    if (!parsedQuery.author && tagged) return false
     return true
   })
   return skeleton
