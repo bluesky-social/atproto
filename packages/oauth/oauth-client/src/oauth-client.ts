@@ -121,14 +121,17 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     signal?.throwIfAborted()
 
     const request = new Request(clientId, {
-      redirect: 'error',
+      redirect: 'manual',
       signal: signal,
     })
     const response = await fetch(request)
 
     if (response.status !== 200) {
       response.body?.cancel?.()
-      throw new TypeError(`Failed to fetch client metadata: ${response.status}`)
+      // Note: browsers can return an opaque redirect with no visible status (status may be 0/falsy), so response.status can be empty and should be treated as "redirected"
+      throw new TypeError(
+        `Failed to fetch client metadata: ${response.status || 'redirected'}`,
+      )
     }
 
     // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-4.1
