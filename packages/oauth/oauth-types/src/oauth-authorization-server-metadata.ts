@@ -1,5 +1,4 @@
 import { z } from 'zod'
-
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
 import { webUriSchema } from './uri.js'
@@ -46,7 +45,11 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
   authorization_endpoint: webUriSchema, // .optional(),
 
   token_endpoint: webUriSchema, // .optional(),
-  token_endpoint_auth_methods_supported: z.array(z.string()).optional(),
+  // https://www.rfc-editor.org/rfc/rfc8414.html#section-2
+  token_endpoint_auth_methods_supported: z
+    .array(z.string())
+    // > If omitted, the default is "client_secret_basic" [...].
+    .default(['client_secret_basic']),
   token_endpoint_auth_signing_alg_values_supported: z
     .array(z.string())
     .optional(),
@@ -64,10 +67,10 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
   // https://datatracker.ietf.org/doc/html/rfc9449#section-5.1
   dpop_signing_alg_values_supported: z.array(z.string()).optional(),
 
-  // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+  // https://www.rfc-editor.org/rfc/rfc9728.html#section-4
   protected_resources: z.array(webUriSchema).optional(),
 
-  // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+  // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
   client_id_metadata_document_supported: z.boolean().optional(),
 })
 
@@ -97,5 +100,17 @@ export const oauthAuthorizationServerMetadataValidator =
             message: 'Response type "code" is required',
           })
         }
+      }
+    })
+    .superRefine((data, ctx) => {
+      if (
+        data.token_endpoint_auth_signing_alg_values_supported?.includes('none')
+      ) {
+        // https://openid.net/specs/openid-connect-discovery-1_0.html#rfc.section.3
+        // > The value `none` MUST NOT be used.
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Client authentication method "none" is not allowed',
+        })
       }
     })

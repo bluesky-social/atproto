@@ -2,12 +2,20 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.sync.listBlobs'
+
+export type QueryParams = {
   /** The DID of the repo. */
   did: string
   /** Optional revision of the repo to list blobs since. */
@@ -15,13 +23,11 @@ export interface QueryParams {
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
   cids: string[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

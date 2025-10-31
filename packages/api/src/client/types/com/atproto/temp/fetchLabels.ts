@@ -2,22 +2,28 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoLabelDefs from '../label/defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ComAtprotoLabelDefs from '../label/defs.js'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.temp.fetchLabels'
+
+export type QueryParams = {
   since?: number
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   labels: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

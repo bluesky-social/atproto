@@ -1,16 +1,15 @@
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-
-import { formatAccountStatus } from '../../../../account-manager'
-import AppContext from '../../../../context'
+import { formatAccountStatus } from '../../../../account-manager/account-manager'
+import { AppContext } from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
+import { resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
-import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
-    auth: ctx.authVerifier.refresh,
+    auth: ctx.authVerifier.refresh(),
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const user = await ctx.accountManager.getAccount(did, {
@@ -33,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.refreshSession(
             undefined,
-            authPassthru(req),
+            ctx.entrywayPassthruHeaders(req),
           ),
         )
       }

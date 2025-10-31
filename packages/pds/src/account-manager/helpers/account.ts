@@ -1,7 +1,7 @@
-import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
-import { AccountDb, ActorEntry } from '../db'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { DAY } from '@atproto/common'
+import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { AccountDb, ActorEntry } from '../db'
 
 export class UserAlreadyExistsError extends Error {}
 

@@ -1,6 +1,11 @@
+import net from 'node:net'
+import { sql } from 'kysely'
+import AtpAgent from '@atproto/api'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
 import { LabelRow } from '../db/schema/label'
+import { DbRef } from '../db/types'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
 
 export type SignedLabel = Label & { sig: Uint8Array }
@@ -16,7 +21,7 @@ export const formatLabel = (row: LabelRow): Label => {
     cts: row.cts,
     exp: row.exp ?? undefined,
     sig: row.sig ? new Uint8Array(row.sig) : undefined,
-  }) as Label
+  } satisfies Label) as unknown as Label
 }
 
 export const formatLabelRow = (
@@ -50,7 +55,7 @@ export const signLabel = async (
     neg: neg === true ? true : undefined,
     cts,
     exp,
-  }) as Label
+  } satisfies Label) as unknown as Label
 
   const bytes = cborEncode(reformatted)
   const sig = await signingKey.sign(bytes)
@@ -58,4 +63,34 @@ export const signLabel = async (
     ...reformatted,
     sig,
   }
+}
+
+export const isSafeUrl = (url: URL) => {
+  if (url.protocol !== 'https:') return false
+  if (!url.hostname || url.hostname === 'localhost') return false
+  if (net.isIP(url.hostname) !== 0) return false
+  return true
+}
+
+export const getPdsAgentForRepo = async (
+  idResolver: IdResolver,
+  did: string,
+  devMode?: boolean,
+) => {
+  const { pds } = await idResolver.did.resolveAtprotoData(did)
+  const url = new URL(pds)
+  if (!devMode && !isSafeUrl(url)) {
+    return { url, agent: null }
+  }
+
+  return { url, agent: new AtpAgent({ service: url }) }
+}
+
+export const dateFromDatetime = (datetime: Date) => {
+  const [date] = datetime.toISOString().split('T')
+  return date
+}
+
+export const dateFromDbDatetime = (dateRef: DbRef) => {
+  return sql<string>`SPLIT_PART(${dateRef}, 'T', 1)`
 }

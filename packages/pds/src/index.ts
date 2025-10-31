@@ -4,37 +4,52 @@
 // leave at top of file before importing Routes
 import 'express-async-errors'
 
-import express from 'express'
+import events from 'node:events'
+import http from 'node:http'
+import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
-import http from 'http'
-import events from 'events'
-import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
+import express from 'express'
+import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
-import API from './api'
+import {
+  MemoryRateLimiter,
+  MethodHandler,
+  RedisRateLimiter,
+  ResponseType,
+  XRPCError,
+} from '@atproto/xrpc-server'
+import apiRoutes from './api'
 import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
-import * as wellKnown from './well-known'
-import * as error from './error'
-import { loggerMiddleware } from './logger'
 import { ServerConfig, ServerSecrets } from './config'
+import { AppContext, AppContextOptions } from './context'
+import * as error from './error'
 import { createServer } from './lexicon'
-import { createHttpTerminator, HttpTerminator } from 'http-terminator'
-import AppContext, { AppContextOptions } from './context'
-import compression from './util/compression'
+import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
+import compression from './util/compression'
+import * as wellKnown from './well-known'
 
+export { createSecretKeyObject } from './auth-verifier'
 export * from './config'
+export { AppContext } from './context'
 export { Database } from './db'
 export { DiskBlobStore } from './disk-blobstore'
-export { AppContext } from './context'
-export { httpLogger } from './logger'
-export { createSecretKeyObject } from './auth-verifier'
-export { type Handler as SkeletonHandler } from './lexicon/types/app/bsky/feed/getFeedSkeleton'
 export { createServer as createLexiconServer } from './lexicon'
-export * as sequencer from './sequencer'
-export { type PreparedWrite } from './repo'
+export { httpLogger } from './logger'
+export { type CommitDataWithOps, type PreparedWrite } from './repo'
 export * as repoPrepare from './repo/prepare'
 export { scripts } from './scripts'
+export * as sequencer from './sequencer'
+
+// Legacy export for backwards compatibility
+export type SkeletonHandler = MethodHandler<
+  void,
+  AppBskyFeedGetFeedSkeleton.QueryParams,
+  AppBskyFeedGetFeedSkeleton.HandlerInput,
+  AppBskyFeedGetFeedSkeleton.HandlerOutput
+>
 
 export class PDS {
   public ctx: AppContext
@@ -56,7 +71,9 @@ export class PDS {
   ): Promise<PDS> {
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
-    const xrpcOpts: XrpcServerOptions = {
+    const { rateLimits } = ctx.cfg
+
+    const server = createServer({
       validateResponse: false,
       payload: {
         jsonLimit: 150 * 1024, // 150kb
@@ -64,9 +81,46 @@ export class PDS {
         blobLimit: cfg.service.blobUploadLimit,
       },
       catchall: proxyHandler(ctx),
-      rateLimits: ctx.ratelimitCreator
+      errorParser: (err) => {
+        if (err instanceof PlcClientError) {
+          const payloadMessage =
+            typeof err.data === 'object' &&
+            err.data != null &&
+            'message' in err.data &&
+            typeof err.data.message === 'string' &&
+            err.data.message
+
+          const type =
+            err.status >= 500
+              ? ResponseType.UpstreamFailure
+              : ResponseType.InvalidRequest
+
+          return new XRPCError(
+            type,
+            payloadMessage || 'Unable to perform PLC operation',
+          )
+        }
+
+        return XRPCError.fromError(err)
+      },
+      rateLimits: rateLimits.enabled
         ? {
-            creator: ctx.ratelimitCreator,
+            creator: ctx.redisScratch
+              ? (opts) => new RedisRateLimiter(ctx.redisScratch, opts)
+              : (opts) => new MemoryRateLimiter(opts),
+            bypass: ({ req }) => {
+              const { bypassKey, bypassIps } = rateLimits
+              if (
+                bypassKey &&
+                bypassKey === req.headers['x-ratelimit-bypass']
+              ) {
+                return true
+              }
+              if (bypassIps && bypassIps.includes(req.ip)) {
+                return true
+              }
+              return false
+            },
             global: [
               {
                 name: 'global-ip',
@@ -88,14 +142,19 @@ export class PDS {
             ],
           }
         : undefined,
-    }
+    })
 
-    let server = createServer(xrpcOpts)
-
-    server = API(server, ctx)
+    apiRoutes(server, ctx)
 
     const app = express()
-    app.set('trust proxy', true)
+    app.set('trust proxy', [
+      // e.g. load balancer
+      'loopback',
+      'linklocal',
+      'uniquelocal',
+      // e.g. trust x-forwarded-for via entryway ip
+      ...getTrustedIps(cfg),
+    ])
     app.use(loggerMiddleware)
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
@@ -134,3 +193,8 @@ export class PDS {
 }
 
 export default PDS
+
+const getTrustedIps = (cfg: ServerConfig) => {
+  if (!cfg.rateLimits.enabled) return []
+  return cfg.rateLimits.bypassIps ?? []
+}

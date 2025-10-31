@@ -1,12 +1,14 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ServerConfig } from '../../../../config'
+import { AppContext } from '../../../../context'
+import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
-  QueryParams,
   OutputSchema,
+  QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
-import AppContext from '../../../../context'
-import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -14,11 +16,9 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
 import { postUriToThreadgateUri } from '../../../../util/uris'
-import { ServerConfig } from '../../../../config'
+import { Views } from '../../../../views'
+import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(

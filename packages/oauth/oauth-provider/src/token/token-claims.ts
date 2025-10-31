@@ -1,31 +1,21 @@
-import { jwtPayloadSchema } from '@atproto/jwk'
-import z from 'zod'
+import { OAuthScope } from '@atproto/oauth-types'
+import { ClientId } from '../client/client-id.js'
+import { TokenId } from './token-id.js'
 
-import { clientIdSchema } from '../client/client-id.js'
-import { Simplify } from '../lib/util/type.js'
-import { subSchema } from '../oidc/sub.js'
-
-export const tokenClaimsSchema = z.intersection(
-  jwtPayloadSchema
-    .pick({
-      iat: true,
-      exp: true,
-      aud: true,
-    })
-    .required(),
-  jwtPayloadSchema
-    .omit({
-      exp: true,
-      iat: true,
-      iss: true,
-      aud: true,
-      jti: true,
-    })
-    .partial()
-    .extend({
-      sub: subSchema,
-      client_id: clientIdSchema,
-    }),
-)
-
-export type TokenClaims = Simplify<z.infer<typeof tokenClaimsSchema>>
+/**
+ * The access token claims that will be set by the {@link TokenManager} and that
+ * will be passed to the "onCreateToken" hook.
+ *
+ * @note "iss" is missing here because it cannot be altered and will always be
+ * set to the Authorization Server's identifier.
+ */
+export type TokenClaims = {
+  jti: TokenId
+  sub: string
+  iat: number
+  exp: number
+  aud: string | [string, ...string[]]
+  cnf?: { jkt: string }
+  scope?: OAuthScope
+  client_id: ClientId
+}

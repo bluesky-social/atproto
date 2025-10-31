@@ -1,10 +1,12 @@
-import http from 'http'
-import events from 'events'
-import express from 'express'
+import events from 'node:events'
+import http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
-import createRoutes from './routes'
-import { Database } from './db'
+import express from 'express'
 import { IdResolver, MemoryCache } from '@atproto/identity'
+import { Database, DatabaseSchema } from './db'
+import createRoutes from './routes'
+
+export type { DatabaseSchema }
 
 export { RepoSubscription } from './subscription'
 

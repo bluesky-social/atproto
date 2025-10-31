@@ -1,5 +1,5 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('label hydration', () => {
   let network: TestNetwork
@@ -76,6 +76,7 @@ describe('label hydration', () => {
         cid: opts.cid,
         val: opts.val,
         cts: new Date().toISOString(),
+        exp: null,
         neg: false,
         src: opts.src ?? labelerDid,
       })

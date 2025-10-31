@@ -1,12 +1,13 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
+import { OutputSchema as GetListFeedOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getListFeed'
 import {
   forSnapshot,
   paginateAll,
   stripViewer,
   stripViewerFromPost,
 } from '../_util'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('list feed views', () => {
   let network: TestNetwork
@@ -59,7 +60,8 @@ describe('list feed views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
+    const results = (results: GetListFeedOutputSchema[]) =>
+      results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getListFeed(
         {
@@ -118,11 +120,14 @@ describe('list feed views', () => {
         }
         if (item.reply) {
           result.reply = {
-            parent: stripViewerFromPost(item.reply.parent),
-            root: stripViewerFromPost(item.reply.root),
-            grandparentAuthor:
-              item.reply.grandparentAuthor &&
-              stripViewer(item.reply.grandparentAuthor),
+            parent: stripViewerFromPost(item.reply.parent, true),
+            root: stripViewerFromPost(item.reply.root, true),
+          }
+
+          if (item.reply.grandparentAuthor) {
+            result.reply.grandparentAuthor = stripViewer(
+              item.reply.grandparentAuthor,
+            )
           }
         }
         return result

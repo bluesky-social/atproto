@@ -1,14 +1,15 @@
+import assert from 'node:assert'
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
-import { LexiconDoc } from '@atproto/lexicon'
-import { ResponseType, XrpcClient } from '@atproto/xrpc'
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
-import { createServer, closeServer } from './_util'
+import { LexiconDoc } from '@atproto/lexicon'
+import { ResponseType, XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
-import logger from '../src/logger'
+import { logger } from '../src/logger'
+import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [
   {
@@ -121,34 +122,27 @@ describe('Bodies', () => {
       blobLimit: BLOB_LIMIT,
     },
   })
-  server.method(
-    'io.example.validationTest',
-    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
-      if (ctx.input?.body instanceof Readable) {
-        throw new Error('Input is readable')
-      }
+  server.method('io.example.validationTest', (ctx) => {
+    assert(!(ctx.input?.body instanceof Readable), 'Input is readable')
 
-      return {
-        encoding: 'json',
-        body: ctx.input?.body ?? null,
-      }
-    },
-  )
+    return {
+      encoding: 'json',
+      body: ctx.input?.body ?? null,
+    }
+  })
   server.method('io.example.validationTestTwo', () => ({
     encoding: 'json',
     body: { wrong: 'data' },
   }))
-  server.method(
-    'io.example.blobTest',
-    async (ctx: { input?: xrpcServer.HandlerInput }) => {
-      const buffer = await consumeInput(ctx.input?.body)
-      const cid = await cidForCbor(buffer)
-      return {
-        encoding: 'json',
-        body: { cid: cid.toString() },
-      }
-    },
-  )
+  server.method('io.example.blobTest', async (ctx) => {
+    assert(ctx.input?.body != null, 'Input body is required')
+    const buffer = await consumeInput(ctx.input.body)
+    const cid = await cidForCbor(buffer)
+    return {
+      encoding: 'json',
+      body: { cid: cid.toString() },
+    }
+  })
 
   let client: XrpcClient
   let url: string
@@ -252,18 +246,23 @@ describe('Bodies', () => {
     )
 
     // 500 responses don't include details, so we nab details from the logger.
-    let error: string | undefined
-    const origError = logger.error
-    logger.error = (obj, ...args) => {
-      error = obj.message
-      logger.error = origError
-      return logger.error(obj, ...args)
-    }
+    const spy = jest.spyOn(logger, 'error')
+    try {
+      await expect(client.call('io.example.validationTestTwo')).rejects.toThrow(
+        'Internal Server Error',
+      )
 
-    await expect(client.call('io.example.validationTestTwo')).rejects.toThrow(
-      'Internal Server Error',
-    )
-    expect(error).toEqual(`Output must have the property "foo"`)
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          err: expect.objectContaining({
+            message: 'Output must have the property "foo"',
+          }),
+        }),
+        'unhandled exception in xrpc method io.example.validationTestTwo',
+      )
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('supports ArrayBuffers', async () => {
@@ -290,10 +289,7 @@ describe('Bodies', () => {
     expect(fileResponse.data.cid).toEqual(expectedCid.toString())
   })
 
-  // This does not work because the xrpc-server will add a json middleware
-  // regardless of the "input" definition. This is probably a behavior that
-  // should be fixed in the xrpc-server.
-  it.skip('supports upload of json data', async () => {
+  it('supports upload of json data', async () => {
     const jsonFile = new Blob([Buffer.from(`{"foo":"bar","baz":[3, null]}`)], {
       type: 'application/json',
     })

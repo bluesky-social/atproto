@@ -2,19 +2,25 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyVideoDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyVideoDefs from './defs.js'
 
-export interface QueryParams {}
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.video.uploadVideo'
 
+export type QueryParams = {}
 export type InputSchema = string | Uint8Array | Blob
 
 export interface OutputSchema {
   jobStatus: AppBskyVideoDefs.JobStatus
-  [k: string]: unknown
 }
 
 export interface CallOptions {

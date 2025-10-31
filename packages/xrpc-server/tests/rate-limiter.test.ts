@@ -4,7 +4,7 @@ import { MINUTE } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
-import { RateLimiter } from '../src'
+import { MemoryRateLimiter } from '../src'
 import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [
@@ -19,6 +19,25 @@ const LEXICONS: LexiconDoc[] = [
           required: ['str'],
           properties: {
             str: { type: 'string' },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'io.example.routeLimitReset',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['count'],
+          properties: {
+            count: { type: 'integer' },
           },
         },
         output: {
@@ -113,11 +132,8 @@ describe('Parameters', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
-      creator: (opts: xrpcServer.RateLimiterOpts) =>
-        RateLimiter.memory({
-          bypassSecret: 'bypass',
-          ...opts,
-        }),
+      creator: (opts) => new MemoryRateLimiter(opts),
+      bypass: ({ req }) => req.headers['x-ratelimit-bypass'] === 'bypass',
       shared: [
         {
           name: 'shared-limit',
@@ -140,18 +156,33 @@ describe('Parameters', () => {
       points: 5,
       calcKey: ({ params }) => params.str as string,
     },
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),
   })
+  server.method('io.example.routeLimitReset', {
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 2,
+    },
+    handler: (ctx) => {
+      if (ctx.params.count === 1) {
+        ctx.resetRouteRateLimits()
+      }
 
+      return {
+        encoding: 'json',
+        body: {},
+      }
+    },
+  })
   server.method('io.example.sharedLimitOne', {
     rateLimit: {
       name: 'shared-limit',
       calcPoints: ({ params }) => params.points as number,
     },
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),
@@ -161,7 +192,7 @@ describe('Parameters', () => {
       name: 'shared-limit',
       calcPoints: ({ params }) => params.points as number,
     },
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),
@@ -178,7 +209,7 @@ describe('Parameters', () => {
         points: 10,
       },
     ],
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),
@@ -206,6 +237,22 @@ describe('Parameters', () => {
       await makeCall()
     }
     await expect(makeCall).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('can reset route rate limits', async () => {
+    // Limit is 2.
+    // Call 0 is OK (1/2).
+    // Call 1 is OK (2/2), and resets the limit.
+    // Call 2 is OK (1/2).
+    // Call 3 is OK (2/2).
+    for (let i = 0; i < 4; i++) {
+      await client.call('io.example.routeLimitReset', { count: i })
+    }
+
+    // Call 4 exceeds the limit (3/2).
+    await expect(
+      client.call('io.example.routeLimitReset', { count: 4 }),
+    ).rejects.toThrow('Rate Limit Exceeded')
   })
 
   it('rate limits on a shared route', async () => {

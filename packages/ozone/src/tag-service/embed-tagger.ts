@@ -1,13 +1,13 @@
 import {
+  AppBskyEmbedExternal,
   AppBskyEmbedImages,
   AppBskyEmbedRecordWithMedia,
-  AppBskyFeedPost,
   AppBskyEmbedVideo,
-  AppBskyEmbedExternal,
+  AppBskyFeedPost,
 } from '@atproto/api'
+import { ids } from '../lexicon/lexicons'
 import { langLogger as log } from '../logger'
 import { ContentTagger } from './content-tagger'
-import { ids } from '../lexicon/lexicons'
 
 export class EmbedTagger extends ContentTagger {
   tagPrefix = 'embed:'
@@ -28,12 +28,14 @@ export class EmbedTagger extends ContentTagger {
         return []
       }
       const tags: string[] = []
-      if (AppBskyFeedPost.isRecord(recordValue)) {
+      const result = AppBskyFeedPost.validateRecord(recordValue)
+
+      if (result.success) {
         const embedContent = AppBskyEmbedRecordWithMedia.isMain(
-          recordValue.embed,
+          result.value.embed,
         )
-          ? recordValue.embed.media
-          : recordValue.embed
+          ? result.value.embed.media
+          : result.value.embed
 
         if (AppBskyEmbedImages.isMain(embedContent)) {
           tags.push(`${this.tagPrefix}image`)

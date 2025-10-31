@@ -1,15 +1,15 @@
-import { Service } from './proto/bsync_connect'
 import {
   Code,
   ConnectError,
+  Interceptor,
   PromiseClient,
   createPromiseClient,
-  Interceptor,
 } from '@connectrpc/connect'
 import {
-  createConnectTransport,
   ConnectTransportOptions,
+  createConnectTransport,
 } from '@connectrpc/connect-node'
+import { Service } from './proto/bsync_connect'
 
 export type BsyncClient = PromiseClient<typeof Service>
 

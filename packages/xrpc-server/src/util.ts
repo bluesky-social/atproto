@@ -1,29 +1,42 @@
 import assert from 'node:assert'
-import { Duplex, pipeline, Readable } from 'node:stream'
-import { IncomingMessage } from 'node:http'
-import express from 'express'
-import mime from 'mime-types'
+import { IncomingMessage, OutgoingMessage } from 'node:http'
+import { Duplex, Readable, pipeline } from 'node:stream'
+import { Request, Response, json, text } from 'express'
+import { contentType } from 'mime-types'
+import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import {
-  jsonToLex,
-  Lexicons,
+  LexXrpcBody,
   LexXrpcProcedure,
   LexXrpcQuery,
   LexXrpcSubscription,
+  Lexicons,
+  jsonToLex,
 } from '@atproto/lexicon'
-import { createDecoders, MaxSizeChecker } from '@atproto/common'
 import { ResponseType } from '@atproto/xrpc'
-
+import { InternalServerError, InvalidRequestError, XRPCError } from './errors'
 import {
-  UndecodedParams,
-  Params,
-  HandlerInput,
+  Awaitable,
   HandlerSuccess,
+  Input,
+  Params,
+  RouteOptions,
+  UndecodedParams,
   handlerSuccess,
-  InvalidRequestError,
-  InternalServerError,
-  XRPCError,
-  RouteOpts,
 } from './types'
+
+export const asArray = <T>(arr: T | T[]): T[] =>
+  Array.isArray(arr) ? arr : [arr]
+
+export function setHeaders(
+  res: OutgoingMessage,
+  headers?: Record<string, string | number>,
+) {
+  if (headers) {
+    for (const [name, val] of Object.entries(headers)) {
+      if (val != null) res.setHeader(name, val)
+    }
+  }
+}
 
 export function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
@@ -68,172 +81,217 @@ export function decodeQueryParam(
   }
 }
 
-export function getQueryParams(url = ''): Record<string, string | string[]> {
-  const { searchParams } = new URL(url ?? '', 'http://x')
-  const result: Record<string, string | string[]> = {}
+export type QueryParams = Record<string, undefined | string | string[]>
+export function getQueryParams(url = ''): QueryParams {
+  const result: QueryParams = Object.create(null)
+
+  const queryStringIdx = url.indexOf('?')
+  if (queryStringIdx === -1) return result
+
+  const queryString = url.slice(queryStringIdx + 1)
+  if (queryString === '') return result
+
+  const searchParams = new URLSearchParams(queryString)
   for (const key of searchParams.keys()) {
-    result[key] = searchParams.getAll(key)
-    if (result[key].length === 1) {
-      result[key] = result[key][0]
+    if (key === '__proto__') {
+      // Prevent prototype pollution
+      throw new InvalidRequestError(
+        `Invalid query parameter: ${key}`,
+        'InvalidQueryParameter',
+      )
     }
+
+    const values = searchParams.getAll(key)
+    result[key] = values.length === 1 ? values[0] : values
   }
+
   return result
 }
 
-export function validateInput(
+export function createInputVerifier(
   nsid: string,
   def: LexXrpcProcedure | LexXrpcQuery,
-  req: express.Request,
-  opts: RouteOpts,
+  options: RouteOptions,
   lexicons: Lexicons,
-): HandlerInput | undefined {
-  // request expectation
+): (req: Request, res: Response) => Awaitable<Input> {
+  if (def.type === 'query' || !def.input) {
+    return (req) => {
+      // @NOTE We allow (and ignore) "empty" bodies
+      if (getBodyPresence(req) === 'present') {
+        throw new InvalidRequestError(
+          `A request body was provided when none was expected`,
+        )
+      }
 
-  const bodyPresence = getBodyPresence(req)
-  if (bodyPresence === 'present' && (def.type !== 'procedure' || !def.input)) {
-    throw new InvalidRequestError(
-      `A request body was provided when none was expected`,
-    )
-  }
-  if (def.type === 'query') {
-    return
-  }
-  if (bodyPresence === 'missing' && def.input) {
-    throw new InvalidRequestError(
-      `A request body is expected but none was provided`,
-    )
-  }
-
-  // mimetype
-  const inputEncoding = normalizeMime(req.headers['content-type'] || '')
-  if (
-    def.input?.encoding &&
-    (!inputEncoding || !isValidEncoding(def.input?.encoding, inputEncoding))
-  ) {
-    if (!inputEncoding) {
-      throw new InvalidRequestError(
-        `Request encoding (Content-Type) required but not provided`,
-      )
-    } else {
-      throw new InvalidRequestError(
-        `Wrong request encoding (Content-Type): ${inputEncoding}`,
-      )
+      return undefined
     }
   }
 
-  if (!inputEncoding) {
-    // no input body
-    return undefined
-  }
+  // Lexicon definition expects a request body
 
-  // if input schema, validate
-  if (def.input?.schema) {
-    try {
-      const lexBody = req.body ? jsonToLex(req.body) : req.body
-      req.body = lexicons.assertValidXrpcInput(nsid, lexBody)
-    } catch (e) {
-      throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
+  const { input } = def
+  const { blobLimit } = options
+
+  const allowedEncodings = parseDefEncoding(input)
+  const checkEncoding = allowedEncodings.includes(ENCODING_ANY)
+    ? undefined // No need to check
+    : (encoding: string) => allowedEncodings.includes(encoding)
+
+  const bodyParser = createBodyParser(input.encoding, options)
+
+  return async (req, res) => {
+    if (getBodyPresence(req) === 'missing') {
+      throw new InvalidRequestError(
+        `A request body is expected but none was provided`,
+      )
     }
-  }
 
-  // if middleware already got the body, we pass that along as input
-  // otherwise, we pass along a decoded readable stream
-  let body
-  if (req.readableEnded) {
-    body = req.body
-  } else {
-    body = decodeBodyStream(req, opts.blobLimit)
-  }
+    const reqEncoding = parseReqEncoding(req)
+    if (checkEncoding && !checkEncoding(reqEncoding)) {
+      throw new InvalidRequestError(
+        `Wrong request encoding (Content-Type): ${reqEncoding}`,
+      )
+    }
 
-  return {
-    encoding: inputEncoding,
-    body,
+    if (bodyParser) {
+      await bodyParser(req, res)
+    }
+
+    if (input.schema) {
+      try {
+        const lexBody = req.body ? jsonToLex(req.body) : req.body
+        req.body = lexicons.assertValidXrpcInput(nsid, lexBody)
+      } catch (e) {
+        throw new InvalidRequestError(
+          e instanceof Error ? e.message : String(e),
+        )
+      }
+    }
+
+    // if middleware already got the body, we pass that along as input
+    // otherwise, we pass along a decoded readable stream
+    const body = req.readableEnded ? req.body : decodeBodyStream(req, blobLimit)
+
+    return { encoding: reqEncoding, body }
   }
 }
 
 export function validateOutput(
   nsid: string,
   def: LexXrpcProcedure | LexXrpcQuery,
-  output: HandlerSuccess | undefined,
+  output: HandlerSuccess | void,
   lexicons: Lexicons,
 ): void {
-  // initial validation
-  if (output) {
-    handlerSuccess.parse(output)
-  }
+  if (def.output) {
+    // An output is expected
+    if (output === undefined) {
+      throw new InternalServerError(
+        `A response body is expected but none was provided`,
+      )
+    }
 
-  // response expectation
-  if (output?.body && !def.output) {
-    throw new InternalServerError(
-      `A response body was provided when none was expected`,
-    )
-  }
-  if (!output?.body && def.output) {
-    throw new InternalServerError(
-      `A response body is expected but none was provided`,
-    )
-  }
+    // Fool-proofing (should not be necessary due to type system)
+    const result = handlerSuccess.safeParse(output)
+    if (!result.success) {
+      throw new InternalServerError(`Invalid handler output`, undefined, {
+        cause: result.error,
+      })
+    }
 
-  // mimetype
-  if (
-    def.output?.encoding &&
-    (!output?.encoding ||
-      !isValidEncoding(def.output?.encoding, output?.encoding))
-  ) {
-    throw new InternalServerError(
-      `Invalid response encoding: ${output?.encoding}`,
-    )
-  }
+    // output mime
+    const { encoding } = output
+    if (!encoding || !isValidEncoding(def.output, encoding)) {
+      throw new InternalServerError(`Invalid response encoding: ${encoding}`)
+    }
 
-  // output schema
-  if (def.output?.schema) {
-    try {
-      const result = lexicons.assertValidXrpcOutput(nsid, output?.body)
-      if (output) {
-        output.body = result
+    // output schema
+    if (def.output.schema) {
+      try {
+        output.body = lexicons.assertValidXrpcOutput(nsid, output.body)
+      } catch (e) {
+        throw new InternalServerError(
+          e instanceof Error ? e.message : String(e),
+        )
       }
-    } catch (e) {
-      throw new InternalServerError(e instanceof Error ? e.message : String(e))
+    }
+  } else {
+    // Expects no output
+    if (output !== undefined) {
+      throw new InternalServerError(
+        `A response body was provided when none was expected`,
+      )
     }
   }
 }
 
-export function normalizeMime(v: string) {
-  if (!v) return false
-  const fullType = mime.contentType(v)
-  if (!fullType) return false
+export function parseReqEncoding(req: IncomingMessage): string {
+  const encoding = normalizeMime(req.headers['content-type'])
+  if (encoding) return encoding
+  throw new InvalidRequestError(
+    `Request encoding (Content-Type) required but not provided`,
+  )
+}
+
+function normalizeMime(v?: string): string | null {
+  if (!v) return null
+  const fullType = contentType(v)
+  if (!fullType) return null
   const shortType = fullType.split(';')[0]
-  if (!shortType) return false
+  if (!shortType) return null
   return shortType
 }
 
-function isValidEncoding(possibleStr: string, value: string) {
-  const possible = possibleStr.split(',').map((v) => v.trim())
-  const normalized = normalizeMime(value)
+const ENCODING_ANY = '*/*'
+
+function parseDefEncoding({ encoding }: LexXrpcBody) {
+  return encoding.split(',').map(trimString)
+}
+
+function trimString(str: string): string {
+  return str.trim()
+}
+
+function isValidEncoding(output: LexXrpcBody, encoding: string) {
+  const normalized = normalizeMime(encoding)
   if (!normalized) return false
-  if (possible.includes('*/*')) return true
-  return possible.includes(normalized)
+
+  const allowed = parseDefEncoding(output)
+  return allowed.includes(ENCODING_ANY) || allowed.includes(normalized)
 }
 
 type BodyPresence = 'missing' | 'empty' | 'present'
 
-function getBodyPresence(req: express.Request): BodyPresence {
+function getBodyPresence(req: IncomingMessage): BodyPresence {
   if (req.headers['transfer-encoding'] != null) return 'present'
   if (req.headers['content-length'] === '0') return 'empty'
   if (req.headers['content-length'] != null) return 'present'
   return 'missing'
 }
 
-export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
-  return new Promise((resolve) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk) => chunks.push(chunk))
-    req.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))))
-  })
+function createBodyParser(inputEncoding: string, options: RouteOptions) {
+  if (inputEncoding === ENCODING_ANY) {
+    // When the lexicon's input encoding is */*, the handler will determine how to process it
+    return
+  }
+  const { jsonLimit, textLimit } = options
+  const jsonParser = json({ limit: jsonLimit })
+  const textParser = text({ limit: textLimit })
+  // Transform json and text parser middlewares into a single function
+  return (req: Request, res: Response) => {
+    return new Promise<void>((resolve, reject) => {
+      jsonParser(req, res, (err) => {
+        if (err) return reject(XRPCError.fromError(err))
+        textParser(req, res, (err) => {
+          if (err) return reject(XRPCError.fromError(err))
+          resolve()
+        })
+      })
+    })
+  }
 }
 
 function decodeBodyStream(
-  req: express.Request,
+  req: IncomingMessage,
   maxSize: number | undefined,
 ): Readable {
   const contentEncoding = req.headers['content-encoding']
@@ -319,13 +377,19 @@ export interface ServerTiming {
   description?: string
 }
 
-export const parseReqNsid = (req: express.Request | IncomingMessage) =>
+export const parseReqNsid = (req: Request | IncomingMessage) =>
   parseUrlNsid('originalUrl' in req ? req.originalUrl : req.url || '/')
 
 /**
  * Validates and extracts the nsid from an xrpc path
  */
 export const parseUrlNsid = (url: string): string => {
+  const nsid = extractUrlNsid(url)
+  if (nsid) return nsid
+  throw new InvalidRequestError('invalid xrpc path')
+}
+
+export const extractUrlNsid = (url: string): string | undefined => {
   // /!\ Hot path
 
   if (
@@ -338,7 +402,7 @@ export const parseUrlNsid = (url: string): string => {
     url[1] !== 'x' ||
     url[0] !== '/'
   ) {
-    throw new InvalidRequestError('invalid xrpc path')
+    return undefined
   }
 
   const startOfNsid = 6
@@ -356,7 +420,7 @@ export const parseUrlNsid = (url: string): string => {
       alphaNumRequired = false
     } else if (char === 45 /* "-" */ || char === 46 /* "." */) {
       if (alphaNumRequired) {
-        throw new InvalidRequestError('invalid xrpc path')
+        return undefined
       }
       alphaNumRequired = true
     } else if (char === 47 /* "/" */) {
@@ -364,25 +428,25 @@ export const parseUrlNsid = (url: string): string => {
       if (curr === url.length - 1 || url.charCodeAt(curr + 1) === 63) {
         break
       }
-      throw new InvalidRequestError('invalid xrpc path')
+      return undefined
     } else if (char === 63 /* "?"" */) {
       break
     } else {
-      throw new InvalidRequestError('invalid xrpc path')
+      return undefined
     }
   }
 
   // last char was one of: '-', '.', '/'
   if (alphaNumRequired) {
-    throw new InvalidRequestError('invalid xrpc path')
+    return undefined
   }
 
   // A domain name consists of minimum two characters
   if (curr - startOfNsid < 2) {
-    throw new InvalidRequestError('invalid xrpc path')
+    return undefined
   }
 
-  // @TODO is there a max ?
+  // @TODO check max length of nsid
 
   return url.slice(startOfNsid, curr)
 }

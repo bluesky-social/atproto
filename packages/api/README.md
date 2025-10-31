@@ -85,7 +85,7 @@ are available:
 - [@atproto/oauth-client-node](https://www.npmjs.com/package/@atproto/oauth-client-node): for
   Node.js.
 - [@atproto/oauth-client](https://www.npmjs.com/package/@atproto/oauth-client):
-  Lower lever; compatible with most JS engines.
+  Lower level; compatible with most JS engines.
 
 Every `@atproto/oauth-client-*` implementation has a different way to obtain an
 `OAuthSession` instance that can be used to instantiate an `Agent` (from

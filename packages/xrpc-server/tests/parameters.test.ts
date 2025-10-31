@@ -2,8 +2,8 @@ import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
-import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
+import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [
   {
@@ -34,13 +34,10 @@ const LEXICONS: LexiconDoc[] = [
 describe('Parameters', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method(
-    'io.example.paramTest',
-    (ctx: { params: xrpcServer.Params }) => ({
-      encoding: 'json',
-      body: ctx.params,
-    }),
-  )
+  server.method('io.example.paramTest', (ctx) => ({
+    encoding: 'json',
+    body: ctx.params,
+  }))
 
   let client: XrpcClient
   beforeAll(async () => {

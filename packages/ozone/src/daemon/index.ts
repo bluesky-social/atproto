@@ -1,10 +1,12 @@
 import { OzoneConfig, OzoneSecrets } from '../config'
-import DaemonContext from './context'
 import { AppContextOptions } from '../context'
+import { DaemonContext } from './context'
 
 export { EventPusher } from './event-pusher'
 export { BlobDiverter } from './blob-diverter'
 export { EventReverser } from './event-reverser'
+export { ScheduledActionProcessor } from './scheduled-action-processor'
+export { StrikeExpiryProcessor } from './strike-expiry-processor'
 
 export class OzoneDaemon {
   constructor(public ctx: DaemonContext) {}
@@ -18,17 +20,14 @@ export class OzoneDaemon {
   }
 
   async start() {
-    this.ctx.eventPusher.start()
-    this.ctx.eventReverser.start()
+    await this.ctx.start()
   }
 
   async processAll() {
-    await this.ctx.eventPusher.processAll()
+    await this.ctx.processAll()
   }
 
   async destroy() {
-    await this.ctx.eventReverser.destroy()
-    await this.ctx.eventPusher.destroy()
-    await this.ctx.db.close()
+    await this.ctx.destroy()
   }
 }

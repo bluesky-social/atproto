@@ -1,13 +1,14 @@
-import http from 'node:http'
 import events from 'node:events'
-import { createHttpTerminator, HttpTerminator } from 'http-terminator'
+import http from 'node:http'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
-import { dbLogger, loggerMiddleware } from './logger'
-import AppContext, { AppContextOptions } from './context'
+import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { ServerConfig } from './config'
-import routes from './routes'
+import { AppContext, AppContextOptions } from './context'
 import { createMuteOpChannel } from './db/schema/mute_op'
 import { createNotifOpChannel } from './db/schema/notif_op'
+import { createOperationChannel } from './db/schema/operation'
+import { dbLogger, loggerMiddleware } from './logger'
+import routes from './routes'
 
 export * from './config'
 export * from './client'
@@ -92,12 +93,16 @@ export class BsyncService {
     // if these error, unhandled rejection should cause process to exit
     conn.query(`listen ${createMuteOpChannel}`)
     conn.query(`listen ${createNotifOpChannel}`)
+    conn.query(`listen ${createOperationChannel}`)
     conn.on('notification', (notif) => {
       if (notif.channel === createMuteOpChannel) {
         this.ctx.events.emit(createMuteOpChannel)
       }
       if (notif.channel === createNotifOpChannel) {
         this.ctx.events.emit(createNotifOpChannel)
+      }
+      if (notif.channel === createOperationChannel) {
+        this.ctx.events.emit(createOperationChannel)
       }
     })
   }

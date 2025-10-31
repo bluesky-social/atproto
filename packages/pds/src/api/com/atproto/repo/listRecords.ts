@@ -1,19 +1,11 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.listRecords(async ({ params }) => {
-    const {
-      repo,
-      collection,
-      limit = 50,
-      cursor,
-      rkeyStart,
-      rkeyEnd,
-      reverse = false,
-    } = params
+    const { repo, collection, limit = 50, cursor, reverse = false } = params
 
     const did = await ctx.accountManager.getDidForActor(repo)
     if (!did) {
@@ -26,8 +18,6 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         reverse,
         cursor,
-        rkeyStart,
-        rkeyEnd,
       }),
     )
 

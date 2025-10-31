@@ -1,133 +1,109 @@
-import util from 'util'
-import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
-import { cborToLexRecord } from '@atproto/repo'
-import { AtpAgent } from '@atproto/api'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { AccountManager } from '../account-manager/account-manager'
+import { ActorStoreReader } from '../actor-store/actor-store-reader'
+import { BskyAppView } from '../bsky-app-view'
+import { ImageUrlBuilder } from '../image/image-url-builder'
 import { ids } from '../lexicon/lexicons'
 import {
-  ProfileViewBasic,
   ProfileView,
+  ProfileViewBasic,
   ProfileViewDetailed,
 } from '../lexicon/types/app/bsky/actor/defs'
-import {
-  FeedViewPost,
-  GeneratorView,
-  PostView,
-} from '../lexicon/types/app/bsky/feed/defs'
-import { ListView } from '../lexicon/types/app/bsky/graph/defs'
-import {
-  Main as EmbedImages,
-  isMain as isEmbedImages,
-} from '../lexicon/types/app/bsky/embed/images'
+import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import {
   Main as EmbedExternal,
+  View as EmbedExternalView,
   isMain as isEmbedExternal,
 } from '../lexicon/types/app/bsky/embed/external'
 import {
+  Main as EmbedImages,
+  View as EmbedImagesView,
+  isMain as isEmbedImages,
+} from '../lexicon/types/app/bsky/embed/images'
+import {
   Main as EmbedRecord,
-  isMain as isEmbedRecord,
   View as EmbedRecordView,
   ViewRecord,
+  isMain as isEmbedRecord,
 } from '../lexicon/types/app/bsky/embed/record'
 import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
 } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { ActorStoreReader } from '../actor-store'
+import {
+  FeedViewPost,
+  GeneratorView,
+  PostView,
+} from '../lexicon/types/app/bsky/feed/defs'
+import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { ListView } from '../lexicon/types/app/bsky/graph/defs'
+import { $Typed } from '../lexicon/util'
 import { LocalRecords, RecordDescript } from './types'
-import { AccountManager } from '../account-manager'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
-export type LocalViewerCreator = (actorStore: ActorStoreReader) => LocalViewer
+export type LocalViewerCreator = (
+  actorStoreReader: ActorStoreReader,
+) => LocalViewer
 
 export class LocalViewer {
-  did: string
-  actorStore: ActorStoreReader
-  accountManager: AccountManager
-  pdsHostname: string
-  appViewAgent?: AtpAgent
-  appviewDid?: string
-  appviewCdnUrlPattern?: string
+  constructor(
+    public readonly actorStoreReader: ActorStoreReader,
+    public readonly accountManager: AccountManager,
+    public readonly imageUrlBuilder: ImageUrlBuilder,
+    public readonly bskyAppView?: BskyAppView,
+  ) {}
 
-  constructor(params: {
-    actorStore: ActorStoreReader
-    accountManager: AccountManager
-    pdsHostname: string
-    appViewAgent?: AtpAgent
-    appviewDid?: string
-    appviewCdnUrlPattern?: string
-  }) {
-    this.did = params.actorStore.did
-    this.actorStore = params.actorStore
-    this.accountManager = params.accountManager
-    this.pdsHostname = params.pdsHostname
-    this.appViewAgent = params.appViewAgent
-    this.appviewDid = params.appviewDid
-    this.appviewCdnUrlPattern = params.appviewCdnUrlPattern
+  get did() {
+    return this.actorStoreReader.did
   }
 
-  static creator(params: {
-    accountManager: AccountManager
-    pdsHostname: string
-    appViewAgent?: AtpAgent
-    appviewDid?: string
-    appviewCdnUrlPattern?: string
-  }): LocalViewerCreator {
-    return (actorStore) => {
-      return new LocalViewer({ ...params, actorStore })
-    }
+  static creator(
+    accountManager: AccountManager,
+    imageUrlBuilder: ImageUrlBuilder,
+    bskyAppView?: BskyAppView,
+  ): LocalViewerCreator {
+    return (actorStore) =>
+      new LocalViewer(actorStore, accountManager, imageUrlBuilder, bskyAppView)
   }
 
   getImageUrl(pattern: CommonSignedUris, cid: string) {
-    if (!this.appviewCdnUrlPattern) {
-      return `https://${this.pdsHostname}/xrpc/${ids.ComAtprotoSyncGetBlob}?did=${this.did}&cid=${cid}`
-    }
-    return util.format(this.appviewCdnUrlPattern, pattern, this.did, cid)
+    return this.imageUrlBuilder.build(pattern, this.did, cid)
   }
 
   async serviceAuthHeaders(did: string, lxm: string) {
-    if (!this.appviewDid) {
+    if (!this.bskyAppView) {
       throw new Error('Could not find bsky appview did')
     }
-    const keypair = await this.actorStore.keypair()
+    const keypair = await this.actorStoreReader.keypair()
 
     return createServiceAuthHeaders({
       iss: did,
-      aud: this.appviewDid,
+      aud: this.bskyAppView.did,
       lxm,
       keypair,
     })
   }
 
   async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
-    return getRecordsSinceRev(this.actorStore, rev)
+    return this.actorStoreReader.record.getRecordsSinceRev(rev)
   }
 
   async getProfileBasic(): Promise<ProfileViewBasic | null> {
-    const profileQuery = this.actorStore.db.db
-      .selectFrom('record')
-      .leftJoin('repo_block', 'repo_block.cid', 'record.cid')
-      .where('record.collection', '=', ids.AppBskyActorProfile)
-      .where('record.rkey', '=', 'self')
-      .selectAll()
     const [profileRes, accountRes] = await Promise.all([
-      profileQuery.executeTakeFirst(),
+      this.actorStoreReader.record.getProfileRecord(),
       this.accountManager.getAccount(this.did),
     ])
+
     if (!accountRes) return null
-    const record = profileRes?.content
-      ? (cborToLexRecord(profileRes.content) as ProfileRecord)
-      : null
+
     return {
       did: this.did,
       handle: accountRes.handle ?? INVALID_HANDLE,
-      displayName: record?.displayName,
-      avatar: record?.avatar
-        ? this.getImageUrl('avatar', record.avatar.ref.toString())
+      displayName: profileRes?.displayName,
+      avatar: profileRes?.avatar
+        ? this.getImageUrl('avatar', profileRes.avatar.ref.toString())
         : undefined,
     }
   }
@@ -194,7 +170,9 @@ export class LocalViewer {
     }
   }
 
-  async formatSimpleEmbed(embed: EmbedImages | EmbedExternal) {
+  async formatSimpleEmbed(
+    embed: $Typed<EmbedImages> | $Typed<EmbedExternal>,
+  ): Promise<$Typed<EmbedImagesView> | $Typed<EmbedExternalView>> {
     if (isEmbedImages(embed)) {
       const images = embed.images.map((img) => ({
         thumb: this.getImageUrl('feed_thumbnail', img.image.ref.toString()),
@@ -206,7 +184,7 @@ export class LocalViewer {
         $type: 'app.bsky.embed.images#view',
         images,
       }
-    } else {
+    } else if (isEmbedExternal(embed)) {
       const { uri, title, description, thumb } = embed.external
       return {
         $type: 'app.bsky.embed.external#view',
@@ -219,10 +197,15 @@ export class LocalViewer {
             : undefined,
         },
       }
+    } else {
+      // @ts-expect-error
+      throw new TypeError(`Unexpected embed type: ${embed.$type}`)
     }
   }
 
-  async formatRecordEmbed(embed: EmbedRecord): Promise<EmbedRecordView> {
+  async formatRecordEmbed(
+    embed: EmbedRecord,
+  ): Promise<$Typed<EmbedRecordView>> {
     const view = await this.formatRecordEmbedInternal(embed)
     return {
       $type: 'app.bsky.embed.record#view',
@@ -238,13 +221,15 @@ export class LocalViewer {
 
   private async formatRecordEmbedInternal(
     embed: EmbedRecord,
-  ): Promise<null | ViewRecord | GeneratorView | ListView> {
-    if (!this.appViewAgent || !this.appviewDid) {
+  ): Promise<
+    null | $Typed<ViewRecord> | $Typed<GeneratorView> | $Typed<ListView>
+  > {
+    if (!this.bskyAppView) {
       return null
     }
     const collection = new AtUri(embed.record.uri).collection
     if (collection === ids.AppBskyFeedPost) {
-      const res = await this.appViewAgent.api.app.bsky.feed.getPosts(
+      const res = await this.bskyAppView.agent.app.bsky.feed.getPosts(
         { uris: [embed.record.uri] },
         await this.serviceAuthHeaders(this.did, ids.AppBskyFeedGetPosts),
       )
@@ -261,7 +246,7 @@ export class LocalViewer {
         indexedAt: post.indexedAt,
       }
     } else if (collection === ids.AppBskyFeedGenerator) {
-      const res = await this.appViewAgent.api.app.bsky.feed.getFeedGenerator(
+      const res = await this.bskyAppView.agent.app.bsky.feed.getFeedGenerator(
         { feed: embed.record.uri },
         await this.serviceAuthHeaders(
           this.did,
@@ -273,7 +258,7 @@ export class LocalViewer {
         ...res.data.view,
       }
     } else if (collection === ids.AppBskyGraphList) {
-      const res = await this.appViewAgent.api.app.bsky.graph.getList(
+      const res = await this.bskyAppView.agent.app.bsky.graph.getList(
         { list: embed.record.uri },
         await this.serviceAuthHeaders(this.did, ids.AppBskyGraphGetList),
       )
@@ -298,10 +283,9 @@ export class LocalViewer {
     }
   }
 
-  updateProfileViewBasic(
-    view: ProfileViewBasic,
-    record: ProfileRecord,
-  ): ProfileViewBasic {
+  updateProfileViewBasic<
+    T extends ProfileViewDetailed | ProfileViewBasic | ProfileView,
+  >(view: T, record: ProfileRecord): T {
     return {
       ...view,
       displayName: record.displayName,
@@ -311,17 +295,19 @@ export class LocalViewer {
     }
   }
 
-  updateProfileView(view: ProfileView, record: ProfileRecord): ProfileView {
+  updateProfileView<
+    T extends ProfileViewDetailed | ProfileViewBasic | ProfileView,
+  >(view: T, record: ProfileRecord): T {
     return {
       ...this.updateProfileViewBasic(view, record),
       description: record.description,
     }
   }
 
-  updateProfileDetailed(
-    view: ProfileViewDetailed,
+  updateProfileDetailed<T extends ProfileViewDetailed>(
+    view: T,
     record: ProfileRecord,
-  ): ProfileViewDetailed {
+  ): T {
     return {
       ...this.updateProfileView(view, record),
       banner: record.banner
@@ -329,51 +315,4 @@ export class LocalViewer {
         : undefined,
     }
   }
-}
-
-export const getRecordsSinceRev = async (
-  actorStore: ActorStoreReader,
-  rev: string,
-): Promise<LocalRecords> => {
-  const res = await actorStore.db.db
-    .selectFrom('record')
-    .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
-    .select(['repo_block.content', 'uri', 'repo_block.cid', 'record.indexedAt'])
-    .where('record.repoRev', '>', rev)
-    .limit(10)
-    .orderBy('record.repoRev', 'asc')
-    .execute()
-  // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
-  if (res.length > 0) {
-    const sanityCheckRes = await actorStore.db.db
-      .selectFrom('record')
-      .selectAll()
-      .where('record.repoRev', '<=', rev)
-      .limit(1)
-      .executeTakeFirst()
-    if (!sanityCheckRes) {
-      return { count: 0, profile: null, posts: [] }
-    }
-  }
-  return res.reduce(
-    (acc, cur) => {
-      const descript = {
-        uri: new AtUri(cur.uri),
-        cid: CID.parse(cur.cid),
-        indexedAt: cur.indexedAt,
-        record: cborToLexRecord(cur.content),
-      }
-      if (
-        descript.uri.collection === ids.AppBskyActorProfile &&
-        descript.uri.rkey === 'self'
-      ) {
-        acc.profile = descript as RecordDescript<ProfileRecord>
-      } else if (descript.uri.collection === ids.AppBskyFeedPost) {
-        acc.posts.push(descript as RecordDescript<PostRecord>)
-      }
-      acc.count++
-      return acc
-    },
-    { count: 0, profile: null, posts: [] } as LocalRecords,
-  )
 }

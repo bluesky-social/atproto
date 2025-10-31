@@ -1,11 +1,11 @@
+import * as fs from 'node:fs'
+import * as readline from 'node:readline'
 import {
-  ensureValidHandle,
-  normalizeAndEnsureValidHandle,
-  ensureValidHandleRegex,
   InvalidHandleError,
+  ensureValidHandle,
+  ensureValidHandleRegex,
+  normalizeAndEnsureValidHandle,
 } from '../src'
-import * as readline from 'readline'
-import * as fs from 'fs'
 
 describe('handle validation', () => {
   const expectValid = (h: string) => {

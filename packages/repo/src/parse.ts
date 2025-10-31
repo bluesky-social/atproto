@@ -1,7 +1,7 @@
-import { check, cborDecode } from '@atproto/common'
-import { RepoRecord } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import BlockMap from './block-map'
+import { cborDecode, check } from '@atproto/common'
+import { RepoRecord } from '@atproto/lexicon'
+import { BlockMap } from './block-map'
 import { MissingBlockError, UnexpectedObjectError } from './error'
 import { cborToLexRecord } from './util'
 
@@ -13,7 +13,7 @@ export const getAndParseRecord = async (
   if (!bytes) {
     throw new MissingBlockError(cid, 'record')
   }
-  const record = await cborToLexRecord(bytes)
+  const record = cborToLexRecord(bytes)
   return { record, bytes }
 }
 

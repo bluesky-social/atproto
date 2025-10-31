@@ -1,7 +1,7 @@
-import path from 'node:path'
 import assert from 'node:assert'
+import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { Customization } from '@atproto/oauth-provider'
+import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -25,6 +25,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
+    maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
   }
@@ -225,7 +226,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const rateLimitsCfg: ServerConfig['rateLimits'] = env.rateLimitsEnabled
     ? {
         enabled: true,
-        mode: redisCfg !== null ? 'redis' : 'memory',
         bypassKey: env.rateLimitBypassKey,
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
@@ -256,47 +256,73 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
         issuer: entrywayCfg.url,
-        provider: false,
+        provider: undefined,
       }
     : {
         issuer: serviceCfg.publicUrl,
         provider: {
-          customization: {
-            name: env.serviceName ?? 'Personal PDS',
+          hcaptcha:
+            env.hcaptchaSiteKey &&
+            env.hcaptchaSecretKey &&
+            env.hcaptchaTokenSalt
+              ? {
+                  siteKey: env.hcaptchaSiteKey,
+                  secretKey: env.hcaptchaSecretKey,
+                  tokenSalt: env.hcaptchaTokenSalt,
+                }
+              : undefined,
+          branding: {
+            name: env.serviceName ?? `${hostname} PDS`,
             logo: env.logoUrl,
             colors: {
-              brand: env.brandColor,
+              light: env.lightColor,
+              dark: env.darkColor,
+              primary: env.primaryColor,
+              primaryContrast: env.primaryColorContrast,
+              primaryHue: env.primaryColorHue,
               error: env.errorColor,
+              errorContrast: env.errorColorContrast,
+              errorHue: env.errorColorHue,
+              success: env.successColor,
+              successContrast: env.successColorContrast,
+              successHue: env.successColorHue,
               warning: env.warningColor,
+              warningContrast: env.warningColorContrast,
+              warningHue: env.warningColorHue,
             },
             links: [
               {
-                title: 'Home',
+                title: { en: 'Home', fr: 'Accueil' },
                 href: env.homeUrl,
-                rel: 'bookmark',
+                rel: 'canonical' as const, // Prevents login page from being indexed
               },
               {
-                title: 'Terms of Service',
+                title: { en: 'Terms of Service' },
                 href: env.termsOfServiceUrl,
-                rel: 'terms-of-service',
+                rel: 'terms-of-service' as const,
               },
               {
-                title: 'Privacy Policy',
+                title: { en: 'Privacy Policy' },
                 href: env.privacyPolicyUrl,
-                rel: 'privacy-policy',
+                rel: 'privacy-policy' as const,
               },
               {
-                title: 'Support',
+                title: { en: 'Support' },
                 href: env.supportUrl,
-                rel: 'help',
+                rel: 'help' as const,
               },
             ].filter(
-              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
-                f.href != null,
+              <T extends { href?: string }>(f: T): f is T & { href: string } =>
+                f.href != null && f.href !== '',
             ),
           },
+          trustedClients: env.trustedOAuthClients,
         },
       }
+
+  const lexiconCfg: LexiconResolverConfig = {
+    didAuthority: env.lexiconDidAuthority,
+  }
 
   return {
     service: serviceCfg,
@@ -316,6 +342,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
     fetch: fetchCfg,
+    lexicon: lexiconCfg,
     proxy: proxyCfg,
     oauth: oauthCfg,
   }
@@ -341,6 +368,7 @@ export type ServerConfig = {
   fetch: FetchConfig
   proxy: ProxyConfig
   oauth: OAuthConfig
+  lexicon: LexiconResolverConfig
 }
 
 export type ServiceConfig = {
@@ -352,6 +380,7 @@ export type ServiceConfig = {
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
   acceptingImports: boolean
+  maxImportSize?: number
   blobUploadLimit: number
   contactEmailAddress?: string
   devMode: boolean
@@ -432,11 +461,15 @@ export type ProxyConfig = {
 
 export type OAuthConfig = {
   issuer: string
-  provider:
-    | false
-    | {
-        customization: Customization
-      }
+  provider?: {
+    hcaptcha?: HcaptchaConfig
+    branding: BrandingInput
+    trustedClients?: string[]
+  }
+}
+
+export type LexiconResolverConfig = {
+  didAuthority?: string
 }
 
 export type InvitesConfig =
@@ -467,7 +500,6 @@ export type RedisScratchConfig = {
 export type RateLimitsConfig =
   | {
       enabled: true
-      mode: 'memory' | 'redis'
       bypassKey?: string
       bypassIps?: string[]
     }

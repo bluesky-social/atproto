@@ -1,14 +1,23 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyActorDefs from '../../../app/bsky/actor/defs.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'chat.bsky.actor.defs'
 
 export interface ProfileViewBasic {
+  $type?: 'chat.bsky.actor.defs#profileViewBasic'
   did: string
   handle: string
   displayName?: string
@@ -16,19 +25,17 @@ export interface ProfileViewBasic {
   associated?: AppBskyActorDefs.ProfileAssociated
   viewer?: AppBskyActorDefs.ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
-  /** Set to true when the actor cannot actively participate in converations */
+  /** Set to true when the actor cannot actively participate in conversations */
   chatDisabled?: boolean
-  [k: string]: unknown
+  verification?: AppBskyActorDefs.VerificationState
 }
 
-export function isProfileViewBasic(v: unknown): v is ProfileViewBasic {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.actor.defs#profileViewBasic'
-  )
+const hashProfileViewBasic = 'profileViewBasic'
+
+export function isProfileViewBasic<V>(v: V) {
+  return is$typed(v, id, hashProfileViewBasic)
 }
 
-export function validateProfileViewBasic(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.actor.defs#profileViewBasic', v)
+export function validateProfileViewBasic<V>(v: V) {
+  return validate<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
 }

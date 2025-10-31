@@ -1,14 +1,14 @@
-import express from 'express'
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { PassThrough, Readable } from 'node:stream'
+import { PassThrough, Readable, finished } from 'node:stream'
+import { Request } from 'express'
 import { Dispatcher } from 'undici'
-
 import {
   decodeStream,
   getServiceEndpoint,
   omit,
   streamToNodeBuffer,
 } from '@atproto/common'
+import { RpcPermissionMatch } from '@atproto/oauth-scopes'
 import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   CatchallHandler,
@@ -16,19 +16,23 @@ import {
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
-  parseReqNsid,
   XRPCError as XRPCServerError,
+  excludeErrorResult,
+  parseReqNsid,
 } from '@atproto/xrpc-server'
-
-import AppContext from './context'
+import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
+import { isAccessPrivileged } from './auth-scope'
+import { AppContext } from './context'
 import { ids } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
-  const accessStandard = ctx.authVerifier.accessStandard()
+  const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
+    authorize: (permissions, { params }) => permissions.assertRpc(params),
+  })
+
   return async (req, res, next) => {
     // /!\ Hot path
-
     try {
       if (
         req.method !== 'GET' &&
@@ -52,12 +56,19 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const auth = await accessStandard({ req, res })
-      if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.has(lxm)) {
+      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+
+      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+
+      const { credentials } = excludeErrorResult(authResult)
+
+      if (
+        credentials.type === 'access' &&
+        !isAccessPrivileged(credentials.scope) &&
+        PRIVILEGED_METHODS.has(lxm)
+      ) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
-
-      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
       const headers: IncomingHttpHeaders = {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
@@ -69,9 +80,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: auth.credentials.did
-          ? `Bearer ${await ctx.serviceAuthJwt(auth.credentials.did, aud, lxm)}`
-          : undefined,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -102,20 +111,6 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   }
 }
 
-const ACCEPT_ENCODING_COMPRESSED = [
-  ['gzip', { q: 1.0 }],
-  ['deflate', { q: 0.9 }],
-  ['br', { q: 0.8 }],
-  ['identity', { q: 0.1 }],
-] as const satisfies Accept[]
-
-const ACCEPT_ENCODING_UNCOMPRESSED = [
-  ['identity', { q: 1.0 }],
-  ['gzip', { q: 0.3 }],
-  ['deflate', { q: 0.2 }],
-  ['br', { q: 0.1 }],
-] as const satisfies Accept[]
-
 export type PipethroughOptions = {
   /**
    * Specify the issuer (requester) for service auth. If not provided, no
@@ -138,7 +133,7 @@ export type PipethroughOptions = {
 
 export async function pipethrough(
   ctx: AppContext,
-  req: express.Request,
+  req: Request,
   options?: PipethroughOptions,
 ): Promise<
   HandlerPipeThroughStream & {
@@ -177,11 +172,9 @@ export async function pipethrough(
       // upstream server for an encoding that both the requester and the PDS can
       // understand. Since we might have to do the decoding ourselves, we will
       // use our own preferences (and weight) to negotiate the encoding.
-      'accept-encoding': negotiateContentEncoding(
+      'accept-encoding': buildProxiedContentEncoding(
         req.headers['accept-encoding'],
-        ctx.cfg.proxy.preferCompressed
-          ? ACCEPT_ENCODING_COMPRESSED
-          : ACCEPT_ENCODING_UNCOMPRESSED,
+        ctx.cfg.proxy.preferCompressed,
       ),
 
       authorization: options?.iss
@@ -207,9 +200,25 @@ export async function pipethrough(
 // Request setup/formatting
 // -------------------
 
-async function parseProxyInfo(
+export function computeProxyTo(
   ctx: AppContext,
-  req: express.Request,
+  req: Request,
+  lxm: string,
+): string {
+  const proxyToHeader = req.header('atproto-proxy')
+  if (proxyToHeader) return proxyToHeader
+
+  const service = defaultService(ctx, lxm)
+  if (service.serviceInfo) {
+    return `${service.serviceInfo.did}#${service.serviceId}`
+  }
+
+  throw new InvalidRequestError(`No service configured for ${lxm}`)
+}
+
+export async function parseProxyInfo(
+  ctx: AppContext,
+  req: Request,
   lxm: string,
 ): Promise<{ url: string; did: string }> {
   // /!\ Hot path
@@ -217,15 +226,15 @@ async function parseProxyInfo(
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
-  const defaultProxy = defaultService(ctx, lxm)
-  if (defaultProxy) return defaultProxy
+  const { serviceInfo } = defaultService(ctx, lxm)
+  if (serviceInfo) return serviceInfo
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
 
 export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
-  ctx: Pick<AppContext, 'idResolver'>,
+  ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
   proxyTo: string,
 ): Promise<{ did: string; url: string }> => {
   // /!\ Hot path
@@ -251,6 +260,15 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
+
+  // Special case a configured appview, while still proxying correctly any other appview
+  if (
+    ctx.cfg.bskyAppView &&
+    proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
+  ) {
+    return { did, url: ctx.cfg.bskyAppView.url }
+  }
+
   const didDoc = await ctx.idResolver.did.resolve(did)
   if (!didDoc) {
     throw new InvalidRequestError('could not resolve proxy did')
@@ -368,116 +386,6 @@ function handleUpstreamRequestError(
 // Request parsing/forwarding
 // -------------------
 
-type AcceptFlags = { q: number }
-type Accept = [name: string, flags: AcceptFlags]
-
-// accept-encoding defaults to "identity with lowest priority"
-const ACCEPT_ENC_DEFAULT = ['identity', { q: 0.001 }] as const satisfies Accept
-const ACCEPT_FORBID_STAR = ['*', { q: 0 }] as const satisfies Accept
-
-function negotiateContentEncoding(
-  acceptHeader: undefined | string | string[],
-  preferences: readonly Accept[],
-): string {
-  const acceptMap = Object.fromEntries<undefined | AcceptFlags>(
-    parseAcceptEncoding(acceptHeader),
-  )
-
-  // Make sure the default (identity) is covered by the preferences
-  if (!preferences.some(coversIdentityAccept)) {
-    preferences = [...preferences, ACCEPT_ENC_DEFAULT]
-  }
-
-  const common = preferences.filter(([name]) => {
-    const acceptQ = (acceptMap[name] ?? acceptMap['*'])?.q
-    // Per HTTP/1.1, "identity" is always acceptable unless explicitly rejected
-    if (name === 'identity') {
-      return acceptQ == null || acceptQ > 0
-    } else {
-      return acceptQ != null && acceptQ > 0
-    }
-  })
-
-  // Since "identity" was present in the preferences, a missing "identity" in
-  // the common array means that the client explicitly rejected it. Let's reflect
-  // this by adding it to the common array.
-  if (!common.some(coversIdentityAccept)) {
-    common.push(ACCEPT_FORBID_STAR)
-  }
-
-  // If no common encodings are acceptable, throw a 406 Not Acceptable error
-  if (!common.some(isAllowedAccept)) {
-    throw new XRPCServerError(
-      ResponseType.NotAcceptable,
-      'this service does not support any of the requested encodings',
-    )
-  }
-
-  return formatAcceptHeader(common as [Accept, ...Accept[]])
-}
-
-function coversIdentityAccept([name]: Accept): boolean {
-  return name === 'identity' || name === '*'
-}
-
-function isAllowedAccept([, flags]: Accept): boolean {
-  return flags.q > 0
-}
-
-/**
- * @see {@link https://developer.mozilla.org/en-US/docs/Glossary/Quality_values}
- */
-function formatAcceptHeader(accept: readonly [Accept, ...Accept[]]): string {
-  return accept.map(formatAcceptPart).join(',')
-}
-
-function formatAcceptPart([name, flags]: Accept): string {
-  return `${name};q=${flags.q}`
-}
-
-function parseAcceptEncoding(
-  acceptEncodings: undefined | string | string[],
-): Accept[] {
-  if (!acceptEncodings?.length) return []
-
-  return Array.isArray(acceptEncodings)
-    ? acceptEncodings.flatMap(parseAcceptEncoding)
-    : acceptEncodings.split(',').map(parseAcceptEncodingDefinition)
-}
-
-function parseAcceptEncodingDefinition(def: string): Accept {
-  const { length, 0: encoding, 1: params } = def.trim().split(';', 3)
-
-  if (length > 2) {
-    throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
-  }
-
-  if (!encoding || encoding.includes('=')) {
-    throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
-  }
-
-  const flags = { q: 1 }
-  if (length === 2) {
-    const { length, 0: key, 1: value } = params.split('=', 3)
-    if (length !== 2) {
-      throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
-    }
-
-    if (key === 'q' || key === 'Q') {
-      const q = parseFloat(value)
-      if (q === 0 || (Number.isFinite(q) && q <= 1 && q >= 0.001)) {
-        flags.q = q
-      } else {
-        throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
-      }
-    } else {
-      throw new InvalidRequestError(`Invalid accept-encoding: "${def}"`)
-    }
-  }
-
-  return [encoding.toLowerCase(), flags]
-}
-
 export function isJsonContentType(contentType?: string): boolean | undefined {
   if (!contentType) return undefined
   return /application\/(?:\w+\+)?json/i.test(contentType)
@@ -490,15 +398,24 @@ async function tryParsingError(
   if (isJsonContentType(headers['content-type']) === false) {
     // We don't known how to parse non JSON content types so we can discard the
     // whole response.
-    //
-    // @NOTE we could also simply "drain" the stream here. This would prevent
-    // the upstream HTTP/1.1 connection from getting destroyed (closed). This
-    // would however imply to read the whole upstream response, which would be
-    // costly in terms of bandwidth and I/O processing. It is recommended to use
-    // HTTP/2 to avoid this issue (be able to destroy a single response stream
-    // without resetting the whole connection). This is not expected to happen
-    // too much as 4xx and 5xx responses are expected to be JSON.
-    readable.destroy()
+
+    // Since we don't care about the response, we would normally just destroy
+    // the stream. However, if the underlying HTTP connection is an HTTP/1.1
+    // connection, this also destroys the underlying (keep-alive) TCP socket. In
+    // order to avoid destroying the TCP socket, while avoiding the cost of
+    // consuming too much IO, we give it a chance to finish first.
+
+    // @NOTE we need to listen (and ignore) "error" events, otherwise the
+    // process could crash (since we drain the stream asynchronously here). This
+    // is performed through the "finished" call below.
+
+    const to = setTimeout(() => {
+      readable.destroy()
+    }, 100)
+    finished(readable, (_err) => {
+      clearTimeout(to)
+    })
+    readable.resume()
 
     return {}
   }
@@ -592,7 +509,7 @@ function* responseHeaders(
 // Utils
 // -------------------
 
-export const PRIVILEGED_METHODS = new Set([
+export const CHAT_BSKY_METHODS = new Set<string>([
   ids.ChatBskyActorDeleteAccount,
   ids.ChatBskyActorExportAccountData,
   ids.ChatBskyConvoDeleteMessageForSelf,
@@ -607,13 +524,17 @@ export const PRIVILEGED_METHODS = new Set([
   ids.ChatBskyConvoSendMessageBatch,
   ids.ChatBskyConvoUnmuteConvo,
   ids.ChatBskyConvoUpdateRead,
+])
+
+export const PRIVILEGED_METHODS = new Set<string>([
+  ...CHAT_BSKY_METHODS,
   ids.ComAtprotoServerCreateAccount,
 ])
 
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
-export const PROTECTED_METHODS = new Set([
+export const PROTECTED_METHODS = new Set<string>([
   ids.ComAtprotoAdminSendEmail,
   ids.ComAtprotoIdentityRequestPlcOperationSignature,
   ids.ComAtprotoIdentitySignPlcOperation,
@@ -623,6 +544,7 @@ export const PROTECTED_METHODS = new Set([
   ids.ComAtprotoServerCreateAppPassword,
   ids.ComAtprotoServerDeactivateAccount,
   ids.ComAtprotoServerGetAccountInviteCodes,
+  ids.ComAtprotoServerGetSession,
   ids.ComAtprotoServerListAppPasswords,
   ids.ComAtprotoServerRequestAccountDelete,
   ids.ComAtprotoServerRequestEmailConfirmation,
@@ -634,7 +556,10 @@ export const PROTECTED_METHODS = new Set([
 const defaultService = (
   ctx: AppContext,
   nsid: string,
-): { url: string; did: string } | null => {
+): {
+  serviceId: string
+  serviceInfo: { url: string; did: string } | null
+} => {
   switch (nsid) {
     case ids.ToolsOzoneTeamAddMember:
     case ids.ToolsOzoneTeamDeleteMember:
@@ -651,11 +576,32 @@ const defaultService = (
     case ids.ToolsOzoneModerationQueryEvents:
     case ids.ToolsOzoneModerationQueryStatuses:
     case ids.ToolsOzoneModerationSearchRepos:
-      return ctx.cfg.modService
+    case ids.ToolsOzoneModerationGetAccountTimeline:
+    case ids.ToolsOzoneVerificationListVerifications:
+    case ids.ToolsOzoneVerificationGrantVerifications:
+    case ids.ToolsOzoneVerificationRevokeVerifications:
+    case ids.ToolsOzoneSafelinkAddRule:
+    case ids.ToolsOzoneSafelinkUpdateRule:
+    case ids.ToolsOzoneSafelinkRemoveRule:
+    case ids.ToolsOzoneSafelinkQueryEvents:
+    case ids.ToolsOzoneSafelinkQueryRules:
+    case ids.ToolsOzoneModerationListScheduledActions:
+    case ids.ToolsOzoneModerationCancelScheduledActions:
+    case ids.ToolsOzoneModerationScheduleAction:
+      return {
+        serviceId: 'atproto_labeler',
+        serviceInfo: ctx.cfg.modService,
+      }
     case ids.ComAtprotoModerationCreateReport:
-      return ctx.cfg.reportService
+      return {
+        serviceId: 'atproto_labeler',
+        serviceInfo: ctx.cfg.reportService,
+      }
     default:
-      return ctx.cfg.bskyAppView
+      return {
+        serviceId: 'bsky_appview',
+        serviceInfo: ctx.cfg.bskyAppView,
+      }
   }
 }
 

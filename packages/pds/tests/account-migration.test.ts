@@ -1,12 +1,12 @@
-import { AtpAgent, AtUri } from '@atproto/api'
+import assert from 'node:assert'
+import { AtUri, AtpAgent } from '@atproto/api'
 import {
-  mockNetworkUtilities,
   SeedClient,
   TestNetworkNoAppView,
   TestPds,
+  mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
-import assert from 'assert'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('account migration', () => {
@@ -44,17 +44,17 @@ describe('account migration', () => {
     }
     const img1 = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/at.png',
+      '../dev-env/assets/at.png',
       'image/png',
     )
     const img2 = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-alt.jpg',
+      '../dev-env/assets/key-alt.jpg',
       'image/jpeg',
     )
     const img3 = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
+      '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
 

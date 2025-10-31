@@ -1,48 +1,58 @@
 import assert from 'node:assert'
-import * as undici from 'undici'
-import * as nodemailer from 'nodemailer'
-import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
-import {
-  Fetch,
-  isUnicastIp,
-  loggedFetch,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
-import * as crypto from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
+import express from 'express'
+import { Redis } from 'ioredis'
+import * as nodemailer from 'nodemailer'
+import * as ui8 from 'uint8arrays'
+import * as undici from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
-import { JoseKey, OAuthVerifier } from '@atproto/oauth-provider'
+import * as crypto from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
+import {
+  LexiconResolver,
+  buildLexiconResolver,
+} from '@atproto/lexicon-resolver'
+import {
+  AccessTokenMode,
+  JoseKey,
+  OAuthProvider,
+  OAuthVerifier,
+} from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
-  RateLimiter,
-  RateLimiterCreator,
-  RateLimiterOpts,
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-
-import { ServerConfig, ServerSecrets } from './config'
-import { PdsOAuthProvider } from './oauth/provider'
+import {
+  Fetch,
+  isUnicastIp,
+  safeFetchWrap,
+  unicastLookup,
+} from '@atproto-labs/fetch-node'
+import { AccountManager } from './account-manager/account-manager'
+import { OAuthStore } from './account-manager/oauth-store'
+import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
+import { ActorStore } from './actor-store/actor-store'
+import { authPassthru, forwardedFor } from './api/proxy'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier'
-import { fetchLogger } from './logger'
+import { BackgroundQueue } from './background'
+import { BskyAppView } from './bsky-app-view'
+import { ServerConfig, ServerSecrets } from './config'
+import { Crawlers } from './crawlers'
+import { DidSqliteCache } from './did-cache'
+import { DiskBlobStore } from './disk-blobstore'
+import { ImageUrlBuilder } from './image/image-url-builder'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { AccountManager } from './account-manager'
-import { Sequencer } from './sequencer'
-import { BackgroundQueue } from './background'
-import { DidSqliteCache } from './did-cache'
-import { Crawlers } from './crawlers'
-import { DiskBlobStore } from './disk-blobstore'
-import { getRedisClient } from './redis'
-import { ActorStore } from './actor-store'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
+import { getRedisClient } from './redis'
+import { Sequencer } from './sequencer'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -57,15 +67,15 @@ export type AppContextOptions = {
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
-  ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
-  appViewAgent?: AtpAgent
+  bskyAppView?: BskyAppView
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  entrywayAdminAgent?: AtpAgent
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
-  authProvider?: PdsOAuthProvider
+  oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -84,16 +94,16 @@ export class AppContext {
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
-  public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
-  public appViewAgent: AtpAgent | undefined
+  public bskyAppView?: BskyAppView
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
+  public entrywayAdminAgent: AtpAgent | undefined
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
-  public authProvider?: PdsOAuthProvider
+  public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -110,16 +120,16 @@ export class AppContext {
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
-    this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
-    this.appViewAgent = opts.appViewAgent
+    this.bskyAppView = opts.bskyAppView
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
+    this.entrywayAdminAgent = opts.entrywayAdminAgent
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
-    this.authProvider = opts.authProvider
+    this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -190,33 +200,10 @@ export class AppContext {
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
-    let ratelimitCreator: RateLimiterCreator | undefined = undefined
-    if (cfg.rateLimits.enabled) {
-      const bypassSecret = cfg.rateLimits.bypassKey
-      const bypassIps = cfg.rateLimits.bypassIps
-      if (cfg.rateLimits.mode === 'redis') {
-        if (!redisScratch) {
-          throw new Error('Redis not set up for ratelimiting mode: `redis`')
-        }
-        ratelimitCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.redis(redisScratch, {
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      } else {
-        ratelimitCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.memory({
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      }
-    }
-
-    const appViewAgent = cfg.bskyAppView
-      ? new AtpAgent({ service: cfg.bskyAppView.url })
+    const bskyAppView = cfg.bskyAppView
+      ? new BskyAppView(cfg.bskyAppView)
       : undefined
+
     const moderationAgent = cfg.modService
       ? new AtpAgent({ service: cfg.modService.url })
       : undefined
@@ -226,18 +213,36 @@ export class AppContext {
     const entrywayAgent = cfg.entryway
       ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
+    let entrywayAdminAgent: AtpAgent | undefined
+    if (cfg.entryway && secrets.entrywayAdminToken) {
+      entrywayAdminAgent = new AtpAgent({ service: cfg.entryway.url })
+      entrywayAdminAgent.api.setHeader(
+        'authorization',
+        basicAuthHeader('admin', secrets.entrywayAdminToken),
+      )
+    }
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
     const jwtPublicKey = cfg.entryway
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : null
 
-    const accountManager = new AccountManager(
+    const imageUrlBuilder = new ImageUrlBuilder(
+      cfg.service.hostname,
+      bskyAppView,
+    )
+
+    const actorStore = new ActorStore(cfg.actorStore, {
+      blobstore,
       backgroundQueue,
-      cfg.db.accountDbLoc,
+    })
+
+    const accountManager = new AccountManager(
+      idResolver,
       jwtSecretKey,
       cfg.service.did,
-      cfg.db.disableWalAutoCheckpoint,
+      cfg.identity.serviceHandleDomains,
+      cfg.db,
     )
     await accountManager.migrateOrThrow()
 
@@ -250,18 +255,11 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const actorStore = new ActorStore(cfg.actorStore, {
-      blobstore,
-      backgroundQueue,
-    })
-
-    const localViewer = LocalViewer.creator({
+    const localViewer = LocalViewer.creator(
       accountManager,
-      appViewAgent,
-      pdsHostname: cfg.service.hostname,
-      appviewDid: cfg.bskyAppView?.did,
-      appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
-    })
+      imageUrlBuilder,
+      bskyAppView,
+    )
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgentBase = new undici.Agent({
@@ -295,49 +293,152 @@ export class AppContext {
           })
         : proxyAgentBase
 
-    // A fetch() function that protects against SSRF attacks, large responses &
-    // known bad domains. This function can safely be used to fetch user
-    // provided URLs (unless "disableSsrfProtection" is true, of course).
-    const safeFetch = loggedFetch({
-      fetch: safeFetchWrap({
-        // Using globalThis.fetch allows safeFetchWrap to use keep-alive. See
-        // unicastFetchWrap().
-        fetch: globalThis.fetch,
-        allowIpHost: false,
-        responseMaxSize: cfg.fetch.maxResponseSize,
-        ssrfProtection: !cfg.fetch.disableSsrfProtection,
-      }),
-      logRequest: ({ method, url }) => {
-        fetchLogger.debug({ method, uri: url }, 'fetch')
+    /**
+     * A fetch() function that protects against SSRF attacks, large responses &
+     * known bad domains. This function can safely be used to fetch user
+     * provided URLs (unless "disableSsrfProtection" is true, of course).
+     *
+     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
+     * this might prevent the use of explicit `redirect: "follow"` init from
+     * working. See {@link safeFetchWrap}.
+     */
+    const safeFetch = safeFetchWrap({
+      allowIpHost: false,
+      allowImplicitRedirect: false,
+      responseMaxSize: cfg.fetch.maxResponseSize,
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
+
+      // @NOTE Since we are using NodeJS <= 20, unicastFetchWrap would normally
+      // *not* be using a keep-alive agent if it we are providing a fetch
+      // function that is different from `globalThis.fetch`. However, since the
+      // fetch function below is indeed calling `globalThis.fetch` without
+      // altering any argument, we can safely force the use of the keep-alive
+      // agent. This would not be the case if we used "loggedFetch" as that
+      // function does wrap the input & init arguments into a Request object,
+      // which, on NodeJS<=20, results in init.dispatcher *not* being used.
+      dangerouslyForceKeepAliveAgent: true,
+      fetch: function (input, init) {
+        const method =
+          init?.method ?? (input instanceof Request ? input.method : 'GET')
+        const uri = input instanceof Request ? input.url : String(input)
+
+        fetchLogger.info({ method, uri }, 'fetch')
+
+        return globalThis.fetch.call(this, input, init)
       },
-      logResponse: false,
-      logError: false,
     })
 
-    const authProvider = cfg.oauth.provider
-      ? new PdsOAuthProvider({
+    const baseLexiconResolver = buildLexiconResolver({
+      idResolver,
+      rpc: { fetch: safeFetch },
+    })
+
+    const getLexiconAuthority = (_nsid: string): string | undefined => {
+      // At the moment, only a single override strategy is supported by
+      // specifying a did through which all the lexicons will be resolved. We
+      // might need more granular control in the future (e.g. per-nsid
+      // overrides)
+      return cfg.lexicon.didAuthority
+    }
+
+    const lexiconResolver: LexiconResolver = async (input) => {
+      const nsid: string = String(input)
+      try {
+        const result = await baseLexiconResolver(input, {
+          didAuthority: getLexiconAuthority(nsid),
+          // Right now, the lexicon resolver is only used by the oauth-provider,
+          // which caches the responses internally (through the LexiconStore).
+          // Since the `LexiconResolver` does not allow specifying a
+          // `forceRefresh` option, we hard code it here. Should PDSs need to
+          // resolve lexicons for other purposes (e.g. record validation), we'd
+          // probably want to either implement caching as built into the
+          // lexiconResolver here, or allow the caller (oauth-provider, etc.) to
+          // specify a `forceRefresh` option by altering the LexiconResolver
+          // interface.
+          forceRefresh: true,
+        })
+
+        const cid = result.cid.toString()
+        const uri = result.uri.toString()
+        lexiconResolverLogger.info({ nsid, uri, cid }, 'Resolved lexicon')
+
+        return result
+      } catch (err) {
+        lexiconResolverLogger.error({ nsid, err }, 'Lexicon resolution failed')
+
+        throw err
+      }
+    }
+
+    const oauthProvider = cfg.oauth.provider
+      ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
-          keyset: [
-            // Note: OpenID compatibility would require an RS256 private key in this list
-            await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'),
-          ],
-          accountManager,
-          actorStore,
-          localViewer,
+          keyset: [await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256')],
+          store: new OAuthStore(
+            accountManager,
+            actorStore,
+            imageUrlBuilder,
+            backgroundQueue,
+            mailer,
+            sequencer,
+            plcClient,
+            plcRotationKey,
+            cfg.service.publicUrl,
+            cfg.identity.recoveryDidKey,
+          ),
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
-          customization: cfg.oauth.provider.customization,
+          inviteCodeRequired: cfg.invites.required,
+          availableUserDomains: cfg.identity.serviceHandleDomains,
+          hcaptcha: cfg.oauth.provider.hcaptcha,
+          branding: cfg.oauth.provider.branding,
           safeFetch,
+          lexiconResolver,
+          metadata: {
+            protected_resources: [new URL(cfg.oauth.issuer).origin],
+          },
+          // If the PDS is both an authorization server & resource server (no
+          // entryway), we can afford to check the token validity on every
+          // request. This allows revoked tokens to be rejected immediately.
+          // This also allows JWT to be shorter since some claims (notably the
+          // "scope" claim) do not need to be included in the token.
+          accessTokenMode: AccessTokenMode.stateful,
+
+          getClientInfo(clientId) {
+            return {
+              isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
+            }
+          },
         })
       : undefined
 
+    const scopeRefGetter = entrywayAgent
+      ? new ScopeReferenceGetter(entrywayAgent, redisScratch)
+      : undefined
+
     const oauthVerifier: OAuthVerifier =
-      authProvider ?? // OAuthProvider extends OAuthVerifier
+      oauthProvider ?? // OAuthProvider extends OAuthVerifier
       new OAuthVerifier({
         issuer: cfg.oauth.issuer,
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
+        onDecodeToken: async ({ payload, dpopProof }) => {
+          // @TODO drop this once oauth provider no longer accepts DPoP proof with
+          // query or fragment in "htu" claim.
+          if (dpopProof?.htu.match(/[?#]/)) {
+            oauthLogger.info(
+              { htu: dpopProof.htu, client_id: payload.client_id },
+              'DPoP proof "htu" contains query or fragment',
+            )
+          }
+
+          if (scopeRefGetter) {
+            payload.scope = await scopeRefGetter.dereference(payload.scope)
+          }
+
+          return payload
+        },
       })
 
     const authVerifier = new AuthVerifier(
@@ -369,16 +470,16 @@ export class AppContext {
       sequencer,
       backgroundQueue,
       redisScratch,
-      ratelimitCreator,
       crawlers,
-      appViewAgent,
+      bskyAppView,
       moderationAgent,
       reportingAgent,
       entrywayAgent,
+      entrywayAdminAgent,
       proxyAgent,
       safeFetch,
       authVerifier,
-      authProvider,
+      oauthProvider,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
@@ -386,8 +487,22 @@ export class AppContext {
   }
 
   async appviewAuthHeaders(did: string, lxm: string) {
-    assert(this.cfg.bskyAppView)
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, lxm)
+    assert(this.bskyAppView)
+    return this.serviceAuthHeaders(did, this.bskyAppView.did, lxm)
+  }
+
+  async entrywayAuthHeaders(req: express.Request, did: string, lxm: string) {
+    assert(this.cfg.entryway)
+    const headers = await this.serviceAuthHeaders(
+      did,
+      this.cfg.entryway.did,
+      lxm,
+    )
+    return forwardedFor(req, headers)
+  }
+
+  entrywayPassthruHeaders(req: express.Request) {
+    return forwardedFor(req, authPassthru(req))
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
@@ -409,6 +524,14 @@ export class AppContext {
       keypair,
     })
   }
+}
+
+const basicAuthHeader = (username: string, password: string) => {
+  const encoded = ui8.toString(
+    ui8.fromString(`${username}:${password}`, 'utf8'),
+    'base64pad',
+  )
+  return `Basic ${encoded}`
 }
 
 export default AppContext

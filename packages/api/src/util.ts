@@ -1,9 +1,7 @@
+import { z } from 'zod'
 import { AtUri } from '@atproto/syntax'
-import { TID } from '@atproto/common-web'
-import zod from 'zod'
-
-import { Nux } from './client/types/app/bsky/actor/defs'
 import { AppBskyActorDefs } from './client'
+import { Nux } from './client/types/app/bsky/actor/defs'
 
 export function sanitizeMutedWordValue(value: string) {
   return (
@@ -62,7 +60,9 @@ export function getSavedFeedType(
 }
 
 export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
-  new TID(savedFeed.id)
+  if (!savedFeed.id) {
+    throw new Error('Saved feed must have an `id` - use a TID')
+  }
 
   if (['feed', 'list'].includes(savedFeed.type)) {
     const uri = new AtUri(savedFeed.value)
@@ -82,27 +82,12 @@ export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
   }
 }
 
-export type Did = `did:${string}`
-
-// @TODO use tools from @atproto/did
-export const isDid = (str: unknown): str is Did =>
-  typeof str === 'string' &&
-  str.startsWith('did:') &&
-  str.includes(':', 4) &&
-  str.length > 8 &&
-  str.length <= 2048
-
-export const asDid = (value: string): Did => {
-  if (isDid(value)) return value
-  throw new TypeError(`Invalid DID: ${value}`)
-}
-
-export const nuxSchema = zod
+export const nuxSchema = z
   .object({
-    id: zod.string().max(64),
-    completed: zod.boolean(),
-    data: zod.string().max(300).optional(),
-    expiresAt: zod.string().datetime().optional(),
+    id: z.string().max(64),
+    completed: z.boolean(),
+    data: z.string().max(300).optional(),
+    expiresAt: z.string().datetime().optional(),
   })
   .strict()
 

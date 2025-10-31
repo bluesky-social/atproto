@@ -1,11 +1,9 @@
+import { CID } from 'multiformats'
+import { DataAdd, DataDelete, DataDiff, DataUpdate } from '../src/data-diff'
 import { MST } from '../src/mst'
-import DataDiff, { DataAdd, DataUpdate, DataDelete } from '../src/data-diff'
-import { countPrefixLen, InvalidMstKeyError } from '../src/mst/util'
-
+import { InvalidMstKeyError, countPrefixLen } from '../src/mst/util'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
-
-import { CID } from 'multiformats'
 
 describe('Merkle Search Tree', () => {
   let blockstore: MemoryBlockstore
@@ -194,6 +192,10 @@ describe('Merkle Search Tree', () => {
       await expect(promise).rejects.toThrow(InvalidMstKeyError)
     }
 
+    const expectAllow = async (key: string) => {
+      await mst.add(key, cid1)
+    }
+
     it('rejects the empty key', async () => {
       await expectReject('')
     })
@@ -224,12 +226,31 @@ describe('Merkle Search Tree', () => {
       await expectReject('coll/key)')
       await expectReject('coll/key+')
       await expectReject('coll/key=')
+      await expectReject('coll/@handle')
+      await expectReject('coll/any space')
+      await expectReject('coll/#extra')
+      await expectReject('coll/any+space')
+      await expectReject('coll/number[3]')
+      await expectReject('coll/number(3)')
+      await expectReject('coll/dHJ1ZQ==')
+      await expectReject('coll/"quote"')
     })
 
-    it('rejects keys over 256 chars', async () => {
+    it('rejects keys over 1024 chars', async () => {
       await expectReject(
-        'coll/asdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpao',
+        'coll/asdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpaoasdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpaoasdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpaoasdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpaoasdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpao',
       )
+    })
+
+    it('allows valid keys', async () => {
+      await expectAllow('coll/3jui7kd54zh2y')
+      await expectAllow('coll/self')
+      await expectAllow('coll/example.com')
+      await expectAllow('com.example/rkey')
+      await expectAllow('coll/~1.2-3_')
+      await expectAllow('coll/dHJ1ZQ')
+      await expectAllow('coll/pre:fix')
+      await expectAllow('coll/_')
     })
   })
 

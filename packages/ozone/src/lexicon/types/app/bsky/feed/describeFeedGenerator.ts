@@ -1,25 +1,29 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 
-export interface QueryParams {}
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.describeFeedGenerator'
 
+export type QueryParams = {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
   did: string
   feeds: Feed[]
   links?: Links
-  [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -32,49 +36,35 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput
+export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface Feed {
+  $type?: 'app.bsky.feed.describeFeedGenerator#feed'
   uri: string
-  [k: string]: unknown
 }
 
-export function isFeed(v: unknown): v is Feed {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.describeFeedGenerator#feed'
-  )
+const hashFeed = 'feed'
+
+export function isFeed<V>(v: V) {
+  return is$typed(v, id, hashFeed)
 }
 
-export function validateFeed(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.describeFeedGenerator#feed', v)
+export function validateFeed<V>(v: V) {
+  return validate<Feed & V>(v, id, hashFeed)
 }
 
 export interface Links {
+  $type?: 'app.bsky.feed.describeFeedGenerator#links'
   privacyPolicy?: string
   termsOfService?: string
-  [k: string]: unknown
 }
 
-export function isLinks(v: unknown): v is Links {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.describeFeedGenerator#links'
-  )
+const hashLinks = 'links'
+
+export function isLinks<V>(v: V) {
+  return is$typed(v, id, hashLinks)
 }
 
-export function validateLinks(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.describeFeedGenerator#links', v)
+export function validateLinks<V>(v: V) {
+  return validate<Links & V>(v, id, hashLinks)
 }

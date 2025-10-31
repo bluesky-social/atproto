@@ -1,23 +1,23 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
-import { createPipeline } from '../../../../pipeline'
+import { AppContext } from '../../../../context'
+import { DataPlaneClient } from '../../../../data-plane'
+import { Actor } from '../../../../hydration/actor'
+import { FeedItem, Post } from '../../../../hydration/feed'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator'
-import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { safePinnedPost, uriToDid } from '../../../../util/uris'
-import { Actor } from '../../../../hydration/actor'
-import { FeedItem, Post } from '../../../../hydration/feed'
+import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { createPipeline } from '../../../../pipeline'
 import { FeedType } from '../../../../proto/bsky_pb'
+import { safePinnedPost, uriToDid } from '../../../../util/uris'
+import { Views } from '../../../../views'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(
@@ -58,6 +58,7 @@ const FILTER_TO_FEED_TYPE = {
   posts_no_replies: FeedType.POSTS_NO_REPLIES,
   posts_with_media: FeedType.POSTS_WITH_MEDIA,
   posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
+  posts_with_video: FeedType.POSTS_WITH_VIDEO,
 }
 
 export const skeleton = async (inputs: {
@@ -69,10 +70,10 @@ export const skeleton = async (inputs: {
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actors = await ctx.hydrator.actor.getActors(
-    [did],
-    params.hydrateCtx.includeTakedowns,
-  )
+  const actors = await ctx.hydrator.actor.getActors([did], {
+    includeTakedowns: params.hydrateCtx.includeTakedowns,
+    skipCacheForDids: params.hydrateCtx.skipCacheForViewer,
+  })
   const actor = actors.get(did)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
@@ -144,13 +145,19 @@ const noBlocksOrMutedReposts = (inputs: {
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
   const relationship = hydration.profileViewers?.get(skeleton.actor.did)
-  if (relationship?.blocking || relationship?.blockingByList) {
+  if (
+    relationship &&
+    (relationship.blocking || ctx.views.blockingByList(relationship, hydration))
+  ) {
     throw new InvalidRequestError(
       `Requester has blocked actor: ${skeleton.actor.did}`,
       'BlockedActor',
     )
   }
-  if (relationship?.blockedBy || relationship?.blockedByList) {
+  if (
+    relationship &&
+    (relationship.blockedBy || ctx.views.blockedByList(relationship, hydration))
+  ) {
     throw new InvalidRequestError(
       `Requester is blocked by actor: ${skeleton.actor.did}`,
       'BlockedByActor',

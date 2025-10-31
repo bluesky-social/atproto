@@ -1,21 +1,26 @@
-import { CidSet } from '@atproto/repo'
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-
-import AppContext from '../../../../context'
+import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { assertValidDidDocumentForService } from './util'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
-    auth: ctx.authVerifier.accessFull(),
+    auth: ctx.authVerifier.authorization({
+      scopes: ACCESS_FULL,
+      authorize: () => {
+        throw new ForbiddenError(
+          'OAuth credentials are not supported for this endpoint',
+        )
+      },
+    }),
     handler: async ({ req, auth }) => {
       // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.activateAccount(
           undefined,
-          authPassthru(req),
+          ctx.entrywayPassthruHeaders(req),
         )
         return
       }
@@ -33,28 +38,18 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.accountManager.activateAccount(requester)
 
-      const commitData = await ctx.actorStore.read(requester, async (store) => {
-        const root = await store.repo.storage.getRootDetailed()
-        const blocks = await store.repo.storage.getBlocks([root.cid])
-        return {
-          cid: root.cid,
-          rev: root.rev,
-          since: null,
-          prev: null,
-          newBlocks: blocks.blocks,
-          relevantBlocks: blocks.blocks,
-          removedCids: new CidSet(),
-        }
-      })
+      const syncData = await ctx.actorStore.read(requester, (store) =>
+        store.repo.getSyncEventData(),
+      )
 
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
       const status = await ctx.accountManager.getAccountStatus(requester)
       await ctx.sequencer.sequenceAccountEvt(requester, status)
-      await ctx.sequencer.sequenceHandleUpdate(
+      await ctx.sequencer.sequenceIdentityEvt(
         requester,
         account.handle ?? INVALID_HANDLE,
       )
-      await ctx.sequencer.sequenceCommit(requester, commitData, [])
+      await ctx.sequencer.sequenceSyncEvt(requester, syncData)
     },
   })
 }

@@ -1,0 +1,663 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-02-27 14:03+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: fr\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:221
+msgid "2FA Confirmation"
+msgstr "Confirmation 2FA"
+
+#: src/components/utils/error-message.tsx:27
+msgid "A second authentication factor is required"
+msgstr "Un second facteur d'authentification est requis"
+
+#: src/components/utils/scope-description.tsx:851
+msgid "A service controlled by <0>{domain}</0>"
+msgstr "Un service contrôlé par <0>{domain}</0>"
+
+#: src/components/utils/scope-description.tsx:282
+msgid "Account"
+msgstr "Compte utilisateur"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:71
+msgid "Already have a code?"
+msgstr "Vous avez déjà un code ?"
+
+#: src/components/utils/client-name.tsx:46
+msgid "An application on your device"
+msgstr "Une application sur votre appareil"
+
+#: src/components/utils/error-message.tsx:87
+msgid "An unknown error occurred"
+msgstr "Une erreur inconnue s'est produite"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:113
+msgid "Another account"
+msgstr "Un autre compte"
+
+#: src/components/utils/scope-description.tsx:879
+msgid "Any collection"
+msgstr "N'importe quelle collection"
+
+#: src/components/utils/scope-description.tsx:821
+msgid "Any method"
+msgstr "N'importe quelle action"
+
+#: src/components/utils/scope-description.tsx:860
+msgid "Any service"
+msgstr "N'importe quel service"
+
+#: src/views/authorize/welcome/welcome-view.tsx:28
+#: src/components/utils/scope-description.tsx:458
+#: src/components/utils/scope-description.tsx:478
+msgid "Authenticate"
+msgstr "Authentification"
+
+#: src/views/authorize/consent/consent-view.tsx:60
+#: src/views/authorize/consent/consent-form.tsx:105
+#: src/views/authorize/consent/consent-form.tsx:174
+msgid "Authorize"
+msgstr "Authoriser l'accès"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:79
+msgid "Avatar"
+msgstr "Photo de profile"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:59
+#: src/views/authorize/sign-in/sign-in-form.tsx:132
+#: src/views/authorize/reset-password/reset-password-view.tsx:65
+#: src/views/authorize/reset-password/reset-password-view.tsx:95
+#: src/views/authorize/consent/consent-form.tsx:99
+#: src/components/forms/wizard-card.tsx:93
+msgid "Back"
+msgstr "Retour"
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:152
+msgid "Between {minLength} and {maxLength} characters"
+msgstr "Entre {minLength} et {maxLength} caractères"
+
+#: src/components/utils/scope-description.tsx:745
+msgid "Blob storage"
+msgstr "Stockage"
+
+#: src/components/utils/scope-description.tsx:836
+msgid "Bluesky App services"
+msgstr "Services de l'application Bluesky"
+
+#: src/components/utils/scope-description.tsx:843
+msgid "Bluesky Chat services"
+msgstr "Services de discussion de Bluesky"
+
+#. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
+#: src/views/authorize/consent/consent-form.tsx:173
+msgid "By clicking <0>{0}</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
+msgstr "En cliquant sur <0>{0}</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et à sa <2>politique de confidentialité</2>."
+
+#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
+#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
+msgid "By creating an account you agree to the {0} and the {1} of this service."
+msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
+
+#: src/components/utils/scope-description.tsx:553
+msgctxt "RPC lxm"
+msgid "Call"
+msgstr "Appeler"
+
+#: src/views/authorize/authorize-view.tsx:151
+#: src/views/authorize/welcome/welcome-view.tsx:51
+#: src/components/forms/form-card-async.tsx:85
+msgid "Cancel"
+msgstr "Annuler"
+
+#: src/components/utils/scope-description.tsx:434
+msgid "Change your <0>@handle</0>"
+msgstr "Modifier votre <0>@pseudo</0>"
+
+#: src/components/utils/scope-description.tsx:394
+msgid "Chat"
+msgstr "Discussions"
+
+#. placeholder {0}: secondFactor.hint
+#: src/views/authorize/sign-in/sign-in-form.tsx:234
+msgid "Check your {0} email for a login code and enter it here."
+msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:99
+msgid "Choose a username"
+msgstr "Choisissez un nom d'utilisateur"
+
+#: src/components/utils/error-card.tsx:76
+msgid "Code"
+msgstr "Code"
+
+#: src/components/utils/description-card.tsx:74
+#: src/components/utils/description-card.tsx:76
+msgid "Collapse details"
+msgstr "Réduire les détails"
+
+#: src/components/utils/scope-description.tsx:713
+msgid "Collection"
+msgstr "Collection"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:139
+msgctxt "verb"
+msgid "Confirm"
+msgstr "Confirmer"
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:69
+msgid "Confirm your password to continue"
+msgstr "Confirmez votre mot de passe pour continuer"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:225
+msgid "Confirmation code"
+msgstr "Code de confirmation"
+
+#: src/components/utils/scope-description.tsx:714
+msgid "Create"
+msgstr "Créer"
+
+#: src/views/authorize/welcome/welcome-view.tsx:35
+msgid "Create a new account"
+msgstr "Créer un nouveau compte"
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:82
+msgid "Create Account"
+msgstr "Créer un compte"
+
+#: src/components/utils/scope-description.tsx:599
+msgid "Create, update, and delete any public record"
+msgstr "Créer, modifier et supprimer tout contenu public"
+
+#: src/components/utils/scope-description.tsx:716
+msgid "Delete"
+msgstr "Supprimer"
+
+#: src/views/authorize/consent/consent-form.tsx:109
+msgid "Deny access"
+msgstr "Refuser l'accès"
+
+#: src/components/utils/error-card.tsx:83
+msgid "Description"
+msgstr "Description"
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:114
+#: src/components/utils/scope-description.tsx:242
+msgid "Email"
+msgstr "Email"
+
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:55
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:60
+#: src/components/forms/input-email-address.tsx:51
+msgid "Email address"
+msgstr "Adresse email"
+
+#: src/components/forms/input-new-password.tsx:44
+msgid "Enter a password"
+msgstr "Saisissez un mot de passe"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:85
+msgid "Enter the code you received to reset your password."
+msgstr "Saisissez le code que vous avez reçu pour réinitialiser votre mot de passe."
+
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:70
+msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
+msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous vous enverrons un \"code de réinitialisation\" pour que vous puissiez définir un nouveau mot de passe."
+
+#: src/views/authorize/reset-password/reset-password-request-form.tsx:58
+msgid "Enter your email address"
+msgstr "Saisissez votre adresse email"
+
+#: src/components/forms/input-new-password.tsx:45
+msgid "Enter your new password"
+msgstr "Saisissez votre nouveau mot de passe"
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:90
+msgid "Enter your password"
+msgstr "Saisissez votre mot de passe"
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:109
+#: src/views/authorize/sign-in/sign-in-view.tsx:126
+msgid "Enter your username and password"
+msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
+
+#: src/views/error/error-view.tsx:27
+msgid "Error"
+msgstr "Erreur"
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:102
+msgid "example-com-xxxxx-xxxxx"
+msgstr "exemple-com-xxxxx-xxxxx"
+
+#: src/components/utils/description-card.tsx:74
+#: src/components/utils/description-card.tsx:76
+msgid "Expand details"
+msgstr "Développer les détails"
+
+#: src/components/utils/password-strength-label.tsx:25
+msgid "Extra"
+msgstr "Extra"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:53
+msgid "Forgot Password"
+msgstr "Mot de passe oublié"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:189
+msgid "Forgot?"
+msgstr "Oublié ?"
+
+#. placeholder {0}: account.preferred_username || account.email || account.sub
+#: src/views/authorize/consent/consent-view.tsx:45
+msgid "Grant access to your <0>{0}</0> account"
+msgstr "Accorder l'accès à votre compte <0>{0}</0>"
+
+#: src/components/utils/help-card.tsx:32
+msgid "Having trouble? <0>Contact support</0>"
+msgstr "Vous rencontrez des difficultés ? <0>Contactez le support</0>"
+
+#: src/components/forms/button-toggle-visibility.tsx:34
+msgid "Hide"
+msgstr "Cacher"
+
+#: src/components/utils/link-title.tsx:17
+msgid "Home"
+msgstr "Accueil"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:91
+#: src/views/authorize/sign-in/sign-in-form.tsx:146
+msgid "Identifier"
+msgstr "Identifiant"
+
+#: src/components/utils/scope-description.tsx:427
+msgid "Identity"
+msgstr "Identité"
+
+#: src/locales/locale-selector.tsx:46
+msgid "Interface language selector"
+msgstr "Sélecteur de langue"
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:286
+msgid "Invalid"
+msgstr "Invalide"
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:96
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:101
+msgid "Invite code"
+msgstr "Code d'invitation"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:55
+msgid "Let's get your password reset!"
+msgstr "Réinitialisons votre mot de passe !"
+
+#: src/views/authorize/authorize-view.tsx:190
+msgid "Login complete"
+msgstr "Connexion terminée"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:107
+msgid "Login to account that is not listed"
+msgstr "Se connecter à un compte qui n'est pas listé"
+
+#: src/components/layouts/layout-welcome.tsx:50
+msgid "Logo"
+msgstr "Logo"
+
+#: src/components/forms/input-token.tsx:59
+msgid "Looks like {example}"
+msgstr "Ressemble à {example}"
+
+#: src/components/forms/button-toggle-visibility.tsx:34
+msgid "Make visible"
+msgstr "Rendre visible"
+
+#: src/components/utils/scope-description.tsx:430
+msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
+msgstr "Gérer votre <0>identité complète</0> y compris votre <1>@pseudo</1>"
+
+#: src/components/utils/scope-description.tsx:365
+msgid "Manage your profile, posts, likes and follows"
+msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements"
+
+#: src/components/utils/scope-description.tsx:360
+msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
+msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements ainsi que lire vos préférences privées"
+
+#: src/components/utils/password-strength-label.tsx:33
+msgid "Missing"
+msgstr "Manquant"
+
+#: src/components/utils/password-strength-label.tsx:29
+msgid "Moderate"
+msgstr "Modéré"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:84
+msgid "Name"
+msgstr "Nom"
+
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:74
+msgid "New password"
+msgstr "Nouveau mot de passe"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:60
+#: src/views/authorize/reset-password/reset-password-view.tsx:90
+#: src/components/forms/wizard-card.tsx:96
+msgid "Next"
+msgstr "Suivant"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:119
+msgid "Okay"
+msgstr "OK"
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:157
+msgid "Only letters, numbers, and hyphens"
+msgstr "Uniquement des lettres, des chiffres et des traits d'union"
+
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:128
+#: src/views/authorize/sign-in/sign-in-form.tsx:170
+#: src/components/forms/input-password.tsx:53
+msgid "Password"
+msgstr "Mot de passe"
+
+#: src/components/utils/password-strength-label.tsx:23
+msgid "Password strength"
+msgstr "Complexité du mot de passe"
+
+#: src/components/utils/password-strength-meter.tsx:45
+msgid "Password strength indicator"
+msgstr "Indicateur de complexité du mot de passe"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:106
+msgid "Password Updated"
+msgstr "Mot de passe mis à jour"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:113
+msgid "Password updated!"
+msgstr "Mot de passe mis à jour !"
+
+#: src/components/forms/input-new-password.tsx:46
+msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
+msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
+
+#: src/components/utils/scope-description.tsx:479
+msgid "Perform actions on your behalf"
+msgstr "Effectuer des actions en votre nom"
+
+#: src/components/utils/scope-description.tsx:460
+msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
+msgstr "Effectuer des actions authentifiées vers <0>n'importe quel service</0> en votre nom"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:201
+msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
+msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre mot de passe. N'entrez jamais votre mot de passe sur un domaine auquel vous ne faites pas confiance."
+
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:42
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
+#: src/components/utils/link-title.tsx:18
+msgid "Privacy Policy"
+msgstr "Politique de Confidentialité"
+
+#: src/components/utils/scope-description.tsx:620
+msgid "Publish changes"
+msgstr "Publier des modifications"
+
+#: src/components/utils/scope-description.tsx:395
+msgid "Read and send messages"
+msgstr "Lire et envoyer des messages"
+
+#: src/components/utils/scope-description.tsx:245
+msgid "Read and update your account's email address"
+msgstr "Lire et mettre à jour l'adresse e-mail de votre compte"
+
+#: src/components/utils/scope-description.tsx:247
+msgid "Read your account's email address"
+msgstr "Lire l'adresse e-mail de votre compte"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:209
+#: src/views/authorize/sign-in/sign-in-form.tsx:214
+msgid "Remember this account on this device"
+msgstr "Se souvenir de ce compte sur cet appareil"
+
+#: src/components/utils/scope-description.tsx:598
+#: src/components/utils/scope-description.tsx:619
+msgid "Repository"
+msgstr "Données publiques"
+
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:59
+msgid "Reset code"
+msgstr "Code de réinitialisation"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:82
+msgid "Reset Password"
+msgstr "Réinitialiser le mot de passe"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:187
+msgid "Reset your password"
+msgstr "Réinitialisez votre mot de passe"
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:196
+msgid "Select domain"
+msgstr "Sélectionner le domaine"
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:141
+msgid "Select from an existing account"
+msgstr "Sélectionner un compte"
+
+#: src/views/authorize/welcome/welcome-view.tsx:45
+#: src/views/authorize/sign-in/sign-in-form.tsx:141
+msgctxt "verb"
+msgid "Sign in"
+msgstr "Se connecter"
+
+#: src/views/authorize/sign-in/sign-in-view.tsx:52
+msgctxt "noun"
+msgid "Sign in"
+msgstr "Connexion"
+
+#. placeholder {0}: account.name
+#: src/views/authorize/sign-in/sign-in-picker.tsx:78
+msgid "Sign in as {0}"
+msgstr "Se connecter en tant que {0}"
+
+#: src/views/authorize/sign-in/sign-in-picker.tsx:64
+msgid "Sign in as..."
+msgstr "Se connecter en tant que..."
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:88
+#: src/views/authorize/sign-in/sign-in-picker.tsx:53
+msgid "Sign up"
+msgstr "S'inscrire"
+
+#: src/components/forms/wizard-card.tsx:106
+msgid "Step {currentPosition} of {count}"
+msgstr "Étape {currentPosition} sur {count}"
+
+#: src/components/utils/password-strength-label.tsx:27
+msgid "Strong"
+msgstr "Fort"
+
+#: src/components/forms/form-card-async.tsx:96
+msgid "Submit"
+msgstr "Soumettre"
+
+#: src/components/utils/link-title.tsx:20
+msgid "Support"
+msgstr "Support"
+
+#: src/views/authorize/consent/consent-form.tsx:142
+msgid "Technical details"
+msgstr "Détails techniques"
+
+#: src/components/utils/scope-description.tsx:283
+msgid "Temporarily activate or deactivate your account"
+msgstr "Activer ou désactiver temporairement votre compte"
+
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:34
+#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:37
+#: src/components/utils/link-title.tsx:19
+msgid "Terms of Service"
+msgstr "Conditions d'Utilisation"
+
+#: src/components/utils/error-message.tsx:52
+msgid "That handle cannot be used"
+msgstr "Ce pseudonyme ne peut pas être utilisé"
+
+#: src/components/utils/scope-description.tsx:205
+msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
+msgstr "L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>usurper</1>, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance."
+
+#: src/components/utils/scope-description.tsx:605
+msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
+msgstr "L'application demande à pouvoir créer, modifier et supprimer <0>tout contenu public</0> de votre dépôt."
+
+#: src/components/utils/scope-description.tsx:172
+#: src/components/utils/scope-description.tsx:485
+#: src/components/utils/scope-description.tsx:626
+msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
+msgstr "L'application demande les autorisations nécessaires pour effectuer les actions suivantes en votre nom :"
+
+#: src/components/utils/scope-description.tsx:500
+msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
+msgstr "Le réseau ATProto utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que le contenu du fil d'actualité ou de modération."
+
+#: src/components/utils/error-message.tsx:69
+msgid "The data you submitted is invalid. Please check the form and try again."
+msgstr "Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer."
+
+#: src/components/utils/error-message.tsx:43
+msgid "The domain name is not allowed"
+msgstr "Le nom de domaine n'est pas autorisé"
+
+#: src/components/utils/error-message.tsx:45
+msgid "The handle contains inappropriate language"
+msgstr "Le pseudonyme contient un langage inapproprié"
+
+#: src/components/utils/error-message.tsx:50
+msgid "The handle is already in use"
+msgstr "Ce pseudonyme est déjà utilisé"
+
+#: src/components/utils/error-message.tsx:41
+msgid "The handle is invalid"
+msgstr "Le pseudonyme est invalide"
+
+#: src/components/utils/error-message.tsx:35
+msgid "The invite code is not valid"
+msgstr "Le code d'invitation n'est pas valide"
+
+#: src/views/authorize/consent/consent-form.tsx:147
+msgid "This application is requesting the following list of technical permissions, summarized hereafter:"
+msgstr "Cette application demande la liste suivante de permissions techniques, résumées ci-après :"
+
+#: src/components/utils/error-message.tsx:77
+msgid "This authorization request has been denied. Please try again."
+msgstr "Cette demande d'autorisation a été refusée. Veuillez réessayer."
+
+#: src/components/utils/error-message.tsx:57
+msgid "This email is already used"
+msgstr "Cet email est déjà utilisé"
+
+#: src/components/utils/error-message.tsx:48
+msgid "This handle is reserved"
+msgstr "Ce pseudonyme est réservé"
+
+#: src/components/utils/error-message.tsx:64
+msgid "This sign-in session has expired"
+msgstr "Cette session de connexion a expiré"
+
+#: src/components/utils/scope-description.tsx:556
+msgctxt "RPC aud"
+msgid "Towards"
+msgstr "Auprès de"
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:166
+msgid "Type your desired username"
+msgstr "Saisissez le nom d'utilisateur souhaité"
+
+#: src/components/utils/error-message.tsx:84
+msgid "Unexpected server response"
+msgstr "Réponse inattendue du serveur"
+
+#: src/components/utils/scope-description.tsx:715
+msgid "Update"
+msgstr "Modifier"
+
+#: src/components/utils/scope-description.tsx:748
+msgid "Upload files"
+msgstr "Envoyer des fichiers"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:151
+msgid "Username or email address"
+msgstr "Nom d'utilisateur ou adresse email"
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:281
+msgid "Valid"
+msgstr "Valide"
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:140
+msgid "Verify you are human"
+msgstr "Vérifiez que vous êtes humain"
+
+#: src/views/authorize/consent/consent-form.tsx:136
+msgid "wants to access your <0/> account"
+msgstr "veut accéder à votre compte <0/>"
+
+#: src/views/authorize/consent/consent-form.tsx:131
+msgid "wants to uniquely identify you through your <0/> account"
+msgstr "veut vous identifier de manière unique via votre compte <0/>"
+
+#: src/views/authorize/sign-in/sign-in-form.tsx:200
+msgid "Warning"
+msgstr "Avertissement"
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:84
+msgid "We're so excited to have you join us!"
+msgstr "Nous sommes ravis de vous accueillir parmi nous !"
+
+#: src/components/utils/password-strength-label.tsx:31
+msgid "Weak"
+msgstr "Faible"
+
+#: src/components/utils/error-message.tsx:31
+msgid "Wrong identifier or password"
+msgstr "Identifiant ou mot de passe incorrect"
+
+#: src/views/authorize/authorize-view.tsx:191
+msgid "You are being redirected..."
+msgstr "Vous êtes redirigé..."
+
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:247
+msgid "You can change this username to any domain name you control after your account is set up."
+msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:116
+msgid "You can now sign in with your new password."
+msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
+
+#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:53
+msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
+msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
+
+#: src/views/authorize/sign-up/sign-up-view.tsx:121
+msgid "Your account"
+msgstr "Votre compte"
+
+#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
+#: src/views/authorize/sign-up/sign-up-handle-form.tsx:230
+msgid "Your full username will be: {0}"
+msgstr "Votre nom d'utilisateur complet sera : {0}"
+
+#: src/views/authorize/reset-password/reset-password-view.tsx:108
+msgid "Your password has been updated!"
+msgstr "Votre mot de passe a été mis à jour !"
+
+#: src/components/utils/scope-description.tsx:641
+msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
+msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau ATProto, telles que les publications, les likes et les abonnements Bluesky. Il contient également des données créées via d'autres applications auxquelles vous vous êtes connecté avec ce compte."

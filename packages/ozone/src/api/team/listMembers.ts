@@ -1,5 +1,5 @@
+import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.team.listMembers({
@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor,
-          members: await teamService.view(members, ctx),
+          members: await teamService.view(members),
         },
       }
     },

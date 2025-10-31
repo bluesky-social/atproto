@@ -1,4 +1,21 @@
 import assert from 'node:assert'
+import { subLogger as log } from './logger'
+
+type LiveNowConfig = {
+  did: string
+  domains: string[]
+}[]
+
+export interface KwsConfig {
+  apiKey: string
+  apiOrigin: string
+  authOrigin: string
+  clientId: string
+  redirectUrl: string
+  userAgent: string
+  verificationSecret: string
+  webhookSecret: string
+}
 
 export interface ServerConfigValues {
   // service
@@ -9,8 +26,11 @@ export interface ServerConfigValues {
   serverDid: string
   alternateAudienceDids: string[]
   entrywayJwtPublicKeyHex?: string
+  liveNowConfig?: LiveNowConfig
   // external services
+  etcdHosts: string[]
   dataplaneUrls: string[]
+  dataplaneUrlsEtcdKeyPrefix?: string
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
   bsyncUrl: string
@@ -24,6 +44,8 @@ export interface ServerConfigValues {
   searchUrl?: string
   suggestionsUrl?: string
   suggestionsApiKey?: string
+  topicsUrl?: string
+  topicsApiKey?: string
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -45,8 +67,24 @@ export interface ServerConfigValues {
   bigThreadUris: Set<string>
   bigThreadDepth?: number
   maxThreadDepth?: number
+  maxThreadParents: number
+  threadTagsHide: Set<string>
+  threadTagsBumpDown: Set<string>
+  // notifications
+  notificationsDelayMs?: number
   // client config
   clientCheckEmailConfirmed?: boolean
+  topicsEnabled?: boolean
+  // http proxy agent
+  disableSsrfProtection?: boolean
+  proxyAllowHTTP2?: boolean
+  proxyHeadersTimeout?: number
+  proxyBodyTimeout?: number
+  proxyMaxResponseSize?: number
+  proxyMaxRetries?: number
+  proxyPreferCompressed?: boolean
+  kws?: KwsConfig
+  debugFieldAllowedDids: Set<string>
 }
 
 export class ServerConfig {
@@ -55,21 +93,36 @@ export class ServerConfig {
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const version = process.env.BSKY_VERSION || undefined
-    const debugMode = process.env.NODE_ENV !== 'production'
+    const debugMode =
+      // Because security related features are disabled in development mode, this requires explicit opt-in.
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
-    const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
-      ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
-      : []
+    const alternateAudienceDids = envList(process.env.BSKY_ALT_AUDIENCE_DIDS)
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
-    const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
-      ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
-      : []
+    let liveNowConfig: LiveNowConfig | undefined
+    if (process.env.BSKY_LIVE_NOW_CONFIG) {
+      try {
+        const parsed = JSON.parse(process.env.BSKY_LIVE_NOW_CONFIG)
+        if (isLiveNowConfig(parsed)) {
+          liveNowConfig = parsed
+        } else {
+          throw new Error('Live Now config failed format validation')
+        }
+      } catch (err) {
+        log.error({ err }, 'Invalid BSKY_LIVE_NOW_CONFIG')
+      }
+    }
+    const handleResolveNameservers = envList(
+      process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
+    )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    const etcdHosts =
+      overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
     const videoPlaylistUrlPattern = process.env.BSKY_VIDEO_PLAYLIST_URL_PATTERN
     // e.g. https://video.invalid/watch/%s/%s/thumbnail.jpg
@@ -82,16 +135,27 @@ export class ServerConfig {
       undefined
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
-    let dataplaneUrls = overrides?.dataplaneUrls
-    dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
-      ? process.env.BSKY_DATAPLANE_URLS.split(',')
-      : []
+    const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
+    const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
+    const dataplaneUrls =
+      overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
+    const dataplaneUrlsEtcdKeyPrefix =
+      process.env.BSKY_DATAPLANE_URLS_ETCD_KEY_PREFIX || undefined
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
-    const labelsFromIssuerDids = process.env.BSKY_LABELS_FROM_ISSUER_DIDS
-      ? process.env.BSKY_LABELS_FROM_ISSUER_DIDS.split(',')
-      : []
+    assert(
+      !dataplaneUrlsEtcdKeyPrefix || etcdHosts.length,
+      'etcd prefix for dataplane urls may only be configured when there are etcd hosts',
+    )
+    assert(
+      dataplaneUrls.length || dataplaneUrlsEtcdKeyPrefix,
+      'dataplane urls are not configured directly nor with etcd',
+    )
+    assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
+    const labelsFromIssuerDids = envList(
+      process.env.BSKY_LABELS_FROM_ISSUER_DIDS,
+    )
     const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
     assert(bsyncUrl)
     const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
@@ -118,8 +182,6 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
-    assert(dataplaneUrls.length)
-    assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
     const statsigKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'
@@ -130,6 +192,7 @@ export class ServerConfig {
         : process.env.BSKY_STATSIG_ENV || 'development'
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
+    const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
     const indexedAtEpoch = process.env.BSKY_INDEXED_AT_EPOCH
       ? new Date(process.env.BSKY_INDEXED_AT_EPOCH)
       : undefined
@@ -144,6 +207,80 @@ export class ServerConfig {
     const maxThreadDepth = process.env.BSKY_MAX_THREAD_DEPTH
       ? parseInt(process.env.BSKY_MAX_THREAD_DEPTH || '', 10)
       : undefined
+    const maxThreadParents = process.env.BSKY_MAX_THREAD_PARENTS
+      ? parseInt(process.env.BSKY_MAX_THREAD_PARENTS || '', 10)
+      : 50
+    const threadTagsHide = new Set(envList(process.env.BSKY_THREAD_TAGS_HIDE))
+    const threadTagsBumpDown = new Set(
+      envList(process.env.BSKY_THREAD_TAGS_BUMP_DOWN),
+    )
+
+    const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
+      : 0
+
+    const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
+      ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
+      : debugMode
+
+    const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
+    const proxyHeadersTimeout =
+      parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || undefined
+    const proxyBodyTimeout =
+      parseInt(process.env.BSKY_PROXY_BODY_TIMEOUT || '', 10) || undefined
+    const proxyMaxResponseSize =
+      parseInt(process.env.BSKY_PROXY_MAX_RESPONSE_SIZE || '', 10) || undefined
+    const proxyMaxRetries =
+      parseInt(process.env.BSKY_PROXY_MAX_RETRIES || '', 10) || undefined
+    const proxyPreferCompressed =
+      process.env.BSKY_PROXY_PREFER_COMPRESSED === 'true'
+
+    let kws: KwsConfig | undefined
+    const kwsApiKey = process.env.BSKY_KWS_API_KEY
+    const kwsApiOrigin = process.env.BSKY_KWS_API_ORIGIN
+    const kwsAuthOrigin = process.env.BSKY_KWS_AUTH_ORIGIN
+    const kwsClientId = process.env.BSKY_KWS_CLIENT_ID
+    const kwsRedirectUrl = process.env.BSKY_KWS_REDIRECT_URL
+    const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
+    const kwsVerificationSecret = process.env.BSKY_KWS_VERIFICATION_SECRET
+    const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SECRET
+    if (
+      kwsApiKey ||
+      kwsApiOrigin ||
+      kwsAuthOrigin ||
+      kwsClientId ||
+      kwsRedirectUrl ||
+      kwsUserAgent ||
+      kwsVerificationSecret ||
+      kwsWebhookSecret
+    ) {
+      assert(
+        kwsApiOrigin &&
+          kwsAuthOrigin &&
+          kwsClientId &&
+          kwsRedirectUrl &&
+          kwsUserAgent &&
+          kwsVerificationSecret &&
+          kwsWebhookSecret &&
+          kwsApiKey,
+        'all KWS environment variables must be set if any are set',
+      )
+      kws = {
+        apiKey: kwsApiKey,
+        apiOrigin: kwsApiOrigin,
+        authOrigin: kwsAuthOrigin,
+        clientId: kwsClientId,
+        redirectUrl: kwsRedirectUrl,
+        userAgent: kwsUserAgent,
+        verificationSecret: kwsVerificationSecret,
+        webhookSecret: kwsWebhookSecret,
+      }
+    }
+
+    const debugFieldAllowedDids = new Set(
+      envList(process.env.BSKY_DEBUG_FIELD_ALLOWED_DIDS),
+    )
+
     return new ServerConfig({
       version,
       debugMode,
@@ -152,12 +289,17 @@ export class ServerConfig {
       serverDid,
       alternateAudienceDids,
       entrywayJwtPublicKeyHex,
+      liveNowConfig,
+      etcdHosts,
       dataplaneUrls,
+      dataplaneUrlsEtcdKeyPrefix,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
       suggestionsUrl,
       suggestionsApiKey,
+      topicsUrl,
+      topicsApiKey,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -180,10 +322,24 @@ export class ServerConfig {
       statsigKey,
       statsigEnv,
       clientCheckEmailConfirmed,
+      topicsEnabled,
       indexedAtEpoch,
       bigThreadUris,
       bigThreadDepth,
       maxThreadDepth,
+      maxThreadParents,
+      threadTagsHide,
+      threadTagsBumpDown,
+      notificationsDelayMs,
+      disableSsrfProtection,
+      proxyAllowHTTP2,
+      proxyHeadersTimeout,
+      proxyBodyTimeout,
+      proxyMaxResponseSize,
+      proxyMaxRetries,
+      proxyPreferCompressed,
+      kws,
+      debugFieldAllowedDids,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -208,11 +364,6 @@ export class ServerConfig {
     return this.assignedPort || this.cfg.port
   }
 
-  get localUrl() {
-    assert(this.port, 'No port assigned')
-    return `http://localhost:${this.port}`
-  }
-
   get publicUrl() {
     return this.cfg.publicUrl
   }
@@ -227,6 +378,18 @@ export class ServerConfig {
 
   get entrywayJwtPublicKeyHex() {
     return this.cfg.entrywayJwtPublicKeyHex
+  }
+
+  get liveNowConfig() {
+    return this.cfg.liveNowConfig
+  }
+
+  get etcdHosts() {
+    return this.cfg.etcdHosts
+  }
+
+  get dataplaneUrlsEtcdKeyPrefix() {
+    return this.cfg.dataplaneUrlsEtcdKeyPrefix
   }
 
   get dataplaneUrls() {
@@ -285,6 +448,14 @@ export class ServerConfig {
     return this.cfg.suggestionsApiKey
   }
 
+  get topicsUrl() {
+    return this.cfg.topicsUrl
+  }
+
+  get topicsApiKey() {
+    return this.cfg.topicsApiKey
+  }
+
   get cdnUrl() {
     return this.cfg.cdnUrl
   }
@@ -341,6 +512,10 @@ export class ServerConfig {
     return this.cfg.clientCheckEmailConfirmed
   }
 
+  get topicsEnabled() {
+    return this.cfg.topicsEnabled
+  }
+
   get indexedAtEpoch() {
     return this.cfg.indexedAtEpoch
   }
@@ -355,6 +530,57 @@ export class ServerConfig {
 
   get maxThreadDepth() {
     return this.cfg.maxThreadDepth
+  }
+
+  get maxThreadParents() {
+    return this.cfg.maxThreadParents
+  }
+
+  get threadTagsHide() {
+    return this.cfg.threadTagsHide
+  }
+  get threadTagsBumpDown() {
+    return this.cfg.threadTagsBumpDown
+  }
+
+  get notificationsDelayMs() {
+    return this.cfg.notificationsDelayMs ?? 0
+  }
+
+  get disableSsrfProtection(): boolean {
+    return this.cfg.disableSsrfProtection ?? false
+  }
+
+  get proxyAllowHTTP2(): boolean {
+    return this.cfg.proxyAllowHTTP2 ?? false
+  }
+
+  get proxyHeadersTimeout(): number {
+    return this.cfg.proxyHeadersTimeout ?? 30e3
+  }
+
+  get proxyBodyTimeout(): number {
+    return this.cfg.proxyBodyTimeout ?? 30e3
+  }
+
+  get proxyMaxResponseSize(): number {
+    return this.cfg.proxyMaxResponseSize ?? 10 * 1024 * 1024 // 10mb
+  }
+
+  get proxyMaxRetries(): number {
+    return this.cfg.proxyMaxRetries ?? 3
+  }
+
+  get proxyPreferCompressed(): boolean {
+    return this.cfg.proxyPreferCompressed ?? true
+  }
+
+  get kws() {
+    return this.cfg.kws
+  }
+
+  get debugFieldAllowedDids() {
+    return this.cfg.debugFieldAllowedDids
   }
 }
 
@@ -373,4 +599,18 @@ function stripUndefineds(
 function envList(str: string | undefined): string[] {
   if (str === undefined || str.length === 0) return []
   return str.split(',')
+}
+
+function isLiveNowConfig(data: any): data is LiveNowConfig {
+  return (
+    Array.isArray(data) &&
+    data.every(
+      (item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof item.did === 'string' &&
+        Array.isArray(item.domains) &&
+        item.domains.every((domain: any) => typeof domain === 'string'),
+    )
+  )
 }

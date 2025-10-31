@@ -1,41 +1,66 @@
-import express from 'express'
+import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
+import express from 'express'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Database } from './db'
-import { OzoneConfig, OzoneSecrets } from './config'
-import { ModerationService, ModerationServiceCreator } from './mod-service'
+import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
-import assert from 'assert'
-import { EventPusher } from './daemon'
-import Sequencer from './sequencer/sequencer'
 import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
+import { OzoneConfig, OzoneSecrets } from './config'
+import { EventPusher } from './daemon'
 import { BlobDiverter } from './daemon/blob-diverter'
-import { AuthVerifier } from './auth-verifier'
+import { Database } from './db'
 import { ImageInvalidator } from './image-invalidator'
-import { TeamService, TeamServiceCreator } from './team'
+import { ModerationService, ModerationServiceCreator } from './mod-service'
 import {
-  defaultLabelerHeader,
-  getSigningKeyId,
-  LABELER_HEADER_NAME,
-  ParsedLabelers,
-  parseLabelerHeader,
-} from './util'
+  ModerationServiceProfile,
+  ModerationServiceProfileCreator,
+} from './mod-service/profile'
+import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
+import {
+  SafelinkRuleService,
+  SafelinkRuleServiceCreator,
+} from './safelink/service'
+import {
+  ScheduledActionService,
+  ScheduledActionServiceCreator,
+} from './scheduled-action/service'
+import { Sequencer } from './sequencer/sequencer'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
+import { TeamService, TeamServiceCreator } from './team'
+import {
+  LABELER_HEADER_NAME,
+  ParsedLabelers,
+  defaultLabelerHeader,
+  getSigningKeyId,
+  parseLabelerHeader,
+} from './util'
+import {
+  VerificationIssuer,
+  VerificationIssuerCreator,
+} from './verification/issuer'
+import {
+  VerificationService,
+  VerificationServiceCreator,
+} from './verification/service'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
+  moderationServiceProfile: ModerationServiceProfileCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  safelinkRuleService: SafelinkRuleServiceCreator
+  scheduledActionService: ScheduledActionServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
+  strikeService: StrikeServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
@@ -49,6 +74,8 @@ export type AppContextOptions = {
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   authVerifier: AuthVerifier
+  verificationService: VerificationServiceCreator
+  verificationIssuer: VerificationIssuerCreator
 }
 
 export class AppContext {
@@ -107,6 +134,24 @@ export class AppContext {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
+
+    const communicationTemplateService = CommunicationTemplateService.creator()
+    const safelinkRuleService = SafelinkRuleService.creator()
+    const scheduledActionService = ScheduledActionService.creator()
+    const teamService = TeamService.creator(
+      appviewAgent,
+      cfg.appview.did,
+      createAuthHeaders,
+    )
+    const setService = SetService.creator()
+    const settingService = SettingService.creator()
+    const strikeService = StrikeService.creator()
+    const verificationService = VerificationService.creator()
+    const verificationIssuer = VerificationIssuer.creator()
+    const moderationServiceProfile = ModerationServiceProfile.creator(
+      cfg,
+      appviewAgent,
+    )
     const modService = ModerationService.creator(
       signingKey,
       signingKeyId,
@@ -116,13 +161,9 @@ export class AppContext {
       eventPusher,
       appviewAgent,
       createAuthHeaders,
+      strikeService,
       overrides?.imgInvalidator,
     )
-
-    const communicationTemplateService = CommunicationTemplateService.creator()
-    const teamService = TeamService.creator()
-    const setService = SetService.creator()
-    const settingService = SettingService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
@@ -137,10 +178,14 @@ export class AppContext {
         db,
         cfg,
         modService,
+        moderationServiceProfile,
         communicationTemplateService,
+        safelinkRuleService,
+        scheduledActionService,
         teamService,
         setService,
         settingService,
+        strikeService,
         appviewAgent,
         pdsAgent,
         chatAgent,
@@ -152,6 +197,8 @@ export class AppContext {
         sequencer,
         authVerifier,
         blobDiverter,
+        verificationService,
+        verificationIssuer,
         ...(overrides ?? {}),
       },
       secrets,
@@ -186,6 +233,14 @@ export class AppContext {
     return this.opts.communicationTemplateService
   }
 
+  get safelinkRuleService(): SafelinkRuleServiceCreator {
+    return this.opts.safelinkRuleService
+  }
+
+  get scheduledActionService(): ScheduledActionServiceCreator {
+    return this.opts.scheduledActionService
+  }
+
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
   }
@@ -196,6 +251,22 @@ export class AppContext {
 
   get settingService(): SettingServiceCreator {
     return this.opts.settingService
+  }
+
+  get strikeService(): StrikeServiceCreator {
+    return this.opts.strikeService
+  }
+
+  get verificationService(): VerificationServiceCreator {
+    return this.opts.verificationService
+  }
+
+  get verificationIssuer(): VerificationIssuerCreator {
+    return this.opts.verificationIssuer
+  }
+
+  get moderationServiceProfile(): ModerationServiceProfileCreator {
+    return this.opts.moderationServiceProfile
   }
 
   get appviewAgent(): AtpAgent {
@@ -289,4 +360,3 @@ export class AppContext {
     return parsed
   }
 }
-export default AppContext

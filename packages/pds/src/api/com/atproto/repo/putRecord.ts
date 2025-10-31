@@ -1,27 +1,38 @@
 import { CID } from 'multiformats/cid'
+import { BlobRef } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { CommitData } from '@atproto/repo'
-import { BlobRef } from '@atproto/lexicon'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { prepareUpdate, prepareCreate } from '../../../../repo'
-import AppContext from '../../../../context'
+import { ids } from '../../../../lexicon/lexicons'
+import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
   InvalidRecordError,
   PreparedCreate,
   PreparedUpdate,
+  prepareCreate,
+  prepareUpdate,
 } from '../../../../repo'
-import { ids } from '../../../../lexicon/lexicons'
-import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
-import { ActorStoreTransactor } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
-    auth: ctx.authVerifier.accessStandard({
-      checkTakedown: true,
-      checkDeactivated: true,
+    auth: ctx.authVerifier.authorization({
+      // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
+      // performed during auth. However, since this method's "repo" parameter
+      // can be a handle, we will need to fetch the account again to ensure that
+      // the handle matches the DID from the request's credentials. In order to
+      // avoid fetching the account twice (during auth, and then again in the
+      // controller), the checks are disabled here:
+
+      // checkTakedown: true,
+      // checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
     }),
     rateLimit: [
       {
@@ -45,18 +56,28 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
-      const account = await ctx.accountManager.getAccount(repo, {
-        includeDeactivated: true,
+
+      const account = await ctx.authVerifier.findAccount(repo, {
+        checkDeactivated: true,
+        checkTakedown: true,
       })
 
-      if (!account) {
-        throw new InvalidRequestError(`Could not find repo: ${repo}`)
-      } else if (account.deactivatedAt) {
-        throw new InvalidRequestError('Account is deactivated')
-      }
       const did = account.did
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
+      }
+
+      // We can't compute permissions based on the request payload ("input") in
+      // the 'auth' phase, so we do it here.
+      if (auth.credentials.type === 'oauth') {
+        auth.credentials.permissions.assertRepo({
+          action: 'create',
+          collection,
+        })
+        auth.credentials.permissions.assertRepo({
+          action: 'update',
+          collection,
+        })
       }
 
       const uri = AtUri.make(did, collection, rkey)
@@ -103,26 +124,34 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
 
-          let commit: CommitData
-          try {
-            commit = await actorTxn.repo.processWrites([write], swapCommitCid)
-          } catch (err) {
-            if (
-              err instanceof BadCommitSwapError ||
-              err instanceof BadRecordSwapError
-            ) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            } else {
-              throw err
-            }
-          }
+          const commit = await actorTxn.repo
+            .processWrites([write], swapCommitCid)
+            .catch((err) => {
+              if (
+                err instanceof BadCommitSwapError ||
+                err instanceof BadRecordSwapError
+              ) {
+                throw new InvalidRequestError(err.message, 'InvalidSwap')
+              } else {
+                throw err
+              }
+            })
+
+          await ctx.sequencer.sequenceCommit(did, commit)
+
           return { commit, write }
         },
       )
 
       if (commit !== null) {
-        await ctx.sequencer.sequenceCommit(did, commit, [write])
-        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+        await ctx.accountManager
+          .updateRepoRoot(did, commit.cid, commit.rev)
+          .catch((err) => {
+            dbLogger.error(
+              { err, did, cid: commit.cid, rev: commit.rev },
+              'failed to update account root',
+            )
+          })
       }
 
       return {
@@ -146,7 +175,7 @@ export default function (server: Server, ctx: AppContext) {
 // WARNING: mutates object
 const updateProfileLegacyBlobRef = async (
   actorStore: ActorStoreTransactor,
-  record: ProfileRecord,
+  record: Partial<ProfileRecord>,
 ) => {
   if (record.avatar && !record.avatar.original['$type']) {
     const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)

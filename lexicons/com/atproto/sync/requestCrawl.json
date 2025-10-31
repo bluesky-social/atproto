@@ -17,7 +17,8 @@
             }
           }
         }
-      }
+      },
+      "errors": [{ "name": "HostBanned" }]
     }
   }
 }

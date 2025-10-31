@@ -1,12 +1,13 @@
 import { AtpAgent } from '@atproto/api'
 import {
-  TestNetwork,
   SeedClient,
+  TestNetwork,
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
+import { OutputSchema as GetMutesOutputSchema } from '../../src/lexicon/types/app/bsky/graph/getMutes'
+import { forSnapshot, paginateAll } from '../_util'
 
 describe('mute views', () => {
   let network: TestNetwork
@@ -211,7 +212,8 @@ describe('mute views', () => {
   })
 
   it('paginates.', async () => {
-    const results = (results) => results.flatMap((res) => res.mutes)
+    const results = (results: GetMutesOutputSchema[]) =>
+      results.flatMap((res) => res.mutes)
     const paginator = async (cursor?: string) => {
       const { data: view } = await agent.api.app.bsky.graph.getMutes(
         { cursor, limit: 2 },

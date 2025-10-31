@@ -4,7 +4,7 @@ import { httpsUriSchema } from './uri.js'
 import { extractUrlPath, isHostnameIP } from './util.js'
 
 /**
- * @see {@link https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html}
+ * @see {@link https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html}
  */
 export const oauthClientIdDiscoverableSchema = z
   .intersection(oauthClientIdSchema, httpsUriSchema)
@@ -74,6 +74,49 @@ export function isOAuthClientIdDiscoverable(
   clientId: string,
 ): clientId is OAuthClientIdDiscoverable {
   return oauthClientIdDiscoverableSchema.safeParse(clientId).success
+}
+
+export const conventionalOAuthClientIdSchema =
+  oauthClientIdDiscoverableSchema.superRefine(
+    (value, ctx): value is `https://${string}/oauth-client-metadata.json` => {
+      const url = new URL(value)
+
+      if (url.port) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'ClientID must not contain a port',
+        })
+        return false
+      }
+
+      if (url.search) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'ClientID must not contain a query string',
+        })
+        return false
+      }
+
+      if (url.pathname !== '/oauth-client-metadata.json') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'ClientID must be "/oauth-client-metadata.json"',
+        })
+        return false
+      }
+
+      return true
+    },
+  )
+
+export type ConventionalOAuthClientId = TypeOf<
+  typeof conventionalOAuthClientIdSchema
+>
+
+export function isConventionalOAuthClientId(
+  clientId: string,
+): clientId is ConventionalOAuthClientId {
+  return conventionalOAuthClientIdSchema.safeParse(clientId).success
 }
 
 export function assertOAuthDiscoverableClientId(

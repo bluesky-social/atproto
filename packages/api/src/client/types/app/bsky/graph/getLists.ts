@@ -2,25 +2,33 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyGraphDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyGraphDefs from './defs.js'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.graph.getLists'
+
+export type QueryParams = {
   /** The account (actor) to enumerate lists from. */
   actor: string
   limit?: number
   cursor?: string
+  /** Optional filter by list purpose. If not specified, all supported types are returned. */
+  purposes?: 'modlist' | 'curatelist' | (string & {})[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
   lists: AppBskyGraphDefs.ListView[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

@@ -3,6 +3,15 @@
 exports[`moderation-statuses query statuses returns statuses filtered by subject language 1`] = `
 Array [
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
+    "ageAssuranceState": "unknown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -10,6 +19,18 @@ Array [
     },
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordsStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -19,6 +40,7 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
+      "report:spam",
       "lang:en",
       "lang:i",
     ],
@@ -26,6 +48,15 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
+    "ageAssuranceState": "unknown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -33,6 +64,18 @@ Array [
     },
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordsStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -41,6 +84,7 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
+      "report:spam",
       "lang:en",
       "lang:i",
     ],
@@ -53,6 +97,15 @@ Array [
 exports[`moderation-statuses query statuses returns statuses for subjects that received moderation events 1`] = `
 Array [
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
+    "ageAssuranceState": "unknown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -60,6 +113,18 @@ Array [
     },
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordsStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -69,6 +134,7 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
+      "report:spam",
       "lang:en",
       "lang:i",
     ],
@@ -76,6 +142,15 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
+    "ageAssuranceState": "unknown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -83,6 +158,18 @@ Array [
     },
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordsStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -91,6 +178,7 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
+      "report:spam",
       "lang:en",
       "lang:i",
     ],
@@ -98,6 +186,15 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
+    "ageAssuranceState": "unknown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -105,6 +202,18 @@ Array [
     },
     "id": 3,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordsStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -114,12 +223,22 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "alice.test",
     "tags": Array [
+      "report:spam",
       "lang:ha",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
+    "accountStats": Object {
+      "$type": "tools.ozone.moderation.defs#accountStats",
+      "appealCount": 0,
+      "escalateCount": 0,
+      "reportCount": 2,
+      "suspendCount": 0,
+      "takedownCount": 0,
+    },
+    "ageAssuranceState": "unknown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "hosting": Object {
       "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -127,6 +246,18 @@ Array [
     },
     "id": 1,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "priorityScore": 0,
+    "recordsStats": Object {
+      "$type": "tools.ozone.moderation.defs#recordsStats",
+      "appealedCount": 0,
+      "escalatedCount": 0,
+      "pendingCount": 1,
+      "processedCount": 0,
+      "reportedCount": 1,
+      "subjectCount": 1,
+      "takendownCount": 0,
+      "totalReports": 2,
+    },
     "reviewState": "tools.ozone.moderation.defs#reviewOpen",
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -135,6 +266,7 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "alice.test",
     "tags": Array [
+      "report:misleading",
       "lang:und",
     ],
     "takendown": false,

@@ -8,7 +8,9 @@ export type ParsedLabelers = {
 export const parseLabelerHeader = (
   header: string | undefined,
 ): ParsedLabelers | null => {
-  if (!header) return null
+  // An empty header is valid, so we shouldn't return null
+  // https://datatracker.ietf.org/doc/html/rfc7230#section-3.2
+  if (header === undefined) return null
   const labelerDids = new Set<string>()
   const redactDids = new Set<string>()
   const parsed = parseList(header)

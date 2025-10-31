@@ -1,26 +1,30 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ChatBskyConvoDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ChatBskyConvoDefs from './defs.js'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'chat.bsky.convo.getConvoForMembers'
+
+export type QueryParams = {
   members: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   convo: ChatBskyConvoDefs.ConvoView
-  [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -33,14 +37,4 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput
+export type HandlerOutput = HandlerError | HandlerSuccess

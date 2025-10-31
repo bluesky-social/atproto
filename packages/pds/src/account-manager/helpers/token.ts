@@ -1,76 +1,36 @@
+import { Selectable } from 'kysely'
 import {
   Code,
   NewTokenData,
-  OAuthAuthorizationDetail,
   RefreshToken,
   TokenData,
   TokenId,
-  TokenInfo,
 } from '@atproto/oauth-provider'
-import { Selectable } from 'kysely'
-import {
-  fromDateISO,
-  fromJsonArray,
-  fromJsonObject,
-  toDateISO,
-  toJsonArray,
-  toJsonObject,
-} from '../../db'
+import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
 import { AccountDb, Token } from '../db'
-import { ActorAccount, selectAccountQB } from './account'
-import {
-  SelectableDeviceAccount,
-  toAccount,
-  toDeviceAccountInfo,
-} from './device-account'
+import { selectAccountQB } from './account'
 
-type LeftJoined<T> = { [K in keyof T]: null | T[K] }
-
-export type ActorAccountToken = Selectable<ActorAccount> &
-  Selectable<Omit<Token, 'id' | 'did'>> &
-  LeftJoined<SelectableDeviceAccount>
-
-export const toTokenInfo = (
-  row: ActorAccountToken,
-  audience: string,
-): TokenInfo => ({
-  id: row.tokenId,
-  data: {
+export function toTokenData(row: Selectable<Token>): TokenData {
+  return {
     createdAt: fromDateISO(row.createdAt),
     expiresAt: fromDateISO(row.expiresAt),
     updatedAt: fromDateISO(row.updatedAt),
     clientId: row.clientId,
-    clientAuth: fromJsonObject(row.clientAuth),
+    clientAuth: fromJson(row.clientAuth),
     deviceId: row.deviceId,
     sub: row.did,
-    parameters: fromJsonObject(row.parameters),
-    details: row.details
-      ? fromJsonArray<OAuthAuthorizationDetail>(row.details)
-      : null,
+    parameters: fromJson(row.parameters),
     code: row.code,
-  },
-  account: toAccount(row, audience),
-  info:
-    row.authenticatedAt != null &&
-    row.authorizedClients != null &&
-    row.remember != null
-      ? toDeviceAccountInfo(row as SelectableDeviceAccount)
-      : undefined,
-  currentRefreshToken: row.currentRefreshToken,
-})
+    scope: row.scope,
+  }
+}
 
 const selectTokenInfoQB = (db: AccountDb) =>
   selectAccountQB(db, { includeDeactivated: true })
     // uses "token_did_idx" index (though unlikely in practice)
     .innerJoin('token', 'token.did', 'actor.did')
-    .leftJoin('device_account', (join) =>
-      join
-        // uses "device_account_pk" index
-        .on('device_account.did', '=', 'token.did')
-        // @ts-expect-error "deviceId" is nullable in token
-        .on('device_account.deviceId', '=', 'token.deviceId'),
-    )
     .select([
+      'token.id',
       'token.tokenId',
       'token.createdAt',
       'token.updatedAt',
@@ -83,9 +43,7 @@ const selectTokenInfoQB = (db: AccountDb) =>
       'token.details',
       'token.code',
       'token.currentRefreshToken',
-      'device_account.authenticatedAt',
-      'device_account.authorizedClients',
-      'device_account.remember',
+      'token.scope',
     ])
 
 export const createQB = (
@@ -93,21 +51,23 @@ export const createQB = (
   tokenId: TokenId,
   data: TokenData,
   refreshToken?: RefreshToken,
-) =>
-  db.db.insertInto('token').values({
+) => {
+  return db.db.insertInto('token').values({
     tokenId,
     createdAt: toDateISO(data.createdAt),
     expiresAt: toDateISO(data.expiresAt),
     updatedAt: toDateISO(data.updatedAt),
     clientId: data.clientId,
-    clientAuth: toJsonObject(data.clientAuth),
+    clientAuth: toJson(data.clientAuth),
     deviceId: data.deviceId,
     did: data.sub,
-    parameters: toJsonObject(data.parameters),
-    details: data.details ? toJsonArray(data.details) : null,
+    parameters: toJson(data.parameters),
+    details: data.details ? toJson(data.details) : null,
     code: data.code,
     currentRefreshToken: refreshToken || null,
+    scope: data.scope,
   })
+}
 
 export const forRotateQB = (db: AccountDb, id: TokenId) =>
   db.db
@@ -120,6 +80,7 @@ export const findByQB = (
   db: AccountDb,
   search: {
     id?: number
+    did?: string
     code?: Code
     tokenId?: TokenId
     currentRefreshToken?: RefreshToken
@@ -127,6 +88,7 @@ export const findByQB = (
 ) => {
   if (
     search.id === undefined &&
+    search.did === undefined &&
     search.code === undefined &&
     search.tokenId === undefined &&
     search.currentRefreshToken === undefined
@@ -139,6 +101,10 @@ export const findByQB = (
     .if(search.id !== undefined, (qb) =>
       // uses primary key index
       qb.where('token.id', '=', search.id!),
+    )
+    .if(search.did !== undefined, (qb) =>
+      // uses "token_did_idx" index
+      qb.where('token.did', '=', search.did!),
     )
     .if(search.code !== undefined, (qb) =>
       // uses "token_code_idx" partial index (hence the null check)
@@ -175,7 +141,8 @@ export const rotateQB = (
 
       expiresAt: toDateISO(newData.expiresAt),
       updatedAt: toDateISO(newData.updatedAt),
-      clientAuth: toJsonObject(newData.clientAuth),
+      clientAuth: toJson(newData.clientAuth),
+      scope: newData.scope,
     })
     // uses primary key index
     .where('id', '=', id)

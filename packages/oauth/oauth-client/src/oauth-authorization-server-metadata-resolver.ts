@@ -1,19 +1,19 @@
 import {
-  bindFetch,
-  cancelBody,
+  OAuthAuthorizationServerMetadata,
+  oauthAuthorizationServerMetadataValidator,
+  oauthIssuerIdentifierSchema,
+} from '@atproto/oauth-types'
+import {
   Fetch,
   FetchResponseError,
+  bindFetch,
+  cancelBody,
 } from '@atproto-labs/fetch'
 import {
   CachedGetter,
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-import {
-  OAuthAuthorizationServerMetadata,
-  oauthAuthorizationServerMetadataValidator,
-  oauthIssuerIdentifierSchema,
-} from '@atproto/oauth-types'
 import { contentMime } from './util.js'
 
 export type { GetCachedOptions, OAuthAuthorizationServerMetadata }
@@ -108,7 +108,7 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
     }
 
     // ATPROTO requires client_id_metadata_document
-    // http://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+    // https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/
     if (metadata.client_id_metadata_document_supported !== true) {
       throw new TypeError(
         `Authorization server "${issuer}" does not support client_id_metadata_document`,

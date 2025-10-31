@@ -17,6 +17,7 @@ message Record {
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp sorted_at = 7;
   string takedown_ref = 8;
+  repeated string tags = 9;
 }
 
 message GetBlockRecordsRequest {
@@ -82,6 +83,7 @@ message PostRecordMeta {
   bool violates_embedding_rules = 4;
   bool has_post_gate = 5;
   bool has_thread_gate = 6;
+  bool has_video = 7;
 }
 
 message GetPostRecordsRequest {
@@ -106,6 +108,22 @@ message GetActorChatDeclarationRecordsRequest {
 }
 
 message GetActorChatDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetNotificationDeclarationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetNotificationDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetStatusRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetStatusRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -204,6 +222,65 @@ message GetFollowsResponse {
 }
 
 //
+// Verification
+//
+
+message VerificationMeta {
+  string rkey = 1;
+  string handle = 2;
+  string display_name = 3;
+  google.protobuf.Timestamp sorted_at = 4;
+}
+
+message GetVerificationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetVerificationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message VerificationIssued {
+  string actor_did = 1;
+  string rkey = 2;
+  string subject_did = 3;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp indexed_at = 8;
+  google.protobuf.Timestamp sorted_at = 9;
+}
+
+message GetVerificationsIssuedRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetVerificationsIssuedResponse {
+  repeated VerificationIssued verifications = 1;
+  string cursor = 2;
+}
+
+message VerificationReceived {
+  string actor_did = 1;
+  string rkey = 2;
+  string subject_did = 3;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp indexed_at = 8;
+  google.protobuf.Timestamp sorted_at = 9;
+}
+
+message GetVerificationsReceivedRequest {
+  string subject_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetVerificationsReceivedResponse {
+  repeated VerificationReceived verifications = 1;
+  string cursor = 2;
+}
+
+//
 // Likes
 //
 
@@ -276,6 +353,7 @@ message GetActorLikesResponse {
 //
 message GetInteractionCountsRequest {
   repeated RecordRef refs = 1;
+  repeated string skip_cache_for_dids = 2;
 }
 
 message GetInteractionCountsResponse {
@@ -283,6 +361,7 @@ message GetInteractionCountsResponse {
   repeated int32 reposts = 2;
   repeated int32 replies = 3;
   repeated int32 quotes = 4;
+  repeated int32 bookmarks = 5;
 }
 
 message GetCountsForUsersRequest {
@@ -380,6 +459,8 @@ message GetActorRepostsResponse {
 //     - should this include handles?  apply repo takedown?
 message GetActorsRequest {
   repeated string dids = 1;
+  repeated string skip_cache_for_dids = 2;
+  repeated string return_age_assurance_for_dids = 3;
 }
 
 message ActorInfo {
@@ -394,6 +475,22 @@ message ActorInfo {
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
   bool priority_notifications = 11;
+  double pagerank = 12;
+  bool trusted_verifier = 13;
+  map<string, VerificationMeta> verified_by = 14;
+  // Tags being applied to the account itself
+  repeated string tags = 15;
+  // Tags being applied to the profile record
+  repeated string profile_tags = 16;
+  Record status_record = 17;
+  string allow_activity_subscriptions_from = 18;
+  optional AgeAssuranceStatus age_assurance_status = 19;
+}
+
+message AgeAssuranceStatus {
+  string status = 1;
+  google.protobuf.Timestamp last_initiated_at = 2;
+  bool override_applied = 3;
 }
 
 message GetActorsResponse {
@@ -405,6 +502,7 @@ message GetActorsResponse {
 //     - answering queries where the query param is a handle
 message GetDidsByHandlesRequest {
   repeated string handles = 1;
+  bool lookup_unidirectional = 2;
 }
 
 message GetDidsByHandlesResponse {
@@ -673,6 +771,67 @@ message GetBlocklistSubscriptionsResponse {
 // Notifications
 //
 
+message GetNotificationPreferencesRequest {
+  repeated string dids = 1;
+}
+
+message NotificationChannelList {
+  bool enabled = 1;
+}
+
+message NotificationChannelPush {
+  bool enabled = 1;
+}
+
+enum NotificationInclude {
+  NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  NOTIFICATION_INCLUDE_ALL = 1;
+  NOTIFICATION_INCLUDE_FOLLOWS = 2;
+}
+
+message FilterableNotificationPreference {
+  NotificationInclude include = 1;
+  NotificationChannelList list = 2;
+  NotificationChannelPush push = 3;
+}
+
+message NotificationPreference {
+  NotificationChannelList list = 1;
+  NotificationChannelPush push = 2;
+}
+
+enum ChatNotificationInclude {
+  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
+  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
+}
+
+message ChatNotificationPreference {
+  ChatNotificationInclude include = 1;
+  NotificationChannelPush push = 2;
+}
+
+message NotificationPreferences {
+  bytes entry = 1;
+  ChatNotificationPreference chat = 2;
+  FilterableNotificationPreference follow = 3;
+  FilterableNotificationPreference like = 4;
+  FilterableNotificationPreference like_via_repost = 5;
+  FilterableNotificationPreference mention = 6;
+  FilterableNotificationPreference quote = 7;
+  FilterableNotificationPreference reply = 8;
+  FilterableNotificationPreference repost = 9;
+  FilterableNotificationPreference repost_via_repost = 10;
+  NotificationPreference starterpack_joined = 11;
+  NotificationPreference subscribed_post = 12;
+  NotificationPreference unverified = 13;
+  NotificationPreference verified = 14;
+}
+
+message GetNotificationPreferencesResponse {
+  repeated NotificationPreferences preferences = 1;
+}
+
 // - list recent notifications for a user
 //     - notifications should include a uri for the record that caused the notif & a “reason” for the notification (reply, like, quotepost, etc)
 //     - this should include both read & unread notifs
@@ -727,6 +886,39 @@ message GetUnreadNotificationCountRequest {
 
 message GetUnreadNotificationCountResponse {
   int32 count = 1;
+}
+
+message GetActivitySubscriptionDidsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActivitySubscriptionDidsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
+message PostActivitySubscription {}
+message ReplyActivitySubscription {}
+
+message ActivitySubscription {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  optional PostActivitySubscription post = 4;
+  optional ReplyActivitySubscription reply = 5;
+  string subject_did = 6;
+  google.protobuf.Timestamp indexed_at = 7;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string subject_dids = 2;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsResponse {
+  repeated ActivitySubscription subscriptions = 1;
 }
 
 //
@@ -788,6 +980,7 @@ enum FeedType {
   FEED_TYPE_POSTS_AND_AUTHOR_THREADS = 1;
   FEED_TYPE_POSTS_NO_REPLIES = 2;
   FEED_TYPE_POSTS_WITH_MEDIA = 3;
+  FEED_TYPE_POSTS_WITH_VIDEO = 4;
 }
 
 // - Returns recent posts authored by a given DID, paginated
@@ -811,6 +1004,7 @@ message AuthorFeedItem {
   bool is_reply = 8;
   bool is_repost = 9;
   bool is_quote_post = 10;
+  bool posts_with_video = 11;
 }
 
 message GetAuthorFeedResponse {
@@ -955,20 +1149,6 @@ message GetSuggestedEntitiesResponse {
 }
 
 //
-// Posts
-//
-
-// - Return post reply count with uris A, B, C…
-//     - All feed hydration
-message GetPostReplyCountsRequest {
-  repeated RecordRef refs = 1;
-}
-
-message GetPostReplyCountsResponse {
-  repeated int32 counts = 1;
-}
-
-//
 // Labels
 //
 
@@ -1072,6 +1252,42 @@ message GetRecordTakedownResponse {
 }
 
 
+//
+// Bookmarks
+//
+message Bookmark {
+  StashRef ref = 1;
+  string subject_uri = 2;
+  string subject_cid = 3;
+  google.protobuf.Timestamp indexed_at = 4;
+}
+
+message GetBookmarksByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string uris = 2;
+}
+
+message GetBookmarksByActorAndSubjectsResponse {
+  repeated Bookmark bookmarks = 1;
+}
+
+message GetActorBookmarksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message BookmarkInfo {
+  string key = 1; // stash key
+  string subject = 2;
+}
+
+message GetActorBookmarksResponse {
+  repeated BookmarkInfo bookmarks = 1;
+  string cursor = 2;
+}
+
+
 // Polo-backed Graph Endpoints
 
 
@@ -1095,8 +1311,11 @@ message GetFollowsFollowingResponse {
 message PingRequest {}
 message PingResponse {}
 
-
-
+message StashRef {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+}
 
 service Service {
   //
@@ -1114,6 +1333,8 @@ service Service {
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
+  rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
+  rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
   rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
@@ -1124,6 +1345,11 @@ service Service {
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
   rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse);
   rpc GetFollows(GetFollowsRequest) returns (GetFollowsResponse);
+
+  // Verifications
+  rpc GetVerificationRecords(GetVerificationRecordsRequest) returns (GetVerificationRecordsResponse);
+  rpc GetVerificationsIssued(GetVerificationsIssuedRequest) returns (GetVerificationsIssuedResponse);
+  rpc GetVerificationsReceived(GetVerificationsReceivedRequest) returns (GetVerificationsReceivedResponse);
 
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
@@ -1182,9 +1408,12 @@ service Service {
   rpc GetBlocklistSubscriptions(GetBlocklistSubscriptionsRequest) returns (GetBlocklistSubscriptionsResponse);
 
   // Notifications
+  rpc GetNotificationPreferences(GetNotificationPreferencesRequest) returns (GetNotificationPreferencesResponse);
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
+  rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
+  rpc GetActivitySubscriptionsByActorAndSubjects(GetActivitySubscriptionsByActorAndSubjectsRequest) returns (GetActivitySubscriptionsByActorAndSubjectsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
   // FeedGenerators
@@ -1210,9 +1439,6 @@ service Service {
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
   rpc GetSuggestedEntities(GetSuggestedEntitiesRequest) returns (GetSuggestedEntitiesResponse);
 
-  // Posts
-  rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
-
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
   rpc GetAllLabelers(GetAllLabelersRequest) returns (GetAllLabelersResponse);
@@ -1227,6 +1453,12 @@ service Service {
   rpc GetBlobTakedown(GetBlobTakedownRequest) returns (GetBlobTakedownResponse);
   rpc GetRecordTakedown(GetRecordTakedownRequest) returns (GetRecordTakedownResponse);
   rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
+
+  // Bookmarks
+  // Returns bookmarks created by the actor for the specified URIs.
+  rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
+  // Returns the bookmarks created by the actor.
+  rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);

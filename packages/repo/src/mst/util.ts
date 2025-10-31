@@ -1,9 +1,9 @@
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
-import { ReadableBlockstore } from '../storage'
-import { sha256 } from '@atproto/crypto'
-import { MST, Leaf, NodeEntry, NodeData, MstOpts } from './mst'
 import { cidForCbor } from '@atproto/common'
+import { sha256 } from '@atproto/crypto'
+import { ReadableBlockstore } from '../storage'
+import { Leaf, MST, MstOpts, NodeData, NodeEntry } from './mst'
 
 export const leadingZerosOnHash = async (key: string | Uint8Array) => {
   const hash = await sha256(key)
@@ -117,7 +117,7 @@ export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
 export const isValidMstKey = (str: string): boolean => {
   const split = str.split('/')
   return (
-    str.length <= 256 &&
+    str.length <= 1024 &&
     split.length === 2 &&
     split[0].length > 0 &&
     split[1].length > 0 &&
@@ -126,7 +126,7 @@ export const isValidMstKey = (str: string): boolean => {
   )
 }
 
-export const validCharsRegex = /^[a-zA-Z0-9_\-:.]*$/
+export const validCharsRegex = /^[a-zA-Z0-9_~\-:.]*$/
 
 export const isValidChars = (str: string): boolean => {
   return str.match(validCharsRegex) !== null

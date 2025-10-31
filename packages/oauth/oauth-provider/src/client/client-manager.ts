@@ -1,6 +1,18 @@
+import { Jwks, Keyset, jwksPubSchema } from '@atproto/jwk'
 import {
-  bindFetch,
+  OAuthAuthorizationServerMetadata,
+  OAuthClientIdDiscoverable,
+  OAuthClientIdLoopback,
+  OAuthClientMetadata,
+  OAuthClientMetadataInput,
+  isLocalHostname,
+  isOAuthClientIdDiscoverable,
+  isOAuthClientIdLoopback,
+  oauthClientMetadataSchema,
+} from '@atproto/oauth-types'
+import {
   Fetch,
+  bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
@@ -11,27 +23,9 @@ import {
   GetCachedOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
-import { Jwks, jwksSchema, Keyset } from '@atproto/jwk'
-import {
-  isLoopbackHost,
-  isOAuthClientIdDiscoverable,
-  isOAuthClientIdLoopback,
-  OAuthAuthorizationServerMetadata,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  oauthClientMetadataSchema,
-} from '@atproto/oauth-types'
-
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { callAsync } from '../lib/util/function.js'
-import {
-  isInternetHost,
-  isInternetUrl,
-  parseUrlPublicSuffix,
-} from '../lib/util/hostname.js'
 import { Awaitable } from '../lib/util/type.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { ClientId } from './client-id.js'
@@ -41,7 +35,7 @@ import { Client } from './client.js'
 
 const fetchMetadataHandler = pipe(
   fetchOkProcessor(),
-  // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
+  // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-4.1
   fetchJsonProcessor('application/json', true),
   fetchJsonZodProcessor(oauthClientMetadataSchema),
 )
@@ -49,7 +43,7 @@ const fetchMetadataHandler = pipe(
 const fetchJwksHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor('application/json', false),
-  fetchJsonZodProcessor(jwksSchema),
+  fetchJsonZodProcessor(jwksPubSchema),
 )
 
 export type LoopbackMetadataGetter = (
@@ -94,7 +88,7 @@ export class ClientManager {
    *
    * @see {@link https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2 OIDC Client Registration}
    */
-  public async getClient(clientId: string) {
+  public async getClient(clientId: ClientId) {
     const metadata = await this.getClientMetadata(clientId).catch((err) => {
       throw InvalidClientMetadataError.from(
         err,
@@ -111,22 +105,52 @@ export class ClientManager {
         })
       : undefined
 
-    const partialInfo = this.hooks.onClientInfo
-      ? await callAsync(this.hooks.onClientInfo, clientId, {
-          metadata,
-          jwks,
-        }).catch((err) => {
-          throw InvalidClientMetadataError.from(
-            err,
-            `Rejected client information for "${clientId}"`,
-          )
-        })
-      : undefined
+    const partialInfo = await callAsync(this.hooks.getClientInfo, clientId, {
+      metadata,
+      jwks,
+    }).catch((err) => {
+      throw InvalidClientMetadataError.from(
+        err,
+        `Rejected client information for "${clientId}"`,
+      )
+    })
 
     const isFirstParty = partialInfo?.isFirstParty ?? false
     const isTrusted = partialInfo?.isTrusted ?? isFirstParty
 
     return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
+  }
+
+  public async loadClients(
+    clientIds: Iterable<ClientId>,
+    {
+      onError = (err) => {
+        throw err
+      },
+    }: {
+      onError?: (
+        err: unknown,
+        clientId: ClientId,
+      ) => Awaitable<Client | null | undefined>
+    } = {},
+  ): Promise<Map<ClientId, Client>> {
+    // Make sure we don't load the same client multiple times
+    const uniqueClientIds =
+      clientIds instanceof Set ? clientIds : new Set(clientIds)
+
+    // Load all (unique) clients in parallel
+    const clients = await Promise.all(
+      Array.from(uniqueClientIds, async (clientId) =>
+        this.getClient(clientId).catch((err) => onError(err, clientId)),
+      ),
+    )
+
+    // Return a map for easy lookups
+    return new Map(
+      clients
+        .filter((c) => c != null && c instanceof Client)
+        .map((c) => [c.id, c]),
+    )
   }
 
   protected async getClientMetadata(
@@ -151,9 +175,23 @@ export class ClientManager {
       throw new InvalidClientMetadataError('Loopback clients are not allowed')
     }
 
-    const metadata = oauthClientMetadataSchema.parse(
-      await loopbackMetadata(clientId),
+    const metadataRaw = await callAsync(loopbackMetadata, clientId).catch(
+      (err) => {
+        throw InvalidClientMetadataError.from(
+          err,
+          `Invalid loopback client id "${clientId}"`,
+        )
+      },
     )
+
+    const metadata = await oauthClientMetadataSchema
+      .parseAsync(metadataRaw)
+      .catch((err) => {
+        throw InvalidClientMetadataError.from(
+          err,
+          `Invalid loopback client metadata for "${clientId}"`,
+        )
+      })
 
     return this.validateClientMetadata(clientId, metadata)
   }
@@ -193,6 +231,10 @@ export class ClientManager {
     clientId: ClientId,
     metadata: OAuthClientMetadata,
   ): OAuthClientMetadata {
+    // @TODO This method should only check for rules that are specific to this
+    // implementation or the ATPROTO specification. All generic validation rules
+    // should be moved to the @atproto/oauth-types package.
+
     if (metadata.jwks && metadata.jwks_uri) {
       throw new InvalidClientMetadataError(
         'jwks_uri and jwks are mutually exclusive',
@@ -214,11 +256,8 @@ export class ClientManager {
     const clientUriUrl = metadata.client_uri
       ? new URL(metadata.client_uri)
       : null
-    const clientUriDomain = clientUriUrl
-      ? parseUrlPublicSuffix(clientUriUrl)
-      : null
 
-    if (clientUriUrl && !clientUriDomain) {
+    if (clientUriUrl && isLocalHostname(clientUriUrl.hostname)) {
       throw new InvalidClientMetadataError('client_uri hostname is invalid')
     }
 
@@ -237,14 +276,6 @@ export class ClientManager {
       throw new InvalidClientMetadataError(`Duplicate scope "${dupScope}"`)
     }
 
-    for (const scope of scopes) {
-      // Note, once we have dynamic scopes, this check will need to be
-      // updated to check against the server's supported scopes.
-      if (!this.serverMetadata.scopes_supported?.includes(scope)) {
-        throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
-      }
-    }
-
     const dupGrantType = metadata.grant_types.find(isDuplicate)
     if (dupGrantType) {
       throw new InvalidClientMetadataError(
@@ -260,7 +291,7 @@ export class ClientManager {
             `Grant type "${grantType}" is not allowed`,
           )
 
-        // @TODO: Add support (e.g. for first party client)
+        // @TODO Add support (e.g. for first party client)
         // case 'client_credentials':
         // case 'password':
         case 'authorization_code':
@@ -289,13 +320,7 @@ export class ClientManager {
       )
     }
 
-    const method = metadata[`token_endpoint_auth_method`]
-    switch (method) {
-      case undefined:
-        throw new InvalidClientMetadataError(
-          'Missing token_endpoint_auth_method client metadata',
-        )
-
+    switch (metadata.token_endpoint_auth_method) {
       case 'none':
         if (metadata.token_endpoint_auth_signing_alg) {
           throw new InvalidClientMetadataError(
@@ -324,7 +349,7 @@ export class ClientManager {
 
       default:
         throw new InvalidClientMetadataError(
-          `${method} is not a supported "token_endpoint_auth_method". Use "private_key_jwt" or "none".`,
+          `Unsupported client authentication method "${metadata.token_endpoint_auth_method}". Make sure "token_endpoint_auth_method" is set to one of: "${Client.AUTH_METHODS_SUPPORTED.join('", "')}"`,
         )
     }
 
@@ -396,6 +421,29 @@ export class ClientManager {
 
       throw new InvalidClientMetadataError(
         'At least one redirect_uri is required',
+      )
+    }
+
+    if (
+      metadata.application_type === 'native' &&
+      metadata.token_endpoint_auth_method !== 'none'
+    ) {
+      // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
+      //
+      // > Except when using a mechanism like Dynamic Client Registration
+      // > [RFC7591] to provision per-instance secrets, native apps are
+      // > classified as public clients, as defined by Section 2.1 of OAuth 2.0
+      // > [RFC6749]; they MUST be registered with the authorization server as
+      // > such. Authorization servers MUST record the client type in the client
+      // > registration details in order to identify and process requests
+      // > accordingly.
+
+      // @NOTE We may want to remove this restriction in the future, for example
+      // if https://github.com/bluesky-social/proposals/tree/main/0010-client-assertion-backend
+      // gets adopted
+
+      throw new InvalidClientMetadataError(
+        'Native clients must authenticate using "none" method',
       )
     }
 
@@ -517,9 +565,9 @@ export class ClientManager {
         }
 
         case url.protocol === 'https:': {
-          if (!isInternetUrl(url)) {
+          if (isLocalHostname(url.hostname)) {
             throw new InvalidRedirectUriError(
-              `Redirect URI "${url}"'s domain name must belong to the Public Suffix List (PSL)`,
+              `Redirect URI "${url}"'s domain name must not be a local hostname`,
             )
           }
 
@@ -559,53 +607,9 @@ export class ClientManager {
         }
 
         case isPrivateUseUriScheme(url): {
-          // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
-          //
-          // > When choosing a URI scheme to associate with the app, apps MUST
-          // > use a URI scheme based on a domain name under their control,
-          // > expressed in reverse order, as recommended by Section 3.8 of
-          // > [RFC7595] for private-use URI schemes.
-
           if (metadata.application_type !== 'native') {
             throw new InvalidRedirectUriError(
               `Private-Use URI Scheme redirect URI are only allowed for native apps`,
-            )
-          }
-
-          // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
-          //
-          // > In addition to the collision-resistant properties, requiring a
-          // > URI scheme based on a domain name that is under the control of
-          // > the app can help to prove ownership in the event of a dispute
-          // > where two apps claim the same private-use URI scheme (where one
-          // > app is acting maliciously).
-          //
-          // We can't check for ownership here (as there is no concept of
-          // proven ownership in the generic client validation), but we can
-          // check that the domain is a valid domain name.
-
-          const urlDomain = reverseDomain(url.protocol.slice(0, -1))
-
-          if (!isInternetHost(urlDomain)) {
-            throw new InvalidRedirectUriError(
-              `Private-use URI Scheme redirect URI must be based on a valid domain name`,
-            )
-          }
-
-          // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
-          //
-          // > Following the requirements of Section 3.2 of [RFC3986], as there
-          // > is no naming authority for private-use URI scheme redirects, only
-          // > a single slash ("/") appears after the scheme component.
-          if (
-            url.href.startsWith(`${url.protocol}//`) ||
-            url.username ||
-            url.password ||
-            url.hostname ||
-            url.port
-          ) {
-            throw new InvalidRedirectUriError(
-              `Private-Use URI Scheme must be in the form ${url.protocol}/<path>`,
             )
           }
 
@@ -648,27 +652,11 @@ export class ClientManager {
       )
     }
 
-    const method = metadata[`token_endpoint_auth_method`]
+    const method = metadata.token_endpoint_auth_method
     if (method !== 'none') {
       throw new InvalidClientMetadataError(
         `Loopback clients are not allowed to use "token_endpoint_auth_method" ${method}`,
       )
-    }
-
-    for (const redirectUri of metadata.redirect_uris) {
-      const url = parseRedirectUri(redirectUri)
-
-      if (url.protocol !== 'http:') {
-        throw new InvalidRedirectUriError(
-          `Loopback clients must use HTTP redirect URIs`,
-        )
-      }
-
-      if (!isLoopbackHost(url.hostname)) {
-        throw new InvalidRedirectUriError(
-          `Loopback clients must use loopback redirect URIs`,
-        )
-      }
     }
 
     return metadata
@@ -679,7 +667,7 @@ export class ClientManager {
     metadata: OAuthClientMetadata,
   ): OAuthClientMetadata {
     if (!metadata.client_id) {
-      // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+      // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
       throw new InvalidClientMetadataError(
         `client_id is required for discoverable clients`,
       )
@@ -688,7 +676,7 @@ export class ClientManager {
     const clientIdUrl = parseDiscoverableClientId(clientId)
 
     if (metadata.client_uri) {
-      // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+      // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
       //
       // The client_uri must be a parent of the client_id URL. This might be
       // relaxed in the future.
@@ -716,28 +704,20 @@ export class ClientManager {
       }
     }
 
-    const method = metadata[`token_endpoint_auth_method`]
-    switch (method) {
-      case 'none':
-      case 'private_key_jwt':
-      case undefined:
-        break
-      case 'client_secret_post':
-      case 'client_secret_basic':
-      case 'client_secret_jwt':
-        throw new InvalidClientMetadataError(
-          `Client authentication method "${method}" is not allowed for discoverable clients`,
-        )
-      default:
-        throw new InvalidClientMetadataError(
-          `Unsupported client authentication method "${method}"`,
-        )
-    }
-
     for (const redirectUri of metadata.redirect_uris) {
+      // @NOTE at this point, all redirect URIs have already been validated by
+      // oauthRedirectUriSchema
+
       const url = parseRedirectUri(redirectUri)
 
       if (isPrivateUseUriScheme(url)) {
+        // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
+        //
+        // > When choosing a URI scheme to associate with the app, apps MUST use
+        // > a URI scheme based on a domain name under their control, expressed
+        // > in reverse order, as recommended by Section 3.8 of [RFC7595] for
+        // > private-use URI schemes.
+
         // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
         //
         // > In addition to the collision-resistant properties, requiring a
@@ -746,34 +726,18 @@ export class ClientManager {
         // > where two apps claim the same private-use URI scheme (where one
         // > app is acting maliciously).
 
-        // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+        // https://atproto.com/specs/oauth
         //
-        // Fully qualified domain name (FQDN) of the client_id, in reverse
-        // order. This could be relaxed to allow same apex domain names, or
-        // parent domains, but for now we require an exact match.
+        // > Any custom scheme must match the client_id hostname in
+        // > reverse-domain order. The URI scheme must be followed by a single
+        // > colon (:) then a single forward slash (/) and then a URI path
+        // > component. For example, an app with client_id
+        // > https://app.example.com/client-metadata.json could have a
+        // > redirect_uri of com.example.app:/callback.
         const protocol = `${reverseDomain(clientIdUrl.hostname)}:`
         if (url.protocol !== protocol) {
           throw new InvalidRedirectUriError(
             `Private-Use URI Scheme redirect URI, for discoverable client metadata, must be the fully qualified domain name (FQDN) of the client_id, in reverse order (${protocol})`,
-          )
-        }
-      }
-
-      if (url.protocol === 'https:') {
-        // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
-        //
-        // > In addition to the collision-resistant properties, requiring a
-        // > URI scheme based on a domain name that is under the control of
-        // > the app can help to prove ownership in the event of a dispute
-        // > where two apps claim the same private-use URI scheme (where one
-        // > app is acting maliciously).
-        //
-        // Although this only applies to "native" clients (extract being from
-        // rfc8252), we apply this rule to "web" clients as well.
-
-        if (url.hostname !== clientIdUrl.hostname) {
-          throw new InvalidRedirectUriError(
-            `Redirect URI ${url} must be under the same domain as client_id ${metadata.client_uri}`,
           )
         }
       }

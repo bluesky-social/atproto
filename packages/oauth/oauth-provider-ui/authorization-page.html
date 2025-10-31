@@ -1,0 +1,303 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mock - OAuth Provider</title>
+  </head>
+  <body class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div id="root"></div>
+    <script>
+      /*
+       * This file's purpose is to provide a way to develop the UI without
+       * running a full featured OAuth server. It mocks the server responses and
+       * provides configuration data to the UI.
+       *
+       * This file is not part of the production build.
+       *
+       * Start the development server with the following command from the
+       * oauth-provider root:
+       *
+       * ```sh
+       * pnpm run start:ui
+       * ```
+       *
+       * Then open the browser at http://localhost:5173/
+       */
+    </script>
+    <style>
+      :root {
+        --branding-color-primary: 10 122 255;
+        --branding-color-primary-contrast: 255 255 255;
+        --branding-color-primary-hue: 212.57142857142856;
+
+        --branding-color-error: 244 11 66;
+        --branding-color-error-contrast: 255 255 255;
+        --branding-color-error-hue: 345.83690987124464;
+
+        --branding-color-warning: 251 86 7;
+        --branding-color-warning-contrast: 255 255 255;
+        --branding-color-warning-hue: 19.426229508196723;
+
+        --branding-color-success: 2 195 154;
+        --branding-color-success-contrast: 0 0 0;
+        --branding-color-success-hue: 167.2538860103627;
+      }
+    </style>
+    <script type="module">
+      import { API_ENDPOINT_PREFIX } from '@atproto/oauth-provider-api'
+
+      /*
+       * PDS branding configuration
+       */
+
+      const name = 'Bluesky'
+      const links = [
+        {
+          title: { en: 'Home', ja: 'ホーム' },
+          href: 'https://bsky.social/',
+          rel: 'canonical', // prevents the login page from being indexed by search engines
+        },
+        {
+          title: { en: 'Terms of Service', ja: '利用規約' },
+          href: 'https://bsky.social/about/support/tos',
+          rel: 'terms-of-service',
+        },
+        {
+          title: { en: 'Privacy Policy', ja: 'プライバシーポリシー' },
+          href: 'https://bsky.social/about/support/privacy-policy',
+          rel: 'privacy-policy',
+        },
+        {
+          title: { en: 'Support', ja: 'サポート' },
+          href: 'https://blueskyweb.zendesk.com/hc/en-us',
+          rel: 'help',
+        },
+      ]
+      const logo = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 320 286"><path fill="rgb(10,122,255)" d="M69.364 19.146c36.687 27.806 76.147 84.186 90.636 114.439 14.489-30.253 53.948-86.633 90.636-114.439C277.107-.917 320-16.44 320 32.957c0 9.865-5.603 82.875-8.889 94.729-11.423 41.208-53.045 51.719-90.071 45.357 64.719 11.12 81.182 47.953 45.627 84.785-80 82.874-106.667-44.333-106.667-44.333s-26.667 127.207-106.667 44.333c-35.555-36.832-19.092-73.665 45.627-84.785-37.026 6.362-78.648-4.149-90.071-45.357C5.603 115.832 0 42.822 0 32.957 0-16.44 42.893-.917 69.364 19.147Z" /></svg>')}`
+
+      // Provide a value here to test the "sing-in only" flow
+      const loginHint = undefined // 'alice.test'
+
+      // Use empty array to disable the "sing-up" flow, use a single value to
+      // disable the domain selector.
+      const availableUserDomains = ['.bsky.social', '.bsky.team']
+
+      // Use non empty string to enable hCaptcha during "sing-up" flow
+      const hcaptchaSiteKey = undefined
+
+      /*
+       * Client branding configuration
+       */
+
+      // Use an "http://" URL to test the "an app on your device" flow
+      const clientId = 'https://example.com/client.json'
+      const clientName = 'My App'
+      const clientPolicyUri = 'https://bsky.app'
+      const clientTosUri = 'https://bsky.app'
+      const clientLogoUri = 'https://picsum.photos/200'
+
+      // Mock data
+
+      const requestUri = 'foo-bar'
+
+      document.cookie = `csrf-${requestUri}=xyz; path=/`
+
+      const lexicons = [
+        {
+          lexicon: 1,
+          id: 'com.atproto.moderation.basePermissions',
+          defs: {
+            main: {
+              type: 'permission-set',
+              title: 'Moderation',
+              'title:lang': { fr: 'Modération' },
+              detail: 'Create moderation reports',
+              'detail:lang': {
+                'fr-FR': 'Créer des rapports de modération',
+              },
+              permissions: [
+                {
+                  type: 'permission',
+                  resource: 'rpc',
+                  aud: '*',
+                  lxm: ['com.atproto.moderation.createReport'],
+                },
+              ],
+            },
+          },
+        },
+        {
+          lexicon: 1,
+          id: 'com.example.calendar.basePermissions',
+          defs: {
+            main: {
+              type: 'permission-set',
+              title: 'Calendar',
+              'title:lang': { fr: 'Calendrier' },
+              detail: 'Manage your events and RSVPs',
+              'detail:lang': {
+                'fr-BE': 'Gérer vos événements et réponses',
+              },
+              permissions: [
+                {
+                  type: 'permission',
+                  resource: 'rpc',
+                  inheritAud: true,
+                  lxm: [
+                    'com.example.calendar.listEvents',
+                    'com.example.calendar.getEventDetails',
+                    'com.example.calendar.getEventRsvps',
+                  ],
+                },
+                {
+                  type: 'permission',
+                  resource: 'repo',
+                  collection: [
+                    'com.example.calendar.event',
+                    'com.example.calendar.rsvp',
+                  ],
+                },
+                {
+                  type: 'permission',
+                  resource: 'blob',
+                  accept: ['image/*', 'video/*'],
+                },
+              ],
+            },
+          },
+        },
+      ]
+
+      window.__customizationData = {
+        availableUserDomains,
+        inviteCodeRequired: false,
+        hcaptchaSiteKey,
+        name,
+        links,
+        logo,
+      }
+
+      window.__authorizeData = {
+        requestUri,
+
+        clientId: clientId,
+        clientMetadata: {
+          client_id: clientId,
+          client_name: clientName,
+          policy_uri: clientPolicyUri,
+          tos_uri: clientTosUri,
+          logo_uri: clientLogoUri,
+        },
+        clientTrusted: false,
+        clientFirstParty: false,
+        permissionSets: Object.fromEntries(
+          lexicons.map((l) => [l.id, l.defs.main]),
+        ),
+
+        loginHint,
+        uiLocales: undefined, // 'en'
+        scope: [
+          'atproto',
+          'account:email',
+          'include:com.atproto.moderation.basePermissions',
+          'include:com.example.calendar.basePermissions?aud=did:web:example.com%23foo',
+          // 'account:status?action=manage',
+          // 'account:repo?action=manage',
+          // 'transition:email',
+          // 'transition:generic',
+          // 'transition:chat.bsky',
+          // 'identity:*',
+          // 'identity:handle',
+          // 'blob:image/*',
+          // 'blob:video/*',
+          // 'repo:app.bsky.feed.post?action=create',
+          // 'repo:app.bsky.feed.like?action=create',
+          // 'repo:app.bsky.graph.follow?action=create',
+          // 'repo:*?action=delete',
+          // 'rpc:*?aud=did:web:bsky.app#bsky_appview',
+          // 'rpc:app.bsky.feed.getFeed?aud=*',
+          // 'rpc:app.bsky.feed.getFeedSkeleton?aud=*',
+          // 'rpc:com.atproto.moderation.createReport?aud=*',
+        ].join(' '),
+      }
+
+      window.__sessions = [
+        {
+          account: {
+            sub: 'did:plc:543',
+            name: 'Bob',
+            email: 'bob@test.com',
+            email_verified: true,
+            preferred_username: 'bob.test',
+            picture: 'https://cat.com/cat.jpg',
+          },
+          selected: false,
+          loginRequired: false,
+          consentRequired: true,
+        },
+      ]
+
+      const origFetch = window.fetch
+
+      async function mockFetch(...args) {
+        const [input, init] = args
+
+        const method = init?.method ?? 'GET'
+        const url =
+          typeof input === 'string'
+            ? new URL(input, window.location)
+            : input instanceof URL
+              ? input
+              : undefined
+        if (url) {
+          switch (`${method} ${url.pathname}`) {
+            case `POST ${API_ENDPOINT_PREFIX}/sign-up`:
+            case `POST ${API_ENDPOINT_PREFIX}/sign-in`:
+              return new Response(
+                JSON.stringify({
+                  consentRequired: false,
+                  account: {
+                    sub: 'did:plc:123',
+                    name: 'Alice',
+                    email: 'alice@test.com',
+                    email_verified: false,
+                    preferred_username: 'alice.test',
+                    picture: 'https://cat.com/cat.jpg',
+                  },
+                }),
+                {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json' },
+                },
+              )
+            case `POST ${API_ENDPOINT_PREFIX}/accept`:
+              return new Response(
+                JSON.stringify({
+                  error: 'invalid_request',
+                  error_description: 'Noooo',
+                }),
+                {
+                  status: 400,
+                  headers: { 'Content-Type': 'application/json' },
+                },
+              )
+            case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`:
+            case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`:
+            case `POST ${API_ENDPOINT_PREFIX}/reset-password-confirm`:
+              return new Response(null, { status: 204 })
+          }
+        }
+
+        return origFetch.call(this, ...args)
+      }
+
+      Object.defineProperty(window, 'fetch', {
+        value: mockFetch,
+        writable: true,
+        configurable: true,
+      })
+    </script>
+    <script src="./src/authorization-page.tsx" type="module"></script>
+  </body>
+</html>

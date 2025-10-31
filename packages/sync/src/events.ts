@@ -1,10 +1,10 @@
+import type { CID } from 'multiformats/cid'
 import { DidDocument } from '@atproto/identity'
 import type { RepoRecord } from '@atproto/lexicon'
 import { BlockMap } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import type { CID } from 'multiformats/cid'
 
-export type Event = CommitEvt | IdentityEvt | AccountEvt
+export type Event = CommitEvt | SyncEvt | IdentityEvt | AccountEvt
 
 export type CommitMeta = {
   seq: number
@@ -34,6 +34,16 @@ export type Update = CommitMeta & {
 
 export type Delete = CommitMeta & {
   event: 'delete'
+}
+
+export type SyncEvt = {
+  seq: number
+  time: string
+  event: 'sync'
+  did: string
+  cid: CID
+  rev: string
+  blocks: BlockMap
 }
 
 export type IdentityEvt = {

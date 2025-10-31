@@ -1,5 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { AccountDb } from '../src/account-manager/db'
+// Importing from `dist` to circumvent circular dependency typing issues
+import { AccountDb } from '../dist/account-manager/db'
 
 describe('db', () => {
   let network: TestNetworkNoAppView

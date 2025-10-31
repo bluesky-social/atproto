@@ -1,23 +1,26 @@
 import { CID } from 'multiformats/cid'
-import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { WriteOpAction } from '@atproto/repo'
-import { prepareCreate, prepareDelete, prepareUpdate } from '../../../../repo'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
-  HandlerInput,
-  isCreate,
-  isUpdate,
-  isDelete,
   CreateResult,
-  UpdateResult,
   DeleteResult,
+  HandlerInput,
+  UpdateResult,
+  isCreate,
+  isDelete,
+  isUpdate,
 } from '../../../../lexicon/types/com/atproto/repo/applyWrites'
+import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedWrite,
+  prepareCreate,
+  prepareDelete,
+  prepareUpdate,
 } from '../../../../repo'
-import AppContext from '../../../../context'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -35,10 +38,21 @@ const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
-    auth: ctx.authVerifier.accessStandard({
-      checkTakedown: true,
-      checkDeactivated: true,
+    auth: ctx.authVerifier.authorization({
+      // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
+      // performed during auth. However, since this method's "repo" parameter
+      // can be a handle, we will need to fetch the account again to ensure that
+      // the handle matches the DID from the request's credentials. In order to
+      // avoid fetching the account twice (during auth, and then again in the
+      // controller), the checks are disabled here:
+
+      // checkTakedown: true,
+      // checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it is based on the request body
+      },
     }),
+
     rateLimit: [
       {
         name: 'repo-write-hour',
@@ -53,31 +67,41 @@ export default function (server: Server, ctx: AppContext) {
     ],
 
     handler: async ({ input, auth }) => {
-      const tx = input.body
-      const { repo, validate, swapCommit } = tx
-      const account = await ctx.accountManager.getAccount(repo, {
-        includeDeactivated: true,
-      })
+      const { repo, validate, swapCommit, writes } = input.body
 
-      if (!account) {
-        throw new InvalidRequestError(`Could not find repo: ${repo}`)
-      } else if (account.deactivatedAt) {
-        throw new InvalidRequestError('Account is deactivated')
-      }
+      const account = await ctx.authVerifier.findAccount(repo, {
+        checkDeactivated: true,
+        checkTakedown: true,
+      })
 
       const did = account.did
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
-      if (tx.writes.length > 200) {
+
+      if (writes.length > 200) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
 
+      // Verify permission of every unique "action" / "collection" pair
+      if (auth.credentials.type === 'oauth') {
+        // @NOTE Unlike "importRepo", we do not require "action" = "*" here.
+        for (const [action, collections] of [
+          ['create', new Set(writes.filter(isCreate).map((w) => w.collection))],
+          ['update', new Set(writes.filter(isUpdate).map((w) => w.collection))],
+          ['delete', new Set(writes.filter(isDelete).map((w) => w.collection))],
+        ] as const) {
+          for (const collection of collections) {
+            auth.credentials.permissions.assertRepo({ action, collection })
+          }
+        }
+      }
+
       // @NOTE should preserve order of ts.writes for final use in response
-      let writes: PreparedWrite[]
+      let preparedWrites: PreparedWrite[]
       try {
-        writes = await Promise.all(
-          tx.writes.map((write) => {
+        preparedWrites = await Promise.all(
+          writes.map(async (write) => {
             if (isCreate(write)) {
               return prepareCreate({
                 did,
@@ -117,19 +141,28 @@ export default function (server: Server, ctx: AppContext) {
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        try {
-          return await actorTxn.repo.processWrites(writes, swapCommitCid)
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
-        }
+        const commit = await actorTxn.repo
+          .processWrites(preparedWrites, swapCommitCid)
+          .catch((err) => {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          })
+
+        await ctx.sequencer.sequenceCommit(did, commit)
+        return commit
       })
 
-      await ctx.sequencer.sequenceCommit(did, commit, writes)
-      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+      await ctx.accountManager
+        .updateRepoRoot(did, commit.cid, commit.rev)
+        .catch((err) => {
+          dbLogger.error(
+            { err, did, cid: commit.cid, rev: commit.rev },
+            'failed to update account root',
+          )
+        })
 
       return {
         encoding: 'application/json',
@@ -138,7 +171,7 @@ export default function (server: Server, ctx: AppContext) {
             cid: commit.cid.toString(),
             rev: commit.rev,
           },
-          results: writes.map(writeToOutputResult),
+          results: preparedWrites.map(writeToOutputResult),
         },
       }
     },

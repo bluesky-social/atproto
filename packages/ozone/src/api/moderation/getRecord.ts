@@ -1,8 +1,8 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../lexicon'
-import AppContext from '../../context'
-import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util'
 import { AtUri } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AppContext } from '../../context'
+import { Server } from '../../lexicon'
+import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.getRecord({
@@ -19,7 +19,10 @@ export default function (server: Server, ctx: AppContext) {
       const record = records.get(params.uri)
 
       if (!record) {
-        throw new InvalidRequestError('Record not found', 'RecordNotFound')
+        throw new InvalidRequestError(
+          `Could not locate record: ${params.uri}`,
+          'RecordNotFound',
+        )
       }
 
       record.repo = addAccountInfoToRepoView(

@@ -1,5 +1,107 @@
 # @atproto/xrpc
 
+## 0.7.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.5.1
+
+## 0.7.4
+
+### Patch Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Explicitly set the `redirect: "follow"` in `fetch()` calls
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/lexicon@0.5.0
+
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [[`2104d9033`](https://github.com/bluesky-social/atproto/commit/2104d9033e2e1a3a7b821c1f0c5c8ffac5832d59)]:
+  - @atproto/lexicon@0.4.14
+
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/lexicon@0.4.13
+
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [[`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20)]:
+  - @atproto/lexicon@0.4.12
+
+## 0.7.0
+
+### Minor Changes
+
+- [#3792](https://github.com/bluesky-social/atproto/pull/3792) [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `ResponseType.AuthRequired` into `ResponseType.AuthenticationRequired` to match actual error name.
+
+- [#3792](https://github.com/bluesky-social/atproto/pull/3792) [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove un-necessary `ResponseTypeNames` in favor of `ResponseType`.
+
+### Patch Changes
+
+- [#3792](https://github.com/bluesky-social/atproto/pull/3792) [`f36ab48d9`](https://github.com/bluesky-social/atproto/commit/f36ab48d910fc4a3afcd22138ba014c814beb93b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing `NotAcceptable` key in `ResponseTypeStrings`
+
+- Updated dependencies [[`cc485d296`](https://github.com/bluesky-social/atproto/commit/cc485d29638488928b5efec3d4b0627040589812)]:
+  - @atproto/lexicon@0.4.11
+
+## 0.6.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.10
+
+## 0.6.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.9
+
+## 0.6.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.8
+
+## 0.6.9
+
+### Patch Changes
+
+- Updated dependencies [[`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c), [`c53d943c8`](https://github.com/bluesky-social/atproto/commit/c53d943c8be5b8886254e020970a68c0f745b14c)]:
+  - @atproto/lexicon@0.4.7
+
+## 0.6.8
+
+### Patch Changes
+
+- [#3220](https://github.com/bluesky-social/atproto/pull/3220) [`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply new linting rules regarding import order
+
+- Updated dependencies [[`61dc0d60e`](https://github.com/bluesky-social/atproto/commit/61dc0d60e19b88c6427a54c6d95a391b5f4da7bd)]:
+  - @atproto/lexicon@0.4.6
+
+## 0.6.7
+
+### Patch Changes
+
+- [#3456](https://github.com/bluesky-social/atproto/pull/3456) [`fb64d50ee`](https://github.com/bluesky-social/atproto/commit/fb64d50ee220316b9f1183e5c3259629489734c9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Explicitly allow "undefined" values in `headers`
+
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.4.5
+
 ## 0.6.5
 
 ### Patch Changes

@@ -28,6 +28,10 @@ Object {
   ],
   "moderation": Object {
     "subjectStatus": Object {
+      "accountStats": Object {
+        "$type": "tools.ozone.moderation.defs#accountStats",
+      },
+      "ageAssuranceState": "unknown",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -37,6 +41,18 @@ Object {
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
+      "priorityScore": 0,
+      "recordsStats": Object {
+        "$type": "tools.ozone.moderation.defs#recordsStats",
+        "appealedCount": 0,
+        "escalatedCount": 0,
+        "pendingCount": 0,
+        "processedCount": 1,
+        "reportedCount": 1,
+        "subjectCount": 1,
+        "takendownCount": 1,
+        "totalReports": 2,
+      },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
@@ -46,7 +62,9 @@ Object {
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "alice.test",
       "tags": Array [
+        "report:spam",
         "lang:en",
+        "report:other",
       ],
       "takendown": true,
       "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -132,6 +150,10 @@ Object {
   ],
   "moderation": Object {
     "subjectStatus": Object {
+      "accountStats": Object {
+        "$type": "tools.ozone.moderation.defs#accountStats",
+      },
+      "ageAssuranceState": "unknown",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -141,6 +163,18 @@ Object {
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
+      "priorityScore": 0,
+      "recordsStats": Object {
+        "$type": "tools.ozone.moderation.defs#recordsStats",
+        "appealedCount": 0,
+        "escalatedCount": 0,
+        "pendingCount": 0,
+        "processedCount": 1,
+        "reportedCount": 1,
+        "subjectCount": 1,
+        "takendownCount": 1,
+        "totalReports": 2,
+      },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
@@ -150,7 +184,9 @@ Object {
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "alice.test",
       "tags": Array [
+        "report:spam",
         "lang:en",
+        "report:other",
       ],
       "takendown": true,
       "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -204,6 +240,32 @@ Object {
       ],
     },
     "text": "hey there",
+  },
+}
+`;
+
+exports[`admin get record view gets record from pds if appview does not have it. 1`] = `
+Object {
+  "blobCids": Array [],
+  "blobs": Array [],
+  "cid": "cids(0)",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
+  "moderation": Object {},
+  "repo": Object {
+    "did": "user(0)",
+    "email": "carol@test.com",
+    "handle": "carol.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
+    "moderation": Object {},
+    "relatedRecords": Array [],
+  },
+  "uri": "record(0)",
+  "value": Object {
+    "$type": "app.bsky.feed.post",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "text": "this is test",
   },
 }
 `;

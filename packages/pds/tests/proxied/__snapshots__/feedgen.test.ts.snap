@@ -6,6 +6,11 @@ Object {
     Object {
       "post": Object {
         "author": Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(0)",
@@ -32,6 +37,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
@@ -62,6 +68,7 @@ Object {
         "repostCount": 0,
         "uri": "record(0)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "threadMuted": false,
         },
@@ -70,6 +77,11 @@ Object {
     Object {
       "post": Object {
         "author": Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
@@ -80,6 +92,7 @@ Object {
             "muted": false,
           },
         },
+        "bookmarkCount": 0,
         "cid": "cids(3)",
         "embed": Object {
           "$type": "app.bsky.embed.recordWithMedia#view",
@@ -87,12 +100,12 @@ Object {
             "$type": "app.bsky.embed.images#view",
             "images": Array [
               Object {
-                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                "alt": "../dev-env/assets/key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
               },
               Object {
-                "alt": "../dev-env/src/seed/img/key-alt.jpg",
+                "alt": "../dev-env/assets/key-alt.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)@jpeg",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)@jpeg",
               },
@@ -102,6 +115,11 @@ Object {
             "record": Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
+                "associated": Object {
+                  "activitySubscription": Object {
+                    "allowSubscriptions": "followers",
+                  },
+                },
                 "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
                 "createdAt": "1970-01-01T00:00:00.000Z",
                 "did": "user(4)",
@@ -149,7 +167,7 @@ Object {
               "$type": "app.bsky.embed.images",
               "images": Array [
                 Object {
-                  "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
+                  "alt": "../dev-env/assets/key-landscape-small.jpg",
                   "image": Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -160,7 +178,7 @@ Object {
                   },
                 },
                 Object {
-                  "alt": "../dev-env/src/seed/img/key-alt.jpg",
+                  "alt": "../dev-env/assets/key-alt.jpg",
                   "image": Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -185,6 +203,7 @@ Object {
         "repostCount": 0,
         "uri": "record(2)",
         "viewer": Object {
+          "bookmarked": false,
           "embeddingDisabled": false,
           "like": "record(8)",
           "threadMuted": false,

@@ -28,7 +28,7 @@ describe('account deactivation', () => {
 
     aliceAvatar = await sc.uploadFile(
       alice,
-      '../dev-env/src/seed/img/key-portrait-small.jpg',
+      '../dev-env/assets/key-portrait-small.jpg',
       'image/jpeg',
     )
     await sc.updateProfile(alice, {

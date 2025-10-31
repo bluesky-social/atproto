@@ -1,26 +1,31 @@
-import assert from 'node:assert'
-
-import { InvalidRequestError } from '@atproto/xrpc-server'
-
+import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
-import AppContext from '../../../../context'
+import { ACCESS_FULL } from '../../../../auth-scope'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
 import { genInvCodes } from './util'
-import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
-    auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
-    handler: async ({ params, auth }) => {
+    auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+      scopes: ACCESS_FULL,
+      authorize: () => {
+        throw new ForbiddenError(
+          'OAuth credentials are not supported for this endpoint',
+        )
+      },
+    }),
+    handler: async ({ params, auth, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getAccountInviteCodes(
             params,
-            await ctx.serviceAuthHeaders(
+            await ctx.entrywayAuthHeaders(
+              req,
               auth.credentials.did,
-              ctx.cfg.entryway.did,
               ids.ComAtprotoServerGetAccountInviteCodes,
             ),
           ),

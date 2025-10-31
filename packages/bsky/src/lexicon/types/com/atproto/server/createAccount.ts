@@ -1,14 +1,20 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 
-export interface QueryParams {}
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.server.createAccount'
+
+export type QueryParams = {}
 
 export interface InputSchema {
   email?: string
@@ -24,8 +30,7 @@ export interface InputSchema {
   /** DID PLC rotation key (aka, recovery key) to be included in PLC creation operation. */
   recoveryKey?: string
   /** A signed DID PLC operation to be submitted as part of importing an existing account to this instance. NOTE: this optional field may be updated when full account migration is implemented. */
-  plcOp?: {}
-  [k: string]: unknown
+  plcOp?: { [_ in string]: unknown }
 }
 
 /** Account login session returned on successful account creation. */
@@ -36,8 +41,7 @@ export interface OutputSchema {
   /** The DID of the new account. */
   did: string
   /** Complete DID document. */
-  didDoc?: {}
-  [k: string]: unknown
+  didDoc?: { [_ in string]: unknown }
 }
 
 export interface HandlerInput {
@@ -64,14 +68,4 @@ export interface HandlerError {
     | 'IncompatibleDidDoc'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput
+export type HandlerOutput = HandlerError | HandlerSuccess

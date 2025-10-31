@@ -1,5 +1,5 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 import { AccountDb, EmailTokenPurpose } from '../db'
 
@@ -71,7 +71,7 @@ export const assertValidTokenAndFindDid = async (
 ): Promise<string> => {
   const res = await db.db
     .selectFrom('email_token')
-    .selectAll()
+    .select(['did', 'requestedAt'])
     .where('purpose', '=', purpose)
     .where('token', '=', token.toUpperCase())
     .executeTakeFirst()

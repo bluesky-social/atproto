@@ -1,11 +1,13 @@
 import {
   AppBskyActorDefs,
   AppBskyFeedDefs,
-  AppBskyNotificationListNotifications,
   AppBskyGraphDefs,
+  AppBskyNotificationListNotifications,
+  ChatBskyActorDefs,
   ComAtprotoLabelDefs,
 } from '../client/index'
 import { KnownLabelValue } from './const/labels'
+import { MuteWordMatch } from './mutewords'
 
 // syntax
 // =
@@ -87,6 +89,7 @@ export type ModerationSubjectProfile =
   | AppBskyActorDefs.ProfileViewBasic
   | AppBskyActorDefs.ProfileView
   | AppBskyActorDefs.ProfileViewDetailed
+  | ChatBskyActorDefs.ProfileViewBasic
 
 export type ModerationSubjectPost = AppBskyFeedDefs.PostView
 
@@ -156,6 +159,7 @@ export type ModerationCause =
       source: ModerationCauseSource
       priority: 6
       downgraded?: boolean
+      matches: MuteWordMatch[]
     }
   | {
       type: 'hidden'

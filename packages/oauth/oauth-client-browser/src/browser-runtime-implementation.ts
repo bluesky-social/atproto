@@ -9,10 +9,11 @@ import {
 /**
  * @see {@link // https://developer.mozilla.org/en-US/docs/Web/API/LockManager/request}
  */
-const nativeRequestLock: undefined | RuntimeLock = navigator.locks?.request
-  ? <T>(name: string, fn: () => T | PromiseLike<T>): Promise<T> =>
-      navigator.locks.request(name, { mode: 'exclusive' }, async () => fn())
-  : undefined
+const nativeRequestLock: undefined | RuntimeLock =
+  typeof navigator !== 'undefined' && navigator.locks?.request
+    ? <T>(name: string, fn: () => T | PromiseLike<T>): Promise<T> =>
+        navigator.locks.request(name, { mode: 'exclusive' }, async () => fn())
+    : undefined
 
 export class BrowserRuntimeImplementation implements RuntimeImplementation {
   requestLock = nativeRequestLock

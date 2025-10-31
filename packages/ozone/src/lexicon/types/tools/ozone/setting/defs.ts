@@ -1,15 +1,24 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.setting.defs'
 
 export interface Option {
+  $type?: 'tools.ozone.setting.defs#option'
   key: string
   did: string
-  value: {}
+  value: { [_ in string]: unknown }
   description?: string
   createdAt?: string
   updatedAt?: string
@@ -17,21 +26,19 @@ export interface Option {
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
     | 'tools.ozone.team.defs#roleAdmin'
+    | 'tools.ozone.team.defs#roleVerifier'
     | (string & {})
   scope: 'instance' | 'personal' | (string & {})
   createdBy: string
   lastUpdatedBy: string
-  [k: string]: unknown
 }
 
-export function isOption(v: unknown): v is Option {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.setting.defs#option'
-  )
+const hashOption = 'option'
+
+export function isOption<V>(v: V) {
+  return is$typed(v, id, hashOption)
 }
 
-export function validateOption(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.setting.defs#option', v)
+export function validateOption<V>(v: V) {
+  return validate<Option & V>(v, id, hashOption)
 }

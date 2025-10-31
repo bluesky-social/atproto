@@ -1,10 +1,11 @@
 import {
   AtpAgent,
+  ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
-  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  ToolsOzoneSettingUpsertOption,
+  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneSettingRemoveOptions,
+  ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
 import { TestOzone } from './ozone'
 
@@ -45,6 +46,19 @@ export class ModeratorClient {
     return result.data
   }
 
+  async getReporterStats(dids: string[]) {
+    const result = await this.agent.tools.ozone.moderation.getReporterStats(
+      { dids },
+      {
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.getReporterStats',
+          'admin',
+        ),
+      },
+    )
+    return result.data
+  }
+
   async queryEvents(input: QueryEventsParams, role?: ModLevel) {
     const result = await this.agent.tools.ozone.moderation.queryEvents(input, {
       headers: await this.ozone.modHeaders(
@@ -62,7 +76,9 @@ export class ModeratorClient {
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       reason?: string
       createdBy?: string
-      meta?: TakeActionInput['meta']
+      meta?: unknown
+      modTool?: ToolsOzoneModerationDefs.ModTool
+      externalId?: string
     },
     role?: ModLevel,
   ) {
@@ -70,11 +86,19 @@ export class ModeratorClient {
       event,
       subject,
       subjectBlobCids,
-      reason = 'X',
       createdBy = 'did:example:admin',
+      modTool,
+      externalId,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
-      { event, subject, subjectBlobCids, createdBy, reason },
+      {
+        event,
+        subject,
+        subjectBlobCids,
+        createdBy,
+        modTool,
+        externalId,
+      },
       {
         encoding: 'application/json',
         headers: await this.ozone.modHeaders(
@@ -92,10 +116,16 @@ export class ModeratorClient {
       subject: TakeActionInput['subject']
       reason?: string
       createdBy?: string
+      modTool?: ToolsOzoneModerationDefs.ModTool
     },
     role?: ModLevel,
   ) {
-    const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
+    const {
+      subject,
+      reason = 'X',
+      createdBy = 'did:example:admin',
+      modTool,
+    } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
         subject,
@@ -104,6 +134,7 @@ export class ModeratorClient {
           comment: reason,
         },
         createdBy,
+        modTool,
       },
       {
         encoding: 'application/json',
@@ -123,16 +154,19 @@ export class ModeratorClient {
       durationInHours?: number
       acknowledgeAccountSubjects?: boolean
       reason?: string
+      policies?: string[]
     },
     role?: ModLevel,
   ) {
-    const { durationInHours, acknowledgeAccountSubjects, ...rest } = opts
+    const { durationInHours, acknowledgeAccountSubjects, policies, ...rest } =
+      opts
     return this.emitEvent(
       {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
           acknowledgeAccountSubjects,
           durationInHours,
+          policies,
         },
         ...rest,
       },

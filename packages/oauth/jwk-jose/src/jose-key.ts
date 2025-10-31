@@ -1,5 +1,9 @@
-import { JwtVerifyError } from '@atproto/jwk'
 import {
+  type GenerateKeyPairOptions,
+  type GenerateKeyPairResult,
+  type JWK,
+  type JWTVerifyOptions,
+  type KeyLike,
   SignJWT,
   errors,
   exportJWK,
@@ -7,81 +11,129 @@ import {
   importJWK,
   importPKCS8,
   jwtVerify,
-  type GenerateKeyPairOptions,
-  type GenerateKeyPairResult,
-  type JWK,
-  type JWTVerifyOptions,
-  type KeyLike,
 } from 'jose'
-
 import {
   Jwk,
   JwkError,
   JwtCreateError,
   JwtHeader,
   JwtPayload,
+  JwtVerifyError,
   Key,
   SignedJwt,
   VerifyOptions,
-  VerifyPayload,
   VerifyResult,
-  jwkValidator,
+  isPrivateJwk,
+  jwkSchema,
+  jwtHeaderSchema,
+  jwtPayloadSchema,
 } from '@atproto/jwk'
-import { either } from './util'
+import { RequiredKey, either } from './util.js'
 
 const { JOSEError } = errors
 
-export type Importable = string | KeyLike | Jwk
+export {
+  type GenerateKeyPairOptions,
+  type GenerateKeyPairResult,
+  type Jwk,
+  type JwtHeader,
+  type JwtPayload,
+  type KeyLike,
+  type SignedJwt,
+  type VerifyOptions,
+}
 
-export type { GenerateKeyPairOptions, GenerateKeyPairResult }
-
-export class JoseKey extends Key {
-  #keyObj?: KeyLike | Uint8Array
-
-  protected async getKey() {
+export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
+  /**
+   * Some runtimes (e.g. Bun) require an `alg` second argument to be set when
+   * invoking `importJWK`. In order to be compatible with these runtimes, we
+   * provide the following method to ensure the `alg` is always set. We also
+   * take the opportunity to ensure that the `alg` is compatible with this key.
+   */
+  protected async getKeyObj(alg: string) {
+    if (!this.algorithms.includes(alg)) {
+      throw new JwkError(`Key cannot be used with algorithm "${alg}"`)
+    }
     try {
-      return (this.#keyObj ||= await importJWK(this.jwk as JWK))
+      return await importJWK(this.jwk as JWK, alg)
     } catch (cause) {
       throw new JwkError('Failed to import JWK', undefined, { cause })
     }
   }
 
-  async createJwt(header: JwtHeader, payload: JwtPayload) {
-    if (header.kid && header.kid !== this.kid) {
-      throw new JwtCreateError(
-        `Invalid "kid" (${header.kid}) used to sign with key "${this.kid}"`,
-      )
-    }
+  async createJwt(header: JwtHeader, payload: JwtPayload): Promise<SignedJwt> {
+    try {
+      const { kid } = header
+      if (kid && kid !== this.kid) {
+        throw new JwtCreateError(
+          `Invalid "kid" (${kid}) used to sign with key "${this.kid}"`,
+        )
+      }
 
-    if (!header.alg || !this.algorithms.includes(header.alg)) {
-      throw new JwtCreateError(
-        `Invalid "alg" (${header.alg}) used to sign with key "${this.kid}"`,
-      )
-    }
+      const { alg } = header
+      if (!alg) {
+        throw new JwtCreateError('Missing "alg" in JWT header')
+      }
 
-    const keyObj = await this.getKey()
-    return new SignJWT(payload)
-      .setProtectedHeader({ ...header, kid: this.kid })
-      .sign(keyObj) as Promise<SignedJwt>
+      const keyObj = await this.getKeyObj(alg)
+      const jwtBuilder = new SignJWT(payload).setProtectedHeader({
+        ...header,
+        alg,
+        kid: this.kid,
+      })
+
+      const signedJwt = await jwtBuilder.sign(keyObj)
+
+      return signedJwt as SignedJwt
+    } catch (cause) {
+      if (cause instanceof JOSEError) {
+        throw new JwtCreateError(cause.message, cause.code, { cause })
+      } else {
+        throw JwtCreateError.from(cause)
+      }
+    }
   }
 
-  async verifyJwt<
-    P extends VerifyPayload = JwtPayload,
-    C extends string = string,
-  >(token: SignedJwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>> {
+  async verifyJwt<C extends string = never>(
+    token: SignedJwt,
+    options?: VerifyOptions<C>,
+  ): Promise<VerifyResult<C>> {
     try {
-      const keyObj = await this.getKey()
-      const result = await jwtVerify(token, keyObj, {
-        ...options,
-        algorithms: this.algorithms,
-      } as JWTVerifyOptions)
+      const result = await jwtVerify(
+        token,
+        async ({ alg }) => this.getKeyObj(alg),
+        { ...options, algorithms: this.algorithms } as JWTVerifyOptions,
+      )
 
-      return result as VerifyResult<P, C>
-    } catch (error) {
-      if (error instanceof JOSEError) {
-        throw new JwtVerifyError(error.message, error.code, { cause: error })
+      // @NOTE if all tokens are signed exclusively through createJwt(), then
+      // there should be no need to parse the payload and headers here. But
+      // since the JWT could have been signed with the same key from somewhere
+      // else, let's parse it to ensure the integrity (and type safety) of the
+      // data.
+      const headerParsed = jwtHeaderSchema.safeParse(result.protectedHeader)
+      if (!headerParsed.success) {
+        throw new JwtVerifyError('Invalid JWT header', undefined, {
+          cause: headerParsed.error,
+        })
+      }
+
+      const payloadParsed = jwtPayloadSchema.safeParse(result.payload)
+      if (!payloadParsed.success) {
+        throw new JwtVerifyError('Invalid JWT payload', undefined, {
+          cause: payloadParsed.error,
+        })
+      }
+
+      return {
+        protectedHeader: headerParsed.data,
+        // "requiredClaims" enforced by jwtVerify()
+        payload: payloadParsed.data as RequiredKey<JwtPayload, C>,
+      }
+    } catch (cause) {
+      if (cause instanceof JOSEError) {
+        throw new JwtVerifyError(cause.message, cause.code, { cause })
       } else {
-        throw JwtVerifyError.from(error)
+        throw JwtVerifyError.from(cause)
       }
     }
   }
@@ -112,16 +164,16 @@ export class JoseKey extends Key {
     allowedAlgos: string[] = ['ES256'],
     kid?: string,
     options?: Omit<GenerateKeyPairOptions, 'extractable'>,
-  ) {
+  ): Promise<JoseKey> {
     const kp = await this.generateKeyPair(allowedAlgos, {
       ...options,
       extractable: true,
     })
-    return this.fromImportable(kp.privateKey, kid)
+    return this.fromKeyLike(kp.privateKey, kid)
   }
 
   static async fromImportable(
-    input: Importable,
+    input: string | KeyLike | Jwk,
     kid?: string,
   ): Promise<JoseKey> {
     if (typeof input === 'string') {
@@ -188,8 +240,16 @@ export class JoseKey extends Key {
     if (!jwk || typeof jwk !== 'object') throw new JwkError('Invalid JWK')
 
     const kid = either(jwk.kid, inputKid)
-    const use = jwk.use || 'sig'
 
-    return new JoseKey(jwkValidator.parse({ ...jwk, kid, use }))
+    // Backwards compatibility with old behavior
+    if (jwk.use != null && isPrivateJwk(jwk)) {
+      console.warn(
+        'Deprecation warning: Private JWK with a "use" property will be rejected in the future. Please remove replace "use" with (valid) "key_ops".',
+      )
+      jwk.key_ops ??= jwk.use === 'sig' ? ['sign'] : ['encrypt']
+      delete jwk.use
+    }
+
+    return new JoseKey<Jwk>(jwkSchema.parse({ ...jwk, kid }))
   }
 }

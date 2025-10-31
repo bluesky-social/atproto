@@ -2,13 +2,21 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyFeedDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyFeedDefs from './defs.js'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.getPostThread'
+
+export type QueryParams = {
   /** Reference (AT-URI) to post record. */
   uri: string
   /** How many levels of reply depth should be included in response. */
@@ -16,17 +24,15 @@ export interface QueryParams {
   /** How many levels of parent (and grandparent, etc) post to include. */
   parentHeight?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   thread:
-    | AppBskyFeedDefs.ThreadViewPost
-    | AppBskyFeedDefs.NotFoundPost
-    | AppBskyFeedDefs.BlockedPost
-    | { $type: string; [k: string]: unknown }
+    | $Typed<AppBskyFeedDefs.ThreadViewPost>
+    | $Typed<AppBskyFeedDefs.NotFoundPost>
+    | $Typed<AppBskyFeedDefs.BlockedPost>
+    | { $type: string }
   threadgate?: AppBskyFeedDefs.ThreadgateView
-  [k: string]: unknown
 }
 
 export interface CallOptions {

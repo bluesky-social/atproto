@@ -1,25 +1,29 @@
-import assert from 'node:assert'
-
-import AppContext from '../../../../context'
+import { ForbiddenError } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope'
+import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAppPassword({
-    auth: ctx.authVerifier.accessFull({
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
+      scopes: ACCESS_FULL,
+      authorize: () => {
+        throw new ForbiddenError(
+          'OAuth credentials are not supported for this endpoint',
+        )
+      },
     }),
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
-        assert(ctx.cfg.entryway)
-
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.createAppPassword(
             input.body,
-            await ctx.serviceAuthHeaders(
+            await ctx.entrywayAuthHeaders(
+              req,
               auth.credentials.did,
-              ctx.cfg.entryway.did,
               ids.ComAtprotoServerCreateAppPassword,
             ),
           ),

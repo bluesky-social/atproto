@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.76",
+  "version": "0.4.191",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -15,7 +15,9 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": "dist/bin.js",
+  "engines": {
+    "node": ">=18.7.0"
+  },
   "scripts": {
     "prepare": "[ \"$npm_config_production\" = true ] || puppeteer browsers install chrome",
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
@@ -31,12 +33,18 @@
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:*",
+    "@atproto-labs/simple-store-memory": "workspace:*",
+    "@atproto-labs/simple-store-redis": "workspace:*",
+    "@atproto-labs/xrpc-utils": "workspace:*",
     "@atproto/api": "workspace:^",
     "@atproto/aws": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
+    "@atproto/lexicon-resolver": "workspace:^",
+    "@atproto/oauth-scopes": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
@@ -83,7 +91,6 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/nodemailer": "^6.4.6",
     "@types/qs": "^6.9.7",
-    "axios": "^0.27.2",
     "esbuild": "^0.14.48",
     "esbuild-plugin-handlebars": "^1.0.3",
     "get-port": "^6.1.2",

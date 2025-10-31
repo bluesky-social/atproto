@@ -1,22 +1,21 @@
 import { Lexicons } from '../lexicons'
-import { LexXrpcParameters, ValidationResult, ValidationError } from '../types'
-
-import * as PrimitiveValidators from './primitives'
+import { LexXrpcParameters, ValidationError, ValidationResult } from '../types'
 import { array } from './complex'
+import * as PrimitiveValidators from './primitives'
 
 export function params(
   lexicons: Lexicons,
   path: string,
   def: LexXrpcParameters,
   val: unknown,
-): ValidationResult {
+): ValidationResult<Record<string, unknown>> {
   // type
   const value = val && typeof val === 'object' ? val : {}
 
   const requiredProps = new Set(def.required ?? [])
 
   // properties
-  let resultValue = value
+  let resultValue = value as Record<string, unknown>
   if (typeof def.properties === 'object') {
     for (const key in def.properties) {
       const propDef = def.properties[key]

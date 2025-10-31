@@ -2,14 +2,22 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from '../actor/defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyActorDefs from '../actor/defs.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.notification.listNotifications'
+
+export type QueryParams = {
   /** Notification reasons to include in response. */
   reasons?: string[]
   limit?: number
@@ -17,7 +25,6 @@ export interface QueryParams {
   cursor?: string
   seenAt?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
@@ -25,7 +32,6 @@ export interface OutputSchema {
   notifications: Notification[]
   priority?: boolean
   seenAt?: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -44,10 +50,11 @@ export function toKnownErr(e: any) {
 }
 
 export interface Notification {
+  $type?: 'app.bsky.notification.listNotifications#notification'
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileView
-  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'. */
+  /** The reason why this notification was delivered - e.g. your post was liked, or you received a new follower. */
   reason:
     | 'like'
     | 'repost'
@@ -56,26 +63,25 @@ export interface Notification {
     | 'reply'
     | 'quote'
     | 'starterpack-joined'
+    | 'verified'
+    | 'unverified'
+    | 'like-via-repost'
+    | 'repost-via-repost'
+    | 'subscribed-post'
     | (string & {})
   reasonSubject?: string
-  record: {}
+  record: { [_ in string]: unknown }
   isRead: boolean
   indexedAt: string
   labels?: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
 }
 
-export function isNotification(v: unknown): v is Notification {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.notification.listNotifications#notification'
-  )
+const hashNotification = 'notification'
+
+export function isNotification<V>(v: V) {
+  return is$typed(v, id, hashNotification)
 }
 
-export function validateNotification(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'app.bsky.notification.listNotifications#notification',
-    v,
-  )
+export function validateNotification<V>(v: V) {
+  return validate<Notification & V>(v, id, hashNotification)
 }

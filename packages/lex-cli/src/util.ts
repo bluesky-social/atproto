@@ -1,11 +1,12 @@
-import fs from 'fs'
-import { join } from 'path'
-import { parseLexiconDoc, LexiconDoc } from '@atproto/lexicon'
-import { ZodError, ZodFormattedError } from 'zod'
+import fs from 'node:fs'
+import { join } from 'node:path'
 import chalk from 'chalk'
-import { GeneratedAPI, FileDiff } from './types'
+import { ZodError, type ZodFormattedError } from 'zod'
+import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
+import { type FileDiff, type GeneratedAPI } from './types'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
+  paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
   const docs: LexiconDoc[] = []
   for (const path of paths) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {

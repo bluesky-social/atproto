@@ -1,10 +1,11 @@
-import { AtUri } from '@atproto/syntax'
-import { COM_ATPROTO_MODERATION, AtpAgent } from '@atproto/api'
+import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
+import { AtUri } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
+import * as seedThreadV2 from '../seed/thread-v2'
 import { postTexts, replyTexts } from './data'
-import labeledImgB64 from './img/labeled-img-b64'
 import blurHashB64 from './img/blur-hash-avatar-b64'
+import labeledImgB64 from './img/labeled-img-b64'
 
 // NOTE
 // deterministic date generator
@@ -183,7 +184,7 @@ export async function generateMockSetup(env: TestNetwork) {
   const filteredPost = await bob.app.bsky.feed.post.create(
     { repo: bob.accountDid },
     {
-      text: 'reallly bad post should be deleted',
+      text: 'really bad post should be deleted',
       createdAt: date.next().value,
     },
   )
@@ -327,6 +328,46 @@ export async function generateMockSetup(env: TestNetwork) {
       embed: {
         $type: 'app.bsky.embed.record',
         record: fgBobRes,
+      },
+      createdAt: date.next().value,
+    },
+  )
+
+  const fg3Uri = AtUri.make(
+    carla.accountDid,
+    'app.bsky.feed.generator',
+    'carla-intr-algo',
+  )
+  const fg3 = await env.createFeedGen({
+    [fg3Uri.toString()]: async () => {
+      const feed = posts
+        .filter(() => rand(2) === 0)
+        .map((post) => ({ post: post.uri }))
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+        },
+      }
+    },
+  })
+  const fgCarlaRes = await carla.app.bsky.feed.generator.create(
+    { repo: carla.accountDid, rkey: fg3Uri.rkey },
+    {
+      did: fg3.did,
+      displayName: `Acceptin' Generator`,
+      acceptsInteractions: true,
+      createdAt: date.next().value,
+    },
+  )
+
+  await alice.app.bsky.feed.post.create(
+    { repo: alice.accountDid },
+    {
+      text: `carla accepts interactions on her feed`,
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: fgCarlaRes,
       },
       createdAt: date.next().value,
     },
@@ -498,6 +539,25 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     )
   }
+
+  await setVerifier(env.bsky.db, alice.accountDid)
+
+  // @TODO the following should be optimized as it makes dev-env start very slow (>10 sec)
+  const sc = env.getSeedClient()
+  await seedThreadV2.simple(sc)
+  await seedThreadV2.long(sc)
+  await seedThreadV2.deep(sc)
+  await seedThreadV2.branchingFactor(sc)
+  await seedThreadV2.annotateMoreReplies(sc)
+  await seedThreadV2.annotateOP(sc)
+  await seedThreadV2.sort(sc)
+  await seedThreadV2.bumpOpAndViewer(sc)
+  await seedThreadV2.bumpGroupSorting(sc)
+  await seedThreadV2.bumpFollows(sc)
+  await seedThreadV2.blockDeletionAuth(sc, env.bsky.ctx.cfg.modServiceDid)
+  await seedThreadV2.mutes(sc)
+  await seedThreadV2.threadgated(sc)
+  await seedThreadV2.tags(sc)
 }
 
 function ucfirst(str: string): string {
@@ -518,5 +578,13 @@ const createLabel = async (
       neg: false,
       src: opts.src ?? EXAMPLE_LABELER,
     })
+    .execute()
+}
+
+const setVerifier = async (db: Database, did: string) => {
+  await db.db
+    .updateTable('actor')
+    .set({ trustedVerifier: true })
+    .where('did', '=', did)
     .execute()
 }

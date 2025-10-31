@@ -1,10 +1,10 @@
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
+import { byteIterableToStream } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
-import { byteIterableToStream } from '@atproto/common'
-import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
+import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [
   {
@@ -30,23 +30,20 @@ const LEXICONS: LexiconDoc[] = [
 describe('Responses', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method(
-    'io.example.readableStream',
-    async (ctx: { params: xrpcServer.Params }) => {
-      async function* iter(): AsyncIterable<Uint8Array> {
-        for (let i = 0; i < 5; i++) {
-          yield new Uint8Array([i])
-        }
-        if (ctx.params.shouldErr) {
-          throw new Error('error')
-        }
+  server.method('io.example.readableStream', async (ctx) => {
+    async function* iter(): AsyncIterable<Uint8Array> {
+      for (let i = 0; i < 5; i++) {
+        yield new Uint8Array([i])
       }
-      return {
-        encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(iter()),
+      if (ctx.params.shouldErr) {
+        throw new Error('error')
       }
-    },
-  )
+    }
+    return {
+      encoding: 'application/vnd.ipld.car',
+      body: byteIterableToStream(iter()),
+    }
+  })
 
   let client: XrpcClient
   beforeAll(async () => {

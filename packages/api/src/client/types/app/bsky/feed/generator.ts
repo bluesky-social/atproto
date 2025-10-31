@@ -1,14 +1,23 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as AppBskyRichtextFacet from '../richtext/facet'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyRichtextFacet from '../richtext/facet.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
-export interface Record {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.feed.generator'
+
+export interface Main {
+  $type: 'app.bsky.feed.generator'
   did: string
   displayName: string
   description?: string
@@ -16,22 +25,27 @@ export interface Record {
   avatar?: BlobRef
   /** Declaration that a feed accepts feedback interactions from a client through app.bsky.feed.sendInteractions */
   acceptsInteractions?: boolean
-  labels?:
-    | ComAtprotoLabelDefs.SelfLabels
-    | { $type: string; [k: string]: unknown }
+  labels?: $Typed<ComAtprotoLabelDefs.SelfLabels> | { $type: string }
+  contentMode?:
+    | 'app.bsky.feed.defs#contentModeUnspecified'
+    | 'app.bsky.feed.defs#contentModeVideo'
+    | (string & {})
   createdAt: string
   [k: string]: unknown
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.feed.generator#main' ||
-      v.$type === 'app.bsky.feed.generator')
-  )
+const hashMain = 'main'
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain)
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.generator#main', v)
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true)
+}
+
+export {
+  type Main as Record,
+  isMain as isRecord,
+  validateMain as validateRecord,
 }

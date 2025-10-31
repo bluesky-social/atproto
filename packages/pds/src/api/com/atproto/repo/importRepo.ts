@@ -1,86 +1,88 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { ActorStoreTransactor } from '../../../../actor-store'
+import { CID } from 'multiformats/cid'
 import { TID } from '@atproto/common'
+import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
 import {
-  Repo,
+  BlockMap,
   WriteOpAction,
   getAndParseRecord,
   readCarStream,
   verifyDiff,
 } from '@atproto/repo'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { CID } from 'multiformats/cid'
-import PQueue from 'p-queue'
 import { AtUri } from '@atproto/syntax'
-import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
-    auth: ctx.authVerifier.accessFull({
+    opts: {
+      blobLimit: ctx.cfg.service.maxImportSize,
+    },
+    auth: ctx.authVerifier.authorization({
       checkTakedown: true,
+      scopes: ACCESS_FULL,
+      authorize: (permissions) => {
+        permissions.assertAccount({ attr: 'repo', action: 'manage' })
+      },
     }),
     handler: async ({ input, auth }) => {
-      const did = auth.credentials.did
       if (!ctx.cfg.service.acceptingImports) {
         throw new InvalidRequestError('Service is not accepting repo imports')
       }
-      await ctx.actorStore.transact(did, (store) =>
-        importRepo(store, input.body),
-      )
-    },
-  })
-}
 
-const importRepo = async (
-  actorStore: ActorStoreTransactor,
-  incomingCar: AsyncIterable<Uint8Array>,
-) => {
-  const now = new Date().toISOString()
-  const rev = TID.nextStr()
-  const did = actorStore.repo.did
+      const { did } = auth.credentials
 
-  const { roots, blocks } = await readCarStream(incomingCar)
-  if (roots.length !== 1) {
-    throw new InvalidRequestError('expected one root')
-  }
-  const currRoot = await actorStore.db.db
-    .selectFrom('repo_root')
-    .selectAll()
-    .executeTakeFirst()
-  const currRepo = currRoot
-    ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
-    : null
-  const diff = await verifyDiff(
-    currRepo,
-    blocks,
-    roots[0],
-    undefined,
-    undefined,
-    { ensureLeaves: false },
-  )
-  diff.commit.rev = rev
-  await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)
-  const recordQueue = new PQueue({ concurrency: 50 })
-  const controller = new AbortController()
-  for (const write of diff.writes) {
-    recordQueue
-      .add(
-        async () => {
+      // @NOTE process as much as we can before the transaction, in particular
+      // the reading of the body stream.
+      const { roots, blocks } = await readCarStream(input.body)
+      if (roots.length !== 1) {
+        await blocks.dump()
+        throw new InvalidRequestError('expected one root')
+      }
+
+      const blockMap = new BlockMap()
+      for await (const block of blocks) {
+        blockMap.set(block.cid, block.bytes)
+      }
+
+      await ctx.actorStore.transact(did, async (store) => {
+        const now = new Date().toISOString()
+        const rev = TID.nextStr()
+        const did = store.repo.did
+
+        const currRepo = await store.repo.maybeLoadRepo()
+        const diff = await verifyDiff(
+          currRepo,
+          blockMap,
+          roots[0],
+          undefined,
+          undefined,
+          { ensureLeaves: false },
+        )
+        diff.commit.rev = rev
+        await store.repo.storage.applyCommit(diff.commit, currRepo === null)
+
+        // @NOTE There is no point in performing the following concurrently
+        // since better-sqlite3 is synchronous.
+        for (const write of diff.writes) {
           const uri = AtUri.make(did, write.collection, write.rkey)
           if (write.action === WriteOpAction.Delete) {
-            await actorStore.record.deleteRecord(uri)
+            await store.record.deleteRecord(uri)
           } else {
             let parsedRecord: RepoRecord
             try {
-              const parsed = await getAndParseRecord(blocks, write.cid)
+              // @NOTE getAndParseRecord returns a promise for historical
+              // reasons but it's internal processing is actually synchronous.
+              const parsed = await getAndParseRecord(blockMap, write.cid)
               parsedRecord = parsed.record
             } catch {
               throw new InvalidRequestError(
                 `Could not parse record at '${write.collection}/${write.rkey}'`,
               )
             }
-            const indexRecord = actorStore.record.indexRecord(
+
+            await store.record.indexRecord(
               uri,
               write.cid,
               parsedRecord,
@@ -89,27 +91,12 @@ const importRepo = async (
               now,
             )
             const recordBlobs = findBlobRefs(parsedRecord)
-            const blobValues = recordBlobs.map((cid) => ({
-              recordUri: uri.toString(),
-              blobCid: cid.ref.toString(),
-            }))
-            const indexRecordBlobs =
-              blobValues.length > 0
-                ? actorStore.db.db
-                    .insertInto('record_blob')
-                    .values(blobValues)
-                    .onConflict((oc) => oc.doNothing())
-                    .execute()
-                : Promise.resolve()
-            await Promise.all([indexRecord, indexRecordBlobs])
+            await store.repo.blob.insertBlobs(uri.toString(), recordBlobs)
           }
-        },
-        { signal: controller.signal },
-      )
-      .catch((err) => controller.abort(err))
-  }
-  await recordQueue.onIdle()
-  controller.signal.throwIfAborted()
+        }
+      })
+    },
+  })
 }
 
 export const findBlobRefs = (val: LexValue, layer = 0): BlobRef[] => {

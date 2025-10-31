@@ -2,12 +2,20 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 
-export interface QueryParams {}
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.admin.sendEmail'
+
+export type QueryParams = {}
 
 export interface InputSchema {
   recipientDid: string
@@ -16,12 +24,10 @@ export interface InputSchema {
   senderDid: string
   /** Additional comment by the sender that won't be used in the email itself but helpful to provide more context for moderators/reviewers */
   comment?: string
-  [k: string]: unknown
 }
 
 export interface OutputSchema {
   sent: boolean
-  [k: string]: unknown
 }
 
 export interface CallOptions {

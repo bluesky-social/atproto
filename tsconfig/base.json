@@ -29,6 +29,7 @@
     "noErrorTruncation": true,
     "declaration": true,
     "declarationMap": true,
+    "inlineSources": true,
     "sourceMap": true,
     "jsx": "preserve",
     "module": "CommonJS",

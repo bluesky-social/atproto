@@ -1,4 +1,4 @@
-import { envInt, envStr, envBool, envList } from '@atproto/common'
+import { envBool, envInt, envList, envStr } from '@atproto/common'
 
 export const readEnv = (): ServerEnvironment => {
   return {
@@ -15,13 +15,33 @@ export const readEnv = (): ServerEnvironment => {
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
+    maxImportSize: envInt('PDS_MAX_REPO_IMPORT_SIZE'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
 
+    // hCaptcha
+    hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
+    hcaptchaSecretKey: envStr('PDS_HCAPTCHA_SECRET_KEY'),
+    hcaptchaTokenSalt: envStr('PDS_HCAPTCHA_TOKEN_SALT'),
+
+    // OAuth
+    trustedOAuthClients: envList('PDS_OAUTH_TRUSTED_CLIENTS'),
+
     // branding
-    brandColor: envStr('PDS_PRIMARY_COLOR'),
+    lightColor: envStr('PDS_LIGHT_COLOR'),
+    darkColor: envStr('PDS_DARK_COLOR'),
+    primaryColor: envStr('PDS_PRIMARY_COLOR'),
+    primaryColorContrast: envStr('PDS_PRIMARY_COLOR_CONTRAST'),
+    primaryColorHue: envInt('PDS_PRIMARY_COLOR_HUE'),
     errorColor: envStr('PDS_ERROR_COLOR'),
+    errorColorContrast: envStr('PDS_ERROR_COLOR_CONTRAST'),
+    errorColorHue: envInt('PDS_ERROR_COLOR_HUE'),
     warningColor: envStr('PDS_WARNING_COLOR'),
+    warningColorContrast: envStr('PDS_WARNING_COLOR_CONTRAST'),
+    warningColorHue: envInt('PDS_WARNING_COLOR_HUE'),
+    successColor: envStr('PDS_SUCCESS_COLOR'),
+    successColorContrast: envStr('PDS_SUCCESS_COLOR_CONTRAST'),
+    successColorHue: envInt('PDS_SUCCESS_COLOR_HUE'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -109,6 +129,7 @@ export const readEnv = (): ServerEnvironment => {
     dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
+    entrywayAdminToken: envStr('PDS_ENTRYWAY_ADMIN_TOKEN'),
 
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
@@ -147,13 +168,31 @@ export type ServerEnvironment = {
   termsOfServiceUrl?: string
   contactEmailAddress?: string
   acceptingImports?: boolean
+  maxImportSize?: number
   blobUploadLimit?: number
   devMode?: boolean
 
+  // OAuth
+  hcaptchaSiteKey?: string
+  hcaptchaSecretKey?: string
+  hcaptchaTokenSalt?: string
+  trustedOAuthClients?: string[]
+
   // branding
-  brandColor?: string
+  lightColor?: string
+  darkColor?: string
+  primaryColor?: string
+  primaryColorContrast?: string
+  primaryColorHue?: number
   errorColor?: string
+  errorColorContrast?: string
+  errorColorHue?: number
   warningColor?: string
+  warningColorContrast?: string
+  warningColorHue?: number
+  successColor?: string
+  successColorContrast?: string
+  successColorHue?: number
 
   // database
   dataDirectory?: string
@@ -239,6 +278,7 @@ export type ServerEnvironment = {
   dpopSecret?: string
   jwtSecret?: string
   adminPassword?: string
+  entrywayAdminToken?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string
@@ -248,7 +288,11 @@ export type ServerEnvironment = {
   disableSsrfProtection?: boolean
 
   // fetch
+  fetchForceLogging?: boolean
   fetchMaxResponseSize?: number
+
+  // lexicon resolver
+  lexiconDidAuthority?: string
 
   // proxy
   proxyAllowHTTP2?: boolean

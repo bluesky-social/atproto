@@ -1,14 +1,16 @@
-import fs from 'fs/promises'
-import { AtUri } from '@atproto/syntax'
-import { AtpAgent } from '@atproto/api'
-import { BlobRef } from '@atproto/lexicon'
+import assert from 'node:assert'
+import fs from 'node:fs/promises'
+import { AppBskyFeedPostRecord, AtpAgent } from '@atproto/api'
+import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
+import { BlobRef } from '@atproto/lexicon'
 import { BlobNotFoundError } from '@atproto/repo'
+import { AtUri } from '@atproto/syntax'
+import { AppContext } from '../src/context'
+import { ids, lexicons } from '../src/lexicon/lexicons'
+import { isMain as isImagesEmbed } from '../src/lexicon/types/app/bsky/embed/images'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { forSnapshot, paginateAll } from './_util'
-import AppContext from '../src/context'
-import { ids, lexicons } from '../src/lexicon/lexicons'
 
 describe('crud operations', () => {
   let network: TestNetworkNoAppView
@@ -156,9 +158,7 @@ describe('crud operations', () => {
   })
 
   it('attaches images to a post', async () => {
-    const file = await fs.readFile(
-      '../dev-env/src/seed/img/key-landscape-small.jpg',
-    )
+    const file = await fs.readFile('../dev-env/assets/key-landscape-small.jpg')
     const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/jpeg',
     })
@@ -186,7 +186,8 @@ describe('crud operations', () => {
       rkey: postUri.rkey,
       repo: aliceAgent.accountDid,
     })
-    const images = post.value.embed?.images as { image: BlobRef }[]
+    assert(isImagesEmbed(post.value.embed))
+    const images = post.value.embed.images
     expect(images.length).toEqual(1)
     expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
@@ -246,7 +247,9 @@ describe('crud operations', () => {
     })
 
     it('in forwards order', async () => {
-      const results = (results) => results.flatMap((res) => res.records)
+      const results = (
+        results: Awaited<ReturnType<AppBskyFeedPostRecord['list']>>[],
+      ) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
         const res = await agent.app.bsky.feed.post.list({
           repo: aliceAgent.accountDid,
@@ -270,7 +273,9 @@ describe('crud operations', () => {
     })
 
     it('in reverse order', async () => {
-      const results = (results) => results.flatMap((res) => res.records)
+      const results = (
+        results: Awaited<ReturnType<AppBskyFeedPostRecord['list']>>[],
+      ) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
         const res = await agent.app.bsky.feed.post.list({
           repo: aliceAgent.accountDid,
@@ -450,6 +455,18 @@ describe('crud operations', () => {
       })
     })
 
+    it('still works if repo is specified by handle', async () => {
+      await bobAgent.api.com.atproto.repo.putRecord({
+        repo: 'bob.test',
+        collection: ids.AppBskyGraphFollow,
+        rkey: TID.nextStr(),
+        record: {
+          subject: aliceAgent.accountDid,
+          createdAt: new Date().toISOString(),
+        },
+      })
+    })
+
     it('does not produce commit on no-op update', async () => {
       const { repo } = bobAgent.api.com.atproto
       const rootRes1 = await bobAgent.api.com.atproto.sync.getLatestCommit({
@@ -516,9 +533,7 @@ describe('crud operations', () => {
     // @TODO remove after migrating legacy blobs
     it('updates a legacy blob ref when updating profile', async () => {
       const { repo } = bobAgent.api.com.atproto
-      const file = await fs.readFile(
-        '../dev-env/src/seed/img/key-portrait-small.jpg',
-      )
+      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
       const uploadedRes = await repo.uploadBlob(file, {
         encoding: 'image/jpeg',
       })
@@ -612,7 +627,7 @@ describe('crud operations', () => {
         },
         rkey: '..',
       }),
-    ).rejects.toThrow('record key can not be "." or ".."')
+    ).rejects.toThrow('Input/rkey must be a valid Record Key')
   })
 
   it('validates the record on write', async () => {
@@ -771,7 +786,6 @@ describe('crud operations', () => {
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
-            action: 'create',
             collection: ids.AppBskyFeedPost,
             value: {
               $type: ids.AppBskyFeedPost,
@@ -781,14 +795,12 @@ describe('crud operations', () => {
           },
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#update`,
-            action: 'update',
             collection: 'com.example.record',
             rkey: new AtUri(existing1.data.uri).rkey,
             value: {},
           },
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#delete`,
-            action: 'delete',
             collection: 'com.example.record',
             rkey: new AtUri(existing2.data.uri).rkey,
           },
@@ -812,9 +824,7 @@ describe('crud operations', () => {
     })
 
     it('correctly associates images with unknown record types', async () => {
-      const file = await fs.readFile(
-        '../dev-env/src/seed/img/key-portrait-small.jpg',
-      )
+      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
       const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(
         file,
         {
@@ -834,22 +844,17 @@ describe('crud operations', () => {
       const record = await ctx.actorStore.read(aliceAgent.accountDid, (store) =>
         store.record.getRecord(new AtUri(res.data.uri), res.data.cid),
       )
-      expect(record?.value).toMatchObject({
+      assert(record)
+      expect(record.value).toMatchObject({
         $type: 'com.example.record',
         blah: 'thing',
       })
       const recordBlobs = await ctx.actorStore.read(
-        aliceAgent.accountDid,
-        (store) =>
-          store.db.db
-            .selectFrom('blob')
-            .innerJoin('record_blob', 'record_blob.blobCid', 'blob.cid')
-            .where('recordUri', '=', res.data.uri)
-            .selectAll()
-            .execute(),
+        aliceAgent.assertDid,
+        (store) => store.repo.blob.getBlobsForRecord(record.uri),
       )
       expect(recordBlobs.length).toBe(1)
-      expect(recordBlobs.at(0)?.cid).toBe(uploadedRes.data.blob.ref.toString())
+      expect(recordBlobs.at(0)).toBe(uploadedRes.data.blob.ref.toString())
     })
 
     it('enforces record type constraint even when unvalidated', async () => {
@@ -867,9 +872,7 @@ describe('crud operations', () => {
     })
 
     it('enforces blob ref format even when unvalidated', async () => {
-      const file = await fs.readFile(
-        '../dev-env/src/seed/img/key-portrait-small.jpg',
-      )
+      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
       const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(
         file,
         {
@@ -1157,7 +1160,6 @@ describe('crud operations', () => {
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
-            action: 'create',
             collection: ids.AppBskyFeedPost,
             value: { $type: ids.AppBskyFeedPost, ...postRecord() },
           },
@@ -1182,7 +1184,6 @@ describe('crud operations', () => {
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
-            action: 'create',
             collection: ids.AppBskyFeedPost,
             value: { $type: ids.AppBskyFeedPost, ...postRecord() },
           },
@@ -1206,7 +1207,7 @@ describe('crud operations', () => {
           record: {
             text: 'x',
             createdAt: new Date().toISOString(),
-            deepObject: createDeepObject(3000),
+            deepObject: createDeepObject(4000),
           },
         }),
         {

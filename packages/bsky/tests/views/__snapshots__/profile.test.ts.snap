@@ -4,6 +4,9 @@ exports[`pds profile views fetches multiple profiles 1`] = `
 Array [
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
@@ -43,6 +46,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "did": "user(2)",
             "handle": "carol.test",
             "labels": Array [],
@@ -59,6 +67,9 @@ Array [
   },
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
@@ -81,6 +92,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
@@ -116,6 +132,9 @@ Array [
   },
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
@@ -134,6 +153,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
@@ -169,6 +193,9 @@ Array [
   },
   Object {
     "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
       "chat": Object {
         "allowIncoming": "none",
       },
@@ -190,6 +217,11 @@ Array [
         "count": 1,
         "followers": Array [
           Object {
+            "associated": Object {
+              "activitySubscription": Object {
+                "allowSubscriptions": "followers",
+              },
+            },
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
@@ -223,12 +255,69 @@ Array [
       "muted": false,
     },
   },
+  Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+      "starterPacks": 0,
+    },
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "description": "It's me, eve",
+    "did": "user(6)",
+    "displayName": "eve",
+    "followersCount": 0,
+    "followsCount": 0,
+    "handle": "eve.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "postsCount": 0,
+    "pronouns": "They/them",
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
+  },
+  Object {
+    "associated": Object {
+      "activitySubscription": Object {
+        "allowSubscriptions": "followers",
+      },
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+      "starterPacks": 0,
+    },
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "description": "It's me, frank",
+    "did": "user(8)",
+    "displayName": "frank",
+    "followersCount": 0,
+    "followsCount": 0,
+    "handle": "frank.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "postsCount": 0,
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
+    "website": "https://frank.example.com",
+  },
 ]
 `;
 
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -268,6 +357,11 @@ Object {
       "count": 1,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
@@ -287,6 +381,9 @@ Object {
 exports[`pds profile views fetches other's profile, without a follow 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "chat": Object {
       "allowIncoming": "none",
     },
@@ -308,6 +405,11 @@ Object {
       "count": 1,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(1)",
@@ -346,6 +448,9 @@ Object {
 exports[`pds profile views fetches own profile 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -383,6 +488,11 @@ Object {
       "count": 2,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
@@ -397,6 +507,11 @@ Object {
           },
         },
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(4)",
           "handle": "carol.test",
           "labels": Array [],
@@ -417,6 +532,9 @@ Object {
 exports[`pds profile views presents avatars & banners 1`] = `
 Object {
   "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -439,6 +557,11 @@ Object {
       "count": 2,
       "followers": Array [
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
@@ -453,6 +576,11 @@ Object {
           },
         },
         Object {
+          "associated": Object {
+            "activitySubscription": Object {
+              "allowSubscriptions": "followers",
+            },
+          },
           "did": "user(4)",
           "handle": "carol.test",
           "labels": Array [],
@@ -467,5 +595,65 @@ Object {
     },
     "muted": false,
   },
+}
+`;
+
+exports[`pds profile views status returns active status when within the duration 1`] = `
+Object {
+  "embed": Object {
+    "$type": "app.bsky.embed.external#view",
+    "external": Object {
+      "description": "testLink",
+      "title": "TestImage",
+      "uri": "https://example.com",
+    },
+  },
+  "expiresAt": "1970-01-01T00:00:00.000Z",
+  "isActive": true,
+  "record": Object {
+    "$type": "app.bsky.actor.status",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "durationMinutes": 10,
+    "embed": Object {
+      "$type": "app.bsky.embed.external",
+      "external": Object {
+        "description": "testLink",
+        "title": "TestImage",
+        "uri": "https://example.com",
+      },
+    },
+    "status": "app.bsky.actor.status#live",
+  },
+  "status": "app.bsky.actor.status#live",
+}
+`;
+
+exports[`pds profile views status when outside the duration returns inactive status 1`] = `
+Object {
+  "embed": Object {
+    "$type": "app.bsky.embed.external#view",
+    "external": Object {
+      "description": "testLink",
+      "title": "TestImage",
+      "uri": "https://example.com",
+    },
+  },
+  "expiresAt": "2021-01-01T01:10:00.000Z",
+  "isActive": false,
+  "record": Object {
+    "$type": "app.bsky.actor.status",
+    "createdAt": "2021-01-01T01:00:00.000Z",
+    "durationMinutes": 10,
+    "embed": Object {
+      "$type": "app.bsky.embed.external",
+      "external": Object {
+        "description": "testLink",
+        "title": "TestImage",
+        "uri": "https://example.com",
+      },
+    },
+    "status": "app.bsky.actor.status#live",
+  },
+  "status": "app.bsky.actor.status#live",
 }
 `;

@@ -1,464 +1,248 @@
-import {
-  ResponseType,
-  ResponseTypeNames,
-  ResponseTypeStrings,
-  XRPCError as XRPCClientError,
-} from '@atproto/xrpc'
-import express from 'express'
-import { IncomingMessage } from 'http'
-import { isHttpError } from 'http-errors'
-import { Readable } from 'stream'
-import zod from 'zod'
+import { IncomingMessage } from 'node:http'
+import { Readable } from 'node:stream'
+import { NextFunction, Request, Response } from 'express'
+import { z } from 'zod'
+import { ErrorResult, XRPCError } from './errors'
+import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
+
+export type Awaitable<T> = T | Promise<T>
 
 export type CatchallHandler = (
-  req: express.Request,
-  _res: express.Response,
-  next: express.NextFunction,
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => unknown
 
 export type Options = {
   validateResponse?: boolean
   catchall?: CatchallHandler
-  payload?: {
-    jsonLimit?: number
-    blobLimit?: number
-    textLimit?: number
-  }
+  payload?: RouteOptions
   rateLimits?: {
-    creator: RateLimiterCreator
-    global?: ServerRateLimitDescription[]
-    shared?: ServerRateLimitDescription[]
+    creator: RateLimiterCreator<HandlerContext>
+    global?: ServerRateLimitDescription<HandlerContext>[]
+    shared?: ServerRateLimitDescription<HandlerContext>[]
+    bypass?: (ctx: HandlerContext) => boolean
   }
+  /**
+   * By default, errors are converted to {@link XRPCError} using
+   * {@link XRPCError.fromError} before being rendered. If method handlers throw
+   * error objects that are not properly rendered in the HTTP response, this
+   * function can be used to properly convert them to {@link XRPCError}. The
+   * provided function will typically fallback to the default error conversion
+   * (`return XRPCError.fromError(err)`) if the error is not recognized.
+   *
+   * @note This function should not throw errors.
+   */
+  errorParser?: (err: unknown) => XRPCError
 }
 
-export type UndecodedParams = (typeof express.request)['query']
+export type UndecodedParams = Request['query']
 
 export type Primitive = string | number | boolean
-export type Params = Record<string, Primitive | Primitive[] | undefined>
+export type Params = { [P in string]?: undefined | Primitive | Primitive[] }
 
-export const handlerInput = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
-})
-export type HandlerInput = zod.infer<typeof handlerInput>
+export type HandlerInput = {
+  encoding: string
+  body: unknown
+}
 
-export const handlerAuth = zod.object({
-  credentials: zod.any(),
-  artifacts: zod.any(),
-})
-export type HandlerAuth = zod.infer<typeof handlerAuth>
+export type AuthResult = {
+  credentials: unknown
+  artifacts?: unknown
+}
 
-export const headersSchema = zod.record(zod.string())
+export const headersSchema = z.record(z.string())
 
-export const handlerSuccess = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
-  headers: headersSchema.optional(),
-})
-export type HandlerSuccess = zod.infer<typeof handlerSuccess>
+export type Headers = z.infer<typeof headersSchema>
 
-export const handlerPipeThroughBuffer = zod.object({
-  encoding: zod.string(),
-  buffer: zod.instanceof(Buffer),
+export const handlerSuccess = z.object({
+  encoding: z.string(),
+  body: z.any(),
   headers: headersSchema.optional(),
 })
 
-export type HandlerPipeThroughBuffer = zod.infer<
-  typeof handlerPipeThroughBuffer
->
+export type HandlerSuccess = z.infer<typeof handlerSuccess>
 
-export const handlerPipeThroughStream = zod.object({
-  encoding: zod.string(),
-  stream: zod.instanceof(Readable),
+export const handlerPipeThroughBuffer = z.object({
+  encoding: z.string(),
+  buffer: z.instanceof(Buffer),
   headers: headersSchema.optional(),
 })
 
-export type HandlerPipeThroughStream = zod.infer<
-  typeof handlerPipeThroughStream
->
+export type HandlerPipeThroughBuffer = z.infer<typeof handlerPipeThroughBuffer>
 
-export const handlerPipeThrough = zod.union([
+export const handlerPipeThroughStream = z.object({
+  encoding: z.string(),
+  stream: z.instanceof(Readable),
+  headers: headersSchema.optional(),
+})
+
+export type HandlerPipeThroughStream = z.infer<typeof handlerPipeThroughStream>
+
+export const handlerPipeThrough = z.union([
   handlerPipeThroughBuffer,
   handlerPipeThroughStream,
 ])
 
-export type HandlerPipeThrough = zod.infer<typeof handlerPipeThrough>
+export type HandlerPipeThrough = z.infer<typeof handlerPipeThrough>
 
-export const handlerError = zod.object({
-  status: zod.number(),
-  error: zod.string().optional(),
-  message: zod.string().optional(),
-})
-export type HandlerError = zod.infer<typeof handlerError>
+export type Auth = void | AuthResult
+export type Input = void | HandlerInput
+export type Output = void | HandlerSuccess | ErrorResult
 
-export type HandlerOutput = HandlerSuccess | HandlerPipeThrough | HandlerError
+export type AuthVerifier<C, A extends AuthResult = AuthResult> =
+  | ((ctx: C) => Awaitable<A | ErrorResult>)
+  | ((ctx: C) => Awaitable<A>)
 
-export type XRPCReqContext = {
-  auth: HandlerAuth | undefined
-  params: Params
-  input: HandlerInput | undefined
-  req: express.Request
-  res: express.Response
+export type MethodAuthContext<P extends Params = Params> = {
+  params: P
+  req: Request
+  res: Response
 }
 
-export type XRPCHandler = (
-  ctx: XRPCReqContext,
-) => Promise<HandlerOutput> | HandlerOutput | undefined
+export type MethodAuthVerifier<
+  A extends AuthResult = AuthResult,
+  P extends Params = Params,
+> = AuthVerifier<MethodAuthContext<P>, A>
 
-export type XRPCStreamHandler = (ctx: {
-  auth: HandlerAuth | undefined
-  params: Params
-  req: IncomingMessage
-  signal: AbortSignal
-}) => AsyncIterable<unknown>
-
-export type AuthOutput = HandlerAuth | HandlerError
-
-export interface AuthVerifierContext {
-  req: express.Request
-  res: express.Response
+export type HandlerContext<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+> = MethodAuthContext<P> & {
+  auth: A
+  input: I
+  resetRouteRateLimits: () => Promise<void>
 }
 
-export type AuthVerifier = (
-  ctx: AuthVerifierContext,
-) => Promise<AuthOutput> | AuthOutput
+export type MethodHandler<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+  O extends Output = Output,
+> = (ctx: HandlerContext<A, P, I>) => Awaitable<O | HandlerPipeThrough>
 
-export interface StreamAuthVerifierContext {
-  req: IncomingMessage
-}
-
-export type StreamAuthVerifier = (
-  ctx: StreamAuthVerifierContext,
-) => Promise<AuthOutput> | AuthOutput
-
-export type CalcKeyFn = (ctx: XRPCReqContext) => string | null
-export type CalcPointsFn = (ctx: XRPCReqContext) => number
-
-export interface RateLimiterI {
-  consume: RateLimiterConsume
-}
-
-export type RateLimiterConsume = (
-  ctx: XRPCReqContext,
-  opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-) => Promise<RateLimiterStatus | RateLimitExceededError | null>
-
-export type RateLimiterCreator = (opts: {
+export type RateLimiterCreator<T extends HandlerContext = HandlerContext> = <
+  C extends T = T,
+>(opts: {
   keyPrefix: string
   durationMs: number
   points: number
-  calcKey?: CalcKeyFn
-  calcPoints?: CalcPointsFn
-}) => RateLimiterI
+  calcKey: CalcKeyFn<C>
+  calcPoints: CalcPointsFn<C>
+  failClosed?: boolean
+}) => RateLimiterI<C>
 
-export type ServerRateLimitDescription = {
+export type ServerRateLimitDescription<
+  C extends HandlerContext = HandlerContext,
+> = {
   name: string
   durationMs: number
   points: number
-  calcKey?: CalcKeyFn
-  calcPoints?: CalcPointsFn
+  calcKey?: CalcKeyFn<C>
+  calcPoints?: CalcPointsFn<C>
+  failClosed?: boolean
 }
 
-export type SharedRateLimitOpts = {
+export type SharedRateLimitOpts<C extends HandlerContext = HandlerContext> = {
   name: string
-  calcKey?: CalcKeyFn
-  calcPoints?: CalcPointsFn
+  calcKey?: CalcKeyFn<C>
+  calcPoints?: CalcPointsFn<C>
 }
 
-export type RouteRateLimitOpts = {
+export type RouteRateLimitOpts<C extends HandlerContext = HandlerContext> = {
   durationMs: number
   points: number
-  calcKey?: CalcKeyFn
-  calcPoints?: CalcPointsFn
+  calcKey?: CalcKeyFn<C>
+  calcPoints?: CalcPointsFn<C>
 }
 
-export type HandlerRateLimitOpts = SharedRateLimitOpts | RouteRateLimitOpts
+export type RateLimitOpts<C extends HandlerContext = HandlerContext> =
+  | SharedRateLimitOpts<C>
+  | RouteRateLimitOpts<C>
 
-export const isShared = (
-  opts: HandlerRateLimitOpts,
-): opts is SharedRateLimitOpts => {
+export function isSharedRateLimitOpts<
+  C extends HandlerContext = HandlerContext,
+>(opts: RateLimitOpts<C>): opts is SharedRateLimitOpts<C> {
   return typeof opts['name'] === 'string'
 }
 
-export type RateLimiterStatus = {
-  limit: number
-  duration: number
-  remainingPoints: number
-  msBeforeNext: number
-  consumedPoints: number
-  isFirstInDuration: boolean
-}
-
-export type RouteOpts = {
+export type RouteOptions = {
   blobLimit?: number
+  jsonLimit?: number
+  textLimit?: number
 }
 
-export type XRPCHandlerConfig = {
-  opts?: RouteOpts
-  rateLimit?: HandlerRateLimitOpts | HandlerRateLimitOpts[]
-  auth?: AuthVerifier
-  handler: XRPCHandler
+export type MethodConfig<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+  O extends Output = Output,
+> = {
+  handler: MethodHandler<A, P, I, O>
+  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P>
+  opts?: RouteOptions
+  rateLimit?:
+    | RateLimitOpts<HandlerContext<A, P, I>>
+    | RateLimitOpts<HandlerContext<A, P, I>>[]
 }
 
-export type XRPCStreamHandlerConfig = {
-  auth?: StreamAuthVerifier
-  handler: XRPCStreamHandler
+export type MethodConfigOrHandler<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+  O extends Output = Output,
+> = MethodHandler<A, P, I, O> | MethodConfig<A, P, I, O>
+
+export type StreamAuthContext<P extends Params = Params> = {
+  params: P
+  req: IncomingMessage
 }
 
-export class XRPCError extends Error {
-  constructor(
-    public type: ResponseType,
-    public errorMessage?: string,
-    public customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(errorMessage, options)
-  }
+export type StreamAuthVerifier<
+  A extends AuthResult = AuthResult,
+  P extends Params = Params,
+> = AuthVerifier<StreamAuthContext<P>, A>
 
-  get payload() {
-    return {
-      error: this.customErrorName ?? this.typeName,
-      message:
-        this.type === ResponseType.InternalServerError
-          ? this.typeStr // Do not respond with error details for 500s
-          : this.errorMessage || this.typeStr,
-    }
-  }
-
-  get typeName(): string | undefined {
-    return ResponseTypeNames[this.type]
-  }
-
-  get typeStr(): string | undefined {
-    return ResponseTypeStrings[this.type]
-  }
-
-  static fromError(cause: unknown): XRPCError {
-    if (cause instanceof XRPCError) {
-      return cause
-    }
-
-    if (cause instanceof XRPCClientError) {
-      return new XRPCError(cause.status, cause.message, cause.error, { cause })
-    }
-
-    if (isHttpError(cause)) {
-      return new XRPCError(cause.status, cause.message, cause.name, { cause })
-    }
-
-    if (isHandlerError(cause)) {
-      return this.fromHandlerError(cause)
-    }
-
-    if (cause instanceof Error) {
-      return new InternalServerError(cause.message, undefined, { cause })
-    }
-
-    return new InternalServerError(
-      'Unexpected internal server error',
-      undefined,
-      { cause },
-    )
-  }
-
-  static fromHandlerError(err: HandlerError): XRPCError {
-    return new XRPCError(err.status, err.message, err.error, { cause: err })
-  }
+export type StreamContext<
+  A extends Auth = Auth,
+  P extends Params = Params,
+> = StreamAuthContext<P> & {
+  auth: A
+  signal: AbortSignal
 }
 
-export function isHandlerError(v: unknown): v is HandlerError {
-  return (
-    !!v &&
-    typeof v === 'object' &&
-    typeof v['status'] === 'number' &&
-    (v['error'] === undefined || typeof v['error'] === 'string') &&
-    (v['message'] === undefined || typeof v['message'] === 'string')
-  )
+export type StreamHandler<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  O = unknown,
+> = (ctx: StreamContext<A, P>) => AsyncIterable<O>
+
+export type StreamConfig<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  O = unknown,
+> = {
+  auth?: StreamAuthVerifier<Extract<A, AuthResult>, P>
+  handler: StreamHandler<A, P, O>
 }
+
+export type StreamConfigOrHandler<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  O = unknown,
+> = StreamHandler<A, P, O> | StreamConfig<A, P, O>
 
 export function isHandlerPipeThroughBuffer(
-  v: HandlerOutput,
-): v is HandlerPipeThroughBuffer {
-  // We only need to discriminate between possible HandlerOutput values
-  return v['buffer'] !== undefined
+  output: Output,
+): output is HandlerPipeThroughBuffer {
+  // We only need to discriminate between possible Output values
+  return output != null && 'buffer' in output && output['buffer'] !== undefined
 }
 
 export function isHandlerPipeThroughStream(
-  v: HandlerOutput,
-): v is HandlerPipeThroughStream {
-  // We only need to discriminate between possible HandlerOutput values
-  return v['stream'] !== undefined
-}
-
-export class InvalidRequestError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(ResponseType.InvalidRequest, errorMessage, customErrorName, options)
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.InvalidRequest
-    )
-  }
-}
-
-export class AuthRequiredError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(ResponseType.AuthRequired, errorMessage, customErrorName, options)
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.AuthRequired
-    )
-  }
-}
-
-export class ForbiddenError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(ResponseType.Forbidden, errorMessage, customErrorName, options)
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError && instance.type === ResponseType.Forbidden
-    )
-  }
-}
-
-export class RateLimitExceededError extends XRPCError {
-  constructor(
-    public status: RateLimiterStatus,
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(
-      ResponseType.RateLimitExceeded,
-      errorMessage,
-      customErrorName,
-      options,
-    )
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.RateLimitExceeded
-    )
-  }
-}
-
-export class InternalServerError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(
-      ResponseType.InternalServerError,
-      errorMessage,
-      customErrorName,
-      options,
-    )
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.InternalServerError
-    )
-  }
-}
-
-export class UpstreamFailureError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(ResponseType.UpstreamFailure, errorMessage, customErrorName, options)
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.UpstreamFailure
-    )
-  }
-}
-
-export class NotEnoughResourcesError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(
-      ResponseType.NotEnoughResources,
-      errorMessage,
-      customErrorName,
-      options,
-    )
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.NotEnoughResources
-    )
-  }
-}
-
-export class UpstreamTimeoutError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(ResponseType.UpstreamTimeout, errorMessage, customErrorName, options)
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.UpstreamTimeout
-    )
-  }
-}
-
-export class MethodNotImplementedError extends XRPCError {
-  constructor(
-    errorMessage?: string,
-    customErrorName?: string,
-    options?: ErrorOptions,
-  ) {
-    super(
-      ResponseType.MethodNotImplemented,
-      errorMessage,
-      customErrorName,
-      options,
-    )
-  }
-
-  [Symbol.hasInstance](instance: unknown): boolean {
-    return (
-      instance instanceof XRPCError &&
-      instance.type === ResponseType.MethodNotImplemented
-    )
-  }
+  output: Output,
+): output is HandlerPipeThroughStream {
+  // We only need to discriminate between possible Output values
+  return output != null && 'stream' in output && output['stream'] !== undefined
 }

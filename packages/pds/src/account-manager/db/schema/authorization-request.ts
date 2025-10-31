@@ -1,11 +1,14 @@
+import { Selectable } from 'kysely'
 import {
+  ClientAuth,
+  ClientAuthLegacy,
   Code,
   DeviceId,
+  OAuthAuthorizationRequestParameters,
   OAuthClientId,
   RequestId,
 } from '@atproto/oauth-provider'
-import { Selectable } from 'kysely'
-import { DateISO, JsonObject } from '../../../db'
+import { DateISO, JsonEncoded } from '../../../db'
 
 export interface AuthorizationRequest {
   id: RequestId
@@ -13,8 +16,8 @@ export interface AuthorizationRequest {
   deviceId: DeviceId | null
 
   clientId: OAuthClientId
-  clientAuth: JsonObject
-  parameters: JsonObject
+  clientAuth: JsonEncoded<null | ClientAuth | ClientAuthLegacy>
+  parameters: JsonEncoded<OAuthAuthorizationRequestParameters>
   expiresAt: DateISO
   code: Code | null
 }

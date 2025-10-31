@@ -1,23 +1,28 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
-import stream from 'stream'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import stream from 'node:stream'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.sync.getBlob'
+
+export type QueryParams = {
   /** The DID of the account. */
   did: string
   /** The CID of the blob to fetch */
   cid: string
 }
-
 export type InputSchema = undefined
-export type HandlerInput = undefined
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: '*/*'
@@ -36,14 +41,4 @@ export interface HandlerError {
     | 'RepoDeactivated'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput
+export type HandlerOutput = HandlerError | HandlerSuccess

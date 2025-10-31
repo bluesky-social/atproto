@@ -1,8 +1,8 @@
-import { keyBy } from '@atproto/common'
-import { AtUri } from '@atproto/syntax'
 import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
+import { keyBy } from '@atproto/common'
+import { AtUri } from '@atproto/syntax'
 import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../../proto/bsky_connect'
 import { PostRecordMeta, Record } from '../../../proto/bsky_pb'
@@ -23,7 +23,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getPostgateRecords: getRecords(db, ids.AppBskyFeedPostgate),
   getLabelerRecords: getRecords(db, ids.AppBskyLabelerService),
   getActorChatDeclarationRecords: getRecords(db, ids.ChatBskyActorDeclaration),
+  getNotificationDeclarationRecords: getRecords(
+    db,
+    ids.AppBskyNotificationDeclaration,
+  ),
   getStarterPackRecords: getRecords(db, ids.AppBskyGraphStarterpack),
+  getVerificationRecords: getRecords(db, ids.AppBskyGraphVerification),
+  getStatusRecords: getRecords(db, ids.AppBskyActorStatus),
 })
 
 export const getRecords =
@@ -41,7 +47,7 @@ export const getRecords =
       : []
     const byUri = keyBy(res, 'uri')
     const records: Record[] = req.uris.map((uri) => {
-      const row = byUri[uri]
+      const row = byUri.get(uri)
       const json = row ? row.json : JSON.stringify(null)
       const createdAtRaw = new Date(JSON.parse(json)?.['createdAt'])
       const createdAt = !isNaN(createdAtRaw.getTime())
@@ -59,6 +65,7 @@ export const getRecords =
         sortedAt: compositeTime(createdAt, indexedAt),
         takenDown: !!row?.takedownRef,
         takedownRef: row?.takedownRef ?? undefined,
+        tags: row?.tags ?? undefined,
       })
     })
     return { records }
@@ -88,10 +95,10 @@ export const getPostRecords = (db: Database) => {
     const byKey = keyBy(details, 'uri')
     const meta = req.uris.map((uri) => {
       return new PostRecordMeta({
-        violatesThreadGate: !!byKey[uri]?.violatesThreadGate,
-        violatesEmbeddingRules: !!byKey[uri]?.violatesEmbeddingRules,
-        hasThreadGate: !!byKey[uri]?.hasThreadGate,
-        hasPostGate: !!byKey[uri]?.hasPostGate,
+        violatesThreadGate: !!byKey.get(uri)?.violatesThreadGate,
+        violatesEmbeddingRules: !!byKey.get(uri)?.violatesEmbeddingRules,
+        hasThreadGate: !!byKey.get(uri)?.hasThreadGate,
+        hasPostGate: !!byKey.get(uri)?.hasPostGate,
       })
     })
     return { records, meta }

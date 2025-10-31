@@ -1,5 +1,7 @@
-import { DatabaseSchema } from './schema.js'
+import 'core-js/modules/esnext.symbol.dispose'
+
 import { DBTransaction } from './db-transaction.js'
+import { DatabaseSchema } from './schema.js'
 
 export class DB<Schema extends DatabaseSchema> implements Disposable {
   static async open<Schema extends DatabaseSchema = DatabaseSchema>(

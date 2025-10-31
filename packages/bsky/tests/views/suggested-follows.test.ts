@@ -1,5 +1,5 @@
-import { AtpAgent, AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
+import { AtUri, AtpAgent } from '@atproto/api'
+import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('suggested follows', () => {

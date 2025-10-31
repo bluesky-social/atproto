@@ -1,10 +1,9 @@
 import { z } from 'zod'
-
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
 import { webUriSchema } from './uri.js'
 
 /**
- * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#name-protected-resource-metadata-r}
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9728.html#section-3.2}
  */
 export const oauthProtectedResourceMetadataSchema = z.object({
   /**

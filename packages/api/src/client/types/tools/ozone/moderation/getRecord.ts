@@ -2,17 +2,24 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneModerationDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ToolsOzoneModerationDefs from './defs.js'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.getRecord'
+
+export type QueryParams = {
   uri: string
   cid?: string
 }
-
 export type InputSchema = undefined
 export type OutputSchema = ToolsOzoneModerationDefs.RecordViewDetail
 

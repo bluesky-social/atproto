@@ -2,25 +2,31 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneModerationDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ToolsOzoneModerationDefs from './defs.js'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.moderation.getRepos'
+
+export type QueryParams = {
   dids: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   repos: (
-    | ToolsOzoneModerationDefs.RepoViewDetail
-    | ToolsOzoneModerationDefs.RepoViewNotFound
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ToolsOzoneModerationDefs.RepoViewDetail>
+    | $Typed<ToolsOzoneModerationDefs.RepoViewNotFound>
+    | { $type: string }
   )[]
-  [k: string]: unknown
 }
 
 export interface CallOptions {

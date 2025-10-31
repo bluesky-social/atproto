@@ -2,22 +2,28 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 
-export interface QueryParams {
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'chat.bsky.moderation.getActorMetadata'
+
+export type QueryParams = {
   actor: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   day: Metadata
   month: Metadata
   all: Metadata
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -36,21 +42,19 @@ export function toKnownErr(e: any) {
 }
 
 export interface Metadata {
+  $type?: 'chat.bsky.moderation.getActorMetadata#metadata'
   messagesSent: number
   messagesReceived: number
   convos: number
   convosStarted: number
-  [k: string]: unknown
 }
 
-export function isMetadata(v: unknown): v is Metadata {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.moderation.getActorMetadata#metadata'
-  )
+const hashMetadata = 'metadata'
+
+export function isMetadata<V>(v: V) {
+  return is$typed(v, id, hashMetadata)
 }
 
-export function validateMetadata(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.moderation.getActorMetadata#metadata', v)
+export function validateMetadata<V>(v: V) {
+  return validate<Metadata & V>(v, id, hashMetadata)
 }

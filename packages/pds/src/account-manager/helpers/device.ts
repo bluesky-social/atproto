@@ -1,9 +1,11 @@
-import { DeviceId, DeviceData } from '@atproto/oauth-provider'
-import { AccountDb, Device } from '../db'
-import { fromDateISO, toDateISO } from '../../db'
 import { Selectable } from 'kysely'
+import { DeviceData, DeviceId } from '@atproto/oauth-provider'
+import { fromDateISO, toDateISO } from '../../db'
+import { AccountDb, Device } from '../db'
 
-export const rowToDeviceData = (row: Selectable<Device>): DeviceData => ({
+export const rowToDeviceData = (
+  row: Omit<Selectable<Device>, 'id'>,
+): DeviceData => ({
   sessionId: row.sessionId,
   userAgent: row.userAgent,
   ipAddress: row.ipAddress,

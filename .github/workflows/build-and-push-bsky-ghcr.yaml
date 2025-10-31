@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - divy/etcd-dp-host-list
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
@@ -14,7 +15,7 @@ env:
 jobs:
   bsky-container-ghcr:
     if: github.repository == 'bluesky-social/atproto'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write

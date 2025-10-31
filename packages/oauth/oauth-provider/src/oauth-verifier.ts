@@ -1,3 +1,4 @@
+import type { Redis, RedisOptions } from 'ioredis'
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import {
   OAuthAccessToken,
@@ -5,86 +6,74 @@ import {
   OAuthTokenType,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import type { Redis, RedisOptions } from 'ioredis'
-
-import { AccessTokenType } from './access-token/access-token-type.js'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
+import { DpopProof } from './dpop/dpop-proof.js'
+import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidTokenError } from './errors/invalid-token-error.js'
 import { UseDpopNonceError } from './errors/use-dpop-nonce-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { parseAuthorizationHeader } from './lib/util/authorization-header.js'
-import { Override } from './lib/util/type.js'
+import { includedIn } from './lib/util/function.js'
+import { OAuthHooks } from './oauth-hooks.js'
 import { ReplayManager } from './replay/replay-manager.js'
 import { ReplayStoreMemory } from './replay/replay-store-memory.js'
 import { ReplayStoreRedis } from './replay/replay-store-redis.js'
 import { ReplayStore } from './replay/replay-store.js'
+import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { Signer } from './signer/signer.js'
-import {
-  VerifyTokenClaimsOptions,
-  VerifyTokenClaimsResult,
-  verifyTokenClaims,
-} from './token/verify-token-claims.js'
 
-export type OAuthVerifierOptions = Override<
-  DpopManagerOptions,
-  {
-    /**
-     * The "issuer" identifier of the OAuth provider, this is the base URL of the
-     * OAuth provider.
-     */
-    issuer: URL | string
+export type DecodeTokenHook = OAuthHooks['onDecodeToken']
 
-    /**
-     * The keyset used to sign access tokens.
-     */
-    keyset: Keyset | Iterable<Key | undefined | null | false>
+export type OAuthVerifierOptions = DpopManagerOptions & {
+  /**
+   * The "issuer" identifier of the OAuth provider, this is the base URL of the
+   * OAuth provider.
+   */
+  issuer: URL | string
 
-    /**
-     * If set to {@link AccessTokenType.jwt}, the provider will use JWTs for
-     * access tokens. If set to {@link AccessTokenType.id}, the provider will
-     * use tokenId as access tokens. If set to {@link AccessTokenType.auto},
-     * JWTs will only be used if the audience is different from the issuer.
-     * Defaults to {@link AccessTokenType.jwt}.
-     *
-     * Here is a comparison of the two types:
-     *
-     * - pro id: less CPU intensive (no crypto operations)
-     * - pro id: less bandwidth (shorter tokens than jwt)
-     * - pro id: token data is in sync with database (e.g. revocation)
-     * - pro jwt: stateless: no I/O needed (no db lookups through token store)
-     * - pro jwt: stateless: allows Resource Server to be on a different
-     *   host/server
-     */
-    accessTokenType?: AccessTokenType
+  /**
+   * The keyset used to sign access tokens.
+   */
+  keyset: Keyset | Iterable<Key | undefined | null | false>
 
-    /**
-     * A redis instance to use for replay protection. If not provided, replay
-     * protection will use memory storage.
-     */
-    redis?: Redis | RedisOptions | string
+  /**
+   * A redis instance to use for replay protection. If not provided, replay
+   * protection will use memory storage.
+   */
+  redis?: Redis | RedisOptions | string
 
-    replayStore?: ReplayStore
-  }
->
+  replayStore?: ReplayStore
 
-export {
-  AccessTokenType,
-  DpopNonce,
-  Keyset,
-  type ReplayStore,
-  type VerifyTokenClaimsOptions,
+  onDecodeToken?: DecodeTokenHook
+}
+
+export type VerifyTokenPayloadOptions = {
+  /** One of these audience must be included in the token audience(s) */
+  audience?: [string, ...string[]]
+  /** One of these scope must be included in the token scope(s) */
+  scope?: [string, ...string[]]
+}
+
+export { DpopNonce, Key, Keyset }
+export type {
+  AccessTokenPayload,
+  DpopProof,
+  OAuthTokenType,
+  RedisOptions,
+  ReplayStore,
 }
 
 export class OAuthVerifier {
+  private readonly onDecodeToken?: DecodeTokenHook
+
   public readonly issuer: OAuthIssuerIdentifier
   public readonly keyset: Keyset
 
-  protected readonly accessTokenType: AccessTokenType
-  protected readonly dpopManager: DpopManager
-  protected readonly replayManager: ReplayManager
-  protected readonly signer: Signer
+  public readonly dpopManager: DpopManager
+  public readonly replayManager: ReplayManager
+  public readonly signer: Signer
 
   constructor({
     redis,
@@ -93,14 +82,16 @@ export class OAuthVerifier {
     replayStore = redis != null
       ? new ReplayStoreRedis({ redis })
       : new ReplayStoreMemory(),
-    accessTokenType = AccessTokenType.jwt,
+    onDecodeToken,
 
-    ...dpopMgrOptions
+    ...rest
   }: OAuthVerifierOptions) {
+    const dpopMgrOptions: DpopManagerOptions = rest
+
     const issuerParsed = oauthIssuerIdentifierSchema.parse(issuer)
     const issuerUrl = new URL(issuerParsed)
 
-    // TODO (?) support issuer with path
+    // @TODO (?) support issuer with path
     if (issuerUrl.pathname !== '/') {
       throw new TypeError(
         `"issuer" must be an URL with no path, search or hash (${issuerUrl})`,
@@ -110,10 +101,11 @@ export class OAuthVerifier {
     this.issuer = issuerParsed
     this.keyset = keyset instanceof Keyset ? keyset : new Keyset(keyset)
 
-    this.accessTokenType = accessTokenType
     this.dpopManager = new DpopManager(dpopMgrOptions)
     this.replayManager = new ReplayManager(replayStore)
     this.signer = new Signer(this.issuer, this.keyset)
+
+    this.onDecodeToken = onDecodeToken
   }
 
   public nextDpopNonce() {
@@ -121,49 +113,34 @@ export class OAuthVerifier {
   }
 
   public async checkDpopProof(
-    proof: unknown,
-    htm: string,
-    htu: string | URL,
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    httpHeaders: Record<string, undefined | string | string[]>,
     accessToken?: string,
-  ): Promise<string | null> {
-    if (proof === undefined) return null
-
-    const { payload, jkt } = await this.dpopManager.checkProof(
-      proof,
-      htm,
-      htu,
+  ): Promise<null | DpopProof> {
+    const dpopProof = await this.dpopManager.checkProof(
+      httpMethod,
+      httpUrl,
+      httpHeaders,
       accessToken,
     )
 
-    const unique = await this.replayManager.uniqueDpop(payload.jti)
-    if (!unique) throw new InvalidDpopProofError('DPoP proof jti is not unique')
-
-    return jkt
-  }
-
-  protected assertTokenTypeAllowed(
-    tokenType: OAuthTokenType,
-    accessTokenType: AccessTokenType,
-  ) {
-    if (
-      this.accessTokenType !== AccessTokenType.auto &&
-      this.accessTokenType !== accessTokenType
-    ) {
-      throw new InvalidTokenError(tokenType, `Invalid token type`)
+    if (dpopProof) {
+      const unique = await this.replayManager.uniqueDpop(dpopProof.jti)
+      if (!unique) throw new InvalidDpopProofError('DPoP proof replayed')
     }
+
+    return dpopProof
   }
 
-  protected async authenticateToken(
+  protected async decodeToken(
     tokenType: OAuthTokenType,
     token: OAuthAccessToken,
-    dpopJkt: string | null,
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
+    dpopProof: null | DpopProof,
+  ): Promise<AccessTokenPayload> {
     if (!isSignedJwt(token)) {
       throw new InvalidTokenError(tokenType, `Malformed token`)
     }
-
-    this.assertTokenTypeAllowed(tokenType, AccessTokenType.jwt)
 
     const { payload } = await this.signer
       .verifyAccessToken(token)
@@ -171,49 +148,113 @@ export class OAuthVerifier {
         throw InvalidTokenError.from(err, tokenType)
       })
 
-    return verifyTokenClaims(
-      token,
-      payload.jti,
-      tokenType,
-      dpopJkt,
-      payload,
-      verifyOptions,
-    )
-  }
+    if (payload.cnf?.jkt) {
+      // An access token with a cnf.jkt claim must be a DPoP token
+      if (tokenType !== 'DPoP') {
+        throw new InvalidTokenError(
+          'DPoP',
+          `Access token is bound to a DPoP proof, but token type is ${tokenType}`,
+        )
+      }
 
-  public async authenticateRequest(
-    method: string,
-    url: URL,
-    headers: {
-      authorization?: string
-      dpop?: unknown
-    },
-    verifyOptions?: VerifyTokenClaimsOptions,
-  ): Promise<VerifyTokenClaimsResult> {
-    const [tokenType, token] = parseAuthorizationHeader(headers.authorization)
-    try {
-      const dpopJkt = await this.checkDpopProof(
-        headers.dpop,
-        method,
-        url,
-        token,
-      )
-
-      if (tokenType === 'DPoP' && !dpopJkt) {
+      // DPoP token type must be used with a DPoP proof
+      if (!dpopProof) {
         throw new InvalidDpopProofError(`DPoP proof required`)
       }
 
-      return await this.authenticateToken(
-        tokenType,
+      // DPoP proof must be signed with the key that matches the "cnf" claim
+      if (payload.cnf.jkt !== dpopProof.jkt) {
+        throw new InvalidDpopKeyBindingError()
+      }
+    } else {
+      // An access token without a cnf.jkt claim must be a Bearer token
+      if (tokenType !== 'Bearer') {
+        throw new InvalidTokenError(
+          'Bearer',
+          `Bearer token type must be used without a DPoP proof`,
+        )
+      }
+
+      // @NOTE We ignore (but allow) DPoP proofs for Bearer tokens
+    }
+
+    const payloadOverride = await this.onDecodeToken?.call(null, {
+      tokenType,
+      token,
+      payload,
+      dpopProof,
+    })
+
+    return payloadOverride ?? payload
+  }
+
+  /**
+   * @throws {WWWAuthenticateError}
+   * @throws {InvalidTokenError}
+   */
+  public async authenticateRequest(
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    httpHeaders: Record<string, undefined | string | string[]>,
+    verifyOptions?: VerifyTokenPayloadOptions,
+  ): Promise<AccessTokenPayload> {
+    const [tokenType, token] = parseAuthorizationHeader(
+      httpHeaders['authorization'],
+    )
+    try {
+      const dpopProof = await this.checkDpopProof(
+        httpMethod,
+        httpUrl,
+        httpHeaders,
         token,
-        dpopJkt,
-        verifyOptions,
       )
+
+      const tokenPayload = await this.decodeToken(tokenType, token, dpopProof)
+
+      this.verifyTokenPayload(tokenType, tokenPayload, verifyOptions)
+
+      return tokenPayload
     } catch (err) {
       if (err instanceof UseDpopNonceError) throw err.toWwwAuthenticateError()
       if (err instanceof WWWAuthenticateError) throw err
 
       throw InvalidTokenError.from(err, tokenType)
+    }
+  }
+
+  protected verifyTokenPayload(
+    tokenType: OAuthTokenType,
+    tokenPayload: AccessTokenPayload,
+    options?: VerifyTokenPayloadOptions,
+  ): void {
+    if (options?.audience) {
+      const { aud } = tokenPayload
+      const hasMatch =
+        aud != null &&
+        (Array.isArray(aud)
+          ? options.audience.some(includedIn, aud)
+          : options.audience.includes(aud))
+      if (!hasMatch) {
+        const details = `(got: ${aud}, expected one of: ${options.audience})`
+        throw new InvalidTokenError(tokenType, `Invalid audience ${details}`)
+      }
+    }
+
+    if (options?.scope) {
+      const { scope } = tokenPayload
+      const scopes = scope?.split(' ')
+      if (!scopes || !options.scope.some(includedIn, scopes)) {
+        const details = `(got: ${scope}, expected one of: ${options.scope})`
+        throw new InvalidTokenError(tokenType, `Invalid scope ${details}`)
+      }
+    }
+
+    if (tokenPayload.exp != null && tokenPayload.exp * 1000 <= Date.now()) {
+      const expirationDate = new Date(tokenPayload.exp * 1000).toISOString()
+      throw new InvalidTokenError(
+        tokenType,
+        `Token expired at ${expirationDate}`,
+      )
     }
   }
 }

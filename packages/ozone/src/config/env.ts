@@ -8,6 +8,7 @@ export const readEnv = (): OzoneEnvironment => {
     port: envInt('OZONE_PORT'),
     publicUrl: envStr('OZONE_PUBLIC_URL'),
     serverDid: envStr('OZONE_SERVER_DID'),
+    serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
     appviewUrl: envStr('OZONE_APPVIEW_URL'),
     appviewDid: envStr('OZONE_APPVIEW_DID'),
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -20,6 +21,12 @@ export const readEnv = (): OzoneEnvironment => {
     dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
     dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
+    dbMaterializedViewRefreshIntervalMs: envInt(
+      'OZONE_DB_MATERIALIZED_VIEW_REFRESH_INTERVAL_MS',
+    ),
+    dbTeamProfileRefreshIntervalMs: envInt(
+      'OZONE_DB_TEAM_PROFILE_REFRESH_INTERVAL_MS',
+    ),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
     didCacheStaleTTL: envInt('OZONE_DID_CACHE_STALE_TTL'),
     didCacheMaxTTL: envInt('OZONE_DID_CACHE_MAX_TTL'),
@@ -31,6 +38,11 @@ export const readEnv = (): OzoneEnvironment => {
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
     blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL'),
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
+    verifierUrl: envStr('OZONE_VERIFIER_URL'),
+    verifierDid: envStr('OZONE_VERIFIER_DID'),
+    verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
+    verifierIssuersToIndex: envList('OZONE_VERIFIER_ISSUERS_TO_INDEX'),
+    jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
   }
 }
 
@@ -41,6 +53,7 @@ export type OzoneEnvironment = {
   port?: number
   publicUrl?: string
   serverDid?: string
+  serviceRecordCacheTTL?: number
   appviewUrl?: string
   appviewDid?: string
   appviewPushEvents?: boolean
@@ -53,6 +66,8 @@ export type OzoneEnvironment = {
   dbPoolSize?: number
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
+  dbMaterializedViewRefreshIntervalMs?: number
+  dbTeamProfileRefreshIntervalMs?: number
   didPlcUrl?: string
   didCacheStaleTTL?: number
   didCacheMaxTTL?: number
@@ -64,4 +79,9 @@ export type OzoneEnvironment = {
   signingKeyHex?: string
   blobDivertUrl?: string
   blobDivertAdminPassword?: string
+  verifierUrl?: string
+  verifierDid?: string
+  verifierPassword?: string
+  verifierIssuersToIndex?: string[]
+  jetstreamUrl?: string
 }

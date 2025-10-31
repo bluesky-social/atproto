@@ -1,14 +1,14 @@
+import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
-import * as plc from '@did-plc/lib'
-import * as ozone from '@atproto/ozone'
 import { AtpAgent } from '@atproto/api'
-import { createServiceJwt } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { DidAndKey, OzoneConfig } from './types'
+import * as ozone from '@atproto/ozone'
+import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
-import { createDidAndKey } from './util'
 import { ModeratorClient } from './moderator-client'
+import { DidAndKey, OzoneConfig } from './types'
+import { createDidAndKey } from './util'
 
 export class TestOzone {
   constructor(
@@ -117,6 +117,8 @@ export class TestOzone {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
+      handle: null,
+      displayName: null,
       lastUpdatedBy: this.ctx.cfg.service.did,
       role: 'tools.ozone.team.defs#roleAdmin',
     })
@@ -127,6 +129,8 @@ export class TestOzone {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
+      handle: null,
+      displayName: null,
       lastUpdatedBy: this.ctx.cfg.service.did,
       role: 'tools.ozone.team.defs#roleModerator',
     })
@@ -137,10 +141,84 @@ export class TestOzone {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
+      handle: null,
+      displayName: null,
       lastUpdatedBy: this.ctx.cfg.service.did,
       role: 'tools.ozone.team.defs#roleTriage',
     })
     this.ctx.cfg.access.triage.push(did)
+  }
+
+  async createPolicies() {
+    const now = new Date()
+    const defaultOptions = {
+      managerRole: 'tools.ozone.team.defs#roleAdmin' as const,
+      scope: 'instance' as const,
+      did: this.ctx.cfg.service.did,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      createdBy: this.ctx.cfg.service.did,
+      createdAt: now,
+      updatedAt: now,
+    }
+    await this.ctx.settingService(this.ctx.db).upsert({
+      ...defaultOptions,
+      key: 'tools.ozone.setting.severityLevels',
+      value: {
+        'sev-2': {
+          strikeCount: 2,
+          expiryInDays: 90,
+        },
+        'sev-4': {
+          strikeCount: 4,
+          expiryInDays: 365,
+        },
+        'sev-7': {
+          needsTakedown: true,
+          description: 'Sever violation, immedate account takedown',
+        },
+        'custom-sev': {
+          strikeCount: 4,
+          firstOccurrenceStrikeCount: 8,
+          description: 'First offense harsher penalty, on subsequent less',
+        },
+      },
+      description: 'Severity levels and strike count mapping for policies',
+    })
+    await this.ctx.settingService(this.ctx.db).upsert({
+      ...defaultOptions,
+      key: 'tools.ozone.setting.policyList',
+      value: {
+        'policy-one': {
+          name: 'Policy One',
+          description: 'Policy for handling user behavior',
+          severityLevels: {
+            'sev-1': {
+              description: 'Minor infraction',
+              isDefault: true,
+            },
+            'sev-2': {
+              description: 'Moderate infraction',
+              isDefault: false,
+            },
+          },
+        },
+        'policy-two': {
+          name: 'Policy Two',
+          description: 'Policy for handling user action',
+          severityLevels: {
+            'sev-4': {
+              description: 'Moderate infraction',
+              isDefault: false,
+            },
+            'sev-5': {
+              description: 'Severe infraction',
+              isDefault: false,
+            },
+          },
+        },
+      },
+      description: 'Moderation policies to be associated with actions',
+    })
   }
 
   async modHeaders(

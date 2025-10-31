@@ -1,15 +1,22 @@
 import {
-  TestNetwork,
-  TestOzone,
+  AtpAgent,
+  ChatBskyConvoDefs,
+  ToolsOzoneModerationEmitEvent,
+} from '@atproto/api'
+import { HOUR } from '@atproto/common'
+import {
   ImageRef,
+  ModeratorClient,
   RecordRef,
   SeedClient,
+  TestNetwork,
+  TestOzone,
   basicSeed,
-  ModeratorClient,
 } from '@atproto/dev-env'
-import { AtpAgent, ToolsOzoneModerationEmitEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
-import { forSnapshot } from './_util'
+import { EventReverser } from '../src'
+import { ImageInvalidator } from '../src/image-invalidator'
+import { ids } from '../src/lexicon/lexicons'
 import {
   REASONMISLEADING,
   REASONOTHER,
@@ -20,10 +27,8 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { EventReverser } from '../src'
-import { ImageInvalidator } from '../src/image-invalidator'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
-import { ids } from '../src/lexicon/lexicons'
+import { forSnapshot, identity } from './_util'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -157,23 +162,26 @@ describe('moderation', () => {
       const reportA = await sc.createReport({
         reportedBy: sc.dids.alice,
         reasonType: REASONSPAM,
-        subject: {
+        // @ts-expect-error "chat.bsky.convo.defs#messageRef" is not spec'd as subject
+        subject: identity<ChatBskyConvoDefs.MessageRef>({
           $type: 'chat.bsky.convo.defs#messageRef',
           did: sc.dids.carol,
           messageId: messageId1,
           convoId: 'testconvoid1',
-        },
+        }),
       })
       const reportB = await sc.createReport({
         reportedBy: sc.dids.carol,
         reasonType: REASONOTHER,
         reason: 'defamation',
-        subject: {
+        // @ts-expect-error "chat.bsky.convo.defs#messageRef" is not spec'd as subject
+        subject: identity<ChatBskyConvoDefs.MessageRef>({
           $type: 'chat.bsky.convo.defs#messageRef',
           did: sc.dids.carol,
           messageId: messageId2,
-          // @TODO convoId intentionally missing, restore once this behavior is deprecated
-        },
+          // @ts-expect-error convoId intentionally missing, restore once this behavior is deprecated
+          convoId: undefined,
+        }),
       })
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
       const events = await ozone.ctx.db.db
@@ -514,6 +522,24 @@ describe('moderation', () => {
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
     })
 
+    it('creates expiring label', async () => {
+      await emitLabelEvent({
+        createLabelVals: ['temp'],
+        negateLabelVals: [],
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+        durationInHours: 24,
+      })
+      const repo = await getRepo(sc.dids.bob)
+      // Losely check that the expiry date is set to above 23 hours from now
+      expect(
+        `${repo?.labels?.[0].exp}` >
+          new Date(Date.now() + 23 * HOUR).toISOString(),
+      ).toBeTruthy()
+    })
+
     it('does not allow triage moderators to label.', async () => {
       const attemptLabel = modClient.emitEvent(
         {
@@ -708,20 +734,22 @@ describe('moderation', () => {
         subject: ToolsOzoneModerationEmitEvent.InputSchema['subject']
         createLabelVals: ModEventLabel['createLabelVals']
         negateLabelVals: ModEventLabel['negateLabelVals']
+        durationInHours?: ModEventLabel['durationInHours']
       },
     ) {
-      const { createLabelVals, negateLabelVals } = opts
-      const result = await modClient.emitEvent({
+      const { createLabelVals, negateLabelVals, durationInHours } = opts
+      const event = await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventLabel',
           createLabelVals,
           negateLabelVals,
+          durationInHours,
         },
         createdBy: 'did:example:admin',
         reason: 'Y',
         ...opts,
       })
-      return result.data
+      return event
     }
 
     async function reverse(
@@ -740,7 +768,7 @@ describe('moderation', () => {
     }
 
     async function getRecordLabels(uri: string) {
-      const result = await agent.api.tools.ozone.moderation.getRecord(
+      const result = await agent.tools.ozone.moderation.getRecord(
         { uri },
         {
           headers: await network.ozone.modHeaders(
@@ -752,8 +780,8 @@ describe('moderation', () => {
       return labels.map((l) => l.val)
     }
 
-    async function getRepoLabels(did: string) {
-      const result = await agent.api.tools.ozone.moderation.getRepo(
+    async function getRepo(did: string) {
+      const result = await agent.tools.ozone.moderation.getRepo(
         { did },
         {
           headers: await network.ozone.modHeaders(
@@ -761,7 +789,12 @@ describe('moderation', () => {
           ),
         },
       )
-      const labels = result.data.labels ?? []
+      return result.data
+    }
+
+    async function getRepoLabels(did: string) {
+      const result = await getRepo(did)
+      const labels = result.labels ?? []
       return labels.map((l) => l.val)
     }
   })
@@ -816,7 +849,9 @@ describe('moderation', () => {
     it.skip('prevents image blob from being served, even when cached.', async () => {
       const fetchImage = await fetch(imageUri)
       expect(fetchImage.status).toEqual(404)
-      expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
+      expect(await fetchImage.json()).toMatchObject({
+        message: 'Blob not found',
+      })
     })
 
     it('invalidates the image in the cdn', async () => {

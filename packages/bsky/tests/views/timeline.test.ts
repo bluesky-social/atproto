@@ -1,15 +1,16 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import {
-  TestNetwork,
-  SeedClient,
-  basicSeed,
   EXAMPLE_LABELER,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
 } from '@atproto/dev-env'
-import { forSnapshot, getOriginator, paginateAll } from '../_util'
-import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { Database } from '../../src'
 import { ids } from '../../src/lexicon/lexicons'
+import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { OutputSchema as GetTimelineOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getTimeline'
+import { forSnapshot, getOriginator, paginateAll } from '../_util'
 
 const REVERSE_CHRON = 'reverse-chronological'
 
@@ -136,7 +137,8 @@ describe('timeline views', () => {
   })
 
   it('paginates reverse-chronological feed', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
+    const results = (results: GetTimelineOutputSchema[]) =>
+      results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getTimeline(
         {
@@ -315,6 +317,7 @@ const createLabel = async (
       cid: opts.cid,
       val: opts.val,
       cts: new Date().toISOString(),
+      exp: null,
       neg: false,
       src: EXAMPLE_LABELER,
     })

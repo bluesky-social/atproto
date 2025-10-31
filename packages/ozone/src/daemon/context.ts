@@ -1,22 +1,37 @@
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
+import { allFulfilled } from '@atproto/common'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { BackgroundQueue } from '../background'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
+import { ModerationService } from '../mod-service'
+import { StrikeService } from '../mod-service/strike'
+import { ScheduledActionService } from '../scheduled-action/service'
+import { SettingService } from '../setting/service'
+import { TeamService } from '../team'
+import { getSigningKeyId } from '../util'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
-import { ModerationService, ModerationServiceCreator } from '../mod-service'
-import { BackgroundQueue } from '../background'
-import { getSigningKeyId } from '../util'
+import { MaterializedViewRefresher } from './materialized-view-refresher'
+import { ScheduledActionProcessor } from './scheduled-action-processor'
+import { StrikeExpiryProcessor } from './strike-expiry-processor'
+import { TeamProfileSynchronizer } from './team-profile-synchronizer'
+import { VerificationListener } from './verification-listener'
 
 export type DaemonContextOptions = {
   db: Database
   cfg: OzoneConfig
-  modService: ModerationServiceCreator
+  backgroundQueue: BackgroundQueue
   signingKey: Keypair
   eventPusher: EventPusher
   eventReverser: EventReverser
+  materializedViewRefresher: MaterializedViewRefresher
+  teamProfileSynchronizer: TeamProfileSynchronizer
+  scheduledActionProcessor: ScheduledActionProcessor
+  strikeExpiryProcessor: StrikeExpiryProcessor
+  verificationListener?: VerificationListener
 }
 
 export class DaemonContext {
@@ -54,6 +69,8 @@ export class DaemonContext {
 
     const backgroundQueue = new BackgroundQueue(db)
 
+    const settingService = SettingService.creator()
+    const strikeService = StrikeService.creator()
     const modService = ModerationService.creator(
       signingKey,
       signingKeyId,
@@ -63,17 +80,59 @@ export class DaemonContext {
       eventPusher,
       appviewAgent,
       createAuthHeaders,
+      strikeService,
+    )
+    const scheduledActionService = ScheduledActionService.creator()
+    const teamService = TeamService.creator(
+      appviewAgent,
+      cfg.appview.did,
+      createAuthHeaders,
+    )
+    const teamProfileSynchronizer = new TeamProfileSynchronizer(
+      backgroundQueue,
+      teamService(db),
+      cfg.db.teamProfileRefreshIntervalMs,
     )
 
     const eventReverser = new EventReverser(db, modService)
 
+    const materializedViewRefresher = new MaterializedViewRefresher(
+      backgroundQueue,
+      cfg.db.materializedViewRefreshIntervalMs,
+    )
+
+    const scheduledActionProcessor = new ScheduledActionProcessor(
+      db,
+      cfg.service.did,
+      settingService,
+      modService,
+      scheduledActionService,
+    )
+
+    const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
+
+    // Only spawn the listener if verifier config exists and a jetstream URL is provided
+    const verificationListener =
+      cfg.verifier && cfg.jetstreamUrl
+        ? new VerificationListener(
+            db,
+            cfg.jetstreamUrl,
+            cfg.verifier?.issuersToIndex,
+          )
+        : undefined
+
     return new DaemonContext({
       db,
       cfg,
-      modService,
+      backgroundQueue,
       signingKey,
       eventPusher,
       eventReverser,
+      materializedViewRefresher,
+      teamProfileSynchronizer,
+      scheduledActionProcessor,
+      strikeExpiryProcessor,
+      verificationListener,
       ...(overrides ?? {}),
     })
   }
@@ -86,8 +145,8 @@ export class DaemonContext {
     return this.opts.cfg
   }
 
-  get modService(): ModerationServiceCreator {
-    return this.opts.modService
+  get backgroundQueue(): BackgroundQueue {
+    return this.opts.backgroundQueue
   }
 
   get eventPusher(): EventPusher {
@@ -97,6 +156,58 @@ export class DaemonContext {
   get eventReverser(): EventReverser {
     return this.opts.eventReverser
   }
-}
 
-export default DaemonContext
+  get materializedViewRefresher(): MaterializedViewRefresher {
+    return this.opts.materializedViewRefresher
+  }
+
+  get teamProfileSynchronizer(): TeamProfileSynchronizer {
+    return this.opts.teamProfileSynchronizer
+  }
+
+  get scheduledActionProcessor(): ScheduledActionProcessor {
+    return this.opts.scheduledActionProcessor
+  }
+
+  get strikeExpiryProcessor(): StrikeExpiryProcessor {
+    return this.opts.strikeExpiryProcessor
+  }
+
+  get verificationListener(): VerificationListener | undefined {
+    return this.opts.verificationListener
+  }
+
+  async start() {
+    this.eventPusher.start()
+    this.eventReverser.start()
+    this.materializedViewRefresher.start()
+    this.teamProfileSynchronizer.start()
+    this.scheduledActionProcessor.start()
+    this.strikeExpiryProcessor.start()
+    this.verificationListener?.start()
+  }
+
+  async processAll() {
+    // Sequential because the materialized view values depend on the events.
+    await this.eventPusher.processAll()
+    await this.materializedViewRefresher.run()
+    await this.teamProfileSynchronizer.run()
+  }
+
+  async destroy() {
+    try {
+      await allFulfilled([
+        this.eventReverser.destroy(),
+        this.eventPusher.destroy(),
+        this.materializedViewRefresher.destroy(),
+        this.teamProfileSynchronizer.destroy(),
+        this.scheduledActionProcessor.destroy(),
+        this.strikeExpiryProcessor.destroy(),
+        this.verificationListener?.stop(),
+      ])
+    } finally {
+      await this.backgroundQueue.destroy()
+      await this.db.close()
+    }
+  }
+}

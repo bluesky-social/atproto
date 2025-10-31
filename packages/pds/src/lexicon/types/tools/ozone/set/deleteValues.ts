@@ -1,21 +1,26 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
 
-export interface QueryParams {}
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'tools.ozone.set.deleteValues'
+
+export type QueryParams = {}
 
 export interface InputSchema {
   /** Name of the set to delete values from */
   name: string
   /** Array of string values to delete from the set */
   values: string[]
-  [k: string]: unknown
 }
 
 export interface HandlerInput {
@@ -30,13 +35,3 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | void
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput

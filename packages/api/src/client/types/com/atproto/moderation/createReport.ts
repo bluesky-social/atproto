@@ -2,25 +2,33 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { HeadersMap, XRPCError } from '@atproto/xrpc'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoModerationDefs from './defs'
-import * as ComAtprotoAdminDefs from '../admin/defs'
-import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as ComAtprotoModerationDefs from './defs.js'
+import type * as ComAtprotoAdminDefs from '../admin/defs.js'
+import type * as ComAtprotoRepoStrongRef from '../repo/strongRef.js'
 
-export interface QueryParams {}
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'com.atproto.moderation.createReport'
+
+export type QueryParams = {}
 
 export interface InputSchema {
   reasonType: ComAtprotoModerationDefs.ReasonType
   /** Additional context about the content and violation. */
   reason?: string
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | { $type: string; [k: string]: unknown }
-  [k: string]: unknown
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
+  modTool?: ModTool
 }
 
 export interface OutputSchema {
@@ -28,12 +36,11 @@ export interface OutputSchema {
   reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
   subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | { $type: string; [k: string]: unknown }
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
   reportedBy: string
   createdAt: string
-  [k: string]: unknown
 }
 
 export interface CallOptions {
@@ -51,4 +58,23 @@ export interface Response {
 
 export function toKnownErr(e: any) {
   return e
+}
+
+/** Moderation tool information for tracing the source of the action */
+export interface ModTool {
+  $type?: 'com.atproto.moderation.createReport#modTool'
+  /** Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome') */
+  name: string
+  /** Additional arbitrary metadata about the source */
+  meta?: { [_ in string]: unknown }
+}
+
+const hashModTool = 'modTool'
+
+export function isModTool<V>(v: V) {
+  return is$typed(v, id, hashModTool)
+}
+
+export function validateModTool<V>(v: V) {
+  return validate<ModTool & V>(v, id, hashModTool)
 }

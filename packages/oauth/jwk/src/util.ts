@@ -5,31 +5,13 @@ import { RefinementCtx, ZodIssueCode } from 'zod'
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 export type Override<T, V> = Simplify<V & Omit<T, keyof V>>
 
-export type RequiredKey<T, K extends string> = Simplify<
-  string extends K
-    ? T
-    : {
-        [L in K]: Exclude<L extends keyof T ? T[L] : unknown, undefined>
-      } & Omit<T, K>
+export type RequiredKey<T, K extends keyof T = never> = Simplify<
+  T & {
+    [L in K]-?: unknown extends T[L]
+      ? NonNullable<unknown> | null
+      : Exclude<T[L], undefined>
+  }
 >
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type DeepReadonly<T> = T extends Function
-  ? T
-  : T extends object
-    ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-    : T extends readonly (infer U)[]
-      ? readonly DeepReadonly<U>[]
-      : T
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type UnReadonly<T> = T extends Function
-  ? T
-  : T extends object
-    ? { -readonly [K in keyof T]: UnReadonly<T[K]> }
-    : T extends readonly (infer U)[]
-      ? UnReadonly<U>[]
-      : T
 
 export const isDefined = <T>(i: T | undefined): i is T => i !== undefined
 
@@ -196,4 +178,10 @@ export const segmentedStringRefinementFactory = <C extends number>(
     }
     return true
   }
+}
+
+export function isLastOccurrence<
+  T extends number | boolean | string | null | undefined | symbol | bigint,
+>(v: T, i: number, arr: readonly T[]): boolean {
+  return arr.indexOf(v, i + 1) === -1
 }

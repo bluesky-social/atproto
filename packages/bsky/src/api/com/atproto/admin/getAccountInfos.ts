@@ -1,7 +1,7 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
+import { AppContext } from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({
@@ -10,7 +10,10 @@ export default function (server: Server, ctx: AppContext) {
       const { dids } = params
       const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
 
-      const actors = await ctx.hydrator.actor.getActors(dids, true)
+      const actors = await ctx.hydrator.actor.getActors(dids, {
+        includeTakedowns: true,
+        skipCacheForDids: dids,
+      })
 
       const infos = mapDefined(dids, (did) => {
         const info = actors.get(did)

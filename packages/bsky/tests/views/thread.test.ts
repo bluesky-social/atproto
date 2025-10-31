@@ -1,15 +1,18 @@
-import { AppBskyFeedGetPostThread, AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import assert from 'node:assert'
+import { AppBskyFeedGetPostThread, AtUri, AtpAgent } from '@atproto/api'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
+import { isThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import {
   assertIsThreadViewPost,
   forSnapshot,
   stripViewerFromThread,
 } from '../_util'
-import { ids } from '../../src/lexicon/lexicons'
 
-describe('pds thread views', () => {
+describe('appview thread views', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -22,11 +25,16 @@ describe('pds thread views', () => {
       dbPostgresSchema: 'bsky_views_thread',
     })
     agent = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
+
+    await sc.like(alice, sc.replies[alice][0].ref)
+    await sc.like(alice, sc.replies[bob][0].ref)
+    await sc.like(alice, sc.replies[carol][0].ref)
   })
 
   beforeAll(async () => {
@@ -400,7 +408,10 @@ describe('pds thread views', () => {
         },
       )
 
-      const parent = threadPreTakedown.data.thread.parent?.['post']
+      assert(isThreadViewPost(threadPreTakedown.data.thread))
+      assert(isThreadViewPost(threadPreTakedown.data.thread.parent))
+
+      const parent = threadPreTakedown.data.thread.parent.post
 
       await network.bsky.ctx.dataplane.takedownRecord({
         recordUri: parent.uri,
@@ -435,8 +446,18 @@ describe('pds thread views', () => {
           ),
         },
       )
+
+      assert(isThreadViewPost(threadPreTakedown.data.thread))
+      assert(isThreadViewPost(threadPreTakedown.data.thread.replies?.[0]))
+      assert(isThreadViewPost(threadPreTakedown.data.thread.replies?.[1]))
+      assert(
+        isThreadViewPost(
+          threadPreTakedown.data.thread.replies?.[1].replies?.[0],
+        ),
+      )
+
       const post1 = threadPreTakedown.data.thread.replies?.[0].post
-      const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
+      const post2 = threadPreTakedown.data.thread.replies?.[1].replies?.[0].post
 
       await Promise.all(
         [post1, post2].map((post) =>
@@ -467,6 +488,136 @@ describe('pds thread views', () => {
           }),
         ),
       )
+    })
+  })
+
+  describe('listblock', () => {
+    it(`doesn't apply listblock if list was taken down by private takedown`, async () => {
+      const post = await sc.post(carol, `I'm carol`)
+      const reply = await sc.reply(bob, post.ref, post.ref, `hi carol`)
+
+      // alice creates a block list that includes carol
+      const listRef = await sc.createList(alice, 'alice blocks', 'mod')
+      await sc.addToList(alice, carol, listRef)
+      // bob subscribes to that list
+      const listblockRef = await pdsAgent.app.bsky.graph.listblock.create(
+        { repo: bob },
+        {
+          subject: listRef.uriStr,
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(bob),
+      )
+      await network.processAll()
+
+      const threadBeforeListTakedown = await agent.app.bsky.feed.getPostThread(
+        { depth: 1, uri: reply.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      expect(
+        forSnapshot(threadBeforeListTakedown.data.thread),
+      ).toMatchSnapshot()
+
+      // Takedown the list
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: listRef.uriStr,
+      })
+      await network.processAll()
+
+      const threadAfterListTakedown = await agent.app.bsky.feed.getPostThread(
+        { depth: 1, uri: reply.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      expect(forSnapshot(threadAfterListTakedown.data.thread)).toMatchSnapshot()
+
+      // Cleanup
+      await pdsAgent.app.bsky.graph.listblock.delete(
+        { repo: bob, rkey: new AtUri(listblockRef.uri).rkey },
+        sc.getHeaders(bob),
+      )
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: listRef.uriStr,
+      })
+      await network.processAll()
+    })
+
+    it(`doesn't apply listblock if list was taken down by takedown label`, async () => {
+      const post = await sc.post(carol, `I'm carol`)
+      const reply = await sc.reply(bob, post.ref, post.ref, `hi carol`)
+
+      // alice creates a block list that includes carol
+      const listRef = await sc.createList(alice, 'alice blocks', 'mod')
+      await sc.addToList(alice, carol, listRef)
+      // bob subscribes to that list
+      const listblockRef = await pdsAgent.app.bsky.graph.listblock.create(
+        { repo: bob },
+        {
+          subject: listRef.uriStr,
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(bob),
+      )
+
+      const threadBeforeListTakedown = await agent.app.bsky.feed.getPostThread(
+        { depth: 1, uri: reply.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      expect(
+        forSnapshot(threadBeforeListTakedown.data.thread),
+      ).toMatchSnapshot()
+
+      // Takedown the list
+      const src = network.ozone.ctx.cfg.service.did
+      const label = {
+        src,
+        uri: listRef.uriStr,
+        cid: '',
+        val: '!takedown',
+        exp: null,
+        neg: false,
+        cts: new Date().toISOString(),
+      }
+      AtpAgent.configure({ appLabelers: [src] })
+      await network.bsky.db.db.insertInto('label').values(label).execute()
+
+      const threadAfterListTakedown = await agent.app.bsky.feed.getPostThread(
+        { depth: 1, uri: reply.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+
+      expect(forSnapshot(threadAfterListTakedown.data.thread)).toMatchSnapshot()
+
+      // Cleanup
+      await pdsAgent.app.bsky.graph.listblock.delete(
+        { repo: bob, rkey: new AtUri(listblockRef.uri).rkey },
+        sc.getHeaders(bob),
+      )
+      await network.bsky.db.db
+        .deleteFrom('label')
+        .where('src', '=', src)
+        .where('uri', '=', listRef.uriStr)
+        .execute()
+      await network.processAll()
     })
   })
 })

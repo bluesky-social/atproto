@@ -1,7 +1,7 @@
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { AccessDeniedError } from './access-denied-error.js'
+import { AuthorizationError } from './authorization-error.js'
 
-export class LoginRequiredError extends AccessDeniedError {
+export class LoginRequiredError extends AuthorizationError {
   constructor(
     parameters: OAuthAuthorizationRequestParameters,
     error_description = 'Login is required',
