@@ -29,6 +29,7 @@ import { isSafeIdentifier } from './ts-lang.js'
 import { TsRefResolver, getPublicIdentifiers } from './ts-ref-resolver.js'
 
 export type TsDocBuilderOptions = {
+  lib?: string
   pureAnnotations?: boolean
 }
 
@@ -65,8 +66,9 @@ export class TsDocBuilder {
 
     const defs = Object.keys(this.doc.defs)
     if (defs.length) {
+      const moduleSpecifier = this.options?.lib ?? '@atproto/lex-schema'
       this.file
-        .addImportDeclaration({ moduleSpecifier: '@atproto/lex' })
+        .addImportDeclaration({ moduleSpecifier })
         .addNamedImports([{ name: 'l' }])
 
       for (const hash of defs) {

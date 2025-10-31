@@ -70,6 +70,12 @@ yargs(hideBin(process.argv))
           describe:
             'list of strings or regex patterns to include lexicon documents by their IDs',
         },
+        lib: {
+          type: 'string',
+          describe:
+            'package name of the library to import the lex schema utility "l" from',
+          default: '@atproto/lex',
+        },
       })
     },
     async (argv) => {
