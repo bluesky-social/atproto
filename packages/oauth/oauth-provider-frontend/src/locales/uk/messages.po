@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:162
+#: src/routes/account/_minimalLayout/sign-in.tsx:170
 msgid "@handle or email"
 msgstr ""
 
@@ -34,7 +34,7 @@ msgstr ""
 msgid "Accounts"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:127
+#: src/routes/account/_minimalLayout/sign-in.tsx:135
 #: src/routes/account/_minimalLayout/reset-password.tsx:62
 #: src/routes/account/_minimalLayout/reset-password.tsx:89
 msgid "An error occurred, please try again."
@@ -61,11 +61,15 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+#. placeholder {0}: secondFactor.hint
+#: src/routes/account/_minimalLayout/sign-in.tsx:231
+msgid "Check your {0} email for a login code and enter it here."
+msgstr ""
+
 #: src/routes/account/_minimalLayout/reset-password.tsx:345
 msgid "Click here to send a new code to your email."
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:204
 #: src/routes/account/_minimalLayout/reset-password.tsx:239
 msgid "Code"
 msgstr ""
@@ -74,11 +78,15 @@ msgstr ""
 msgid "Code was resent"
 msgstr ""
 
+#: src/routes/account/_minimalLayout/sign-in.tsx:212
+msgid "Confirmation Code"
+msgstr ""
+
 #: src/routes/account/_appLayout/$sub.tsx:63
 msgid "Connected apps"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:145
+#: src/routes/account/_minimalLayout/sign-in.tsx:153
 msgid "Credentials"
 msgstr ""
 
@@ -130,7 +138,7 @@ msgstr ""
 msgid "Failed to sign out"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:250
+#: src/routes/account/_minimalLayout/sign-in.tsx:267
 msgid "Forgot password?"
 msgstr ""
 
@@ -143,7 +151,7 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:152
+#: src/routes/account/_minimalLayout/sign-in.tsx:160
 msgid "Identifier"
 msgstr ""
 
@@ -151,11 +159,11 @@ msgstr ""
 msgid "Invalid email"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:85
+#: src/routes/account/_minimalLayout/sign-in.tsx:90
 msgid "Invalid handle"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:125
+#: src/routes/account/_minimalLayout/sign-in.tsx:133
 msgid "Invalid identifier or password."
 msgstr ""
 
@@ -188,13 +196,13 @@ msgstr ""
 msgid "No devices"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:177
-#: src/routes/account/_minimalLayout/sign-in.tsx:187
+#: src/routes/account/_minimalLayout/sign-in.tsx:185
+#: src/routes/account/_minimalLayout/sign-in.tsx:195
 #: src/routes/account/_minimalLayout/reset-password.tsx:278
 msgid "Password"
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:90
+#: src/routes/account/_minimalLayout/sign-in.tsx:95
 msgid "Password is required"
 msgstr ""
 
@@ -238,8 +246,8 @@ msgid "Select the account you would like to manage."
 msgstr ""
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:32
-#: src/routes/account/_minimalLayout/sign-in.tsx:136
-#: src/routes/account/_minimalLayout/sign-in.tsx:241
+#: src/routes/account/_minimalLayout/sign-in.tsx:144
+#: src/routes/account/_minimalLayout/sign-in.tsx:258
 msgid "Sign in"
 msgstr ""
 
@@ -310,7 +318,7 @@ msgstr ""
 msgid "Whoops! An error occurred."
 msgstr ""
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:213
+#: src/routes/account/_minimalLayout/sign-in.tsx:221
 #: src/routes/account/_minimalLayout/reset-password.tsx:249
 msgid "XXXXX-XXXXX"
 msgstr ""
