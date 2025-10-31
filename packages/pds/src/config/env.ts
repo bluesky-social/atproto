@@ -128,6 +128,9 @@ export const readEnv = (): ServerEnvironment => {
     // secrets
     dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
+    jwtSigningKeyK256PrivateKeyHex: envStr(
+      'PDS_JWT_SIGNING_KEY_K256_PRIVATE_KEY_HEX',
+    ),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
     entrywayAdminToken: envStr('PDS_ENTRYWAY_ADMIN_TOKEN'),
 
@@ -277,6 +280,7 @@ export type ServerEnvironment = {
   // secrets
   dpopSecret?: string
   jwtSecret?: string
+  jwtSigningKeyK256PrivateKeyHex?: string
   adminPassword?: string
   entrywayAdminToken?: string
 

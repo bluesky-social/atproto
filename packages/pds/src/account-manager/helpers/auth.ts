@@ -48,7 +48,7 @@ export const createAccessToken = (opts: {
   const signer = new jose.SignJWT({ scope })
     .setProtectedHeader({
       typ: 'at+jwt', // https://www.rfc-editor.org/rfc/rfc9068.html
-      alg: 'HS256', // only symmetric keys supported
+      alg: jwtKey.type === 'private' ? 'ES256K' : 'HS256',
     })
     .setAudience(serviceDid)
     .setSubject(did)
@@ -74,7 +74,7 @@ export const createRefreshToken = (opts: {
   const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
     .setProtectedHeader({
       typ: 'refresh+jwt',
-      alg: 'HS256', // only symmetric keys supported
+      alg: jwtKey.type === 'private' ? 'ES256K' : 'HS256',
     })
     .setAudience(serviceDid)
     .setSubject(did)
