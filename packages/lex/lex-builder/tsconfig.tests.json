@@ -4,9 +4,6 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "rootDir": "./",
-    "baseUrl": "./",
-    "paths": {
-      "@atproto/lex": ["./index"]
-    }
+    "baseUrl": "./"
   }
 }
