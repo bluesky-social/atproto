@@ -10,7 +10,7 @@ export class Nexus {
   channel(handler: NexusHandler, opts?: NexusWebsocketOptions): NexusChannel {
     const url = new URL(this.url)
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-    url.pathname = '/listen'
+    url.pathname = '/channel'
     return new NexusChannel(url.toString(), handler, opts)
   }
 

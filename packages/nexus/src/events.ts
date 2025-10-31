@@ -8,6 +8,7 @@ export const recordEventDataSchema = z.object({
   action: z.enum(['create', 'update', 'delete']),
   record: z.record(z.string(), z.unknown()).optional(),
   cid: z.string().optional(),
+  live: z.boolean(),
 })
 
 export const userEventDataSchema = z.object({
@@ -47,6 +48,7 @@ export type RecordEvent = {
   rkey: string
   record?: Record<string, unknown>
   cid?: string
+  live: boolean
 }
 
 export type UserEvent = {
@@ -82,6 +84,7 @@ export const parseNexusEvent = (data: unknown): NexusEvent => {
       rkey: parsed.record.rkey,
       record: parsed.record.record,
       cid: parsed.record.cid,
+      live: parsed.record.live,
     }
   }
 }
