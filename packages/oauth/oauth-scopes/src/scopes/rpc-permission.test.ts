@@ -128,7 +128,6 @@ describe('RpcPermission', () => {
         'rpc:foo.bar.baz?aud=did:foo:bar%23service_id',
         'rpc:foo.bar.baz?aud=did:web:example.com%23service_id&lxm=foo.bar.baz',
         'rpc:foo.bar.baz?aud=invalid',
-        'rpc:foo.bar.baz?aud=invalid',
         'rpc:invalid?aud=did:web:example.com',
         'rpc:invalid?aud=did:web:example.com%23service_id',
         'rpc:com.example.service?aud=invalid',
