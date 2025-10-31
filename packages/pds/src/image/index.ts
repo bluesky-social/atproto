@@ -16,12 +16,8 @@ export async function maybeGetInfo(
     ])
     metadata = result
   } catch (err) {
-    // If the buffer doesn't have any identifiable image in it, return null
-    if (errHasMsg(err, 'Input buffer contains unsupported image format')) {
-      return null
-    }
-    // Otherwise, the buffer has a corrupt image in it
-    throw new InvalidRequestError("Image detected but content is unparsable")
+    // The buffer has a corrupted image or no image at all.
+    return null
   }
   const { size, height, width, format } = metadata
   if (
