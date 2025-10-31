@@ -1,0 +1,50 @@
+{
+  "name": "@atproto/lex-core",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Core utilities for AT Lexicons",
+  "keywords": [
+    "atproto",
+    "lexicon",
+    "utilities"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/lex/lex-core"
+  },
+  "files": [
+    "./src",
+    "./tsconfig.build.json",
+    "./tsconfig.tests.json",
+    "./tsconfig.json",
+    "./polyfills.js",
+    "./polyfills.mjs",
+    "./polyfills.d.ts",
+    "./dist"
+  ],
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "browser": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@atproto/syntax": "workspace:*",
+    "multiformats": "^9.9.0",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "jest": "^28.1.2"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "jest"
+  }
+}
