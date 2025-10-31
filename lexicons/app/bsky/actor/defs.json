@@ -414,10 +414,6 @@
           "type": "string",
           "description": "Sorting mode for threads.",
           "knownValues": ["oldest", "newest", "most-likes", "random", "hotness"]
-        },
-        "prioritizeFollowedUsers": {
-          "type": "boolean",
-          "description": "Show followed users at the top of all replies."
         }
       }
     },

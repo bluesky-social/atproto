@@ -406,8 +406,6 @@ export interface ThreadViewPref {
     | 'random'
     | 'hotness'
     | (string & {})
-  /** Show followed users at the top of all replies. */
-  prioritizeFollowedUsers?: boolean
 }
 
 const hashThreadViewPref = 'threadViewPref'

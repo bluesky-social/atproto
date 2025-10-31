@@ -61,7 +61,6 @@ const FEED_VIEW_PREF_DEFAULTS = {
 
 const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
-  prioritizeFollowedUsers: true,
 }
 
 export type { FetchHandler }
