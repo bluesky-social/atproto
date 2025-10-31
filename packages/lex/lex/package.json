@@ -15,25 +15,24 @@
     "directory": "packages/lex/lex"
   },
   "files": [
+    "./index.js",
+    "./index.d.ts",
     "./polyfills.js",
-    "./polyfills.mjs",
     "./polyfills.d.ts",
-    "./bin",
-    "./src",
-    "./dist"
+    "./bin"
   ],
   "bin": {
     "lex": "./bin/lex"
   },
   "sideEffects": false,
   "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "browser": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./index.js",
+      "browser": "./index.js",
+      "types": "./index.d.ts"
     },
     "./polyfills": {
       "require": "./polyfills.js",
