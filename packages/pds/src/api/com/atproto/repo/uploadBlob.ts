@@ -1,4 +1,3 @@
-import { DAY } from '@atproto/common'
 import { UpstreamTimeoutError, parseReqEncoding } from '@atproto/xrpc-server'
 import { BlobMetadata } from '../../../../actor-store/blob/transactor'
 import { AppContext } from '../../../../context'
@@ -14,8 +13,8 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     rateLimit: {
-      durationMs: DAY,
-      points: 1000,
+      durationMs: ctx.cfg.rateLimits.repoUploadBlobRateLimitDuration,
+      points: ctx.cfg.rateLimits.repoUploadBlobRateLimitPoints,
     },
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
