@@ -42,6 +42,7 @@ export interface ServerConfigValues {
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
   searchUrl?: string
+  searchTagsHide: Set<string>
   suggestionsUrl?: string
   suggestionsApiKey?: string
   topicsUrl?: string
@@ -133,6 +134,7 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
@@ -296,6 +298,7 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      searchTagsHide,
       suggestionsUrl,
       suggestionsApiKey,
       topicsUrl,
@@ -440,6 +443,10 @@ export class ServerConfig {
     return this.cfg.searchUrl
   }
 
+  get searchTagsHide() {
+    return this.cfg.searchTagsHide
+  }
+
   get suggestionsUrl() {
     return this.cfg.suggestionsUrl
   }
@@ -539,6 +546,7 @@ export class ServerConfig {
   get threadTagsHide() {
     return this.cfg.threadTagsHide
   }
+
   get threadTagsBumpDown() {
     return this.cfg.threadTagsBumpDown
   }
