@@ -17,6 +17,7 @@ export const readEnv = (): ServerEnvironment => {
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     maxImportSize: envInt('PDS_MAX_REPO_IMPORT_SIZE'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
+    hostnameAlt: envStr('PDS_HOSTNAME_ALT'), // Used by ActivityPub
     devMode: envBool('PDS_DEV_MODE'),
 
     // hCaptcha
@@ -170,6 +171,7 @@ export type ServerEnvironment = {
   acceptingImports?: boolean
   maxImportSize?: number
   blobUploadLimit?: number
+  hostnameAlt?: string // Used by ActivityPub
   devMode?: boolean
 
   // OAuth
