@@ -148,8 +148,21 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         'Partial email config, must set both emailFromAddress and emailSmtpUrl',
       )
     }
-    emailCfg = {
+    if (env.emailSmtpUrl && env.emailSmtpHost) {
+      throw new Error(
+        'Cannot set both emailSmtpUrl and emailSmtpHost env vars'
+      )
+    }
+    emailCfg = env.emailSmtpUrl ? {
       smtpUrl: env.emailSmtpUrl,
+      fromAddress: env.emailFromAddress,
+    } : {
+      smtpHost: env.emailSmtpHost || 'localhost',
+      smtpPort: env.emailSmtpPort || 25,
+      smtpPool: env.emailSmtpPool,
+      smtpSecure: env.emailSmtpSecure,
+      smtpAuthUser: env.emailSmtpAuthUser,
+      smtpAuthPassword: env.emailSmtpAuthPassword,
       fromAddress: env.emailFromAddress,
     }
   }
@@ -163,8 +176,16 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         'Partial moderation email config, must set both emailFromAddress and emailSmtpUrl',
       )
     }
-    moderationEmailCfg = {
+    moderationEmailCfg = env.moderationEmailSmtpUrl ? {
       smtpUrl: env.moderationEmailSmtpUrl,
+      fromAddress: env.moderationEmailAddress,
+    } : {
+      smtpHost: env.moderationEmailSmtpHost || 'localhost',
+      smtpPort: env.moderationEmailSmtpPort || 25,
+      smtpPool: env.moderationEmailSmtpPool,
+      smtpSecure: env.moderationEmailSmtpSecure,
+      smtpAuthUser: env.moderationEmailSmtpAuthUser,
+      smtpAuthPassword: env.moderationEmailSmtpAuthPassword,
       fromAddress: env.moderationEmailAddress,
     }
   }
@@ -482,10 +503,20 @@ export type InvitesConfig =
       required: false
     }
 
-export type EmailConfig = {
+export type EmailUrlConfig = {
   smtpUrl: string
   fromAddress: string
 }
+export type EmailHostConfig = {
+  smtpHost: string
+  smtpPort: number
+  smtpPool?: boolean
+  smtpSecure?: boolean
+  smtpAuthUser?: string
+  smtpAuthPassword?: string
+  fromAddress: string
+}
+export type EmailConfig = EmailUrlConfig | EmailHostConfig
 
 export type SubscriptionConfig = {
   maxBuffer: number
