@@ -1,14 +1,11 @@
 
 SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
+DOCKER_AVAIL := $(shell docker ps >/dev/null 2>&1 && echo true)
 
 .PHONY: help
 help: ## Print info about all commands
-	@echo "Helper Commands:"
-	@echo
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "    \033[01;32m%-20s\033[0m %s\n", $$1, $$2}'
-	@echo
-	@echo "NOTE: dependencies between commands are not automatic. Eg, you must run 'deps' and 'build' first, and after any changes"
+	node packages/dev-infra/src/make
 
 .PHONY: build
 build: ## Compile all modules
@@ -16,7 +13,26 @@ build: ## Compile all modules
 
 .PHONY: test
 test: ## Run all tests
-	pnpm test
+ifeq ($(DOCKER_AVAIL),true)
+	pnpm clean-docker
+endif
+ifeq ($(OS),Windows_NT)
+ifeq ($(DOCKER_AVAIL),true)
+	pnpm test:docker
+else
+	@echo This requires docker to be installed and running
+endif
+else
+	pnpm test:shards
+endif
+
+.PHONY: test-docker
+test-docker: ## Run all tests on a docker
+ifeq ($(DOCKER_AVAIL),true)
+	pnpm test:docker
+else
+	@echo This requires docker to be installed and running
+endif
 
 .PHONY: run-dev-env
 run-dev-env: ## Run a "development environment" shell
@@ -46,8 +62,18 @@ fmt-lexicons: ## Run syntax re-formatting, just on .json files
 deps: ## Installs dependent libs using 'pnpm install'
 	pnpm install --frozen-lockfile
 
-.PHONY: nvm-setup
-nvm-setup: ## Use NVM to install and activate node+pnpm
-	nvm install 18
-	nvm use 18
-	corepack enable
+.PHONY: clean
+clean: ## Clean node_modules
+	@echo Cleaning node_modules
+	node packages/dev-infra/src/make --clean
+
+.PHONY: all
+all: ## Clean node_modules, build, and test
+	@echo Clean node_modules, build, and test
+	node packages/dev-infra/src/make --clean
+	pnpm install --frozen-lockfile
+	pnpm build
+ifeq ($(DOCKER_AVAIL),true)
+	pnpm clean-docker
+endif
+	pnpm test:shards

@@ -1,0 +1,26 @@
+{
+  "name": "@atproto/dev-infra",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Development infrastructure CLI for atproto workspace",
+  "keywords": [
+    "atproto",
+    "dev-infra",
+    "workspace"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/dev-infra"
+  },
+  "bin": {
+    "workspace-cli": "src/workspace-cli/index.js"
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true
+    }
+  },
+  "type":"commonjs"
+}

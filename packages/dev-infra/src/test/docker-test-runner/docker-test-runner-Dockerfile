@@ -1,0 +1,22 @@
+FROM node:20.11-bookworm-slim
+WORKDIR /app
+
+# Install Google Chrome and network tools
+RUN apt-get update && apt-get install rsync make curl gnupg iputils-ping dnsutils postgresql-client redis-tools -y \
+  && curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+  && apt-get update \
+  && apt-get install google-chrome-stable -y --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN corepack enable
+RUN pnpm config set store-dir /pnpm-store
+ENV puppeteer_skip_chromium_download=true
+ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/google-chrome-stable"
+ENV PGOPTIONS="-c client_min_messages=warning"
+
+# Copy the copy-code script and make it executable
+COPY packages/dev-infra/src/test/docker-test-runner/copy-code.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/copy-code.sh
+
+CMD ["tail", "-f", "/dev/null"]

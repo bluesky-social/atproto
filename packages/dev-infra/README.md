@@ -1,8 +1,17 @@
 # dev-infra
 
-Helpers for working with postgres and redis locally. Previously known as `pg`.
 
-## Usage
+## Workspace CLI Usage
+
+
+
+```bash
+pnpm workspace-cli --help
+```
+
+
+
+## Original Shell Scripts
 
 ### `with-test-db.sh`
 
