@@ -10,7 +10,7 @@
         "index": { "type": "ref", "ref": "#byteSlice" },
         "features": {
           "type": "array",
-          "items": { "type": "union", "refs": ["#mention", "#link", "#tag"] }
+          "items": { "type": "union", "refs": ["#mention", "#link", "#tag", "#bold", "#italic", "#underline"] }
         }
       }
     },
@@ -37,6 +37,18 @@
       "properties": {
         "tag": { "type": "string", "maxLength": 640, "maxGraphemes": 64 }
       }
+    },
+    "bold": {
+      "type": "object",
+      "description": "Facet feature for bold text."
+    },
+    "italic": {
+      "type": "object",
+      "description": "Facet feature for italic text."
+    },
+    "underline": {
+      "type": "object",
+      "description": "Facet feature for underlined text."
     },
     "byteSlice": {
       "type": "object",
