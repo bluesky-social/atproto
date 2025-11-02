@@ -191,12 +191,13 @@ describe('pds posts views', () => {
   })
 
   it('embed malformed image', async () => {
-    // Check that image formats aren't validated
+    // Check that the PDS does not itself validate image contents. Upload a
+    // malformed image and embed it in a post.
     const { data: image } = await pdsAgent.api.com.atproto.repo.uploadBlob(
       Buffer.from('<svgQ'),
       {
         headers: sc.getHeaders(sc.dids.alice),
-        encoding: 'image/svg',
+        encoding: 'image/svg+xml',
       },
     )
     const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
