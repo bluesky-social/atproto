@@ -1,8 +1,6 @@
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import sharp from 'sharp'
-import { errHasMsg } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export async function maybeGetInfo(
   stream: Readable,
