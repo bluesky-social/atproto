@@ -108,20 +108,58 @@ export default function (server: Server, ctx: AppContext) {
       const enrichedRequests = await Promise.all(
         requests.map(async (req) => {
           try {
-            // Get basic profile info for the requester
             const requesterDid =
               typeof req.requester === 'string'
                 ? req.requester
                 : req.requester.did
 
-            // For now, return minimal profile data
-            // In a full implementation, this would fetch from app view
+            // Resolve DID to handle
+            let handle = requesterDid
+            try {
+              const didDoc = await ctx.idResolver.did.resolve(requesterDid)
+              if (didDoc) {
+                // Extract handle from DID document alsoKnownAs
+                const handleFromDoc = didDoc.alsoKnownAs?.find((aka) =>
+                  aka.startsWith('at://'),
+                )
+                if (handleFromDoc) {
+                  handle = handleFromDoc.replace('at://', '')
+                }
+              }
+            } catch (err) {
+              // If resolution fails, fall back to DID
+            }
+
+            // Get display name and avatar from profile record if available
+            let displayName: string | undefined
+            let avatar: string | undefined
+            try {
+              const profile = await ctx.actorStore.read(
+                requesterDid,
+                async (store) => {
+                  return store.record.getRecord(
+                    'app.bsky.actor.profile',
+                    'self',
+                  )
+                },
+              )
+              if (profile) {
+                const profileData = profile.value as any
+                displayName = profileData.displayName
+                avatar = profileData.avatar
+              }
+            } catch (err) {
+              // Profile record not found or inaccessible
+            }
+
             return {
               uri: req.uri,
               cid: req.cid,
               requester: {
                 did: requesterDid,
-                handle: requesterDid, // Would be resolved in full implementation
+                handle,
+                displayName,
+                avatar,
               },
               subject: req.subject,
               status: req.status,
@@ -129,7 +167,20 @@ export default function (server: Server, ctx: AppContext) {
               respondedAt: req.respondedAt,
             }
           } catch (err) {
-            return req
+            // On any error, return request with minimal data
+            return {
+              ...req,
+              requester: {
+                did:
+                  typeof req.requester === 'string'
+                    ? req.requester
+                    : req.requester.did,
+                handle:
+                  typeof req.requester === 'string'
+                    ? req.requester
+                    : req.requester.did,
+              },
+            }
           }
         }),
       )
