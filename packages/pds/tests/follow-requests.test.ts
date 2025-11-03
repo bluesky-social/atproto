@@ -262,9 +262,9 @@ describe('follow request records', () => {
 
     // Should find at least alice's request
     expect(backlinks.length).toBeGreaterThanOrEqual(1)
-    expect(
-      backlinks.some((b) => b.uri.includes(aliceAgent.accountDid)),
-    ).toBe(true)
+    expect(backlinks.some((b) => b.uri.includes(aliceAgent.accountDid))).toBe(
+      true,
+    )
   })
 
   it('supports pagination for follow requests', async () => {
@@ -388,4 +388,3 @@ describe('follow request records', () => {
     }
   })
 })
-
