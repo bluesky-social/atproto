@@ -15,3 +15,7 @@ test.sqlite
 \#*\#
 *~
 *.swp
+
+# PDS local development directories
+packages/pds/data
+packages/pds/blobs

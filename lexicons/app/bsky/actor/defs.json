@@ -284,7 +284,8 @@
           "#bskyAppStatePref",
           "#labelersPref",
           "#postInteractionSettingsPref",
-          "#verificationPrefs"
+          "#verificationPrefs",
+          "#privateProfilePref"
         ]
       }
     },
@@ -587,6 +588,18 @@
         "hideBadges": {
           "description": "Hide the blue check badges for verified accounts and trusted verifiers.",
           "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "privateProfilePref": {
+      "type": "object",
+      "description": "Preferences for private profile settings, controlling who can follow and view the account's content. Existing followers are retained when switching to private; only new follow attempts require approval.",
+      "required": ["isPrivate"],
+      "properties": {
+        "isPrivate": {
+          "type": "boolean",
+          "description": "Whether the profile is private. If true, new follow requests must be approved before followers can view content. Existing followers are automatically retained.",
           "default": false
         }
       }
