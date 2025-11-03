@@ -17,7 +17,7 @@ Promise.all([
       'com.atproto.repo.uploadBlob',
     ],
     lib: '@atproto/lex-schema',
-    format: true,
+    pretty: true,
     pureAnnotations: true,
   }),
 

@@ -14,7 +14,7 @@ const DEFAULT_BANNER = `/*
 
 export type TsFormatterOptions = {
   /** @default false */
-  format?: boolean | PrettierOptions
+  pretty?: boolean | PrettierOptions
   banner?: string
 }
 
@@ -26,9 +26,9 @@ export class TsFormatter {
     this.banner = options?.banner ?? DEFAULT_BANNER
 
     this.prettierOptions =
-      options?.format === true
+      options?.pretty === true
         ? DEFAULT_FORMAT_OPTIONS
-        : options?.format || null
+        : options?.pretty || null
   }
 
   async format(code: string) {

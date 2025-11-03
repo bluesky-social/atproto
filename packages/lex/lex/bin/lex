@@ -42,7 +42,7 @@ yargs(hideBin(process.argv))
           default: false,
           describe: 'override existing files (has no effect with --clear)',
         },
-        format: {
+        pretty: {
           type: 'boolean',
           default: true,
           describe: 'run prettier on generated files',
