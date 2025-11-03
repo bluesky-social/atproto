@@ -34,23 +34,12 @@
       "require": "./index.cjs",
       "types": "./index.d.ts"
     },
-    "./client": {
-      "browser": "./client.mjs",
-      "import": "./client.mjs",
-      "require": "./client.cjs",
-      "types": "./client.d.ts"
-    },
     "./polyfills": {
       "browser": "./polyfills.mjs",
       "import": "./polyfills.mjs",
       "require": "./polyfills.cjs",
       "types": "./polyfills.d.ts"
     }
-  },
-  "browser": {
-    ".": "./index.cjs",
-    "./client": "./client.cjs",
-    "./polyfills": "./polyfills.cjs"
   },
   "dependencies": {
     "@atproto/lex-builder": "workspace:*",
