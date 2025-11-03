@@ -446,3 +446,140 @@ describe('user preferences', () => {
     })
   })
 })
+
+describe('privacy settings endpoints', () => {
+  // Reuse the same network and agent from the parent scope
+  let aliceAgent: AtpAgent
+  let bobAgent: AtpAgent
+
+  beforeAll(async () => {
+    aliceAgent = network.pds.getClient()
+    bobAgent = network.pds.getClient()
+
+    await aliceAgent.createAccount({
+      email: 'alice-ep@test.com',
+      handle: 'alice-ep.test',
+      password: 'alice-pass',
+    })
+
+    await bobAgent.createAccount({
+      email: 'bob-ep@test.com',
+      handle: 'bob-ep.test',
+      password: 'bob-pass',
+    })
+  })
+
+  describe('setPrivacySettings', () => {
+    it('sets privacy to private', async () => {
+      const res = await aliceAgent.api.app.bsky.actor.setPrivacySettings({
+        isPrivate: true,
+      })
+
+      expect(res.data.isPrivate).toBe(true)
+    })
+
+    it('sets privacy to public', async () => {
+      const res = await aliceAgent.api.app.bsky.actor.setPrivacySettings({
+        isPrivate: false,
+      })
+
+      expect(res.data.isPrivate).toBe(false)
+    })
+
+    it('requires authentication', async () => {
+      const unauthAgent = network.pds.getClient()
+
+      await expect(
+        unauthAgent.api.app.bsky.actor.setPrivacySettings({
+          isPrivate: true,
+        }),
+      ).rejects.toThrow()
+    })
+
+    it('validates input type', async () => {
+      await expect(
+        aliceAgent.api.app.bsky.actor.setPrivacySettings({
+          isPrivate: 'invalid' as any,
+        }),
+      ).rejects.toThrow()
+    })
+  })
+
+  describe('getPrivacySettings', () => {
+    beforeAll(async () => {
+      // Set Bob's profile to private
+      await bobAgent.api.app.bsky.actor.setPrivacySettings({
+        isPrivate: true,
+      })
+    })
+
+    it('gets own privacy settings when authenticated', async () => {
+      const res = await bobAgent.api.app.bsky.actor.getPrivacySettings()
+
+      expect(res.data.isPrivate).toBe(true)
+    })
+
+    it('gets other user public privacy settings', async () => {
+      // Alice is public by default
+      const res = await bobAgent.api.app.bsky.actor.getPrivacySettings({
+        actor: aliceAgent.accountDid,
+      })
+
+      expect(res.data.isPrivate).toBe(false)
+    })
+
+    it('denies access to other user private settings', async () => {
+      // Bob is private, Alice tries to view
+      await expect(
+        aliceAgent.api.app.bsky.actor.getPrivacySettings({
+          actor: bobAgent.accountDid,
+        }),
+      ).rejects.toThrow(/not authorized/i)
+    })
+
+    it('returns false for users without privacy settings', async () => {
+      // Carol has never set privacy settings
+      const carolAgent = network.pds.getClient()
+      await carolAgent.createAccount({
+        email: 'carol-ep@test.com',
+        handle: 'carol-ep.test',
+        password: 'carol-pass',
+      })
+
+      const res = await carolAgent.api.app.bsky.actor.getPrivacySettings()
+      expect(res.data.isPrivate).toBe(false)
+    })
+
+    it('requires authentication', async () => {
+      const unauthAgent = network.pds.getClient()
+
+      await expect(
+        unauthAgent.api.app.bsky.actor.getPrivacySettings(),
+      ).rejects.toThrow()
+    })
+  })
+
+  describe('privacy settings integration', () => {
+    it('updates settings multiple times', async () => {
+      // Toggle privacy on
+      let res = await aliceAgent.api.app.bsky.actor.setPrivacySettings({
+        isPrivate: true,
+      })
+      expect(res.data.isPrivate).toBe(true)
+
+      // Verify it persisted
+      let getRes = await aliceAgent.api.app.bsky.actor.getPrivacySettings()
+      expect(getRes.data.isPrivate).toBe(true)
+
+      // Toggle privacy off
+      res = await aliceAgent.api.app.bsky.actor.setPrivacySettings({
+        isPrivate: false,
+      })
+      expect(res.data.isPrivate).toBe(false)
+
+      // Verify it persisted
+      getRes = await aliceAgent.api.app.bsky.actor.getPrivacySettings()
+      expect(getRes.data.isPrivate).toBe(false)
+    })
+  })
+})
