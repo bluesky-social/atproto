@@ -25,7 +25,7 @@
     { "path": "./packages/lex/lex-builder" },
     { "path": "./packages/lex/lex-core" },
     { "path": "./packages/lex/lex-document" },
-    { "path": "./packages/lex/lex-validation" },
+    { "path": "./packages/lex/lex-schema" },
     { "path": "./packages/lex-cli" },
     { "path": "./packages/lexicon" },
     { "path": "./packages/lexicon-resolver" },

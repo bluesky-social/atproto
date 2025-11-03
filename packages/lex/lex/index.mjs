@@ -1,1 +1,1 @@
-export * from '@atproto/lex-validation'
+export * from '@atproto/lex-schema'

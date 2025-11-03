@@ -2,4 +2,4 @@
 
 /* eslint-env commonjs */
 
-module.exports = require('@atproto/lex-validation')
+module.exports = require('@atproto/lex-schema')

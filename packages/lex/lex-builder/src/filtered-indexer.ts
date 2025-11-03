@@ -8,7 +8,7 @@ import { Filter } from './filter.js'
  * will be bypassed for that document.
  */
 export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
-  readonly #returned = new Set<string>()
+  protected readonly returned = new Set<string>()
 
   constructor(
     readonly indexer: LexiconIndexer & AsyncIterable<LexiconDocument>,
@@ -16,7 +16,7 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
   ) {}
 
   async get(id: string): Promise<LexiconDocument> {
-    this.#returned.add(id)
+    this.returned.add(id)
     return this.indexer.get(id)
   }
 
@@ -29,8 +29,8 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
         throw new Error(`Duplicate lexicon document id: ${doc.id}`)
       }
 
-      if (this.#returned.has(doc.id) || this.filter(doc.id)) {
-        this.#returned.add(doc.id)
+      if (this.returned.has(doc.id) || this.filter(doc.id)) {
+        this.returned.add(doc.id)
         returned.add(doc.id)
         yield doc
       }
@@ -44,7 +44,7 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
     let returnedAny: boolean
     do {
       returnedAny = false
-      for (const id of this.#returned) {
+      for (const id of this.returned) {
         if (!returned.has(id)) {
           yield await this.indexer.get(id)
           returned.add(id)

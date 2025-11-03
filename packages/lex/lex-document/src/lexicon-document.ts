@@ -1,4 +1,4 @@
-import { l } from '@atproto/lex-validation'
+import { l } from '@atproto/lex-schema'
 
 // Scalar Types
 

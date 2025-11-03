@@ -24,7 +24,7 @@ import {
   LexiconToken,
   LexiconUnknown,
 } from '@atproto/lex-document'
-import { Nsid, l } from '@atproto/lex-validation'
+import { Nsid, l } from '@atproto/lex-schema'
 import { isSafeIdentifier } from './ts-lang.js'
 import { TsRefResolver, getPublicIdentifiers } from './ts-ref-resolver.js'
 

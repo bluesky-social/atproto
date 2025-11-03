@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@atproto/lex-builder": "workspace:*",
-    "@atproto/lex-validation": "workspace:*",
+    "@atproto/lex-schema": "workspace:*",
     "@formatjs/intl-segmenter": "^11.7.12",
     "core-js": "^3",
     "yargs": "^17.0.0"
