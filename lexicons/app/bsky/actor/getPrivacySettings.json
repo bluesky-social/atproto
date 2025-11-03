@@ -1,0 +1,44 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.getPrivacySettings",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get privacy settings for an actor. If no actor specified, returns settings for the authenticated user. Non-private users can have their settings viewed by anyone. Private users can only have their settings viewed by themselves. Requires auth for viewing private profiles.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "actor": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The actor whose privacy settings to retrieve. If not specified, returns settings for the authenticated user."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["isPrivate"],
+          "properties": {
+            "isPrivate": {
+              "type": "boolean",
+              "description": "Whether the profile is private and requires follow request approval"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "NotFound",
+          "description": "The specified actor could not be found"
+        },
+        {
+          "name": "NotAuthorized",
+          "description": "The authenticated user is not authorized to view these settings"
+        }
+      ]
+    }
+  }
+}
+

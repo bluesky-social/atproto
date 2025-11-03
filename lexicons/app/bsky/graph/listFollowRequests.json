@@ -1,0 +1,60 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.listFollowRequests",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List follow requests for the authenticated user. Can list incoming requests (requests to follow you) or outgoing requests (your requests to follow others). Requires auth.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": ["incoming", "outgoing"],
+            "default": "incoming",
+            "description": "Direction of follow requests: 'incoming' for requests to follow you, 'outgoing' for your requests to follow others"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "approved", "denied", "all"],
+            "default": "pending",
+            "description": "Filter by request status. 'all' returns requests of any status."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "Maximum number of results to return"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor from previous response"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["requests"],
+          "properties": {
+            "cursor": {
+              "type": "string",
+              "description": "Pagination cursor for next page of results"
+            },
+            "requests": {
+              "type": "array",
+              "description": "List of follow request views",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.graph.defs#followRequestView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

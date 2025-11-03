@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.setPrivacySettings",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Set privacy settings for the authenticated user's profile. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["isPrivate"],
+          "properties": {
+            "isPrivate": {
+              "type": "boolean",
+              "description": "Whether the profile should be private and require follow request approval"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["isPrivate"],
+          "properties": {
+            "isPrivate": {
+              "type": "boolean",
+              "description": "Whether the profile is private"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "InvalidRequest",
+          "description": "The request parameters are invalid"
+        }
+      ]
+    }
+  }
+}
+

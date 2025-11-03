@@ -1,0 +1,58 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.createFollowRequest",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a follow request to a private profile. If the profile is not private, this will fail and the client should create a regular follow instead. Duplicate requests to the same subject will be rejected. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject"],
+          "properties": {
+            "subject": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of the private profile to request to follow"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "AT-URI of the created follow request record"
+            },
+            "cid": {
+              "type": "string",
+              "format": "cid",
+              "description": "CID of the created follow request record"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ProfileNotPrivate",
+          "description": "The target profile is not private; use regular follow instead"
+        },
+        {
+          "name": "DuplicateRequest",
+          "description": "A pending follow request to this subject already exists"
+        },
+        {
+          "name": "SubjectNotFound",
+          "description": "The specified subject DID could not be found"
+        }
+      ]
+    }
+  }
+}
+
