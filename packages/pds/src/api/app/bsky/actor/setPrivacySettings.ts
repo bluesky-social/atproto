@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         isPrivate,
       }
 
+      // putPreferences will check authorization via prefAllowed internally
       await ctx.actorStore.transact(did, async (actorTxn) => {
         await actorTxn.pref.putPreferences([privacyPref], 'app.bsky', {
           hasAccessFull,

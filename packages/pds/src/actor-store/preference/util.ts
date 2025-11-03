@@ -1,5 +1,6 @@
 const FULL_ACCESS_ONLY_PREFS = new Set([
   'app.bsky.actor.defs#personalDetailsPref',
+  'app.bsky.actor.privacySettings',
 ])
 
 export type PrefAllowedOptions = {
