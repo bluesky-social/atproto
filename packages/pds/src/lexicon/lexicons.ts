@@ -19119,6 +19119,7 @@ export const ids = {
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
+  AppBskyGraphFollowRequest: 'app.bsky.graph.followRequest',
   AppBskyGraphGetActorStarterPacks: 'app.bsky.graph.getActorStarterPacks',
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',

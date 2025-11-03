@@ -320,12 +320,13 @@ export class RecordReader {
 }
 
 // @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.
-// For now we just want to ensure we're tracking links from follows, blocks, likes, and reposts.
+// For now we just want to ensure we're tracking links from follows, blocks, likes, reposts, and follow requests.
 
 export const getBacklinks = (uri: AtUri, record: RepoRecord): Backlink[] => {
   if (
     record?.['$type'] === ids.AppBskyGraphFollow ||
-    record?.['$type'] === ids.AppBskyGraphBlock
+    record?.['$type'] === ids.AppBskyGraphBlock ||
+    record?.['$type'] === ids.AppBskyGraphFollowRequest
   ) {
     const subject = record['subject']
     if (typeof subject !== 'string') {
