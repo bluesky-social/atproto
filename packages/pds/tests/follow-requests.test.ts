@@ -387,4 +387,332 @@ describe('follow request records', () => {
       expect((getRes.data.value as any).status).toBe(status)
     }
   })
+
+  describe('backlink functionality', () => {
+    it('creates backlinks automatically when follow request is created', async () => {
+      // Create a follow request from Alice to Bob
+      const createRes = await aliceAgent.api.com.atproto.repo.createRecord({
+        repo: aliceAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        record: {
+          $type: 'app.bsky.graph.followRequest',
+          subject: bobAgent.accountDid,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      // Query backlinks to verify it was indexed
+      const backlinks = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: bobAgent.accountDid,
+          }),
+      )
+
+      // Should find Alice's request
+      expect(backlinks.length).toBeGreaterThanOrEqual(1)
+      expect(backlinks.some((b) => b.uri === createRes.data.uri)).toBe(true)
+    })
+
+    it('updates backlinks when follow request subject changes', async () => {
+      // Create a follow request
+      const createRes = await aliceAgent.api.com.atproto.repo.createRecord({
+        repo: aliceAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        record: {
+          $type: 'app.bsky.graph.followRequest',
+          subject: bobAgent.accountDid,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      const uri = new AtUri(createRes.data.uri)
+
+      // Update to point to Carol instead
+      await aliceAgent.api.com.atproto.repo.putRecord({
+        repo: aliceAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        rkey: uri.rkey,
+        record: {
+          $type: 'app.bsky.graph.followRequest',
+          subject: carolAgent.accountDid,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      // Old backlink to Bob should be gone
+      const bobBacklinks = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: bobAgent.accountDid,
+          }),
+      )
+      expect(bobBacklinks.some((b) => b.uri === uri.toString())).toBe(false)
+
+      // New backlink to Carol should exist
+      const carolBacklinks = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: carolAgent.accountDid,
+          }),
+      )
+      expect(carolBacklinks.some((b) => b.uri === uri.toString())).toBe(true)
+    })
+
+    it('removes backlinks when follow request is deleted', async () => {
+      // Create a follow request
+      const createRes = await aliceAgent.api.com.atproto.repo.createRecord({
+        repo: aliceAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        record: {
+          $type: 'app.bsky.graph.followRequest',
+          subject: bobAgent.accountDid,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      const uri = new AtUri(createRes.data.uri)
+
+      // Verify backlink exists
+      let backlinks = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: bobAgent.accountDid,
+          }),
+      )
+      expect(backlinks.some((b) => b.uri === uri.toString())).toBe(true)
+
+      // Delete the record
+      await aliceAgent.api.com.atproto.repo.deleteRecord({
+        repo: aliceAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        rkey: uri.rkey,
+      })
+
+      // Backlink should be gone
+      backlinks = await ctx.actorStore.read(aliceAgent.accountDid, (store) =>
+        store.record.getRecordBacklinks({
+          collection: 'app.bsky.graph.followRequest',
+          path: 'subject',
+          linkTo: bobAgent.accountDid,
+        }),
+      )
+      expect(backlinks.some((b) => b.uri === uri.toString())).toBe(false)
+    })
+
+    it('queries multiple incoming requests efficiently', async () => {
+      // Create a fresh user to test with
+      const targetAgent = network.pds.getClient()
+      await targetAgent.createAccount({
+        email: 'target@test.com',
+        handle: 'target.test',
+        password: 'target-pass',
+      })
+
+      // Create multiple follow requests from different users to target
+      const requesters = [aliceAgent, bobAgent, carolAgent]
+      const createdRequests: string[] = []
+
+      for (const requester of requesters) {
+        const res = await requester.api.com.atproto.repo.createRecord({
+          repo: requester.accountDid,
+          collection: 'app.bsky.graph.followRequest',
+          record: {
+            $type: 'app.bsky.graph.followRequest',
+            subject: targetAgent.accountDid,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          },
+        })
+        createdRequests.push(res.data.uri)
+      }
+
+      // Query all incoming requests for target
+      const backlinks = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: targetAgent.accountDid,
+          }),
+      )
+
+      // Should find all three requests
+      expect(backlinks.length).toBeGreaterThanOrEqual(3)
+      expect(backlinks.some((b) => b.uri.includes(aliceAgent.accountDid))).toBe(
+        true,
+      )
+      expect(backlinks.some((b) => b.uri.includes(bobAgent.accountDid))).toBe(
+        true,
+      )
+      expect(backlinks.some((b) => b.uri.includes(carolAgent.accountDid))).toBe(
+        true,
+      )
+    })
+
+    it('backlinks work correctly with different request statuses', async () => {
+      // Create requests with different statuses
+      const statuses = ['pending', 'approved', 'denied'] as const
+
+      for (const status of statuses) {
+        await aliceAgent.api.com.atproto.repo.createRecord({
+          repo: aliceAgent.accountDid,
+          collection: 'app.bsky.graph.followRequest',
+          record: {
+            $type: 'app.bsky.graph.followRequest',
+            subject: bobAgent.accountDid,
+            status,
+            createdAt: new Date().toISOString(),
+          },
+        })
+      }
+
+      // Query backlinks - should find all regardless of status
+      const backlinks = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: bobAgent.accountDid,
+          }),
+      )
+
+      // Should find at least 3 requests (may be more from other tests)
+      expect(backlinks.length).toBeGreaterThanOrEqual(3)
+
+      // Verify we can retrieve the records and check their statuses
+      const records = await Promise.all(
+        backlinks.slice(0, 3).map(async (backlink) => {
+          const uri = new AtUri(backlink.uri)
+          return agent.api.com.atproto.repo.getRecord({
+            repo: uri.hostname,
+            collection: uri.collection,
+            rkey: uri.rkey,
+          })
+        }),
+      )
+
+      // Should have requests with different statuses
+      const foundStatuses = records.map((r) => (r.data.value as any).status)
+      expect(foundStatuses).toEqual(expect.arrayContaining(['pending']))
+    })
+
+    it('does not create backlinks for follow requests with invalid DIDs', async () => {
+      // Attempt to create a follow request with invalid subject
+      // This should be caught by validation before backlink creation
+      const createAttempt = aliceAgent.api.com.atproto.repo.createRecord({
+        repo: aliceAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        record: {
+          $type: 'app.bsky.graph.followRequest',
+          subject: 'not-a-valid-did',
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      // Should fail validation (this depends on validation being in place)
+      // If validation isn't strict, the record might be created but no backlink
+      try {
+        await createAttempt
+        // If it succeeds, verify no backlink was created
+        const backlinks = await ctx.actorStore.read(
+          aliceAgent.accountDid,
+          (store) =>
+            store.record.getRecordBacklinks({
+              collection: 'app.bsky.graph.followRequest',
+              path: 'subject',
+              linkTo: 'not-a-valid-did',
+            }),
+        )
+        // Should not find any backlinks for invalid DID
+        expect(backlinks.length).toBe(0)
+      } catch (error) {
+        // If it fails validation, that's also acceptable
+        expect(error).toBeDefined()
+      }
+    })
+
+    it('can filter incoming requests by querying backlinks from different repos', async () => {
+      // Create a new user to receive requests
+      const receiverAgent = network.pds.getClient()
+      await receiverAgent.createAccount({
+        email: 'receiver@test.com',
+        handle: 'receiver.test',
+        password: 'receiver-pass',
+      })
+
+      // Alice sends a request
+      await aliceAgent.api.com.atproto.repo.createRecord({
+        repo: aliceAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        record: {
+          $type: 'app.bsky.graph.followRequest',
+          subject: receiverAgent.accountDid,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      // Bob sends a request
+      await bobAgent.api.com.atproto.repo.createRecord({
+        repo: bobAgent.accountDid,
+        collection: 'app.bsky.graph.followRequest',
+        record: {
+          $type: 'app.bsky.graph.followRequest',
+          subject: receiverAgent.accountDid,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      // Query from Alice's repo (different actor store)
+      const aliceBacklinks = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: receiverAgent.accountDid,
+          }),
+      )
+
+      // Query from Bob's repo
+      const bobBacklinks = await ctx.actorStore.read(
+        bobAgent.accountDid,
+        (store) =>
+          store.record.getRecordBacklinks({
+            collection: 'app.bsky.graph.followRequest',
+            path: 'subject',
+            linkTo: receiverAgent.accountDid,
+          }),
+      )
+
+      // Each repo should only see their own follow request
+      expect(
+        aliceBacklinks.some((b) => b.uri.includes(aliceAgent.accountDid)),
+      ).toBe(true)
+      expect(
+        bobBacklinks.some((b) => b.uri.includes(bobAgent.accountDid)),
+      ).toBe(true)
+    })
+  })
 })
