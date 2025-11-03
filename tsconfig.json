@@ -23,6 +23,7 @@
     { "path": "./packages/internal/xrpc-utils" },
     { "path": "./packages/lex/lex" },
     { "path": "./packages/lex/lex-builder" },
+    { "path": "./packages/lex/lex-client" },
     { "path": "./packages/lex/lex-core" },
     { "path": "./packages/lex/lex-document" },
     { "path": "./packages/lex/lex-schema" },
