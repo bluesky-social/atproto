@@ -4,30 +4,30 @@ import { IndentationText, Project } from 'ts-morph'
 import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import { BuildFilterOptions, buildFilter } from './filter.js'
 import { FilteredIndexer } from './filtered-indexer.js'
+import { Formatter, FormatterOptions } from './formatter.js'
+import { LexDefBuilder, LexDefBuilderOptions } from './lex-def-builder.js'
 import {
   LexiconDirectoryIndexer,
   LexiconDirectoryIndexerOptions,
 } from './lexicon-directory-indexer.js'
-import { TsDocBuilder, TsDocBuilderOptions } from './ts-doc-builder.js'
-import { TsFormatter, TsFormatterOptions } from './ts-formatter.js'
 import { isSafeIdentifier } from './ts-lang.js'
 
-export type TsProjectBuildOptions = TsProjectBuilderLoadOptions &
-  TsProjectBuilderSaveOptions
+export type TsProjectBuildOptions = LexBuilderLoadOptions &
+  LexBuilderSaveOptions
 
-export type TsProjectBuilderLoadOptions = TsDocBuilderOptions &
+export type LexBuilderLoadOptions = LexDefBuilderOptions &
   LexiconDirectoryIndexerOptions &
   BuildFilterOptions
 
-export type TsProjectBuilderSaveOptions = TsFormatterOptions & {
+export type LexBuilderSaveOptions = FormatterOptions & {
   out: string
   clear?: boolean
   override?: boolean
 }
 
-export class TsProjectBuilder {
+export class LexBuilder {
   static async build(options: TsProjectBuildOptions) {
-    const builder = new TsProjectBuilder()
+    const builder = new LexBuilder()
     await builder.load(options)
     await builder.save(options)
   }
@@ -38,7 +38,7 @@ export class TsProjectBuilder {
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
 
-  public async load(options: TsProjectBuilderLoadOptions) {
+  public async load(options: LexBuilderLoadOptions) {
     await using indexer = new FilteredIndexer(
       new LexiconDirectoryIndexer(options),
       buildFilter(options),
@@ -56,7 +56,7 @@ export class TsProjectBuilder {
     }
   }
 
-  public async save(options: TsProjectBuilderSaveOptions) {
+  public async save(options: LexBuilderSaveOptions) {
     const files = this.#project.getSourceFiles()
 
     const destination = resolve(options.out)
@@ -71,7 +71,7 @@ export class TsProjectBuilder {
       )
     }
 
-    const formatter = new TsFormatter(options)
+    const formatter = new Formatter(options)
 
     await Promise.all(
       Array.from(files, async (file) => {
@@ -137,12 +137,12 @@ export class TsProjectBuilder {
   private async createDefsFile(
     doc: LexiconDocument,
     indexer: LexiconIndexer,
-    options: TsDocBuilderOptions,
+    options: LexDefBuilderOptions,
   ): Promise<void> {
     const path = join('/', ...doc.id.split('.'))
     const file = this.createFile(`${path}.defs.ts`)
 
-    const fileBuilder = new TsDocBuilder(options, file, doc, indexer)
+    const fileBuilder = new LexDefBuilder(options, file, doc, indexer)
     await fileBuilder.build()
   }
 }

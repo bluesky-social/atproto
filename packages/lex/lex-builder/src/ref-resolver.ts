@@ -20,7 +20,7 @@ export type ResolvedRef = {
  * Utility class to resolve lexicon references to TypeScript identifiers,
  * generating "import" statements as needed.
  */
-export class TsRefResolver {
+export class RefResolver {
   constructor(
     private doc: LexiconDocument,
     private file: SourceFile,

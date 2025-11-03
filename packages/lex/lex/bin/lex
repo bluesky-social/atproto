@@ -10,7 +10,7 @@
 
 const yargs = require('yargs')
 const { hideBin } = require('yargs/helpers')
-const { TsProjectBuilder } = require('@atproto/lex-builder')
+const { LexBuilder } = require('@atproto/lex-builder')
 
 yargs(hideBin(process.argv))
   .strict()
@@ -79,7 +79,7 @@ yargs(hideBin(process.argv))
       })
     },
     async (argv) => {
-      await TsProjectBuilder.build(argv)
+      await LexBuilder.build(argv)
     },
   )
   .parseAsync()

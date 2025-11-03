@@ -25,10 +25,10 @@ import {
   LexiconUnknown,
 } from '@atproto/lex-document'
 import { Nsid, l } from '@atproto/lex-schema'
+import { RefResolver, getPublicIdentifiers } from './ref-resolver.js'
 import { isSafeIdentifier } from './ts-lang.js'
-import { TsRefResolver, getPublicIdentifiers } from './ts-ref-resolver.js'
 
-export type TsDocBuilderOptions = {
+export type LexDefBuilderOptions = {
   lib?: string
   pureAnnotations?: boolean
 }
@@ -36,16 +36,16 @@ export type TsDocBuilderOptions = {
 /**
  * Utility class to build a TypeScript source file from a lexicon document.
  */
-export class TsDocBuilder {
-  private readonly refResolver: TsRefResolver
+export class LexDefBuilder {
+  private readonly refResolver: RefResolver
 
   constructor(
-    private readonly options: TsDocBuilderOptions,
+    private readonly options: LexDefBuilderOptions,
     private readonly file: SourceFile,
     private readonly doc: LexiconDocument,
     indexer: LexiconIndexer,
   ) {
-    this.refResolver = new TsRefResolver(doc, file, indexer)
+    this.refResolver = new RefResolver(doc, file, indexer)
   }
 
   private pure(code: string) {
