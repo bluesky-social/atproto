@@ -1,3 +1,4 @@
+import { ForbiddenError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -9,12 +10,15 @@ import {
   LocalViewer,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
+import { AccessControlService } from '../../../../services/access-control'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return
 
+  const accessControl = new AccessControlService(ctx.actorStore)
+
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.authVerifier.authorization({
+    auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       authorize: (permissions, { req }) => {
         const lxm = ids.AppBskyFeedGetAuthorFeed
         const aud = computeProxyTo(ctx, req, lxm)
@@ -22,6 +26,28 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async (reqCtx) => {
+      const { params, auth } = reqCtx
+      const requester = auth?.credentials?.did ?? null
+
+      // Resolve actor DID from handle or DID
+      const actorDid = await ctx.idResolver.actor.resolve(params.actor)
+
+      if (!actorDid) {
+        throw new Error('Profile not found')
+      }
+
+      // Check access control
+      const accessResult = await accessControl.canViewProfile(
+        requester,
+        actorDid,
+      )
+
+      // If unauthorized, throw forbidden error
+      if (!accessResult.canView) {
+        throw new ForbiddenError('Profile is private')
+      }
+
+      // Authorized - continue with normal proxy logic
       return pipethroughReadAfterWrite(ctx, reqCtx, getAuthorMunge)
     },
   })

@@ -524,6 +524,19 @@ export class AppContext {
       keypair,
     })
   }
+
+  // Access Control Helpers
+  async canViewProfile(requester: string | null, subject: string) {
+    const { AccessControlService } = await import('./services/access-control')
+    const accessControl = new AccessControlService(this.actorStore)
+    return accessControl.canViewProfile(requester, subject)
+  }
+
+  async getPrivacySettings(did: string) {
+    const { AccessControlService } = await import('./services/access-control')
+    const accessControl = new AccessControlService(this.actorStore)
+    return accessControl.getPrivacySettings(did)
+  }
 }
 
 const basicAuthHeader = (username: string, password: string) => {
