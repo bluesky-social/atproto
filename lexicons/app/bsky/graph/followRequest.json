@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.followRequest",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record representing a follow request to a private profile. Duplicate follow requests will be ignored by the AppView.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "status", "createdAt"],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the account being requested to follow"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "approved", "denied"],
+            "description": "Current status of the follow request",
+            "default": "pending"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when the follow request was created"
+          },
+          "respondedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when the follow request was approved or denied"
+          }
+        }
+      }
+    }
+  }
+}
+

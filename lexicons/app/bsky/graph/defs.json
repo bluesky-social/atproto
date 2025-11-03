@@ -161,6 +161,80 @@
           "description": "if the actor is followed by this DID, contains the AT-URI of the follow record"
         }
       }
+    },
+    "followRequestView": {
+      "type": "object",
+      "description": "Detailed view of a follow request with requester profile information",
+      "required": ["uri", "requester", "subject", "status", "createdAt"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the follow request record"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid",
+          "description": "CID of the follow request record"
+        },
+        "requester": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileView",
+          "description": "Profile of the account making the follow request"
+        },
+        "subject": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the private profile being requested to follow"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "denied"],
+          "description": "Current status of the follow request"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the follow request was created"
+        },
+        "respondedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the follow request was approved or denied"
+        }
+      }
+    },
+    "followRequestViewBasic": {
+      "type": "object",
+      "description": "Basic view of a follow request with minimal requester information",
+      "required": ["uri", "requester", "subject", "status", "createdAt"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the follow request record"
+        },
+        "requester": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic",
+          "description": "Basic profile of the account making the follow request"
+        },
+        "subject": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the private profile being requested to follow"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "denied"],
+          "description": "Current status of the follow request"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the follow request was created"
+        }
+      }
     }
   }
 }

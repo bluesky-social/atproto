@@ -1,0 +1,63 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.respondToFollowRequest",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Approve or deny a follow request to a private profile. When approved, automatically creates the follow record. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["requestUri", "response"],
+          "properties": {
+            "requestUri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "AT-URI of the follow request record to respond to"
+            },
+            "response": {
+              "type": "string",
+              "enum": ["approve", "deny"],
+              "description": "Whether to approve or deny the follow request"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["request"],
+          "properties": {
+            "request": {
+              "type": "ref",
+              "ref": "com.atproto.repo.strongRef",
+              "description": "Reference to the updated follow request record"
+            },
+            "followRecord": {
+              "type": "ref",
+              "ref": "com.atproto.repo.strongRef",
+              "description": "Reference to the created follow record (only present when approved)"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "RequestNotFound",
+          "description": "The specified follow request could not be found"
+        },
+        {
+          "name": "InvalidResponse",
+          "description": "The response value is not valid (must be 'approve' or 'deny')"
+        },
+        {
+          "name": "NotAuthorized",
+          "description": "The authenticated user is not authorized to respond to this request"
+        }
+      ]
+    }
+  }
+}
+
