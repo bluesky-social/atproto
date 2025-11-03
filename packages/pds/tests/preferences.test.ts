@@ -250,4 +250,199 @@ describe('user preferences', () => {
     )
     expect(scopedPref).toBeDefined()
   })
+
+  describe('privacy settings (privateProfilePref)', () => {
+    it('creates private profile preference with default value.', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#privateProfilePref',
+              isPrivate: false,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+
+      const { data } = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+
+      expect(data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#privateProfilePref',
+        isPrivate: false,
+      })
+    })
+
+    it('updates isPrivate flag to true.', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#privateProfilePref',
+              isPrivate: true,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+
+      const { data } = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+
+      expect(data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#privateProfilePref',
+        isPrivate: true,
+      })
+    })
+
+    it('updates isPrivate flag back to false.', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#privateProfilePref',
+              isPrivate: false,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+
+      const { data } = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+
+      expect(data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#privateProfilePref',
+        isPrivate: false,
+      })
+    })
+
+    it('retrieves privacy settings for multiple users independently.', async () => {
+      // Set alice to private
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#privateProfilePref',
+              isPrivate: true,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+
+      // Set bob to public
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#privateProfilePref',
+              isPrivate: false,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
+      )
+
+      // Check alice is private
+      const aliceData = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+      expect(aliceData.data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#privateProfilePref',
+        isPrivate: true,
+      })
+
+      // Check bob is public
+      const bobData = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.bob) },
+      )
+      expect(bobData.data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#privateProfilePref',
+        isPrivate: false,
+      })
+    })
+
+    it('persists privacy settings across sessions.', async () => {
+      // Set privacy setting
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#privateProfilePref',
+              isPrivate: true,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
+      )
+
+      // Read directly from database
+      const dbPrefs = await network.pds.ctx.actorStore.read(
+        sc.dids.carol,
+        (store) =>
+          store.pref.getPreferences('app.bsky', { hasAccessFull: true }),
+      )
+
+      expect(dbPrefs).toContainEqual({
+        $type: 'app.bsky.actor.defs#privateProfilePref',
+        isPrivate: true,
+      })
+    })
+
+    it('removes privacy settings when not included in put operation.', async () => {
+      // First set privacy preference
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#privateProfilePref',
+              isPrivate: true,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.dan), encoding: 'application/json' },
+      )
+
+      // Verify it's set
+      let { data } = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.dan) },
+      )
+      expect(data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#privateProfilePref',
+        isPrivate: true,
+      })
+
+      // Put preferences without privacy setting
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            { $type: 'app.bsky.actor.defs#adultContentPref', enabled: false },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.dan), encoding: 'application/json' },
+      )
+
+      // Verify privacy setting is removed
+      ;({ data } = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.dan) },
+      ))
+      expect(data.preferences).not.toContainEqual(
+        expect.objectContaining({
+          $type: 'app.bsky.actor.defs#privateProfilePref',
+        }),
+      )
+    })
+  })
 })
