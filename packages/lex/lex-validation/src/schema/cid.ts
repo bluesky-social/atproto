@@ -1,5 +1,4 @@
-import { CID } from 'multiformats/cid'
-import { parseLexLink } from '@atproto/lex-core'
+import { CID, parseLexLink } from '@atproto/lex-core'
 import {
   ValidationContext,
   ValidationResult,

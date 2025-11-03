@@ -25,20 +25,25 @@
     "lex": "./bin/lex"
   },
   "sideEffects": false,
-  "type": "commonjs",
   "main": "./index.js",
   "types": "./index.d.ts",
   "exports": {
     ".": {
-      "require": "./index.js",
-      "browser": "./index.js",
+      "browser": "./index.mjs",
+      "import": "./index.mjs",
+      "require": "./index.cjs",
       "types": "./index.d.ts"
     },
     "./polyfills": {
-      "require": "./polyfills.js",
-      "browser": "./polyfills.js",
+      "browser": "./polyfills.mjs",
+      "import": "./polyfills.mjs",
+      "require": "./polyfills.cjs",
       "types": "./polyfills.d.ts"
     }
+  },
+  "browser": {
+    ".": "./index.cjs",
+    "./polyfills": "./polyfills.cjs"
   },
   "dependencies": {
     "@atproto/lex-builder": "workspace:*",

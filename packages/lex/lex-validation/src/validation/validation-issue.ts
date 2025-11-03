@@ -1,5 +1,4 @@
-import { CID } from 'multiformats/cid'
-import { isPlainObject } from '@atproto/lex-core'
+import { CID, isPlainObject } from '@atproto/lex-core'
 import { arrayAgg } from '../util/array-agg.js'
 import { PropertyKey } from './property-key.js'
 

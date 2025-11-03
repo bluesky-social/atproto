@@ -1,0 +1,5 @@
+import 'core-js/modules/esnext.symbol.async-dispose'
+import 'core-js/modules/esnext.symbol.dispose'
+import 'core-js/modules/esnext.uint8-array.from-base64'
+import 'core-js/modules/esnext.uint8-array.to-base64'
+import '@formatjs/intl-segmenter/polyfill'
