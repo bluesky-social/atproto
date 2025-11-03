@@ -34,6 +34,12 @@
       "require": "./index.cjs",
       "types": "./index.d.ts"
     },
+    "./client": {
+      "browser": "./client.mjs",
+      "import": "./client.mjs",
+      "require": "./client.cjs",
+      "types": "./client.d.ts"
+    },
     "./polyfills": {
       "browser": "./polyfills.mjs",
       "import": "./polyfills.mjs",
@@ -43,11 +49,13 @@
   },
   "browser": {
     ".": "./index.cjs",
+    "./client": "./client.cjs",
     "./polyfills": "./polyfills.cjs"
   },
   "dependencies": {
     "@atproto/lex-builder": "workspace:*",
     "@atproto/lex-schema": "workspace:*",
+    "@atproto/lex-client": "workspace:*",
     "@formatjs/intl-segmenter": "^11.7.12",
     "core-js": "^3",
     "yargs": "^17.0.0"

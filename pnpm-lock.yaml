@@ -797,6 +797,9 @@ importers:
       '@atproto/lex-builder':
         specifier: workspace:*
         version: link:../lex-builder
+      '@atproto/lex-client':
+        specifier: workspace:*
+        version: link:../lex-client
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema
