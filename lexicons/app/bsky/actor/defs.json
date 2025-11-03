@@ -594,17 +594,12 @@
     },
     "privateProfilePref": {
       "type": "object",
-      "description": "Preferences for private profile settings, controlling who can follow and view the account's content.",
+      "description": "Preferences for private profile settings, controlling who can follow and view the account's content. Existing followers are retained when switching to private; only new follow attempts require approval.",
       "required": ["isPrivate"],
       "properties": {
         "isPrivate": {
           "type": "boolean",
-          "description": "Whether the profile is private. If true, follow requests must be approved before followers can view content.",
-          "default": false
-        },
-        "autoApproveKnownFollowers": {
-          "type": "boolean",
-          "description": "Automatically approve follow requests from accounts that were following before the profile became private.",
+          "description": "Whether the profile is private. If true, new follow requests must be approved before followers can view content. Existing followers are automatically retained.",
           "default": false
         }
       }
