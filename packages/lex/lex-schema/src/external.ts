@@ -18,6 +18,7 @@ import {
   IntegerSchema,
   IntegerSchemaOptions,
   NeverSchema,
+  NullSchema,
   ObjectSchema,
   ObjectSchemaOptions,
   ObjectSchemaProperties,
@@ -65,6 +66,13 @@ export function never() {
 export function unknown() {
   return new UnknownSchema()
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function _null() {
+  return new NullSchema()
+}
+
+export { _null as null }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function literal<const V extends null | string | number | boolean>(
