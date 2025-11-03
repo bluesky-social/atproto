@@ -1,8 +1,8 @@
-import './index.css'
+import '@atproto/lex/polyfills'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from './_app.tsx'
+import { App } from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

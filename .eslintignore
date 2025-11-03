@@ -15,6 +15,7 @@ packages/ozone/src/lexicon
 # @atproto/lex
 packages/lex/*/src/lexicons
 packages/lex/*/tests/lexicons
+packages/oauth/oauth-client-browser-example/src/lexicons
 
 # others
 packages/oauth/*/src/locales/*/messages.ts

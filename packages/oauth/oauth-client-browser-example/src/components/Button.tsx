@@ -1,9 +1,8 @@
-import { useMutation } from '@tanstack/react-query'
-import { JSX } from 'react'
-import { Spinner } from './_spinner.tsx'
+import { JSX, useState } from 'react'
+import { Spinner } from './Spinner.tsx'
 
 export type ButtonProps = {
-  action?: () => Promise<void>
+  action?: () => unknown | Promise<unknown>
   loading?: boolean
   size?: 'small' | 'medium' | 'large'
   transparent?: boolean
@@ -24,12 +23,22 @@ export function Button({
   const actionable =
     props.type === 'submit' || onClick != null || action != null
 
-  const mutation = useMutation({
-    mutationFn: action,
-    onError: (error) => console.error(error),
-  })
+  const [pendingActions, setPendingActions] = useState(0)
 
-  const isLoading = loading || mutation.isPending
+  const doAction = action
+    ? async () => {
+        setPendingActions((p) => p + 1)
+        try {
+          await action()
+        } catch (error) {
+          console.error('Error in button action:', error)
+        } finally {
+          setPendingActions((p) => p - 1)
+        }
+      }
+    : null
+
+  const isLoading = loading || pendingActions > 0
   const sizeClass =
     size === 'small'
       ? 'px-1 py-0'
@@ -42,9 +51,9 @@ export function Button({
       {...props}
       onClick={(event) => {
         onClick?.(event)
-        if (action != null && !event.defaultPrevented) {
+        if (doAction != null && !event.defaultPrevented) {
           event.preventDefault()
-          void mutation.mutateAsync()
+          void doAction()
         }
       }}
       tabIndex={props?.tabIndex ?? (actionable ? 0 : -1)}

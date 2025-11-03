@@ -1,6 +1,6 @@
 import { useGetActorProfileQuery } from '../queries/use-get-actor-profile-query.ts'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
-import { Button } from './_button.tsx'
+import { Button } from './Button.tsx'
 
 export function ProfileInfo() {
   const result = useGetActorProfileQuery()
@@ -10,7 +10,7 @@ export function ProfileInfo() {
       <h2>
         Bluesky profile
         <Button
-          onClick={() => result.refetch({ throwOnError: false })}
+          action={async () => result.refetch({ throwOnError: false })}
           className="ml-1"
           size="small"
           transparent

@@ -1,6 +1,6 @@
 import { useGetSessionQuery } from '../queries/use-get-session-query.ts'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
-import { Button } from './_button.tsx'
+import { Button } from './Button.tsx'
 
 export function SessionInfo() {
   const result = useGetSessionQuery()
@@ -10,7 +10,7 @@ export function SessionInfo() {
       <h2>
         getSession
         <Button
-          onClick={() => result.refetch({ throwOnError: false })}
+          action={async () => result.refetch({ throwOnError: false })}
           className="ml-1"
           size="small"
           transparent
