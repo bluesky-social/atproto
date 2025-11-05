@@ -119,7 +119,6 @@ export function sortTrimFlattenThreadTree(
 type SortTrimFlattenOptions = {
   branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
   opDid: string
-  prioritizeFollowedUsers: boolean
   sort?: GetPostThreadV2QueryParams['sort']
   viewer: HydrateCtx['viewer']
   threadTagsBumpDown: readonly string[]
@@ -182,13 +181,7 @@ function applyBumping(
     return null
   }
 
-  const {
-    opDid,
-    prioritizeFollowedUsers,
-    viewer,
-    threadTagsBumpDown,
-    threadTagsHide,
-  } = opts
+  const { opDid, viewer, threadTagsBumpDown, threadTagsHide } = opts
 
   type BumpDirection = 'up' | 'down'
   type BumpPredicateFn = (i: ThreadMaybeOtherPostNode) => boolean
@@ -227,10 +220,7 @@ function applyBumping(
     // Followers posts.
     [
       'up',
-      (i) =>
-        i.type === 'post' &&
-        prioritizeFollowedUsers &&
-        !!i.item.value.post.author.viewer?.following,
+      (i) => i.type === 'post' && !!i.item.value.post.author.viewer?.following,
     ],
     // Bump-down tags.
     [

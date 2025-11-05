@@ -89,7 +89,6 @@ const presentation = (
     above: calculateAbove(ctx, params),
     below: calculateBelow(ctx, skeleton.anchor, params),
     branchingFactor: params.branchingFactor,
-    prioritizeFollowedUsers: params.prioritizeFollowedUsers,
     sort: params.sort,
   })
 
