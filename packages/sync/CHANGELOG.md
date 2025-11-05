@@ -1,5 +1,11 @@
 # @atproto/sync
 
+## 0.1.36
+
+### Patch Changes
+
+- [#4038](https://github.com/bluesky-social/atproto/pull/4038) [`756ab5d87`](https://github.com/bluesky-social/atproto/commit/756ab5d87fea75e8648a6bdd545d8b441bfb2dd6) Thanks [@knotbin](https://github.com/knotbin)! - filtercollections wildcard endings
+
 ## 0.1.35
 
 ### Patch Changes
