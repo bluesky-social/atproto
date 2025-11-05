@@ -1,5 +1,6 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { FeatureGateID } from '../feature-gates'
 import { Actor, ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
@@ -139,6 +140,8 @@ export class Views {
   public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
   private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
   private threadTagsHide: readonly string[] = this.opts.threadTagsHide
+  private visibilityTagHide: string = this.opts.visibilityTagHide
+  private visibilityTagRankPrefix: string = this.opts.visibilityTagRankPrefix
   constructor(
     private opts: {
       imgUriBuilder: ImageUriBuilder
@@ -146,6 +149,8 @@ export class Views {
       indexedAtEpoch: Date | undefined
       threadTagsBumpDown: readonly string[]
       threadTagsHide: readonly string[]
+      visibilityTagHide: string
+      visibilityTagRankPrefix: string
     },
   ) {}
 
@@ -1367,14 +1372,21 @@ export class Views {
       }
     }
 
-    const thread = sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      sort,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    const thread = sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        sort,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
 
     return {
       hasOtherReplies,
@@ -1734,13 +1746,20 @@ export class Views {
       ),
     }
 
-    return sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    return sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
   }
 
   private threadOtherV2Replies(
@@ -1933,21 +1952,32 @@ export class Views {
     const opDid = creatorFromUri(rootUri)
     const authorDid = creatorFromUri(uri)
 
-    const showBecauseFollowing = !!postView.author.viewer?.following
-    const hiddenByTag =
-      authorDid !== opDid &&
-      authorDid !== state.ctx?.viewer &&
-      !showBecauseFollowing &&
-      this.threadTagsHide.some((t) => post.tags.has(t))
+    let hiddenByTag = false
+    if (
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      )
+    ) {
+      hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
+    } else {
+      const showBecauseFollowing = !!postView.author.viewer?.following
+      hiddenByTag =
+        authorDid !== opDid &&
+        authorDid !== state.ctx?.viewer &&
+        !showBecauseFollowing &&
+        this.threadTagsHide.some((t) => post.tags.has(t))
+    }
 
     const hiddenByThreadgate =
       state.ctx?.viewer !== authorDid &&
       this.replyIsHiddenByThreadgate(uri, rootUri, state)
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
+    const isPushPin =
+      isPostRecord(post.record) && post.record.text.trim() === '📌'
 
     return {
-      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer,
+      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer || isPushPin,
       hiddenByTag,
       hiddenByThreadgate,
       mutedByViewer,

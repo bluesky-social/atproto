@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { type CheckedFeatureGatesMap, FeatureGateID } from '../feature-gates'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
@@ -30,6 +31,7 @@ import {
   FeedGenViewerStates,
   FeedGens,
   FeedHydrator,
+  type GetPostsHydrationOptions,
   FeedItem,
   Likes,
   Post,
@@ -81,6 +83,7 @@ export class HydrateCtx {
   includeActorTakedowns = this.vals.includeActorTakedowns
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
+  featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
   constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
@@ -99,6 +102,7 @@ export type HydrateCtxVals = {
   includeActorTakedowns?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
+  featureGates?: CheckedFeatureGatesMap
 }
 
 export type HydrationState = {
@@ -444,6 +448,7 @@ export class Hydrator {
     refs: ItemRef[],
     ctx: HydrateCtx,
     state: HydrationState = {},
+    options: Pick<GetPostsHydrationOptions, 'processDynamicTagsForView'> = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
 
@@ -460,6 +465,10 @@ export class Hydrator {
       uris,
       ctx.includeTakedowns,
       state.posts,
+      ctx.viewer,
+      {
+        processDynamicTagsForView: options.processDynamicTagsForView,
+      },
     )
     addPostsToHydrationState(postsLayer0)
 
@@ -731,7 +740,13 @@ export class Hydrator {
     refs: ItemRef[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const postsState = await this.hydratePosts(refs, ctx)
+    const postsState = await this.hydratePosts(refs, ctx, undefined, {
+      processDynamicTagsForView: ctx.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      )
+        ? 'thread'
+        : undefined,
+    })
 
     const { posts } = postsState
     const postsList = posts ? Array.from(posts.entries()) : []
@@ -1304,6 +1319,7 @@ export class Hydrator {
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
       includeDebugField,
+      featureGates: vals.featureGates,
     })
   }
 

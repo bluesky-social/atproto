@@ -132,6 +132,8 @@ export class BskyAppView {
       indexedAtEpoch: config.indexedAtEpoch,
       threadTagsBumpDown: [...config.threadTagsBumpDown],
       threadTagsHide: [...config.threadTagsHide],
+      visibilityTagHide: config.visibilityTagHide,
+      visibilityTagRankPrefix: config.visibilityTagRankPrefix,
     })
 
     const bsyncClient = createBsyncClient({
