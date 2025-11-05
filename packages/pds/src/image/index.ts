@@ -1,6 +1,7 @@
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import sharp from 'sharp'
+import { errHasMsg } from '@atproto/common'
 
 export async function maybeGetInfo(
   stream: Readable,
@@ -15,7 +16,13 @@ export async function maybeGetInfo(
     metadata = result
   } catch (err) {
     // The buffer has a corrupted image or no image at all.
-    return null
+    if (
+      errHasMsg(err, 'Input buffer contains unsupported image format') ||
+      errHasMsg(err, 'Input buffer has corrupt header')
+    ) {
+      return null
+    }
+    throw err
   }
   const { size, height, width, format } = metadata
   if (

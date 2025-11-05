@@ -145,7 +145,7 @@ export const isErrnoException = (
 }
 
 export const errHasMsg = (err: unknown, msg: string): boolean => {
-  return !!err && typeof err === 'object' && err['message'] === msg
+  return !!err && typeof err === 'object' && err['message'].startsWith(msg)
 }
 
 export const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {

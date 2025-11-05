@@ -212,8 +212,8 @@ describe('pds posts views', () => {
               alt: 'alt text',
               image: image.blob,
               aspectRatio: { height: 3, width: 4 },
-            }
-          ]
+            },
+          ],
         },
       },
       sc.getHeaders(sc.dids.alice),

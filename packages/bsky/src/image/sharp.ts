@@ -73,7 +73,10 @@ export async function maybeGetInfo(
       mime: formatsToMimes.get(format) ?? 'unknown',
     }
   } catch (err) {
-    if (errHasMsg(err, 'Input buffer contains unsupported image format')) {
+    if (
+      errHasMsg(err, 'Input buffer contains unsupported image format') ||
+      errHasMsg(err, 'Input buffer has corrupt header')
+    ) {
       return null
     }
     throw err
