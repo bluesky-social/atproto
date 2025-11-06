@@ -1,4 +1,4 @@
-import { Lex } from '@atproto/lex-core'
+import { Lex } from '@atproto/lex-data'
 import { Validator } from '../validation.js'
 
 export type LexBody<E extends string = any> = E extends `text/${string}`

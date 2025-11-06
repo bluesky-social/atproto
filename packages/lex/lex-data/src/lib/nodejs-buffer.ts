@@ -1,9 +1,11 @@
 interface NodeJSBuffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>
   extends Uint8Array<TArrayBuffer> {
+  byteLength: number
   toString(encoding?: 'base64'): string
 }
 
 interface NodeJSBufferConstructor {
+  new (input: string, encoding?: 'utf-8'): NodeJSBuffer
   from(input: Uint8Array | ArrayBuffer | ArrayBufferView): NodeJSBuffer
   from(input: string, encoding?: 'base64'): NodeJSBuffer
   byteLength(input: string): number

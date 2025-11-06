@@ -1,4 +1,4 @@
-import { Nsid } from './format.js'
+import { Nsid } from './string-format.js'
 
 export type $Type<
   N extends Nsid = Nsid,

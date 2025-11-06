@@ -21,7 +21,7 @@ export default defineConfig({
         /oauth-scopes/,
         /lex/,
         /lex-client/,
-        /lex-core/,
+        /lex-data/,
         /lex-schema/,
         /syntax/,
       ],

@@ -1,4 +1,5 @@
-import { ArrayContaining, isPlainObject } from '@atproto/lex-core'
+import { isPlainObject } from '@atproto/lex-data'
+import { ArrayContaining } from '../core.js'
 import {
   FailureResult,
   ValidationContext,

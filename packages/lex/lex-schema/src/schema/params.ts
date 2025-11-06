@@ -1,4 +1,4 @@
-import { isPlainObject } from '@atproto/lex-core'
+import { isPlainObject } from '@atproto/lex-data'
 import {
   ValidationContext,
   ValidationResult,

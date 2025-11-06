@@ -29,14 +29,14 @@ export abstract class Validator<V = any> {
    * This method should be implemented by subclasses to perform validation and
    * transformation of the input value.
    *
-   * By convention, the {@link ValidationResult} should return the original
-   * input value if validation was successful and no transformation was applied
-   * (i.e. the input already conformed to the schema). If a default value or
-   * other transformation was applied, the returned value should be the new
-   * value.
+   * By convention, the {@link ValidationResult} must return the original input
+   * value if validation was successful and no transformation was applied (i.e.
+   * the input already conformed to the schema). If a default value, or any
+   * other transformation was applied, the returned value c&an be different from
+   * the input.
    *
-   * This convention allows the `is` and `assert` methods to check whether the
-   * input value exactly matches the schema (without defaults or
+   * This convention allows the `matches` and `assert` methods to check whether
+   * the input value exactly matches the schema (without defaults or
    * transformations), by checking if the returned value is strictly equal to
    * the input.
    */
@@ -45,24 +45,24 @@ export abstract class Validator<V = any> {
     ctx: ValidationContext,
   ): ValidationResult<V>
 
-  is(input: unknown): input is V {
-    const result = ValidationContext.validate(input, this, {
-      allowTransform: false,
-    })
+  assert(input: unknown): asserts input is V {
+    const result = this.validate(input, { allowTransform: false })
+    if (!result.success) throw result.error
+  }
+
+  matches(input: unknown): input is V {
+    const result = this.validate(input, { allowTransform: false })
     return result.success
   }
 
-  parse(input: unknown, options?: ValidationOptions): V {
-    const result = ValidationContext.validate(input, this, options)
-    if (!result.success) throw result.error
-    return result.value
+  maybe<T>(input: T): (T & V) | undefined {
+    return this.matches(input) ? input : undefined
   }
 
-  assert(input: unknown): asserts input is V {
-    const result = ValidationContext.validate(input, this, {
-      allowTransform: false,
-    })
+  parse(input: unknown, options?: ValidationOptions): V {
+    const result = this.validate(input, options)
     if (!result.success) throw result.error
+    return result.value
   }
 
   validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
@@ -83,16 +83,20 @@ export abstract class Validator<V = any> {
   // - "app.bsky.feed.post.$parse(...)" // calls a utility function created by "lex build"
   // - "app.bsky.feed.defs.postView.$parse(...)" // uses the alias defined below on the schema instance
 
-  $is(input: unknown): input is V {
-    return this.is(input)
+  $assert(input: unknown): asserts input is V {
+    return this.assert(input)
+  }
+
+  $matches(input: unknown): input is V {
+    return this.matches(input)
+  }
+
+  $maybe<T>(input: T): (T & V) | undefined {
+    return this.maybe(input)
   }
 
   $parse(input: unknown, options?: ValidationOptions): V {
     return this.parse(input, options)
-  }
-
-  $assert(input: unknown): asserts input is V {
-    this.assert(input)
   }
 
   $validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
@@ -110,15 +114,15 @@ export class ValidationContext {
     return context.validate(input, validator)
   }
 
-  #path: PropertyKey[]
+  private readonly currentPath: PropertyKey[]
 
   protected constructor(readonly options?: ValidationOptions) {
-    // Create a copy because we will be mutating the path
-    this.#path = options?.path ? [...options.path] : []
+    // Create a copy because we will be mutating the array during validation.
+    this.currentPath = options?.path ? [...options.path] : []
   }
 
   get path() {
-    return [...this.#path]
+    return [...this.currentPath]
   }
 
   get allowTransform() {
@@ -130,10 +134,15 @@ export class ValidationContext {
     // (and meant to be called only from here).
     const result = validator.validateInContext(input, this)
 
-    // If the value changed, it means that a default or transformation was
-    // applied, meaning that the original value did *not* match the (output)
-    // schema. When "allowTransform" is false, we consider this a failure.
-    if (result.success && result.value !== input && !this.allowTransform) {
+    // If the value changed, it means that a default (or some other
+    // transformation) was applied, meaning that the original value did *not*
+    // match the (output) schema. When "allowTransform" is false, we consider
+    // this a failure.
+    if (
+      result.success &&
+      !this.allowTransform &&
+      !Object.is(result.value, input)
+    ) {
       return this.issueInvalidValue(input, [result.value])
     }
 
@@ -146,11 +155,11 @@ export class ValidationContext {
     validator: Validator<V>,
   ): ValidationResult<V> {
     // Instead of creating a new context, we just push/pop the path segment.
-    this.#path.push(key)
+    this.currentPath.push(key)
     try {
       return this.validate(input[key], validator)
     } finally {
-      this.#path.length--
+      this.currentPath.length--
     }
   }
 
@@ -171,7 +180,7 @@ export class ValidationContext {
       code: 'invalid_value',
       input,
       values,
-      path: path ? this.#path.concat(path) : [...this.#path],
+      path: path ? this.currentPath.concat(path) : [...this.currentPath],
     })
   }
 
@@ -184,7 +193,7 @@ export class ValidationContext {
       code: 'invalid_type',
       input,
       expected: Array.isArray(expected) ? expected : [expected],
-      path: path ? this.#path.concat(path) : [...this.#path],
+      path: path ? this.currentPath.concat(path) : [...this.currentPath],
     })
   }
 
@@ -209,7 +218,7 @@ export class ValidationContext {
       code: 'required_key',
       key,
       input,
-      path: [...this.#path, key],
+      path: [...this.currentPath, key],
     })
   }
 
@@ -219,7 +228,7 @@ export class ValidationContext {
       message,
       format,
       input,
-      path: [...this.#path],
+      path: [...this.currentPath],
     })
   }
 
@@ -235,7 +244,7 @@ export class ValidationContext {
       maximum,
       actual,
       input,
-      path: [...this.#path],
+      path: [...this.currentPath],
     })
   }
 
@@ -251,7 +260,7 @@ export class ValidationContext {
       minimum,
       actual,
       input,
-      path: [...this.#path],
+      path: [...this.currentPath],
     })
   }
 }

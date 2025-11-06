@@ -690,12 +690,12 @@ async function handleXrpcResponse<T extends Query | Procedure>(
       // JSON, allowing to avoid having to convert to Lex first. This allows a
       // performance gain as only relevant parts of the response body will be
       // checked for coercion during validation, instead of the whole body.
-      const body = await readXrpcResponseBody(response, output.encoding, {
-        skipLexParsing: true,
-      }).catch((err) => {
-        // TODO 400 error
-        throw new Error('Failed to read response body', { cause: err })
-      })
+      const body = await readXrpcResponseBody(response, output.encoding).catch(
+        (err) => {
+          // TODO 400 error
+          throw new Error('Failed to read response body', { cause: err })
+        },
+      )
 
       return {
         status: response.status,
@@ -744,17 +744,14 @@ async function cancelBody(body: Body): Promise<void> {
 async function readXrpcResponseBody(
   response: Response,
   encoding: string,
-  options?: { skipLexParsing?: boolean },
 ): Promise<Lex>
 async function readXrpcResponseBody(
   response: Response,
   encoding: string | undefined,
-  options?: { skipLexParsing?: boolean },
 ): Promise<Lex | undefined>
 async function readXrpcResponseBody(
   response: Response,
   encoding: string | undefined,
-  options?: { skipLexParsing?: boolean },
 ): Promise<Lex | undefined> {
   // When encoding is undefined or empty, we expect no body
   if (!encoding) {
@@ -777,10 +774,6 @@ async function readXrpcResponseBody(
   }
 
   if (encoding === 'application/json') {
-    if (options?.skipLexParsing) {
-      return response.json()
-    }
-
     // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as using
     // a reviver function during JSON.parse should be faster than parsing to
     // JSON then converting to Lex (?)

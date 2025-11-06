@@ -5,7 +5,7 @@ import { LexBuilder } from '@atproto/lex-builder'
 Promise.all([
   // For src
   LexBuilder.build({
-    in: '../../../lexicons',
+    lexicons: '../../../lexicons',
     out: './src/lexicons',
     override: true,
     include: [
@@ -23,7 +23,7 @@ Promise.all([
 
   // For tests
   LexBuilder.build({
-    in: '../../../lexicons',
+    lexicons: '../../../lexicons',
     out: './tests/lexicons',
     override: true,
     include: ['app.bsky.*'],

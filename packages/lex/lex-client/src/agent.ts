@@ -1,4 +1,4 @@
-import { Did } from '@atproto/lex-core'
+import { Did } from '@atproto/lex-schema'
 
 export interface Agent {
   did?: Did

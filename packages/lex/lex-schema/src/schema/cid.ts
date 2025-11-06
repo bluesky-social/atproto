@@ -1,4 +1,4 @@
-import { CID, parseLexLink } from '@atproto/lex-core'
+import { CID, isPlainObject, parseLexLink } from '@atproto/lex-data'
 import {
   ValidationContext,
   ValidationResult,
@@ -15,8 +15,15 @@ export class CidSchema extends Validator<CID> {
     const cid = CID.asCID(input)
     if (cid) return ctx.success(cid)
 
-    const parsed = parseLexLink(input)
-    if (parsed) return ctx.success(parsed)
+    // Try coalescing from a JSON { "$link": string } object
+    if (isPlainObject(input)) {
+      try {
+        const cid = parseLexLink(input)
+        return ctx.success(cid)
+      } catch {
+        // Not a (valid) CID link object representation
+      }
+    }
 
     return ctx.issueInvalidType(input, 'cid')
   }

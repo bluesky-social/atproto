@@ -11,15 +11,16 @@
 const yargs = require('yargs')
 const { hideBin } = require('yargs/helpers')
 const { LexBuilder } = require('@atproto/lex-builder')
+const { LexInstaller } = require('@atproto/lex-installer')
 
 yargs(hideBin(process.argv))
   .strict()
   .command(
-    'build',
+    ['build', 'b'],
     'Generate TypeScript lexicon schema files from JSON lexicon definitions',
     (yargs) => {
       return yargs.strict().options({
-        in: {
+        lexicons: {
           array: true,
           type: 'string',
           demandOption: true,
@@ -80,6 +81,43 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       await LexBuilder.build(argv)
+    },
+  )
+  .command(
+    ['install [nsid..]', 'i [nsid..]'],
+    'Fetch and install lexicon documents',
+    (yargs) => {
+      return yargs.strict().options({
+        save: {
+          alias: 's',
+          type: 'boolean',
+          default: false,
+          describe: 'adds installed lexicon NSIDs to lexicons.json',
+          implies: 'nsid',
+        },
+        build: {
+          type: 'string',
+          alias: 'b',
+          describe:
+            'output directory to build installed lexicons into (dir content will be overwritten)',
+          example: '--build ./src/lexicons',
+        },
+      })
+    },
+    async (argv) => {
+      await LexInstaller.install(argv)
+
+      if (argv.build != null) {
+        await LexBuilder.build({
+          lexicons: './lexicons',
+          out: argv.build || './src/lexicons',
+          clear: true,
+          pretty: true,
+          pureAnnotations: true,
+          ignoreErrors: false,
+          lib: '@atproto/lex',
+        })
+      }
     },
   )
   .parseAsync()

@@ -1,4 +1,3 @@
-import { Json, jsonToLex } from '@atproto/lex-core'
 import { ValidationContext, ValidationResult, Validator } from '../validation'
 
 export class UnknownSchema extends Validator<unknown> {
@@ -8,7 +7,6 @@ export class UnknownSchema extends Validator<unknown> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<unknown> {
-    // By convention, the output of schemas is always coerced into Lex format.
-    return ctx.success(jsonToLex(input as Json))
+    return ctx.success(input)
   }
 }

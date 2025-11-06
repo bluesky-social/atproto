@@ -1,3 +1,4 @@
+import { ensureValidCidString } from '@atproto/lex-data'
 import {
   ensureValidAtUri,
   ensureValidDatetime,
@@ -7,8 +8,6 @@ import {
   ensureValidRecordKey,
   ensureValidTid,
 } from '@atproto/syntax'
-import { CID } from './cid.js'
-import { Did } from './did.js'
 
 // @NOTE This was copied from @atproto/common-web to avoid loading a full extra
 // dependency just for this regexp.
@@ -40,12 +39,13 @@ export const STRING_FORMATS = Object.freeze([
 
 export type StringFormat = (typeof STRING_FORMATS)[number]
 
+export type Did = `did:${string}:${string}`
 export type Uri = `${string}:${string}`
+export type Nsid = `${string}.${string}.${string}`
 /** An ISO 8601 formatted datetime string (YYYY-MM-DDTHH:mm:ss.sssZ) */
 export type Datetime = `${string}T${string}`
 export type Handle = `${string}.${string}`
 export type AtIdentifier = Did | Handle
-export type Nsid = `${string}.${string}.${string}`
 export type AtUri = `at://${AtIdentifier}/${Nsid}/${string}`
 
 export type InferStringFormat<F> =
@@ -109,12 +109,7 @@ export function validateStringFormat<F extends StringFormat>(
       break
     }
     case 'cid': {
-      try {
-        CID.parse(input)
-      } catch (cause) {
-        // CID.parse throws non-user friendly errors
-        throw new Error('Invalid CID string', { cause })
-      }
+      ensureValidCidString(input)
       break
     }
     case 'language': {

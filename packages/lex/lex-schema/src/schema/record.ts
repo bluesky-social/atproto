@@ -1,4 +1,4 @@
-import { Nsid, RecordKey, Simplify } from '@atproto/lex-core'
+import { Nsid, RecordKey, Simplify } from '../core.js'
 import {
   Infer,
   ValidationContext,

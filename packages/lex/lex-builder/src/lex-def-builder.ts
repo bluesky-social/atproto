@@ -97,9 +97,10 @@ export class LexDefBuilder {
 
   private addValidationUtils(varName: string) {
     this.addUtils({
-      $is: markPure(`${varName}.$is.bind(${varName})`),
-      $parse: markPure(`${varName}.$parse.bind(${varName})`),
       $assert: markPure(`${varName}.$assert.bind(${varName})`),
+      $maybe: markPure(`${varName}.$maybe.bind(${varName})`),
+      $matches: markPure(`${varName}.$matches.bind(${varName})`),
+      $parse: markPure(`${varName}.$parse.bind(${varName})`),
       $validate: markPure(`${varName}.$validate.bind(${varName})`),
     })
   }
@@ -609,7 +610,7 @@ export class LexDefBuilder {
     if (hasConst(def)) {
       const schema = l.integer(def)
       assert(
-        schema.$is(def.const),
+        schema.matches(def.const),
         `Integer const ${def.const} is out of bounds`,
       )
     }
@@ -617,7 +618,10 @@ export class LexDefBuilder {
     if (hasEnum(def)) {
       const schema = l.integer(def)
       for (const val of def.enum) {
-        assert(schema.$is(val), `Integer enum value ${val} is out of bounds`)
+        assert(
+          schema.matches(val),
+          `Integer enum value ${val} is out of bounds`,
+        )
       }
     }
 
@@ -639,14 +643,14 @@ export class LexDefBuilder {
     if (hasConst(def)) {
       const schema = l.string(def)
       assert(
-        schema.$is(def.const),
+        schema.matches(def.const),
         `String const "${def.const}" does not match format`,
       )
     } else if (hasEnum(def)) {
       const schema = l.string(def)
       for (const val of def.enum) {
         assert(
-          schema.$is(val),
+          schema.matches(val),
           `String enum value "${val}" does not match format`,
         )
       }

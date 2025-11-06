@@ -1,4 +1,4 @@
-import { Nsid } from '@atproto/lex-core'
+import { Nsid } from '../core.js'
 import { Infer } from '../validation.js'
 import { ParamsSchema } from './params.js'
 import { InferPayloadBody, Payload } from './payload.js'

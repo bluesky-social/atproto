@@ -1,4 +1,5 @@
 // Utilities (that depend on *and* are used by schemas)
+export * from './schema/_blob-ref.js'
 export * from './schema/_parameters.js'
 
 // IPLD Types

@@ -1,5 +1,5 @@
 import { Server, createServer } from 'node:http'
-import { lexParse } from '@atproto/lex-core'
+import { lexParse } from '@atproto/lex-data'
 import { Action, Client } from '..'
 import * as app from './lexicons/app.js'
 

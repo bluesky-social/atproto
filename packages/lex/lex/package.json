@@ -44,18 +44,18 @@
   "dependencies": {
     "@atproto/lex-builder": "workspace:*",
     "@atproto/lex-client": "workspace:*",
+    "@atproto/lex-installer": "workspace:*",
     "@atproto/lex-schema": "workspace:*",
     "@formatjs/intl-segmenter": "^11.7.12",
     "core-js": "^3",
     "yargs": "^17.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.18.6",
     "@types/yargs": "^17.0.33",
     "jest": "^28.1.2"
   },
   "scripts": {
-    "build": "./bin/lex build --clear --in ./lexicons --out ./tests/lexicons -- ignore additional npm args",
+    "build": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons -- ignore additional npm args",
     "test": "jest"
   }
 }

@@ -1,4 +1,4 @@
-import { $Type, $type, Nsid, RecordKey } from '@atproto/lex-core'
+import { $Type, $type, Nsid, RecordKey } from './core.js'
 import { LiteralSchema } from './schema/literal.js'
 import { Subscription } from './schema/subscription.js'
 import {
@@ -49,7 +49,8 @@ import {
 } from './schema.js'
 import { Infer, Validator } from './validation.js'
 
-export * from '@atproto/lex-core'
+export * from '@atproto/lex-data'
+export * from './core.js'
 export * from './schema.js'
 export * from './validation.js'
 

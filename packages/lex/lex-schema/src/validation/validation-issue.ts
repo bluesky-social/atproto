@@ -1,4 +1,4 @@
-import { CID, isPlainObject } from '@atproto/lex-core'
+import { CID, isPlainObject } from '@atproto/lex-data'
 import { arrayAgg } from '../util/array-agg.js'
 import { PropertyKey } from './property-key.js'
 

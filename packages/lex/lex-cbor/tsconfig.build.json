@@ -1,0 +1,12 @@
+{
+  "extends": ["../../../tsconfig/isomorphic.json"],
+  "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "importHelpers": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "./src",
+    "outDir": "./dist"
+  }
+}

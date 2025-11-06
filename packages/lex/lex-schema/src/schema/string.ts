@@ -1,12 +1,10 @@
+import { CID, graphemeLen, utf8Len } from '@atproto/lex-data'
 import {
-  CID,
   InferStringFormat,
   StringFormat,
   UnknownString,
-  graphemeLen,
-  utf8Len,
   validateStringFormat,
-} from '@atproto/lex-core'
+} from '../core.js'
 import {
   ValidationContext,
   ValidationResult,

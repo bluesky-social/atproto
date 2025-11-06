@@ -15,16 +15,18 @@ export class LexiconDirectoryIndexer extends LexiconIterableIndexer {
 }
 
 type ReadLexiconsOptions = {
-  in: string | string[]
+  lexicons: string | string[]
   ignoreErrors?: boolean
 }
 
 async function* readLexicons(
   options: ReadLexiconsOptions,
 ): AsyncGenerator<LexiconDocument, void, unknown> {
-  const inputDirs = Array.isArray(options.in) ? options.in : [options.in]
-  for (const inputDir of inputDirs) {
-    for await (const filePath of listFiles(inputDir)) {
+  const dirs = Array.isArray(options.lexicons)
+    ? options.lexicons
+    : [options.lexicons]
+  for (const dir of dirs) {
+    for await (const filePath of listFiles(dir)) {
       if (filePath.endsWith('.json')) {
         try {
           const data = await readFile(filePath, 'utf8')

@@ -1,4 +1,5 @@
-import { $Type, Simplify, isPlainObject } from '@atproto/lex-core'
+import { isPlainObject } from '@atproto/lex-data'
+import { $Type, Simplify } from '../core.js'
 import {
   Infer,
   ValidationContext,

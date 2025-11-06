@@ -1,49 +1,49 @@
 {
-  "name": "@atproto/lex-core",
+  "name": "@atproto/lex-cbor",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "Core utilities for AT Lexicons",
+  "description": "Lexicon encoding utilities for AT Lexicon data",
   "keywords": [
     "atproto",
-    "lexicon",
+    "lex",
+    "data",
+    "encoding",
     "utilities"
   ],
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
-    "directory": "packages/lex/lex-core"
+    "directory": "packages/lex/lex-cbor"
   },
   "files": [
     "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
-    "./polyfills.js",
-    "./polyfills.mjs",
-    "./polyfills.d.ts",
     "./dist"
   ],
   "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "browser": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
     }
   },
   "dependencies": {
-    "@atproto/syntax": "workspace:*",
+    "@atproto/lex-data": "workspace:*",
+    "cborg": "^4.2.18",
     "multiformats": "^9.9.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "jest": "^28.1.2"
+    "jest": "^28.1.2",
+    "vite": "^6.2.0"
   },
   "scripts": {
+    "dev": "vite build --watch",
+    "prebuild": "vite build --emptyOutDir",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   }

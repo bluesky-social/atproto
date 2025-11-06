@@ -16,7 +16,6 @@
     "directory": "packages/lex/lex-client"
   },
   "dependencies": {
-    "@atproto/lex-core": "workspace:*",
     "@atproto/lex-schema": "workspace:*",
     "tslib": "^2.8.1"
   },

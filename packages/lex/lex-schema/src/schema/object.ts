@@ -1,4 +1,5 @@
-import { Simplify, isPlainObject } from '@atproto/lex-core'
+import { isPlainObject } from '@atproto/lex-data'
+import { Simplify } from '../core.js'
 import {
   Infer,
   ValidationContext,
@@ -11,7 +12,7 @@ export type ObjectSchemaProperties = { [_ in string]: Validator<any> }
 export type ObjectSchemaOptions = {
   required?: readonly string[]
   nullable?: readonly string[]
-  unknownProperties?: DictSchema
+  unknownProperties?: 'strict' | DictSchema
 }
 
 export type ObjectSchemaNullValue<
@@ -154,7 +155,13 @@ export class ObjectSchema<
       }
     }
 
-    if (this.options.unknownProperties) {
+    if (this.options.unknownProperties === 'strict') {
+      for (const key of Object.keys(input)) {
+        if (!this.validatorsMap.has(key)) {
+          return ctx.issueInvalidPropertyType(input, key, 'undefined')
+        }
+      }
+    } else if (this.options.unknownProperties) {
       const result = this.options.unknownProperties.validateInContext(
         copy ?? input,
         ctx,

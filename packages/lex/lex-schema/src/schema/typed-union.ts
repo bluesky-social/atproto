@@ -1,4 +1,5 @@
-import { Restricted, UnknownString, isPlainObject } from '@atproto/lex-core'
+import { isPlainObject } from '@atproto/lex-data'
+import { Restricted, UnknownString } from '../core.js'
 import {
   Infer,
   ValidationContext,
