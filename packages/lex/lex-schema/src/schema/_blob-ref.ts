@@ -22,7 +22,7 @@ export const typedBlobRefSchema = new ObjectSchema(
 
 export type TypedBlobRef = Infer<typeof typedBlobRefSchema>
 
-export const untypedBlobRefSchema = new ObjectSchema(
+export const legacyBlobRefSchema = new ObjectSchema(
   {
     cid: new StringSchema({ format: 'cid' }),
     mimeType: new StringSchema({}),
@@ -33,11 +33,11 @@ export const untypedBlobRefSchema = new ObjectSchema(
   },
 )
 
-export type UntypedBlobRef = Infer<typeof untypedBlobRefSchema>
+export type LegacyBlobRef = Infer<typeof legacyBlobRefSchema>
 
 export const blobRefSchema = new UnionSchema([
   typedBlobRefSchema,
-  untypedBlobRefSchema,
+  legacyBlobRefSchema,
 ])
 
 export type BlobRef = Infer<typeof blobRefSchema>
@@ -80,7 +80,7 @@ export function asTypedBlobRef(input: unknown): TypedBlobRef {
   const typed = typedBlobRefSchema.validate(input)
   if (typed.success) return typed.value
 
-  const untyped = untypedBlobRefSchema.validate(input)
+  const untyped = legacyBlobRefSchema.validate(input)
   if (untyped.success) {
     const { cid, mimeType } = untyped.value
     return buildBlobRef(CID.parse(cid), mimeType, -1)
@@ -89,6 +89,6 @@ export function asTypedBlobRef(input: unknown): TypedBlobRef {
   throw new Error('Invalid BlobRef')
 }
 
-export function isUntypedBlobRef(input: unknown): input is UntypedBlobRef {
-  return untypedBlobRefSchema.matches(input)
+export function isUntypedBlobRef(input: unknown): input is LegacyBlobRef {
+  return legacyBlobRefSchema.matches(input)
 }

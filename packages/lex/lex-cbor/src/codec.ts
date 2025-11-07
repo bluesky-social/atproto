@@ -9,16 +9,15 @@ import {
   encode as cborgEncode,
 } from 'cborg'
 import type { BlockDecoder, BlockEncoder, ByteView } from 'multiformats/block'
-import { CID, DAG_CBOR_CODEC, Lex } from '@atproto/lex-data'
+import { CID, DAG_CBOR_MULTICODEC, Lex } from '@atproto/lex-data'
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
-// match ATPROTO Data Model constraints.
+// match ATPROTO Data Model constraints. Floats, in particular, are not allowed.
 
 // @NOTE "cborg" version 4 is required to support multi-decoding via the
-// "decodeFirst" function. However, that version only supports ES exports.
-// Because of that, this package will bundle "cborg" instead of depending on it
-// directly. This is fine since the "@atproto/lex-cbor" package is the only
-// consumer of "cborg".
+// "decodeFirst" function. However, that version only exposes ES modules.
+// Because this package is using "commonjs", "cborg" will be bundled instead of
+// depending on it directly.
 
 const CID_CBOR_TAG = 42
 
@@ -84,11 +83,6 @@ const decodeOptions: DecodeOptions = {
   tags: tagDecoders,
 }
 
-export const name = 'atproto-cbor'
-
-export const code = DAG_CBOR_CODEC
-export type Code = typeof code
-
 export function cborEncode<T extends Lex>(data: T): ByteView<T> {
   return cborgEncode(data, encodeOptions)
 }
@@ -97,9 +91,12 @@ export function cborDecode<T extends Lex>(bytes: ByteView<T>): T {
   return cborgDecode(bytes, decodeOptions)
 }
 
-export const codec: BlockEncoder<Code, Lex> & BlockDecoder<Code, Lex> = {
-  name,
-  code,
+// @NOTE ATP uses the "dag-cbor" code (0x71) for block encoding/decoding but
+// does not actually support the full "dag-cbor" specification. Instead, it uses
+// a restricted subset defined in the atproto.com "Data Model".
+export const atpCodec: BlockEncoder<0x71, Lex> & BlockDecoder<0x71, Lex> = {
+  name: 'atp-cbor',
+  code: DAG_CBOR_MULTICODEC,
   encode: cborEncode,
   decode: cborDecode,
 }

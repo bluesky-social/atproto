@@ -30,6 +30,7 @@ import { isSafeIdentifier } from './ts-lang.js'
 
 export type LexDefBuilderOptions = {
   lib?: string
+  allowLegacyBlobs?: boolean
   pureAnnotations?: boolean
 }
 
@@ -704,12 +705,15 @@ export class LexDefBuilder {
   }
 
   private async compileBlobSchema(def: LexiconBlob): Promise<string> {
-    const options = stringifyOptionalOptions(def, ['type', 'description'])
+    const opts = this.options.allowLegacyBlobs
+      ? { ...def, allowLegacy: true }
+      : def
+    const options = stringifyOptionalOptions(opts, ['type', 'description'])
     return this.pure(`l.blob(${options})`)
   }
 
   private async compileBlobType(_def: LexiconBlob): Promise<string> {
-    return 'l.BlobRef'
+    return this.options.allowLegacyBlobs ? 'l.BlobRef' : 'l.TypedBlobRef'
   }
 
   private async compileCidLinkSchema(def: LexiconCid): Promise<string> {

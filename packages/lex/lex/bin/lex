@@ -24,14 +24,14 @@ yargs(hideBin(process.argv))
           array: true,
           type: 'string',
           demandOption: true,
-          describe: 'directory containing lexicon JSON files',
           default: './lexicons',
+          describe: 'directory containing lexicon JSON files',
         },
         out: {
           type: 'string',
           demandOption: true,
-          describe: 'output directory for generated TS files',
           default: './src/lexicons',
+          describe: 'output directory for generated TS files',
         },
         clear: {
           type: 'boolean',
@@ -73,9 +73,15 @@ yargs(hideBin(process.argv))
         },
         lib: {
           type: 'string',
+          default: '@atproto/lex',
           describe:
             'package name of the library to import the lex schema utility "l" from',
-          default: '@atproto/lex',
+        },
+        allowLegacyBlobs: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'allow generating schemas that accept legacy blob references',
         },
       })
     },
@@ -92,15 +98,15 @@ yargs(hideBin(process.argv))
           alias: 's',
           type: 'boolean',
           default: false,
-          describe: 'adds installed lexicon NSIDs to lexicons.json',
           implies: 'nsid',
+          describe: 'adds installed lexicon NSIDs to lexicons.json',
         },
         build: {
           type: 'string',
           alias: 'b',
+          example: '--build ./src/lexicons',
           describe:
             'output directory to build installed lexicons into (dir content will be overwritten)',
-          example: '--build ./src/lexicons',
         },
       })
     },

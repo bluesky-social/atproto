@@ -257,10 +257,23 @@ const validVectors: Array<{
   },
 ]
 
-const invalidVectors: Array<{
+const acceptableVectors: Array<{
   note: string
   json: Json
 }> = [
+  {
+    note: 'non string $type',
+    json: {
+      $type: 3124,
+      foo: 'bar',
+    },
+  },
+  {
+    note: 'object with float values',
+    json: {
+      a: 1.5,
+    },
+  },
   {
     note: 'blob with wrong field type',
     json: {
@@ -291,28 +304,10 @@ const invalidVectors: Array<{
     },
   },
   {
-    note: 'bytes with wrong field type',
-    json: {
-      $bytes: [1, 2, 3],
-    },
-  },
-  {
     note: 'bytes with extra fields',
     json: {
       $bytes: 'nFERjvLLiw9qm45JrqH9QTzyC2Lu1Xb4ne6+sBrCzI0',
       other: 'blah',
-    },
-  },
-  {
-    note: 'link with wrong field type',
-    json: {
-      $link: 1234,
-    },
-  },
-  {
-    note: 'link with bogus CID',
-    json: {
-      $link: '.',
     },
   },
   {
@@ -330,17 +325,47 @@ const invalidVectors: Array<{
     },
   },
   {
-    note: '$bytes and $type@',
+    note: '$bytes and $type',
     json: {
+      $type: 'bytes',
       $bytes: 'nFERjvLLiw9qm45JrqH9QTzyC2Lu1Xb4ne6+sBrCzI0',
-      $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
     },
   },
   {
     note: '$link and $type',
     json: {
-      $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
       $type: 'blob',
+      $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
+    },
+  },
+]
+
+const invalidVectors: Array<{
+  note: string
+  json: Json
+}> = [
+  {
+    note: 'bytes with wrong field type',
+    json: {
+      $bytes: [1, 2, 3],
+    },
+  },
+  {
+    note: 'invalid base64 in $bytes',
+    json: {
+      $bytes: '🐻',
+    },
+  },
+  {
+    note: 'link with wrong field type',
+    json: {
+      $link: 1234,
+    },
+  },
+  {
+    note: 'link with bogus CID',
+    json: {
+      $link: '.',
     },
   },
 ]
@@ -355,12 +380,14 @@ describe('lexEquals', () => {
   })
 
   describe('jsonToLex', () => {
-    for (const { name, json, lex } of validVectors) {
-      it(name, () => {
-        expect(lexEquals(jsonToLex(json), lex)).toBe(true)
-        expect(lexEquals(lex, jsonToLex(json))).toBe(true)
-      })
-    }
+    describe('valid vectors', () => {
+      for (const { name, json, lex } of validVectors) {
+        it(name, () => {
+          expect(lexEquals(jsonToLex(json), lex)).toBe(true)
+          expect(lexEquals(lex, jsonToLex(json))).toBe(true)
+        })
+      }
+    })
   })
 
   describe('not equal to other vectors', () => {
@@ -398,7 +425,30 @@ describe('lexParse', () => {
     for (const { name, json, lex } of validVectors) {
       describe(name, () => {
         it('parses lex from string', () => {
-          expect(lexEquals(lex, lexParse(JSON.stringify(json)))).toBe(true)
+          expect(
+            lexEquals(lex, lexParse(JSON.stringify(json), { strict: false })),
+          ).toBe(true)
+          expect(
+            lexEquals(lex, lexParse(JSON.stringify(json), { strict: true })),
+          ).toBe(true)
+        })
+      })
+    }
+  })
+
+  describe('acceptable vectors', () => {
+    for (const { note, json } of acceptableVectors) {
+      describe(note, () => {
+        it('parses lex from string in non-strict mode', () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: false }),
+          ).not.toThrow()
+        })
+
+        it('parses lex from string in strict mode', () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: true }),
+          ).toThrow()
         })
       })
     }
@@ -408,7 +458,12 @@ describe('lexParse', () => {
     for (const { note, json } of invalidVectors) {
       describe(note, () => {
         it('throws when parsing malformed JSON', () => {
-          expect(() => lexParse(JSON.stringify(json))).toThrow()
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: false }),
+          ).toThrow()
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: true }),
+          ).toThrow()
         })
       })
     }
@@ -428,16 +483,41 @@ describe('lexStringify', () => {
 })
 
 describe('jsonToLex', () => {
+  describe('valid vectors', () => {
+    for (const { name, json } of validVectors) {
+      describe(name, () => {
+        it('converts json to lex', () => {
+          expect(() => jsonToLex(json, { strict: true })).not.toThrow()
+          expect(() => jsonToLex(json, { strict: false })).not.toThrow()
+        })
+      })
+    }
+  })
+
+  describe('acceptable vectors', () => {
+    for (const { note, json } of acceptableVectors) {
+      describe(note, () => {
+        it('parses lex from json in strict mode', () => {
+          expect(() => jsonToLex(json, { strict: true })).toThrow()
+        })
+
+        it('parses lex from json in non-strict mode', () => {
+          expect(() => jsonToLex(json, { strict: false })).not.toThrow()
+        })
+      })
+    }
+  })
+
   describe('invalid vectors', () => {
     for (const { note, json } of invalidVectors) {
       describe(note, () => {
         it(`throws for malformed object`, () => {
-          expect(() => jsonToLex(json)).toThrow()
+          expect(() => jsonToLex(json, { strict: true })).toThrow()
         })
 
         it('throws for nested malformed object', () => {
-          expect(() => jsonToLex({ nested: json })).toThrow()
-          expect(() => jsonToLex([json])).toThrow()
+          expect(() => jsonToLex({ nested: json }, { strict: true })).toThrow()
+          expect(() => jsonToLex([json], { strict: true })).toThrow()
         })
       })
     }

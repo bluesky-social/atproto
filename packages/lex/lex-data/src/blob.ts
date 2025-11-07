@@ -1,5 +1,6 @@
-import { code as rawCodecCode } from 'multiformats/codecs/raw'
-import { CID, parseLexLink } from './cid.js'
+import { CID } from './cid.js'
+import { asLexLink } from './link.js'
+import { isPlainObject } from './object.js'
 
 const TYPE = 'blob'
 
@@ -10,40 +11,49 @@ export type Blob = {
   size: number
 }
 
-export function parseLexBlob(input: Record<string, unknown>): Blob {
-  if (input.$type !== TYPE) {
-    throw new Error(`$type property must be 'blob'`)
+export function parseLexBlob(
+  input: object & Record<string, unknown>,
+): Blob | undefined {
+  if (input?.$type !== TYPE) {
+    return undefined
   }
-  const { mimeType, size } = input
+  const { mimeType, size, ref } = input
   if (typeof mimeType !== 'string') {
-    throw new Error(`mimeType property must be a string`)
+    return undefined
   }
   if (typeof size !== 'number' || size < 0 || !Number.isInteger(size)) {
-    throw new Error(`size property must be an integer`)
+    return undefined
   }
-  if (typeof input.ref !== 'object' || input.ref === null) {
-    throw new Error(`ref property must be a link object or CID`)
+  if (typeof ref !== 'object' || ref === null) {
+    return undefined
   }
 
   for (const key in input) {
-    // https://atproto.com/specs/data-model
-    // > Implementations should ignore unknown $ fields (to allow protocol evolution).
-    if (key.codePointAt(0) === 36) {
-      // Note that $link, $bytes, and $type are mutually exclusive
-      if (key !== '$bytes' && key !== '$link') continue
-    }
-
-    if (key !== 'mimeType' && key !== 'ref' && key !== 'size') {
-      throw new Error(`Invalid property in $blob object: ${key}`)
+    if (
+      key !== '$type' &&
+      key !== 'mimeType' &&
+      key !== 'ref' &&
+      key !== 'size'
+    ) {
+      return undefined
     }
   }
 
-  const ref = CID.asCID(input.ref) ?? parseLexLink(input.ref)
-  if (ref.code !== rawCodecCode) {
-    throw new Error(`Invalid multicodec for blob ref; expected raw codec`)
-  }
+  const cid = asLexLink(ref)
+  if (!cid) return undefined
 
-  return ref === input.ref
+  return cid === ref
     ? (input as Blob) // Already a Blob
-    : { $type: TYPE, mimeType, ref, size }
+    : { $type: TYPE, mimeType, ref: cid, size }
+}
+
+/**
+ * Coerce json or Lex into a Blob.
+ */
+export function asLexBlob(input: unknown): Blob | undefined {
+  if (isPlainObject(input)) {
+    return parseLexBlob(input)
+  }
+
+  return undefined
 }

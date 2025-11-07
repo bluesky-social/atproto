@@ -1,7 +1,8 @@
 import { Blob, parseLexBlob } from './blob.js'
-import { bytesEquals, encodeLexBytes, parseLexBytes } from './bytes.js'
-import { CID, encodeLexLink, isCid, parseLexLink } from './cid.js'
+import { encodeLexBytes, parseLexBytes } from './bytes.js'
+import { CID, isCid } from './cid.js'
 import { Json, JsonObject, JsonScalar } from './json.js'
+import { encodeLexLink, parseLexLink } from './link.js'
 import { isPlainObject } from './object.js'
 
 export type LexScalar = JsonScalar | CID | Uint8Array
@@ -16,34 +17,55 @@ export function lexStringify(input: Lex): string {
   return JSON.stringify(lexToJson(input))
 }
 
-export function lexParse(input: string): Lex {
-  return JSON.parse(input, lexParseReviver)
+export type LexParseOptions = {
+  /**
+   * Forbids the presence of invalid Lex values (e.g. non-integer numbers,
+   * malformed $link, $bytes, blob objects, etc.)
+   */
+  strict?: boolean
 }
 
-function lexParseReviver(_key: string, value: Json): Lex {
-  switch (typeof value) {
-    case 'object':
-      if (value === null) return null
-      if (Array.isArray(value)) return value
-      return parseSpecialJsonObject(value) ?? value
-    case 'number':
-      if (Number.isInteger(value)) return value
-      throw new TypeError(`Invalid non-integer number: ${value}`)
-    default:
-      return value
-  }
+export function lexParse(
+  input: string,
+  options: LexParseOptions = { strict: false },
+): Lex {
+  return JSON.parse(input, function (key: string, value: Json): Lex {
+    switch (typeof value) {
+      case 'object':
+        if (value === null) return null
+        if (Array.isArray(value)) return value
+        return parseSpecialJsonObject(value, options) ?? value
+      case 'number':
+        if (Number.isInteger(value)) return value
+        if (options.strict) {
+          throw new TypeError(`Invalid non-integer number: ${value}`)
+        }
+      // fallthrough
+      default:
+        return value
+    }
+  })
 }
 
-export function jsonToLex(value: Json): Lex {
+export function jsonToLex(
+  value: Json,
+  options: LexParseOptions = { strict: false },
+): Lex {
   switch (typeof value) {
     case 'object': {
       if (value === null) return null
-      if (Array.isArray(value)) return jsonArrayToLex(value)
-      return parseSpecialJsonObject(value) ?? jsonObjectToLex(value)
+      if (Array.isArray(value)) return jsonArrayToLex(value, options)
+      return (
+        parseSpecialJsonObject(value, options) ??
+        jsonObjectToLex(value, options)
+      )
     }
     case 'number':
       if (Number.isInteger(value)) return value
-      throw new TypeError(`Invalid non-integer number: ${value}`)
+      if (options.strict) {
+        throw new TypeError(`Invalid non-integer number: ${value}`)
+      }
+    // fallthrough
     case 'boolean':
     case 'string':
       return value
@@ -52,12 +74,12 @@ export function jsonToLex(value: Json): Lex {
   }
 }
 
-function jsonArrayToLex(input: Json[]): Lex[] {
+function jsonArrayToLex(input: Json[], options: LexParseOptions): Lex[] {
   // Lazily copy value
   let copy: Lex[] | undefined
   for (let i = 0; i < input.length; i++) {
     const inputItem = input[i]
-    const item = jsonToLex(inputItem)
+    const item = jsonToLex(inputItem, options)
     if (item !== inputItem) {
       copy ??= Array.from(input)
       copy[i] = item
@@ -66,11 +88,14 @@ function jsonArrayToLex(input: Json[]): Lex[] {
   return copy ?? input
 }
 
-function jsonObjectToLex(input: JsonObject): LexObject {
+function jsonObjectToLex(
+  input: JsonObject,
+  options: LexParseOptions,
+): LexObject {
   // Lazily copy value
   let copy: LexObject | undefined = undefined
   for (const [key, inputValue] of Object.entries(input)) {
-    const value = jsonToLex(inputValue!)
+    const value = jsonToLex(inputValue!, options)
     if (value !== inputValue) {
       copy ??= { ...input }
       copy[key] = value
@@ -131,18 +156,33 @@ function lexObjectToJson(input: LexObject): JsonObject {
 
 function parseSpecialJsonObject(
   input: JsonObject,
+  options: LexParseOptions,
 ): CID | Uint8Array | Blob | undefined {
   // Hot path: use hints to avoid parsing when possible
 
   if (input.$link !== undefined) {
-    return parseLexLink(input)
+    const cid = parseLexLink(input)
+    if (cid) return cid
+    if (options.strict) throw new TypeError(`Invalid $link object`)
   } else if (input.$bytes !== undefined) {
-    return parseLexBytes(input)
+    const bytes = parseLexBytes(input)
+    if (bytes) return bytes
+    if (options.strict) throw new TypeError(`Invalid $bytes object`)
   } else if (input.$type !== undefined) {
-    if (input.$type === 'blob') {
-      return parseLexBlob(input)
-    } else if (!input.$type || typeof input.$type !== 'string') {
-      throw new Error(`$type property must be a non-empty string`)
+    // @NOTE Since blobs are "just" regular lex objects with a special shape,
+    // and because an object that does not conform to the blob shape would still
+    // result in undefined being returned, we only attempt to parse blobs when
+    // the strict option is enabled.
+    if (options.strict) {
+      if (input.$type === 'blob') {
+        const blob = parseLexBlob(input)
+        if (blob) return blob
+        throw new TypeError(`Invalid blob object`)
+      } else if (typeof input.$type !== 'string') {
+        throw new TypeError(`Invalid $type property (${typeof input.$type})`)
+      } else if (input.$type.length === 0) {
+        throw new TypeError(`Empty $type property`)
+      }
     }
   }
 
@@ -184,13 +224,25 @@ export function lexEquals(a: Lex, b: Lex): boolean {
   }
 
   if (ArrayBuffer.isView(a)) {
-    return ArrayBuffer.isView(b) && bytesEquals(a, b)
+    if (!ArrayBuffer.isView(b)) return false
+
+    if (a.byteLength !== b.byteLength) {
+      return false
+    }
+
+    for (let i = 0; i < a.byteLength; i++) {
+      if (a[i] !== b[i]) {
+        return false
+      }
+    }
+
+    return true
   } else if (ArrayBuffer.isView(b)) {
     return false
   }
 
   if (isCid(a)) {
-    return CID.asCID(a)!.equals(b)
+    return CID.asCID(a)!.equals(CID.asCID(b)) === true
   } else if (isCid(b)) {
     return false
   }

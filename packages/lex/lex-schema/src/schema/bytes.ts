@@ -1,4 +1,4 @@
-import { asUint8Array, parseLexBytes } from '@atproto/lex-data'
+import { asLexBytes } from '@atproto/lex-data'
 import {
   ValidationContext,
   ValidationResult,
@@ -21,7 +21,8 @@ export class BytesSchema extends Validator<Uint8Array> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Uint8Array> {
-    const bytes = asUint8Array(input) ?? parseLexBytesSafe(input)
+    // Coalesce different input formats into Uint8Array
+    const bytes = asLexBytes(input)
     if (!bytes) return ctx.issueInvalidType(input, 'bytes')
 
     const { minLength } = this.options
@@ -35,13 +36,5 @@ export class BytesSchema extends Validator<Uint8Array> {
     }
 
     return ctx.success(bytes)
-  }
-}
-
-function parseLexBytesSafe(input: unknown): Uint8Array | undefined {
-  try {
-    return parseLexBytes(input)
-  } catch {
-    return undefined
   }
 }

@@ -1,5 +1,5 @@
 import { jsonToLex, lexEquals, lexToJson } from '@atproto/lex-data'
-import { cborDecode, cborEncode, cidForCbor } from '..'
+import { cborDecode, cborEncode, cidForLex } from '..'
 import { vectors } from './vectors'
 
 describe('lex', () => {
@@ -10,7 +10,7 @@ describe('lex', () => {
       const cbor = cborEncode(lex)
       const ipldAgain = cborDecode(cbor)
       const jsonAgain = lexToJson(ipldAgain)
-      const cid = await cidForCbor(lex)
+      const cid = await cidForLex(lex)
       expect(json).toEqual(vector.json)
       expect(jsonAgain).toEqual(vector.json)
       expect(lexEquals(lex, vector.lex)).toBeTruthy()
