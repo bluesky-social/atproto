@@ -7,6 +7,7 @@ import {
   PostSearchQuery,
   parsePostSearchQuery,
 } from '../../../../data-plane/server/util'
+import { FeatureGateID } from '../../../../feature-gates'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
@@ -21,7 +22,6 @@ import {
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
-import { FeatureGateID } from '../../../../feature-gates'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
