@@ -71,6 +71,8 @@ export interface ServerConfigValues {
   maxThreadParents: number
   threadTagsHide: Set<string>
   threadTagsBumpDown: Set<string>
+  visibilityTagHide: string
+  visibilityTagRankPrefix: string
   // notifications
   notificationsDelayMs?: number
   // client config
@@ -216,6 +218,9 @@ export class ServerConfig {
     const threadTagsBumpDown = new Set(
       envList(process.env.BSKY_THREAD_TAGS_BUMP_DOWN),
     )
+    const visibilityTagHide = process.env.BSKY_VISIBILITY_TAG_HIDE || ''
+    const visibilityTagRankPrefix =
+      process.env.BSKY_VISIBILITY_TAG_RANK_PREFIX || ''
 
     const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
@@ -333,6 +338,8 @@ export class ServerConfig {
       maxThreadParents,
       threadTagsHide,
       threadTagsBumpDown,
+      visibilityTagHide,
+      visibilityTagRankPrefix,
       notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
@@ -549,6 +556,14 @@ export class ServerConfig {
 
   get threadTagsBumpDown() {
     return this.cfg.threadTagsBumpDown
+  }
+
+  get visibilityTagHide() {
+    return this.cfg.visibilityTagHide
+  }
+
+  get visibilityTagRankPrefix() {
+    return this.cfg.visibilityTagRankPrefix
   }
 
   get notificationsDelayMs() {

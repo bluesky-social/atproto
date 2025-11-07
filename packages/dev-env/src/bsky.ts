@@ -86,6 +86,8 @@ export class TestBsky {
       searchTagsHide: new Set(),
       threadTagsBumpDown: new Set(),
       threadTagsHide: new Set(),
+      visibilityTagHide: '',
+      visibilityTagRankPrefix: '',
       debugFieldAllowedDids: new Set(),
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],

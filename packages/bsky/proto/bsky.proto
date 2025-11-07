@@ -88,6 +88,8 @@ message PostRecordMeta {
 
 message GetPostRecordsRequest {
   repeated string uris = 1;
+  optional string process_dynamic_tags_for_view = 2;
+  optional string viewer_did = 3;
 }
 
 message GetPostRecordsResponse {

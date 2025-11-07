@@ -7,6 +7,7 @@ import {
   PostSearchQuery,
   parsePostSearchQuery,
 } from '../../../../data-plane/server/util'
+import { FeatureGateID } from '../../../../feature-gates'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
@@ -35,7 +36,14 @@ export default function (server: Server, ctx: AppContext) {
       const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
 
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        featureGates: ctx.featureGates.checkGates(
+          [ctx.featureGates.ids.SearchFilteringExploration],
+          ctx.featureGates.user({ did: viewer ?? '' }),
+        ),
+      })
       const results = await searchPosts(
         { ...params, hydrateCtx, isModService },
         ctx,
@@ -99,6 +107,14 @@ const hydration = async (
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
     params.hydrateCtx,
+    undefined,
+    {
+      processDynamicTagsForView: params.hydrateCtx.featureGates.get(
+        FeatureGateID.SearchFilteringExploration,
+      )
+        ? 'search'
+        : undefined,
+    },
   )
 }
 
@@ -121,8 +137,18 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     // Cases to never show.
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    let tagged = false
+    if (
+      params.hydrateCtx.featureGates.get(
+        FeatureGateID.SearchFilteringExploration,
+      )
+    ) {
+      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
+    } else {
+      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    }
+
     // Cases to conditionally show based on tagging.
-    const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
     if (isCuratedSearch && tagged) return false
     if (!parsedQuery.author && tagged) return false
     return true
