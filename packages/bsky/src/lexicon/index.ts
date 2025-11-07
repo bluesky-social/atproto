@@ -119,7 +119,9 @@ import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
 import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+import * as ComAtprotoAdminCreateIdentityProvider from './types/com/atproto/admin/createIdentityProvider.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
+import * as ComAtprotoAdminDeleteIdentityProvider from './types/com/atproto/admin/deleteIdentityProvider.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes.js'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites.js'
@@ -182,6 +184,9 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSsoGetCallback from './types/com/atproto/sso/getCallback.js'
+import * as ComAtprotoSsoGetRedirect from './types/com/atproto/sso/getRedirect.js'
+import * as ComAtprotoSsoListIdentityProviders from './types/com/atproto/sso/listIdentityProviders.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
@@ -1751,6 +1756,7 @@ export class ComAtprotoNS {
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
+  sso: ComAtprotoSsoNS
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
 
@@ -1763,6 +1769,7 @@ export class ComAtprotoNS {
     this.moderation = new ComAtprotoModerationNS(server)
     this.repo = new ComAtprotoRepoNS(server)
     this.server = new ComAtprotoServerNS(server)
+    this.sso = new ComAtprotoSsoNS(server)
     this.sync = new ComAtprotoSyncNS(server)
     this.temp = new ComAtprotoTempNS(server)
   }
@@ -1775,6 +1782,18 @@ export class ComAtprotoAdminNS {
     this._server = server
   }
 
+  createIdentityProvider<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminCreateIdentityProvider.QueryParams,
+      ComAtprotoAdminCreateIdentityProvider.HandlerInput,
+      ComAtprotoAdminCreateIdentityProvider.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.createIdentityProvider' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   deleteAccount<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1784,6 +1803,18 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteIdentityProvider<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminDeleteIdentityProvider.QueryParams,
+      ComAtprotoAdminDeleteIdentityProvider.HandlerInput,
+      ComAtprotoAdminDeleteIdentityProvider.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.deleteIdentityProvider' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2575,6 +2606,50 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.updateEmail' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComAtprotoSsoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getCallback<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSsoGetCallback.QueryParams,
+      ComAtprotoSsoGetCallback.HandlerInput,
+      ComAtprotoSsoGetCallback.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.sso.getCallback' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRedirect<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSsoGetRedirect.QueryParams,
+      ComAtprotoSsoGetRedirect.HandlerInput,
+      ComAtprotoSsoGetRedirect.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.sso.getRedirect' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listIdentityProviders<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSsoListIdentityProviders.QueryParams,
+      ComAtprotoSsoListIdentityProviders.HandlerInput,
+      ComAtprotoSsoListIdentityProviders.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.sso.listIdentityProviders' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

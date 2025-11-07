@@ -9193,6 +9193,166 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminCreateIdentityProvider: {
+    lexicon: 1,
+    id: 'com.atproto.admin.createIdentityProvider',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an identity provider. Implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'id',
+              'issuer',
+              'clientId',
+              'scope',
+              'usePkce',
+              'discoverable',
+            ],
+            properties: {
+              id: {
+                type: 'string',
+              },
+              name: {
+                type: 'string',
+              },
+              icon: {
+                type: 'string',
+                format: 'uri',
+              },
+              issuer: {
+                type: 'string',
+                format: 'uri',
+              },
+              clientId: {
+                type: 'string',
+              },
+              clientSecret: {
+                type: 'string',
+              },
+              scope: {
+                type: 'string',
+              },
+              usePkce: {
+                type: 'boolean',
+              },
+              discoverable: {
+                type: 'boolean',
+              },
+              metadata: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.createIdentityProvider#metadata',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['idpId'],
+            properties: {
+              idpId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'IdentityProviderAlreadyExists',
+          },
+          {
+            name: 'IndiscoverableMetadata',
+          },
+          {
+            name: 'IssuerMismatch',
+          },
+          {
+            name: 'InsecureTransport',
+          },
+          {
+            name: 'PublicWithoutPkce',
+          },
+        ],
+      },
+      authMethod: {
+        type: 'string',
+        knownValues: ['client_secret_basic', 'client_secret_post'],
+      },
+      codeChallengeMethod: {
+        type: 'string',
+        knownValues: ['plain', 'S256'],
+      },
+      endpoints: {
+        type: 'object',
+        required: ['authorization', 'token'],
+        properties: {
+          authorization: {
+            type: 'string',
+            format: 'uri',
+          },
+          token: {
+            type: 'string',
+            format: 'uri',
+          },
+          userinfo: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+      mappings: {
+        type: 'object',
+        required: ['sub'],
+        properties: {
+          sub: {
+            type: 'string',
+          },
+          username: {
+            type: 'string',
+          },
+          picture: {
+            type: 'string',
+          },
+          email: {
+            type: 'string',
+          },
+        },
+      },
+      metadata: {
+        type: 'object',
+        required: ['endpoints', 'mappings', 'authMethods'],
+        properties: {
+          endpoints: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.createIdentityProvider#endpoints',
+          },
+          mappings: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.createIdentityProvider#mappings',
+          },
+          authMethods: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.createIdentityProvider#authMethod',
+            },
+          },
+          codeChallengeMethods: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.createIdentityProvider#codeChallengeMethod',
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminDefs: {
     lexicon: 1,
     id: 'com.atproto.admin.defs',
@@ -9327,6 +9487,24 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminDeleteIdentityProvider: {
+    lexicon: 1,
+    id: 'com.atproto.admin.deleteIdentityProvider',
+    defs: {
+      main: {
+        type: 'procedure',
+        parameters: {
+          type: 'params',
+          required: ['idpId'],
+          properties: {
+            idpId: {
+              type: 'string',
             },
           },
         },
@@ -12665,6 +12843,117 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSsoGetCallback: {
+    lexicon: 1,
+    id: 'com.atproto.sso.getCallback',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['state'],
+          properties: {
+            code: {
+              type: 'string',
+            },
+            error: {
+              type: 'string',
+            },
+            error_description: {
+              type: 'string',
+            },
+            state: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSsoGetRedirect: {
+    lexicon: 1,
+    id: 'com.atproto.sso.getRedirect',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['idpId', 'redirectUri'],
+          properties: {
+            idpId: {
+              type: 'string',
+            },
+            redirectUri: {
+              type: 'string',
+              format: 'uri',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['state'],
+            properties: {
+              state: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSsoListIdentityProviders: {
+    lexicon: 1,
+    id: 'com.atproto.sso.listIdentityProviders',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all available identity providers.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['identityProviders'],
+            properties: {
+              identityProviders: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sso.listIdentityProviders#identityProvider',
+                },
+              },
+            },
+          },
+        },
+      },
+      identityProvider: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          icon: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncDefs: {
     lexicon: 1,
     id: 'com.atproto.sync.defs',
@@ -14177,8 +14466,12 @@ export const ids = {
   ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
   ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',
   ChatBskyModerationUpdateActorAccess: 'chat.bsky.moderation.updateActorAccess',
+  ComAtprotoAdminCreateIdentityProvider:
+    'com.atproto.admin.createIdentityProvider',
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
+  ComAtprotoAdminDeleteIdentityProvider:
+    'com.atproto.admin.deleteIdentityProvider',
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
@@ -14258,6 +14551,9 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
+  ComAtprotoSsoGetCallback: 'com.atproto.sso.getCallback',
+  ComAtprotoSsoGetRedirect: 'com.atproto.sso.getRedirect',
+  ComAtprotoSsoListIdentityProviders: 'com.atproto.sso.listIdentityProviders',
   ComAtprotoSyncDefs: 'com.atproto.sync.defs',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',

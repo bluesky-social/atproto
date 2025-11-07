@@ -2,6 +2,9 @@ import {
   InternalServerError,
   InvalidRequestError,
 } from "@atproto/xrpc-server";
+import {
+  CookieJar
+} from "@atproto/common";
 import { AppContext } from "../../../../context";
 import { Server } from "../../../../lexicon";
 import { randomBytes, subtle } from "node:crypto";
@@ -11,6 +14,13 @@ import { ServerResponse } from "node:http";
 import { resultPassthru } from "../../../proxy";
 import { ssoLogger as log } from "../../../../logger";
 import { CodeChallengeMethod } from "../../../../sso/db/schema/identity-provider";
+
+export type SessionData = {
+  state: string,
+  idpId: string,
+  redirectUri: string,
+  createdAt: number,
+}
 
 export function appendHeader(
   res: ServerResponse,
@@ -126,6 +136,16 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.ssoManager.createAuthCallback(authCallback);
 
+      const sessionData: SessionData = {
+        state: authCallback.state,
+        idpId: idp.id,
+        redirectUri: redirectUri,
+        createdAt: Date.now(),
+      };
+
+      // Use CookieJar to set the encrypted cookie
+      await ctx.cookieJar.create(res, "atproto-callback", sessionData);
+
       const query = new URLSearchParams({
         client_id: idp.clientId,
         redirect_uri: redirectUri,
@@ -140,12 +160,6 @@ export default function (server: Server, ctx: AppContext) {
       for (const [k, v] of [...query.entries()]) {
         location.searchParams.append(k, v);
       }
-
-      appendHeader(res, "Set-Cookie", serializeCookie(
-        "atproto-callback",
-        authCallback.state,
-        getCallbackCookieOptions()
-      ));
 
       appendHeader(res, "Location", location.toString());
 

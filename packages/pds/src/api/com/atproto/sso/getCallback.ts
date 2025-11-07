@@ -5,7 +5,6 @@ import {
 } from "@atproto/xrpc-server";
 import { AppContext } from "../../../../context";
 import { Server } from "../../../../lexicon";
-import * as cookie from "cookie";
 import { base64url } from "jose";
 import {
   UnauthorizedClientError,
@@ -18,7 +17,7 @@ import {
   formatAccountStatus,
 } from "../../../../account-manager/account-manager";
 import { syncEvtDataFromCommit } from "../../../../sequencer";
-import { NullOutput, UserServiceAuthOutput } from "../../../../auth-verifier";
+import { UserServiceAuthOutput, UnauthenticatedOutput } from "../../../../auth-output";
 import {
   InputSchema,
   OutputSchema,
@@ -29,11 +28,12 @@ import { resultPassthru } from "../../../proxy";
 import { GitHubEmailsSchema, OauthResponse, oauthResponseSchema, OidcClaims, oidcClaimsSchema } from "../../../../sso/db/schema/identity-provider";
 import { ActorAccount } from "../../../../account-manager/helpers/account";
 import { ssoLogger as log } from "../../../../logger";
+import { SessionData } from "./getRedirect";
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sso.getCallback({
     auth: ctx.authVerifier.userServiceAuthOptional,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, res }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.sso.getCallback(
@@ -58,44 +58,35 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Missing code in callback response`);
       }
 
-      const { code, state } = params;
+      const session: SessionData | null = await ctx.cookieJar.get(req, "atproto-callback", (msg, error) => {
+        log.error(`Cookie error: ${msg} ${error}`);
+      });
 
-      if (!req.headers.cookie) {
-        throw new InvalidRequestError("Missing cookie header");
+      if (!session) {
+        throw new InvalidRequestError("Invalid or expired session");
       }
 
-      let callbackId: string | undefined = undefined;
+      // CSRF protection: compare state from URL with state from session
+      if (session.state !== params.state) {
+        await ctx.ssoManager.deleteAuthCallback(session.state);
+        ctx.cookieJar.clear(res, "atproto-callback");
 
-      if (typeof req.headers.cookie === 'string') {
-        try {
-          const cookies: Record<string, string | undefined>
-            = cookie.parse(req.headers.cookie);
+        log.error("State mismatch - potential CSRF attack");
 
-          callbackId = cookies["atproto-callback"];
-        } catch (err) {
-          throw new InvalidRequestError(`Invalid cookie header: ${err}`);
-        }
+        throw new InvalidRequestError("State parameter mismatch");
       }
 
-      if (!callbackId) {
-        throw new InvalidRequestError("Missing callback cookie");
-      }
-
-      const callback = await ctx.ssoManager.getAuthCallback(callbackId);
-
+      // Retrieve the full callback from database
+      const callback = await ctx.ssoManager.getAuthCallback(session.state);
       if (!callback) {
-        throw new InvalidRequestError("Failed to find callback");
+        ctx.cookieJar.clear(res, "atproto-callback");
+
+        throw new InvalidRequestError("Invalid or expired callback");
       }
 
-      log.info(callback, `Found callback`);
+      // Clear the cookie after successful validation
+      ctx.cookieJar.clear(res, "atproto-callback");
 
-      if (callbackId !== state) {
-        throw new InvalidRequestError(
-          `State mismatch in callback parameter (expected: ${callbackId}, got: ${state})`
-        );
-      }
-
-      log.info(`Callback state is valid`);
 
       const idp = await ctx.ssoManager.getIdentityProvider(callback.idpId);
 
@@ -121,7 +112,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const data = new URLSearchParams({
         grant_type: "authorization_code",
-        code,
+        code: params.code,
         redirect_uri: callback.redirectUri,
         client_id: idp.clientId,
       });
@@ -138,10 +129,10 @@ export default function (server: Server, ctx: AppContext) {
 
       let claims: OidcClaims = {};
 
-      let res: Response;
+      let fetchRes: Response;
 
       try {
-        res = await fetch(idp.metadata.endpoints.token, {
+        fetchRes = await fetch(idp.metadata.endpoints.token, {
           method: "POST",
           headers: {
             "Content-type": "application/x-www-form-urlencoded",
@@ -153,11 +144,11 @@ export default function (server: Server, ctx: AppContext) {
           body: data,
         });
 
-        if (!res.ok) {
-          const text = await res.text().catch(() => "<unreadable body>");
+        if (!fetchRes.ok) {
+          const text = await fetchRes.text().catch(() => "<unreadable body>");
 
           throw new InternalServerError(
-            `Failed to fetch token endpoint: ${res.status} ${res.statusText} – ${text}`
+            `Failed to fetch token endpoint: ${fetchRes.status} ${fetchRes.statusText} – ${text}`
           );
         }
       } catch (err) {
@@ -169,7 +160,7 @@ export default function (server: Server, ctx: AppContext) {
       let body: OauthResponse;
 
       try {
-        body = await res.json().then(token => {
+        body = await fetchRes.json().then(token => {
           log.info(token, `Token endpoint response`);
 
           return oauthResponseSchema.parse(token);
@@ -435,7 +426,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const createAccount = async (
   ctx: AppContext,
-  auth: UserServiceAuthOutput | NullOutput,
+  auth: UserServiceAuthOutput | UnauthenticatedOutput,
   body: InputSchema,
 ): Promise<OutputSchema> => {
   const requester = auth.credentials?.did ?? null;
