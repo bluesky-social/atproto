@@ -53,7 +53,6 @@ function mapEncoder(map: Map<unknown, unknown>): null {
 }
 
 const encodeOptions: EncodeOptions = {
-  float64: false,
   typeEncoders: {
     Map: mapEncoder,
     Object: cidEncoder,
