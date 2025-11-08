@@ -1,15 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { Json } from './json.js'
-import {
-  Lex,
-  jsonToLex,
-  lexEquals,
-  lexParse,
-  lexStringify,
-  lexToJson,
-} from './lex.js'
+import { lexEquals } from './lex-equals.js'
+import { Lex, jsonToLex, lexParse, lexStringify, lexToJson } from './lex.js'
 
-const validVectors: Array<{
+export const validVectors: Array<{
   name: string
   json: Json
   lex: Lex
@@ -257,7 +251,7 @@ const validVectors: Array<{
   },
 ]
 
-const acceptableVectors: Array<{
+export const acceptableVectors: Array<{
   note: string
   json: Json
 }> = [
@@ -340,7 +334,7 @@ const acceptableVectors: Array<{
   },
 ]
 
-const invalidVectors: Array<{
+export const invalidVectors: Array<{
   note: string
   json: Json
 }> = [
@@ -369,56 +363,6 @@ const invalidVectors: Array<{
     },
   },
 ]
-
-describe('lexEquals', () => {
-  describe('equal to self', () => {
-    for (const { name, lex } of validVectors) {
-      it(name, () => {
-        expect(lexEquals(lex, lex)).toBe(true)
-      })
-    }
-  })
-
-  describe('jsonToLex', () => {
-    describe('valid vectors', () => {
-      for (const { name, json, lex } of validVectors) {
-        it(name, () => {
-          expect(lexEquals(jsonToLex(json), lex)).toBe(true)
-          expect(lexEquals(lex, jsonToLex(json))).toBe(true)
-        })
-      }
-    })
-  })
-
-  describe('not equal to other vectors', () => {
-    for (const vectorA of validVectors) {
-      for (const vectorB of validVectors) {
-        if (vectorA === vectorB) continue
-        it(`${vectorA.name} vs ${vectorB.name}`, () => {
-          expect(lexEquals(vectorA.lex, vectorB.lex)).toBe(false)
-        })
-      }
-    }
-  })
-
-  it('throws when comparing plain object with non-allowed class instance', () => {
-    // @ts-expect-error
-    expect(() => lexEquals({}, new Map())).toThrow()
-    // @ts-expect-error
-    expect(() => lexEquals(new Map(), {})).toThrow()
-    // @ts-expect-error
-    expect(() => lexEquals({ foo: {} }, { foo: new Map() })).toThrow()
-    // @ts-expect-error
-    expect(() => lexEquals({ foo: new Map() }, { foo: {} })).toThrow()
-
-    expect(() => lexEquals({ foo: {} }, { foo: new (class {})() })).toThrow()
-    expect(() => lexEquals({ foo: new (class {})() }, { foo: {} })).toThrow()
-
-    expect(() =>
-      lexEquals({ foo: {} }, { foo: new (class Object {})() }),
-    ).toThrow()
-  })
-})
 
 describe('lexParse', () => {
   describe('valid vectors', () => {
@@ -484,11 +428,16 @@ describe('lexStringify', () => {
 
 describe('jsonToLex', () => {
   describe('valid vectors', () => {
-    for (const { name, json } of validVectors) {
+    for (const { name, json, lex } of validVectors) {
       describe(name, () => {
-        it('converts json to lex', () => {
-          expect(() => jsonToLex(json, { strict: true })).not.toThrow()
-          expect(() => jsonToLex(json, { strict: false })).not.toThrow()
+        it('converts json to lex (in strict mode)', () => {
+          expect(lexEquals(jsonToLex(json, { strict: true }), lex)).toBe(true)
+          expect(lexEquals(lex, jsonToLex(json, { strict: true }))).toBe(true)
+        })
+
+        it('converts json to lex (in non-strict mode)', () => {
+          expect(lexEquals(jsonToLex(json, { strict: false }), lex)).toBe(true)
+          expect(lexEquals(lex, jsonToLex(json, { strict: false }))).toBe(true)
         })
       })
     }

@@ -3,7 +3,6 @@ import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { CID, isCid } from './cid.js'
 import { Json, JsonObject, JsonScalar } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
-import { isPlainObject } from './object.js'
 
 export type LexScalar = JsonScalar | CID | Uint8Array
 export type Lex = LexScalar | Lex[] | { [_ in string]?: Lex }
@@ -190,92 +189,4 @@ function parseSpecialJsonObject(
   // application level if needed.
 
   return undefined
-}
-
-export function lexEquals(a: Lex, b: Lex): boolean {
-  if (Object.is(a, b)) {
-    return true
-  }
-
-  if (
-    a == null ||
-    b == null ||
-    typeof a !== 'object' ||
-    typeof b !== 'object'
-  ) {
-    return false
-  }
-
-  if (Array.isArray(a)) {
-    if (!Array.isArray(b)) {
-      return false
-    }
-    if (a.length !== b.length) {
-      return false
-    }
-    for (let i = 0; i < a.length; i++) {
-      if (!lexEquals(a[i], b[i])) {
-        return false
-      }
-    }
-    return true
-  } else if (Array.isArray(b)) {
-    return false
-  }
-
-  if (ArrayBuffer.isView(a)) {
-    if (!ArrayBuffer.isView(b)) return false
-
-    if (a.byteLength !== b.byteLength) {
-      return false
-    }
-
-    for (let i = 0; i < a.byteLength; i++) {
-      if (a[i] !== b[i]) {
-        return false
-      }
-    }
-
-    return true
-  } else if (ArrayBuffer.isView(b)) {
-    return false
-  }
-
-  if (isCid(a)) {
-    return CID.asCID(a)!.equals(CID.asCID(b)) === true
-  } else if (isCid(b)) {
-    return false
-  }
-
-  if (!isPlainObject(a) || !isPlainObject(b)) {
-    // Foolproof (should never happen)
-    throw new TypeError('Invalid Lex object value')
-  }
-
-  const aKeys = Object.keys(a)
-  const bKeys = Object.keys(b)
-
-  if (aKeys.length !== bKeys.length) {
-    return false
-  }
-
-  for (const key of aKeys) {
-    const aVal = a[key]
-    const bVal = b[key]
-
-    // Needed because of the optional index signature in the Lex object type
-    // though, in practice, aVal should never be undefined here.
-    if (aVal === undefined) {
-      if (bVal === undefined && bKeys.includes(key)) continue
-      return false
-    } else if (bVal === undefined) {
-      return false
-    }
-
-    if (!lexEquals(aVal, bVal)) {
-      return false
-    }
-  }
-
-  return true
 }
