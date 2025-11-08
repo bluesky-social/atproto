@@ -12,7 +12,7 @@ import {
   InferQueryParameters,
   InferRecordKey,
   Lex,
-  LexObject,
+  LexMap,
   Nsid,
   Parameters,
   ParamsSchema,
@@ -286,7 +286,7 @@ export class Client implements Agent {
    * @param rkey Leave `undefined` to have the server generate a TID.
    */
   public async createRecord(
-    record: { $type: Nsid } & LexObject,
+    record: { $type: Nsid } & LexMap,
     rkey: string | undefined,
     options?: CreateRecordOptions,
   ): Promise<CreateRecordOutput> {
@@ -339,7 +339,7 @@ export class Client implements Agent {
   }
 
   async putRecord(
-    record: { $type: Nsid } & LexObject,
+    record: { $type: Nsid } & LexMap,
     rkey: string,
     options?: PutRecordOptions,
   ): Promise<PutRecordOutput> {

@@ -6,7 +6,7 @@ import { encodeLexLink, parseLexLink } from './link.js'
 
 export type LexScalar = JsonScalar | CID | Uint8Array
 export type Lex = LexScalar | Lex[] | { [_ in string]?: Lex }
-export type LexObject = { [_ in string]?: Lex }
+export type LexMap = { [_ in string]?: Lex }
 export type LexArray = Lex[]
 
 export function lexStringify(input: Lex): string {
@@ -56,7 +56,7 @@ export function jsonToLex(
       if (Array.isArray(value)) return jsonArrayToLex(value, options)
       return (
         parseSpecialJsonObject(value, options) ??
-        jsonObjectToLex(value, options)
+        jsonObjectToLexMap(value, options)
       )
     }
     case 'number':
@@ -87,12 +87,12 @@ function jsonArrayToLex(input: Json[], options: LexParseOptions): Lex[] {
   return copy ?? input
 }
 
-function jsonObjectToLex(
+function jsonObjectToLexMap(
   input: JsonObject,
   options: LexParseOptions,
-): LexObject {
+): LexMap {
   // Lazily copy value
-  let copy: LexObject | undefined = undefined
+  let copy: LexMap | undefined = undefined
   for (const [key, inputValue] of Object.entries(input)) {
     const value = jsonToLex(inputValue!, options)
     if (value !== inputValue) {
@@ -115,7 +115,7 @@ export function lexToJson(value: Lex): Json {
       } else if (value instanceof Uint8Array) {
         return encodeLexBytes(value)
       } else {
-        return lexObjectToJson(value)
+        return encodeLexMap(value)
       }
     case 'boolean':
     case 'string':
@@ -140,7 +140,7 @@ function lexArrayToJson(input: LexArray): Json[] {
   return copy ?? (input as Json[])
 }
 
-function lexObjectToJson(input: LexObject): JsonObject {
+function encodeLexMap(input: LexMap): JsonObject {
   // Lazily copy value
   let copy: JsonObject | undefined = undefined
   for (const [key, inputValue] of Object.entries(input)) {
