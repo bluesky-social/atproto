@@ -33,10 +33,11 @@
     }
   },
   "dependencies": {
-    "@atproto/syntax": "workspace:*",
+    "@atproto/syntax": "workspace:^",
     "multiformats": "^9.9.0",
     "tslib": "^2.8.1",
-    "uint8arrays": "3.0.0"
+    "uint8arrays": "3.0.0",
+    "unicode-segmenter": "^0.14.0"
   },
   "devDependencies": {
     "jest": "^28.1.2"

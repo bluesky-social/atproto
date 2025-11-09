@@ -61,7 +61,7 @@ importers:
         version: 5.1.3(eslint-config-prettier@9.1.0)(eslint@8.57.0)(prettier@3.2.5)
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       node-gyp:
         specifier: ^9.3.1
         version: 9.3.1
@@ -113,7 +113,7 @@ importers:
         version: link:../lex-cli
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -408,25 +408,22 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
-      '@ipld/dag-cbor':
-        specifier: ^7.0.3
-        version: 7.0.3
-      cbor-x:
-        specifier: ^1.5.1
-        version: 1.5.1
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
       iso-datestring-validator:
         specifier: ^2.2.2
         version: 2.2.2
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       pino:
         specifier: ^8.21.0
         version: 8.21.0
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -436,22 +433,16 @@ importers:
 
   packages/common-web:
     dependencies:
-      graphemer:
-        specifier: ^1.4.0
-        version: 1.4.0
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
-      uint8arrays:
-        specifier: 3.0.0
-        version: 3.0.0
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex/lex-data
       zod:
         specifier: ^3.23.8
         version: 3.24.2
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -473,7 +464,7 @@ importers:
         version: link:../common
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -559,7 +550,7 @@ importers:
         version: 0.2.24(@swc/core@1.13.3)
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -590,7 +581,7 @@ importers:
         version: 6.1.2
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -795,20 +786,17 @@ importers:
   packages/lex/lex:
     dependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       '@atproto/lex-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-client
       '@atproto/lex-installer':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-installer
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
-      '@formatjs/intl-segmenter':
-        specifier: ^11.7.12
-        version: 11.7.12
       core-js:
         specifier: ^3
         version: 3.45.1
@@ -821,15 +809,15 @@ importers:
         version: 17.0.33
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
 
   packages/lex/lex-builder:
     dependencies:
       '@atproto/lex-document':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-document
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       prettier:
         specifier: ^3.2.5
@@ -846,16 +834,13 @@ importers:
         version: 0.28.1
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
 
   packages/lex/lex-cbor:
     dependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
-      cborg:
-        specifier: ^4.2.18
-        version: 4.2.18
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -863,9 +848,12 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
+      cborg:
+        specifier: ^4.2.18
+        version: 4.2.18
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
@@ -873,23 +861,23 @@ importers:
   packages/lex/lex-client:
     dependencies:
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
 
   packages/lex/lex-data:
     dependencies:
       '@atproto/syntax':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../syntax
       multiformats:
         specifier: ^9.9.0
@@ -900,15 +888,18 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      unicode-segmenter:
+        specifier: ^0.14.0
+        version: 0.14.0
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
 
   packages/lex/lex-document:
     dependencies:
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       tslib:
         specifier: ^2.8.1
@@ -916,21 +907,21 @@ importers:
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
 
   packages/lex/lex-installer:
     dependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       '@atproto/lex-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-client
       '@atproto/lex-document':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-document
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       tslib:
         specifier: ^2.8.1
@@ -938,15 +929,15 @@ importers:
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
 
   packages/lex/lex-schema:
     dependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       '@atproto/syntax':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../syntax
       tslib:
         specifier: ^2.8.1
@@ -954,7 +945,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
 
   packages/lexicon:
     dependencies:
@@ -976,7 +967,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -1013,7 +1004,7 @@ importers:
         version: link:../lex-cli
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.3
@@ -1543,7 +1534,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.3
@@ -1901,7 +1892,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -1941,7 +1932,7 @@ importers:
         version: 8.5.4
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -1950,7 +1941,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
@@ -2027,7 +2018,7 @@ importers:
         version: 6.1.2
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       jose:
         specifier: ^4.15.4
         version: 4.15.4
@@ -5701,35 +5692,6 @@ packages:
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
     dev: true
 
-  /@formatjs/ecma402-abstract@2.3.6:
-    resolution: {integrity: sha512-HJnTFeRM2kVFVr5gr5kH1XP6K0JcJtE7Lzvtr3FS/so5f1kpsqqqxy5JF+FRaO6H2qmcMfAUIox7AJteieRtVw==}
-    dependencies:
-      '@formatjs/fast-memoize': 2.2.7
-      '@formatjs/intl-localematcher': 0.6.2
-      decimal.js: 10.6.0
-      tslib: 2.8.1
-    dev: false
-
-  /@formatjs/fast-memoize@2.2.7:
-    resolution: {integrity: sha512-Yabmi9nSvyOMrlSeGGWDiH7rf3a7sIwplbvo/dlz9WCIjzIQAfy1RMf4S0X3yG724n5Ghu2GmEl5NJIV6O9sZQ==}
-    dependencies:
-      tslib: 2.8.1
-    dev: false
-
-  /@formatjs/intl-localematcher@0.6.2:
-    resolution: {integrity: sha512-XOMO2Hupl0wdd172Y06h6kLpBz6Dv+J4okPLl4LPtzbr8f66WbIoy4ev98EBuZ6ZK4h5ydTN6XneT4QVpD7cdA==}
-    dependencies:
-      tslib: 2.8.1
-    dev: false
-
-  /@formatjs/intl-segmenter@11.7.12:
-    resolution: {integrity: sha512-3QefVKh5HvaKU80lAFmqUsWmKYWcpiDymsc0HwFvhuVl0dAnMhtbNmzMN50UiC7ZsnbybelNGrm9GZPp4kbbZA==}
-    dependencies:
-      '@formatjs/ecma402-abstract': 2.3.6
-      '@formatjs/intl-localematcher': 0.6.2
-      tslib: 2.8.1
-    dev: false
-
   /@gar/promisify@1.1.3:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: true
@@ -6061,7 +6023,7 @@ packages:
       slash: 3.0.0
     dev: true
 
-  /@jest/core@28.1.3:
+  /@jest/core@28.1.3(ts-node@10.8.2):
     resolution: {integrity: sha512-CIKBrlaKOzA7YG19BEqCw3SLIsEwjZkeJzf5bdooVnW4bH5cktqe3JX+G2YV1aK5vP8N9na1IGWFzYaTp6k6NA==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     peerDependencies:
@@ -6082,7 +6044,7 @@ packages:
       exit: 0.1.2
       graceful-fs: 4.2.11
       jest-changed-files: 28.1.3
-      jest-config: 28.1.3(@types/node@22.18.11)
+      jest-config: 28.1.3(@types/node@22.18.11)(ts-node@10.8.2)
       jest-haste-map: 28.1.3
       jest-message-util: 28.1.3
       jest-regex-util: 28.0.2
@@ -6095,49 +6057,6 @@ packages:
       jest-validate: 28.1.3
       jest-watcher: 28.1.3
       micromatch: 4.0.5
-      pretty-format: 28.1.3
-      rimraf: 3.0.2
-      slash: 3.0.0
-      strip-ansi: 6.0.1
-    transitivePeerDependencies:
-      - supports-color
-      - ts-node
-    dev: true
-
-  /@jest/core@28.1.3(ts-node@10.8.2):
-    resolution: {integrity: sha512-CIKBrlaKOzA7YG19BEqCw3SLIsEwjZkeJzf5bdooVnW4bH5cktqe3JX+G2YV1aK5vP8N9na1IGWFzYaTp6k6NA==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    peerDependencies:
-      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
-    peerDependenciesMeta:
-      node-notifier:
-        optional: true
-    dependencies:
-      '@jest/console': 28.1.3
-      '@jest/reporters': 28.1.3
-      '@jest/test-result': 28.1.3
-      '@jest/transform': 28.1.3
-      '@jest/types': 28.1.3
-      '@types/node': 18.19.67
-      ansi-escapes: 4.3.2
-      chalk: 4.1.2
-      ci-info: 3.8.0
-      exit: 0.1.2
-      graceful-fs: 4.2.11
-      jest-changed-files: 28.1.3
-      jest-config: 28.1.3(@types/node@18.19.67)(ts-node@10.8.2)
-      jest-haste-map: 28.1.3
-      jest-message-util: 28.1.3
-      jest-regex-util: 28.0.2
-      jest-resolve: 28.1.3
-      jest-resolve-dependencies: 28.1.3
-      jest-runner: 28.1.3
-      jest-runtime: 28.1.3
-      jest-snapshot: 28.1.3
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      jest-watcher: 28.1.3
-      micromatch: 4.0.8
       pretty-format: 28.1.3
       rimraf: 3.0.2
       slash: 3.0.0
@@ -9914,24 +9833,6 @@ packages:
       - supports-color
     dev: true
 
-  /babel-jest@28.1.3(@babel/core@7.26.9):
-    resolution: {integrity: sha512-epUaPOEWMk3cWX0M/sPvCHHCe9fMFAa/9hXEgKP8nFfNl/jlGkE9ucq9NqkZGXLDduCJYS0UvSlPUwC0S+rH6Q==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    peerDependencies:
-      '@babel/core': ^7.8.0
-    dependencies:
-      '@babel/core': 7.26.9
-      '@jest/transform': 28.1.3
-      '@types/babel__core': 7.20.1
-      babel-plugin-istanbul: 6.1.1
-      babel-preset-jest: 28.1.3(@babel/core@7.26.9)
-      chalk: 4.1.2
-      graceful-fs: 4.2.11
-      slash: 3.0.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /babel-jest@29.7.0(@babel/core@7.26.9):
     resolution: {integrity: sha512-BrvGY3xZSwEcCzKvKsCi2GgHqDqsYkOP4/by5xCgIwGXQxIEh+8ew3gmrE1y7XRR6LHZIj6yLYnUi/mm2KXKBg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -10141,17 +10042,6 @@ packages:
       '@babel/core': 7.18.6
       babel-plugin-jest-hoist: 28.1.3
       babel-preset-current-node-syntax: 1.0.1(@babel/core@7.18.6)
-    dev: true
-
-  /babel-preset-jest@28.1.3(@babel/core@7.26.9):
-    resolution: {integrity: sha512-L+fupJvlWAHbQfn74coNX3zf60LXMJsezNvvx8eIh7iOR1luJ1poxYgQk1F8PYtNq/6QODDHCqsSnTFSWC491A==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    dependencies:
-      '@babel/core': 7.26.9
-      babel-plugin-jest-hoist: 28.1.3
-      babel-preset-current-node-syntax: 1.0.1(@babel/core@7.26.9)
     dev: true
 
   /babel-preset-jest@29.6.3(@babel/core@7.26.9):
@@ -10588,7 +10478,7 @@ packages:
   /cborg@4.2.18:
     resolution: {integrity: sha512-uzhkd5HOaLccokqeZa5B0Qz7/aa9C12pmUq5yU3vcy6I6OhTKdPHSzOuBPZfcoQHdcx8Emz/dWZbPNNfF/puvg==}
     hasBin: true
-    dev: false
+    dev: true
 
   /chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -11284,10 +11174,6 @@ packages:
     resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
     engines: {node: '>=0.10.0'}
     dev: true
-
-  /decimal.js@10.6.0:
-    resolution: {integrity: sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg==}
-    dev: false
 
   /decode-formdata@0.9.0:
     resolution: {integrity: sha512-q5uwOjR3Um5YD+ZWPOF/1sGHVW9A5rCrRwITQChRXlmPkxDFBqCm4jNTIVdGHNH9OnR+V9MoZVgRhsFb+ARbUw==}
@@ -13337,6 +13223,7 @@ packages:
 
   /graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
+    dev: true
 
   /handlebars@4.7.7:
     resolution: {integrity: sha512-aAcXm5OAfE/8IXkcZvCepKU3VzW1/39Fb5ZuqMtgI/hT8X2YgoMvBY5dLhq/cpOvw7Lk1nK/UF71aLG/ZnVYRA==}
@@ -14202,34 +14089,6 @@ packages:
       - supports-color
     dev: true
 
-  /jest-cli@28.1.3(@types/node@18.19.67):
-    resolution: {integrity: sha512-roY3kvrv57Azn1yPgdTebPAXvdR2xfezaKKYzVxZ6It/5NCxzJym6tUI5P1zkdWhfUYkxEI9uZWcQdaFLo8mJQ==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    hasBin: true
-    peerDependencies:
-      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
-    peerDependenciesMeta:
-      node-notifier:
-        optional: true
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/test-result': 28.1.3
-      '@jest/types': 28.1.3
-      chalk: 4.1.2
-      exit: 0.1.2
-      graceful-fs: 4.2.11
-      import-local: 3.1.0
-      jest-config: 28.1.3(@types/node@18.19.67)(ts-node@10.8.2)
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      prompts: 2.4.2
-      yargs: 17.7.2
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-    dev: true
-
   /jest-cli@28.1.3(@types/node@18.19.67)(ts-node@10.8.2):
     resolution: {integrity: sha512-roY3kvrv57Azn1yPgdTebPAXvdR2xfezaKKYzVxZ6It/5NCxzJym6tUI5P1zkdWhfUYkxEI9uZWcQdaFLo8mJQ==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
@@ -14270,11 +14129,11 @@ packages:
       ts-node:
         optional: true
     dependencies:
-      '@babel/core': 7.26.9
+      '@babel/core': 7.18.6
       '@jest/test-sequencer': 28.1.3
       '@jest/types': 28.1.3
       '@types/node': 18.19.67
-      babel-jest: 28.1.3(@babel/core@7.26.9)
+      babel-jest: 28.1.3(@babel/core@7.18.6)
       chalk: 4.1.2
       ci-info: 3.8.0
       deepmerge: 4.3.1
@@ -14288,7 +14147,7 @@ packages:
       jest-runner: 28.1.3
       jest-util: 28.1.3
       jest-validate: 28.1.3
-      micromatch: 4.0.8
+      micromatch: 4.0.5
       parse-json: 5.2.0
       pretty-format: 28.1.3
       slash: 3.0.0
@@ -14298,7 +14157,7 @@ packages:
       - supports-color
     dev: true
 
-  /jest-config@28.1.3(@types/node@22.18.11):
+  /jest-config@28.1.3(@types/node@22.18.11)(ts-node@10.8.2):
     resolution: {integrity: sha512-MG3INjByJ0J4AsNBm7T3hsuxKQqFIiRo/AUqb1q9LRKI5UU6Aar9JHbr9Ivn1TVwfUD9KirRoM/T6u8XlcQPHQ==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     peerDependencies:
@@ -14333,6 +14192,7 @@ packages:
       pretty-format: 28.1.3
       slash: 3.0.0
       strip-json-comments: 3.1.1
+      ts-node: 10.8.2(@swc/core@1.11.18)(@types/node@18.19.67)(typescript@5.8.2)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -14724,26 +14584,6 @@ packages:
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: false
-
-  /jest@28.1.2(@types/node@18.19.67):
-    resolution: {integrity: sha512-Tuf05DwLeCh2cfWCQbcz9UxldoDyiR1E9Igaei5khjonKncYdc6LDfynKCEWozK0oLE3GD+xKAo2u8x/0s6GOg==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    hasBin: true
-    peerDependencies:
-      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
-    peerDependenciesMeta:
-      node-notifier:
-        optional: true
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/types': 28.1.3
-      import-local: 3.1.0
-      jest-cli: 28.1.3(@types/node@18.19.67)
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-    dev: true
 
   /jest@28.1.2(@types/node@18.19.67)(ts-node@10.8.2):
     resolution: {integrity: sha512-Tuf05DwLeCh2cfWCQbcz9UxldoDyiR1E9Igaei5khjonKncYdc6LDfynKCEWozK0oLE3GD+xKAo2u8x/0s6GOg==}
@@ -19359,6 +19199,10 @@ packages:
   /unicode-property-aliases-ecmascript@2.2.0:
     resolution: {integrity: sha512-hpbDzxUY9BFwX+UeBnxv3Sh1q7HFxj48DTmXchNgRa46lO8uj3/1iEn3MiNUYTg1g9ctIqXCCERn8gYZhHC5lQ==}
     engines: {node: '>=4'}
+    dev: false
+
+  /unicode-segmenter@0.14.0:
+    resolution: {integrity: sha512-AH4lhPCJANUnSLEKnM4byboctePJzltF4xj8b+NbNiYeAkAXGh7px2K/4NANFp7dnr6+zB3e6HLu8Jj8SKyvYg==}
     dev: false
 
   /unique-filename@2.0.1:

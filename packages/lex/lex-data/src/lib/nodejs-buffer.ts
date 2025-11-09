@@ -1,13 +1,15 @@
+type Encoding = 'utf8' | 'base64' | 'base64url'
+
 interface NodeJSBuffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>
   extends Uint8Array<TArrayBuffer> {
   byteLength: number
-  toString(encoding?: 'base64'): string
+  toString(encoding?: Encoding): string
 }
 
 interface NodeJSBufferConstructor {
-  new (input: string, encoding?: 'utf-8'): NodeJSBuffer
+  new (input: string, encoding?: Encoding): NodeJSBuffer
   from(input: Uint8Array | ArrayBuffer | ArrayBufferView): NodeJSBuffer
-  from(input: string, encoding?: 'base64'): NodeJSBuffer
+  from(input: string, encoding?: Encoding): NodeJSBuffer
   byteLength(input: string): number
   prototype: NodeJSBuffer
 }

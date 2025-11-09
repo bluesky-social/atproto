@@ -6,21 +6,21 @@ import {
   CID,
   DAG_CBOR_MULTICODEC,
   Lex,
-  LexObject,
+  LexMap,
   RAW_BIN_MULTICODEC,
 } from '@atproto/lex-data'
 import { atpCodec } from './codec.js'
 
 export * from './codec.js'
 
-export async function dataToCborBlock<T extends Lex>(
+export async function lexToCborBlock<T extends Lex>(
   value: T,
 ): Promise<Block<T>> {
   return encodeBlock<T, 0x71, 0x12>({ value, codec: atpCodec, hasher: sha256 })
 }
 
 export async function cidForLex(value: Lex): Promise<CID> {
-  const { cid } = await dataToCborBlock(value)
+  const { cid } = await lexToCborBlock(value)
   return cid
 }
 
@@ -34,7 +34,7 @@ export async function verifyCidForCbor(cid: CID, bytes: Uint8Array) {
   }
 }
 
-export type LexRecord = LexObject & { $type: string }
+export type LexRecord = LexMap & { $type: string }
 export function cborToLexRecord(bytes: Uint8Array): LexRecord {
   const data = atpCodec.decode(bytes)
   if (
@@ -47,7 +47,7 @@ export function cborToLexRecord(bytes: Uint8Array): LexRecord {
   ) {
     throw new Error(`Expected record with $type property`)
   }
-  return data as LexObject & { $type: string }
+  return data as LexMap & { $type: string }
 }
 
 export function cidForRawHash(hash: Uint8Array): CID {

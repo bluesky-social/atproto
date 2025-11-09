@@ -1,3 +1,4 @@
+import { countGraphemes } from 'unicode-segmenter/grapheme'
 import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 
 export const utf8Len: (string: string) => number = NodeJSBuffer
@@ -40,9 +41,25 @@ export const utf8Len: (string: string) => number = NodeJSBuffer
       return len
     }
 
-const segmenter = /*#__PURE__*/ new Intl.Segmenter()
-export function graphemeLen(str: string) {
-  let length = 0
-  for (const _ of segmenter.segment(str)) length++
-  return length
+// @TODO: Drop usage of "unicode-segmenter" package when Intl.Segmenter is
+// widely supported.
+// https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter
+const segmenter =
+  'Segmenter' in Intl && typeof Intl.Segmenter === 'function'
+    ? /*#__PURE__*/ new Intl.Segmenter()
+    : null
+
+if (!segmenter) {
+  /*#__PURE__*/
+  console.warn(
+    '[@atproto/lex-data]: Intl.Segmenter is not available in this environment. Falling back to "unicode-segmenter" package for grapheme segmentation.',
+  )
 }
+
+export const graphemeLen: (str: string) => number = segmenter
+  ? (str: string) => {
+      let length = 0
+      for (const _ of segmenter.segment(str)) length++
+      return length
+    }
+  : (str: string) => countGraphemes(str)

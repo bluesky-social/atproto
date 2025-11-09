@@ -1,0 +1,6 @@
+---
+"@atproto/common-web": patch
+"@atproto/common": patch
+---
+
+Deprecate "ipld" function (use `@atproto/lex-data` and `@atproto/lex-cbor` instead)

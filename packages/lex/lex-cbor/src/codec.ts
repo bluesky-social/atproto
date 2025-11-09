@@ -11,6 +11,9 @@ import {
 import type { BlockDecoder, BlockEncoder, ByteView } from 'multiformats/block'
 import { CID, DAG_CBOR_MULTICODEC, Lex } from '@atproto/lex-data'
 
+export { CID }
+export type { Lex }
+
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
 // match ATPROTO Data Model constraints. Floats, in particular, are not allowed.
 
