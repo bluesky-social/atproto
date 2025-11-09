@@ -1,38 +1,50 @@
 import { CID } from './cid.js'
 import { lexEquals } from './lex-equals.js'
+import { Lex } from './lex.js'
+
+function expectLexEqual(a: Lex, b: Lex, expected: boolean) {
+  expect(lexEquals(a, b)).toBe(expected)
+  expect(lexEquals(b, a)).toBe(expected)
+}
 
 describe('lexEquals', () => {
   it('compares primitive values', () => {
-    expect(lexEquals(null, null)).toBe(true)
-    expect(lexEquals(true, true)).toBe(true)
-    expect(lexEquals(false, false)).toBe(true)
-    expect(lexEquals(42, 42)).toBe(true)
-    expect(lexEquals('hello', 'hello')).toBe(true)
+    expectLexEqual(null, null, true)
+    expectLexEqual(true, true, true)
+    expectLexEqual(false, false, true)
+    expectLexEqual(42, 42, true)
+    expectLexEqual('hello', 'hello', true)
 
-    expect(lexEquals(null, false)).toBe(false)
-    expect(lexEquals(true, false)).toBe(false)
-    expect(lexEquals(42, 43)).toBe(false)
-    expect(lexEquals('hello', 'world')).toBe(false)
+    expectLexEqual(null, false, false)
+    expectLexEqual(false, null, false)
+    expectLexEqual(true, false, false)
+    expectLexEqual(false, true, false)
+    expectLexEqual(42, 43, false)
+    expectLexEqual('hello', 'world', false)
+  })
+
+  it('compares NaN and Infinity correctly', () => {
+    expectLexEqual(NaN, NaN, true)
+    expectLexEqual(Infinity, Infinity, true)
+    expectLexEqual(-Infinity, -Infinity, true)
+
+    expectLexEqual(NaN, 0, false)
+    expectLexEqual(NaN, null, false)
+    expectLexEqual(Infinity, -Infinity, false)
   })
 
   it('compares arrays', () => {
-    expect(lexEquals([1, 2, 3], [1, 2, 3])).toBe(true)
-    expect(lexEquals([1, 2, 3], [1, 2, 4])).toBe(false)
-    expect(lexEquals([1, 2, 3], [1, 2])).toBe(false)
-    expect(lexEquals([1, 2, 3], 'not an array')).toBe(false)
+    expectLexEqual([1, 2, 3], [1, 2, 3], true)
+    expectLexEqual([1, 2, 3], [1, 2, 4], false)
+    expectLexEqual([1, 2, 3], [1, 2], false)
+    expectLexEqual([1, 2, 3], 'not an array', false)
   })
 
   it('compares Uint8Arrays', () => {
-    expect(
-      lexEquals(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3])),
-    ).toBe(true)
-    expect(
-      lexEquals(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 4])),
-    ).toBe(false)
-    expect(lexEquals(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2]))).toBe(
-      false,
-    )
-    expect(lexEquals(new Uint8Array([1, 2, 3]), 'not a Uint8Array')).toBe(false)
+    expectLexEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]), true)
+    expectLexEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 4]), false)
+    expectLexEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2]), false)
+    expectLexEqual(new Uint8Array([1, 2, 3]), 'not a Uint8Array', false)
   })
 
   it('compares CIDs', () => {
@@ -42,18 +54,25 @@ describe('lexEquals', () => {
     const cid2 = CID.parse(cid1.toString())
     const cid3 = CID.parse(cid1.toString())
 
-    expect(lexEquals(cid1, cid2)).toBe(true)
-    expect(lexEquals(cid1, cid3)).toBe(true)
-    expect(lexEquals(cid2, cid3)).toBe(true)
+    expectLexEqual(cid1, cid2, true)
+    expectLexEqual(cid1, cid3, true)
+    expectLexEqual(cid2, cid3, true)
 
-    expect(lexEquals(cid1, cid1.toString())).toBe(false)
+    expectLexEqual(cid1, cid1.toString(), false)
   })
 
   it('compares objects', () => {
-    expect(lexEquals({ a: 1, b: 2 }, { a: 1, b: 2 })).toBe(true)
-    expect(lexEquals({ a: 1, b: 2 }, { a: 1, b: 3 })).toBe(false)
-    expect(lexEquals({ a: 1, b: 2 }, { a: 1 })).toBe(false)
-    expect(lexEquals({ a: 1, b: 2 }, 'not an object')).toBe(false)
+    expectLexEqual({ a: 1, b: 2 }, { a: 1, b: 2 }, true)
+    expectLexEqual(
+      { a: 1, b: { unicode: 'a~öñ©⽘☎𓋓😀👨‍👩‍👧‍👧' } },
+      { a: 1, b: { unicode: 'a~öñ©⽘☎𓋓😀👨‍👩‍👧‍👧' } },
+      true,
+    )
+
+    expectLexEqual({ a: 1, b: 2 }, { a: 1, b: 3 }, false)
+    expectLexEqual({ a: 1, b: 2 }, { a: 1 }, false)
+    expectLexEqual({ a: 1, b: 2 }, 'not an object', false)
+    expectLexEqual({ a: 1, b: 2 }, null, false)
   })
 
   it('compares nested structures', () => {
@@ -70,44 +89,44 @@ describe('lexEquals', () => {
       ),
     }
     const lex3 = {
-      foo: [1, 2, { bar: new Uint8Array([3, 4, 6]) }],
+      foo: [1, 2, { bar: new Uint8Array([3, 4, 5 + 1]) }],
       baz: CID.parse(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }
 
-    expect(lexEquals(lex1, lex2)).toBe(true)
-    expect(lexEquals(lex1, lex3)).toBe(false)
-    expect(lexEquals(lex2, lex3)).toBe(false)
+    expectLexEqual(lex1, lex2, true)
+    expectLexEqual(lex1, lex3, false)
+    expectLexEqual(lex2, lex3, false)
   })
 
   it('allows comparing invalid numbers (floats, NaN, Infinity)', () => {
-    expect(lexEquals(3.14, 3.14)).toBe(true)
-    expect(lexEquals(NaN, NaN)).toBe(true)
-    expect(lexEquals(Infinity, Infinity)).toBe(true)
-    expect(lexEquals([Infinity], [Infinity])).toBe(true)
-    expect(lexEquals([{ foo: Infinity }], [{ foo: Infinity }])).toBe(true)
-    expect(lexEquals({ v: -Infinity }, { v: -Infinity })).toBe(true)
+    expectLexEqual(3.14, 3.14, true)
+    expectLexEqual(NaN, NaN, true)
+    expectLexEqual(Infinity, Infinity, true)
+    expectLexEqual([Infinity], [Infinity], true)
+    expectLexEqual([{ foo: Infinity }], [{ foo: Infinity }], true)
+    expectLexEqual({ v: -Infinity }, { v: -Infinity }, true)
 
-    expect(lexEquals(3.14, 2.71)).toBe(false)
-    expect(lexEquals(NaN, 0)).toBe(false)
-    expect(lexEquals(Infinity, -Infinity)).toBe(false)
+    expectLexEqual(3.14, 2.71, false)
+    expectLexEqual(NaN, 0, false)
+    expectLexEqual(Infinity, -Infinity, false)
   })
 
   it('returns true for identical references', () => {
     const arr = [1, 2, 3]
-    expect(lexEquals(arr, arr)).toBe(true)
+    expectLexEqual(arr, arr, true)
 
     const obj = { a: 1, b: 2 }
-    expect(lexEquals(obj, obj)).toBe(true)
+    expectLexEqual(obj, obj, true)
 
     const u8 = new Uint8Array([1, 2, 3])
-    expect(lexEquals(u8, u8)).toBe(true)
+    expectLexEqual(u8, u8, true)
 
     const cid = CID.parse(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     )
-    expect(lexEquals(cid, cid)).toBe(true)
+    expectLexEqual(cid, cid, true)
   })
 
   it('throws when comparing plain object with non-allowed class instance', () => {

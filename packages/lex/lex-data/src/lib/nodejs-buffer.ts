@@ -10,7 +10,7 @@ interface NodeJSBufferConstructor {
   new (input: string, encoding?: Encoding): NodeJSBuffer
   from(input: Uint8Array | ArrayBuffer | ArrayBufferView): NodeJSBuffer
   from(input: string, encoding?: Encoding): NodeJSBuffer
-  byteLength(input: string): number
+  byteLength(input: string, encoding?: Encoding): number
   prototype: NodeJSBuffer
 }
 

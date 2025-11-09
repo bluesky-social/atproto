@@ -1,7 +1,8 @@
 import { CID } from 'multiformats/cid'
 import { Json } from './json.js'
 import { lexEquals } from './lex-equals.js'
-import { Lex, jsonToLex, lexParse, lexStringify, lexToJson } from './lex.js'
+import { jsonToLex, lexParse, lexStringify, lexToJson } from './lex-json.js'
+import { Lex } from './lex.js'
 
 export const validVectors: Array<{
   name: string
