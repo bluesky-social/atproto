@@ -132,7 +132,7 @@ describe('Client', () => {
       }
 
       for (const pref of preferences) {
-        if (app.bsky.actor.defs.adultContentPref.typed(pref)) {
+        if (app.bsky.actor.defs.adultContentPref.isTypeOf(pref)) {
           pref.$type
           pref.enabled
         } else {

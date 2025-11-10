@@ -23,9 +23,9 @@ export class TypedObjectSchema<
     super()
   }
 
-  typed<X extends { $type?: unknown }>(
+  isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X & { $type?: Type } {
+  ): value is X extends { $type?: Type } ? X : never {
     return value.$type === undefined || value.$type === this.$type
   }
 
@@ -33,8 +33,8 @@ export class TypedObjectSchema<
     return { ...input, $type: this.$type }
   }
 
-  $typed<X extends { $type?: unknown }>(value: X) {
-    return this.typed<X>(value)
+  $isTypeOf<X extends { $type?: unknown }>(value: X) {
+    return this.isTypeOf<X>(value)
   }
 
   $build<X extends Omit<Output, '$type'>>(input: X) {
