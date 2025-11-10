@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.18.0
+
+### Minor Changes
+
+- [#4227](https://github.com/bluesky-social/atproto/pull/4227) [`94ddc8219`](https://github.com/bluesky-social/atproto/commit/94ddc8219c144475df622137ab88895255136eda) Thanks [@bnewbold](https://github.com/bnewbold)! - Introduce `com.atproto.lexicon.resolveLexicon` lexicon method
+
+### Patch Changes
+
+- [#4269](https://github.com/bluesky-social/atproto/pull/4269) [`39b5c08e0`](https://github.com/bluesky-social/atproto/commit/39b5c08e0799468eba0c3bf50f4f5a8104c35f34) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Deprecate and remove `prioritizeFollowedUsers` setting from preferences response types and `getPostThreadV2` query params.
+
 ## 0.17.7
 
 ### Patch Changes

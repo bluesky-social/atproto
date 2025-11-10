@@ -26,8 +26,6 @@ export type QueryParams = {
   below?: number
   /** Maximum of replies to include at each level of the thread, except for the direct replies to the anchor, which are (NOTE: currently, during unspecced phase) all returned (NOTE: later they might be paginated). */
   branchingFactor?: number
-  /** Whether to prioritize posts from followed users. It only has effect when the user is authenticated. */
-  prioritizeFollowedUsers?: boolean
   /** Sorting for the thread replies. */
   sort?: 'newest' | 'oldest' | 'top' | (string & {})
 }

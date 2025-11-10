@@ -388,12 +388,17 @@ export class AuthVerifier {
     const canPerformTakedown =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'mod_service'
+    const isModService =
+      creds.credentials.type === 'mod_service' ||
+      (creds.credentials.type === 'standard' &&
+        this.isModService(creds.credentials.iss))
 
     return {
       viewer,
       includeTakedowns: includeTakedownsAnd3pBlocks,
       include3pBlocks: includeTakedownsAnd3pBlocks,
       canPerformTakedown,
+      isModService,
     }
   }
 }
