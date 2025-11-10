@@ -85,11 +85,11 @@ const decodeOptions: DecodeOptions = {
   tags: tagDecoders,
 }
 
-export function cborEncode<T extends Lex>(data: T): ByteView<T> {
+export function cborEncode<T>(data: T): ByteView<T> {
   return cborgEncode(data, encodeOptions)
 }
 
-export function cborDecode<T extends Lex>(bytes: ByteView<T>): T {
+export function cborDecode<T>(bytes: ByteView<T>): T {
   return cborgDecode(bytes, decodeOptions)
 }
 

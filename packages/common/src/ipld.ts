@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { Transform } from 'node:stream'
 import {
+  Block,
   Lex,
   cborToLexRecord,
   cidForLex,
@@ -16,7 +17,7 @@ export { cborDecode, cborEncode } from '@atproto/lex-cbor'
 /**
  * @deprecated Use {@link lexToCborBlock} from '@atproto/lex-cbor' instead.
  */
-export async function dataToCborBlock(data: unknown) {
+export async function dataToCborBlock(data: unknown): Promise<Block<Lex>> {
   return lexToCborBlock(data as Lex)
 }
 
@@ -30,30 +31,28 @@ export async function cidForCbor(data: unknown): Promise<CID> {
 /**
  * @deprecated Use {@link validateCidString} from '@atproto/lex-data' instead.
  */
-export const isValidCid = async (cidStr: string): Promise<boolean> => {
+export async function isValidCid(cidStr: string): Promise<boolean> {
   return validateCidString(cidStr)
 }
 
 /**
  * @deprecated Use {@link cborToLexRecord} from '@atproto/lex-cbor' instead.
  */
-export const cborBytesToRecord = (
-  bytes: Uint8Array,
-): Record<string, unknown> => {
+export function cborBytesToRecord(bytes: Uint8Array): Record<string, unknown> {
   return cborToLexRecord(bytes)
 }
 
 /**
  * @deprecated Use {@link verifyCidForCbor} from '@atproto/lex-cbor' instead.
  */
-export const verifyCidForBytes = async (cid: CID, bytes: Uint8Array) => {
+export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
   return verifyCidForCbor(cid, bytes)
 }
 
 /**
  * @deprecated Use {@link cidForRawHash} from '@atproto/lex-cbor' instead.
  */
-export const sha256RawToCid = (hash: Uint8Array): CID => {
+export function sha256RawToCid(hash: Uint8Array): CID {
   return cidForRawHash(hash)
 }
 

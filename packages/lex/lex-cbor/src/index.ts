@@ -13,6 +13,7 @@ import { atpCodec } from './codec.js'
 
 export * from './codec.js'
 
+export type { Block }
 export async function lexToCborBlock<T extends Lex>(
   value: T,
 ): Promise<Block<T>> {

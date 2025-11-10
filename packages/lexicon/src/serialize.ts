@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import {
   IpldValue,
@@ -8,11 +10,11 @@ import {
 } from '@atproto/common-web'
 import { BlobRef, jsonBlobRef } from './blob-refs'
 
-export type LexValue =
-  | IpldValue
-  | BlobRef
-  | Array<LexValue>
-  | { [key: string]: LexValue }
+/**
+ * @note this is basically equivalent to `unknown` for legacy reasons
+ * @deprecated Use {@link Lex} from `@atproto/lex-data` instead.
+ */
+export type LexValue = unknown | Array<LexValue> | { [key: string]: LexValue }
 
 export type RepoRecord = Record<string, LexValue>
 
@@ -32,7 +34,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
     }
     // retain cids & bytes
     if (CID.asCID(val) || val instanceof Uint8Array) {
-      return val
+      return val as IpldValue
     }
     // walk plain objects
     const toReturn = {}
@@ -42,7 +44,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
     return toReturn
   }
   // pass through
-  return val
+  return val as IpldValue
 }
 
 export const ipldToLex = (val: IpldValue): LexValue => {
