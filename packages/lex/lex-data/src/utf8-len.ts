@@ -5,7 +5,9 @@ import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 // file allows to test both the NodeJS-optimized and ponyfill implementations.
 
 export const utf8LenNode = NodeJSBuffer
-  ? (string: string): number => NodeJSBuffer!.byteLength(string, 'utf8')
+  ? function utf8LenNode(string: string): number {
+      return NodeJSBuffer!.byteLength(string, 'utf8')
+    }
   : null
 
 export function utf8LenCompute(string: string): number {
@@ -47,6 +49,3 @@ export function utf8LenCompute(string: string): number {
 
   return len
 }
-
-// Optimization: use NodeJS Buffer if available as it is twice as fast
-export const utf8Len: (string: string) => number = utf8LenNode ?? utf8LenCompute

@@ -1,6 +1,7 @@
 import { CID, isCid } from './cid.js'
 import { Lex } from './lex.js'
 import { isPlainObject } from './object.js'
+import { uin8Equals } from './uint8array.js'
 
 export function lexEquals(a: Lex, b: Lex): boolean {
   if (Object.is(a, b)) {
@@ -35,23 +36,14 @@ export function lexEquals(a: Lex, b: Lex): boolean {
 
   if (ArrayBuffer.isView(a)) {
     if (!ArrayBuffer.isView(b)) return false
-
-    if (a.byteLength !== b.byteLength) {
-      return false
-    }
-
-    for (let i = 0; i < a.byteLength; i++) {
-      if (a[i] !== b[i]) {
-        return false
-      }
-    }
-
-    return true
+    return uin8Equals(a, b)
   } else if (ArrayBuffer.isView(b)) {
     return false
   }
 
   if (isCid(a)) {
+    // @NOTE CID.equals returns its argument when it is falsy (e.g. null or
+    // undefined) so we need to explicitly check that the output is "true".
     return CID.asCID(a)!.equals(CID.asCID(b)) === true
   } else if (isCid(b)) {
     return false

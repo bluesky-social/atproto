@@ -40,6 +40,7 @@
     "unicode-segmenter": "^0.14.0"
   },
   "devDependencies": {
+    "core-js": "^3",
     "jest": "^28.1.2"
   },
   "scripts": {

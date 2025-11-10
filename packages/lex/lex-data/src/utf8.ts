@@ -1,5 +1,14 @@
-// @NOTE The functions bellow are using ponyfill implementations to support
-// browser environments where Intl.Segmenter is not available.
+import { graphemeLenNative, graphemeLenPonyfill } from './utf8-grapheme-len.js'
+import { utf8LenCompute, utf8LenNode } from './utf8-len.js'
 
-export { graphemeLen } from './utf8-grapheme-len.js'
-export { utf8Len } from './utf8-len.js'
+export const graphemeLen: (str: string) => number =
+  graphemeLenNative ?? graphemeLenPonyfill
+
+if (graphemeLen === graphemeLenPonyfill) {
+  /*#__PURE__*/
+  console.warn(
+    '[@atproto/lex-data]: Intl.Segmenter is not available in this environment. Falling back to ponyfill implementation.',
+  )
+}
+
+export const utf8Len: (string: string) => number = utf8LenNode ?? utf8LenCompute

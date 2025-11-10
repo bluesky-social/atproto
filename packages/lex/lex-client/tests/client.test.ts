@@ -1,5 +1,5 @@
 import { Server, createServer } from 'node:http'
-import { lexParse } from '@atproto/lex-data'
+import { lexParse } from '@atproto/lex-schema'
 import { Action, Client } from '..'
 import * as app from './lexicons/app.js'
 
@@ -132,7 +132,7 @@ describe('Client', () => {
       }
 
       for (const pref of preferences) {
-        if (app.bsky.actor.defs.adultContentPref.is(pref)) {
+        if (app.bsky.actor.defs.adultContentPref.typed(pref)) {
           pref.$type
           pref.enabled
         } else {
