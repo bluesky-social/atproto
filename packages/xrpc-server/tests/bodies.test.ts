@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import assert from 'node:assert'
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'

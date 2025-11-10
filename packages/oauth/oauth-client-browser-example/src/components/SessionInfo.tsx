@@ -1,6 +1,6 @@
 import { useGetSessionQuery } from '../queries/use-get-session-query.ts'
-import { JsonQueryResult } from './JsonQueryResult.tsx'
 import { Button } from './Button.tsx'
+import { JsonQueryResult } from './JsonQueryResult.tsx'
 
 export function SessionInfo() {
   const result = useGetSessionQuery()

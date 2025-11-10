@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri'

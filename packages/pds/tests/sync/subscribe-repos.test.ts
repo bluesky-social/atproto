@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { WebSocket } from 'ws'
 import { AtpAgent } from '@atproto/api'

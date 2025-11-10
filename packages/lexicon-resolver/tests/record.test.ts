@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { dataToCborBlock } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { AtprotoRecordResolver, buildRecordResolver } from '../src/index.js'
