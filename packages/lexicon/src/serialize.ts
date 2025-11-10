@@ -11,10 +11,14 @@ import {
 import { BlobRef, jsonBlobRef } from './blob-refs'
 
 /**
- * @note this is basically equivalent to `unknown` for legacy reasons
+ * @note this is equivalent to `unknown` because of {@link IpldValue} being `unknown`.
  * @deprecated Use {@link Lex} from `@atproto/lex-data` instead.
  */
-export type LexValue = unknown | Array<LexValue> | { [key: string]: LexValue }
+export type LexValue =
+  | IpldValue
+  | BlobRef
+  | Array<LexValue>
+  | { [key: string]: LexValue }
 
 export type RepoRecord = Record<string, LexValue>
 
@@ -34,7 +38,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
     }
     // retain cids & bytes
     if (CID.asCID(val) || val instanceof Uint8Array) {
-      return val as IpldValue
+      return val
     }
     // walk plain objects
     const toReturn = {}
@@ -44,7 +48,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
     return toReturn
   }
   // pass through
-  return val as IpldValue
+  return val
 }
 
 export const ipldToLex = (val: IpldValue): LexValue => {

@@ -35,8 +35,8 @@ export async function verifyCidForCbor(cid: CID, bytes: Uint8Array) {
   }
 }
 
-export type LexRecord = LexMap & { $type: string }
-export function cborToLexRecord(bytes: Uint8Array): LexRecord {
+export type TypedLexMap = LexMap & { $type: string }
+export function cborToTypedLexMap(bytes: Uint8Array): TypedLexMap {
   const data = atpCodec.decode(bytes)
   if (
     data == null ||
@@ -48,7 +48,7 @@ export function cborToLexRecord(bytes: Uint8Array): LexRecord {
   ) {
     throw new Error(`Expected record with $type property`)
   }
-  return data as LexMap & { $type: string }
+  return data as TypedLexMap
 }
 
 export function cidForRawHash(hash: Uint8Array): CID {

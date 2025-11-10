@@ -12,7 +12,7 @@ import type { BlockDecoder, BlockEncoder, ByteView } from 'multiformats/block'
 import { CID, DAG_CBOR_MULTICODEC, Lex } from '@atproto/lex-data'
 
 export { CID }
-export type { Lex }
+export type { ByteView, Lex }
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
 // match ATPROTO Data Model constraints. Floats, in particular, are not allowed.
@@ -85,11 +85,11 @@ const decodeOptions: DecodeOptions = {
   tags: tagDecoders,
 }
 
-export function cborEncode<T>(data: T): ByteView<T> {
+export function cborEncode<T extends Lex>(data: T): ByteView<T> {
   return cborgEncode(data, encodeOptions)
 }
 
-export function cborDecode<T>(bytes: ByteView<T>): T {
+export function cborDecode<T extends Lex>(bytes: ByteView<T>): T {
   return cborgDecode(bytes, decodeOptions)
 }
 

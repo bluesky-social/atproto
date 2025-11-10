@@ -2,8 +2,10 @@ import { createHash } from 'node:crypto'
 import { Transform } from 'node:stream'
 import {
   Block,
+  ByteView,
   Lex,
-  cborToLexRecord,
+  atpCodec,
+  cborToTypedLexMap,
   cidForLex,
   cidForRawHash,
   lexToCborBlock,
@@ -12,17 +14,29 @@ import {
 } from '@atproto/lex-cbor'
 import { CID, validateCidString } from '@atproto/lex-data'
 
-export { cborDecode, cborEncode } from '@atproto/lex-cbor'
-
 /**
- * @deprecated Use {@link lexToCborBlock} from '@atproto/lex-cbor' instead.
+ * @deprecated Use {@link cborEncode} from `@atproto/lex-cbor` instead.
  */
-export async function dataToCborBlock(data: unknown): Promise<Block<Lex>> {
-  return lexToCborBlock(data as Lex)
+export function cborEncode<T = unknown>(data: T): ByteView<T> {
+  return atpCodec.encode(data as Lex) as ByteView<T>
 }
 
 /**
- * @deprecated Use {@link cidForLex} from '@atproto/lex-cbor' instead.
+ * @deprecated Use {@link cborDecode} from `@atproto/lex-cbor` instead.
+ */
+export function cborDecode<T = unknown>(bytes: ByteView<T>): T {
+  return atpCodec.decode(bytes) as T
+}
+
+/**
+ * @deprecated Use {@link lexToCborBlock} from `@atproto/lex-cbor` instead.
+ */
+export async function dataToCborBlock<T>(data: T): Promise<Block<T>> {
+  return lexToCborBlock(data as Lex) as Promise<Block<T>>
+}
+
+/**
+ * @deprecated Use {@link cidForLex} from `@atproto/lex-cbor` instead.
  */
 export async function cidForCbor(data: unknown): Promise<CID> {
   return cidForLex(data as Lex)
@@ -36,21 +50,21 @@ export async function isValidCid(cidStr: string): Promise<boolean> {
 }
 
 /**
- * @deprecated Use {@link cborToLexRecord} from '@atproto/lex-cbor' instead.
+ * @deprecated Use {@link cborToTypedLexMap} from `@atproto/lex-cbor` instead.
  */
 export function cborBytesToRecord(bytes: Uint8Array): Record<string, unknown> {
-  return cborToLexRecord(bytes)
+  return cborToTypedLexMap(bytes)
 }
 
 /**
- * @deprecated Use {@link verifyCidForCbor} from '@atproto/lex-cbor' instead.
+ * @deprecated Use {@link verifyCidForCbor} from `@atproto/lex-cbor` instead.
  */
 export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
   return verifyCidForCbor(cid, bytes)
 }
 
 /**
- * @deprecated Use {@link cidForRawHash} from '@atproto/lex-cbor' instead.
+ * @deprecated Use {@link cidForRawHash} from `@atproto/lex-cbor` instead.
  */
 export function sha256RawToCid(hash: Uint8Array): CID {
   return cidForRawHash(hash)

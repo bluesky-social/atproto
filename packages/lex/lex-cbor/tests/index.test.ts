@@ -1,4 +1,4 @@
-import { cborEncode, cborToLexRecord } from '..'
+import { cborEncode, cborToTypedLexMap } from '..'
 
 describe('cborToLexRecord', () => {
   describe('valid records', () => {
@@ -29,7 +29,7 @@ describe('cborToLexRecord', () => {
       },
     ]) {
       it(note, () => {
-        expect(cborToLexRecord(cborEncode(json))).toEqual(json)
+        expect(cborToTypedLexMap(cborEncode(json))).toEqual(json)
       })
     }
   })
@@ -70,7 +70,7 @@ describe('cborToLexRecord', () => {
       },
     ]) {
       it(note, () => {
-        expect(() => cborToLexRecord(cborEncode(json))).toThrow()
+        expect(() => cborToTypedLexMap(cborEncode(json))).toThrow()
       })
     }
   })

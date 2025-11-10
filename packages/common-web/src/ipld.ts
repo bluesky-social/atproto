@@ -1,19 +1,38 @@
-import { Json, Lex, jsonToLex, lexEquals, lexToJson } from '@atproto/lex-data'
+import {
+  CID,
+  Json,
+  Lex,
+  jsonToLex,
+  lexEquals,
+  lexToJson,
+} from '@atproto/lex-data'
 
 /**
- * @note For historical reasons, this defined as `unknown`.
- * @deprecated Use {@link Json} from '@atproto/lex-data' instead.
+ * @deprecated Use {@link Json} from `@atproto/lex-cbor` instead.
  */
-export type JsonValue = unknown
+export type JsonValue =
+  | boolean
+  | number
+  | string
+  | null
+  | undefined
+  | unknown // @NOTE this makes the whole type "unknown"
+  | Array<JsonValue>
+  | { [key: string]: JsonValue }
 
 /**
- * @deprecated Use {@link Lex} from '@atproto/lex-data' instead.
+ * @deprecated Use {@link Lex} from `@atproto/lex-cbor` instead.
  */
-export type IpldValue = Lex
+export type IpldValue =
+  | JsonValue
+  | CID
+  | Uint8Array
+  | Array<IpldValue>
+  | { [key: string]: IpldValue }
 
 /**
  * Converts a JSON-compatible value to an IPLD-compatible value.
- * @deprecated Use {@link jsonToLex} from '@atproto/lex-data' instead.
+ * @deprecated Use {@link jsonToLex} from `@atproto/lex-cbor` instead.
  */
 export const jsonToIpld = (val: JsonValue): IpldValue => {
   return jsonToLex(val as Json, { strict: false })
@@ -21,15 +40,15 @@ export const jsonToIpld = (val: JsonValue): IpldValue => {
 
 /**
  * Converts an IPLD-compatible value to a JSON-compatible value.
- * @deprecated Use {@link lexToJson} from '@atproto/lex-data' instead.
+ * @deprecated Use {@link lexToJson} from `@atproto/lex-cbor` instead.
  */
 export const ipldToJson = (val: IpldValue): JsonValue => {
-  return lexToJson(val)
+  return lexToJson(val as Lex)
 }
 
 /**
  * Compares two IPLD-compatible values for deep equality.
- * @deprecated Use {@link lexEquals} from '@atproto/lex-data' instead.
+ * @deprecated Use {@link lexEquals} from `@atproto/lex-cbor` instead.
  */
 export const ipldEquals = (a: IpldValue, b: IpldValue): boolean => {
   // @NOTE The previous implementation used "===" which treats NaN as unequal to
@@ -37,5 +56,5 @@ export const ipldEquals = (a: IpldValue, b: IpldValue): boolean => {
   if (Number.isNaN(a) || Number.isNaN(b)) {
     return false
   }
-  return lexEquals(a, b)
+  return lexEquals(a as Lex, b as Lex)
 }
