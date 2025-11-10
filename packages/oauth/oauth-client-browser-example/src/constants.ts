@@ -43,6 +43,7 @@ export const OAUTH_SCOPE_DEFAULT: string =
         'identity:*',
         'blob:*/*',
         'repo:*',
+        'rpc:app.bsky.actor.getPreferences?aud=*',
         `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
         `include:com.example.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
       ].join(' ')
@@ -53,6 +54,7 @@ export const OAUTH_SCOPE_DEFAULT: string =
           'account:status',
           'blob:*/*',
           'repo:*',
+          'rpc:app.bsky.actor.getPreferences?aud=*',
           `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
           `include:directory.lexicon.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
         ].join(' ')
@@ -62,6 +64,7 @@ export const OAUTH_SCOPE_DEFAULT: string =
           'account:status',
           'blob:*/*',
           'repo:*',
+          'rpc:app.bsky.actor.getPreferences?aud=*',
           `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
         ].join(' ')
 export const OAUTH_SCOPE: string =

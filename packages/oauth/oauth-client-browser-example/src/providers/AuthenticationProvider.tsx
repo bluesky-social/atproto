@@ -124,11 +124,13 @@ async function configureClient(
   const { preferences } = await getPreferences(client, signal)
 
   const labelers = preferences
-    .findLast((v) => app.bsky.actor.defs.labelersPref.is(v))
+    .findLast((v) => app.bsky.actor.defs.labelersPref.matches(v))
     ?.labelers.map((l) => l.did)
 
   client.setLabelers(labelers)
   client.assertAuthenticated()
+
+  console.info('Configured client with labelers:', labelers)
 
   return client
 }
@@ -138,6 +140,7 @@ async function getPreferences(client: Client, signal: AbortSignal) {
     try {
       return await client.call(app.bsky.actor.getPreferences, {}, { signal })
     } catch (err) {
+      // TODO handle 403 ?
       signal.throwIfAborted()
       await new Promise((resolve) =>
         setTimeout(resolve, Math.min(200 * 1.5 ** attempt, 5000)),
