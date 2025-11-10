@@ -59,7 +59,7 @@ export const createServiceAuthHeaders = async (params: ServiceJwtParams) => {
 }
 
 const jsonToB64Url = (json: Record<string, unknown>): string => {
-  return common.utf8ToB64Url(JSON.stringify(json))
+  return Buffer.from(JSON.stringify(json)).toString('base64url')
 }
 
 export type VerifySignatureWithKeyFn = (
@@ -182,7 +182,7 @@ export const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
 }
 
 const parseB64UrlToJson = (b64: string) => {
-  return JSON.parse(common.b64UrlToUtf8(b64))
+  return JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'))
 }
 
 const parseHeader = (b64: string): ServiceJwtHeaders => {
