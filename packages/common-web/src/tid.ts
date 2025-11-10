@@ -3,8 +3,50 @@ import { s32decode, s32encode } from './util'
 const TID_LEN = 13
 
 let lastTimestamp = 0
-let timestampCount = 0
-let clockid: number | null = null
+let usCounter = 0
+
+// javascript does not have microsecond precision. instead, we append a counter
+// to the timestamp to indicate if multiple timestamps were created within the
+// same millisecond take max of current time & last timestamp to prevent tids
+// moving backwards if system clock drifts backwards
+function timeUs(): number {
+  const currentTimestamp = Date.now()
+
+  if (lastTimestamp > currentTimestamp + 60e3) {
+    // We created more than 1,000,000 TIDs per second for 1 minute. This is
+    // extremely unlikely and could lead to too much drift, if continued. So we
+    // bail out.
+    throw new Error('Too many TIDs generated in a short time')
+  }
+
+  // Under high load, continue counting within the previous second if we are
+  // still within it to avoid dropping too many available unique values
+  // (preventing the drift from increasing uncontrollably). If the load is low,
+  // we can reset the counter after each millisecond.
+  const underHighLoad =
+    lastTimestamp === currentTimestamp
+      ? usCounter >= 500
+      : lastTimestamp > currentTimestamp
+
+  if (currentTimestamp > lastTimestamp + (underHighLoad ? 1e3 : 0)) {
+    // We are enough in the future, reset counter
+    usCounter = 0
+    lastTimestamp = currentTimestamp
+  } else if (usCounter === 999) {
+    // We have generated 1,000 TIDs within the same millisecond, move to the
+    // next millisecond to avoid collisions
+    lastTimestamp++
+    usCounter = 0
+  } else {
+    usCounter++
+  }
+  return lastTimestamp * 1000 + usCounter
+}
+
+// the bottom 32 clock ids can be randomized & are not guaranteed to be
+// collision resistant we use the same clockid for all tids coming from this
+// machine
+const clockid: number = Math.floor(Math.random() * 32)
 
 function dedash(str: string): string {
   return str.replaceAll('-', '')
@@ -22,20 +64,8 @@ export class TID {
   }
 
   static next(prev?: TID): TID {
-    // javascript does not have microsecond precision
-    // instead, we append a counter to the timestamp to indicate if multiple timestamps were created within the same millisecond
-    // take max of current time & last timestamp to prevent tids moving backwards if system clock drifts backwards
-    const time = Math.max(Date.now(), lastTimestamp)
-    if (time === lastTimestamp) {
-      timestampCount++
-    }
-    lastTimestamp = time
-    const timestamp = time * 1000 + timestampCount
-    // the bottom 32 clock ids can be randomized & are not guaranteed to be collision resistant
-    // we use the same clockid for all tids coming from this machine
-    if (clockid === null) {
-      clockid = Math.floor(Math.random() * 32)
-    }
+    const timestamp = timeUs()
+
     const tid = TID.fromTime(timestamp, clockid)
     if (!prev || tid.newerThan(prev)) {
       return tid
