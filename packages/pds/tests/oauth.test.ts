@@ -10,7 +10,7 @@ import { AddressInfo } from 'node:net'
 import { type Browser, type Page, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
-import files from '@atproto/oauth-client-browser-example'
+import files from '@atproto/oauth-client-browser-example' with { type: 'json' }
 
 class PageHelper implements AsyncDisposable {
   constructor(protected readonly page: Page) {}
@@ -96,8 +96,8 @@ describe('oauth', () => {
       args: ['--accept-lang=fr-BE,en-GB,en'],
 
       // For debugging:
-      // headless: false,
-      // devtools: true,
+      headless: false,
+      devtools: true,
       // slowMo: 250,
     })
 

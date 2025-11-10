@@ -1136,6 +1136,9 @@ importers:
 
   packages/oauth/oauth-client-browser-example:
     devDependencies:
+      '@atproto-labs/rollup-plugin-bundle-manifest':
+        specifier: workspace:*
+        version: link:../../internal/rollup-plugin-bundle-manifest
       '@atproto/lex':
         specifier: workspace:*
         version: link:../../lex/lex

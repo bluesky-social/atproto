@@ -18,10 +18,12 @@
     "directory": "packages/oauth/oauth-client-browser"
   },
   "type": "module",
+  "exports": "./dist/files.json",
   "files": [
     "dist"
   ],
   "devDependencies": {
+    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
     "@atproto/lex": "workspace:*",
     "@atproto/oauth-client-browser": "workspace:*",
     "@tailwindcss/vite": "^4.1.3",

@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig } from 'vite'
+import { bundleManifest } from '@atproto-labs/rollup-plugin-bundle-manifest'
 
 export default defineConfig({
   plugins: [
@@ -25,6 +26,9 @@ export default defineConfig({
         /lex-schema/,
         /syntax/,
       ],
+    },
+    rollupOptions: {
+      plugins: [bundleManifest({ name: 'files.json', data: true })],
     },
   },
   // Needed because this is a monorepo (and packages are CommonJS)
