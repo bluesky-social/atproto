@@ -139,11 +139,14 @@ function lexArrayToJson(input: LexArray): Json[] {
 function encodeLexMap(input: LexMap): JsonObject {
   // Lazily copy value
   let copy: JsonObject | undefined = undefined
-  for (const [key, inputValue] of Object.entries(input)) {
-    const value = lexToJson(inputValue!)
-    if (value !== inputValue) {
+  for (const [key, lexValue] of Object.entries(input)) {
+    // Just ignore undefined values
+    if (lexValue === undefined) continue
+
+    const jsonValue = lexToJson(lexValue!)
+    if (jsonValue !== lexValue) {
       copy ??= { ...input } as JsonObject
-      copy[key] = value
+      copy[key] = jsonValue
     }
   }
   return copy ?? (input as JsonObject)
