@@ -494,6 +494,7 @@ export class ModerationService {
 
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
+      meta.isDelivered = !!event.isDelivered
       if (event.content) {
         meta.content = event.content
       }

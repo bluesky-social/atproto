@@ -229,6 +229,7 @@ export class ModerationViews {
     if (isModEventEmail(event)) {
       event.content = ifString(meta.content)!
       event.subjectLine = ifString(meta.subjectLine)!
+      event.isDelivered = !!meta.isDelivered
     }
 
     if (isModEventComment(event) && meta.sticky) {
