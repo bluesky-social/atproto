@@ -15,6 +15,7 @@ export * from './schema/never.js'
 export * from './schema/null.js'
 export * from './schema/object.js'
 export * from './schema/string.js'
+export * from './schema/unknown-object.js'
 export * from './schema/unknown.js'
 
 // Composite Types

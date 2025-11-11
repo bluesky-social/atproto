@@ -24,8 +24,12 @@ import {
   LexiconToken,
   LexiconUnknown,
 } from '@atproto/lex-document'
-import { Nsid, l } from '@atproto/lex-schema'
-import { RefResolver, getPublicIdentifiers } from './ref-resolver.js'
+import { l } from '@atproto/lex-schema'
+import {
+  RefResolver,
+  ResolvedRef,
+  getPublicIdentifiers,
+} from './ref-resolver.js'
 import { isSafeIdentifier } from './ts-lang.js'
 
 export type LexDefBuilderOptions = {
@@ -126,6 +130,8 @@ export class LexDefBuilder {
           return this.addToken(hash, def)
         case 'object':
           return this.addObject(hash, def)
+        case 'array':
+          return this.addArray(hash, def)
         default:
           return this.addBaseDef(hash, def)
       }
@@ -141,6 +147,8 @@ export class LexDefBuilder {
           return this.addToken(hash, def)
         case 'object':
           return this.addObject(hash, def)
+        case 'array':
+          return this.addArray(hash, def)
         default:
           return this.addBaseDef(hash, def)
       }
@@ -169,9 +177,7 @@ export class LexDefBuilder {
   }
 
   private async addProcedure(hash: string, def: LexiconProcedure) {
-    const ref = await this.refResolver.resolveLocal(hash)
-
-    await this.addSchema(hash, def, {
+    const ref = await this.addSchema(hash, def, {
       schema: this.pure(`
         l.procedure(
           $nsid,
@@ -228,9 +234,7 @@ export class LexDefBuilder {
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
-    const ref = await this.refResolver.resolveLocal(hash)
-
-    await this.addSchema(hash, def, {
+    const ref = await this.addSchema(hash, def, {
       schema: this.pure(`
         l.query(
           $nsid,
@@ -273,9 +277,7 @@ export class LexDefBuilder {
   }
 
   private async addSubscription(hash: string, def: LexiconSubscription) {
-    const ref = await this.refResolver.resolveLocal(hash)
-
-    await this.addSchema(hash, def, {
+    const ref = await this.addSchema(hash, def, {
       schema: this.pure(`
         l.subscription(
           $nsid,
@@ -314,8 +316,6 @@ export class LexDefBuilder {
   }
 
   private async addRecord(hash: string, def: LexiconRecord) {
-    const ref = await this.refResolver.resolveLocal(hash)
-
     const key = JSON.stringify(def.key ?? 'any')
     const objectSchema = await this.compileObjectSchema(def.record)
 
@@ -324,20 +324,16 @@ export class LexDefBuilder {
 
     await this.addSchema(hash, def, {
       type: `{ ${properties.join(';')} }`,
-      schema: this.pure(
-        `l.record<${key}, ${ref.typeName}>(${key}, $nsid, ${objectSchema})`,
-      ),
+      schema: (ref) =>
+        this.pure(
+          `l.record<${key}, ${ref.typeName}>(${key}, $nsid, ${objectSchema})`,
+        ),
+      objectUtils: true,
+      validationUtils: true,
     })
-
-    if (hash === 'main') {
-      this.addObjectUtils(ref.varName)
-      this.addValidationUtils(ref.varName)
-    }
   }
 
   private async addObject(hash: string, def: LexiconObject) {
-    const ref = await this.refResolver.resolveLocal(hash)
-
     const objectSchema = await this.compileObjectSchema(def)
 
     const properties = await this.compilePropertiesTypes(def)
@@ -345,41 +341,53 @@ export class LexDefBuilder {
 
     await this.addSchema(hash, def, {
       type: `{ ${properties.join(';')} }`,
-      schema: this.pure(
-        `l.typedObject<${ref.typeName}>($nsid, ${JSON.stringify(hash)}, ${objectSchema})`,
-      ),
+      schema: (ref) =>
+        this.pure(
+          `l.typedObject<${ref.typeName}>($nsid, ${JSON.stringify(hash)}, ${objectSchema})`,
+        ),
+      objectUtils: true,
+      validationUtils: true,
     })
-
-    if (hash === 'main') {
-      this.addObjectUtils(ref.varName)
-      this.addValidationUtils(ref.varName)
-    }
   }
 
   private async addToken(hash: string, def: LexiconToken) {
-    const ref = await this.refResolver.resolveLocal(hash)
-
     await this.addSchema(hash, def, {
       schema: this.pure(`l.token($nsid, ${JSON.stringify(hash)})`),
       type: JSON.stringify(l.$type(this.doc.id, hash)),
+      validationUtils: true,
     })
-
-    if (hash === 'main') {
-      this.addValidationUtils(ref.varName)
-    }
   }
 
-  private async addBaseDef(hash: string, def: LexiconBase | LexiconArray) {
-    const ref = await this.refResolver.resolveLocal(hash)
+  private async addArray(hash: string, def: LexiconArray) {
+    // @TODO It could be nice to expose the array item type as a separate type.
+    // This was not done (yet) as there is no easy way to name it to avoid
+    // collisions.
 
+    const itemSchema = await this.compileBaseSchema(def.items)
+    const options = stringifyOptionalOptions(def, [
+      'type',
+      'description',
+      'items',
+    ])
+
+    await this.addSchema(hash, def, {
+      type: `(${await this.compileBaseType(def.items)})[]`,
+      // @NOTE Not using compileArraySchema to allow specifying the generic
+      // parameter to l.array<>.
+      schema: (ref) =>
+        this.pure(
+          `l.array<${ref.typeName}[number]>(${itemSchema}, ${options})`,
+        ),
+      validationUtils: true,
+    })
+  }
+
+  private async addBaseDef(hash: string, def: LexiconBase) {
     await this.addSchema(hash, def, {
       type: await this.compileBaseType(def),
       schema: await this.compileBaseSchema(def),
+      validationUtils: true,
     })
-
-    if (hash === 'main') {
-      this.addValidationUtils(ref.varName)
-    }
   }
 
   private async addSchema(
@@ -388,11 +396,15 @@ export class LexDefBuilder {
     {
       type,
       schema,
+      objectUtils,
+      validationUtils,
     }: {
-      type?: string
-      schema?: string
+      type?: string | ((ref: ResolvedRef) => string)
+      schema?: string | ((ref: ResolvedRef) => string)
+      objectUtils?: boolean
+      validationUtils?: boolean
     },
-  ) {
+  ): Promise<ResolvedRef> {
     const ref = await this.refResolver.resolveLocal(hash)
     const pub = getPublicIdentifiers(hash)
 
@@ -404,7 +416,7 @@ export class LexDefBuilder {
     if (type) {
       const typeStmt = this.file.addTypeAlias({
         name: ref.typeName,
-        type,
+        type: typeof type === 'function' ? type(ref) : type,
       })
 
       addJsDoc(typeStmt, def)
@@ -423,7 +435,12 @@ export class LexDefBuilder {
     if (schema) {
       const constStmt = this.file.addVariableStatement({
         declarationKind: VariableDeclarationKind.Const,
-        declarations: [{ name: ref.varName, initializer: schema }],
+        declarations: [
+          {
+            name: ref.varName,
+            initializer: typeof schema === 'function' ? schema(ref) : schema,
+          },
+        ],
       })
 
       addJsDoc(constStmt, def)
@@ -442,6 +459,13 @@ export class LexDefBuilder {
         ],
       })
     }
+
+    if (hash === 'main') {
+      if (objectUtils) this.addObjectUtils(ref.varName)
+      if (validationUtils) this.addValidationUtils(ref.varName)
+    }
+
+    return ref
   }
 
   private async compileObjectSchema(def: LexiconObject): Promise<string> {
@@ -584,15 +608,15 @@ export class LexDefBuilder {
   }
 
   private async compileArrayType(def: LexiconArray): Promise<string> {
-    return `Array<${await this.compileBaseType(def.items)}>`
+    return `(${await this.compileBaseType(def.items)})[]`
   }
 
   private async compileUnknownSchema(_def: LexiconUnknown): Promise<string> {
-    return this.pure(`l.unknown()`)
+    return this.pure(`l.unknownObject()`)
   }
 
   private async compileUnknownType(_def: LexiconUnknown): Promise<string> {
-    return `unknown`
+    return `l.UnknownObject`
   }
 
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
@@ -727,12 +751,9 @@ export class LexDefBuilder {
 
   private async compileRefSchema(def: LexiconRef): Promise<string> {
     const { varName, typeName } = await this.refResolver.resolve(def.ref)
-    // @NOTE "as" is needed in schemas with circular refs as TypeScript cannot
-    // infer the type of a value that depends on its initializer type
-    return this.pure(
-      // @TODO Only add the "as" if there is a circular ref
-      `l.ref((() => ${varName}) as l.RefSchemaGetter<${typeName}>)`,
-    )
+    // @NOTE "as any" is needed in schemas with circular refs as TypeScript
+    // cannot infer the type of a value that depends on its initializer type
+    return this.pure(`l.ref<${typeName}>((() => ${varName}) as any)`)
   }
 
   private async compileRefType(def: LexiconRef): Promise<string> {
@@ -748,12 +769,9 @@ export class LexDefBuilder {
     const refs = await Promise.all(
       def.refs.map(async (ref: string) => {
         const { varName, typeName } = await this.refResolver.resolve(ref)
-        // @NOTE "as" is needed in schemas with circular refs as TypeScript cannot
-        // infer the type of a value that depends on its initializer type
-        return this.pure(
-          // @TODO Only add the "as" if there is a circular ref
-          `l.typedRef((() => ${varName}) as l.TypedRefGetter<${typeName}>)`,
-        )
+        // @NOTE "as any" is needed in schemas with circular refs as TypeScript
+        // cannot infer the type of a value that depends on its initializer type
+        return this.pure(`l.typedRef<${typeName}>((() => ${varName}) as any)`)
       }),
     )
 
@@ -765,13 +783,8 @@ export class LexDefBuilder {
   private async compileRefUnionType(def: LexiconRefUnion): Promise<string> {
     const types = await Promise.all(
       def.refs.map(async (ref) => {
-        const [nsid, hash = 'main'] = ref.split('#') as [
-          '' | Nsid,
-          string | undefined,
-        ]
-        const $type = l.$type(nsid || this.doc.id, hash)
         const { typeName } = await this.refResolver.resolve(ref)
-        return `(${typeName} & { $type: ${JSON.stringify($type)} })`
+        return `l.TypedRef<${typeName}>`
       }),
     )
     if (!def.closed) types.push('l.UnknownTypedObject')

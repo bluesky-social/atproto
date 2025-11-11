@@ -6,7 +6,9 @@ import {
   ValidationResult,
   Validator,
 } from '../validation.js'
-import { TypedRefSchema } from './typed-ref.js'
+import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
+
+export type TypedRef<T extends { $type?: string }> = TypedRefSchemaOutput<T>
 
 export type UnknownProperty = Restricted<'Unknown property'>
 export type UnknownTypedObject = { $type: UnknownString } & {

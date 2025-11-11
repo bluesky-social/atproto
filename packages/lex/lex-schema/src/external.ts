@@ -45,6 +45,8 @@ import {
   TypedUnionSchema,
   UnionSchema,
   UnionSchemaOptions,
+  UnknownObjectOutput,
+  UnknownObjectSchema,
   UnknownSchema,
 } from './schema.js'
 import { Infer, Validator } from './validation.js'
@@ -144,6 +146,13 @@ export function dict<const K extends Validator, const V extends Validator>(
   value: V,
 ) {
   return new DictSchema<K, V>(key, value)
+}
+
+// Utility
+export type UnknownObject = UnknownObjectOutput
+
+export function unknownObject() {
+  return new UnknownObjectSchema()
 }
 
 /////////////////////
