@@ -40,7 +40,9 @@ export class RecordSchema<
     return value.$type === this.$type
   }
 
-  build<X>(input: X): Simplify<Omit<X, '$type'> & { $type: Type }> {
+  build<X extends Omit<Output, '$type'>>(
+    input: X,
+  ): Simplify<Omit<X, '$type'> & { $type: Type }> {
     return { ...input, $type: this.$type }
   }
 

@@ -20,6 +20,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
+    "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-builder": "workspace:^",
     "jest": "^28.1.2"
   },

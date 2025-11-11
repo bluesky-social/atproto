@@ -97,6 +97,7 @@ export class LexDefBuilder {
     this.addUtils({
       $isTypeOf: markPure(`${varName}.$isTypeOf.bind(${varName})`),
       $build: markPure(`${varName}.$build.bind(${varName})`),
+      $type: markPure(`${varName}.$type`),
     })
   }
 

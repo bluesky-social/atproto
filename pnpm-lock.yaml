@@ -870,6 +870,9 @@ importers:
       '@atproto/lex-builder':
         specifier: workspace:^
         version: link:../lex-builder
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex-cbor
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)

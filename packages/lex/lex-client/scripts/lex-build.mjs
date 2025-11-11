@@ -26,8 +26,13 @@ Promise.all([
     lexicons: '../../../lexicons',
     out: './tests/lexicons',
     override: true,
-    include: ['app.bsky.*'],
+    include: [
+      'app.bsky.*',
+      'com.atproto.repo.createRecord',
+      'com.atproto.repo.getRecord',
+    ],
     lib: '@atproto/lex-schema',
+    pretty: true,
   }),
 ]).catch((err) => {
   console.error('Error building lexicon schemas:', err)

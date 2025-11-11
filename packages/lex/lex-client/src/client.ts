@@ -440,7 +440,9 @@ export class Client implements Agent {
     options: CreateOptions<T> = {} as CreateOptions<T>,
   ): Promise<CreateOutput> {
     const schema: T = getMainExport(ns)
-    const record = schema.build(input)
+    const record = options.validate
+      ? schema.parse(schema.build(input))
+      : schema.build(input)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     return this.createRecord(record, rkey, options)
@@ -643,7 +645,7 @@ function buildXrpcRequestBody(
 
 async function handleFetchError(err: unknown): Promise<never> {
   // @TODO
-  throw new Error('Fetch error', { cause: err })
+  throw err
 }
 
 async function handleXrpcResponse<T extends Query | Procedure>(
