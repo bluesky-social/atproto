@@ -408,13 +408,13 @@ export class Client implements Agent {
       return ns(this, arg, options)
     }
 
-    const schema = 'lexiconType' in ns ? ns : ns.main
+    const schema = getMainExport(ns)
 
-    if (schema.lexiconType === 'query') {
+    if (schema instanceof Query) {
       const params = arg as Parameters | undefined
       const result = await this.xrpc(schema, { ...options, params })
       return result.body
-    } else if (schema.lexiconType === 'procedure') {
+    } else if (schema instanceof Procedure) {
       const body = arg as Lex | undefined
       const result = await this.xrpc(schema, { ...options, body })
       return result.body
@@ -439,7 +439,7 @@ export class Client implements Agent {
     input: Omit<Infer<T>, '$type'>,
     options: CreateOptions<T> = {} as CreateOptions<T>,
   ): Promise<CreateOutput> {
-    const schema: RecordSchema = 'lexiconType' in ns ? ns : ns.main
+    const schema: T = getMainExport(ns)
     const record = schema.build(input)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
@@ -459,7 +459,7 @@ export class Client implements Agent {
     ns: T | { main: T },
     options: DeleteOptions<T> = {} as DeleteOptions<T>,
   ): Promise<DeleteOutput> {
-    const schema: RecordSchema = 'lexiconType' in ns ? ns : ns.main
+    const schema = getMainExport(ns)
     const rkey = schema.keySchema.parse(
       options.rkey ?? getLiteralRecordKey(schema),
     )
@@ -479,7 +479,7 @@ export class Client implements Agent {
     ns: T | { main: T },
     options: GetOptions<T> = {} as GetOptions<T>,
   ): Promise<GetOutput<T>> {
-    const schema: RecordSchema = 'lexiconType' in ns ? ns : ns.main
+    const schema = getMainExport(ns)
     const rkey = schema.keySchema.parse(
       options.rkey ?? getLiteralRecordKey(schema),
     )
@@ -503,7 +503,7 @@ export class Client implements Agent {
     input: Omit<Infer<T>, '$type'>,
     options: PutOptions<T> = {} as PutOptions<T>,
   ): Promise<PutOutput> {
-    const schema: RecordSchema = 'lexiconType' in ns ? ns : ns.main
+    const schema = getMainExport(ns)
     const record = schema.build(input)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
@@ -514,7 +514,7 @@ export class Client implements Agent {
     ns: T | { main: T },
     options?: ListOptions,
   ): Promise<ListOutput<T>> {
-    const schema: RecordSchema = 'lexiconType' in ns ? ns : ns.main
+    const schema = getMainExport(ns)
     const { body } = await this.listRecords(schema.$type, options)
     const result: ListOutput<T> = { cursor: body.cursor, values: [] }
 
@@ -615,7 +615,7 @@ function buildXrpcRequestInit<T extends Procedure | Query>(
     referrerPolicy: 'strict-origin-when-cross-origin', // (default)
     mode: 'cors', // (default)
     signal: options.signal,
-    method: schema.lexiconType === 'query' ? 'GET' : 'POST',
+    method: schema instanceof Query ? 'GET' : 'POST',
     headers: options.headers,
   }
 }
@@ -793,4 +793,8 @@ function getContentMime(headers: Headers): string | undefined {
   const contentType = headers.get('content-type')
   if (!contentType) return undefined
   return contentType.split(';')[0].trim()
+}
+
+function getMainExport<T extends object>(ns: T | { main: T }): T {
+  return 'main' in ns ? ns.main : ns
 }

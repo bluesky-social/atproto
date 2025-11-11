@@ -177,6 +177,8 @@ export class LexDefBuilder {
   }
 
   private async addProcedure(hash: string, def: LexiconProcedure) {
+    // @TODO Build the types instead of using an inferred type.
+
     const ref = await this.addSchema(hash, def, {
       schema: this.pure(`
         l.procedure(
@@ -234,6 +236,8 @@ export class LexDefBuilder {
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
+    // @TODO Build the types instead of using an inferred type.
+
     const ref = await this.addSchema(hash, def, {
       schema: this.pure(`
         l.query(
@@ -277,6 +281,8 @@ export class LexDefBuilder {
   }
 
   private async addSubscription(hash: string, def: LexiconSubscription) {
+    // @TODO Build the types instead of using an inferred type.
+
     const ref = await this.addSchema(hash, def, {
       schema: this.pure(`
         l.subscription(

@@ -21,6 +21,8 @@ type ValidationOptions = {
 }
 
 export abstract class Validator<V = any> {
+  readonly lexiconType?: string
+
   /**
    * @internal **DO NOT CALL THIS METHOD DIRECTLY**
    *
