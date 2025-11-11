@@ -234,7 +234,15 @@ export class AuthVerifier {
         )
       })
 
-    const { sub, aud, scope } = res.payload
+    const { sub, aud, scope, cnf } = res.payload
+    if (typeof cnf !== 'undefined') {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
+      throw new AuthRequiredError(
+        'Malformed token: DPoP not supported',
+        'InvalidToken',
+      )
+    }
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new AuthRequiredError('Malformed token', 'InvalidToken')
     } else if (
