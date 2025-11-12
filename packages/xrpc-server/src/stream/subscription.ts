@@ -1,4 +1,5 @@
 import { ClientOptions } from 'ws'
+import { isLexMap } from '@atproto/lex-cbor'
 import { ensureChunkIsMessage } from './stream'
 import { WebSocketKeepAlive } from './websocket-keepalive'
 
@@ -35,7 +36,7 @@ export class Subscription<T = unknown> {
     for await (const chunk of ws) {
       const message = await ensureChunkIsMessage(chunk)
       const t = message.header.t
-      const clone = message.body !== undefined ? { ...message.body } : undefined
+      const clone = isLexMap(message.body) ? { ...message.body } : undefined
       if (clone !== undefined && t !== undefined) {
         clone['$type'] = t.startsWith('#') ? this.opts.method + t : t
       }

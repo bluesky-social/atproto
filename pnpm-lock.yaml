@@ -849,8 +849,8 @@ importers:
         version: 2.8.1
     devDependencies:
       cborg:
-        specifier: ^4.2.18
-        version: 4.2.18
+        specifier: ^4.3.0
+        version: 4.3.0
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
@@ -1976,15 +1976,15 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
       '@atproto/xrpc':
         specifier: workspace:^
         version: link:../xrpc
-      cbor-x:
-        specifier: ^1.5.1
-        version: 1.5.1
       express:
         specifier: ^4.17.2
         version: 4.18.2
@@ -1997,9 +1997,6 @@ importers:
       rate-limiter-flexible:
         specifier: ^2.4.1
         version: 2.4.1
-      uint8arrays:
-        specifier: 3.0.0
-        version: 3.0.0
       ws:
         specifier: ^8.12.0
         version: 8.12.0
@@ -4340,54 +4337,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
-
-  /@cbor-extract/cbor-extract-darwin-arm64@2.2.0:
-    resolution: {integrity: sha512-P7swiOAdF7aSi0H+tHtHtr6zrpF3aAq/W9FXx5HektRvLTM2O89xCyXF3pk7pLc7QpaY7AoaE8UowVf9QBdh3w==}
-    cpu: [arm64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
-    optional: true
-
-  /@cbor-extract/cbor-extract-darwin-x64@2.2.0:
-    resolution: {integrity: sha512-1liF6fgowph0JxBbYnAS7ZlqNYLf000Qnj4KjqPNW4GViKrEql2MgZnAsExhY9LSy8dnvA4C0qHEBgPrll0z0w==}
-    cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
-    dev: false
-    optional: true
-
-  /@cbor-extract/cbor-extract-linux-arm64@2.2.0:
-    resolution: {integrity: sha512-rQvhNmDuhjTVXSPFLolmQ47/ydGOFXtbR7+wgkSY0bdOxCFept1hvg59uiLPT2fVDuJFuEy16EImo5tE2x3RsQ==}
-    cpu: [arm64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
-  /@cbor-extract/cbor-extract-linux-arm@2.2.0:
-    resolution: {integrity: sha512-QeBcBXk964zOytiedMPQNZr7sg0TNavZeuUCD6ON4vEOU/25+pLhNN6EDIKJ9VLTKaZ7K7EaAriyYQ1NQ05s/Q==}
-    cpu: [arm]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
-  /@cbor-extract/cbor-extract-linux-x64@2.2.0:
-    resolution: {integrity: sha512-cWLAWtT3kNLHSvP4RKDzSTX9o0wvQEEAj4SKvhWuOVZxiDAeQazr9A+PSiRILK1VYMLeDml89ohxCnUNQNQNCw==}
-    cpu: [x64]
-    os: [linux]
-    requiresBuild: true
-    dev: false
-    optional: true
-
-  /@cbor-extract/cbor-extract-win32-x64@2.2.0:
-    resolution: {integrity: sha512-l2M+Z8DO2vbvADOBNLbbh9y5ST1RY5sqkWOg/58GkUPBYou/cuNZ68SGQ644f1CvZ8kcOxyZtw06+dxWHIoN/w==}
-    cpu: [x64]
-    os: [win32]
-    requiresBuild: true
-    dev: false
-    optional: true
 
   /@changesets/apply-release-plan@6.1.4:
     resolution: {integrity: sha512-FMpKF1fRlJyCZVYHr3CbinpZZ+6MwvOtWUuO8uo+svcATEoc1zRDcj23pAurJ2TZ/uVz1wFHH6K3NlACy0PLew==}
@@ -10458,34 +10407,12 @@ packages:
     resolution: {integrity: sha512-eA7Ys/DGw+pnkWWSE/id29f2IcPHVoE8wxtvE5JdvD2V28VTDPy1yEeo11Guz0sJ4ZeGRcm3uaTcAqK1LXaphA==}
     dev: false
 
-  /cbor-extract@2.2.0:
-    resolution: {integrity: sha512-Ig1zM66BjLfTXpNgKpvBePq271BPOvu8MR0Jl080yG7Jsl+wAZunfrwiwA+9ruzm/WEdIV5QF/bjDZTqyAIVHA==}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      node-gyp-build-optional-packages: 5.1.1
-    optionalDependencies:
-      '@cbor-extract/cbor-extract-darwin-arm64': 2.2.0
-      '@cbor-extract/cbor-extract-darwin-x64': 2.2.0
-      '@cbor-extract/cbor-extract-linux-arm': 2.2.0
-      '@cbor-extract/cbor-extract-linux-arm64': 2.2.0
-      '@cbor-extract/cbor-extract-linux-x64': 2.2.0
-      '@cbor-extract/cbor-extract-win32-x64': 2.2.0
-    dev: false
-    optional: true
-
-  /cbor-x@1.5.1:
-    resolution: {integrity: sha512-/vAkC4tiKCQCm5en4sA+mpKmjwY6Xxp1LO+BgZCNhp+Zow3pomyUHeBOK5EDp0mDaE36jw39l5eLHsoF3M1Lmg==}
-    optionalDependencies:
-      cbor-extract: 2.2.0
-    dev: false
-
   /cborg@1.10.2:
     resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
     hasBin: true
 
-  /cborg@4.2.18:
-    resolution: {integrity: sha512-uzhkd5HOaLccokqeZa5B0Qz7/aa9C12pmUq5yU3vcy6I6OhTKdPHSzOuBPZfcoQHdcx8Emz/dWZbPNNfF/puvg==}
+  /cborg@4.3.0:
+    resolution: {integrity: sha512-vOXo1pB4mdeBw3LbpoynQlZNw/H3kZVHLtPYlp8kFMreL/2YfT54F70BM1s3iDoCtQ+3C9QmiRF4rfCSSTlhBw==}
     hasBin: true
     dev: true
 
@@ -16083,15 +16010,6 @@ packages:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
     engines: {node: '>= 6.13.0'}
     dev: false
-
-  /node-gyp-build-optional-packages@5.1.1:
-    resolution: {integrity: sha512-+P72GAjVAbTxjjwUmwjVrqrdZROD4nf8KgpBoDxqXXTiYZZt/ud60dE5yvCSr9lRO8e8yv6kgJIC0K0PfZFVQw==}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      detect-libc: 2.0.3
-    dev: false
-    optional: true
 
   /node-gyp-build@3.9.0:
     resolution: {integrity: sha512-zLcTg6P4AbcHPq465ZMFNXx7XpKKJh+7kkN699NiQWisR2uWYOWNWqRHAmbnmKiL4e9aLSlmy5U7rEMUXV59+A==}
