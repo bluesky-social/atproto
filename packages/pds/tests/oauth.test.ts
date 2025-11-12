@@ -96,8 +96,8 @@ describe('oauth', () => {
       args: ['--accept-lang=fr-BE,en-GB,en'],
 
       // For debugging:
-      headless: false,
-      devtools: true,
+      // headless: false,
+      // devtools: true,
       // slowMo: 250,
     })
 
@@ -124,7 +124,7 @@ describe('oauth', () => {
       handle_resolver: network.pds.url,
       sign_up_url: network.pds.url,
       env: 'test',
-      scope: `atproto account:email identity:* repo:*`,
+      scope: `atproto account:email identity:* repo:* rpc:app.bsky.actor.getPreferences?aud=*`,
     })}`
   })
 
@@ -333,7 +333,7 @@ function clientHandler(
 
   if (file) {
     res
-      .writeHead(200, 'OK', { 'content-type': file.type })
+      .writeHead(200, 'OK', { 'content-type': file.mime })
       .end(Buffer.from(file.data, 'base64'))
   } else if (next) {
     next()
