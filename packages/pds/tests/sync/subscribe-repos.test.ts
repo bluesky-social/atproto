@@ -15,6 +15,7 @@ import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
 import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
+import { isLexMap } from '../../../lex/lex-data/dist'
 import { AppContext } from '../../src'
 import { AccountStatus } from '../../src/account-manager/account-manager'
 import {
@@ -344,7 +345,7 @@ describe('repo subscribe repos', () => {
     const seqSlice = seqs.slice(midPoint + 1)
     expect(evts.length).toBe(seqSlice.length)
     for (let i = 0; i < evts.length; i++) {
-      const evt = evts[i].body as CommitEvt
+      const evt = evts[i].body as unknown as CommitEvt
       const seq = seqSlice[i]
       const seqEvt = cborDecode(seq.event) as { commit: CID }
       expect(evt.time).toEqual(seq.sequencedAt)
