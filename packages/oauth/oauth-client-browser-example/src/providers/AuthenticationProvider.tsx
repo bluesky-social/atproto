@@ -96,7 +96,7 @@ function AuthenticationProviderInternal({
           <AtmosphereSignInDialog
             signUpUrl={SIGN_UP_URL}
             loading={isLoading || isConfiguring}
-            signIn={async (handle) => signIn(handle, { display: 'popup' })}
+            signIn={signIn}
           />
         ) : (
           <Spinner />
