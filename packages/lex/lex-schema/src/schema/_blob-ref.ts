@@ -69,11 +69,11 @@ export function asBlobRef(input: unknown): BlobRef {
 }
 
 export function isBlobRef(input: unknown): input is BlobRef {
-  return blobRefSchema.matches(input)
+  return blobRefSchema.check(input)
 }
 
 export function isTypedBlobRef(input: unknown): input is TypedBlobRef {
-  return typedBlobRefSchema.matches(input)
+  return typedBlobRefSchema.check(input)
 }
 
 export function asTypedBlobRef(input: unknown): TypedBlobRef {
@@ -90,5 +90,5 @@ export function asTypedBlobRef(input: unknown): TypedBlobRef {
 }
 
 export function isUntypedBlobRef(input: unknown): input is LegacyBlobRef {
-  return legacyBlobRefSchema.matches(input)
+  return legacyBlobRefSchema.check(input)
 }

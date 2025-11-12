@@ -135,11 +135,11 @@ export type RecordKeyOptions<
   ? { rkey?: InferRecordKey<T> }
   : { rkey: InferRecordKey<T> }
 
-export type CreateOutput = CreateRecordOutput
+export type CreateOutput = CreateRecordOutput['body']
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
   RecordKeyOptions<T, 'tid'>
 
-export type DeleteOutput = DeleteRecordOutput
+export type DeleteOutput = DeleteRecordOutput['body']
 export type DeleteOptions<T extends RecordSchema> = DeleteRecordOptions &
   RecordKeyOptions<T>
 
@@ -257,19 +257,20 @@ export class Client implements Agent {
   //#region XRPC request
 
   async xrpc<const M extends Query | Procedure>(
-    method: NonNullable<unknown> extends XrpcOptions<M>
-      ? M
+    ns: NonNullable<unknown> extends XrpcOptions<M>
+      ? Namespace<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
   ): Promise<XrpcResponse<M>>
   async xrpc<const T extends Query | Procedure>(
-    method: T,
+    ns: Namespace<T>,
     options: XrpcOptions<T>,
   ): Promise<XrpcResponse<T>>
   async xrpc<const T extends Query | Procedure>(
-    method: T,
+    ns: Namespace<T>,
     options: XrpcOptions<T> = {} as XrpcOptions<T>,
   ): Promise<XrpcResponse<T>> {
     options.signal?.throwIfAborted()
+    const method = getMain(ns)
     const url = buildXrpcRequestUrl(method, options)
     const request = buildXrpcRequestInit(method, options)
     const response = await this.fetchHandler(url, request).catch(
@@ -380,43 +381,43 @@ export class Client implements Agent {
   //#region Convenience Methods
 
   public async call<const T extends Action>(
-    ns: T,
+    ns: Namespace<T>,
     input: InferActionInput<T>,
     options?: CallOptions,
   ): Promise<InferActionOutput<T>>
-  public async call<const T extends Query>(
-    ns: NonNullable<unknown> extends InferQueryParameters<T>
-      ? T | { main: T }
-      : Restricted<'This query type requires a "params" argument'>,
-  ): Promise<InferQueryOutputBody<T>>
-  public async call<const T extends Query>(
-    ns: T | { main: T },
-    params: InferQueryParameters<T>,
-    options?: CallOptions,
-  ): Promise<InferQueryOutputBody<T>>
   public async call<const T extends Procedure>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     body: InferProcedureInputBody<T>,
     options?: CallOptions,
   ): Promise<InferProcedureOutputBody<T>>
+  public async call<const T extends Query>(
+    ns: NonNullable<unknown> extends InferQueryParameters<T>
+      ? Namespace<T>
+      : Restricted<'This query type requires a "params" argument'>,
+  ): Promise<InferQueryOutputBody<T>>
+  public async call<const T extends Query>(
+    ns: Namespace<T>,
+    params: InferQueryParameters<T>,
+    options?: CallOptions,
+  ): Promise<InferQueryOutputBody<T>>
   public async call(
-    ns: Action | Query | Procedure | { main: Query | Procedure },
+    ns: Namespace<Action> | Namespace<Procedure> | Namespace<Query>,
     arg: undefined | Lex = undefined,
     options: CallOptions = {},
   ): Promise<unknown> {
-    if (typeof ns === 'function') {
-      return ns(this, arg, options)
+    const schema = getMain(ns)
+
+    if (typeof schema === 'function') {
+      return schema(this, arg, options)
     }
 
-    const schema = getMainExport(ns)
-
-    if (schema instanceof Query) {
-      const params = arg as Parameters | undefined
-      const result = await this.xrpc(schema, { ...options, params })
-      return result.body
-    } else if (schema instanceof Procedure) {
+    if (schema instanceof Procedure) {
       const body = arg as Lex | undefined
       const result = await this.xrpc(schema, { ...options, body })
+      return result.body
+    } else if (schema instanceof Query) {
+      const params = arg as Parameters | undefined
+      const result = await this.xrpc(schema, { ...options, params })
       return result.body
     } else {
       throw new TypeError('Invalid lexicon')
@@ -425,63 +426,65 @@ export class Client implements Agent {
 
   public async create<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends CreateOptions<T>
-      ? T | { main: T }
+      ? Namespace<T>
       : Restricted<'This record type requires an "options" argument'>,
     input: Omit<Infer<T>, '$type'>,
   ): Promise<CreateOutput>
   public async create<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     input: Omit<Infer<T>, '$type'>,
     options: CreateOptions<T>,
   ): Promise<CreateOutput>
   public async create<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     input: Omit<Infer<T>, '$type'>,
     options: CreateOptions<T> = {} as CreateOptions<T>,
   ): Promise<CreateOutput> {
-    const schema: T = getMainExport(ns)
+    const schema: T = getMain(ns)
     const record = options.validate
       ? schema.parse(schema.build(input))
       : schema.build(input)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
-    return this.createRecord(record, rkey, options)
+    const response = await this.createRecord(record, rkey, options)
+    return response.body
   }
 
   public async delete<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends DeleteOptions<T>
-      ? T | { main: T }
+      ? Namespace<T>
       : Restricted<'This record type requires an "options" argument'>,
   ): Promise<DeleteOutput>
   public async delete<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     options?: DeleteOptions<T>,
   ): Promise<DeleteOutput>
   public async delete<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     options: DeleteOptions<T> = {} as DeleteOptions<T>,
   ): Promise<DeleteOutput> {
-    const schema = getMainExport(ns)
+    const schema = getMain(ns)
     const rkey = schema.keySchema.parse(
       options.rkey ?? getLiteralRecordKey(schema),
     )
-    return this.deleteRecord(schema.$type, rkey, options)
+    const response = await this.deleteRecord(schema.$type, rkey, options)
+    return response.body
   }
 
   public async get<const T extends RecordSchema>(
     ns: T['key'] extends `literal:${string}`
-      ? T | { main: T }
+      ? Namespace<T>
       : Restricted<'This record type requires an "options" argument'>,
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     options?: GetOptions<T>,
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     options: GetOptions<T> = {} as GetOptions<T>,
   ): Promise<GetOutput<T>> {
-    const schema = getMainExport(ns)
+    const schema = getMain(ns)
     const rkey = schema.keySchema.parse(
       options.rkey ?? getLiteralRecordKey(schema),
     )
@@ -491,21 +494,21 @@ export class Client implements Agent {
 
   public async put<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends PutOptions<T>
-      ? T | { main: T }
+      ? Namespace<T>
       : Restricted<'This record type requires an "options" argument'>,
     input: Omit<Infer<T>, '$type'>,
   ): Promise<PutOutput>
   public async put<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     input: Omit<Infer<T>, '$type'>,
     options: PutOptions<T>,
   ): Promise<PutOutput>
   public async put<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     input: Omit<Infer<T>, '$type'>,
     options: PutOptions<T> = {} as PutOptions<T>,
   ): Promise<PutOutput> {
-    const schema = getMainExport(ns)
+    const schema = getMain(ns)
     const record = schema.build(input)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
@@ -513,10 +516,10 @@ export class Client implements Agent {
   }
 
   async list<const T extends RecordSchema>(
-    ns: T | { main: T },
+    ns: Namespace<T>,
     options?: ListOptions,
   ): Promise<ListOutput<T>> {
-    const schema = getMainExport(ns)
+    const schema = getMain(ns)
     const { body } = await this.listRecords(schema.$type, options)
     const result: ListOutput<T> = { cursor: body.cursor, values: [] }
 
@@ -797,6 +800,8 @@ function getContentMime(headers: Headers): string | undefined {
   return contentType.split(';')[0].trim()
 }
 
-function getMainExport<T extends object>(ns: T | { main: T }): T {
+type Namespace<T> = T | { main: T }
+
+function getMain<T extends object>(ns: Namespace<T>): T {
   return 'main' in ns ? ns.main : ns
 }

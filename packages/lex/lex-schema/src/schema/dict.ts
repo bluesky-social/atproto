@@ -30,8 +30,7 @@ export class DictSchema<
     super()
   }
 
-  /** @internal **DO NOT USE DIRECTLY** */
-  public override validateInContext(
+  override validateInContext(
     input: unknown,
     ctx: ValidationContext,
     options?: { ignoredKeys?: { has(k: string): boolean } },

@@ -10,9 +10,6 @@ export type SuccessResult<V = any> = { success: true; value: V }
 
 export type ValidationResult<Value = any> = SuccessResult<Value> | FailureResult
 
-export type Infer<T extends Validator> =
-  T extends Validator<infer V> ? V : never
-
 type ValidationOptions = {
   path?: PropertyKey[]
 
@@ -20,16 +17,35 @@ type ValidationOptions = {
   allowTransform?: boolean
 }
 
-export abstract class Validator<V = any> {
+export type Infer<T extends Validator> = T['_lex']['output']
+
+export abstract class Validator<Output = any> {
+  /**
+   * @internal **INTERNAL API, DO NOT USE**.
+   *
+   * This property is used for type inference purposes and does not actually
+   * exist at runtime.
+   */
+  _lex!: { output: Output }
+
   readonly lexiconType?: string
 
   /**
-   * @internal **DO NOT CALL THIS METHOD DIRECTLY**
+   * @internal **INTERNAL API, DO NOT USE**.
    *
-   * Use `is`,`parse`, `assert` or `validate` instead.
+   * Use {@link Validator.assert assert}, {@link Validator.check check},
+   * {@link Validator.parse parse} or {@link Validator.validate validate}
+   * instead.
    *
-   * This method should be implemented by subclasses to perform validation and
-   * transformation of the input value.
+   * This method is implemented by subclasses to perform transformation and
+   * validation of the input value. Do not call this method directly; as the
+   * {@link ValidationContext.options.allowTransform} option will **not** be
+   * enforced. See {@link ValidationContext.validate} for details. When
+   * delegating validation from one validator sub-class implementation to
+   * another schema, {@link ValidationContext.validate} should be used instead
+   * of calling {@link Validator.validateInContext}. This will allow to stop the
+   * validation process if the value was transformed (by the other schema) but
+   * transformations are not allowed.
    *
    * By convention, the {@link ValidationResult} must return the original input
    * value if validation was successful and no transformation was applied (i.e.
@@ -37,37 +53,55 @@ export abstract class Validator<V = any> {
    * other transformation was applied, the returned value c&an be different from
    * the input.
    *
-   * This convention allows the `matches` and `assert` methods to check whether
-   * the input value exactly matches the schema (without defaults or
-   * transformations), by checking if the returned value is strictly equal to
-   * the input.
+   * This convention allows the {@link Validator.check check} and
+   * {@link Validator.assert assert} methods to check whether the input value
+   * exactly matches the schema (without defaults or transformations), by
+   * checking if the returned value is strictly equal to the input.
+   *
+   * @see {@link ValidationContext.validate}
    */
-  protected abstract validateInContext(
+  abstract validateInContext(
     input: unknown,
     ctx: ValidationContext,
-  ): ValidationResult<V>
+  ): ValidationResult<Output>
 
-  assert(input: unknown): asserts input is V {
+  assert(input: unknown): asserts input is Output {
     const result = this.validate(input, { allowTransform: false })
     if (!result.success) throw result.error
   }
 
-  matches(input: unknown): input is V {
+  check(input: unknown): input is Output {
     const result = this.validate(input, { allowTransform: false })
     return result.success
   }
 
-  maybe<T>(input: T): (T & V) | undefined {
-    return this.matches(input) ? input : undefined
+  maybe<I>(input: I): (I & Output) | undefined {
+    return this.check(input) ? input : undefined
   }
 
-  parse(input: unknown, options?: ValidationOptions): V {
-    const result = this.validate(input, options)
+  parse<I>(
+    input: I,
+    options: ValidationOptions & { allowTransform: false },
+  ): I & Output
+  parse(input: unknown, options?: ValidationOptions): Output
+  parse(input: unknown, options?: ValidationOptions): Output {
+    const result = ValidationContext.validate(input, this, options)
     if (!result.success) throw result.error
     return result.value
   }
 
-  validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
+  validate<I>(
+    input: I,
+    options: ValidationOptions & { allowTransform: false },
+  ): ValidationResult<I & Output>
+  validate(
+    input: unknown,
+    options?: ValidationOptions,
+  ): ValidationResult<Output>
+  validate(
+    input: unknown,
+    options?: ValidationOptions,
+  ): ValidationResult<Output> {
     return ValidationContext.validate(input, this, options)
   }
 
@@ -85,32 +119,39 @@ export abstract class Validator<V = any> {
   // - "app.bsky.feed.post.$parse(...)" // calls a utility function created by "lex build"
   // - "app.bsky.feed.defs.postView.$parse(...)" // uses the alias defined below on the schema instance
 
-  $assert(input: unknown): asserts input is V {
+  $assert(input: unknown): asserts input is Output {
     return this.assert(input)
   }
 
-  $matches(input: unknown): input is V {
-    return this.matches(input)
+  $check(input: unknown): input is Output {
+    return this.check(input)
   }
 
-  $maybe<T>(input: T): (T & V) | undefined {
+  $maybe<I>(input: I): (I & Output) | undefined {
     return this.maybe(input)
   }
 
-  $parse(input: unknown, options?: ValidationOptions): V {
+  $parse(input: unknown, options?: ValidationOptions): Output {
     return this.parse(input, options)
   }
 
-  $validate(input: unknown, options?: ValidationOptions): ValidationResult<V> {
+  $validate(
+    input: unknown,
+    options?: ValidationOptions,
+  ): ValidationResult<Output> {
     return this.validate(input, options)
   }
 }
 
 export class ValidationContext {
+  /**
+   * Creates a new validation context and validates the input using the
+   * provided validator.
+   */
   static validate<V>(
     input: unknown,
     validator: Validator<V>,
-    options?: ValidationOptions,
+    options: ValidationOptions = {},
   ): ValidationResult<V> {
     const context = new ValidationContext(options)
     return context.validate(input, validator)
@@ -118,7 +159,7 @@ export class ValidationContext {
 
   private readonly currentPath: PropertyKey[]
 
-  protected constructor(readonly options?: ValidationOptions) {
+  protected constructor(readonly options: ValidationOptions) {
     // Create a copy because we will be mutating the array during validation.
     this.currentPath = options?.path ? [...options.path] : []
   }
@@ -128,18 +169,25 @@ export class ValidationContext {
   }
 
   get allowTransform() {
+    // Default to true
     return this.options?.allowTransform !== false
   }
 
+  /**
+   * This is basically the entry point for validation within a context. Use this
+   * method instead of {@link Validator.validateInContext} directly, because
+   * this method enforces the {@link ValidationOptions.allowTransform} option.
+   */
   validate<V>(input: unknown, validator: Validator<V>): ValidationResult<V> {
-    // @ts-expect-error validateInContext is abstract because it is @internal
-    // (and meant to be called only from here).
     const result = validator.validateInContext(input, this)
 
     // If the value changed, it means that a default (or some other
     // transformation) was applied, meaning that the original value did *not*
     // match the (output) schema. When "allowTransform" is false, we consider
     // this a failure.
+
+    // This check is the reason why Validator.validateInContext should not be
+    // used directly.
     if (
       result.success &&
       !this.allowTransform &&

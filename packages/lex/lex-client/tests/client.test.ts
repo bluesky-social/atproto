@@ -276,7 +276,7 @@ describe('Client', () => {
       )
 
       expect(fetchHandler).toHaveBeenCalledTimes(1)
-      expect(newGenerator.body.cid).toBe(
+      expect(newGenerator.cid).toBe(
         'bafyreihx5eurnmsnj6ulfby3icl4ebh6pliwuqaze25z4ejitnt23b4vw4',
       )
 
@@ -291,7 +291,7 @@ describe('Client', () => {
       )
 
       expect(nextTid).toHaveBeenCalledTimes(1)
-      expect(aliceGenerator.body.uri).toBe(
+      expect(aliceGenerator.uri).toBe(
         `at://${did}/app.bsky.feed.generator/${'2'.repeat(13)}`,
       )
 
@@ -301,7 +301,7 @@ describe('Client', () => {
 
       expect(nextTid).toHaveBeenCalledTimes(1)
       expect(fetchHandler).toHaveBeenCalledTimes(3)
-      expect(newProfile.body.uri).toBe(
+      expect(newProfile.uri).toBe(
         'at://did:plc:alice/app.bsky.actor.profile/self',
       )
 
@@ -312,9 +312,7 @@ describe('Client', () => {
 
       expect(nextTid).toHaveBeenCalledTimes(2)
       expect(fetchHandler).toHaveBeenCalledTimes(4)
-      expect(newPost.body.uri).toBe(
-        `at://${did}/app.bsky.feed.post/2222222222322`,
-      )
+      expect(newPost.uri).toBe(`at://${did}/app.bsky.feed.post/2222222222322`)
     })
 
     it('allows fetching records', async () => {

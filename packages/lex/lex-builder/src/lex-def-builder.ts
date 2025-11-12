@@ -82,33 +82,20 @@ export class LexDefBuilder {
     }
   }
 
-  private addUtils(definitions: Record<string, string>) {
-    this.file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: Object.entries(definitions).map(([name, initializer]) => ({
-        name,
-        initializer,
-      })),
-    })
-  }
-
-  private addObjectUtils(varName: string) {
-    this.addUtils({
-      $isTypeOf: markPure(`${varName}.$isTypeOf.bind(${varName})`),
-      $build: markPure(`${varName}.$build.bind(${varName})`),
-      $type: markPure(`${varName}.$type`),
-    })
-  }
-
-  private addValidationUtils(varName: string) {
-    this.addUtils({
-      $assert: markPure(`${varName}.$assert.bind(${varName})`),
-      $maybe: markPure(`${varName}.$maybe.bind(${varName})`),
-      $matches: markPure(`${varName}.$matches.bind(${varName})`),
-      $parse: markPure(`${varName}.$parse.bind(${varName})`),
-      $validate: markPure(`${varName}.$validate.bind(${varName})`),
-    })
+  private addUtils(definitions: Record<string, undefined | string>) {
+    const entries = Object.entries(definitions).filter(
+      (e): e is [(typeof e)[0], NonNullable<(typeof e)[1]>] => e[1] != null,
+    )
+    if (entries.length) {
+      this.file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: entries.map(([name, initializer]) => ({
+          name,
+          initializer,
+        })),
+      })
+    }
   }
 
   private async addDef(hash: string) {
@@ -467,9 +454,22 @@ export class LexDefBuilder {
       })
     }
 
-    if (hash === 'main') {
-      if (objectUtils) this.addObjectUtils(ref.varName)
-      if (validationUtils) this.addValidationUtils(ref.varName)
+    if (hash === 'main' && objectUtils) {
+      this.addUtils({
+        $isTypeOf: markPure(`${ref.varName}.isTypeOf.bind(${ref.varName})`),
+        $build: markPure(`${ref.varName}.build.bind(${ref.varName})`),
+        $type: markPure(`${ref.varName}.type`),
+      })
+    }
+
+    if (hash === 'main' && validationUtils) {
+      this.addUtils({
+        $assert: markPure(`${ref.varName}.assert.bind(${ref.varName})`),
+        $check: markPure(`${ref.varName}.check.bind(${ref.varName})`),
+        $maybe: markPure(`${ref.varName}.maybe.bind(${ref.varName})`),
+        $parse: markPure(`${ref.varName}.parse.bind(${ref.varName})`),
+        $validate: markPure(`${ref.varName}.validate.bind(${ref.varName})`),
+      })
     }
 
     return ref
@@ -642,7 +642,7 @@ export class LexDefBuilder {
     if (hasConst(def)) {
       const schema = l.integer(def)
       assert(
-        schema.matches(def.const),
+        schema.check(def.const),
         `Integer const ${def.const} is out of bounds`,
       )
     }
@@ -650,10 +650,7 @@ export class LexDefBuilder {
     if (hasEnum(def)) {
       const schema = l.integer(def)
       for (const val of def.enum) {
-        assert(
-          schema.matches(val),
-          `Integer enum value ${val} is out of bounds`,
-        )
+        assert(schema.check(val), `Integer enum value ${val} is out of bounds`)
       }
     }
 
@@ -675,14 +672,14 @@ export class LexDefBuilder {
     if (hasConst(def)) {
       const schema = l.string(def)
       assert(
-        schema.matches(def.const),
+        schema.check(def.const),
         `String const "${def.const}" does not match format`,
       )
     } else if (hasEnum(def)) {
       const schema = l.string(def)
       for (const val of def.enum) {
         assert(
-          schema.matches(val),
+          schema.check(val),
           `String enum value "${val}" does not match format`,
         )
       }
