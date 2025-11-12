@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { useSignedInContext } from '../auth/auth-provider.tsx'
+import { useBskyClient } from '../lib/use-bsky-client.ts'
 
 export function useGetSessionQuery() {
-  const { agent } = useSignedInContext()
+  const client = useBskyClient()
 
   return useQuery({
-    queryKey: ['session', agent.assertDid],
+    queryKey: ['session', client.assertDid],
     queryFn: async () => {
-      const { data } = await agent.com.atproto.server.getSession()
+      const { data } = await client.com.atproto.server.getSession()
       return data
     },
   })

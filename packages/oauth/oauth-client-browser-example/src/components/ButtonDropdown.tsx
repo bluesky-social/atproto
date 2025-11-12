@@ -9,7 +9,7 @@ import {
 import { useClickOutside } from '../lib/use-click-outside.ts'
 import { useEscapeKey } from '../lib/use-escape-key.ts'
 import { useRandomString } from '../lib/use-random-string.ts'
-import { Button, ButtonProps } from './button.tsx'
+import { Button, ButtonProps } from './_button.tsx'
 
 export type Item = {
   label?: ReactNode

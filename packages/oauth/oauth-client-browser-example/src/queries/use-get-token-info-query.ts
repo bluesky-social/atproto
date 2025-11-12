@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { useSignedInContext } from '../auth/auth-provider.tsx'
+import { useOAuthSession } from '../providers/OAuthProvider.tsx'
 
 export function useGetTokenInfoQuery() {
-  const { session } = useSignedInContext()
+  const session = useOAuthSession()
   return useQuery({
-    queryKey: ['tokeninfo', session.did],
+    queryKey: ['tokenInfo', session.did],
     queryFn: async () => session.getTokenInfo(true),
   })
 }

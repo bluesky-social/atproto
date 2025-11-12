@@ -9,6 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -18,6 +19,7 @@ export interface Main {
   $type: 'app.bsky.graph.follow'
   subject: string
   createdAt: string
+  via?: ComAtprotoRepoStrongRef.Main
   [k: string]: unknown
 }
 

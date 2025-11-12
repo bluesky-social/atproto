@@ -33,11 +33,6 @@
             "minimum": 0,
             "maximum": 100
           },
-          "prioritizeFollowedUsers": {
-            "type": "boolean",
-            "description": "Whether to prioritize posts from followed users. It only has effect when the user is authenticated.",
-            "default": false
-          },
           "sort": {
             "type": "string",
             "description": "Sorting for the thread replies.",

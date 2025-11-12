@@ -1,5 +1,27 @@
 # @atproto/api
 
+## 0.18.0
+
+### Minor Changes
+
+- [#4227](https://github.com/bluesky-social/atproto/pull/4227) [`94ddc8219`](https://github.com/bluesky-social/atproto/commit/94ddc8219c144475df622137ab88895255136eda) Thanks [@bnewbold](https://github.com/bnewbold)! - Introduce `com.atproto.lexicon.resolveLexicon` lexicon method
+
+### Patch Changes
+
+- [#4269](https://github.com/bluesky-social/atproto/pull/4269) [`39b5c08e0`](https://github.com/bluesky-social/atproto/commit/39b5c08e0799468eba0c3bf50f4f5a8104c35f34) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Deprecate and remove `prioritizeFollowedUsers` setting from preferences response types and `getPostThreadV2` query params.
+
+## 0.17.7
+
+### Patch Changes
+
+- [#4317](https://github.com/bluesky-social/atproto/pull/4317) [`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `via` to `follow` record to mirror `like` records and provide a way to reference the starter pack that the follow originated from.
+
+## 0.17.6
+
+### Patch Changes
+
+- [#4314](https://github.com/bluesky-social/atproto/pull/4314) [`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add debug field to `PostView` and `ProfileView*` (see cdb6b27fc6be1e858476d8c55fd0c37561b972b4)
+
 ## 0.17.5
 
 ### Patch Changes

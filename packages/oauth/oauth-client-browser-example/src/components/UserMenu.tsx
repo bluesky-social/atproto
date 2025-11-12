@@ -1,17 +1,20 @@
-import { useSignedInContext } from '../auth/auth-provider.tsx'
 import { ifString } from '../lib/util.ts'
+import { useOAuthContext } from '../providers/OAuthProvider.tsx'
 import { useGetActorProfileQuery } from '../queries/use-get-actor-profile-query.ts'
 import { useGetSessionQuery } from '../queries/use-get-session-query.ts'
-import { ButtonDropdown } from './button-dropdown.tsx'
+import { ButtonDropdown } from './ButtonDropdown.tsx'
 
 export function UserMenu() {
-  const { agent, signOut } = useSignedInContext()
-  const { data: profile, isLoading: profileLoading } = useGetActorProfileQuery()
-  const { data: session, isLoading: sessionLoading } = useGetSessionQuery()
+  const { session, signOut } = useOAuthContext()
+  const getProfile = useGetActorProfileQuery()
+  const getSession = useGetSessionQuery()
 
-  const displayName = ifString(profile?.value?.displayName)
-  const did = agent.assertDid
-  const handle = session?.handle
+  if (!session) return null
+
+  const { did } = session
+
+  const displayName = ifString(getProfile.data?.value?.displayName)
+  const handle = getSession.data?.handle
 
   return (
     <ButtonDropdown
@@ -42,9 +45,9 @@ export function UserMenu() {
       ]}
     >
       {displayName ||
-        (profileLoading
+        (getProfile.isLoading
           ? null
-          : displayName || handle || (sessionLoading ? null : handle || did))}
+          : handle || (getSession.isLoading ? null : handle || did))}
     </ButtonDropdown>
   )
 }
