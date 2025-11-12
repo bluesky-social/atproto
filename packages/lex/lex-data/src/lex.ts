@@ -9,14 +9,26 @@ export type LexArray = LexValue[]
 export const isLexMap: (value: LexValue) => value is LexMap = isPlainObject
 export const isLexArray: (value: LexValue) => value is LexArray = Array.isArray
 export const isLexScalar = (value: LexValue): value is LexScalar => {
-  if (value === null) return true
-  if (typeof value !== 'object') return true
-  return value instanceof Uint8Array || isCid(value)
+  switch (typeof value) {
+    case 'object':
+      if (value === null) return true
+      return value instanceof Uint8Array || isCid(value)
+    case 'string':
+    case 'boolean':
+      return true
+    case 'number':
+      if (Number.isInteger(value)) return true
+      throw new TypeError(`Invalid Lex value: ${value}`)
+    default:
+      throw new TypeError(`Invalid Lex value: ${typeof value}`)
+  }
 }
 
 export function isLexValue(value: unknown): value is LexValue {
   switch (typeof value) {
     case 'number':
+      if (!Number.isInteger(value)) return false
+    // fallthrough
     case 'string':
     case 'boolean':
       return true

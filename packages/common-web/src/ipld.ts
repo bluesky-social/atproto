@@ -43,8 +43,10 @@ export const jsonToIpld = (val: JsonValue): IpldValue => {
  * @deprecated Use {@link lexToJson} from `@atproto/lex-cbor` instead.
  */
 export const ipldToJson = (val: IpldValue): JsonValue => {
-  // Legacy behavior
-  if (val === undefined) return undefined
+  // Legacy behavior(s)
+  if (val === undefined) return val
+  if (Number.isNaN(val)) return val
+
   return lexToJson(val as LexValue)
 }
 
