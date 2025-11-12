@@ -30,7 +30,10 @@ export const fromBase64Node = Buffer
   ? function fromBase64Node(b64: string): Uint8Array {
       const bytes = Buffer.from(b64, 'base64')
       verifyBase64ForBytes(b64, bytes)
-      return bytes
+      // Convert to Uint8Array because even though Buffer is a sub class of
+      // Uint8Array, it serializes differently to Uint8Array (e.g. in JSON) and
+      // results in unexpected behavior downstream (e.g. in tests)
+      return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
     }
   : null
 

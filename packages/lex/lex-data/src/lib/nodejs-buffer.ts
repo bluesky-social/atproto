@@ -8,8 +8,10 @@ interface NodeJSBuffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>
 
 interface NodeJSBufferConstructor {
   new (input: string, encoding?: Encoding): NodeJSBuffer
-  from(input: Uint8Array | ArrayBuffer | ArrayBufferView): NodeJSBuffer
-  from(input: string, encoding?: Encoding): NodeJSBuffer
+  from(
+    input: Uint8Array | ArrayBuffer | ArrayBufferView,
+  ): NodeJSBuffer<ArrayBuffer>
+  from(input: string, encoding?: Encoding): NodeJSBuffer<ArrayBuffer>
   byteLength(input: string, encoding?: Encoding): number
   prototype: NodeJSBuffer
 }
