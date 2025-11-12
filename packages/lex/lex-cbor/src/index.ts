@@ -11,6 +11,8 @@ import {
 } from '@atproto/lex-data'
 import { atpCodec } from './codec.js'
 
+export * from '@atproto/lex-data'
+
 export * from './codec.js'
 
 export type { Block }
@@ -59,7 +61,7 @@ export function cidForRawHash(hash: Uint8Array): CID {
 /**
  * @note Only supports DASL CIDs
  * @see {@link https://dasl.ing/cid.html}
- * @returns `undefined` if the input do not represent a valid DASL {@link CID}
+ * @throws if the input do not represent a valid DASL {@link CID}
  */
 export function parseCidFromBytes(cidBytes: Uint8Array): CID {
   const version = cidBytes[0]

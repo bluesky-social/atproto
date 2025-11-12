@@ -103,7 +103,7 @@ export const atpCodec: BlockEncoder<0x71, Lex> & BlockDecoder<0x71, Lex> = {
   decode: cborDecode,
 }
 
-export function* cborDecodeAll<T>(
+export function* cborDecodeAll<T = Lex>(
   data: ByteView<T>,
 ): Generator<T, void, unknown> {
   do {

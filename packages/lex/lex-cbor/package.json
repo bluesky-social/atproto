@@ -37,7 +37,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "cborg": "^4.2.18",
+    "cborg": "^4.3.0",
     "jest": "^28.1.2",
     "vite": "^6.2.0"
   },
