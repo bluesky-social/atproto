@@ -5,8 +5,8 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import {
   CID,
   DAG_CBOR_MULTICODEC,
-  Lex,
   LexMap,
+  LexValue,
   RAW_BIN_MULTICODEC,
 } from '@atproto/lex-data'
 import { atpCodec } from './codec.js'
@@ -16,13 +16,13 @@ export * from '@atproto/lex-data'
 export * from './codec.js'
 
 export type { Block }
-export async function lexToCborBlock<T extends Lex>(
+export async function lexToCborBlock<T extends LexValue>(
   value: T,
 ): Promise<Block<T>> {
   return encodeBlock<T, 0x71, 0x12>({ value, codec: atpCodec, hasher: sha256 })
 }
 
-export async function cidForLex(value: Lex): Promise<CID> {
+export async function cidForLex(value: LexValue): Promise<CID> {
   const { cid } = await lexToCborBlock(value)
   return cid
 }

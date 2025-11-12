@@ -1,4 +1,4 @@
-import { Lex, cidForLex } from '@atproto/lex-cbor'
+import { LexValue, cidForLex } from '@atproto/lex-cbor'
 import { lexParse } from '@atproto/lex-schema'
 import { Action, Client } from '..'
 import * as app from './lexicons/app.js'
@@ -227,7 +227,7 @@ describe('Client', () => {
           })
 
           const rkey = payload.rkey || nextTid()
-          const cid = await cidForLex(payload.record as Lex)
+          const cid = await cidForLex(payload.record as LexValue)
 
           const responsePayload: com.atproto.repo.createRecord.Output = {
             cid: cid.toString(),

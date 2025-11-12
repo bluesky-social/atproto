@@ -1,4 +1,4 @@
-import { CID, Lex } from '@atproto/lex-data'
+import { CID, LexValue } from '@atproto/lex-data'
 import { cborDecode, cborDecodeAll, cborEncode } from '..'
 
 describe('cborEncode', () => {
@@ -74,7 +74,7 @@ describe('identity', () => {
         bytes: new Uint8Array(Buffer.from('byte array')),
       },
     },
-  ] as Lex[]) {
+  ] as LexValue[]) {
     it(JSON.stringify(vector), () => {
       const cbor = cborEncode(vector)
       const decoded = cborDecode(cbor)

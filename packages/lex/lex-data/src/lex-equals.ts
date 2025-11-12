@@ -1,9 +1,8 @@
 import { CID, isCid } from './cid.js'
-import { Lex } from './lex.js'
-import { isPlainObject } from './object.js'
+import { LexValue, isLexMap } from './lex.js'
 import { uin8Equals } from './uint8array.js'
 
-export function lexEquals(a: Lex, b: Lex): boolean {
+export function lexEquals(a: LexValue, b: LexValue): boolean {
   if (Object.is(a, b)) {
     return true
   }
@@ -49,9 +48,11 @@ export function lexEquals(a: Lex, b: Lex): boolean {
     return false
   }
 
-  if (!isPlainObject(a) || !isPlainObject(b)) {
+  if (!isLexMap(a) || !isLexMap(b)) {
     // Foolproof (should never happen)
-    throw new TypeError('Invalid Lex object value')
+    throw new TypeError(
+      'Invalid LexValue (expected CID, Uint8Array, or LexMap)',
+    )
   }
 
   const aKeys = Object.keys(a)

@@ -2,10 +2,10 @@ import { Blob, parseLexBlob } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { CID, isCid } from './cid.js'
 import { Json, JsonObject } from './json.js'
-import { Lex, LexArray, LexMap } from './lex.js'
+import { LexArray, LexMap, LexValue } from './lex.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
-export function lexStringify(input: Lex): string {
+export function lexStringify(input: LexValue): string {
   // @NOTE Because of the way the "replacer" works in JSON.stringify, it's
   // simpler to convert Lex to JSON first rather than trying to do it
   // on-the-fly.
@@ -23,8 +23,8 @@ export type LexParseOptions = {
 export function lexParse(
   input: string,
   options: LexParseOptions = { strict: false },
-): Lex {
-  return JSON.parse(input, function (key: string, value: Json): Lex {
+): LexValue {
+  return JSON.parse(input, function (key: string, value: Json): LexValue {
     switch (typeof value) {
       case 'object':
         if (value === null) return null
@@ -45,7 +45,7 @@ export function lexParse(
 export function jsonToLex(
   value: Json,
   options: LexParseOptions = { strict: false },
-): Lex {
+): LexValue {
   switch (typeof value) {
     case 'object': {
       if (value === null) return null
@@ -69,9 +69,9 @@ export function jsonToLex(
   }
 }
 
-function jsonArrayToLex(input: Json[], options: LexParseOptions): Lex[] {
+function jsonArrayToLex(input: Json[], options: LexParseOptions): LexValue[] {
   // Lazily copy value
-  let copy: Lex[] | undefined
+  let copy: LexValue[] | undefined
   for (let i = 0; i < input.length; i++) {
     const inputItem = input[i]
     const item = jsonToLex(inputItem, options)
@@ -99,7 +99,7 @@ function jsonObjectToLexMap(
   return copy ?? input
 }
 
-export function lexToJson(value: Lex): Json {
+export function lexToJson(value: LexValue): Json {
   switch (typeof value) {
     case 'object':
       if (value === null) {

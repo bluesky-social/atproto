@@ -1,7 +1,7 @@
 import {
   CID,
   Json,
-  Lex,
+  LexValue,
   jsonToLex,
   lexEquals,
   lexToJson,
@@ -21,7 +21,7 @@ export type JsonValue =
   | { [key: string]: JsonValue }
 
 /**
- * @deprecated Use {@link Lex} from `@atproto/lex-cbor` instead.
+ * @deprecated Use {@link LexValue} from `@atproto/lex-cbor` instead.
  */
 export type IpldValue =
   | JsonValue
@@ -45,7 +45,7 @@ export const jsonToIpld = (val: JsonValue): IpldValue => {
 export const ipldToJson = (val: IpldValue): JsonValue => {
   // Legacy behavior
   if (val === undefined) return undefined
-  return lexToJson(val as Lex)
+  return lexToJson(val as LexValue)
 }
 
 /**
@@ -53,10 +53,11 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
  * @deprecated Use {@link lexEquals} from `@atproto/lex-cbor` instead.
  */
 export const ipldEquals = (a: IpldValue, b: IpldValue): boolean => {
+  if (!lexEquals(a as LexValue, b as LexValue)) return false
+
   // @NOTE The previous implementation used "===" which treats NaN as unequal to
   // NaN.
-  if (Number.isNaN(a) || Number.isNaN(b)) {
-    return false
-  }
-  return lexEquals(a as Lex, b as Lex)
+  if (Number.isNaN(a)) return false
+
+  return true
 }

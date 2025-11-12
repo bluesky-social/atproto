@@ -11,7 +11,7 @@ import express, {
   Router,
 } from 'express'
 import { check, schema } from '@atproto/common'
-import { Lex, LexMap } from '@atproto/lex-cbor'
+import { LexMap, LexValue } from '@atproto/lex-cbor'
 import {
   LexXrpcProcedure,
   LexXrpcQuery,
@@ -407,7 +407,7 @@ export class Server {
               }
               const type = item?.['$type']
               if (!check.is(item, schema.map) || typeof type !== 'string') {
-                yield new MessageFrame(item as Lex)
+                yield new MessageFrame(item as LexValue)
                 continue
               }
               const split = type.split('#')

@@ -11,8 +11,8 @@ import {
   InferQueryOutputBody,
   InferQueryParameters,
   InferRecordKey,
-  Lex,
   LexMap,
+  LexValue,
   Nsid,
   Parameters,
   ParamsSchema,
@@ -402,7 +402,7 @@ export class Client implements Agent {
   ): Promise<InferQueryOutputBody<T>>
   public async call(
     ns: Namespace<Action> | Namespace<Procedure> | Namespace<Query>,
-    arg: undefined | Lex = undefined,
+    arg: undefined | LexValue = undefined,
     options: CallOptions = {},
   ): Promise<unknown> {
     const schema = getMain(ns)
@@ -412,7 +412,7 @@ export class Client implements Agent {
     }
 
     if (schema instanceof Procedure) {
-      const body = arg as Lex | undefined
+      const body = arg as LexValue | undefined
       const result = await this.xrpc(schema, { ...options, body })
       return result.body
     } else if (schema instanceof Query) {
@@ -627,7 +627,7 @@ function buildXrpcRequestInit<T extends Procedure | Query>(
 
 function buildXrpcRequestBody(
   payload: Payload | undefined,
-  body: Lex | undefined,
+  body: LexValue | undefined,
 ): BodyInit | null {
   if (payload?.encoding === undefined) {
     return null
@@ -690,11 +690,6 @@ async function handleXrpcResponse<T extends Query | Procedure>(
 
     // Validate response body
     if (output.encoding && output.schema && !options.skipVerification) {
-      // @NOTE Schemas validation (`validator.parse(...)`) will automatically
-      // coerce encoded Lex values (e.g. LexLinks, LexBytes) when validating
-      // JSON, allowing to avoid having to convert to Lex first. This allows a
-      // performance gain as only relevant parts of the response body will be
-      // checked for coercion during validation, instead of the whole body.
       const body = await readXrpcResponseBody(response, output.encoding).catch(
         (err) => {
           // TODO 400 error
@@ -749,15 +744,15 @@ async function cancelBody(body: Body): Promise<void> {
 async function readXrpcResponseBody(
   response: Response,
   encoding: string,
-): Promise<Lex>
+): Promise<LexValue>
 async function readXrpcResponseBody(
   response: Response,
   encoding: string | undefined,
-): Promise<Lex | undefined>
+): Promise<LexValue | undefined>
 async function readXrpcResponseBody(
   response: Response,
   encoding: string | undefined,
-): Promise<Lex | undefined> {
+): Promise<LexValue | undefined> {
   // When encoding is undefined or empty, we expect no body
   if (!encoding) {
     if (response.body == null) return undefined

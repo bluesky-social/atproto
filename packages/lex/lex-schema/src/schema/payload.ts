@@ -1,10 +1,10 @@
-import { Lex } from '@atproto/lex-data'
+import { LexValue } from '@atproto/lex-data'
 import { Validator } from '../validation.js'
 
 export type LexBody<E extends string = any> = E extends `text/${string}`
   ? string // Text encodings always yield string bodies
   : E extends 'application/json'
-    ? Lex
+    ? LexValue
     : Uint8Array
 
 export type InferPayloadEncoding<P extends Payload> =

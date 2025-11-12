@@ -9,10 +9,10 @@ import {
   encode as cborgEncode,
 } from 'cborg'
 import type { BlockDecoder, BlockEncoder, ByteView } from 'multiformats/block'
-import { CID, DAG_CBOR_MULTICODEC, Lex } from '@atproto/lex-data'
+import { CID, DAG_CBOR_MULTICODEC, LexValue } from '@atproto/lex-data'
 
 export { CID }
-export type { ByteView, Lex }
+export type { ByteView, LexValue }
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
 // match ATPROTO Data Model constraints. Floats, in particular, are not allowed.
@@ -85,25 +85,26 @@ const decodeOptions: DecodeOptions = {
   tags: tagDecoders,
 }
 
-export function cborEncode<T extends Lex>(data: T): ByteView<T> {
+export function cborEncode<T extends LexValue>(data: T): ByteView<T> {
   return cborgEncode(data, encodeOptions)
 }
 
-export function cborDecode<T extends Lex>(bytes: ByteView<T>): T {
+export function cborDecode<T extends LexValue>(bytes: ByteView<T>): T {
   return cborgDecode(bytes, decodeOptions)
 }
 
 // @NOTE ATP uses the "dag-cbor" code (0x71) for block encoding/decoding but
 // does not actually support the full "dag-cbor" specification. Instead, it uses
 // a restricted subset defined in the atproto.com "Data Model".
-export const atpCodec: BlockEncoder<0x71, Lex> & BlockDecoder<0x71, Lex> = {
+export const atpCodec: BlockEncoder<0x71, LexValue> &
+  BlockDecoder<0x71, LexValue> = {
   name: 'atp-cbor',
   code: DAG_CBOR_MULTICODEC,
   encode: cborEncode,
   decode: cborDecode,
 }
 
-export function* cborDecodeAll<T = Lex>(
+export function* cborDecodeAll<T = LexValue>(
   data: ByteView<T>,
 ): Generator<T, void, unknown> {
   do {

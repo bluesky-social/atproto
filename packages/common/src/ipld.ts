@@ -3,7 +3,7 @@ import { Transform } from 'node:stream'
 import {
   Block,
   ByteView,
-  Lex,
+  LexValue,
   atpCodec,
   cborToTypedLexMap,
   cidForLex,
@@ -18,7 +18,7 @@ import { CID, validateCidString } from '@atproto/lex-data'
  * @deprecated Use {@link cborEncode} from `@atproto/lex-cbor` instead.
  */
 export function cborEncode<T = unknown>(data: T): ByteView<T> {
-  return atpCodec.encode(data as Lex) as ByteView<T>
+  return atpCodec.encode(data as LexValue) as ByteView<T>
 }
 
 /**
@@ -32,14 +32,14 @@ export function cborDecode<T = unknown>(bytes: ByteView<T>): T {
  * @deprecated Use {@link lexToCborBlock} from `@atproto/lex-cbor` instead.
  */
 export async function dataToCborBlock<T>(data: T): Promise<Block<T>> {
-  return lexToCborBlock(data as Lex) as Promise<Block<T>>
+  return lexToCborBlock(data as LexValue) as Promise<Block<T>>
 }
 
 /**
  * @deprecated Use {@link cidForLex} from `@atproto/lex-cbor` instead.
  */
 export async function cidForCbor(data: unknown): Promise<CID> {
-  return cidForLex(data as Lex)
+  return cidForLex(data as LexValue)
 }
 
 /**

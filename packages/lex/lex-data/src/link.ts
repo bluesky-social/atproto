@@ -38,7 +38,7 @@ export function encodeLexLink(cid: CID): Json {
 }
 
 /**
- * Coerces json or Lex into a CID.
+ * Coerces json or LexMap into a CID.
  */
 export function asLexLink(input: unknown): CID | undefined {
   if (isCid(input)) {

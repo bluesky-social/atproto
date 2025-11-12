@@ -1,6 +1,6 @@
 /* eslint-disable import/no-deprecated */
 
-import { Lex, cborDecodeAll, cborEncode } from '@atproto/lex-cbor'
+import { LexValue, cborDecodeAll, cborEncode } from '@atproto/lex-cbor'
 import {
   ErrorFrameBody,
   ErrorFrameHeader,
@@ -11,7 +11,7 @@ import {
   frameHeader,
 } from './types'
 
-export abstract class Frame<T extends Lex = Lex> {
+export abstract class Frame<T extends LexValue = LexValue> {
   abstract header: FrameHeader
   abstract body: T
 
@@ -57,7 +57,7 @@ export abstract class Frame<T extends Lex = Lex> {
   }
 }
 
-export class MessageFrame<T extends Lex = Lex> extends Frame<T> {
+export class MessageFrame<T extends LexValue = LexValue> extends Frame<T> {
   header: MessageFrameHeader
   body: T
 
