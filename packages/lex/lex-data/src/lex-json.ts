@@ -89,9 +89,21 @@ function jsonObjectToLexMap(
 ): LexMap {
   // Lazily copy value
   let copy: LexMap | undefined = undefined
-  for (const [key, inputValue] of Object.entries(input)) {
-    const value = jsonToLex(inputValue!, options)
-    if (value !== inputValue) {
+  for (const [key, jsonValue] of Object.entries(input)) {
+    // Prevent prototype pollution
+    if (key === '__proto__') {
+      throw new TypeError('Invalid key: __proto__')
+    }
+
+    // Ignore (strip) undefined values
+    if (jsonValue === undefined) {
+      copy ??= { ...input }
+      delete copy[key]
+      continue
+    }
+
+    const value = jsonToLex(jsonValue!, options)
+    if (value !== jsonValue) {
       copy ??= { ...input }
       copy[key] = value
     }
@@ -140,8 +152,17 @@ function encodeLexMap(input: LexMap): JsonObject {
   // Lazily copy value
   let copy: JsonObject | undefined = undefined
   for (const [key, lexValue] of Object.entries(input)) {
-    // Just ignore undefined values
-    if (lexValue === undefined) continue
+    // Prevent prototype pollution
+    if (key === '__proto__') {
+      throw new TypeError('Invalid key: __proto__')
+    }
+
+    // Ignore (strip) undefined values
+    if (lexValue === undefined) {
+      copy ??= { ...input } as JsonObject
+      delete copy[key]
+      continue
+    }
 
     const jsonValue = lexToJson(lexValue!)
     if (jsonValue !== lexValue) {
