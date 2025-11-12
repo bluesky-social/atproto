@@ -27,9 +27,9 @@ export async function cidForLex(value: LexValue): Promise<CID> {
   return cid
 }
 
-export async function verifyCidForCbor(cid: CID, bytes: Uint8Array) {
-  const hash = await sha256.digest(bytes)
-  const expected = CID.createV1(atpCodec.code, hash)
+export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
+  const digest = await sha256.digest(bytes)
+  const expected = CID.createV1(cid.code, digest)
   if (!cid.equals(expected)) {
     throw new Error(
       `Not a valid CID for bytes. Expected: ${expected.toString()} Got: ${cid.toString()}`,

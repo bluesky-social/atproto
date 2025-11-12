@@ -10,7 +10,7 @@ import {
   cidForRawHash,
   lexToCborBlock,
   parseCidFromBytes,
-  verifyCidForCbor,
+  verifyCidForBytes as verifyCidForBytesInternal,
 } from '@atproto/lex-cbor'
 import { CID, validateCidString } from '@atproto/lex-data'
 
@@ -57,10 +57,10 @@ export function cborBytesToRecord(bytes: Uint8Array): Record<string, unknown> {
 }
 
 /**
- * @deprecated Use {@link verifyCidForCbor} from `@atproto/lex-cbor` instead.
+ * @deprecated Use {@link verifyCidForBytes} from `@atproto/lex-cbor` instead.
  */
 export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
-  return verifyCidForCbor(cid, bytes)
+  return verifyCidForBytesInternal(cid, bytes)
 }
 
 /**
