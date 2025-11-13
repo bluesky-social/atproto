@@ -15,7 +15,6 @@ import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
 import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
-import { isLexMap } from '../../../lex/lex-data/dist'
 import { AppContext } from '../../src'
 import { AccountStatus } from '../../src/account-manager/account-manager'
 import {
