@@ -4,9 +4,9 @@ import {
   LexArray,
   LexMap,
   LexValue,
-  isBlobRef,
   isCid,
 } from '@atproto/lex-data'
+import { parseBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { Json, JsonObject } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
@@ -56,8 +56,10 @@ export function jsonToLex(
     case 'object': {
       if (value === null) return null
       if (Array.isArray(value)) return jsonArrayToLex(value, options)
-      const map = jsonObjectToLexMap(value, options)
-      return parseSpecialJsonObject(map, options) ?? map
+      return (
+        parseSpecialJsonObject(value, options) ??
+        jsonObjectToLexMap(value, options)
+      )
     }
     case 'number':
       if (Number.isInteger(value)) return value
@@ -198,7 +200,8 @@ function parseSpecialJsonObject(
     // the strict option is enabled.
     if (options.strict) {
       if (input.$type === 'blob') {
-        if (isBlobRef(input, options)) return input
+        const blob = parseBlobRef(input, options)
+        if (blob) return blob
         throw new TypeError(`Invalid blob object`)
       } else if (typeof input.$type !== 'string') {
         throw new TypeError(`Invalid $type property (${typeof input.$type})`)
