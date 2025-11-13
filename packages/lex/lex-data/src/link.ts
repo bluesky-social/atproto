@@ -1,9 +1,8 @@
-import { CID, isCid } from './cid.js'
+import { CID } from './cid.js'
 import { Json } from './json.js'
-import { isPlainObject } from './object.js'
 
 export function parseLexLink(input?: { $link?: unknown }): CID | undefined {
-  if (!input) {
+  if (!input || !('$link' in input)) {
     return undefined
   }
 
@@ -35,23 +34,4 @@ export function parseLexLink(input?: { $link?: unknown }): CID | undefined {
 
 export function encodeLexLink(cid: CID): Json {
   return { $link: cid.toString() }
-}
-
-/**
- * Coerces json or LexMap into a CID.
- */
-export function asLexLink(input: unknown): CID | undefined {
-  if (isCid(input)) {
-    return input
-  }
-
-  if (isPlainObject(input)) {
-    try {
-      return parseLexLink(input)
-    } catch {
-      // Ignore parse errors
-    }
-  }
-
-  return undefined
 }

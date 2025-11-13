@@ -1,5 +1,5 @@
-import { CID } from './cid.js'
-import { asLexLink } from './link.js'
+import { CID, isCid } from './cid.js'
+import { parseLexLink } from './link.js'
 import { isPlainObject } from './object.js'
 
 const TYPE = 'blob'
@@ -39,12 +39,21 @@ export function parseLexBlob(
     }
   }
 
-  const cid = asLexLink(ref)
-  if (!cid) return undefined
+  if (!isCid(ref)) {
+    // Attempt to coerce ref into a CID
+    if (isPlainObject(ref)) {
+      try {
+        const cid = parseLexLink(ref)
+        if (cid) return { $type: TYPE, mimeType, size, ref: cid }
+      } catch {
+        // Ignore
+      }
+    }
 
-  return cid === ref
-    ? (input as Blob) // Already a Blob
-    : { $type: TYPE, mimeType, ref: cid, size }
+    return undefined
+  }
+
+  return input as Blob // Already a Blob
 }
 
 /**

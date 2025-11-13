@@ -3,7 +3,9 @@ import {
   DAG_CBOR_MULTICODEC,
   RAW_BIN_MULTICODEC,
   SHA2_256_MULTIHASH_CODE,
-  asLexLink,
+  isCid,
+  isPlainObject,
+  parseLexLink,
 } from '@atproto/lex-data'
 import {
   ValidationContext,
@@ -26,7 +28,7 @@ export class CidSchema extends Validator<CID> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<CID> {
-    const cid = asLexLink(input)
+    const cid = coerceToCid(input)
     if (!cid) return ctx.issueInvalidType(input, 'cid')
 
     if (this.options.strict) {
@@ -43,4 +45,23 @@ export class CidSchema extends Validator<CID> {
 
     return ctx.success(cid)
   }
+}
+
+/**
+ * Coerces {@link Json} or {@link LexValue} into a {@link CID}.
+ */
+export function coerceToCid(input: unknown): CID | undefined {
+  if (isCid(input)) {
+    return input
+  }
+
+  if (isPlainObject(input)) {
+    try {
+      return parseLexLink(input)
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  return undefined
 }

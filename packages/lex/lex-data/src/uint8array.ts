@@ -40,9 +40,10 @@ if (toBase64 === toBase64Ponyfill || fromBase64 === fromBase64Ponyfill) {
 
 /**
  * Coerces various binary data representations into a Uint8Array.
- * @return The input as a {@link Uint8Array}, or `null` if the input could not be converted
+ *
+ * @return `undefined` if the input could not be coerced into a {@link Uint8Array}.
  */
-export function asUint8Array(input: unknown): Uint8Array | null {
+export function asUint8Array(input: unknown): Uint8Array | undefined {
   if (input instanceof Uint8Array) {
     return input
   }
@@ -59,7 +60,7 @@ export function asUint8Array(input: unknown): Uint8Array | null {
     return new Uint8Array(input)
   }
 
-  return null
+  return undefined
 }
 
 export function uin8Equals(a: Uint8Array, b: Uint8Array): boolean {
