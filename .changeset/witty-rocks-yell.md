@@ -3,4 +3,4 @@
 "@atproto/common": patch
 ---
 
-Deprecate "ipld" function (use `@atproto/lex-data` and `@atproto/lex-cbor` instead)
+Deprecate "ipld" function (use `@atproto/lex-data`, `@atproto/lex-json` and `@atproto/lex-cbor` instead)
