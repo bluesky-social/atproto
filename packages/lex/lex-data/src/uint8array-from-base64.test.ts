@@ -21,7 +21,7 @@ for (const fromBase64 of [
   fromBase64Ponyfill,
 ] as const) {
   // Tests should run in NodeJS where implementations are either available or
-  // polyfilled (see core-js import above).
+  // polyfilled (see core-js imports above).
   assert(fromBase64 !== null, 'fromBase64 implementation should not be null')
 
   describe(fromBase64.name, () => {
@@ -33,9 +33,7 @@ for (const fromBase64 of [
       })
 
       it('decodes 10MB', () => {
-        const bytes = Buffer.allocUnsafe(10_000_000)
-        for (let i = 0; i < bytes.length; i++) bytes[i] = i % 256
-
+        const bytes = Buffer.allocUnsafe(10_000_000).fill('🐩')
         const encoded = bytes.toString('base64')
         const decoded = fromBase64(encoded)
         expect(decoded).toBeInstanceOf(Uint8Array)

@@ -5,9 +5,9 @@ import { CID } from './cid.js'
 const blobCid = CID.parse(
   'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
 )
-// await cidForLex({ "hello": "World!" })
+// await cidForLex(Buffer.from('Hello, World!'))
 const lexCid = CID.parse(
-  'bafyreihh3drj54zoijb67lbwsuzp7pzgyjlcztoofaibx7n24wxeced6xa',
+  'bafyreic52vzks7wdklat4evp3vimohl55i2unzqpshz2ytka5omzr7exdy',
 )
 
 describe('isBlobRef', () => {
