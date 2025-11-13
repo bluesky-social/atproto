@@ -48,7 +48,7 @@ export class NexusChannel {
   async ackEvent(id: number): Promise<boolean> {
     if (this.ws.isConnected()) {
       try {
-        await this.ws.send(JSON.stringify({ id }))
+        await this.ws.send(JSON.stringify({ type: 'ack', id }))
         return true
       } catch (err) {
         this.bufferedAcks.push(id)
