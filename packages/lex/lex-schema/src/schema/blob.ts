@@ -30,6 +30,8 @@ export type BlobSchemaOptions = {
   maxSize?: number
 }
 
+export type { BlobRef, LegacyBlobRef }
+
 export type BlobSchemaOutput<Options> = Options extends { allowLegacy: true }
   ? BlobRef | LegacyBlobRef
   : BlobRef
