@@ -1,5 +1,4 @@
 import { Block, encode as encodeBlock } from 'multiformats/block'
-import { code as rawCodecCode } from 'multiformats/codecs/raw'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import { sha256 } from 'multiformats/hashes/sha2'
 import {
@@ -8,14 +7,14 @@ import {
   LexMap,
   LexValue,
   RAW_BIN_MULTICODEC,
+  SHA2_256_MULTIHASH_CODE,
 } from '@atproto/lex-data'
 import { atpCodec } from './codec.js'
 
-export * from '@atproto/lex-data'
-
 export * from './codec.js'
+export { CID, DAG_CBOR_MULTICODEC, RAW_BIN_MULTICODEC, SHA2_256_MULTIHASH_CODE }
+export type { Block, LexValue }
 
-export type { Block }
 export async function lexToCborBlock<T extends LexValue>(
   value: T,
 ): Promise<Block<T>> {
@@ -53,9 +52,14 @@ export function cborToTypedLexMap(bytes: Uint8Array): TypedLexMap {
   return data as TypedLexMap
 }
 
+export async function cidForRawBytes(bytes: Uint8Array): Promise<CID> {
+  const digest = await sha256.digest(bytes)
+  return CID.createV1(RAW_BIN_MULTICODEC, digest)
+}
+
 export function cidForRawHash(hash: Uint8Array): CID {
   const digest = createDigest(sha256.code, hash)
-  return CID.createV1(rawCodecCode, digest)
+  return CID.createV1(RAW_BIN_MULTICODEC, digest)
 }
 
 /**
@@ -73,7 +77,7 @@ export function parseCidFromBytes(cidBytes: Uint8Array): CID {
     throw new Error(`Unsupported CID codec: ${code}`)
   }
   const hashType = cidBytes[2]
-  if (hashType !== 0x12) {
+  if (hashType !== SHA2_256_MULTIHASH_CODE) {
     throw new Error(`Unsupported CID hash function: ${hashType}`)
   }
   const hashLength = cidBytes[3]

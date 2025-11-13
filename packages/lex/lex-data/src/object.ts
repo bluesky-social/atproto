@@ -2,6 +2,8 @@ export function isObject(input: unknown): input is object {
   return input != null && typeof input === 'object'
 }
 
+const ObjectProto = Object.prototype
+
 export function isPlainObject(
   input: unknown,
 ): input is object & Record<string, unknown> {
@@ -9,11 +11,10 @@ export function isPlainObject(
   const proto = Object.getPrototypeOf(input)
   if (proto === null) return true
   return (
-    (proto === null ||
-      proto === Object.prototype ||
+    (proto === ObjectProto ||
       // Needed to support NodeJS's `runInNewContext` which produces objects
       // with a different prototype
       Object.getPrototypeOf(proto) === null) &&
-    Object.prototype.toString.call(input) === '[object Object]'
+    ObjectProto.toString.call(input) === '[object Object]'
   )
 }

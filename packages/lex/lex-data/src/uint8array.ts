@@ -63,7 +63,7 @@ export function asUint8Array(input: unknown): Uint8Array | undefined {
   return undefined
 }
 
-export function uin8Equals(a: Uint8Array, b: Uint8Array): boolean {
+export function ui8Equals(a: Uint8Array, b: Uint8Array): boolean {
   if (a.byteLength !== b.byteLength) {
     return false
   }

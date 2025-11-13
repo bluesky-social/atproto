@@ -1,4 +1,5 @@
-import { cborEncode, uin8Equals } from '@atproto/lex-cbor'
+import { cborEncode } from '@atproto/lex-cbor'
+import { ui8Equals } from '@atproto/lex-data'
 import { ErrorFrame, Frame, FrameType, MessageFrame } from '../src'
 
 describe('Frames', () => {
@@ -18,7 +19,7 @@ describe('Frames', () => {
 
     const bytes = messageFrame.toBytes()
     expect(
-      uin8Equals(
+      ui8Equals(
         bytes,
         new Uint8Array([
           /*header*/ 162, 97, 116, 98, 35, 100, 98, 111, 112, 1, /*body*/ 162,
@@ -55,7 +56,7 @@ describe('Frames', () => {
 
     const bytes = errorFrame.toBytes()
     expect(
-      uin8Equals(
+      ui8Equals(
         bytes,
         new Uint8Array([
           /*header*/ 161, 98, 111, 112, 32, /*body*/ 162, 101, 101, 114, 114,

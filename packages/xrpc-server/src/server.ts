@@ -11,7 +11,7 @@ import express, {
   Router,
 } from 'express'
 import { check, schema } from '@atproto/common'
-import { LexMap, LexValue } from '@atproto/lex-cbor'
+import { LexMap, LexValue } from '@atproto/lex-data'
 import {
   LexXrpcProcedure,
   LexXrpcQuery,

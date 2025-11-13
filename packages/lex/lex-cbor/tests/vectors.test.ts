@@ -1,4 +1,5 @@
-import { jsonToLex, lexEquals, lexToJson } from '@atproto/lex-data'
+import { lexEquals } from '@atproto/lex-data'
+import { jsonToLex, lexToJson } from '@atproto/lex-json'
 import { cborDecode, cborEncode, cidForLex } from '..'
 import { vectors } from './vectors'
 

@@ -1,8 +1,14 @@
-import { Blob, parseLexBlob } from './blob.js'
+import {
+  BlobRef,
+  CID,
+  LexArray,
+  LexMap,
+  LexValue,
+  isBlobRef,
+  isCid,
+} from '@atproto/lex-data'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { CID, isCid } from './cid.js'
 import { Json, JsonObject } from './json.js'
-import { LexArray, LexMap, LexValue } from './lex.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
 export function lexStringify(input: LexValue): string {
@@ -50,10 +56,8 @@ export function jsonToLex(
     case 'object': {
       if (value === null) return null
       if (Array.isArray(value)) return jsonArrayToLex(value, options)
-      return (
-        parseSpecialJsonObject(value, options) ??
-        jsonObjectToLexMap(value, options)
-      )
+      const map = jsonObjectToLexMap(value, options)
+      return parseSpecialJsonObject(map, options) ?? map
     }
     case 'number':
       if (Number.isInteger(value)) return value
@@ -174,9 +178,9 @@ function encodeLexMap(input: LexMap): JsonObject {
 }
 
 function parseSpecialJsonObject(
-  input: JsonObject,
+  input: LexMap,
   options: LexParseOptions,
-): CID | Uint8Array | Blob | undefined {
+): CID | Uint8Array | BlobRef | undefined {
   // Hot path: use hints to avoid parsing when possible
 
   if (input.$link !== undefined) {
@@ -194,8 +198,7 @@ function parseSpecialJsonObject(
     // the strict option is enabled.
     if (options.strict) {
       if (input.$type === 'blob') {
-        const blob = parseLexBlob(input)
-        if (blob) return blob
+        if (isBlobRef(input, options)) return input
         throw new TypeError(`Invalid blob object`)
       } else if (typeof input.$type !== 'string') {
         throw new TypeError(`Invalid $type property (${typeof input.$type})`)

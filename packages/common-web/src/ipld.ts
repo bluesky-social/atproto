@@ -1,11 +1,5 @@
-import {
-  CID,
-  Json,
-  LexValue,
-  jsonToLex,
-  lexEquals,
-  lexToJson,
-} from '@atproto/lex-data'
+import { CID, LexValue, lexEquals } from '@atproto/lex-data'
+import { Json, jsonToLex, lexToJson } from '@atproto/lex-json'
 
 /**
  * @deprecated Use {@link Json} from `@atproto/lex-cbor` instead.

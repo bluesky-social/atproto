@@ -1,6 +1,8 @@
 import { CID, isCid } from './cid.js'
 import { isPlainObject } from './object.js'
 
+// @NOTE BlobRef is just a special case of LexMap.
+
 export type LexScalar = number | string | boolean | null | CID | Uint8Array
 export type LexValue = LexScalar | LexValue[] | { [_ in string]?: LexValue }
 export type LexMap = { [_ in string]?: LexValue }
@@ -34,8 +36,18 @@ export function isLexValue(value: unknown): value is LexValue {
       return true
     case 'object':
       if (value === null) return true
-      if (Array.isArray(value)) return value.every(isLexValue)
-      if (isPlainObject(value)) return Object.values(value).every(isLexValue)
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          if (!isLexValue(value[i])) return false
+        }
+        return true
+      }
+      if (isPlainObject(value)) {
+        for (const key in value) {
+          if (!isLexValue(value[key])) return false
+        }
+        return true
+      }
       if (value instanceof Uint8Array) return true
       if (isCid(value)) return true
     // fallthrough

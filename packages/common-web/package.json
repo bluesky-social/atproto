@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@atproto/lex-data": "workspace:*",
+    "@atproto/lex-json": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {

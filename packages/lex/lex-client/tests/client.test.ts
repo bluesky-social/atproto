@@ -1,5 +1,5 @@
 import { LexValue, cidForLex } from '@atproto/lex-cbor'
-import { lexParse } from '@atproto/lex-schema'
+import { lexParse } from '@atproto/lex-json'
 import { Action, Client } from '..'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'

@@ -6,7 +6,7 @@ import {
   fromBase64Node,
   fromBase64Ponyfill,
 } from './uint8array-from-base64.js'
-import { uin8Equals } from './uint8array.js'
+import { ui8Equals } from './uint8array.js'
 
 // @NOTE This test suite relies on the NodeJS Buffer implementation to generate
 // valid base64 strings for testing.
@@ -39,7 +39,7 @@ for (const fromBase64 of [
         const encoded = bytes.toString('base64')
         const decoded = fromBase64(encoded)
         expect(decoded).toBeInstanceOf(Uint8Array)
-        expect(uin8Equals(decoded, bytes)).toBe(true)
+        expect(ui8Equals(decoded, bytes)).toBe(true)
       })
 
       for (const string of [
@@ -65,14 +65,14 @@ for (const fromBase64 of [
         it(`decodes ${JSON.stringify(string)}`, () => {
           const decoded = fromBase64(base64)
           expect(decoded).toBeInstanceOf(Uint8Array)
-          expect(uin8Equals(decoded, buffer)).toBe(true)
+          expect(ui8Equals(decoded, buffer)).toBe(true)
         })
 
         if (base64 !== base64Unpadded) {
           it(`decodes ${JSON.stringify(string)} (unpadded)`, () => {
             const decoded = fromBase64(base64Unpadded)
             expect(decoded).toBeInstanceOf(Uint8Array)
-            expect(uin8Equals(decoded, buffer)).toBe(true)
+            expect(ui8Equals(decoded, buffer)).toBe(true)
           })
         }
       }

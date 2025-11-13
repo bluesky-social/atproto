@@ -1,31 +1,36 @@
-import { CID, isCid } from './cid.js'
-import { parseLexLink } from './link.js'
+import { CID, RAW_BIN_MULTICODEC, SHA2_256_MULTIHASH_CODE } from './cid.js'
 import { isPlainObject } from './object.js'
 
-const TYPE = 'blob'
-
-export type Blob = {
+export type BlobRef = {
   $type: 'blob'
   mimeType: string
   ref: CID
   size: number
 }
 
-export function parseLexBlob(
-  input: object & Record<string, unknown>,
-): Blob | undefined {
-  if (input?.$type !== TYPE) {
-    return undefined
+export function isBlobRef(
+  input: unknown,
+  options?: { strict?: boolean },
+): input is BlobRef {
+  if (!isPlainObject(input)) {
+    return false
   }
+
+  if (input?.$type !== 'blob') {
+    return false
+  }
+
   const { mimeType, size, ref } = input
   if (typeof mimeType !== 'string') {
-    return undefined
+    return false
   }
+
   if (typeof size !== 'number' || size < 0 || !Number.isInteger(size)) {
-    return undefined
+    return false
   }
+
   if (typeof ref !== 'object' || ref === null) {
-    return undefined
+    return false
   }
 
   for (const key in input) {
@@ -35,34 +40,60 @@ export function parseLexBlob(
       key !== 'ref' &&
       key !== 'size'
     ) {
-      return undefined
+      return false
     }
   }
 
-  if (!isCid(ref)) {
-    // Attempt to coerce ref into a CID
-    if (isPlainObject(ref)) {
-      try {
-        const cid = parseLexLink(ref)
-        if (cid) return { $type: TYPE, mimeType, size, ref: cid }
-      } catch {
-        // Ignore
-      }
-    }
-
-    return undefined
+  const cid = CID.asCID(ref)
+  if (!cid) {
+    return false
   }
 
-  return input as Blob // Already a Blob
+  if (options?.strict) {
+    if (cid.version !== 1) {
+      return false
+    }
+    if (cid.code !== RAW_BIN_MULTICODEC) {
+      return false
+    }
+    if (cid.multihash.code !== SHA2_256_MULTIHASH_CODE) {
+      return false
+    }
+  }
+
+  return true
 }
 
-/**
- * Coerce json or Lex into a Blob.
- */
-export function asLexBlob(input: unknown): Blob | undefined {
-  if (isPlainObject(input)) {
-    return parseLexBlob(input)
+export type LegacyBlobRef = {
+  cid: string
+  mimeType: string
+}
+
+export function isLegacyBlobRef(input: unknown): input is LegacyBlobRef {
+  if (!isPlainObject(input)) {
+    return false
   }
 
-  return undefined
+  const { cid, mimeType } = input
+  if (typeof cid !== 'string') {
+    return false
+  }
+
+  if (typeof mimeType !== 'string') {
+    return false
+  }
+
+  for (const key in input) {
+    if (key !== 'cid' && key !== 'mimeType') {
+      return false
+    }
+  }
+
+  try {
+    CID.parse(cid)
+  } catch {
+    return false
+  }
+
+  return true
 }

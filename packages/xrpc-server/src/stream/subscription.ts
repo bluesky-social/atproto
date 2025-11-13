@@ -1,5 +1,5 @@
 import { ClientOptions } from 'ws'
-import { isLexMap } from '@atproto/lex-cbor'
+import { isLexMap } from '@atproto/lex-data'
 import { ensureChunkIsMessage } from './stream'
 import { WebSocketKeepAlive } from './websocket-keepalive'
 

@@ -24,6 +24,7 @@
     { "path": "./packages/lex/lex" },
     { "path": "./packages/lex/lex-builder" },
     { "path": "./packages/lex/lex-cbor" },
+    { "path": "./packages/lex/lex-json" },
     { "path": "./packages/lex/lex-client" },
     { "path": "./packages/lex/lex-data" },
     { "path": "./packages/lex/lex-document" },

@@ -1,6 +1,6 @@
 import { CID, isCid } from './cid.js'
 import { LexValue, isLexMap } from './lex.js'
-import { uin8Equals } from './uint8array.js'
+import { ui8Equals } from './uint8array.js'
 
 export function lexEquals(a: LexValue, b: LexValue): boolean {
   if (Object.is(a, b)) {
@@ -35,7 +35,7 @@ export function lexEquals(a: LexValue, b: LexValue): boolean {
 
   if (ArrayBuffer.isView(a)) {
     if (!ArrayBuffer.isView(b)) return false
-    return uin8Equals(a, b)
+    return ui8Equals(a, b)
   } else if (ArrayBuffer.isView(b)) {
     return false
   }

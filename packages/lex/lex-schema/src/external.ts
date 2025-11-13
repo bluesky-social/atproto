@@ -51,7 +51,6 @@ import {
 } from './schema.js'
 import { Infer, Validator } from './validation.js'
 
-export * from '@atproto/lex-data'
 export * from './core.js'
 export * from './schema.js'
 export * from './validation.js'

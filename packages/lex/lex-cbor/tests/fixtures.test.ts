@@ -1,4 +1,4 @@
-import { jsonToLex, lexToJson } from '@atproto/lex-data'
+import { jsonToLex, lexToJson } from '@atproto/lex-json'
 import { cborDecodeAll, cborEncode, cidForLex } from '..'
 import fixtures from './fixtures.json' with { type: 'json' }
 

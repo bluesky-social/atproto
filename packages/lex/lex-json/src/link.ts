@@ -1,4 +1,4 @@
-import { CID } from './cid.js'
+import { CID } from '@atproto/lex-data'
 import { Json } from './json.js'
 
 export function parseLexLink(input?: { $link?: unknown }): CID | undefined {

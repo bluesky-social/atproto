@@ -1,8 +1,6 @@
-import { CID } from 'multiformats/cid'
+import { CID, LexValue, lexEquals } from '@atproto/lex-data'
 import { Json } from './json.js'
-import { lexEquals } from './lex-equals.js'
 import { jsonToLex, lexParse, lexStringify, lexToJson } from './lex-json.js'
-import { LexValue } from './lex.js'
 
 export const validVectors: Array<{
   name: string
@@ -52,7 +50,7 @@ export const validVectors: Array<{
       c: {
         $type: 'blob',
         ref: {
-          $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
+          $link: 'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
         },
         mimeType: 'image/jpeg',
         size: 10000,
@@ -70,7 +68,7 @@ export const validVectors: Array<{
       c: {
         $type: 'blob',
         ref: CID.parse(
-          'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
+          'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
         ),
         mimeType: 'image/jpeg',
         size: 10000,
@@ -273,7 +271,7 @@ export const acceptableVectors: Array<{
     note: 'blob with wrong field type',
     json: {
       $type: 'blob',
-      ref: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
+      ref: 'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
       mimeType: 'image/jpeg',
       size: 10000,
     },
@@ -291,7 +289,7 @@ export const acceptableVectors: Array<{
     json: {
       $type: 'blob',
       ref: {
-        $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
+        $link: 'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
       },
       mimeType: 'image/jpeg',
       size: 10000,

@@ -1,83 +1,186 @@
-import assert from 'node:assert'
-import { parseLexBlob } from './blob.js'
+import { isBlobRef, isLegacyBlobRef } from './blob.js'
 import { CID } from './cid.js'
 
-describe('parseLexBlob', () => {
-  it('parses valid blob', () => {
-    const json = {
-      $type: 'blob',
-      ref: {
-        $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
-      },
-      mimeType: 'image/jpeg',
-      size: 10000,
-    }
-    const blob = parseLexBlob(json)
-    assert(blob, 'Expected blob to be parsed successfully')
-    expect(blob.$type).toBe('blob')
-    expect(blob.ref).toBeInstanceOf(CID)
-    expect(typeof blob.mimeType).toBe('string')
-    expect(typeof blob.size).toBe('number')
-    expect(blob.mimeType).toBe(json.mimeType)
-    expect(blob.size).toBe(json.size)
+// await cidForRawBytes(Buffer.from('Hello, World!'))
+const blobCid = CID.parse(
+  'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
+)
+// await cidForLex({ "hello": "World!" })
+const lexCid = CID.parse(
+  'bafyreihh3drj54zoijb67lbwsuzp7pzgyjlcztoofaibx7n24wxeced6xa',
+)
+
+describe('isBlobRef', () => {
+  it('tests valid blobCid and lexCid', () => {
+    expect(blobCid.code).toBe(0x55) // raw
+    expect(blobCid.multihash.code).toBe(0x12) // sha2-256
+    expect(lexCid.code).toBe(0x71) // dag-cbor
+    expect(lexCid.multihash.code).toBe(0x12) // sha2-256
   })
 
-  it('parses nested blob', () => {
-    const json = {
-      data: {
-        file: {
+  it('parses valid blob', () => {
+    expect(
+      isBlobRef({
+        $type: 'blob',
+        ref: blobCid,
+        mimeType: 'image/jpeg',
+        size: 10000,
+      }),
+    ).toBe(true)
+
+    expect(
+      isBlobRef(
+        {
           $type: 'blob',
-          ref: {
-            $link:
-              'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
-          },
+          ref: lexCid,
           mimeType: 'image/jpeg',
           size: 10000,
         },
-      },
-    }
-    const blob = parseLexBlob(json.data.file)
-    assert(blob, 'Expected blob to be parsed successfully')
-    expect(blob.$type).toBe('blob')
-    expect(blob.ref).toBeInstanceOf(CID)
-    expect(typeof blob.mimeType).toBe('string')
-    expect(typeof blob.size).toBe('number')
-    expect(blob.mimeType).toBe(json.data.file.mimeType)
-    expect(blob.size).toBe(json.data.file.size)
+        // In non-strict mode, any CID should be accepted
+        { strict: false },
+      ),
+    ).toBe(true)
   })
 
-  describe('strict mode', () => {
-    it('rejects blob with invalid CID version', () => {
-      // TODO
-    })
-  })
-
-  describe('invalid inputs', () => {
-    for (const { note, json } of [
-      {
-        note: 'blob with string size',
-        json: {
+  it('rejects invalid inputs', () => {
+    expect(
+      isBlobRef({
+        $type: 'blob',
+        ref: { $link: blobCid.toString() },
+        mimeType: 'image/jpeg',
+        size: '10000',
+      }),
+    ).toBe(false)
+    expect(
+      isBlobRef(
+        {
           $type: 'blob',
-          ref: {
-            $link:
-              'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
-          },
+          ref: { $link: blobCid.toString() },
           mimeType: 'image/jpeg',
           size: '10000',
         },
-      },
-      {
-        note: 'blob with missing key',
-        json: {
+        { strict: true },
+      ),
+    ).toBe(false)
+
+    expect(
+      isBlobRef({
+        $type: 'blob',
+        mimeType: 'image/jpeg',
+        size: 10000,
+      }),
+    ).toBe(false)
+
+    expect(
+      isBlobRef(
+        {
           $type: 'blob',
           mimeType: 'image/jpeg',
           size: 10000,
         },
-      },
-    ]) {
-      it(note, () => {
-        expect(parseLexBlob(json)).toBeUndefined()
-      })
-    }
+        { strict: true },
+      ),
+    ).toBe(false)
+  })
+
+  it('rejects invalid CID/multihash code', () => {
+    expect(
+      isBlobRef(
+        {
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+        },
+        { strict: true },
+      ),
+    ).toBe(true)
+
+    expect(
+      isBlobRef(
+        {
+          $type: 'blob',
+          ref: lexCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+        },
+        { strict: true },
+      ),
+    ).toBe(false)
+  })
+
+  it('rejects extra keys', () => {
+    expect(
+      isBlobRef({
+        $type: 'blob',
+        ref: blobCid,
+        mimeType: 'image/jpeg',
+        size: 10000,
+        extra: 'not allowed',
+      }),
+    ).toBe(false)
+
+    expect(
+      isBlobRef(
+        {
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+          extra: 'not allowed',
+        },
+        { strict: true },
+      ),
+    ).toBe(false)
+  })
+})
+
+describe('isLegacyBlobRef', () => {
+  it('parses valid legacy blob', () => {
+    expect(
+      isLegacyBlobRef({
+        cid: blobCid.toString(),
+        mimeType: 'image/jpeg',
+      }),
+    ).toBe(true)
+
+    expect(
+      isLegacyBlobRef({
+        cid: lexCid.toString(),
+        mimeType: 'image/jpeg',
+      }),
+    ).toBe(true)
+  })
+
+  it('rejects invalid inputs', () => {
+    expect(
+      isLegacyBlobRef({
+        cid: 'babbaaa',
+        mimeType: 'image/jpeg',
+      }),
+    ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        cid: 12345,
+        mimeType: 'image/jpeg',
+      }),
+    ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        mimeType: 'image/jpeg',
+      }),
+    ).toBe(false)
+  })
+
+  it('rejects extra keys', () => {
+    expect(
+      isLegacyBlobRef({
+        cid: blobCid.toString(),
+        mimeType: 'image/jpeg',
+        extra: 'not allowed',
+      }),
+    ).toBe(false)
   })
 })

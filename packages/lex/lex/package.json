@@ -42,10 +42,10 @@
     }
   },
   "dependencies": {
-    "@atproto/lex-builder": "workspace:^",
-    "@atproto/lex-client": "workspace:^",
-    "@atproto/lex-installer": "workspace:^",
-    "@atproto/lex-schema": "workspace:^",
+    "@atproto/lex-builder": "workspace:*",
+    "@atproto/lex-client": "workspace:*",
+    "@atproto/lex-installer": "workspace:*",
+    "@atproto/lex-schema": "workspace:*",
     "core-js": "^3",
     "yargs": "^17.0.0"
   },

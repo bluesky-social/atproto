@@ -1,3 +1,5 @@
+import { LexMap, LexValue } from '@atproto/lex-data'
+import { lexParse, lexStringify } from '@atproto/lex-json'
 import {
   AtIdentifier,
   AtUri,
@@ -11,8 +13,6 @@ import {
   InferQueryOutputBody,
   InferQueryParameters,
   InferRecordKey,
-  LexMap,
-  LexValue,
   Nsid,
   Parameters,
   ParamsSchema,
@@ -25,8 +25,6 @@ import {
   Subscription,
   UnknownString,
   ValidationResult,
-  lexParse,
-  lexStringify,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
 import * as createRecord from './lexicons/com/atproto/repo/createRecord.defs.js'

@@ -1,5 +1,5 @@
+import { fromBase64, toBase64 } from '@atproto/lex-data'
 import { Json } from './json.js'
-import { fromBase64, toBase64 } from './uint8array.js'
 
 export function parseLexBytes(input?: {
   $bytes?: unknown

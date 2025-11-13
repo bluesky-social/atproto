@@ -25,7 +25,8 @@
   "dependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
-    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-data": "workspace:*",
+    "@atproto/lex-cbor": "workspace:*",
     "@atproto/lexicon": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "express": "^4.17.2",
