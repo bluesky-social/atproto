@@ -1,3 +1,4 @@
+import { ui8Equals } from '@atproto/lex-data'
 import { jsonToLex, lexToJson } from '@atproto/lex-json'
 import { cborDecodeAll, cborEncode, cidForLex } from '..'
 import fixtures from './data-model-fixtures.json' with { type: 'json' }
@@ -7,11 +8,12 @@ describe('fixtures', () => {
     it(fixture.cid, async () => {
       const lex = jsonToLex(fixture.json, { strict: true })
       const cid = await cidForLex(lex)
-      expect(cid.toString()).toEqual(fixture.cid)
+      expect(cid.toString()).toBe(fixture.cid)
       const encoded = cborEncode(lex)
       expect(encoded).toBeInstanceOf(Uint8Array)
-      // @NOTE cborEncode() returns Buffer instances on NodeJS (which is a subclass of Uint8Array)
-      expect(encoded).toEqual(Buffer.from(fixture.cbor_base64, 'base64'))
+      expect(
+        ui8Equals(encoded, Buffer.from(fixture.cbor_base64, 'base64')),
+      ).toBe(true)
       const [decoded, ...rest] = cborDecodeAll(encoded)
       expect(rest.length).toBe(0)
       expect(lexToJson(decoded)).toEqual(fixture.json)
