@@ -1,11 +1,11 @@
 import { jsonToLex, lexToJson } from '@atproto/lex-json'
 import { cborDecodeAll, cborEncode, cidForLex } from '..'
-import fixtures from './fixtures.json' with { type: 'json' }
+import fixtures from './data-model-fixtures.json' with { type: 'json' }
 
 describe('fixtures', () => {
   for (const fixture of fixtures) {
     it(fixture.cid, async () => {
-      const lex = jsonToLex(fixture.json)
+      const lex = jsonToLex(fixture.json, { strict: true })
       const cid = await cidForLex(lex)
       expect(cid.toString()).toEqual(fixture.cid)
       const encoded = cborEncode(lex)
