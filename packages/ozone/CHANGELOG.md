@@ -1,5 +1,13 @@
 # @atproto/ozone
 
+## 0.1.155
+
+### Patch Changes
+
+- [#4330](https://github.com/bluesky-social/atproto/pull/4330) [`3628cebfb`](https://github.com/bluesky-social/atproto/commit/3628cebfbb04ba49f326bbf411a2d15de2900302) Thanks [@mistydemeo](https://github.com/mistydemeo)! - adjust explicit-slurs regex
+
+- [#4335](https://github.com/bluesky-social/atproto/pull/4335) [`82e75bf6c`](https://github.com/bluesky-social/atproto/commit/82e75bf6c1b31daa834386edce35c8aa4c787229) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove non-existing `reporter_stats` from materliaziled view to refresh
+
 ## 0.1.154
 
 ### Patch Changes
