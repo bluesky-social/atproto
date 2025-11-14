@@ -17,8 +17,6 @@
   "files": [
     "./index.js",
     "./index.d.ts",
-    "./polyfills.js",
-    "./polyfills.d.ts",
     "./bin"
   ],
   "bin": {
@@ -33,12 +31,6 @@
       "import": "./index.mjs",
       "require": "./index.cjs",
       "types": "./index.d.ts"
-    },
-    "./polyfills": {
-      "browser": "./polyfills.mjs",
-      "import": "./polyfills.mjs",
-      "require": "./polyfills.cjs",
-      "types": "./polyfills.d.ts"
     }
   },
   "dependencies": {
@@ -46,7 +38,6 @@
     "@atproto/lex-client": "workspace:*",
     "@atproto/lex-installer": "workspace:*",
     "@atproto/lex-schema": "workspace:*",
-    "core-js": "^3",
     "yargs": "^17.0.0"
   },
   "devDependencies": {
