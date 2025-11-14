@@ -16,7 +16,7 @@ lex --help
 Install the Lexicon schemas you need for your application:
 
 ```bash
-lex install --save app.bsky.feed.post app.bsky.feed.like
+lex install app.bsky.feed.post app.bsky.feed.like
 ```
 
 > [!NOTE]
@@ -39,7 +39,7 @@ Make sure to commit these files to version control.
 
 TypeScript definitions will be automatically built when installing the lexicons.
 
-If you whish to customize the output location, or any other options, you can run
+If you wish to customize the output location, or any other options, you can run
 the build command separately. For that purpose, make sure to use the
 `--no-build` flag when installing lexicons to skip the automatic build step.
 
@@ -71,14 +71,14 @@ const response = await client.call(app.bsky.actor.getProfile, {
 Install Lexicon schemas and their dependencies.
 
 ```bash
-# Add a new lexicon to the project and update lexicons.json
-lex install --save app.bsky.feed.post
+# Install Lexicons and update lexicons.json (default behavior)
+lex install app.bsky.feed.post
 
 # Install all Lexicons from lexicons.json manifest
 lex install
 
-# Install specific Lexicons (without updating manifest)
-lex install app.bsky.feed.post app.bsky.actor.profile
+# Install specific Lexicons without updating manifest
+lex install --no-save app.bsky.feed.post app.bsky.actor.profile
 
 # Update (re-fetch) all installed Lexicons to latest versions
 lex install --update
@@ -89,10 +89,13 @@ lex install --ci
 
 Options:
 
-- `--save`, `-s` - Update lexicons.json with installed Lexicons
-- `--build <dir>`, `-b <dir>` - Build TypeScript definitions after installing
-- `--update` - Update all Lexicons to latest versions
-- `--ci` - Fail if installed Lexicons don't match manifest
+- `--manifest <path>` - Path to lexicons.json manifest file (default: `./lexicons.json`)
+- `--no-save` - Don't update lexicons.json with installed lexicons (save is enabled by default)
+- `--no-build` - Skip building TypeScript lexicon schema files after installation (build is enabled by default)
+- `--update` - Update all installed lexicons to their latest versions by re-resolving and re-installing them
+- `--ci` - Error if the installed lexicons do not match the CIDs in the lexicons.json manifest
+- `--lexicons <dir>` - Directory containing lexicon JSON files (default: `./lexicons`)
+- `--out <dir>` - Output directory for generated TS files (default: `./src/lexicons`)
 
 ### `lex build`
 
@@ -104,17 +107,17 @@ lex build --lexicons ./lexicons --out ./src/lexicons
 
 Options:
 
-- `--lexicons <dirs...>` - Directories containing Lexicon JSON files (default: `./lexicons`)
+- `--lexicons <dir>` - Directory containing lexicon JSON files (default: `./lexicons`)
 - `--out <dir>` - Output directory for generated TypeScript (default: `./src/lexicons`)
 - `--clear` - Clear output directory before generating
-- `--override` - Override existing files (no effect with --clear)
-- `--pretty` - Run prettier on generated files (default: true)
-- `--pure-annotations` - Add `/*#__PURE__*/` annotations for tree-shaking
-- `--exclude <patterns...>` - Exclude Lexicons by ID patterns
-- `--include <patterns...>` - Include only Lexicons matching ID patterns
-- `--lib <package>` - Package name to import from (default: `@atproto/lex`)
-- `--ignore-errors` - Continue processing despite errors
-- `--allowLegacyBlobs` - Allow legacy blob references
+- `--override` - Override existing files (has no effect with --clear)
+- `--no-pretty` - Don't run prettier on generated files (prettier is enabled by default)
+- `--ignore-errors` - How to handle errors when processing input files
+- `--pure-annotations` - Add `/*#__PURE__*/` annotations for tree-shaking tools. Set this to true if you are using generated lexicons in a library
+- `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
+- `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
+- `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
+- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references
 
 ## Client API
 
@@ -206,7 +209,7 @@ async function createBaseClient(session: OAuthSession) {
 // Usage
 const baseClient = await createBaseClient(session)
 
-// Create a new client with a different service, but re-using the labelers
+// Create a new client with a different service, but reusing the labelers
 // from the base client.
 const otherClient = new Client(baseClient, {
   service: 'did:web:com.example.other#other_service',
@@ -445,7 +448,6 @@ Add these scripts to your `package.json`:
 This ensures:
 
 1. `postinstall` - Lexicons are verified/installed after `npm install`
-2. `prebuild` - TypeScript definitions are generated before building your app
 
 ## Advanced Usage
 
@@ -494,6 +496,7 @@ All methods support these base options:
 type CallOptions = {
   signal?: AbortSignal // Abort the request
   headers?: HeadersInit // Custom request headers
+  service?: Service // Override service proxy for this request
 }
 ```
 
@@ -531,7 +534,7 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
   params: { limit: 50 },
   signal: abortController.signal,
   headers: { 'x-custom': 'value' },
-  skipVerification: false, // Skip response schema validation
+  skipVerification: false, // Whether to skip response schema validation
 })
 
 console.log(response.status) // 200

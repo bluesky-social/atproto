@@ -90,7 +90,7 @@ yargs(hideBin(process.argv))
     },
   )
   .command(
-    ['install [lexicons..]', 'i [lexicons..]'],
+    ['install [nsid..]', 'i [nsid..]'],
     'Fetch and install lexicon documents',
     (yargs) => {
       return yargs.strict().options({
@@ -102,8 +102,9 @@ yargs(hideBin(process.argv))
         save: {
           alias: 's',
           type: 'boolean',
-          default: false,
-          describe: 'Updates lexicons.json with installed lexicons',
+          default: true,
+          describe:
+            'Updates lexicons.json with installed lexicons (use --no-save to disable)',
         },
         build: {
           type: 'boolean',
@@ -130,7 +131,7 @@ yargs(hideBin(process.argv))
           default: './lexicons',
           describe: 'directory containing lexicon JSON files',
         },
-        buildDirectory: {
+        out: {
           type: 'string',
           demandOption: true,
           default: './src/lexicons',
@@ -140,7 +141,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       await install({
-        add: argv.lexicons,
+        add: argv.nsid,
         save: argv.save,
         ci: argv.ci,
         update: argv.update,
@@ -151,7 +152,7 @@ yargs(hideBin(process.argv))
       if (argv.build) {
         await build({
           lexicons: argv.lexicons,
-          out: argv.buildDirectory,
+          out: argv.out,
           clear: true,
           pretty: true,
           pureAnnotations: true,
