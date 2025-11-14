@@ -37,30 +37,30 @@ export type DidServiceIdentifier = 'atproto_labeler' | UnknownString
 export type Service = `${Did}#${DidServiceIdentifier}`
 
 export type ClientOptions = {
+  labelers?: Iterable<Did>
   headers?: HeadersInit
   service?: Service
-  labelers?: Iterable<Did>
 }
 
 export type CallOptions = {
-  headers?: HeadersInit
   signal?: AbortSignal
+  headers?: HeadersInit
+  service?: Service
 }
 
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  CallOptions &
-    XrpcRequestParamsOptions<M> &
-    XrpcRequestInitOptions<M> &
-    XrpcResponseOptions
+  XrpcRequestOptions<M> & XrpcResponseOptions
 
-export type XrpcRequestParamsOptions<
-  M extends Query | Procedure | Subscription,
-> =
+export type XrpcRequestOptions<M extends Procedure | Query> = CallOptions &
+  XrpcRequestUrlOptions<M> &
+  XrpcRequestBodyOptions<M>
+
+export type XrpcRequestUrlOptions<M extends Query | Procedure | Subscription> =
   undefined extends InferParamsSchema<M['parameters']>
     ? { params?: InferParamsSchema<M['parameters']> }
     : { params: InferParamsSchema<M['parameters']> }
 
-export type XrpcRequestInitOptions<T extends Query | Procedure> =
+export type XrpcRequestBodyOptions<T extends Query | Procedure> =
   T extends Procedure
     ? never extends InferPayloadBody<T['input']>
       ? { body?: InferPayloadBody<T['input']> }
@@ -563,7 +563,7 @@ function getLiteralRecordKey<const T extends RecordSchema>(
 
 function buildXrpcRequestUrl<M extends Procedure | Query | Subscription>(
   method: M,
-  options: XrpcRequestParamsOptions<M>,
+  options: XrpcRequestUrlOptions<M>,
 ) {
   const path = `/xrpc/${method.nsid}`
   const queryString = buildXrpcRequestParams(method.parameters, options.params)
@@ -593,11 +593,16 @@ function buildXrpcRequestParams(
 
 function buildXrpcRequestInit<T extends Procedure | Query>(
   schema: T,
-  options: CallOptions & XrpcRequestInitOptions<T>,
+  options: XrpcRequestOptions<T>,
 ): RequestInit & { duplex?: 'half' } {
+  const headers = new Headers(options.headers)
+
+  if (options.service && !headers.has('atproto-proxy')) {
+    headers.set('atproto-proxy', options.service)
+  }
+
   // Requests with body
   if ('input' in schema && schema.input?.encoding) {
-    const headers = new Headers(options.headers)
     headers.set('content-type', schema.input.encoding)
     return {
       duplex: 'half',
@@ -619,7 +624,7 @@ function buildXrpcRequestInit<T extends Procedure | Query>(
     mode: 'cors', // (default)
     signal: options.signal,
     method: schema instanceof Query ? 'GET' : 'POST',
-    headers: options.headers,
+    headers,
   }
 }
 
