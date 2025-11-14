@@ -1,5 +1,5 @@
 import { ClientOptions } from 'ws'
-import { Deferrable, createDeferrable } from '@atproto/common'
+import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
 import { NexusEvent, parseNexusEvent } from './events'
 import { WebSocketKeepAlive } from './websocket-keepalive'
 
@@ -84,7 +84,7 @@ export class NexusChannel {
         await this.processWsEvent(chunk)
       }
     } catch (err) {
-      if (err && err['name'] === 'AbortError') {
+      if (isErrnoException(err) && err.name === 'AbortError') {
         this.destroyDefer.resolve()
       } else {
         throw err
