@@ -94,6 +94,11 @@ yargs(hideBin(process.argv))
     'Fetch and install lexicon documents',
     (yargs) => {
       return yargs.strict().options({
+        manifest: {
+          type: 'string',
+          default: './lexicons.json',
+          describe: 'path to lexicons.json manifest file',
+        },
         save: {
           alias: 's',
           type: 'boolean',
@@ -101,11 +106,10 @@ yargs(hideBin(process.argv))
           describe: 'Updates lexicons.json with installed lexicons',
         },
         build: {
-          type: 'string',
-          alias: 'b',
-          example: '--build ./src/lexicons',
+          type: 'boolean',
+          default: true,
           describe:
-            'output directory to build installed lexicons into (dir content will be overwritten)',
+            'automatically build TypeScript lexicon schema files after installation (use --no-build to disable)',
         },
         update: {
           type: 'boolean',
@@ -119,6 +123,19 @@ yargs(hideBin(process.argv))
           describe:
             'error if the installed lexicons do not match the CIDs in the lexicons.json manifest',
         },
+        lexicons: {
+          array: true,
+          type: 'string',
+          demandOption: true,
+          default: './lexicons',
+          describe: 'directory containing lexicon JSON files',
+        },
+        buildDirectory: {
+          type: 'string',
+          demandOption: true,
+          default: './src/lexicons',
+          describe: 'output directory for generated TS files',
+        },
       })
     },
     async (argv) => {
@@ -127,14 +144,14 @@ yargs(hideBin(process.argv))
         save: argv.save,
         ci: argv.ci,
         update: argv.update,
-        lexicons: './lexicons',
-        manifest: './lexicons.json',
+        lexicons: argv.lexicons,
+        manifest: argv.manifest,
       })
 
-      if (argv.build != null) {
+      if (argv.build) {
         await build({
-          lexicons: './lexicons',
-          out: argv.build || './src/lexicons',
+          lexicons: argv.lexicons,
+          out: argv.buildDirectory,
           clear: true,
           pretty: true,
           pureAnnotations: true,

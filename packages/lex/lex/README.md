@@ -5,7 +5,8 @@ Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for m
 ## Installation
 
 ```bash
-npm install @atproto/lex
+npm install -g @atproto/lex
+lex --help
 ```
 
 ## Quick Start
@@ -15,8 +16,17 @@ npm install @atproto/lex
 Install the Lexicon schemas you need for your application:
 
 ```bash
-npx lex install app.bsky.feed.post app.bsky.feed.like
+lex install app.bsky.feed.post app.bsky.feed.like
 ```
+
+> [!NOTE]
+>
+> If you didn't install the CLI globally, or if you didn't setup your shell's
+> PATH to include your package manager's binaries directory, you can use
+> `npx @atproto/lex` or `pnpm exec lex` to run the command. The recommended
+> approach is to add `@atproto/lex` as part of your project's `devDependencies`
+> and run `lex` via your project's `scripts` (see
+> [Development Workflow](#development-workflow) below).
 
 This creates:
 
@@ -30,14 +40,14 @@ Make sure to commit these files to version control.
 Generate TypeScript definitions from your Lexicons:
 
 ```bash
-npx lex build --lexicons ./lexicons --out ./src/lexicons
+lex build --lexicons ./lexicons --out ./src/lexicons
 ```
 
 > [!TIP]
 > You can install and build in one step using:
 >
 > ```bash
-> npx lex install --build
+> lex install --build
 > ```
 
 ### 3. Use in Your Application
@@ -63,19 +73,19 @@ Install Lexicon schemas and their dependencies.
 
 ```bash
 # Install specific Lexicons
-npx lex install app.bsky.feed.post app.bsky.actor.profile
+lex install app.bsky.feed.post app.bsky.actor.profile
 
 # Install all Lexicons from lexicons.json manifest
-npx lex install
+lex install
 
 # Install and build in one command
-npx lex install app.bsky.feed.post --build ./src/lexicons
+lex install app.bsky.feed.post --build ./src/lexicons
 
 # Update (re-fetch) all installed Lexicons to latest versions
-npx lex install --update
+lex install --update
 
 # Verify installed Lexicons match manifest (CI mode)
-npx lex install --ci
+lex install --ci
 ```
 
 Options:
@@ -90,7 +100,7 @@ Options:
 Generate TypeScript definitions from Lexicon JSON files.
 
 ```bash
-npx lex build --lexicons ./lexicons --out ./src/lexicons
+lex build --lexicons ./lexicons --out ./src/lexicons
 ```
 
 Options:
@@ -427,8 +437,7 @@ Add these scripts to your `package.json`:
 ```json
 {
   "scripts": {
-    "postinstall": "lex install --ci",
-    "prebuild": "lex build --lexicons ./lexicons --out ./src/lexicons"
+    "postinstall": "lex install --ci"
   }
 }
 ```
@@ -456,7 +465,7 @@ import * as app from './lexicons/app.js'
 For library authors, use `--pure-annotations` when building:
 
 ```bash
-npx lex build --lexicons ./lexicons --out ./src/lexicons --pure-annotations
+lex build --pure-annotations
 ```
 
 This will make the generated code more tree-shakeable from places that import your library.

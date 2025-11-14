@@ -43,6 +43,7 @@ export type ClientOptions = {
 }
 
 export type CallOptions = {
+  labelers?: Iterable<Did>
   signal?: AbortSignal
   headers?: HeadersInit
   service?: Service
@@ -221,31 +222,21 @@ export class Client implements Agent {
   //#region Agent fetch handler
 
   public fetchHandler(path: string, init: RequestInit): Promise<Response> {
-    const headers = new Headers(init.headers)
-
-    // Incoming headers take precedence
-    if (this.service && !headers.has('atproto-proxy')) {
-      headers.set('atproto-proxy', this.service)
-    }
+    const headers = buildHeaders({
+      headers: init.headers,
+      service: this.service,
+      labelers: [
+        ...(this.constructor as typeof Client).appLabelers.map(
+          (l) => `${l};redact` as const,
+        ),
+        ...this.labelers,
+      ],
+    })
 
     // Incoming headers take precedence
     for (const [key, value] of this.headers) {
       if (!headers.has(key)) headers.set(key, value)
     }
-
-    // Merge incoming labelers with client-wide and app-wide labelers
-    headers.set(
-      'atproto-accept-labelers',
-      [
-        ...(this.constructor as typeof Client).appLabelers.map(
-          (l) => `${l};redact`,
-        ),
-        ...this.labelers,
-        headers.get('atproto-accept-labelers')?.trim(),
-      ]
-        .filter(Boolean)
-        .join(', '),
-    )
 
     return this.agent.fetchHandler(path, { ...init, headers })
   }
@@ -595,11 +586,7 @@ function buildXrpcRequestInit<T extends Procedure | Query>(
   schema: T,
   options: XrpcRequestOptions<T>,
 ): RequestInit & { duplex?: 'half' } {
-  const headers = new Headers(options.headers)
-
-  if (options.service && !headers.has('atproto-proxy')) {
-    headers.set('atproto-proxy', options.service)
-  }
+  const headers = buildHeaders(options)
 
   // Requests with body
   if ('input' in schema && schema.input?.encoding) {
@@ -742,6 +729,29 @@ async function cancelBody(body: Body): Promise<void> {
   ) {
     await body.body.cancel()
   }
+}
+
+function buildHeaders(options: {
+  headers?: HeadersInit
+  service?: Service
+  labelers?: Iterable<Did>
+}): Headers {
+  const headers = new Headers(options.headers)
+
+  if (options.service && !headers.has('atproto-proxy')) {
+    headers.set('atproto-proxy', options.service)
+  }
+
+  if (options.labelers) {
+    headers.set(
+      'atproto-accept-labelers',
+      [...options.labelers, headers.get('atproto-accept-labelers')?.trim()]
+        .filter(Boolean)
+        .join(', '),
+    )
+  }
+
+  return headers
 }
 
 async function readXrpcResponseBody(
