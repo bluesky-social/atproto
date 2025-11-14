@@ -33,12 +33,12 @@ import * as getRecord from './lexicons/com/atproto/repo/getRecord.defs.js'
 import * as listRecords from './lexicons/com/atproto/repo/listRecords.defs.js'
 import * as putRecord from './lexicons/com/atproto/repo/putRecord.defs.js'
 
-export type DidServiceId = 'atproto_labeler' | UnknownString
-export type DidService = `${Did}#${DidServiceId}`
+export type DidServiceIdentifier = 'atproto_labeler' | UnknownString
+export type Service = `${Did}#${DidServiceIdentifier}`
 
 export type ClientOptions = {
   headers?: HeadersInit
-  service?: DidService
+  service?: Service
   labelers?: Iterable<Did>
 }
 
@@ -171,7 +171,7 @@ export class Client implements Agent {
 
   public readonly agent: Agent
   public readonly headers: Headers
-  public readonly service?: DidService
+  public readonly service?: Service
   public readonly labelers: Set<Did>
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {

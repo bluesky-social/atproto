@@ -10,8 +10,8 @@
 
 const yargs = require('yargs')
 const { hideBin } = require('yargs/helpers')
-const { LexBuilder } = require('@atproto/lex-builder')
-const { LexInstaller } = require('@atproto/lex-installer')
+const { build } = require('@atproto/lex-builder')
+const { install } = require('@atproto/lex-installer')
 
 yargs(hideBin(process.argv))
   .strict()
@@ -86,11 +86,11 @@ yargs(hideBin(process.argv))
       })
     },
     async (argv) => {
-      await LexBuilder.build(argv)
+      await build(argv)
     },
   )
   .command(
-    ['install [nsid..]', 'i [nsid..]'],
+    ['install [lexicons..]', 'i [lexicons..]'],
     'Fetch and install lexicon documents',
     (yargs) => {
       return yargs.strict().options({
@@ -98,8 +98,7 @@ yargs(hideBin(process.argv))
           alias: 's',
           type: 'boolean',
           default: false,
-          implies: 'nsid',
-          describe: 'adds installed lexicon NSIDs to lexicons.json',
+          describe: 'Updates lexicons.json with installed lexicons',
         },
         build: {
           type: 'string',
@@ -108,13 +107,32 @@ yargs(hideBin(process.argv))
           describe:
             'output directory to build installed lexicons into (dir content will be overwritten)',
         },
+        update: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'update all installed lexicons to their latest versions by re-resolving and re-installing them',
+        },
+        ci: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'error if the installed lexicons do not match the CIDs in the lexicons.json manifest',
+        },
       })
     },
     async (argv) => {
-      await LexInstaller.install(argv)
+      await install({
+        add: argv.lexicons,
+        save: argv.save,
+        ci: argv.ci,
+        update: argv.update,
+        lexicons: './lexicons',
+        manifest: './lexicons.json',
+      })
 
       if (argv.build != null) {
-        await LexBuilder.build({
+        await build({
           lexicons: './lexicons',
           out: argv.build || './src/lexicons',
           clear: true,

@@ -409,10 +409,13 @@ export type MainLexiconDefinition = l.Infer<
   (typeof MAIN_LEXICON_SCHEMAS)[number]
 >
 
+export const lexiconIdentifierSchema = l.string({ format: 'nsid' })
+export type LexiconIdentifier = l.Infer<typeof lexiconIdentifierSchema>
+
 export const lexiconDocumentSchema = l.object(
   {
     lexicon: l.literal(1),
-    id: l.string({ format: 'nsid' }),
+    id: lexiconIdentifierSchema,
     revision: l.integer(),
     description: l.string(),
     defs: l.object(

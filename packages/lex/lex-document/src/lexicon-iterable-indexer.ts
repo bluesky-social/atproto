@@ -27,7 +27,9 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
       if (doc.id === id) return doc
     }
 
-    throw new Error(`Lexicon ${id} not found`)
+    throw Object.assign(new Error(`Lexicon ${id} not found`), {
+      code: 'ENOENT',
+    })
   }
 
   async *[Symbol.asyncIterator](): AsyncIterator<

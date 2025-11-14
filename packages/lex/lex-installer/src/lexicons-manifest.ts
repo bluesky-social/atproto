@@ -2,12 +2,22 @@ import { l } from '@atproto/lex-schema'
 
 export const lexiconsManifestSchema = l.object(
   {
-    lexicons: l.dict(
+    version: l.literal(1),
+    lexicons: l.array(l.string({ format: 'nsid' })),
+    resolutions: l.dict(
       l.string({ format: 'nsid' }),
-      l.union([l.string({ format: 'cid' }), l.string({ format: 'uri' })]),
+      l.object(
+        {
+          cid: l.string({ format: 'cid' }),
+          uri: l.string({ format: 'at-uri' }),
+        },
+        {
+          required: ['cid', 'uri'],
+        },
+      ),
     ),
   },
-  { required: ['lexicons'] },
+  { required: ['version', 'lexicons', 'resolutions'] },
 )
 
 export type LexiconsManifest = l.Infer<typeof lexiconsManifestSchema>

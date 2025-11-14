@@ -22,7 +22,7 @@ import { FALLBACK_ALG } from './constants.js'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
-  IdentityResolverOptions,
+  CreateIdentityResolverOptions,
   createIdentityResolver,
 } from './identity-resolver.js'
 import {
@@ -71,7 +71,7 @@ export {
   type StateStore,
 }
 
-export type OAuthClientOptions = IdentityResolverOptions & {
+export type OAuthClientOptions = CreateIdentityResolverOptions & {
   // Config
   responseMode: OAuthResponseMode
   clientMetadata: Readonly<OAuthClientMetadataInput>

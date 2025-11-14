@@ -1,10 +1,10 @@
 /* eslint-env node  */
 
-import { LexBuilder } from '@atproto/lex-builder'
+import { build } from '@atproto/lex-builder'
 
 Promise.all([
   // For src
-  LexBuilder.build({
+  build({
     lexicons: '../../../lexicons',
     out: './src/lexicons',
     override: true,
@@ -22,7 +22,7 @@ Promise.all([
   }),
 
   // For tests
-  LexBuilder.build({
+  build({
     lexicons: '../../../lexicons',
     out: './tests/lexicons',
     override: true,

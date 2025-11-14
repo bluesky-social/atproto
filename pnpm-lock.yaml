@@ -932,15 +932,24 @@ importers:
       '@atproto/lex-builder':
         specifier: workspace:*
         version: link:../lex-builder
-      '@atproto/lex-client':
+      '@atproto/lex-cbor':
         specifier: workspace:*
-        version: link:../lex-client
+        version: link:../lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex-data
       '@atproto/lex-document':
         specifier: workspace:*
         version: link:../lex-document
+      '@atproto/lex-resolver':
+        specifier: workspace:*
+        version: link:../lex-resolver
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema
+      '@atproto/syntax':
+        specifier: workspace:*
+        version: link:../../syntax
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -961,6 +970,24 @@ importers:
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+
+  packages/lex/lex-resolver:
+    dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:*
+        version: link:../../internal/did-resolver
+      '@atproto/lex-client':
+        specifier: workspace:*
+        version: link:../lex-client
+      '@atproto/lex-document':
+        specifier: workspace:*
+        version: link:../lex-document
+      '@atproto/syntax':
+        specifier: workspace:*
+        version: link:../../syntax
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
 
   packages/lex/lex-schema:
     dependencies:

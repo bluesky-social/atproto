@@ -131,7 +131,7 @@ export class RefResolver {
       const srcDef = Object.hasOwn(srcDoc.defs, hash) ? srcDoc.defs[hash] : null
       if (!srcDef) {
         throw new Error(
-          `Lexicon reference ${hash} not found (referenced from ${this.doc.id})`,
+          `Missing def "${hash}" in "${nsid}" (referenced from ${this.doc.id})`,
         )
       }
 

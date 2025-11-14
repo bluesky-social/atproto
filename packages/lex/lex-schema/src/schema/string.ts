@@ -3,7 +3,7 @@ import {
   InferStringFormat,
   StringFormat,
   UnknownString,
-  validateStringFormat,
+  assertStringFormat,
 } from '../core.js'
 import {
   ValidationContext,
@@ -90,21 +90,17 @@ export class StringSchema<
       }
     }
 
-    if (options.format === undefined) {
-      return ctx.success(str as StringSchemaOutput<Options>)
+    if (options.format !== undefined) {
+      try {
+        // @TODO optimize (avoid throw cost)
+        assertStringFormat(str, options.format)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : undefined
+        return ctx.issueInvalidFormat(str, options.format, message)
+      }
     }
 
-    try {
-      return ctx.success(
-        validateStringFormat(
-          str,
-          options.format,
-        ) as StringSchemaOutput<Options>,
-      )
-    } catch (err) {
-      const message = err instanceof Error ? err.message : undefined
-      return ctx.issueInvalidFormat(str, options.format, message)
-    }
+    return ctx.success(str as StringSchemaOutput<Options>)
   }
 }
 

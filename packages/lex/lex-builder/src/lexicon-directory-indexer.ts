@@ -30,7 +30,7 @@ async function* readLexicons(
       if (filePath.endsWith('.json')) {
         try {
           const data = await readFile(filePath, 'utf8')
-          yield lexiconDocumentSchema.$parse(JSON.parse(data))
+          yield lexiconDocumentSchema.parse(JSON.parse(data))
         } catch (cause) {
           const message = `Error parsing lexicon document ${filePath}`
           if (options.ignoreErrors) console.error(`${message}:`, cause)
@@ -42,7 +42,10 @@ async function* readLexicons(
 }
 
 async function* listFiles(dir: string): AsyncGenerator<string> {
-  const dirents = await readdir(dir, { withFileTypes: true })
+  const dirents = await readdir(dir, { withFileTypes: true }).catch((err) => {
+    if ((err as any)?.code === 'ENOENT') return []
+    throw err
+  })
   for (const dirent of dirents) {
     const res = join(dir, dirent.name)
     if (dirent.isDirectory()) {

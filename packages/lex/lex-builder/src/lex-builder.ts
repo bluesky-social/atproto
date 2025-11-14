@@ -12,9 +12,6 @@ import {
 } from './lexicon-directory-indexer.js'
 import { isSafeIdentifier } from './ts-lang.js'
 
-export type TsProjectBuildOptions = LexBuilderLoadOptions &
-  LexBuilderSaveOptions
-
 export type LexBuilderLoadOptions = LexDefBuilderOptions &
   LexiconDirectoryIndexerOptions &
   BuildFilterOptions
@@ -26,12 +23,6 @@ export type LexBuilderSaveOptions = FormatterOptions & {
 }
 
 export class LexBuilder {
-  static async build(options: TsProjectBuildOptions) {
-    const builder = new LexBuilder()
-    await builder.load(options)
-    await builder.save(options)
-  }
-
   readonly #imported = new Set<string>()
   readonly #project = new Project({
     useInMemoryFileSystem: true,
