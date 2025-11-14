@@ -16,7 +16,7 @@ lex --help
 Install the Lexicon schemas you need for your application:
 
 ```bash
-lex install app.bsky.feed.post app.bsky.feed.like
+lex install --save app.bsky.feed.post app.bsky.feed.like
 ```
 
 > [!NOTE]
@@ -37,18 +37,17 @@ Make sure to commit these files to version control.
 
 ### 2. Generate TypeScript Definitions
 
-Generate TypeScript definitions from your Lexicons:
+TypeScript definitions will be automatically built when installing the lexicons.
+
+If you whish to customize the output location, or any other options, you can run
+the build command separately. For that purpose, make sure to use the
+`--no-build` flag when installing lexicons to skip the automatic build step.
+
+Generate TypeScript definitions for your installed Lexicons:
 
 ```bash
 lex build --lexicons ./lexicons --out ./src/lexicons
 ```
-
-> [!TIP]
-> You can install and build in one step using:
->
-> ```bash
-> lex install --build
-> ```
 
 ### 3. Use in Your Application
 
@@ -72,19 +71,19 @@ const response = await client.call(app.bsky.actor.getProfile, {
 Install Lexicon schemas and their dependencies.
 
 ```bash
-# Install specific Lexicons
-lex install app.bsky.feed.post app.bsky.actor.profile
+# Add a new lexicon to the project and update lexicons.json
+lex install --save app.bsky.feed.post
 
 # Install all Lexicons from lexicons.json manifest
 lex install
 
-# Install and build in one command
-lex install app.bsky.feed.post --build ./src/lexicons
+# Install specific Lexicons (without updating manifest)
+lex install app.bsky.feed.post app.bsky.actor.profile
 
 # Update (re-fetch) all installed Lexicons to latest versions
 lex install --update
 
-# Verify installed Lexicons match manifest (CI mode)
+# Fetch any missing Lexicons and verify against manifest
 lex install --ci
 ```
 
@@ -437,6 +436,7 @@ Add these scripts to your `package.json`:
 ```json
 {
   "scripts": {
+    "lex:update": "lex install --update --save",
     "postinstall": "lex install --ci"
   }
 }
