@@ -1,6 +1,6 @@
 import { ClientOptions } from 'ws'
+import { WebSocketKeepAlive } from '@atproto/websocket'
 import { ensureChunkIsMessage } from './stream'
-import { WebSocketKeepAlive } from './websocket-keepalive'
 
 export class Subscription<T = unknown> {
   constructor(
@@ -33,7 +33,7 @@ export class Subscription<T = unknown> {
       },
     })
     for await (const chunk of ws) {
-      const message = await ensureChunkIsMessage(chunk)
+      const message = ensureChunkIsMessage(chunk)
       const t = message.header.t
       const clone = message.body !== undefined ? { ...message.body } : undefined
       if (clone !== undefined && t !== undefined) {
