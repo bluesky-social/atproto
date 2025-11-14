@@ -1,6 +1,6 @@
 {
   "name": "@atproto/websocket",
-  "version": "0.9.5",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Websocket utility library",
   "keywords": [
