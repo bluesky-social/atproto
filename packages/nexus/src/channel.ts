@@ -18,6 +18,11 @@ export type NexusWebsocketOptions = ClientOptions & {
   onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
 }
 
+type BufferedAck = {
+  id: number
+  defer: Deferrable
+}
+
 export class NexusChannel {
   private ws: WebSocketKeepAlive
   private handler: NexusHandler
@@ -25,7 +30,7 @@ export class NexusChannel {
   private abortController: AbortController
   private destroyDefer: Deferrable
 
-  private bufferedAcks: number[] = []
+  private bufferedAcks: BufferedAck[] = []
 
   constructor(
     url: string,
@@ -45,28 +50,43 @@ export class NexusChannel {
     })
   }
 
-  async ackEvent(id: number): Promise<boolean> {
+  async ackEvent(id: number): Promise<void> {
     if (this.ws.isConnected()) {
       try {
+        this.sendAck(id)
         await this.ws.send(JSON.stringify({ type: 'ack', id }))
-        return true
-      } catch (err) {
-        this.bufferedAcks.push(id)
-        return false
+      } catch {
+        await this.bufferAndSendAck(id)
       }
     } else {
-      this.bufferedAcks.push(id)
-      return false
+      await this.bufferAndSendAck(id)
     }
   }
 
-  private async flushBufferedAcks() {
+  private async sendAck(id: number): Promise<void> {
+    await this.ws.send(JSON.stringify({ type: 'ack', id }))
+  }
+
+  // resolves after the ack has been actually sent
+  private async bufferAndSendAck(id: number): Promise<void> {
+    const defer = createDeferrable()
+    this.bufferedAcks.push({
+      id,
+      defer,
+    })
+    await defer.complete
+  }
+
+  private async flushBufferedAcks(): Promise<void> {
     while (this.bufferedAcks.length > 0) {
       try {
-        const success = await this.ackEvent(this.bufferedAcks[0])
-        if (success) {
-          this.bufferedAcks = this.bufferedAcks.slice(1)
+        const ack = this.bufferedAcks.at(0)
+        if (!ack) {
+          return
         }
+        await this.sendAck(ack.id)
+        ack.defer.resolve()
+        this.bufferedAcks = this.bufferedAcks.slice(1)
       } catch (err) {
         this.handler.onError(
           new Error(`failed to send ack for event ${this.bufferedAcks[0]}`, {
