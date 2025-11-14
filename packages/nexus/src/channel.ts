@@ -98,7 +98,7 @@ export class NexusChannel {
       const data = chunk.toString()
       evt = parseNexusEvent(JSON.parse(data))
     } catch (err) {
-      this.handler.onError(new Error(`Failed to parse message: ${err}`))
+      this.handler.onError(new Error('Failed to parse message', { cause: err }))
       return
     }
 
@@ -108,7 +108,7 @@ export class NexusChannel {
     } catch (err) {
       // Don't ack on error - let Nexus retry
       this.handler.onError(
-        new Error(`Failed to prcoess event ${evt.id}: ${err}`),
+        new Error(`Failed to process event ${evt.id}`, { cause: err }),
       )
       return
     }

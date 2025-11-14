@@ -1,20 +1,23 @@
 import { HandlerOpts, NexusHandler } from './channel'
 import { NexusEvent, RecordEvent, UserEvent } from './events'
 
-type UserEvtHandler = (evt: UserEvent, opts?: HandlerOpts) => Promise<void>
-type RecordEvtHandler = (evt: RecordEvent, opts?: HandlerOpts) => Promise<void>
+type UserEventHandler = (evt: UserEvent, opts?: HandlerOpts) => Promise<void>
+type RecordEventHandler = (
+  evt: RecordEvent,
+  opts?: HandlerOpts,
+) => Promise<void>
 type ErrorHandler = (err: Error) => void
 
 export class SimpleIndexer implements NexusHandler {
-  private userHandler: UserEvtHandler | undefined
-  private recordHandler: RecordEvtHandler | undefined
+  private userHandler: UserEventHandler | undefined
+  private recordHandler: RecordEventHandler | undefined
   private errorHandler: ErrorHandler | undefined
 
-  user(fn: UserEvtHandler) {
+  user(fn: UserEventHandler) {
     this.userHandler = fn
   }
 
-  record(fn: RecordEvtHandler) {
+  record(fn: RecordEventHandler) {
     this.recordHandler = fn
   }
 

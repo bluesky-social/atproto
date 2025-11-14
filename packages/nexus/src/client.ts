@@ -4,6 +4,9 @@ export class Nexus {
   url: string
 
   constructor(url: string) {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      throw new Error('Invalid URL, expected http:// or https://')
+    }
     this.url = url
   }
 
@@ -14,7 +17,7 @@ export class Nexus {
     return new NexusChannel(url.toString(), handler, opts)
   }
 
-  async addRepos(dids: string[]) {
+  async addRepos(dids: string[]): Promise<void> {
     const response = await fetch(`${this.url}/add-repos`, {
       method: 'POST',
       headers: {
@@ -22,15 +25,15 @@ export class Nexus {
       },
       body: JSON.stringify({ dids }),
     })
+    await response.arrayBuffer()
 
     if (!response.ok) {
+      await response.arrayBuffer()
       throw new Error(`Failed to add repos: ${response.statusText}`)
     }
-
-    return response.json()
   }
 
-  async removeRepos(dids: string[]) {
+  async removeRepos(dids: string[]): Promise<void> {
     const response = await fetch(`${this.url}/remove-repos`, {
       method: 'POST',
       headers: {
@@ -38,11 +41,11 @@ export class Nexus {
       },
       body: JSON.stringify({ dids }),
     })
+    await response.arrayBuffer()
 
     if (!response.ok) {
+      await response.arrayBuffer()
       throw new Error(`Failed to remove repos: ${response.statusText}`)
     }
-
-    return response.json()
   }
 }
