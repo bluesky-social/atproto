@@ -2,9 +2,9 @@ import { isPlainObject } from '@atproto/lex-data'
 import { Restricted, UnknownString } from '../core.js'
 import {
   Infer,
-  ValidationContext,
   ValidationResult,
   Validator,
+  ValidatorContext,
 } from '../validation.js'
 import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
 
@@ -48,8 +48,8 @@ export class TypedUnionSchema<
   readonly lexiconType = 'union' as const
 
   constructor(
-    readonly refs: TypedRefs,
-    readonly closed: Closed,
+    protected readonly refs: TypedRefs,
+    public readonly closed: Closed,
   ) {
     // @NOTE In order to avoid circular dependency issues, we don't access the
     // refs's schema (or $type) here. Instead, we access them lazily when first
@@ -79,7 +79,7 @@ export class TypedUnionSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<TypedUnionSchemaOutput<TypedRefs, Closed>> {
     if (!isPlainObject(input) || !('$type' in input)) {
       return ctx.issueInvalidType(input, '$typed')

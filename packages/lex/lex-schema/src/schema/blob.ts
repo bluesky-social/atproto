@@ -4,11 +4,7 @@ import {
   isBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export type BlobSchemaOptions = {
   /**
@@ -47,7 +43,7 @@ export class BlobSchema<O extends BlobSchemaOptions> extends Validator<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<BlobSchemaOutput<O>> {
     if (!isBlob(input, this.options)) {
       return ctx.issueInvalidType(input, 'blob')

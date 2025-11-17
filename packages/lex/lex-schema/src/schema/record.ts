@@ -1,9 +1,9 @@
 import { Nsid, RecordKey, Simplify } from '../core.js'
 import {
   Infer,
-  ValidationContext,
   ValidationResult,
   Validator,
+  ValidatorContext,
 } from '../validation.js'
 import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
@@ -56,7 +56,7 @@ export class RecordSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<Output> {
     const result = ctx.validate(input, this.schema) as ValidationResult<Output>
 

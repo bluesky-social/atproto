@@ -1,9 +1,5 @@
 import { asUint8Array } from '@atproto/lex-data'
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export type BytesSchemaOptions = {
   minLength?: number
@@ -19,7 +15,7 @@ export class BytesSchema extends Validator<Uint8Array> {
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<Uint8Array> {
     // Coerce different binary formats into Uint8Array
     const bytes = asUint8Array(input)

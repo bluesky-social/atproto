@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export class TokenSchema<V extends string = any> extends Validator<V> {
   readonly lexiconType = 'token' as const
@@ -13,7 +9,7 @@ export class TokenSchema<V extends string = any> extends Validator<V> {
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<V> {
     if (input === this.value) {
       return ctx.success(this.value)

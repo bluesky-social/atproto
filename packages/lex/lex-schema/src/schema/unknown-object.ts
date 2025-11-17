@@ -1,5 +1,5 @@
 import { LexMap, isLexMap } from '@atproto/lex-data'
-import { ValidationContext, ValidationResult, Validator } from '../validation'
+import { ValidationResult, Validator, ValidatorContext } from '../validation'
 
 export type UnknownObjectOutput = LexMap
 
@@ -8,7 +8,7 @@ export class UnknownObjectSchema extends Validator<UnknownObjectOutput> {
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<UnknownObjectOutput> {
     if (isLexMap(input)) {
       return ctx.success(input)

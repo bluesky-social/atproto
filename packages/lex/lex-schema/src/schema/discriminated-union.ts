@@ -2,10 +2,10 @@ import { isPlainObject } from '@atproto/lex-data'
 import { ArrayContaining } from '../core.js'
 import {
   FailureResult,
-  ValidationContext,
   ValidationError,
   ValidationResult,
   Validator,
+  ValidatorContext,
 } from '../validation.js'
 import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
@@ -88,7 +88,7 @@ export class DiscriminatedUnionSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<DiscriminatedUnionSchemaOutput<Options>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')

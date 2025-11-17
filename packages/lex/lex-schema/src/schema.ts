@@ -1,8 +1,9 @@
 // Utilities (that depend on *and* are used by schemas)
 export * from './schema/_parameters.js'
 
-// IPLD Types
+// Concrete Types
 export * from './schema/array.js'
+export * from './schema/blob.js'
 export * from './schema/boolean.js'
 export * from './schema/bytes.js'
 export * from './schema/cid.js'
@@ -18,12 +19,13 @@ export * from './schema/unknown-object.js'
 export * from './schema/unknown.js'
 
 // Composite Types
+export * from './schema/custom.js'
 export * from './schema/discriminated-union.js'
+export * from './schema/intersection.js'
 export * from './schema/ref.js'
 export * from './schema/union.js'
 
 // Lexicon specific Types
-export * from './schema/blob.js'
 export * from './schema/params.js'
 export * from './schema/payload.js'
 export * from './schema/permission-set.js'

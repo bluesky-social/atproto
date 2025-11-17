@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export type ArraySchemaOptions = {
   minLength?: number
@@ -21,7 +17,7 @@ export class ArraySchema<Item = any> extends Validator<Array<Item>> {
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<Array<Item>> {
     if (!Array.isArray(input)) {
       return ctx.issueInvalidType(input, 'array')

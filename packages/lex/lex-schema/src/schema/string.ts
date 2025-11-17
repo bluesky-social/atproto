@@ -5,11 +5,7 @@ import {
   UnknownString,
   assertStringFormat,
 } from '../core.js'
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 import { TokenSchema } from './token.js'
 
 export type StringSchemaOptions = {
@@ -42,7 +38,7 @@ export class StringSchema<
   override validateInContext(
     // @NOTE validation will be applied on the default value as well
     input: unknown = this.options.default,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<StringSchemaOutput<Options>> {
     const { options } = this
 

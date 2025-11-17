@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export type RefSchemaGetter<V> = () => Validator<V>
 
@@ -40,7 +36,7 @@ export class RefSchema<V = any> extends Validator<V> {
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<V> {
     return ctx.validate(input, this.schema)
   }

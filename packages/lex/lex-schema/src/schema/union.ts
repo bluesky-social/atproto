@@ -1,32 +1,32 @@
 import {
   FailureResult,
   Infer,
-  ValidationContext,
   ValidationError,
   ValidationResult,
   Validator,
+  ValidatorContext,
 } from '../validation.js'
 
-export type UnionSchemaOptions = readonly [Validator, ...Validator[]]
+export type UnionSchemaValidators = readonly [Validator, ...Validator[]]
 export type UnionSchemaOutput<V extends readonly Validator[]> = Infer<V[number]>
 
 export class UnionSchema<
-  Options extends UnionSchemaOptions = any,
-> extends Validator<UnionSchemaOutput<Options>> {
-  constructor(readonly options: Options) {
+  V extends UnionSchemaValidators = any,
+> extends Validator<UnionSchemaOutput<V>> {
+  constructor(protected readonly validators: V) {
     super()
   }
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
-  ): ValidationResult<UnionSchemaOutput<Options>> {
+    ctx: ValidatorContext,
+  ): ValidationResult<UnionSchemaOutput<V>> {
     const failures: FailureResult[] = []
 
-    for (const validator of this.options) {
+    for (const validator of this.validators) {
       const result = ctx.validate(input, validator)
       if (result.success) {
-        return result as ValidationResult<UnionSchemaOutput<Options>>
+        return result as ValidationResult<UnionSchemaOutput<V>>
       } else {
         failures.push(result)
       }

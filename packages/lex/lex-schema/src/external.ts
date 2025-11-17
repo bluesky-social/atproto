@@ -1,6 +1,4 @@
 import { $Type, $type, Nsid, RecordKey } from './core.js'
-import { LiteralSchema } from './schema/literal.js'
-import { Subscription } from './schema/subscription.js'
 import {
   ArraySchema,
   ArraySchemaOptions,
@@ -11,12 +9,17 @@ import {
   BytesSchema,
   BytesSchemaOptions,
   CidSchema,
+  CustomAssertion,
+  CustomSchema,
   DictSchema,
   DiscriminatedUnionSchema,
   DiscriminatedUnionSchemaVariants,
   EnumSchema,
   IntegerSchema,
   IntegerSchemaOptions,
+  IntersectionSchema,
+  IntersectionSchemaValidators,
+  LiteralSchema,
   NeverSchema,
   NullSchema,
   ObjectSchema,
@@ -38,18 +41,19 @@ import {
   RefSchemaGetter,
   StringSchema,
   StringSchemaOptions,
+  Subscription,
   TokenSchema,
   TypedObjectSchema,
   TypedRefGetter,
   TypedRefSchema,
   TypedUnionSchema,
   UnionSchema,
-  UnionSchemaOptions,
+  UnionSchemaValidators,
   UnknownObjectOutput,
   UnknownObjectSchema,
   UnknownSchema,
 } from './schema.js'
-import { Infer, Validator } from './validation.js'
+import { Infer, PropertyKey, Validator } from './validation.js'
 
 export * from './core.js'
 export * from './schema.js'
@@ -110,6 +114,11 @@ export function bytes(options: BytesSchemaOptions = {}) {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
+export function blob(options: BlobSchemaOptions = {}) {
+  return new BlobSchema(options)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
 export function string<
   const O extends StringSchemaOptions = NonNullable<unknown>,
 >(options: StringSchemaOptions & O = {} as O) {
@@ -152,15 +161,29 @@ export function unknownObject() {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function ref<const T>(get: RefSchemaGetter<T>) {
+export function ref<T>(get: RefSchemaGetter<T>) {
   return new RefSchema<T>(get)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function union<const Options extends UnionSchemaOptions>(
-  validators: Options,
+export function custom<T>(
+  assertion: CustomAssertion<T>,
+  message: string,
+  path?: PropertyKey | PropertyKey[],
 ) {
-  return new UnionSchema<Options>(validators)
+  return new CustomSchema<T>(assertion, message, path)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function union<const V extends UnionSchemaValidators>(validators: V) {
+  return new UnionSchema<V>(validators)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function intersection<const V extends IntersectionSchemaValidators>(
+  validators: V,
+) {
+  return new IntersectionSchema<V>(validators)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -172,11 +195,6 @@ export function discriminatedUnion<
     discriminator,
     variants,
   )
-}
-
-/*@__NO_SIDE_EFFECTS__*/
-export function blob(options: BlobSchemaOptions = {}) {
-  return new BlobSchema(options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/

@@ -1,9 +1,5 @@
 import { CID, isCid } from '@atproto/lex-data'
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export { CID }
 
@@ -20,7 +16,7 @@ export class CidSchema extends Validator<CID> {
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<CID> {
     if (!isCid(input, this.options)) {
       return ctx.issueInvalidType(input, 'cid')

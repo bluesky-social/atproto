@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 // Basically a RecordSchema or TypedObjectSchema
 export type TypedRefSchemaValidator<V extends { $type?: string } = any> =
@@ -54,7 +50,7 @@ export class TypedRefSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<TypedRefSchemaOutput<V>> {
     const result = ctx.validate(input, this.schema)
     if (!result.success) return result

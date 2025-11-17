@@ -1,9 +1,9 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
   Infer,
-  ValidationContext,
   ValidationResult,
   Validator,
+  ValidatorContext,
 } from '../validation.js'
 
 export type DictSchemaOutput<
@@ -32,7 +32,7 @@ export class DictSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
     options?: { ignoredKeys?: { has(k: string): boolean } },
   ): ValidationResult<DictSchemaOutput<KeySchema, ValueSchema>> {
     if (!isPlainObject(input)) {

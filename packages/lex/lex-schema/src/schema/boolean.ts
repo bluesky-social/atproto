@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export type BooleanSchemaOptions = {
   default?: boolean
@@ -17,7 +13,7 @@ export class BooleanSchema extends Validator<boolean> {
 
   override validateInContext(
     input: unknown = this.options.default,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<boolean> {
     if (typeof input !== 'boolean') {
       return ctx.issueInvalidType(input, 'boolean')

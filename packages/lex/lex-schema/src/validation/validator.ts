@@ -39,10 +39,10 @@ export abstract class Validator<Output = any> {
    *
    * This method is implemented by subclasses to perform transformation and
    * validation of the input value. Do not call this method directly; as the
-   * {@link ValidationContext.options.allowTransform} option will **not** be
-   * enforced. See {@link ValidationContext.validate} for details. When
+   * {@link ValidatorContext.options.allowTransform} option will **not** be
+   * enforced. See {@link ValidatorContext.validate} for details. When
    * delegating validation from one validator sub-class implementation to
-   * another schema, {@link ValidationContext.validate} should be used instead
+   * another schema, {@link ValidatorContext.validate} should be used instead
    * of calling {@link Validator.validateInContext}. This will allow to stop the
    * validation process if the value was transformed (by the other schema) but
    * transformations are not allowed.
@@ -58,11 +58,11 @@ export abstract class Validator<Output = any> {
    * exactly matches the schema (without defaults or transformations), by
    * checking if the returned value is strictly equal to the input.
    *
-   * @see {@link ValidationContext.validate}
+   * @see {@link ValidatorContext.validate}
    */
   abstract validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<Output>
 
   assert(input: unknown): asserts input is Output {
@@ -85,7 +85,7 @@ export abstract class Validator<Output = any> {
   ): I & Output
   parse(input: unknown, options?: ValidationOptions): Output
   parse(input: unknown, options?: ValidationOptions): Output {
-    const result = ValidationContext.validate(input, this, options)
+    const result = ValidatorContext.validate(input, this, options)
     if (!result.success) throw result.error
     return result.value
   }
@@ -102,7 +102,7 @@ export abstract class Validator<Output = any> {
     input: unknown,
     options?: ValidationOptions,
   ): ValidationResult<Output> {
-    return ValidationContext.validate(input, this, options)
+    return ValidatorContext.validate(input, this, options)
   }
 
   // @NOTE The built lexicons namespaces will export utility functions that
@@ -143,7 +143,14 @@ export abstract class Validator<Output = any> {
   }
 }
 
-export class ValidationContext {
+export type ContextualizedIssue = {
+  [Code in ValidationIssue['code']]: Omit<
+    Extract<ValidationIssue, { code: Code }>,
+    'path'
+  > & { path?: PropertyKey | PropertyKey[] }
+}[ValidationIssue['code']]
+
+export class ValidatorContext {
   /**
    * Creates a new validation context and validates the input using the
    * provided validator.
@@ -153,7 +160,7 @@ export class ValidationContext {
     validator: Validator<V>,
     options: ValidationOptions = {},
   ): ValidationResult<V> {
-    const context = new ValidationContext(options)
+    const context = new ValidatorContext(options)
     return context.validate(input, validator)
   }
 
@@ -162,7 +169,7 @@ export class ValidationContext {
 
   protected constructor(readonly options: ValidationOptions) {
     // Create a copy because we will be mutating the array during validation.
-    this.currentPath = options?.path ? [...options.path] : []
+    this.currentPath = options?.path != null ? [...options.path] : []
   }
 
   get path() {
@@ -221,20 +228,12 @@ export class ValidationContext {
     }
   }
 
-  addIssue(
-    issue: {
-      [Code in ValidationIssue['code']]: Omit<
-        Extract<ValidationIssue, { code: Code }>,
-        'path'
-      > & { path?: PropertyKey[] }
-    }[ValidationIssue['code']],
-  ): void {
+  addIssue({ path, ...issue }: ContextualizedIssue): void {
     this.issues.push({
       ...issue,
-      path: issue.path
-        ? [...this.currentPath, ...issue.path]
-        : [...this.currentPath],
-    } as ValidationIssue)
+      path:
+        path != null ? this.currentPath.concat(path) : [...this.currentPath],
+    })
   }
 
   success<V>(value: V): ValidationResult<V> {
@@ -242,7 +241,10 @@ export class ValidationContext {
   }
 
   failure(issue: ValidationIssue): FailureResult {
-    return { success: false, error: new ValidationError([issue]) }
+    return {
+      success: false,
+      error: new ValidationError([...this.issues, issue]),
+    }
   }
 
   issueInvalidValue(
@@ -254,7 +256,8 @@ export class ValidationContext {
       code: 'invalid_value',
       input,
       values,
-      path: path ? this.currentPath.concat(path) : [...this.currentPath],
+      path:
+        path != null ? this.currentPath.concat(path) : [...this.currentPath],
     })
   }
 
@@ -267,7 +270,8 @@ export class ValidationContext {
       code: 'invalid_type',
       input,
       expected: Array.isArray(expected) ? expected : [expected],
-      path: path ? this.currentPath.concat(path) : [...this.currentPath],
+      path:
+        path != null ? this.currentPath.concat(path) : [...this.currentPath],
     })
   }
 
@@ -338,12 +342,13 @@ export class ValidationContext {
     })
   }
 
-  custom(input: unknown, message: string) {
+  custom(input: unknown, message: string, path?: PropertyKey | PropertyKey[]) {
     return this.failure({
       code: 'custom',
       input,
       message,
-      path: [...this.currentPath],
+      path:
+        path != null ? this.currentPath.concat(path) : [...this.currentPath],
     })
   }
 }

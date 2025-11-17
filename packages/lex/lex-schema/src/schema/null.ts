@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export class NullSchema extends Validator<null> {
   readonly lexiconType = 'null' as const
@@ -13,7 +9,7 @@ export class NullSchema extends Validator<null> {
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<null> {
     if (input !== null) {
       return ctx.issueInvalidType(input, 'null')

@@ -1,9 +1,5 @@
 import { isPlainObject } from '@atproto/lex-data'
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 import { Parameter, parameterSchema } from './_parameters.js'
 import { ObjectSchemaOutput } from './object.js'
 
@@ -58,7 +54,7 @@ export class ParamsSchema<
 
   override validateInContext(
     input: unknown = {},
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<Output> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')

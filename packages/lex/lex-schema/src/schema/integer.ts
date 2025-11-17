@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export type IntegerSchemaOptions = {
   default?: number
@@ -19,7 +15,7 @@ export class IntegerSchema extends Validator<number> {
 
   override validateInContext(
     input: unknown = this.options.default,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<number> {
     if (!isInteger(input)) {
       return ctx.issueInvalidType(input, 'integer')

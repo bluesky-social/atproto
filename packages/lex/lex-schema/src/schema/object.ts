@@ -2,9 +2,9 @@ import { isPlainObject } from '@atproto/lex-data'
 import { Simplify } from '../core.js'
 import {
   Infer,
-  ValidationContext,
   ValidationResult,
   Validator,
+  ValidatorContext,
 } from '../validation.js'
 import { DictSchema } from './dict.js'
 
@@ -67,11 +67,12 @@ type Intersect<
 export type ObjectSchemaOutput<
   P extends ObjectSchemaProperties,
   O extends ObjectSchemaOptions,
-> = O extends {
-  unknownProperties: Validator<infer D extends Record<string, unknown>>
-}
-  ? Intersect<ObjectSchemaPropertiesOutput<P, O>, D>
-  : ObjectSchemaPropertiesOutput<P, O>
+> = object &
+  (O extends {
+    unknownProperties: Validator<infer D extends Record<string, unknown>>
+  }
+    ? Intersect<ObjectSchemaPropertiesOutput<P, O>, D>
+    : ObjectSchemaPropertiesOutput<P, O>)
 
 export class ObjectSchema<
   const Validators extends ObjectSchemaProperties = any,
@@ -100,7 +101,7 @@ export class ObjectSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<ObjectSchemaOutput<Validators, Options>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, ['object'])

@@ -2,9 +2,9 @@ import { isPlainObject } from '@atproto/lex-data'
 import { $Type, Simplify } from '../core.js'
 import {
   Infer,
-  ValidationContext,
   ValidationResult,
   Validator,
+  ValidatorContext,
 } from '../validation.js'
 
 export class TypedObjectSchema<
@@ -45,7 +45,7 @@ export class TypedObjectSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<Output> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')

@@ -1,8 +1,4 @@
-import {
-  ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export class EnumSchema<
   Output extends null | string | number | boolean = any,
@@ -13,7 +9,7 @@ export class EnumSchema<
 
   override validateInContext(
     input: unknown,
-    ctx: ValidationContext,
+    ctx: ValidatorContext,
   ): ValidationResult<Output> {
     if (!(this.values as readonly unknown[]).includes(input)) {
       return ctx.issueInvalidValue(input, this.values)
