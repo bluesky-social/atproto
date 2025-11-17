@@ -143,12 +143,20 @@ export abstract class Validator<Output = any> {
   }
 }
 
-export type ContextualizedIssue = {
+export type ContextualIssue = {
   [Code in ValidationIssue['code']]: Omit<
     Extract<ValidationIssue, { code: Code }>,
     'path'
-  > & { path?: PropertyKey | PropertyKey[] }
+  > & { path?: PropertyKey | readonly PropertyKey[] }
 }[ValidationIssue['code']]
+
+const asIssue = (
+  { path, ...issue }: ContextualIssue,
+  currentPath: readonly PropertyKey[],
+): ValidationIssue & { path: PropertyKey[] } => ({
+  ...issue,
+  path: path != null ? currentPath.concat(path) : [...currentPath],
+})
 
 export class ValidatorContext {
   /**
@@ -189,26 +197,29 @@ export class ValidatorContext {
   validate<V>(input: unknown, validator: Validator<V>): ValidationResult<V> {
     const result = validator.validateInContext(input, this)
 
-    if (this.issues.length > 0) {
-      const issues = result.success
-        ? [...this.issues]
-        : [...this.issues, ...result.error.issues]
-      return { success: false, error: new ValidationError(issues) }
-    }
+    if (result.success) {
+      if (!this.allowTransform && !Object.is(result.value, input)) {
+        // If the value changed, it means that a default (or some other
+        // transformation) was applied, meaning that the original value did
+        // *not* match the (output) schema. When "allowTransform" is false, we
+        // consider this a failure.
 
-    // If the value changed, it means that a default (or some other
-    // transformation) was applied, meaning that the original value did *not*
-    // match the (output) schema. When "allowTransform" is false, we consider
-    // this a failure.
+        // This check is the reason why Validator.validateInContext should not
+        // be used directly, and ValidatorContext.validate should be used
+        // instead, even when delegating validation from one validator to
+        // another.
 
-    // This check is the reason why Validator.validateInContext should not be
-    // used directly.
-    if (
-      result.success &&
-      !this.allowTransform &&
-      !Object.is(result.value, input)
-    ) {
-      return this.issueInvalidValue(input, [result.value])
+        // This if block comes before the next one because 'this.issues' will
+        // end-up being appended to the returned ValidationError (see the
+        // "failure" method below), resulting in a more complete error report.
+        return this.issueInvalidValue(input, [result.value])
+      }
+
+      if (this.issues.length > 0) {
+        // Validator returned a success but issues were added via the context.
+        // This means the overall validation failed.
+        return { success: false, error: new ValidationError(this.issues) }
+      }
     }
 
     return result
@@ -228,22 +239,21 @@ export class ValidatorContext {
     }
   }
 
-  addIssue({ path, ...issue }: ContextualizedIssue): void {
-    this.issues.push({
-      ...issue,
-      path:
-        path != null ? this.currentPath.concat(path) : [...this.currentPath],
-    })
+  addIssue(issue: ContextualIssue): void {
+    this.issues.push(asIssue(issue, this.currentPath))
   }
 
   success<V>(value: V): ValidationResult<V> {
     return { success: true, value }
   }
 
-  failure(issue: ValidationIssue): FailureResult {
+  failure(issue: ContextualIssue): FailureResult {
     return {
       success: false,
-      error: new ValidationError([...this.issues, issue]),
+      error: new ValidationError([
+        ...this.issues,
+        asIssue(issue, this.currentPath),
+      ]),
     }
   }
 
@@ -256,8 +266,7 @@ export class ValidatorContext {
       code: 'invalid_value',
       input,
       values,
-      path:
-        path != null ? this.currentPath.concat(path) : [...this.currentPath],
+      path,
     })
   }
 
@@ -270,8 +279,7 @@ export class ValidatorContext {
       code: 'invalid_type',
       input,
       expected: Array.isArray(expected) ? expected : [expected],
-      path:
-        path != null ? this.currentPath.concat(path) : [...this.currentPath],
+      path,
     })
   }
 
@@ -296,7 +304,7 @@ export class ValidatorContext {
       code: 'required_key',
       key,
       input,
-      path: [...this.currentPath, key],
+      path: key,
     })
   }
 
@@ -306,7 +314,6 @@ export class ValidatorContext {
       message,
       format,
       input,
-      path: [...this.currentPath],
     })
   }
 
@@ -322,7 +329,6 @@ export class ValidatorContext {
       maximum,
       actual,
       input,
-      path: [...this.currentPath],
     })
   }
 
@@ -338,17 +344,19 @@ export class ValidatorContext {
       minimum,
       actual,
       input,
-      path: [...this.currentPath],
     })
   }
 
-  custom(input: unknown, message: string, path?: PropertyKey | PropertyKey[]) {
+  custom(
+    input: unknown,
+    message: string,
+    path?: PropertyKey | readonly PropertyKey[],
+  ) {
     return this.failure({
       code: 'custom',
       input,
       message,
-      path:
-        path != null ? this.currentPath.concat(path) : [...this.currentPath],
+      path,
     })
   }
 }

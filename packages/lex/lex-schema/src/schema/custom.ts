@@ -1,27 +1,27 @@
 import { PropertyKey } from '../validation/property-key.js'
 import {
-  ContextualizedIssue,
+  ContextualIssue,
   ValidationResult,
   Validator,
   ValidatorContext,
 } from '../validation/validator.js'
 
-export type CustomSchemaContext = {
+export type CustomAssertionContext = {
   path: PropertyKey[]
-  addIssue(issue: ContextualizedIssue): void
+  addIssue(issue: ContextualIssue): void
 }
 
 export type CustomAssertion<T = any> = (
   this: null,
   input: unknown,
-  ctx: CustomSchemaContext,
+  ctx: CustomAssertionContext,
 ) => input is T
 
 export class CustomSchema<T = unknown> extends Validator<T> {
   constructor(
     private readonly assertion: CustomAssertion<T>,
     private readonly message: string,
-    private readonly path?: PropertyKey | PropertyKey[],
+    private readonly path?: PropertyKey | readonly PropertyKey[],
   ) {
     super()
   }

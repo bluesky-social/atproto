@@ -169,7 +169,7 @@ export function ref<T>(get: RefSchemaGetter<T>) {
 export function custom<T>(
   assertion: CustomAssertion<T>,
   message: string,
-  path?: PropertyKey | PropertyKey[],
+  path?: PropertyKey | readonly PropertyKey[],
 ) {
   return new CustomSchema<T>(assertion, message, path)
 }
