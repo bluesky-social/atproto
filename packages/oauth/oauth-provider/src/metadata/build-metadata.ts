@@ -127,5 +127,9 @@ export function buildMetadata(
 
     // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
     client_id_metadata_document_supported: true,
+
+    // https://datatracker.ietf.org/doc/draft-emelia-oauth-authorization-management-uri/
+    // URL is serviced by createAccountPageMiddleware
+    authorization_management_uri: new URL('/account', issuer).href,
   })
 }
