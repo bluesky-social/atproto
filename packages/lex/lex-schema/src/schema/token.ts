@@ -7,7 +7,7 @@ import {
 export class TokenSchema<V extends string = any> extends Validator<V> {
   readonly lexiconType = 'token' as const
 
-  constructor(readonly value: V) {
+  constructor(protected readonly value: V) {
     super()
   }
 
@@ -32,14 +32,14 @@ export class TokenSchema<V extends string = any> extends Validator<V> {
     return ctx.issueInvalidValue(input, [this.value])
   }
 
-  // When using the TokenSchema instance as data, let's serialize to the token
-  // value:
+  // When using the TokenSchema instance as data, let's serialize it to the
+  // token value
 
-  toJSON() {
+  toJSON(): string {
     return this.value
   }
 
-  toString() {
+  toString(): string {
     return this.value
   }
 }

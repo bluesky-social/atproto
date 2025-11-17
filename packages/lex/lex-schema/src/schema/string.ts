@@ -10,6 +10,7 @@ import {
   ValidationResult,
   Validator,
 } from '../validation.js'
+import { TokenSchema } from './token.js'
 
 export type StringSchemaOptions = {
   default?: string
@@ -107,10 +108,21 @@ export class StringSchema<
 const utf8Decoder = /*#__PURE__*/ new TextDecoder('utf-8', { fatal: false })
 export function coerceToString(input: unknown): string | null {
   switch (typeof input) {
+    case 'number':
+      if (!Number.isFinite(input)) return null
+    // falls through
+    case 'bigint':
+      return String(input)
     case 'string':
       return input
     case 'object': {
       if (input == null) return null
+
+      // @NOTE Allow using TokenSchema instances in places expecting strings,
+      // converting them to their string value.
+      if (input instanceof TokenSchema) {
+        return input.toString()
+      }
 
       if (input instanceof ArrayBuffer || input instanceof Uint8Array) {
         try {

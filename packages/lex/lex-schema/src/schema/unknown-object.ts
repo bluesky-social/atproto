@@ -1,7 +1,7 @@
-import { isPlainObject } from '@atproto/lex-data'
+import { LexMap, isLexMap } from '@atproto/lex-data'
 import { ValidationContext, ValidationResult, Validator } from '../validation'
 
-export type UnknownObjectOutput = { [_ in string]?: unknown }
+export type UnknownObjectOutput = LexMap
 
 export class UnknownObjectSchema extends Validator<UnknownObjectOutput> {
   readonly lexiconType = 'unknown' as const
@@ -10,10 +10,10 @@ export class UnknownObjectSchema extends Validator<UnknownObjectOutput> {
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<UnknownObjectOutput> {
-    if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
+    if (isLexMap(input)) {
+      return ctx.success(input)
     }
 
-    return ctx.success(input)
+    return ctx.issueInvalidType(input, 'unknown')
   }
 }

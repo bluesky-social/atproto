@@ -9,6 +9,11 @@ export interface Issue<I = unknown> {
   readonly path: readonly PropertyKey[]
 }
 
+export interface IssueCustom extends Issue {
+  readonly code: 'custom'
+  readonly message: string
+}
+
 export interface IssueInvalidFormat extends Issue {
   readonly code: 'invalid_format'
   readonly format: string
@@ -44,6 +49,7 @@ export interface IssueTooSmall extends Issue {
 }
 
 export type ValidationIssue =
+  | IssueCustom
   | IssueInvalidFormat
   | IssueInvalidType
   | IssueInvalidValue
@@ -67,6 +73,8 @@ export function stringifyIssue(issue: ValidationIssue): string {
       return `${issue.type} too big (maximum ${issue.maximum})${pathStr} (got ${issue.actual})`
     case 'too_small':
       return `${issue.type} too small (minimum ${issue.minimum})${pathStr} (got ${issue.actual})`
+    case 'custom':
+      return `${issue.message}${pathStr}`
     default:
       // @ts-expect-error fool-proofing
       return `${issue.code} validation error${pathStr}`

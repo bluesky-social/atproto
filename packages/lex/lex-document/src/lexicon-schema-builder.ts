@@ -1,7 +1,7 @@
 import { l } from '@atproto/lex-schema'
 import {
   LexiconArray,
-  LexiconBase,
+  LexiconArrayItems,
   LexiconDocument,
   LexiconObject,
   LexiconParameters,
@@ -178,7 +178,7 @@ export class LexiconSchemaBuilder {
 
   protected compileLeaf(
     doc: LexiconDocument,
-    def: LexiconBase | LexiconArray,
+    def: LexiconArray | LexiconArrayItems,
   ): l.Validator<unknown> {
     switch (def.type) {
       case 'string':
@@ -195,6 +195,8 @@ export class LexiconSchemaBuilder {
         return l.bytes(def)
       case 'unknown':
         return l.unknown()
+      case 'null':
+        return l.null()
       case 'array':
         return l.array(this.compileLeaf(doc, def.items), def)
       default:

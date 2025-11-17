@@ -8,9 +8,23 @@ export type LexValue = LexScalar | LexValue[] | { [_ in string]?: LexValue }
 export type LexMap = { [_ in string]?: LexValue }
 export type LexArray = LexValue[]
 
-export const isLexMap: (value: LexValue) => value is LexMap = isPlainObject
-export const isLexArray: (value: LexValue) => value is LexArray = Array.isArray
-export const isLexScalar = (value: LexValue): value is LexScalar => {
+export function isLexMap(value: unknown): value is LexMap {
+  if (!isPlainObject(value)) return false
+  for (const key in value) {
+    if (!isLexValue(value[key])) return false
+  }
+  return true
+}
+
+export function isLexArray(value: unknown): value is LexArray {
+  if (!Array.isArray(value)) return false
+  for (let i = 0; i < value.length; i++) {
+    if (!isLexValue(value[i])) return false
+  }
+  return true
+}
+
+export function isLexScalar(value: unknown): value is LexScalar {
   switch (typeof value) {
     case 'object':
       if (value === null) return true

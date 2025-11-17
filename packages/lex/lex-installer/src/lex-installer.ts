@@ -5,10 +5,12 @@ import { lexEquals } from '@atproto/lex-data'
 import {
   LexiconDocument,
   LexiconParameters,
+  LexiconPermission,
   LexiconRef,
   LexiconRefUnion,
+  LexiconUnknown,
   MainLexiconDefinition,
-  UserLexiconDefinition,
+  NamedLexiconDefinition,
 } from '@atproto/lex-document'
 import { LexResolver, LexResolverOptions } from '@atproto/lex-resolver'
 import { AtUri as AtUriString, Nsid as NsidString } from '@atproto/lex-schema'
@@ -210,8 +212,10 @@ function* listDocumentNsidRefs(doc: LexiconDocument): Iterable<NSID> {
 
 function* defRefs(
   def:
-    | UserLexiconDefinition
     | MainLexiconDefinition
+    | NamedLexiconDefinition
+    | LexiconPermission
+    | LexiconUnknown
     | LexiconParameters
     | LexiconRef
     | LexiconRefUnion,
@@ -220,7 +224,16 @@ function* defRefs(
     case 'string':
       if (def.knownValues) {
         for (const val of def.knownValues) {
-          if (val.includes('#')) yield val
+          // Tokens ?
+          const { length, 0: nsid, 1: hash } = val.split('#')
+          if (length === 2 && hash) {
+            try {
+              NSID.from(nsid)
+              yield val
+            } catch {
+              // ignore invalid nsid
+            }
+          }
         }
       }
       return
@@ -262,26 +275,41 @@ function* defRefs(
       return
     case 'permission-set':
       for (const permission of def.permissions) {
-        if (permission.resource === 'rpc') {
-          if (Array.isArray(permission.lxm)) {
-            for (const lxm of permission.lxm) {
-              if (typeof lxm === 'string') {
-                yield lxm
-              }
+        yield* defRefs(permission)
+      }
+      return
+    case 'permission':
+      if (def.resource === 'rpc') {
+        if (Array.isArray(def.lxm)) {
+          for (const lxm of def.lxm) {
+            if (typeof lxm === 'string') {
+              yield lxm
             }
           }
-        } else if (permission.resource === 'repo') {
-          if (Array.isArray(permission.collection)) {
-            for (const lxm of permission.collection) {
-              if (typeof lxm === 'string') {
-                yield lxm
-              }
+        }
+      } else if (def.resource === 'repo') {
+        if (Array.isArray(def.collection)) {
+          for (const lxm of def.collection) {
+            if (typeof lxm === 'string') {
+              yield lxm
             }
           }
         }
       }
       return
-    default:
+    case 'boolean':
+    case 'null':
+    case 'cid-link':
+    case 'token':
+    case 'bytes':
+    case 'blob':
+    case 'integer':
+    case 'unknown':
+      // @NOTE We explicitly list all types here to ensure exhaustiveness
+      // causing TS to error if a new type is added without updating this switch
       return
+    default:
+      // @ts-expect-error
+      throw new Error(`Unknown lexicon def type: ${def.type}`)
   }
 }

@@ -158,6 +158,7 @@ export class ValidationContext {
   }
 
   private readonly currentPath: PropertyKey[]
+  private readonly issues: ValidationIssue[] = []
 
   protected constructor(readonly options: ValidationOptions) {
     // Create a copy because we will be mutating the array during validation.
@@ -180,6 +181,13 @@ export class ValidationContext {
    */
   validate<V>(input: unknown, validator: Validator<V>): ValidationResult<V> {
     const result = validator.validateInContext(input, this)
+
+    if (this.issues.length > 0) {
+      const issues = result.success
+        ? [...this.issues]
+        : [...this.issues, ...result.error.issues]
+      return { success: false, error: new ValidationError(issues) }
+    }
 
     // If the value changed, it means that a default (or some other
     // transformation) was applied, meaning that the original value did *not*
@@ -211,6 +219,22 @@ export class ValidationContext {
     } finally {
       this.currentPath.length--
     }
+  }
+
+  addIssue(
+    issue: {
+      [Code in ValidationIssue['code']]: Omit<
+        Extract<ValidationIssue, { code: Code }>,
+        'path'
+      > & { path?: PropertyKey[] }
+    }[ValidationIssue['code']],
+  ): void {
+    this.issues.push({
+      ...issue,
+      path: issue.path
+        ? [...this.currentPath, ...issue.path]
+        : [...this.currentPath],
+    } as ValidationIssue)
   }
 
   success<V>(value: V): ValidationResult<V> {
@@ -310,6 +334,15 @@ export class ValidationContext {
       minimum,
       actual,
       input,
+      path: [...this.currentPath],
+    })
+  }
+
+  custom(input: unknown, message: string) {
+    return this.failure({
+      code: 'custom',
+      input,
+      message,
       path: [...this.currentPath],
     })
   }

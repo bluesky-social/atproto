@@ -55,10 +55,6 @@ export * from './core.js'
 export * from './schema.js'
 export * from './validation.js'
 
-////////////////
-// IPLD Types //
-////////////////
-
 /*@__NO_SIDE_EFFECTS__*/
 export function never() {
   return new NeverSchema()
@@ -148,15 +144,12 @@ export function dict<const K extends Validator, const V extends Validator>(
 }
 
 // Utility
-export type UnknownObject = UnknownObjectOutput
+export type { UnknownObjectOutput as UnknownObject }
 
+/*@__NO_SIDE_EFFECTS__*/
 export function unknownObject() {
   return new UnknownObjectSchema()
 }
-
-/////////////////////
-// Composite Types //
-/////////////////////
 
 /*@__NO_SIDE_EFFECTS__*/
 export function ref<const T>(get: RefSchemaGetter<T>) {
@@ -180,10 +173,6 @@ export function discriminatedUnion<
     variants,
   )
 }
-
-///////////////////
-// Lexicon types //
-///////////////////
 
 /*@__NO_SIDE_EFFECTS__*/
 export function blob(options: BlobSchemaOptions = {}) {

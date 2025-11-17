@@ -1,6 +1,19 @@
 import { l } from '@atproto/lex-schema'
 
-// Scalar Types
+// https://atproto.com/specs/lexicon
+
+// "Concrete" Types
+
+export const lexiconNullSchema = l.object(
+  {
+    type: l.literal('null'),
+    description: l.string(),
+  },
+  {
+    required: ['type'],
+  },
+)
+export type LexiconNull = l.Infer<typeof lexiconNullSchema>
 
 export const lexiconBooleanSchema = l.object(
   {
@@ -31,8 +44,10 @@ export const lexiconIntegerSchema = l.object(
 )
 export type LexiconInteger = l.Infer<typeof lexiconIntegerSchema>
 
-export const lexiconStringFormatSchema = l.enum(l.STRING_FORMATS)
 export type LexiconStringFormat = l.StringFormat
+export const lexiconStringFormatSchema = l.enum<LexiconStringFormat>(
+  l.STRING_FORMATS,
+)
 
 export const lexiconStringSchema = l.object(
   {
@@ -53,17 +68,6 @@ export const lexiconStringSchema = l.object(
   },
 )
 export type LexiconString = l.Infer<typeof lexiconStringSchema>
-
-export const lexiconUnknownSchema = l.object(
-  {
-    type: l.literal('unknown'),
-    description: l.string(),
-  },
-  {
-    required: ['type'],
-  },
-)
-export type LexiconUnknown = l.Infer<typeof lexiconUnknownSchema>
 
 export const lexiconBytesSchema = l.object(
   {
@@ -102,6 +106,31 @@ export const lexiconBlobSchema = l.object(
 )
 export type LexiconBlob = l.Infer<typeof lexiconBlobSchema>
 
+const CONCRETE_TYPES = [
+  lexiconNullSchema,
+  lexiconBooleanSchema,
+  lexiconIntegerSchema,
+  lexiconStringSchema,
+  // Lexicon (DAG-CBOR)
+  lexiconBytesSchema,
+  lexiconCidLinkSchema,
+  // Lexicon Specific
+  lexiconBlobSchema,
+] as const
+
+// Meta types
+
+export const lexiconUnknownSchema = l.object(
+  {
+    type: l.literal('unknown'),
+    description: l.string(),
+  },
+  {
+    required: ['type'],
+  },
+)
+export type LexiconUnknown = l.Infer<typeof lexiconUnknownSchema>
+
 export const lexiconTokenSchema = l.object(
   {
     type: l.literal('token'),
@@ -112,8 +141,6 @@ export const lexiconTokenSchema = l.object(
   },
 )
 export type LexiconToken = l.Infer<typeof lexiconTokenSchema>
-
-// Reference Types
 
 export const lexiconRefSchema = l.object(
   {
@@ -140,37 +167,23 @@ export const lexiconRefUnionSchema = l.object(
 )
 export type LexiconRefUnion = l.Infer<typeof lexiconRefUnionSchema>
 
-export const lexiconRefVariantSchema = l.discriminatedUnion('type', [
-  lexiconRefSchema,
-  lexiconRefUnionSchema,
-])
-export type LexiconRefVariant = l.Infer<typeof lexiconRefVariantSchema>
-
 // Complex Types
 
-const LEXICON_BASE_SCHEMAS = [
-  lexiconBooleanSchema,
-  lexiconIntegerSchema,
-  lexiconStringSchema,
+const ARRAY_ITEMS_SCHEMAS = [
+  ...CONCRETE_TYPES,
+  // Meta
   lexiconUnknownSchema,
-  lexiconBytesSchema,
-  lexiconCidLinkSchema,
   lexiconRefSchema,
   lexiconRefUnionSchema,
-  lexiconBlobSchema,
 ] as const
-export const lexiconBaseSchema = l.discriminatedUnion(
-  'type',
-  LEXICON_BASE_SCHEMAS,
-)
 
-export type LexiconBase = l.Infer<typeof lexiconBaseSchema>
+export type LexiconArrayItems = l.Infer<(typeof ARRAY_ITEMS_SCHEMAS)[number]>
 
 export const lexiconArraySchema = l.object(
   {
     type: l.literal('array'),
     description: l.string(),
-    items: lexiconBaseSchema,
+    items: l.discriminatedUnion('type', ARRAY_ITEMS_SCHEMAS),
     minLength: l.integer(),
     maxLength: l.integer(),
   },
@@ -179,28 +192,6 @@ export const lexiconArraySchema = l.object(
   },
 )
 export type LexiconArray = l.Infer<typeof lexiconArraySchema>
-
-export const lexiconPrimitiveSchema = l.discriminatedUnion('type', [
-  lexiconBooleanSchema,
-  lexiconIntegerSchema,
-  lexiconStringSchema,
-  lexiconUnknownSchema,
-])
-export type LexiconPrimitive = l.Infer<typeof lexiconPrimitiveSchema>
-
-export const lexiconPrimitiveArraySchema = l.object(
-  {
-    type: l.literal('array'),
-    description: l.string(),
-    items: lexiconPrimitiveSchema,
-    minLength: l.integer(),
-    maxLength: l.integer(),
-  },
-  {
-    required: ['type', 'items'],
-  },
-)
-export type LexiconPrimitiveArray = l.Infer<typeof lexiconPrimitiveArraySchema>
 
 export const lexiconObjectSchema = l.object(
   {
@@ -211,8 +202,8 @@ export const lexiconObjectSchema = l.object(
     properties: l.dict(
       l.string(),
       l.discriminatedUnion('type', [
+        ...ARRAY_ITEMS_SCHEMAS,
         lexiconArraySchema,
-        ...LEXICON_BASE_SCHEMAS,
       ]),
     ),
   },
@@ -245,11 +236,25 @@ export const lexiconParameters = l.object(
     properties: l.dict(
       l.string(),
       l.discriminatedUnion('type', [
-        lexiconPrimitiveArraySchema,
         lexiconBooleanSchema,
         lexiconIntegerSchema,
         lexiconStringSchema,
-        lexiconUnknownSchema,
+        l.object(
+          {
+            type: l.literal('array'),
+            description: l.string(),
+            items: l.discriminatedUnion('type', [
+              lexiconBooleanSchema,
+              lexiconIntegerSchema,
+              lexiconStringSchema,
+            ]),
+            minLength: l.integer(),
+            maxLength: l.integer(),
+          },
+          {
+            required: ['type', 'items'],
+          },
+        ),
       ]),
     ),
   },
@@ -378,21 +383,15 @@ const lexiconPermissionSetSchema = l.object(
 export type LexiconPermissionSet = l.Infer<typeof lexiconPermissionSetSchema>
 
 // Schemas that can appear anywhere in the defs
-const USER_LEXICON_SCHEMAS = [
+const NAMED_LEXICON_SCHEMAS = [
+  ...CONCRETE_TYPES,
   lexiconArraySchema,
-  lexiconBlobSchema,
-  lexiconBooleanSchema,
-  lexiconBytesSchema,
-  lexiconCidLinkSchema,
-  lexiconIntegerSchema,
   lexiconObjectSchema,
-  lexiconStringSchema,
   lexiconTokenSchema,
-  lexiconUnknownSchema,
 ] as const
 
-export type UserLexiconDefinition = l.Infer<
-  (typeof USER_LEXICON_SCHEMAS)[number]
+export type NamedLexiconDefinition = l.Infer<
+  (typeof NAMED_LEXICON_SCHEMAS)[number]
 >
 
 // Schemas that can only appear as "main" def
@@ -402,7 +401,7 @@ const MAIN_LEXICON_SCHEMAS = [
   lexiconQuerySchema,
   lexiconRecordSchema,
   lexiconSubscriptionSchema,
-  ...USER_LEXICON_SCHEMAS,
+  ...NAMED_LEXICON_SCHEMAS,
 ] as const
 
 export type MainLexiconDefinition = l.Infer<
@@ -423,7 +422,7 @@ export const lexiconDocumentSchema = l.object(
       {
         unknownProperties: l.dict(
           l.string({ minLength: 1 }),
-          l.discriminatedUnion('type', USER_LEXICON_SCHEMAS),
+          l.discriminatedUnion('type', NAMED_LEXICON_SCHEMAS),
         ),
       },
     ),
