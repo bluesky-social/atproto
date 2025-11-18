@@ -34,6 +34,7 @@
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
+    "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
