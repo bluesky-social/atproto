@@ -27,7 +27,7 @@ export class SimpleIndexer implements NexusHandler {
 
   async onEvent(evt: NexusEvent, opts?: HandlerOpts): Promise<void> {
     if (evt.type === 'record') {
-      this.recordHandler?.(evt, opts)
+      return this.recordHandler?.(evt, opts)
     } else {
       return this.userHandler?.(evt, opts)
     }
