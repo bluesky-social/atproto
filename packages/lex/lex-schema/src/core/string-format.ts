@@ -106,7 +106,7 @@ export const assertAtIdentifier: AssertFn<AtIdentifier> = (input) => {
   }
 }
 
-const formatters = new Map<StringFormat, (input: string) => void>([
+const formatters = /*#__PURE__*/ new Map<StringFormat, (str: string) => void>([
   ['datetime', assertDatetime],
   ['uri', assertUri],
   ['at-uri', assertAtUri],
