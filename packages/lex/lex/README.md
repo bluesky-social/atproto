@@ -2,6 +2,80 @@
 
 Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for managing Lexicon schemas and a client for making authenticated XRPC requests.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Examples](#examples)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+  - [1. Install Lexicons](#1-install-lexicons)
+  - [2. Generate TypeScript Definitions](#2-generate-typescript-definitions)
+  - [3. Use in Your Application](#3-use-in-your-application)
+- [CLI Commands](#cli-commands)
+  - [`lex install`](#lex-install)
+  - [`lex build`](#lex-build)
+- [Client API](#client-api)
+  - [Creating a Client](#creating-a-client)
+    - [Unauthenticated Client](#unauthenticated-client)
+    - [Authenticated Client with OAuth](#authenticated-client-with-oauth)
+    - [Creating a Client from Another Client](#creating-a-client-from-another-client)
+    - [Client with Service Proxy (authenticated only)](#client-with-service-proxy-authenticated-only)
+  - [Core Methods](#core-methods)
+    - [`client.call()`](#clientcall)
+    - [`client.create()`](#clientcreate)
+    - [`client.get()`](#clientget)
+    - [`client.put()`](#clientput)
+    - [`client.delete()`](#clientdelete)
+    - [`client.list()`](#clientlist)
+  - [Authentication Methods](#authentication-methods)
+    - [`client.did`](#clientdid)
+    - [`client.assertAuthenticated()`](#clientassertauthenticated)
+  - [Labeler Configuration](#labeler-configuration)
+  - [Low-Level XRPC](#low-level-xrpc)
+- [Workflow Integration](#workflow-integration)
+  - [Development Workflow](#development-workflow)
+- [Advanced Usage](#advanced-usage)
+  - [Tree-Shaking](#tree-shaking)
+  - [Custom Headers](#custom-headers)
+  - [Request Options](#request-options)
+    - [Base Call Options](#base-call-options)
+    - [Query and Procedure Calls](#query-and-procedure-calls)
+    - [Record Operations (CRUD)](#record-operations-crud)
+- [Actions](#actions)
+  - [What are Actions?](#what-are-actions)
+  - [Using Actions](#using-actions)
+  - [Composing Multiple Operations](#composing-multiple-operations)
+  - [Higher-Order Actions](#higher-order-actions)
+- [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
+  - [Creating Posts](#creating-posts)
+  - [Following Users](#following-users)
+  - [Updating Profile with Retry Logic](#updating-profile-with-retry-logic)
+  - [Packaging Actions as a Library](#packaging-actions-as-a-library)
+  - [Best Practices for Actions](#best-practices-for-actions)
+- [TypeScript Integration](#typescript-integration)
+- [Related Packages](#related-packages)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Examples
+
+```typescript
+const profile = await client.call(app.bsky.actor.getProfile, {
+  actor: 'pfrazee.com',
+})
+
+await client.create(app.bsky.feed.post, {
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
+})
+
+const posts = await client.list(app.bsky.feed.post, {
+  limit: 10,
+  repo: 'did:plc:pfrazee.com',
+})
+```
+
 ## Installation
 
 ```bash
@@ -1060,4 +1134,4 @@ app.bsky.feed.post.main.build(data) // Build with defaults
 
 ## License
 
-MIT
+MIT or Apache2
