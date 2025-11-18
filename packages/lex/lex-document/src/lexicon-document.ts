@@ -292,10 +292,15 @@ export type LexiconSubscriptionMessage = l.Infer<
   typeof lexiconSubscriptionMessage
 >
 
-export const lexiconError = l.object({
-  name: l.string(),
-  description: l.string(),
-})
+export const lexiconError = l.object(
+  {
+    name: l.string({ minLength: 1 }),
+    description: l.string(),
+  },
+  {
+    required: ['name'],
+  },
+)
 export type LexiconError = l.Infer<typeof lexiconError>
 
 export const lexiconQuerySchema = l.object(
