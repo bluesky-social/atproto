@@ -70,10 +70,14 @@ await client.create(app.bsky.feed.post, {
   createdAt: new Date().toISOString(),
 })
 
-const posts = await client.list(app.bsky.feed.post, {
+const list = await client.list(app.bsky.feed.post, {
   limit: 10,
   repo: 'did:plc:pfrazee.com',
 })
+
+for (const post of list.values) {
+  await client.call(likePost, post)
+}
 ```
 
 ## Installation
