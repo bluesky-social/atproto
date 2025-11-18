@@ -1,6 +1,6 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
-import { WebSocketKeepAlive } from '@atproto/websocket'
+import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { NexusEvent, parseNexusEvent } from './events'
 
 export interface HandlerOpts {
