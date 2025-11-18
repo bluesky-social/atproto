@@ -28,17 +28,15 @@ export type ObjectSchemaPropertiesOutput<
   P extends ObjectSchemaProperties,
   O extends ObjectSchemaOptions,
 > = O extends { required: readonly (infer R extends string)[] }
-  ? Simplify<
-      {
-        -readonly [K in string & keyof P & R]-?:
-          | Infer<P[K]>
-          | ObjectSchemaNullValue<O, K>
-      } & {
-        -readonly [K in Exclude<string & keyof P, R>]?:
-          | Infer<P[K]>
-          | ObjectSchemaNullValue<O, K>
-      }
-    >
+  ? {
+      -readonly [K in string & keyof P & R]-?:
+        | Infer<P[K]>
+        | ObjectSchemaNullValue<O, K>
+    } & {
+      -readonly [K in Exclude<string & keyof P, R>]?:
+        | Infer<P[K]>
+        | ObjectSchemaNullValue<O, K>
+    }
   : {
       -readonly [K in string & keyof P]?:
         | Infer<P[K]>
@@ -67,17 +65,20 @@ type Intersect<
 export type ObjectSchemaOutput<
   P extends ObjectSchemaProperties,
   O extends ObjectSchemaOptions,
-> = object &
-  (O extends {
-    unknownProperties: Validator<infer D extends Record<string, unknown>>
-  }
-    ? Intersect<ObjectSchemaPropertiesOutput<P, O>, D>
-    : ObjectSchemaPropertiesOutput<P, O>)
+> = O extends {
+  unknownProperties: Validator<infer D extends Record<string, unknown>>
+}
+  ? Simplify<Intersect<ObjectSchemaPropertiesOutput<P, O>, D>>
+  : Simplify<ObjectSchemaPropertiesOutput<P, O>>
 
 export class ObjectSchema<
   const Validators extends ObjectSchemaProperties = any,
   const Options extends ObjectSchemaOptions = any,
-> extends Validator<ObjectSchemaOutput<Validators, Options>> {
+  const Output extends ObjectSchemaOutput<
+    Validators,
+    Options
+  > = ObjectSchemaOutput<Validators, Options>,
+> extends Validator<object & Output> {
   constructor(
     readonly validators: Validators,
     readonly options: Options,
@@ -102,7 +103,7 @@ export class ObjectSchema<
   override validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<ObjectSchemaOutput<Validators, Options>> {
+  ): ValidationResult<object & Output> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, ['object'])
     }
@@ -172,7 +173,7 @@ export class ObjectSchema<
       if (result.value !== input) copy = result.value
     }
 
-    const output = (copy ?? input) as ObjectSchemaOutput<Validators, Options>
+    const output = (copy ?? input) as object & Output
 
     return ctx.success(output)
   }
