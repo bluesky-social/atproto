@@ -101,16 +101,20 @@ describe('lexEquals', () => {
   })
 
   it('allows comparing invalid numbers (floats, NaN, Infinity)', () => {
-    expectLexEqual(3.14, 3.14, true)
-    expectLexEqual(NaN, NaN, true)
-    expectLexEqual(Infinity, Infinity, true)
-    expectLexEqual([Infinity], [Infinity], true)
-    expectLexEqual([{ foo: Infinity }], [{ foo: Infinity }], true)
-    expectLexEqual({ v: -Infinity }, { v: -Infinity }, true)
-
     expectLexEqual(3.14, 2.71, false)
     expectLexEqual(NaN, 0, false)
     expectLexEqual(Infinity, -Infinity, false)
+  })
+
+  describe('reference equality', () => {
+    for (const value of [3.14, NaN, Infinity, -Infinity]) {
+      it(`returns true for identical references of ${String(value)}`, () => {
+        expectLexEqual(value, value, true)
+        expectLexEqual([value], [value], true)
+        expectLexEqual({ foo: value }, { foo: value }, true)
+        expectLexEqual([{ foo: value }], [{ foo: value }], true)
+      })
+    }
   })
 
   it('returns true for identical references', () => {
