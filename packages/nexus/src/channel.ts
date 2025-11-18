@@ -1,7 +1,7 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
+import { WebSocketKeepAlive } from '@atproto/websocket'
 import { NexusEvent, parseNexusEvent } from './events'
-import { WebSocketKeepAlive } from './websocket-keepalive'
 
 export interface HandlerOpts {
   signal: AbortSignal
