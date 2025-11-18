@@ -26,7 +26,7 @@ COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/lexicon-resolver ./packages/lexicon-resolver
 COPY ./packages/repo ./packages/repo
-COPY ./packages/websocket ./packages/websocket
+COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/oauth/jwk ./packages/oauth/jwk

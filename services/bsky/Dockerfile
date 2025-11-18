@@ -22,7 +22,7 @@ COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/repo ./packages/repo
-COPY ./packages/websocket ./packages/websocket
+COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node

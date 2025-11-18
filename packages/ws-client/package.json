@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/websocket",
+  "name": "@atproto/ws-client",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Websocket utility library",

@@ -42,7 +42,7 @@
     { "path": "./packages/repo" },
     { "path": "./packages/sync" },
     { "path": "./packages/syntax" },
-    { "path": "./packages/websocket" },
+    { "path": "./packages/ws-client" },
     { "path": "./packages/xrpc" },
     { "path": "./packages/xrpc-server" }
   ]
