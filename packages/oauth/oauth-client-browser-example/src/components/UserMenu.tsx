@@ -1,4 +1,3 @@
-import { ifString } from '../lib/util.ts'
 import { useOAuthContext } from '../providers/OAuthProvider.tsx'
 import { useGetActorProfileQuery } from '../queries/use-get-actor-profile-query.ts'
 import { useGetSessionQuery } from '../queries/use-get-session-query.ts'
@@ -14,7 +13,7 @@ export function UserMenu() {
 
   const { did } = session
 
-  const displayName = ifString(getProfile.data?.displayName)
+  const displayName = getProfile.data?.displayName
   const handle = getSession.data?.handle
 
   return (
