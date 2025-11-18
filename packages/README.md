@@ -15,7 +15,7 @@
 - [Lexicon](./lexicon): A library for validating data using atproto's schema system.
 - [OAuth Provider](./oauth/oauth-provider): A library for supporting ATPROTO's OAuth.
 - [Repo](./repo): The "atproto repository" core implementation (a Merkle Search Tree).
-- [WebSocket](./websocket): A library for working with longstanding WebSocket connections.
+- [WebSocket Client](./ws-client): A library for working with long-lived WebSocket client connections.
 - [XRPC](./xrpc): An XRPC client implementation.
 - [XRPC Server](./xrpc-server): An XRPC server implementation.
 

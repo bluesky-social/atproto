@@ -1,5 +1,5 @@
 import { ClientOptions } from 'ws'
-import { WebSocketKeepAlive } from '@atproto/websocket'
+import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream'
 
 export class Subscription<T = unknown> {
