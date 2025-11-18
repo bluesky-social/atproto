@@ -3,6 +3,7 @@ export function isObject(input: unknown): input is object {
 }
 
 const ObjectProto = Object.prototype
+const ObjectToString = Object.prototype.toString
 
 export function isPlainObject(
   input: unknown,
@@ -15,6 +16,6 @@ export function isPlainObject(
       // Needed to support NodeJS's `runInNewContext` which produces objects
       // with a different prototype
       Object.getPrototypeOf(proto) === null) &&
-    ObjectProto.toString.call(input) === '[object Object]'
+    ObjectToString.call(input) === '[object Object]'
   )
 }
