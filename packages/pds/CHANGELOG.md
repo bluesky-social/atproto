@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.193
+
+### Patch Changes
+
+- [#4330](https://github.com/bluesky-social/atproto/pull/4330) [`3628cebfb`](https://github.com/bluesky-social/atproto/commit/3628cebfbb04ba49f326bbf411a2d15de2900302) Thanks [@mistydemeo](https://github.com/mistydemeo)! - adjust explicit-slurs regex
+
 ## 0.4.192
 
 ### Patch Changes
