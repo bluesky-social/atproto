@@ -34,6 +34,8 @@ export interface ProfileViewBasic {
   createdAt?: string
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -61,6 +63,8 @@ export interface ProfileView {
   labels?: ComAtprotoLabelDefs.Label[]
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileView = 'profileView'
@@ -95,6 +99,8 @@ export interface ProfileViewDetailed {
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
@@ -400,8 +406,6 @@ export interface ThreadViewPref {
     | 'random'
     | 'hotness'
     | (string & {})
-  /** Show followed users at the top of all replies. */
-  prioritizeFollowedUsers?: boolean
 }
 
 const hashThreadViewPref = 'threadViewPref'

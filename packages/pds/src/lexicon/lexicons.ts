@@ -65,6 +65,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
+          },
         },
       },
       profileView: {
@@ -126,6 +130,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -213,6 +221,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -542,10 +554,6 @@ export const schemaDict = {
               'random',
               'hotness',
             ],
-          },
-          prioritizeFollowedUsers: {
-            type: 'boolean',
-            description: 'Show followed users at the top of all replies.',
           },
         },
       },
@@ -1845,6 +1853,10 @@ export const schemaDict = {
           threadgate: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -4085,6 +4097,10 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
           },
         },
@@ -6779,12 +6795,6 @@ export const schemaDict = {
               description:
                 'Reference (AT-URI) to post record. This is the anchor post.',
             },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
-            },
           },
         },
         output: {
@@ -6865,12 +6875,6 @@ export const schemaDict = {
               default: 10,
               minimum: 0,
               maximum: 100,
-            },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
             },
             sort: {
               type: 'string',
@@ -10508,6 +10512,57 @@ export const schemaDict = {
             type: 'string',
           },
         },
+      },
+    },
+  },
+  ComAtprotoLexiconResolveLexicon: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.resolveLexicon',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Resolves an atproto lexicon (NSID) to a schema.',
+        parameters: {
+          type: 'params',
+          properties: {
+            nsid: {
+              format: 'nsid',
+              type: 'string',
+              description: 'The lexicon NSID to resolve.',
+            },
+          },
+          required: ['nsid'],
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+                description: 'The CID of the lexicon schema record.',
+              },
+              schema: {
+                type: 'ref',
+                ref: 'lex:com.atproto.lexicon.schema#main',
+                description: 'The resolved lexicon schema record.',
+              },
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+                description: 'The AT-URI of the lexicon schema record.',
+              },
+            },
+            required: ['uri', 'cid', 'schema'],
+          },
+        },
+        errors: [
+          {
+            description: 'No lexicon was resolved for the NSID.',
+            name: 'LexiconNotFound',
+          },
+        ],
       },
     },
   },
@@ -14630,6 +14685,12 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#recordsStats',
           },
+          accountStrike: {
+            description:
+              'Strike information for the account (account-level only)',
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#accountStrike',
+          },
           ageAssuranceState: {
             type: 'string',
             description: 'Current age assurance state of the subject.',
@@ -14742,6 +14803,32 @@ export const schemaDict = {
           },
         },
       },
+      accountStrike: {
+        description: 'Strike information for an account',
+        type: 'object',
+        properties: {
+          activeStrikeCount: {
+            description:
+              'Current number of active strikes (excluding expired strikes)',
+            type: 'integer',
+          },
+          totalStrikeCount: {
+            description:
+              'Total number of strikes ever received (including expired strikes)',
+            type: 'integer',
+          },
+          firstStrikeAt: {
+            description: 'Timestamp of the first strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+          lastStrikeAt: {
+            description: 'Timestamp of the most recent strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       subjectReviewState: {
         type: 'string',
         knownValues: [
@@ -14797,6 +14884,22 @@ export const schemaDict = {
             description:
               'Names/Keywords of the policies that drove the decision.',
           },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -14806,6 +14909,25 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policy infraction for which takedown is being reversed.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Usually set from the last policy infraction's severity.",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              "Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity.",
           },
         },
       },
@@ -15049,6 +15171,31 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about the outgoing comm.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that necessitated the email.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
           },
         },
       },
@@ -16448,6 +16595,11 @@ export const schemaDict = {
                 'blocked',
               ],
             },
+            withStrike: {
+              type: 'boolean',
+              description:
+                'If specified, only events where strikeCount value is set are returned.',
+            },
             cursor: {
               type: 'string',
             },
@@ -16677,6 +16829,12 @@ export const schemaDict = {
               type: 'integer',
               description:
                 'If specified, only subjects that have priority score value above the given value will be returned.',
+            },
+            minStrikeCount: {
+              type: 'integer',
+              minimum: 1,
+              description:
+                'If specified, only subjects that belong to an account that has at least this many active strikes will be returned.',
             },
             ageAssuranceState: {
               type: 'string',
@@ -19145,6 +19303,7 @@ export const ids = {
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
   ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
+  ComAtprotoLexiconResolveLexicon: 'com.atproto.lexicon.resolveLexicon',
   ComAtprotoLexiconSchema: 'com.atproto.lexicon.schema',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',

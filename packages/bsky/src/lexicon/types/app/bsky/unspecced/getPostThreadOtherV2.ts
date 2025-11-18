@@ -18,8 +18,6 @@ const id = 'app.bsky.unspecced.getPostThreadOtherV2'
 export type QueryParams = {
   /** Reference (AT-URI) to post record. This is the anchor post. */
   anchor: string
-  /** Whether to prioritize posts from followed users. It only has effect when the user is authenticated. */
-  prioritizeFollowedUsers: boolean
 }
 export type InputSchema = undefined
 

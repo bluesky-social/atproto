@@ -20,11 +20,11 @@ module.exports = defineConfig((commandLineArguments) => {
   const devMode = NODE_ENV === 'development'
 
   return {
-    input: 'src/main.tsx',
+    input: 'src/index.tsx',
     output: {
       manualChunks: undefined,
       sourcemap: true,
-      file: 'dist/main.js',
+      file: 'dist/index.js',
       format: 'iife',
     },
     plugins: [

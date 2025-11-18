@@ -61,7 +61,6 @@ const FEED_VIEW_PREF_DEFAULTS = {
 
 const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
-  prioritizeFollowedUsers: true,
 }
 
 export type { FetchHandler }
@@ -427,12 +426,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async follow(subjectDid: string) {
+  async follow(subjectDid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.graph.follow.create(
       { repo: this.accountDid },
       {
         subject: subjectDid,
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }

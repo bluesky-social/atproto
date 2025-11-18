@@ -1,5 +1,58 @@
 # @atproto/pds
 
+## 0.4.193
+
+### Patch Changes
+
+- [#4330](https://github.com/bluesky-social/atproto/pull/4330) [`3628cebfb`](https://github.com/bluesky-social/atproto/commit/3628cebfbb04ba49f326bbf411a2d15de2900302) Thanks [@mistydemeo](https://github.com/mistydemeo)! - adjust explicit-slurs regex
+
+## 0.4.192
+
+### Patch Changes
+
+- Updated dependencies [[`94ddc8219`](https://github.com/bluesky-social/atproto/commit/94ddc8219c144475df622137ab88895255136eda), [`39b5c08e0`](https://github.com/bluesky-social/atproto/commit/39b5c08e0799468eba0c3bf50f4f5a8104c35f34)]:
+  - @atproto/api@0.18.0
+
+## 0.4.191
+
+### Patch Changes
+
+- Updated dependencies [[`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6)]:
+  - @atproto/api@0.17.7
+
+## 0.4.190
+
+### Patch Changes
+
+- Updated dependencies [[`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee)]:
+  - @atproto/api@0.17.6
+
+## 0.4.189
+
+### Patch Changes
+
+- [#4279](https://github.com/bluesky-social/atproto/pull/4279) [`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031) Thanks [@foysalit](https://github.com/foysalit)! - Add strike system to ozone
+
+- Updated dependencies [[`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031)]:
+  - @atproto/api@0.17.5
+
+## 0.4.188
+
+### Patch Changes
+
+- Updated dependencies [[`f496fa2c4`](https://github.com/bluesky-social/atproto/commit/f496fa2c4d9316229523454c691c75c269aba21e)]:
+  - @atproto/oauth-provider@0.13.4
+
+## 0.4.187
+
+### Patch Changes
+
+- Updated dependencies [[`8c03d75b6`](https://github.com/bluesky-social/atproto/commit/8c03d75b6c11bed15b58bfa7ff4bf68199fc6511), [`a8e307ef4`](https://github.com/bluesky-social/atproto/commit/a8e307ef4851b164ee38bb5149343631e329f143), [`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58), [`1e702ea67`](https://github.com/bluesky-social/atproto/commit/1e702ea675e3697e050be1f28e54bb1298b56436)]:
+  - @atproto/oauth-provider@0.13.3
+  - @atproto/api@0.17.4
+  - @atproto-labs/fetch-node@0.2.0
+  - @atproto/lexicon-resolver@0.2.3
+
 ## 0.4.186
 
 ### Patch Changes

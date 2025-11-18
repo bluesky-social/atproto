@@ -22,7 +22,7 @@ jobs:
       - run: corepack enable && corepack prepare --activate
       - uses: actions/setup-node@v4
         with:
-          node-version-file: package.json
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
       - run: pnpm i --frozen-lockfile
       - run: pnpm build

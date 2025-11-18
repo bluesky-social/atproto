@@ -1,5 +1,63 @@
 # @atproto/bsky
 
+## 0.0.196
+
+### Patch Changes
+
+- [#4333](https://github.com/bluesky-social/atproto/pull/4333) [`f8e56b387`](https://github.com/bluesky-social/atproto/commit/f8e56b387fcd3bc8405225c1bbdef66ca5dc1591) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Prevent usage of DPoP bound access tokens with bsky.social
+
+  Using DPoP bound access tokens against the bsky server would already fail, but
+  it would fail with a rather misleading error: "InvalidToken: Bad token scope",
+  because the `scope` on a DPoP bound access token is the actual OAuth scopes, not
+  the expected `com.atproto.access` string.
+
+  This change means the entryway explicit checks if the token is a DPoP bound
+  access token, and if it is, then it fails with an error "Malformed token: DPoP
+  not supported". A similar check is also done with Bearer tokens in the PDS.
+
+- [#4330](https://github.com/bluesky-social/atproto/pull/4330) [`3628cebfb`](https://github.com/bluesky-social/atproto/commit/3628cebfbb04ba49f326bbf411a2d15de2900302) Thanks [@mistydemeo](https://github.com/mistydemeo)! - adjust explicit-slurs regex
+
+## 0.0.195
+
+### Patch Changes
+
+- [#4269](https://github.com/bluesky-social/atproto/pull/4269) [`39b5c08e0`](https://github.com/bluesky-social/atproto/commit/39b5c08e0799468eba0c3bf50f4f5a8104c35f34) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Deprecate and remove `prioritizeFollowedUsers` setting from preferences response types and `getPostThreadV2` query params.
+
+- Updated dependencies [[`94ddc8219`](https://github.com/bluesky-social/atproto/commit/94ddc8219c144475df622137ab88895255136eda), [`756ab5d87`](https://github.com/bluesky-social/atproto/commit/756ab5d87fea75e8648a6bdd545d8b441bfb2dd6), [`39b5c08e0`](https://github.com/bluesky-social/atproto/commit/39b5c08e0799468eba0c3bf50f4f5a8104c35f34)]:
+  - @atproto/api@0.18.0
+  - @atproto/sync@0.1.36
+
+## 0.0.194
+
+### Patch Changes
+
+- Updated dependencies [[`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6)]:
+  - @atproto/api@0.17.7
+
+## 0.0.193
+
+### Patch Changes
+
+- [#4297](https://github.com/bluesky-social/atproto/pull/4297) [`cdb6b27fc`](https://github.com/bluesky-social/atproto/commit/cdb6b27fc6be1e858476d8c55fd0c37561b972b4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `debug` field to `PostView` and `ProfileView*`s
+
+- Updated dependencies [[`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee)]:
+  - @atproto/api@0.17.6
+
+## 0.0.192
+
+### Patch Changes
+
+- Updated dependencies [[`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031)]:
+  - @atproto/api@0.17.5
+
+## 0.0.191
+
+### Patch Changes
+
+- Updated dependencies [[`a8e307ef4`](https://github.com/bluesky-social/atproto/commit/a8e307ef4851b164ee38bb5149343631e329f143), [`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58)]:
+  - @atproto/api@0.17.4
+  - @atproto-labs/fetch-node@0.2.0
+
 ## 0.0.190
 
 ### Patch Changes

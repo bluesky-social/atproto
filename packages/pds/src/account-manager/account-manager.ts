@@ -543,6 +543,8 @@ export class AccountManager {
       opts.token,
     )
     await this.updateAccountPassword({ did, password: opts.password })
+
+    return did
   }
 
   async updateAccountPassword(opts: { did: string; password: string }) {

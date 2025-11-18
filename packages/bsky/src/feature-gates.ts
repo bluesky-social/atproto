@@ -1,5 +1,4 @@
 import Statsig, { StatsigUser } from 'statsig-node'
-import { sha256Hex } from '@atproto/crypto'
 import { featureGatesLogger } from './logger'
 
 export type Config = {
@@ -7,13 +6,20 @@ export type Config = {
   env?: 'development' | 'staging' | 'production' | string
 }
 
-export enum GateID {
+export enum FeatureGateID {
   /**
    * Left here ensure this is interpreted as a string enum and therefore
    * appease TS
    */
   _ = '',
+  ThreadsV2ReplyRankingExploration = 'threads_v2_reply_ranking_exploration',
+  SearchFilteringExploration = 'search_filtering_exploration',
 }
+
+/**
+ * Pre-evaluated feature gates map, the result of `FeatureGates.checkGates()`
+ */
+export type CheckedFeatureGatesMap = Map<FeatureGateID, boolean>
 
 /**
  * @see https://docs.statsig.com/server/nodejsServerSDK
@@ -21,7 +27,7 @@ export enum GateID {
 export class FeatureGates {
   ready = false
   private statsig = Statsig
-  ids = GateID
+  ids = FeatureGateID
 
   constructor(private config: Config) {}
 
@@ -54,15 +60,28 @@ export class FeatureGates {
     }
   }
 
-  async user({ did }: { did: string }): Promise<StatsigUser> {
-    const userID = await sha256Hex(did)
-    return {
-      userID,
-    }
+  user({ did }: { did?: string }): StatsigUser | undefined {
+    return did
+      ? {
+          userID: did,
+        }
+      : undefined
   }
 
-  check(user: StatsigUser, gate: GateID) {
+  check(gate: FeatureGateID, user?: StatsigUser): boolean {
     if (!this.ready) return false
+    if (!user) return false
     return this.statsig.checkGateSync(user, gate)
+  }
+
+  /**
+   * Pre-evaluate multiple feature gates for a given user, returning a map of
+   * gate ID to boolean result.
+   */
+  checkGates(
+    gates: FeatureGateID[],
+    user?: StatsigUser,
+  ): CheckedFeatureGatesMap {
+    return new Map(gates.map((g) => [g, this.check(g, user)]))
   }
 }

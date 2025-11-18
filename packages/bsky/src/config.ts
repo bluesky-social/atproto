@@ -42,6 +42,7 @@ export interface ServerConfigValues {
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
   searchUrl?: string
+  searchTagsHide: Set<string>
   suggestionsUrl?: string
   suggestionsApiKey?: string
   topicsUrl?: string
@@ -70,6 +71,8 @@ export interface ServerConfigValues {
   maxThreadParents: number
   threadTagsHide: Set<string>
   threadTagsBumpDown: Set<string>
+  visibilityTagHide: string
+  visibilityTagRankPrefix: string
   // notifications
   notificationsDelayMs?: number
   // client config
@@ -84,6 +87,7 @@ export interface ServerConfigValues {
   proxyMaxRetries?: number
   proxyPreferCompressed?: boolean
   kws?: KwsConfig
+  debugFieldAllowedDids: Set<string>
 }
 
 export class ServerConfig {
@@ -132,6 +136,7 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
@@ -213,6 +218,9 @@ export class ServerConfig {
     const threadTagsBumpDown = new Set(
       envList(process.env.BSKY_THREAD_TAGS_BUMP_DOWN),
     )
+    const visibilityTagHide = process.env.BSKY_VISIBILITY_TAG_HIDE || ''
+    const visibilityTagRankPrefix =
+      process.env.BSKY_VISIBILITY_TAG_RANK_PREFIX || ''
 
     const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
@@ -276,6 +284,10 @@ export class ServerConfig {
       }
     }
 
+    const debugFieldAllowedDids = new Set(
+      envList(process.env.BSKY_DEBUG_FIELD_ALLOWED_DIDS),
+    )
+
     return new ServerConfig({
       version,
       debugMode,
@@ -291,6 +303,7 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      searchTagsHide,
       suggestionsUrl,
       suggestionsApiKey,
       topicsUrl,
@@ -325,6 +338,8 @@ export class ServerConfig {
       maxThreadParents,
       threadTagsHide,
       threadTagsBumpDown,
+      visibilityTagHide,
+      visibilityTagRankPrefix,
       notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
@@ -334,6 +349,7 @@ export class ServerConfig {
       proxyMaxRetries,
       proxyPreferCompressed,
       kws,
+      debugFieldAllowedDids,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -432,6 +448,10 @@ export class ServerConfig {
 
   get searchUrl() {
     return this.cfg.searchUrl
+  }
+
+  get searchTagsHide() {
+    return this.cfg.searchTagsHide
   }
 
   get suggestionsUrl() {
@@ -533,8 +553,17 @@ export class ServerConfig {
   get threadTagsHide() {
     return this.cfg.threadTagsHide
   }
+
   get threadTagsBumpDown() {
     return this.cfg.threadTagsBumpDown
+  }
+
+  get visibilityTagHide() {
+    return this.cfg.visibilityTagHide
+  }
+
+  get visibilityTagRankPrefix() {
+    return this.cfg.visibilityTagRankPrefix
   }
 
   get notificationsDelayMs() {
@@ -571,6 +600,10 @@ export class ServerConfig {
 
   get kws() {
     return this.cfg.kws
+  }
+
+  get debugFieldAllowedDids() {
+    return this.cfg.debugFieldAllowedDids
   }
 }
 

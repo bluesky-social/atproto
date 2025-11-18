@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser-example",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "license": "MIT",
   "description": "Example single page application app using ATPROTO OAuth",
   "keywords": [
@@ -29,10 +29,7 @@
   "devDependencies": {
     "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
     "@atproto/api": "workspace:*",
-    "@atproto/oauth-client": "workspace:*",
     "@atproto/oauth-client-browser": "workspace:*",
-    "@atproto/oauth-types": "workspace:*",
-    "@atproto/xrpc": "workspace:*",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-html": "^1.0.4",
     "@rollup/plugin-json": "^6.1.0",

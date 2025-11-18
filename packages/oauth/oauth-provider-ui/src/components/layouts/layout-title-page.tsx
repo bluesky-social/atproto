@@ -33,8 +33,6 @@ export function LayoutTitlePage({
         'flex flex-col items-center',
         'md:flex md:flex-row md:items-center md:justify-stretch',
         'min-w-screen min-h-screen',
-        'bg-white text-slate-900',
-        'dark:bg-slate-900 dark:text-slate-100',
       )}
     >
       {htmlTitle && <title>{htmlTitle}</title>}

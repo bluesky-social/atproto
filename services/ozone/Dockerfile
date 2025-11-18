@@ -21,6 +21,7 @@ COPY ./packages/identity ./packages/identity
 COPY ./packages/repo ./packages/repo
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/lexicon ./packages/lexicon
+COPY ./packages/websocket ./packages/websocket
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./services/ozone ./services/ozone
