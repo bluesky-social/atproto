@@ -2,7 +2,7 @@
   "name": "@atproto/ws-client",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "Websocket utility library",
+  "description": "Websocket client library",
   "keywords": [
     "atproto",
     "xrpc"
@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
-    "directory": "packages/websocket"
+    "directory": "packages/ws-client"
   },
   "engines": {
     "node": ">=18.7.0"
