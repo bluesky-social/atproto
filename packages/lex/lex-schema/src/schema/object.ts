@@ -78,7 +78,7 @@ export class ObjectSchema<
     Validators,
     Options
   > = ObjectSchemaOutput<Validators, Options>,
-> extends Validator<object & Output> {
+> extends Validator<Output> {
   constructor(
     readonly validators: Validators,
     readonly options: Options,
@@ -103,7 +103,7 @@ export class ObjectSchema<
   override validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<object & Output> {
+  ): ValidationResult<Output> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, ['object'])
     }
@@ -173,7 +173,7 @@ export class ObjectSchema<
       if (result.value !== input) copy = result.value
     }
 
-    const output = (copy ?? input) as object & Output
+    const output = (copy ?? input) as Output
 
     return ctx.success(output)
   }

@@ -1,8 +1,8 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { ArrayContaining } from '../core.js'
 import {
-  FailureResult,
   ValidationError,
+  ValidationFailure,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -116,7 +116,7 @@ export class DiscriminatedUnionSchema<
 
     // Slow path: try validating against each variant and return the first
     // successful one (or aggregate all failures if none match).
-    const failures: FailureResult[] = []
+    const failures: ValidationFailure[] = []
 
     for (const variant of this.variants) {
       const discSchema = variant.validators[this.discriminator]

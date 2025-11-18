@@ -21,13 +21,15 @@ export type InferSubscriptionMessage<S extends Subscription> =
 export class Subscription<
   N extends string = any,
   P extends ParamsSchema = any,
-  S extends undefined | RefSchema | TypedUnionSchema | ObjectSchema = any,
+  M extends undefined | RefSchema | TypedUnionSchema | ObjectSchema = any,
+  E extends undefined | readonly string[] = any,
 > {
   readonly type = 'subscription' as const
 
   constructor(
     readonly nsid: N,
     readonly parameters: P,
-    readonly message: S,
+    readonly message: M,
+    readonly errors: E,
   ) {}
 }

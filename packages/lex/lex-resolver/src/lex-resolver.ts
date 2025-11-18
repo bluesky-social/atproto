@@ -1,5 +1,5 @@
 import { resolveTxt } from 'node:dns/promises'
-import { Client, buildAgent } from '@atproto/lex-client'
+import { Client, LexRpcResponseError, buildAgent } from '@atproto/lex-client'
 import { LexiconDocument, lexiconDocumentSchema } from '@atproto/lex-document'
 import { AtUri, NSID } from '@atproto/syntax'
 import {
@@ -28,16 +28,19 @@ export class LexResolver {
   }
 
   async get(
-    input: string | NSID,
+    nsidStr: NSID | string,
     options?: ResolveDidOptions,
-  ): Promise<LexiconDocument> {
-    const uri = await this.resolve(input)
-    return this.fetch(uri, options)
+  ): Promise<{
+    uri: AtUri
+    document: LexiconDocument
+  }> {
+    const uri = await this.resolve(nsidStr)
+    const document = await this.fetch(uri, options)
+    return { uri, document }
   }
 
-  async resolve(input: string | NSID): Promise<AtUri> {
-    const nsid = NSID.from(input)
-
+  async resolve(nsidStr: NSID | string): Promise<AtUri> {
+    const nsid = NSID.from(nsidStr)
     const did =
       this.options.didAuthority ??
       (await resolveLexiconDidAuthority(nsid).catch((cause) => {
@@ -52,10 +55,11 @@ export class LexResolver {
   }
 
   async fetch(
-    input: string | AtUri,
+    uriStr: AtUri | string,
     options?: ResolveDidOptions,
   ): Promise<LexiconDocument> {
-    const { uri, did, nsid } = parseLexiconUri(input)
+    const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
+    const { did, nsid } = parseLexiconUri(uri)
 
     if (this.options.didAuthority && this.options.didAuthority !== did) {
       throw new LexResolverError(
@@ -94,6 +98,7 @@ export class LexResolver {
     // DID document key
     const response = await new Client(agent)
       .getRecord('com.atproto.lexicon.schema', nsid.toString(), { repo: did })
+      .then(LexRpcResponseError.parseResponseSuccess)
       .catch((cause) => {
         throw new LexResolverError(
           nsid,
@@ -122,19 +127,16 @@ export class LexResolver {
   }
 }
 
-function parseLexiconUri(input: string | AtUri): {
-  uri: AtUri
+function parseLexiconUri(uri: AtUri): {
   did: Did
   nsid: NSID
 } {
-  const uri = typeof input === 'string' ? new AtUri(input) : input
-
   // Validate input URI
   const nsid = NSID.from(uri.rkey)
   const did = uri.host
   assertDid(did)
 
-  return { uri, did, nsid }
+  return { did, nsid }
 }
 
 async function resolveLexiconDidAuthority(nsid: NSID): Promise<Did> {

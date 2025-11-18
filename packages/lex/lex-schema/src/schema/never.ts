@@ -1,10 +1,14 @@
-import { FailureResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  ValidationFailure,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 
 export class NeverSchema extends Validator<never> {
   override validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): FailureResult {
+  ): ValidationFailure {
     return ctx.issueInvalidType(input, 'never')
   }
 }

@@ -27,11 +27,17 @@ import {
   ValidationResult,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
+import { LexRpcInvalidError, LexRpcResponseError } from './error.js'
 import * as createRecord from './lexicons/com/atproto/repo/createRecord.defs.js'
 import * as deleteRecord from './lexicons/com/atproto/repo/deleteRecord.defs.js'
 import * as getRecord from './lexicons/com/atproto/repo/getRecord.defs.js'
 import * as listRecords from './lexicons/com/atproto/repo/listRecords.defs.js'
 import * as putRecord from './lexicons/com/atproto/repo/putRecord.defs.js'
+import {
+  KnownError,
+  LexRpcResponse,
+  lexRpcErrorBodySchema,
+} from './response.js'
 
 export type DidServiceIdentifier = 'atproto_labeler' | UnknownString
 export type Service = `${Did}#${DidServiceIdentifier}`
@@ -49,33 +55,28 @@ export type CallOptions = {
   service?: Service
 }
 
-export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  XrpcRequestOptions<M> & XrpcResponseOptions
+export type LexRpcOptions<M extends Procedure | Query = Procedure | Query> =
+  LexRpcRequestOptions<M> & LexRpcResponseOptions
 
-export type XrpcRequestOptions<M extends Procedure | Query> = CallOptions &
-  XrpcRequestUrlOptions<M> &
-  XrpcRequestBodyOptions<M>
+export type LexRpcRequestOptions<M extends Procedure | Query> = CallOptions &
+  LexRpcRequestUrlOptions<M> &
+  LexRpcRequestBodyOptions<M>
 
-export type XrpcRequestUrlOptions<M extends Query | Procedure | Subscription> =
+export type LexRpcRequestUrlOptions<
+  M extends Query | Procedure | Subscription,
+> =
   undefined extends InferParamsSchema<M['parameters']>
     ? { params?: InferParamsSchema<M['parameters']> }
     : { params: InferParamsSchema<M['parameters']> }
 
-export type XrpcRequestBodyOptions<T extends Query | Procedure> =
+export type LexRpcRequestBodyOptions<T extends Query | Procedure> =
   T extends Procedure
     ? never extends InferPayloadBody<T['input']>
       ? { body?: InferPayloadBody<T['input']> }
       : { body: InferPayloadBody<T['input']> }
     : { body?: never }
 
-export type XrpcResponseOptions = { skipVerification?: boolean }
-
-export type XrpcResponse<S extends Procedure | Query = Procedure | Query> = {
-  status: number
-  headers: Headers
-  encoding: InferPayloadEncoding<S['output']>
-  body: InferPayloadBody<S['output']>
-}
+export type LexRpcResponseOptions = { skipVerification?: boolean }
 
 export type Action<I = any, O = any> = (
   client: Client,
@@ -87,40 +88,40 @@ export type InferActionInput<A extends Action> =
 export type InferActionOutput<A extends Action> =
   A extends Action<any, infer O> ? O : never
 
-export type CreateRecordOutput = XrpcResponse<typeof createRecord.main>
+export type CreateRecordOutput = LexRpcResponse<typeof createRecord.main>
 export type CreateRecordOptions = CallOptions &
-  XrpcResponseOptions & {
+  LexRpcResponseOptions & {
     repo?: AtIdentifier
     swapCommit?: string
     validate?: boolean
   }
 
-export type DeleteRecordOutput = XrpcResponse<typeof deleteRecord.main>
+export type DeleteRecordOutput = LexRpcResponse<typeof deleteRecord.main>
 export type DeleteRecordOptions = CallOptions &
-  XrpcResponseOptions & {
+  LexRpcResponseOptions & {
     repo?: AtIdentifier
     swapCommit?: string
     swapRecord?: string
   }
 
-export type PutRecordOutput = XrpcResponse<typeof putRecord.main>
+export type PutRecordOutput = LexRpcResponse<typeof putRecord.main>
 export type PutRecordOptions = CallOptions &
-  XrpcResponseOptions & {
+  LexRpcResponseOptions & {
     repo?: AtIdentifier
     swapCommit?: string
     swapRecord?: string
     validate?: boolean
   }
 
-export type GetRecordOutput = XrpcResponse<typeof getRecord.main>
+export type GetRecordOutput = LexRpcResponse<typeof getRecord.main>
 export type GetRecordOptions = CallOptions &
-  XrpcResponseOptions & {
+  LexRpcResponseOptions & {
     repo?: AtIdentifier
   }
 
-export type ListRecordsOutput = XrpcResponse<typeof listRecords.main>
+export type ListRecordsOutput = LexRpcResponse<typeof listRecords.main>
 export type ListRecordsOptions = CallOptions &
-  XrpcResponseOptions & {
+  LexRpcResponseOptions & {
     repo?: AtIdentifier
     limit?: number
     cursor?: string
@@ -134,11 +135,17 @@ export type RecordKeyOptions<
   ? { rkey?: InferRecordKey<T> }
   : { rkey: InferRecordKey<T> }
 
-export type CreateOutput = CreateRecordOutput['body']
+export type CreateOutput = Extract<
+  CreateRecordOutput,
+  { success: true }
+>['body']
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
   RecordKeyOptions<T, 'tid'>
 
-export type DeleteOutput = DeleteRecordOutput['body']
+export type DeleteOutput = Extract<
+  DeleteRecordOutput,
+  { success: true }
+>['body']
 export type DeleteOptions<T extends RecordSchema> = DeleteRecordOptions &
   RecordKeyOptions<T>
 
@@ -146,18 +153,19 @@ export type GetOutput<T extends RecordSchema> = Infer<T>
 export type GetOptions<T extends RecordSchema> = GetRecordOptions &
   RecordKeyOptions<T>
 
-export type PutOutput = PutRecordOutput['body']
+export type PutOutput = Extract<PutRecordOutput, { success: true }>['body']
 export type PutOptions<T extends RecordSchema> = PutRecordOptions &
   RecordKeyOptions<T>
 
 export type ListOptions = ListRecordsOptions
 export type ListOutput<T extends RecordSchema> = {
   cursor: string | undefined
-  values: Array<{
-    cid: string
-    uri: AtUri
-    value: Infer<T>
-  }>
+  values: ListValue<T>[]
+}
+export type ListValue<T extends RecordSchema> = {
+  cid: string
+  uri: AtUri
+  value: Infer<T>
 }
 
 export class Client implements Agent {
@@ -243,29 +251,29 @@ export class Client implements Agent {
 
   //#endregion
 
-  //#region XRPC request
+  //#region Lexicon RPC request
 
-  async xrpc<const M extends Query | Procedure>(
-    ns: NonNullable<unknown> extends XrpcOptions<M>
+  async rpc<const M extends Query | Procedure>(
+    ns: NonNullable<unknown> extends LexRpcOptions<M>
       ? Namespace<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<XrpcResponse<M>>
-  async xrpc<const T extends Query | Procedure>(
+  ): Promise<LexRpcResponse<M>>
+  async rpc<const T extends Query | Procedure>(
     ns: Namespace<T>,
-    options: XrpcOptions<T>,
-  ): Promise<XrpcResponse<T>>
-  async xrpc<const T extends Query | Procedure>(
+    options: LexRpcOptions<T>,
+  ): Promise<LexRpcResponse<T>>
+  async rpc<const T extends Query | Procedure>(
     ns: Namespace<T>,
-    options: XrpcOptions<T> = {} as XrpcOptions<T>,
-  ): Promise<XrpcResponse<T>> {
+    options: LexRpcOptions<T> = {} as LexRpcOptions<T>,
+  ): Promise<LexRpcResponse<T>> {
     options.signal?.throwIfAborted()
     const method = getMain(ns)
-    const url = buildXrpcRequestUrl(method, options)
-    const request = buildXrpcRequestInit(method, options)
+    const url = buildLexRpcRequestUrl(method, options)
+    const request = buildLexRpcRequestInit(method, options)
     const response = await this.fetchHandler(url, request).catch(
       handleFetchError,
     )
-    return await handleXrpcResponse(response, method, options)
+    return await handleLexRpcResponse(response, method, options)
   }
 
   //#endregion
@@ -280,7 +288,7 @@ export class Client implements Agent {
     rkey: string | undefined,
     options?: CreateRecordOptions,
   ): Promise<CreateRecordOutput> {
-    return this.xrpc(createRecord.main, {
+    return this.rpc(createRecord.main, {
       signal: options?.signal,
       headers: options?.headers,
       body: {
@@ -299,7 +307,7 @@ export class Client implements Agent {
     rkey: string,
     options?: DeleteRecordOptions,
   ) {
-    return this.xrpc(deleteRecord.main, {
+    return this.rpc(deleteRecord.main, {
       signal: options?.signal,
       headers: options?.headers,
       body: {
@@ -317,7 +325,7 @@ export class Client implements Agent {
     rkey: string,
     options?: GetRecordOptions,
   ): Promise<GetRecordOutput> {
-    return this.xrpc(getRecord.main, {
+    return this.rpc(getRecord.main, {
       signal: options?.signal,
       headers: options?.headers,
       params: {
@@ -333,7 +341,7 @@ export class Client implements Agent {
     rkey: string,
     options?: PutRecordOptions,
   ): Promise<PutRecordOutput> {
-    return this.xrpc(putRecord.main, {
+    return this.rpc(putRecord.main, {
       signal: options?.signal,
       headers: options?.headers,
       body: {
@@ -352,7 +360,7 @@ export class Client implements Agent {
     nsid: Nsid,
     options?: ListRecordsOptions,
   ): Promise<ListRecordsOutput> {
-    return this.xrpc(listRecords.main, {
+    return this.rpc(listRecords.main, {
       signal: options?.signal,
       headers: options?.headers,
       params: {
@@ -402,11 +410,11 @@ export class Client implements Agent {
 
     if (schema instanceof Procedure) {
       const body = arg as LexValue | undefined
-      const result = await this.xrpc(schema, { ...options, body })
+      const result = await this.rpc(schema, { ...options, body })
       return result.body
     } else if (schema instanceof Query) {
       const params = arg as Parameters | undefined
-      const result = await this.xrpc(schema, { ...options, params })
+      const result = await this.rpc(schema, { ...options, params })
       return result.body
     } else {
       throw new TypeError('Invalid lexicon')
@@ -436,6 +444,7 @@ export class Client implements Agent {
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
+    LexRpcResponseError.assertResponseSuccess(response)
     return response.body
   }
 
@@ -457,6 +466,7 @@ export class Client implements Agent {
       options.rkey ?? getLiteralRecordKey(schema),
     )
     const response = await this.deleteRecord(schema.$type, rkey, options)
+    LexRpcResponseError.assertResponseSuccess(response)
     return response.body
   }
 
@@ -478,6 +488,7 @@ export class Client implements Agent {
       options.rkey ?? getLiteralRecordKey(schema),
     )
     const response = await this.getRecord(schema.$type, rkey, options)
+    LexRpcResponseError.assertResponseSuccess(response)
     return schema.parse(response.body.value) as Infer<T>
   }
 
@@ -501,6 +512,7 @@ export class Client implements Agent {
     const record = schema.build(input)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
+    LexRpcResponseError.assertResponseSuccess(response)
     return response.body
   }
 
@@ -509,14 +521,16 @@ export class Client implements Agent {
     options?: ListOptions,
   ): Promise<ListOutput<T>> {
     const schema = getMain(ns)
-    const { body } = await this.listRecords(schema.$type, options)
-    const result: ListOutput<T> = { cursor: body.cursor, values: [] }
+    const response = await this.listRecords(schema.$type, options)
+    LexRpcResponseError.assertResponseSuccess(response)
+
+    const values: ListValue<T>[] = []
 
     // Keep only valid records
-    for (const record of body.records) {
+    for (const record of response.body.records) {
       const parsed = schema.validate(record.value) as ValidationResult<Infer<T>>
       if (parsed.success) {
-        result.values.push({
+        values.push({
           cid: record.cid,
           uri: record.uri,
           value: parsed.value,
@@ -524,7 +538,7 @@ export class Client implements Agent {
       }
     }
 
-    return result
+    return { cursor: response.body.cursor, values }
   }
 
   //#endregion
@@ -552,17 +566,20 @@ function getLiteralRecordKey<const T extends RecordSchema>(
   )
 }
 
-function buildXrpcRequestUrl<M extends Procedure | Query | Subscription>(
+function buildLexRpcRequestUrl<M extends Procedure | Query | Subscription>(
   method: M,
-  options: XrpcRequestUrlOptions<M>,
+  options: LexRpcRequestUrlOptions<M>,
 ) {
-  const path = `/xrpc/${method.nsid}`
-  const queryString = buildXrpcRequestParams(method.parameters, options.params)
+  const path = `/rpc/${method.nsid}`
+  const queryString = buildLexRpcRequestParams(
+    method.parameters,
+    options.params,
+  )
   const url = queryString ? `${path}?${queryString}` : path
   return url
 }
 
-function buildXrpcRequestParams(
+function buildLexRpcRequestParams(
   schema: ParamsSchema | undefined,
   params: Parameters | undefined,
 ): string {
@@ -582,9 +599,9 @@ function buildXrpcRequestParams(
   return urlSearchParams.toString()
 }
 
-function buildXrpcRequestInit<T extends Procedure | Query>(
+function buildLexRpcRequestInit<T extends Procedure | Query>(
   schema: T,
-  options: XrpcRequestOptions<T>,
+  options: LexRpcRequestOptions<T>,
 ): RequestInit & { duplex?: 'half' } {
   const headers = buildHeaders(options)
 
@@ -599,7 +616,7 @@ function buildXrpcRequestInit<T extends Procedure | Query>(
       signal: options.signal,
       method: 'POST',
       headers,
-      body: buildXrpcRequestBody(schema.input, options.body),
+      body: buildLexRpcRequestBody(schema.input, options.body),
     }
   }
 
@@ -615,7 +632,7 @@ function buildXrpcRequestInit<T extends Procedure | Query>(
   }
 }
 
-function buildXrpcRequestBody(
+function buildLexRpcRequestBody(
   payload: Payload | undefined,
   body: LexValue | undefined,
 ): BodyInit | null {
@@ -641,53 +658,88 @@ async function handleFetchError(err: unknown): Promise<never> {
   throw err
 }
 
-async function handleXrpcResponse<T extends Query | Procedure>(
+async function handleLexRpcResponse<T extends Query | Procedure>(
   response: Response,
   { output }: T,
-  options: XrpcOptions<T>,
-): Promise<XrpcResponse<T>> {
+  options: LexRpcOptions<T>,
+): Promise<LexRpcResponse<T>> {
   try {
     const encoding = getContentMime(response.headers)
 
-    // Check response status
+    const body = await readLexRpcResponseBody(response, encoding).catch(
+      (cause) => {
+        throw new LexRpcInvalidError(
+          response.status,
+          response.headers,
+          body,
+          'Failed to read XRPC response body',
+          undefined,
+          { cause },
+        )
+      },
+    )
+
+    if (response.status >= 400) {
+      // All unsuccessful responses should follow a standard error response
+      // schema. The Content-Type should be application/json, and the payload
+      // should be a JSON object with the following fields:
+      // - error (string, required): type name of the error (generic ASCII
+      //   constant, no whitespace)
+      // - message (string, optional): description of the error, appropriate for
+      //   display to humans
+      if (
+        encoding !== 'application/json' ||
+        body == null ||
+        !lexRpcErrorBodySchema.check(body)
+      ) {
+        throw new LexRpcInvalidError(
+          response.status,
+          response.headers,
+          body,
+          'Invalid response body for error response',
+          response.status >= 500
+            ? KnownError.InternalServerError
+            : KnownError.InvalidRequest,
+        )
+      }
+
+      if (!output.errors?.includes(body.error)) {
+        throw new LexRpcResponseError(response.status, response.headers, body)
+      }
+
+      return {
+        success: false,
+        status: response.status,
+        headers: response.headers,
+        encoding,
+        body,
+      } as LexRpcResponse<T>
+    }
+
+    // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
-      // @TODO xrpc error
-      throw new Error(`Request failed with status ${response.status}`, {
-        cause: {
-          encoding,
-          body: await readXrpcResponseBody(response, encoding).catch(
-            (err) => `<Response error: ${String(err)}>`,
-          ),
-        },
-      })
+      throw new LexRpcInvalidError(
+        response.status,
+        response.headers,
+        body,
+        'Invalid response status',
+      )
     }
 
     // Check response encoding
     if (output.encoding !== encoding) {
-      // @TODO 400 error
-      throw new Error(
+      throw new LexRpcInvalidError(
+        response.status,
+        response.headers,
+        body,
         `Expected response with content-type ${output.encoding}, got ${encoding}`,
-        {
-          cause: {
-            encoding,
-            body: await readXrpcResponseBody(response, encoding).catch(
-              (err) => `<Response error: ${String(err)}>`,
-            ),
-          },
-        },
       )
     }
 
     // Validate response body
     if (output.encoding && output.schema && !options.skipVerification) {
-      const body = await readXrpcResponseBody(response, output.encoding).catch(
-        (err) => {
-          // TODO 400 error
-          throw new Error('Failed to read response body', { cause: err })
-        },
-      )
-
       return {
+        success: true,
         status: response.status,
         headers: response.headers,
         encoding: output.encoding as InferPayloadEncoding<T['output']>,
@@ -695,25 +747,22 @@ async function handleXrpcResponse<T extends Query | Procedure>(
       }
     }
 
-    // output.encoding is undefined, we expect an empty body
-    const body = await readXrpcResponseBody(response, encoding).catch((err) => {
-      // TODO 400 error
-      throw new Error('Failed to read response body', { cause: err })
-    })
-
     if (output.encoding === undefined && body !== undefined) {
-      // @TODO 400 error
-      throw new Error('Expected empty response body', {
-        cause: { encoding, body },
-      })
+      throw new LexRpcInvalidError(
+        response.status,
+        response.headers,
+        body,
+        `Expected empty response body`,
+      )
     }
 
     return {
+      success: true,
       status: response.status,
       headers: response.headers,
       encoding,
       body,
-    } as XrpcResponse<T>
+    } as LexRpcResponse<T>
   } finally {
     await cancelBody(response)
   }
@@ -754,15 +803,15 @@ function buildHeaders(options: {
   return headers
 }
 
-async function readXrpcResponseBody(
+async function readLexRpcResponseBody(
   response: Response,
   encoding: string,
 ): Promise<LexValue>
-async function readXrpcResponseBody(
+async function readLexRpcResponseBody(
   response: Response,
   encoding: string | undefined,
 ): Promise<LexValue | undefined>
-async function readXrpcResponseBody(
+async function readLexRpcResponseBody(
   response: Response,
   encoding: string | undefined,
 ): Promise<LexValue | undefined> {
@@ -780,7 +829,7 @@ async function readXrpcResponseBody(
       const reader = response.body.getReader()
       const next = await reader.read()
       if (next.done) return undefined
-      await reader.cancel() // Drain the body
+      await reader.cancel() // Drain the rest of the (non-empty) body stream
     }
 
     throw new SyntaxError('Content-type is undefined but body is not empty')

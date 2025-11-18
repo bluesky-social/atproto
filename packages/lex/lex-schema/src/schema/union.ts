@@ -1,7 +1,7 @@
 import {
-  FailureResult,
   Infer,
   ValidationError,
+  ValidationFailure,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -21,7 +21,7 @@ export class UnionSchema<
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<UnionSchemaOutput<V>> {
-    const failures: FailureResult[] = []
+    const failures: ValidationFailure[] = []
 
     for (const validator of this.validators) {
       const result = ctx.validate(input, validator)

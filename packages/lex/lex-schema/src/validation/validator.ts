@@ -1,14 +1,17 @@
+import { ResultFailure, ResultSuccess } from '../util/result.js'
 import { PropertyKey } from './property-key.js'
-import { FailureResult, ValidationError } from './validation-error.js'
+import { ValidationError } from './validation-error.js'
 import {
   IssueTooBig,
   IssueTooSmall,
   ValidationIssue,
 } from './validation-issue.js'
 
-export type SuccessResult<V = any> = { success: true; value: V }
-
-export type ValidationResult<Value = any> = SuccessResult<Value> | FailureResult
+export type ValidationSuccess<Value = any> = ResultSuccess<Value>
+export type ValidationFailure = ResultFailure<ValidationError>
+export type ValidationResult<Value = any> =
+  | ValidationSuccess<Value>
+  | ValidationFailure
 
 type ValidationOptions = {
   path?: PropertyKey[]
@@ -21,10 +24,10 @@ export type Infer<T extends Validator> = T['_lex']['output']
 
 export abstract class Validator<Output = any> {
   /**
-   * @internal **INTERNAL API, DO NOT USE**.
-   *
    * This property is used for type inference purposes and does not actually
    * exist at runtime.
+   *
+   * @deprecated For internal use only (not actually deprecated)
    */
   _lex!: { output: Output }
 
@@ -247,7 +250,7 @@ export class ValidatorContext {
     return { success: true, value }
   }
 
-  failure(issue: ContextualIssue): FailureResult {
+  failure(issue: ContextualIssue): ValidationFailure {
     return {
       success: false,
       error: new ValidationError([
@@ -287,7 +290,7 @@ export class ValidatorContext {
     input: I,
     property: keyof I & PropertyKey,
     values: readonly unknown[],
-  ): FailureResult {
+  ) {
     return this.issueInvalidValue(input[property], values, property)
   }
 
@@ -295,7 +298,7 @@ export class ValidatorContext {
     input: I,
     property: keyof I & PropertyKey,
     expected: string | readonly string[],
-  ): FailureResult {
+  ) {
     return this.issueInvalidType(input[property], expected, property)
   }
 

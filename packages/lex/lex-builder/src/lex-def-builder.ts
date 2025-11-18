@@ -8,6 +8,7 @@ import {
   LexiconBytes,
   LexiconCid,
   LexiconDocument,
+  LexiconError,
   LexiconIndexer,
   LexiconInteger,
   LexiconNull,
@@ -163,7 +164,8 @@ export class LexDefBuilder {
           $nsid,
           ${await this.compileParamsSchema(def.parameters)},
           ${await this.compilePayload(def.input)},
-          ${await this.compilePayload(def.output)}
+          ${await this.compilePayload(def.output)},
+          ${await this.compileErrors(def.errors)}
         )
       `),
     })
@@ -199,18 +201,6 @@ export class LexDefBuilder {
     addJsDoc(outputTypeStmt, def.output)
   }
 
-  private async compilePayload(def: LexiconPayload | undefined) {
-    if (!def) return this.pure(`l.payload()`)
-
-    const encodedEncoding = JSON.stringify(def.encoding)
-    if (def.schema) {
-      const bodySchema = await this.compileBodySchema(def.schema)
-      return this.pure(`l.payload(${encodedEncoding}, ${bodySchema})`)
-    } else {
-      return this.pure(`l.payload(${encodedEncoding})`)
-    }
-  }
-
   private async addQuery(hash: string, def: LexiconQuery) {
     if (hash !== 'main') {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
@@ -223,7 +213,8 @@ export class LexDefBuilder {
         l.query(
           $nsid,
           ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compilePayload(def.output)}
+          ${await this.compilePayload(def.output)},
+          ${await this.compileErrors(def.errors)}
         )
       `),
     })
@@ -246,18 +237,6 @@ export class LexDefBuilder {
     })
   }
 
-  private async compileParamsSchema(def: undefined | LexiconParameters) {
-    if (!def) return this.pure(`l.params({})`)
-
-    const properties = await this.compilePropertiesSchemas(def)
-    const options = stringifyOptionalOptions(def, [
-      'type',
-      'description',
-      'properties',
-    ])
-    return this.pure(`l.params({${properties.join(',')}}, ${options})`)
-  }
-
   private async addSubscription(hash: string, def: LexiconSubscription) {
     if (hash !== 'main') {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
@@ -270,7 +249,8 @@ export class LexDefBuilder {
         l.subscription(
           $nsid,
           ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compileBodySchema(def.message?.schema)}
+          ${await this.compileBodySchema(def.message?.schema)},
+          ${await this.compileErrors(def.errors)}
         )
       `),
     })
@@ -291,14 +271,6 @@ export class LexDefBuilder {
       name: 'Message',
       type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
     })
-  }
-
-  private async compileBodySchema(
-    def?: LexiconRef | LexiconRefUnion | LexiconObject,
-  ): Promise<string> {
-    if (!def) return 'undefined'
-    if (def.type === 'object') return this.compileObjectSchema(def)
-    return this.compileContainedSchema(def)
   }
 
   private async addRecord(hash: string, def: LexiconRecord) {
@@ -461,6 +433,43 @@ export class LexDefBuilder {
     }
 
     return ref
+  }
+
+  private async compilePayload(def: LexiconPayload | undefined) {
+    if (!def) return this.pure(`l.payload()`)
+
+    const encodedEncoding = JSON.stringify(def.encoding)
+    if (def.schema) {
+      const bodySchema = await this.compileBodySchema(def.schema)
+      return this.pure(`l.payload(${encodedEncoding}, ${bodySchema})`)
+    } else {
+      return this.pure(`l.payload(${encodedEncoding})`)
+    }
+  }
+
+  private async compileBodySchema(
+    def?: LexiconRef | LexiconRefUnion | LexiconObject,
+  ): Promise<string> {
+    if (!def) return 'undefined'
+    if (def.type === 'object') return this.compileObjectSchema(def)
+    return this.compileContainedSchema(def)
+  }
+
+  private async compileParamsSchema(def: undefined | LexiconParameters) {
+    if (!def) return this.pure(`l.params({})`)
+
+    const properties = await this.compilePropertiesSchemas(def)
+    const options = stringifyOptionalOptions(def, [
+      'type',
+      'description',
+      'properties',
+    ])
+    return this.pure(`l.params({${properties.join(',')}}, ${options})`)
+  }
+
+  private async compileErrors(defs?: readonly LexiconError[]) {
+    if (!defs?.length) return ''
+    return JSON.stringify(defs.map((d) => d.name))
   }
 
   private async compileObjectSchema(def: LexiconObject): Promise<string> {

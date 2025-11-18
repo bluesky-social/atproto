@@ -17,10 +17,11 @@ export type InferProcedureOutputBody<Q extends Procedure> =
     : never
 
 export class Procedure<
-  N extends Nsid = Nsid,
-  P extends ParamsSchema = ParamsSchema,
-  I extends Payload = Payload,
-  O extends Payload = Payload,
+  N extends Nsid = any,
+  P extends ParamsSchema = any,
+  I extends Payload = any,
+  O extends Payload = any,
+  E extends undefined | readonly string[] = any,
 > {
   readonly lexiconType = 'procedure' as const
 
@@ -29,5 +30,6 @@ export class Procedure<
     readonly parameters: P,
     readonly input: I,
     readonly output: O,
+    readonly errors: E,
   ) {}
 }

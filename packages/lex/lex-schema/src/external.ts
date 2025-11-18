@@ -321,8 +321,9 @@ export function query<
   const N extends Nsid,
   const P extends ParamsSchema,
   const O extends Payload,
->(nsid: N, parameters: P, output: O) {
-  return new Query<N, P, O>(nsid, parameters, output)
+  const E extends undefined | readonly string[] = undefined,
+>(nsid: N, parameters: P, output: O, errors: E = undefined as E) {
+  return new Query<N, P, O, E>(nsid, parameters, output, errors)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -331,8 +332,9 @@ export function procedure<
   const P extends ParamsSchema,
   const I extends Payload,
   const O extends Payload,
->(nsid: N, parameters: P, input: I, output: O) {
-  return new Procedure<N, P, I, O>(nsid, parameters, input, output)
+  const E extends undefined | readonly string[] = undefined,
+>(nsid: N, parameters: P, input: I, output: O, errors: E = undefined as E) {
+  return new Procedure<N, P, I, O, E>(nsid, parameters, input, output, errors)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -340,8 +342,9 @@ export function subscription<
   const N extends string,
   const P extends ParamsSchema,
   const M extends undefined | RefSchema | TypedUnionSchema | ObjectSchema,
->(nsid: N, parameters: P, message: M) {
-  return new Subscription<N, P, M>(nsid, parameters, message)
+  const E extends undefined | readonly string[] = undefined,
+>(nsid: N, parameters: P, message: M, errors: E = undefined as E) {
+  return new Subscription<N, P, M, E>(nsid, parameters, message, errors)
 }
 
 /*@__NO_SIDE_EFFECTS__*/

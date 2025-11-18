@@ -1,10 +1,9 @@
+import { ResultFailure, extractFailureError } from '../util/result.js'
 import {
   ValidationIssue,
   aggregateIssues,
   stringifyIssue,
 } from './validation-issue.js'
-
-export type FailureResult = { success: false; error: ValidationError }
 
 export class ValidationError extends Error {
   name = 'ValidationError'
@@ -16,7 +15,9 @@ export class ValidationError extends Error {
     super(issues.map(stringifyIssue).join(', '), options)
   }
 
-  static fromFailures(failures: FailureResult[]): ValidationError {
+  static fromFailures(
+    failures: ResultFailure<ValidationError>[],
+  ): ValidationError {
     if (failures.length === 1) return failures[0].error
     const issues = failures.flatMap(extractFailureIssues)
     return new ValidationError(aggregateIssues(issues), {
@@ -26,10 +27,6 @@ export class ValidationError extends Error {
   }
 }
 
-function extractFailureError(result: FailureResult): ValidationError {
-  return result.error
-}
-
-function extractFailureIssues(result: FailureResult): ValidationIssue[] {
+function extractFailureIssues(result: ResultFailure<ValidationError>) {
   return result.error.issues
 }

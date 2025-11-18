@@ -12,9 +12,10 @@ export type InferQueryOutputBody<Q extends Query> =
     : never
 
 export class Query<
-  N extends Nsid = Nsid,
-  P extends ParamsSchema = ParamsSchema,
-  O extends Payload = Payload,
+  N extends Nsid = any,
+  P extends ParamsSchema = any,
+  O extends Payload = any,
+  E extends undefined | readonly string[] = any,
 > {
   readonly lexiconType = 'query' as const
 
@@ -22,5 +23,6 @@ export class Query<
     readonly nsid: N,
     readonly parameters: P,
     readonly output: O,
+    readonly errors: E,
   ) {}
 }

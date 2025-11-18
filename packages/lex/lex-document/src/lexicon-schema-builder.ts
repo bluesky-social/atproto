@@ -3,6 +3,7 @@ import {
   LexiconArray,
   LexiconArrayItems,
   LexiconDocument,
+  LexiconError,
   LexiconObject,
   LexiconParameters,
   LexiconPayload,
@@ -148,18 +149,21 @@ export class LexiconSchemaBuilder {
           this.compileParams(doc, def.parameters),
           this.compilePayload(doc, def.input),
           this.compilePayload(doc, def.output),
+          this.compileErrors(doc, def.errors),
         )
       case 'query':
         return l.query(
           doc.id,
           this.compileParams(doc, def.parameters),
           this.compilePayload(doc, def.output),
+          this.compileErrors(doc, def.errors),
         )
       case 'subscription':
         return l.subscription(
           doc.id,
           this.compileParams(doc, def.parameters),
           this.compilePayloadSchema(doc, def.message?.schema),
+          this.compileErrors(doc, def.errors),
         )
       case 'token':
         return l.token(doc.id, hash)
@@ -244,6 +248,13 @@ export class LexiconSchemaBuilder {
       def?.encoding,
       def?.schema ? this.compilePayloadSchema(doc, def.schema) : undefined,
     )
+  }
+
+  protected compileErrors(
+    _doc: LexiconDocument,
+    errors?: readonly LexiconError[],
+  ): undefined | string[] {
+    return errors?.map((e) => e.name)
   }
 
   protected compilePayloadSchema(
