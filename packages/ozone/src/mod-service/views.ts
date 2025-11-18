@@ -195,6 +195,15 @@ export class ModerationViews {
       }
     }
 
+    if (isModEventTakedown(event)) {
+      if (
+        typeof meta.targetServices === 'string' &&
+        meta.targetServices.length > 0
+      ) {
+        event.targetServices = meta.targetServices.split(',')
+      }
+    }
+
     if (isModEventLabel(event)) {
       event.createLabelVals = row.createLabelVals?.length
         ? row.createLabelVals.split(' ')

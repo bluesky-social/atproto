@@ -572,6 +572,10 @@ export class ModerationService {
       meta.policies = event.policies.join(',')
     }
 
+    if (isModEventTakedown(event) && event.targetServices?.length) {
+      meta.targetServices = event.targetServices.join(',')
+    }
+
     // Keep trace of reports that came in while the reporter was in muted stated
     if (isModEventReport(event)) {
       const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
@@ -773,17 +777,20 @@ export class ModerationService {
   async takedownRepo(
     subject: RepoSubject,
     takedownId: number,
+    targetServices: Set<string>,
     isSuspend = false,
   ) {
     const takedownRef = `BSKY-${
       isSuspend ? 'SUSPEND' : 'TAKEDOWN'
     }-${takedownId}`
 
-    const values = this.eventPusher.takedowns.map((eventType) => ({
-      eventType,
-      subjectDid: subject.did,
-      takedownRef,
-    }))
+    const values = this.eventPusher
+      .getTakedownServices(targetServices)
+      .map((eventType) => ({
+        eventType,
+        subjectDid: subject.did,
+        takedownRef,
+      }))
 
     const repoEvts = await this.db.db
       .insertInto('repo_push_event')
@@ -849,7 +856,11 @@ export class ModerationService {
     })
   }
 
-  async takedownRecord(subject: RecordSubject, takedownId: number) {
+  async takedownRecord(
+    subject: RecordSubject,
+    takedownId: number,
+    targetServices: Set<string>,
+  ) {
     this.db.assertTransaction()
     await this.formatAndCreateLabels(subject.uri, subject.cid, {
       create: [TAKEDOWN_LABEL],
@@ -859,7 +870,9 @@ export class ModerationService {
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobValues: Insertable<BlobPushEvent>[] = []
-      for (const eventType of this.eventPusher.takedowns) {
+      for (const eventType of this.eventPusher.getTakedownServices(
+        targetServices,
+      )) {
         for (const cid of blobCids) {
           blobValues.push({
             eventType,
