@@ -87,7 +87,7 @@ app.bsky.actor.profile.$validate({
 
 ```bash
 npm install -g @atproto/lex
-ts-lex --help
+lex --help
 ```
 
 ## Quick Start
@@ -97,7 +97,7 @@ ts-lex --help
 Install the Lexicon schemas you need for your application:
 
 ```bash
-ts-lex install app.bsky.feed.post app.bsky.feed.like
+lex install app.bsky.feed.post app.bsky.feed.like
 ```
 
 This creates:
@@ -107,12 +107,9 @@ This creates:
 
 > [!NOTE]
 >
-> If you didn't install the CLI globally, or if you didn't setup your shell's
-> PATH to include your package manager's binaries directory, you can use
-> `npx @atproto/lex` or `pnpm exec ts-lex` to run the command. The recommended
-> approach is to add `@atproto/lex` as part of your project's `devDependencies`
-> and run `ts-lex` via your project's `scripts` (see
-> [Development Workflow](#development-workflow) below).
+> The `lex` command might conflict with other binaries intalled on your system.
+> If that happens, you can also run the CLI using `ts-lex`, `pnpm exec lex` or
+> `npx @atproto/lex`.
 
 **2. Verify and commit installed Lexicons**
 
@@ -141,27 +138,27 @@ const response = await client.call(app.bsky.actor.getProfile, {
 
 > [!TIP]
 >
-> If you wish to customize the output location, or any other options, you can run the `ts-lex build` command separately. For that purpose, make sure to use the `--no-build` flag when installing lexicons to skip the automatic build step.
+> If you wish to customize the output location, or any other options, you can run the `lex build` command separately. For that purpose, make sure to use the `--no-build` flag when installing lexicons to skip the automatic build step.
 
 ## JSON Schemas
 
-The `ts-lex install` command fetches Lexicon JSON schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
+The `lex install` command fetches Lexicon JSON schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
 
 ```bash
 # Install Lexicons and update lexicons.json (default behavior)
-ts-lex install app.bsky.feed.post
+lex install app.bsky.feed.post
 
 # Install all Lexicons from lexicons.json manifest
-ts-lex install
+lex install
 
 # Install specific Lexicons without updating manifest
-ts-lex install --no-save app.bsky.feed.post app.bsky.actor.profile
+lex install --no-save app.bsky.feed.post app.bsky.actor.profile
 
 # Update (re-fetch) all installed Lexicons to latest versions
-ts-lex install --update
+lex install --update
 
 # Fetch any missing Lexicons and verify against manifest
-ts-lex install --ci
+lex install --ci
 ```
 
 Options:
@@ -176,10 +173,10 @@ Options:
 
 ## TypeScript Schemas
 
-The `ts-lex install` comman automatically builds TypeScript schemas after installing Lexicon JSON files. You can also run the build step separately using the `ts-lex build` command. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
+The `lex install` comman automatically builds TypeScript schemas after installing Lexicon JSON files. You can also run the build step separately using the `lex build` command. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
 
 ```bash
-ts-lex build --lexicons ./lexicons --out ./src/lexicons
+lex build --lexicons ./lexicons --out ./src/lexicons
 ```
 
 Options:
@@ -673,8 +670,8 @@ Add these scripts to your `package.json`:
 ```json
 {
   "scripts": {
-    "lex:update": "ts-lex install --update --save",
-    "postinstall": "ts-lex install --ci"
+    "lex:update": "lex install --update --save",
+    "postinstall": "lex install --ci"
   }
 }
 ```
@@ -723,7 +720,7 @@ import * as app from './lexicons/app.js'
 For library authors, use `--pure-annotations` when building:
 
 ```bash
-ts-lex build --pure-annotations
+lex build --pure-annotations
 ```
 
 This will make the generated code more tree-shakeable from places that import your library.
