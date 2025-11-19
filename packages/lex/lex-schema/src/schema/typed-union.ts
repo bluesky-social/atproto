@@ -10,24 +10,23 @@ import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
 
 export type TypedRef<T extends { $type?: string }> = TypedRefSchemaOutput<T>
 
-export type UnknownProperty = Restricted<'Unknown property'>
-export type UnknownTypedObject = { $type: UnknownString } & {
+export type TypedObject = { $type: UnknownString } & {
   // In order to prevent places that expect an open union from accepting an
   // invalid version of the known typed objects, we need to prevent any other
   // properties from being present.
   //
   // For example, if an open union expects:
   // ```ts
-  // UnknownTypedObject | { $type: 'A'; a: number }
+  // TypedObject | { $type: 'A'; a: number }
   // ```
   // we don't want it to accept:
   // ```ts
   // { $type: 'A' }
   // ```
   // Which would be the case as `{ $type: 'A' }` is a valid
-  // `UnknownTypedObject`. By adding an index signature that forbids any
+  // `TypedObject`. By adding an index signature that forbids any
   // property, we ensure that only valid known typed objects can be used.
-  [K in string]: UnknownProperty
+  [K in string]: Restricted<'Unknown property'>
 }
 
 type TypedRefSchemasToUnion<T extends readonly TypedRefSchema[]> = {
@@ -39,7 +38,7 @@ export type TypedUnionSchemaOutput<
   Closed extends boolean,
 > = Closed extends true
   ? TypedRefSchemasToUnion<TypedRefs>
-  : TypedRefSchemasToUnion<TypedRefs> | UnknownTypedObject
+  : TypedRefSchemasToUnion<TypedRefs> | TypedObject
 
 export class TypedUnionSchema<
   TypedRefs extends readonly TypedRefSchema[] = any,
