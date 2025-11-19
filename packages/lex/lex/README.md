@@ -1,8 +1,38 @@
 # @atproto/lex
 
-Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for managing Lexicon schemas and a client for making authenticated XRPC requests.
+A toolkit for working with [Lexicon schemas](https://atproto.com/specs/lexicon) in AT. This package provides CLI tools for managing Lexicon schemas and a client for making authenticated XRPC requests.
 
-- [Overview](#overview)
+Provides:
+
+- CLI tools for managing Lexicon schemas
+- Runtime client for type-safe XRPC requests
+
+**Example usage**
+
+```typescript
+const profile = await client.call(app.bsky.actor.getProfile, {
+  actor: 'jcsalterego.bsky.social',
+})
+
+await client.create(app.bsky.feed.post, {
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
+})
+
+const posts = await client.list(app.bsky.feed.post, {
+  limit: 10,
+  repo: 'jcsalterego.bsky.social',
+})
+
+app.bsky.actor.profile.$validate({
+  $type: 'app.bsky.actor.profile',
+  displayName: 'Ha'.repeat(32) + '!',
+}) // { success: false, error: Error: grapheme too big (maximum 64) at $.displayName (got 65) }
+```
+
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [JSON Schemas](#json-schemas)
@@ -25,63 +55,6 @@ Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for m
   - [Actions](#actions)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
 - [License](#license)
-
-## Overview
-
-`@atproto/lex` is a comprehensive toolkit for working with [Lexicon schemas](https://atproto.com/specs/lexicon) in the AT Protocol ecosystem. It provides both CLI tools for managing schemas and a runtime client for making type-safe XRPC requests.
-
-**What it does**
-
-- **Schema Management**: Install, version, and manage Lexicon schemas from the Atmosphere network
-- **Code Generation**: Generate TypeScript types and runtime validators from Lexicon schemas
-- **Type-Safe Client**: Make authenticated XRPC requests with full TypeScript type safety
-- **Validation**: Validate data against Lexicon schemas at runtime
-- **Actions**: Compose higher-level operations from low-level XRPC calls
-
-**Why use it?**
-
-Working directly with XRPC endpoints requires manually tracking schema definitions, validating data structures, and managing authentication. `@atproto/lex` automates this by:
-
-1. Fetching schemas from the network and generating TypeScript types
-2. Providing runtime validation to ensure data matches schemas
-3. Offering a type-safe client that knows which parameters each endpoint expects
-4. Supporting modern patterns like tree-shaking and composition
-
-**Example usage**
-
-```typescript
-import { Client } from '@atproto/lex'
-import * as app from './lexicons/app.js'
-
-// Create an (authenticated) client
-const client = new Client(...)
-
-// Call XRPC procedures and queries
-const profile = await client.call(app.bsky.actor.getProfile, {
-  actor: 'jcsalterego.bsky.social',
-})
-
-// Create records
-await client.create(app.bsky.feed.post, {
-  text: 'Hello, world!',
-  createdAt: new Date().toISOString(),
-})
-
-// List records
-const posts = await client.list(app.bsky.feed.post, {
-  limit: 10,
-  repo: 'jcsalterego.bsky.social',
-})
-
-// Call actions
-await client.call(likeAll, posts)
-
-// Validate data
-app.bsky.actor.profile.$validate({
-  $type: 'app.bsky.actor.profile',
-  displayName: 'Ha'.repeat(32) + '!',
-}) // { success: false, error: Error: grapheme too big (maximum 64) at $.displayName (got 65) }
-```
 
 ## Installation
 
