@@ -20,7 +20,7 @@
     "./bin"
   ],
   "bin": {
-    "lex": "./bin/lex"
+    "ts-lex": "./bin/ts-lex"
   },
   "sideEffects": false,
   "main": "./index.js",
@@ -45,7 +45,7 @@
     "jest": "^28.1.2"
   },
   "scripts": {
-    "build": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons -- ignore additional npm args",
+    "build": "./bin/ts-lex build --clear --lexicons ./lexicons --out ./tests/lexicons -- ignore additional npm args",
     "test": "jest"
   }
 }

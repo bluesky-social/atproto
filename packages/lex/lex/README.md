@@ -5,13 +5,10 @@ Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for m
 - [Examples](#examples)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-  - [1. Install Lexicons](#1-install-lexicons)
-  - [2. Generate TypeScript Definitions](#2-generate-typescript-definitions)
-  - [3. Use in Your Application](#3-use-in-your-application)
-- [JSON Schema](#json-schema)
+- [JSON Schemas](#json-schemas)
 - [TypeScript Schemas](#typescript-schemas)
   - [Generated Schema Structure](#generated-schema-structure)
-  - [Type Extraction](#type-extraction)
+  - [Type definitions](#type-definitions)
   - [Validation Helpers](#validation-helpers)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
@@ -55,17 +52,17 @@ for (const post of list.values) {
 
 ```bash
 npm install -g @atproto/lex
-lex --help
+ts-lex --help
 ```
 
 ## Quick Start
 
-### 1. Install Lexicons
+**1. Install Lexicons**
 
 Install the Lexicon schemas you need for your application:
 
 ```bash
-lex install app.bsky.feed.post app.bsky.feed.like
+ts-lex install app.bsky.feed.post app.bsky.feed.like
 ```
 
 > [!NOTE]
@@ -84,7 +81,7 @@ This creates:
 
 Make sure to commit these files to version control.
 
-### 2. Generate TypeScript Definitions
+**2. Generate TypeScript Definitions**
 
 TypeScript definitions will be automatically built when installing the lexicons.
 
@@ -95,10 +92,10 @@ the build command separately. For that purpose, make sure to use the
 Generate TypeScript definitions for your installed Lexicons:
 
 ```bash
-lex build --lexicons ./lexicons --out ./src/lexicons
+ts-lex build --lexicons ./lexicons --out ./src/lexicons
 ```
 
-### 3. Use in Your Application
+**3. Use in Your Application**
 
 ```typescript
 import { Client } from '@atproto/lex'
@@ -113,25 +110,25 @@ const response = await client.call(app.bsky.actor.getProfile, {
 })
 ```
 
-## JSON Schema
+## JSON Schemas
 
-The `lex install` command fetches Lexicon JSON schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
+The `ts-lex install` command fetches Lexicon JSON schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
 
 ```bash
 # Install Lexicons and update lexicons.json (default behavior)
-lex install app.bsky.feed.post
+ts-lex install app.bsky.feed.post
 
 # Install all Lexicons from lexicons.json manifest
-lex install
+ts-lex install
 
 # Install specific Lexicons without updating manifest
-lex install --no-save app.bsky.feed.post app.bsky.actor.profile
+ts-lex install --no-save app.bsky.feed.post app.bsky.actor.profile
 
 # Update (re-fetch) all installed Lexicons to latest versions
-lex install --update
+ts-lex install --update
 
 # Fetch any missing Lexicons and verify against manifest
-lex install --ci
+ts-lex install --ci
 ```
 
 Options:
@@ -146,10 +143,10 @@ Options:
 
 ## TypeScript Schemas
 
-The `lex build` command generates TypeScript schemas from Lexicon JSON files. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
+The `ts-lex build` command generates TypeScript schemas from Lexicon JSON files. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
 
 ```bash
-lex build --lexicons ./lexicons --out ./src/lexicons
+ts-lex build --lexicons ./lexicons --out ./src/lexicons
 ```
 
 Options:
@@ -174,9 +171,9 @@ Each Lexicon generates a TypeScript module with:
 - **Schema instances** - Runtime validation objects with methods
 - **Exported utilities** - Convenience functions for common operations
 
-### Type Extraction
+### Type definitions
 
-Use the `Infer` utility type to extract TypeScript types from schemas:
+You can extract TypeScript types from the generated schemas for use in you application:
 
 ```typescript
 import * as app from './lexicons/app.js'
@@ -641,8 +638,8 @@ Add these scripts to your `package.json`:
 ```json
 {
   "scripts": {
-    "lex:update": "lex install --update --save",
-    "postinstall": "lex install --ci"
+    "lex:update": "ts-lex install --update --save",
+    "postinstall": "ts-lex install --ci"
   }
 }
 ```
@@ -691,7 +688,7 @@ import * as app from './lexicons/app.js'
 For library authors, use `--pure-annotations` when building:
 
 ```bash
-lex build --pure-annotations
+ts-lex build --pure-annotations
 ```
 
 This will make the generated code more tree-shakeable from places that import your library.
