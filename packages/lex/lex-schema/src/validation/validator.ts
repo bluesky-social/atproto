@@ -1,4 +1,4 @@
-import { ResultFailure, ResultSuccess } from '../util/result.js'
+import { ResultFailure, ResultSuccess, failure, success } from '../core.js'
 import { PropertyKey } from './property-key.js'
 import { ValidationError } from './validation-error.js'
 import {
@@ -247,17 +247,13 @@ export class ValidatorContext {
   }
 
   success<V>(value: V): ValidationResult<V> {
-    return { success: true, value }
+    return success(value)
   }
 
   failure(issue: ContextualIssue): ValidationFailure {
-    return {
-      success: false,
-      error: new ValidationError([
-        ...this.issues,
-        asIssue(issue, this.currentPath),
-      ]),
-    }
+    return failure(
+      new ValidationError([...this.issues, asIssue(issue, this.currentPath)]),
+    )
   }
 
   issueInvalidValue(

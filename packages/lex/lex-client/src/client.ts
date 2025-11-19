@@ -59,7 +59,11 @@ export type XrpcOutputBody<M extends Procedure | Query> = InferPayloadBody<
   M['output']
 >
 export type XrpcOutput<M extends Procedure | Query> = {
+  /**
+   * Allows for convenient discrimination against {@link ResultFailure}
+   */
   success: true
+
   status: number
   headers: Headers
   encoding: XrpcOutputEncoding<M>

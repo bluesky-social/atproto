@@ -1,5 +1,5 @@
 import { LexValue } from '@atproto/lex-data'
-import { Procedure, Query, l } from '@atproto/lex-schema'
+import { l } from '@atproto/lex-schema'
 
 export enum KnownError {
   Unknown = 'Unknown',
@@ -34,8 +34,17 @@ export const xrpcErrorBodySchema = l.object(
   { required: ['error'] },
 ) satisfies l.Validator<XrpcErrorBody>
 
-export class XrpcError<N extends XrpcErrorName = XrpcErrorName> extends Error {
+export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
+  extends Error
+  implements l.ResultFailure<XrpcError<N>>
+{
+  /** @see {@link l.ResultFailure.success} */
   readonly success = false
+
+  /** @see {@link l.ResultFailure.error} */
+  get error(): this {
+    return this
+  }
 
   constructor(
     public readonly name: N,
@@ -134,7 +143,9 @@ export class XrpcResponseError<
     )
   }
 
-  static catcherFor<const M extends Procedure | Query>(ns: M | { main: M }) {
+  static catcherFor<const M extends l.Procedure | l.Query>(
+    ns: M | { main: M },
+  ) {
     const schema = 'main' in ns ? ns.main : ns
     return catcherFor.bind(schema) as (
       err: unknown,
@@ -149,7 +160,10 @@ export class XrpcResponseError<
   }
 }
 
-function catcherFor(this: Procedure | Query, err: unknown): XrpcResponseError {
+function catcherFor(
+  this: l.Procedure | l.Query,
+  err: unknown,
+): XrpcResponseError {
   if (
     this.errors?.length &&
     err instanceof XrpcResponseError &&

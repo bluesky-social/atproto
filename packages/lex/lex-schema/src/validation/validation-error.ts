@@ -1,4 +1,4 @@
-import { ResultFailure, extractFailureError } from '../util/result.js'
+import { ResultFailure, failureError } from '../core.js'
 import {
   ValidationIssue,
   aggregateIssues,
@@ -22,7 +22,7 @@ export class ValidationError extends Error {
     const issues = failures.flatMap(extractFailureIssues)
     return new ValidationError(aggregateIssues(issues), {
       // Keep the original errors as the cause chain
-      cause: failures.map(extractFailureError),
+      cause: failures.map(failureError),
     })
   }
 }
