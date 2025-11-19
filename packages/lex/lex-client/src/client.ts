@@ -18,7 +18,7 @@ import {
   ValidationResult,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcResponseError } from './error.js'
+import { KnownError, XrpcError, XrpcResponseError } from './error.js'
 import * as com from './lexicons/com.js'
 import { XrpcResponse, XrpcResponseBody } from './response.js'
 import { CallOptions, Namespace, Service, getMain } from './types.js'
@@ -148,7 +148,7 @@ export class Client implements Agent {
   }
 
   public assertAuthenticated(): asserts this is { did: Did } {
-    if (!this.did) throw new Error('Not authenticated')
+    if (!this.did) throw new XrpcError(KnownError.AuthenticationRequired)
   }
 
   public setLabelers(labelers: Iterable<Did> = []) {
