@@ -1,12 +1,14 @@
 import { LexValue } from '@atproto/lex-data'
 import {
   Infer,
+  ObjectSchema,
   Procedure,
   Query,
   ResultFailure,
+  StringSchema,
   Validator,
-  l,
 } from '@atproto/lex-schema'
+import { Namespace, getMain } from './types.js'
 
 export enum KnownError {
   Unknown = 'Unknown',
@@ -27,7 +29,7 @@ export enum KnownError {
 }
 
 export type XrpcErrorName = Infer<typeof xrpcErrorNameSchema>
-export const xrpcErrorNameSchema = l.string({
+export const xrpcErrorNameSchema = new StringSchema({
   minLength: 1,
   knownValues: Object.keys(KnownError) as KnownError[],
 })
@@ -36,8 +38,8 @@ export type XrpcErrorBody<N extends XrpcErrorName = XrpcErrorName> = {
   error: N
   message?: string
 }
-export const xrpcErrorBodySchema = l.object(
-  { error: xrpcErrorNameSchema, message: l.string() },
+export const xrpcErrorBodySchema = new ObjectSchema(
+  { error: xrpcErrorNameSchema, message: new StringSchema({}) },
   { required: ['error'] },
 ) satisfies Validator<XrpcErrorBody>
 
@@ -48,14 +50,6 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
   extends Error
   implements ResultFailure<XrpcError<N>>
 {
-  /** @see {@link ResultFailure.success} */
-  readonly success = false as const
-
-  /** @see {@link ResultFailure.error} */
-  get error(): this {
-    return this
-  }
-
   constructor(
     public readonly name: N,
     message: string = name === KnownError.InvalidResponse
@@ -69,6 +63,14 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
     options?: ErrorOptions,
   ) {
     super(message, options)
+  }
+
+  /** @see {@link ResultFailure.success} */
+  readonly success = false as const
+
+  /** @see {@link ResultFailure.error} */
+  get error(): this {
+    return this
   }
 
   static catcher(err: unknown): XrpcError {
@@ -122,40 +124,9 @@ export class XrpcResponseError<
     super(body.error, body.message, options)
   }
 
-  static fromResponse(
-    status: number,
-    headers: Headers,
-    encoding: undefined | string,
-    body: undefined | LexValue,
-  ): XrpcResponseError | XrpcServiceError {
-    // All unsuccessful responses should follow a standard error response
-    // schema. The Content-Type should be application/json, and the payload
-    // should be a JSON object with the following fields:
-    // - error (string, required): type name of the error (generic ASCII
-    //   constant, no whitespace)
-    // - message (string, optional): description of the error, appropriate for
-    //   display to humans
-    if (
-      body != null &&
-      encoding === 'application/json' &&
-      xrpcErrorBodySchema.check(body)
-    ) {
-      return new XrpcResponseError(status, headers, encoding, body)
-    }
-
-    return new XrpcServiceError(
-      status >= 500
-        ? KnownError.InternalServerError
-        : KnownError.InvalidResponse,
-      status,
-      headers,
-      body,
-    )
-  }
-
-  static catcherFor<const M extends Procedure | Query>(ns: M | { main: M }) {
-    const schema = 'main' in ns ? ns.main : ns
-    return catcherFor.bind(schema) as (
+  static catcherFor<const M extends Procedure | Query>(ns: Namespace<M>) {
+    const method = getMain(ns)
+    return catcherFor.bind(method) as (
       err: unknown,
     ) => M extends { errors: readonly (infer N extends string)[] }
       ? XrpcResponseError<N>
