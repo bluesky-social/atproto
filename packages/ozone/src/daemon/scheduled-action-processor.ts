@@ -88,6 +88,8 @@ export class ScheduledActionProcessor {
             {
               const eventData = action.eventData as ModEventTakedown & {
                 modTool?: ModTool
+                emailSubject?: string
+                emailContent?: string
               }
               modTool = eventData.modTool
               event = {
@@ -100,13 +102,10 @@ export class ScheduledActionProcessor {
                 severityLevel: eventData.severityLevel,
                 strikeCount: eventData.strikeCount,
               }
-              const emailData = action.eventData as {
-                emailSubject?: string
-                emailContent?: string
-              }
-              if (emailData.emailSubject && emailData.emailContent) {
-                email.subject = emailData.emailSubject
-                email.content = emailData.emailContent
+
+              if (eventData.emailSubject && eventData.emailContent) {
+                email.subject = eventData.emailSubject
+                email.content = eventData.emailContent
               }
             }
             break
@@ -231,7 +230,10 @@ export class ScheduledActionProcessor {
           content: email.content,
           subjectLine: email.subject,
           $type: 'tools.ozone.moderation.defs#modEventEmail',
-          comment: 'Communication attached to scheduled action',
+          comment: [
+            'Communication attached to scheduled action',
+            isDelivered ? '' : 'Email delivery failed',
+          ].join('.'),
           isDelivered,
         },
         subject,

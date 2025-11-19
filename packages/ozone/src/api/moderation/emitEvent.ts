@@ -177,8 +177,8 @@ const handleModerationEvent = async ({
       )
       event.isDelivered = true
     } catch (err) {
-      httpLogger.error({ err, event }, 'failed to send mod event email')
       event.isDelivered = false
+      httpLogger.error({ err, event }, 'failed to send mod event email')
     }
   }
 

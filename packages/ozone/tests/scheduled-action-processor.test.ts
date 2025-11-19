@@ -224,7 +224,9 @@ describe('scheduled action processor', () => {
       // Verify the moderation event has all properties
       const modEvents = await getModerationEvents(testSubject, [
         'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventEmail',
       ])
+      // No email was sent
       expect(modEvents.length).toBe(1)
 
       const takedownEvent = modEvents[0].event as ModEventTakedown
