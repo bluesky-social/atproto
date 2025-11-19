@@ -98,6 +98,7 @@ This creates:
 Make sure to commit the `lexicons.json` manifest and the `lexicons/` directory containing the JSON files to version control.
 
 ```bash
+echo "./src/lexicons" >> .gitignore
 git add lexicons.json lexicons/
 git commit -m "Install Lexicons"
 ```
@@ -108,7 +109,7 @@ git commit -m "Install Lexicons"
 import { Client } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
-// Create an unauthenticated client
+// Create a client instance
 const client = new Client('https://public.api.bsky.app')
 
 // Start making requests using generated schemas
@@ -154,7 +155,7 @@ Options:
 
 ## TypeScript Schemas
 
-The `ts-lex build` command generates TypeScript schemas from Lexicon JSON files. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
+The `ts-lex install` comman automatically builds TypeScript schemas after installing Lexicon JSON files. You can also run the build step separately using the `ts-lex build` command. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
 
 ```bash
 ts-lex build --lexicons ./lexicons --out ./src/lexicons
@@ -198,13 +199,6 @@ const post: Post = {
   text: 'Hello, AT Protocol!',
   createdAt: new Date().toISOString(),
 }
-
-// Create a post using helpers
-const newPost = app.bsky.feed.post.$build({
-  // $type is auto-filled
-  text: 'Building a post with defaults!',
-  createdAt: new Date().toISOString(),
-})
 ```
 
 ### Validation Helpers
@@ -267,7 +261,7 @@ try {
   // post is now typed and validated
   console.log(post.text)
 } catch (error) {
-  console.error('Validation failed:', error.message)
+  console.error('Validation failed:', error)
 }
 ```
 
@@ -287,7 +281,7 @@ const result = app.bsky.feed.post.$validate({
 if (result.success) {
   console.log('Valid post:', result.value)
 } else {
-  console.error('Validation errors:', result.errors)
+  console.error('Validation failed:', result.error)
 }
 ```
 
@@ -298,7 +292,7 @@ Creates a valid object by applying defaults for optional fields:
 ```typescript
 import * as app from './lexicons/app.js'
 
-// Build a like record with defaults
+// Build a like record with defaults (and without needing to specify $type)
 const like = app.bsky.feed.like.$build({
   subject: {
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',
@@ -310,7 +304,7 @@ const like = app.bsky.feed.like.$build({
 
 #### `$isTypeOf(data)` - Type Discriminator
 
-Record schemas include additional metadata for AT Protocol record types:
+Discriminates (already validated) data by `$type`, without re-validating. This is especially useful when working with union types:
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -361,7 +355,7 @@ For detailed OAuth setup, see the [@atproto/oauth-client](../../../oauth/oauth-c
 
 #### Creating a Client from Another Client
 
-You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the option to override specific settings.
+You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the ability to override specific settings.
 
 ```typescript
 import { Client } from '@atproto/lex'
@@ -369,16 +363,15 @@ import { Client } from '@atproto/lex'
 // Base client with authentication
 const baseClient = new Client(session)
 
-// Create a new client with additional configuration
-const configuredClient = new Client(baseClient, {
-  // These settings will be merged with baseClient's settings
-  labelers: ['did:plc:labeler123'],
-  headers: { 'x-app-version': '1.0.0' },
-})
+baseClient.setLabelers(['did:plc:labelerA', 'did:plc:labelerB'])
+baseClient.headers.set('x-app-version', '1.0.0')
 
-// Both clients share the same authentication but have different settings
-console.log(baseClient.did === configuredClient.did) // true
-console.log(baseClient.labelers.size === configuredClient.labelers.size) // false
+// Create a new client with additional configuration that will get merged with
+// baseClient's settings on every request.
+const configuredClient = new Client(baseClient, {
+  labelers: ['did:plc:labelerC'],
+  headers: { 'x-trace-id': 'abc123' },
+})
 ```
 
 This pattern is particularly useful when you need to:
