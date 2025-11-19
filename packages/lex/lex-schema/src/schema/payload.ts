@@ -8,7 +8,7 @@ export type LexBody<E extends string = any> = E extends `text/${string}`
     : Uint8Array
 
 export type InferPayloadEncoding<P extends Payload> =
-  P extends Payload<infer E, any> ? E : never
+  P extends Payload<infer E, any> ? E : undefined
 
 export type InferPayloadBody<P extends Payload> =
   P extends Payload<any, infer S>
@@ -16,8 +16,8 @@ export type InferPayloadBody<P extends Payload> =
       ? V
       : P extends Payload<infer E extends string>
         ? LexBody<E>
-        : never
-    : never
+        : undefined
+    : undefined
 
 export type PayloadOutput<
   E extends string | undefined = any,

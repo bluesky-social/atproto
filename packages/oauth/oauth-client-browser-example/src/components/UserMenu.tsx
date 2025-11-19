@@ -13,7 +13,7 @@ export function UserMenu() {
 
   const { did } = session
 
-  const displayName = getProfile.data?.displayName
+  const displayName = getProfile.data?.value?.displayName
   const handle = getSession.data?.handle
 
   return (

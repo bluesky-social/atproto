@@ -364,7 +364,7 @@ const lexiconPermissionSchema = l.object(
   },
   {
     required: ['type', 'resource'],
-    unknownProperties: l.dict(l.string(), l.parameterSchema),
+    unknownProperties: l.paramsSchema,
   },
 )
 

@@ -178,7 +178,7 @@ export class LexDefBuilder {
 
     const parametersTypeStmt = this.file.addTypeAlias({
       isExported: true,
-      name: 'Parameters',
+      name: 'Params',
       type: `l.InferProcedureParameters<typeof ${ref.varName}>`,
     })
 

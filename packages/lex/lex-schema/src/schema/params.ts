@@ -1,9 +1,11 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
-import { Parameter, parameterSchema } from './_parameters.js'
-import { ObjectSchemaOutput } from './object.js'
+import { Param, paramSchema } from './_parameters.js'
+import { ObjectSchemaPropertiesOutput } from './object.js'
 
-export type ParamsSchemaProperties = { [_ in string]: Validator<Parameter> }
+export type ParamsSchemaProperties = {
+  [_ in string]: Validator<Param>
+}
 
 export type ParamsSchemaOptions = {
   required?: readonly string[]
@@ -12,7 +14,7 @@ export type ParamsSchemaOptions = {
 export type ParamsSchemaOutput<
   P extends ParamsSchemaProperties,
   O extends ParamsSchemaOptions,
-> = ObjectSchemaOutput<P, O>
+> = ObjectSchemaPropertiesOutput<P, O>
 
 export type InferParamsSchema<T> =
   T extends ParamsSchema<infer P, infer O>
@@ -38,7 +40,7 @@ export class ParamsSchema<
     super()
   }
 
-  get validatorsMap(): Map<string, Validator<Parameter>> {
+  get validatorsMap(): Map<string, Validator<Param>> {
     const map = new Map(Object.entries(this.validators))
 
     // Cache the map on the instance (to avoid re-creating it)
@@ -63,11 +65,11 @@ export class ParamsSchema<
     // Lazily copy value
     let copy: undefined | Record<string, unknown>
 
+    // Ensure that non-specified params conform to param schema
     for (const key in input) {
       if (this.validatorsMap.has(key)) continue
 
-      // In "passthrough" mode we still need to ensure that params are valid
-      const result = ctx.validateChild(input, key, parameterSchema)
+      const result = ctx.validateChild(input, key, paramSchema)
       if (!result.success) return result
 
       if (result.value !== input[key]) {

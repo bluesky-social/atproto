@@ -353,7 +353,7 @@ describe('Client', () => {
 
       const client = new Client({ fetchHandler, did })
 
-      const post = await client.get(app.bsky.feed.post, {
+      const { value: post } = await client.get(app.bsky.feed.post, {
         rkey: '2222222222222',
       })
 

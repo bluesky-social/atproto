@@ -1,6 +1,6 @@
-import { Parameter } from './_parameters.js'
+import { Params } from './_parameters.js'
 
-export type PermissionOptions = Record<string, Parameter>
+export type PermissionOptions = Params
 
 export class Permission<
   const Resource extends string = any,
