@@ -1,5 +1,5 @@
 import { resolveTxt } from 'node:dns/promises'
-import { Client, LexRpcResponseError, buildAgent } from '@atproto/lex-client'
+import { Client, buildAgent } from '@atproto/lex-client'
 import { LexiconDocument, lexiconDocumentSchema } from '@atproto/lex-document'
 import { AtUri, NSID } from '@atproto/syntax'
 import {
@@ -98,7 +98,6 @@ export class LexResolver {
     // DID document key
     const response = await new Client(agent)
       .getRecord('com.atproto.lexicon.schema', nsid.toString(), { repo: did })
-      .then(LexRpcResponseError.parseResponseSuccess)
       .catch((cause) => {
         throw new LexResolverError(
           nsid,
