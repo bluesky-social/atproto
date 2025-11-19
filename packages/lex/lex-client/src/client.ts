@@ -657,7 +657,7 @@ function xrpcRequestBody(
 
 async function xrpcResponse<M extends Query | Procedure>(
   response: Response,
-  { output }: M,
+  schema: M,
   options: CallOptions,
 ): Promise<XrpcOutput<M>> {
   // @NOTE The body MUST either be read or canceled to avoid resource leaks.
@@ -688,18 +688,17 @@ async function xrpcResponse<M extends Query | Procedure>(
   }
 
   // Check response encoding
-  if (output.encoding !== encoding) {
+  if (schema.output.encoding !== encoding) {
     throw new XrpcServiceError(
       KnownError.InvalidResponse,
       response.status,
       response.headers,
       body,
-      `Expected response with content-type ${output.encoding}, got ${encoding}`,
+      `Expected response with content-type ${schema.output.encoding}, got ${encoding}`,
     )
   }
 
-  if (output.encoding == null) {
-    // No output expected
+  if (schema.output.encoding == null) {
     if (body !== undefined) {
       throw new XrpcServiceError(
         KnownError.InvalidResponse,
@@ -714,20 +713,30 @@ async function xrpcResponse<M extends Query | Procedure>(
       success: true,
       status: response.status,
       headers: response.headers,
-      encoding: output.encoding,
+      encoding: schema.output.encoding,
       body: undefined as InferPayloadBody<M['output']>,
     }
   } else {
-    // Output expected
+    // @NOTE this should already be enforced by readXrpcResponseBody
+    if (body === undefined) {
+      throw new XrpcServiceError(
+        KnownError.InvalidResponse,
+        response.status,
+        response.headers,
+        body,
+        `Expected non-empty response body`,
+      )
+    }
+
     return {
       success: true,
       status: response.status,
       headers: response.headers,
-      encoding: output.encoding,
+      encoding: schema.output.encoding,
       body:
-        output.schema == null || options.validateResponse === false
+        schema.output.schema == null || options.validateResponse === false
           ? body
-          : output.schema.parse(body),
+          : schema.output.schema.parse(body),
     }
   }
 }

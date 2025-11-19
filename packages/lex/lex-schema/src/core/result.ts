@@ -19,7 +19,55 @@ export function successValue<T>(result: ResultSuccess<T>): T {
   return result.value
 }
 
-export function catcher(err: unknown): ResultFailure<Error> {
+/**
+ * Catches any error and wraps it in a {@link ResultFailure<Error>}.
+ *
+ * @param err - The error to catch.
+ * @returns A {@link ResultFailure<Error>} containing the caught error.
+ * @example
+ *
+ * ```ts
+ * declare function someFunction(): Promise<ResultSuccess<string>>
+ *
+ * const result = await someFunction().catch(catchall)
+ * if (result.success) {
+ *   console.log(result.value) // string
+ * } else {
+ *   console.error(result.error instanceof Error) // true
+ *   console.error(result.error.message) // string
+ * }
+ * ```
+ */
+export function catchall(err: unknown): ResultFailure<Error> {
   if (err instanceof Error) return failure(err)
-  throw err
+  return failure(new Error('Unknown error', { cause: err }))
+}
+
+/**
+ * Creates a catcher function for the given constructor that wraps caught errors
+ * in a {@link ResultFailure}.
+ *
+ * @example
+ *
+ * ```ts
+ * class FooError extends Error {}
+ * class BarError extends Error {}
+ *
+ * declare function someFunction(): Promise<ResultSuccess<string>>
+ *
+ * const result = await someFunction()
+ *   .catch(createCatcher(FooError))
+ *   .catch(createCatcher(BarError))
+ *
+ * if (result.success) {
+ *   console.log(result.value) // string
+ * } else {
+ *   console.error(result.error) // FooError | BarError
+ * }
+ */
+export function createCatcher<T>(Ctor: new (...args: any[]) => T) {
+  return (err: unknown): ResultFailure<T> => {
+    if (err instanceof Ctor) return failure(err)
+    throw err
+  }
 }

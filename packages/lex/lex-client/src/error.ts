@@ -1,5 +1,12 @@
 import { LexValue } from '@atproto/lex-data'
-import { l } from '@atproto/lex-schema'
+import {
+  Infer,
+  Procedure,
+  Query,
+  ResultFailure,
+  Validator,
+  l,
+} from '@atproto/lex-schema'
 
 export enum KnownError {
   Unknown = 'Unknown',
@@ -19,7 +26,7 @@ export enum KnownError {
   XRPCNotSupported = 'XRPCNotSupported',
 }
 
-export type XrpcErrorName = l.Infer<typeof xrpcErrorNameSchema>
+export type XrpcErrorName = Infer<typeof xrpcErrorNameSchema>
 export const xrpcErrorNameSchema = l.string({
   minLength: 1,
   knownValues: Object.keys(KnownError) as KnownError[],
@@ -32,16 +39,19 @@ export type XrpcErrorBody<N extends XrpcErrorName = XrpcErrorName> = {
 export const xrpcErrorBodySchema = l.object(
   { error: xrpcErrorNameSchema, message: l.string() },
   { required: ['error'] },
-) satisfies l.Validator<XrpcErrorBody>
+) satisfies Validator<XrpcErrorBody>
 
+/**
+ * @implements {ResultFailure<XrpcError<N>>} for convenience in result handling contexts.
+ */
 export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
   extends Error
-  implements l.ResultFailure<XrpcError<N>>
+  implements ResultFailure<XrpcError<N>>
 {
-  /** @see {@link l.ResultFailure.success} */
-  readonly success = false
+  /** @see {@link ResultFailure.success} */
+  readonly success = false as const
 
-  /** @see {@link l.ResultFailure.error} */
+  /** @see {@link ResultFailure.error} */
   get error(): this {
     return this
   }
@@ -143,9 +153,7 @@ export class XrpcResponseError<
     )
   }
 
-  static catcherFor<const M extends l.Procedure | l.Query>(
-    ns: M | { main: M },
-  ) {
+  static catcherFor<const M extends Procedure | Query>(ns: M | { main: M }) {
     const schema = 'main' in ns ? ns.main : ns
     return catcherFor.bind(schema) as (
       err: unknown,
@@ -160,10 +168,7 @@ export class XrpcResponseError<
   }
 }
 
-function catcherFor(
-  this: l.Procedure | l.Query,
-  err: unknown,
-): XrpcResponseError {
+function catcherFor(this: Procedure | Query, err: unknown): XrpcResponseError {
   if (
     this.errors?.length &&
     err instanceof XrpcResponseError &&
