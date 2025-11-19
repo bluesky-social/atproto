@@ -16,6 +16,7 @@ import { RepoSubject } from '../mod-service/subject'
 import { ModEventType } from '../mod-service/types'
 import { ScheduledActionServiceCreator } from '../scheduled-action/service'
 import { SettingService, SettingServiceCreator } from '../setting/service'
+import { retryHttp } from '../util'
 
 export class ScheduledActionProcessor {
   destroyed = false
@@ -75,6 +76,10 @@ export class ScheduledActionProcessor {
         }
 
         let event: ModEventType
+        const email = {
+          subject: '',
+          content: '',
+        }
         let modTool: ModTool | undefined
 
         // Create the appropriate moderation action based on the scheduled action type
@@ -83,6 +88,8 @@ export class ScheduledActionProcessor {
             {
               const eventData = action.eventData as ModEventTakedown & {
                 modTool?: ModTool
+                emailSubject?: string
+                emailContent?: string
               }
               modTool = eventData.modTool
               event = {
@@ -92,6 +99,13 @@ export class ScheduledActionProcessor {
                 acknowledgeAccountSubjects:
                   eventData.acknowledgeAccountSubjects,
                 policies: eventData.policies,
+                severityLevel: eventData.severityLevel,
+                strikeCount: eventData.strikeCount,
+              }
+
+              if (eventData.emailSubject && eventData.emailContent) {
+                email.subject = eventData.emailSubject
+                email.content = eventData.emailContent
               }
             }
             break
@@ -107,6 +121,7 @@ export class ScheduledActionProcessor {
           modTool,
           moderationTxn,
           settingService,
+          email,
         })
 
         // Mark the scheduled action as executed
@@ -142,12 +157,14 @@ export class ScheduledActionProcessor {
   }
 
   async performTakedown({
+    email,
     action,
     event,
     modTool,
     moderationTxn,
     settingService,
   }: {
+    email: { subject: string; content: string }
     action: Selectable<ScheduledAction>
     event: ModEventType
     modTool: ModTool | undefined
@@ -190,7 +207,48 @@ export class ScheduledActionProcessor {
     })
 
     // register the takedown in event pusher
-    await moderationTxn.takedownRepo(subject, moderationEvent.event.id)
+    await moderationTxn.takedownRepo(
+      subject,
+      moderationEvent.event.id,
+      new Set(
+        moderationEvent.event.meta?.targetServices
+          ? `${moderationEvent.event.meta.targetServices}`.split(',')
+          : undefined,
+      ),
+    )
+
+    if (email.content && email.subject) {
+      let isDelivered = false
+      try {
+        await retryHttp(() =>
+          moderationTxn.sendEmail({
+            ...email,
+            recipientDid: action.did,
+          }),
+        )
+        isDelivered = true
+      } catch (err) {
+        dbLogger.error(
+          { err, did: action.did },
+          'failed to send takedown email',
+        )
+      }
+      await moderationTxn.logEvent({
+        event: {
+          content: email.content,
+          subjectLine: email.subject,
+          $type: 'tools.ozone.moderation.defs#modEventEmail',
+          comment: [
+            'Communication attached to scheduled action',
+            isDelivered ? '' : 'Email delivery failed',
+          ].join('.'),
+          isDelivered,
+        },
+        subject,
+        modTool,
+        createdBy: action.createdBy,
+      })
+    }
 
     return moderationEvent
   }

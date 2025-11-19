@@ -308,6 +308,8 @@ export interface ModEventTakedown {
   policies?: string[]
   /** Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.). */
   severityLevel?: string
+  /** List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services. */
+  targetServices?: ('appview' | 'pds' | (string & {}))[]
   /** Number of strikes to assign to the user for this violation. */
   strikeCount?: number
   /** When the strike should expire. If not provided, the strike never expires. */
@@ -634,6 +636,8 @@ export interface ModEventEmail {
   strikeCount?: number
   /** When the strike should expire. If not provided, the strike never expires. */
   strikeExpiresAt?: string
+  /** Indicates whether the email was successfully delivered to the user's inbox. */
+  isDelivered?: boolean
 }
 
 const hashModEventEmail = 'modEventEmail'

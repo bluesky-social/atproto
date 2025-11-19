@@ -1,7 +1,5 @@
-import { ClientOptions, WebSocket } from 'ws'
-import { SECOND, wait } from '@atproto/common'
-import { streamByteChunks } from './stream'
-import { CloseCode, DisconnectError } from './types'
+import { ClientOptions, WebSocket, createWebSocketStream } from 'ws'
+import { SECOND, isErrnoException, wait } from '@atproto/common'
 
 export class WebSocketKeepAlive {
   public ws: WebSocket | null = null
@@ -54,12 +52,18 @@ export class WebSocketKeepAlive {
       })
 
       try {
-        const wsStream = streamByteChunks(this.ws, { signal: ac.signal })
+        const wsStream = createWebSocketStream(this.ws, {
+          signal: ac.signal,
+          readableObjectMode: true, // Ensures frame bytes don't get buffered/combined together
+        })
         for await (const chunk of wsStream) {
           yield chunk
         }
       } catch (_err) {
-        const err = _err?.['code'] === 'ABORT_ERR' ? _err['cause'] : _err
+        const err =
+          isErrnoException(_err) && _err.code === 'ABORT_ERR'
+            ? _err.cause
+            : _err
         if (err instanceof DisconnectError) {
           // We cleanly end the connection
           this.ws?.close(err.wsCode)
@@ -114,13 +118,31 @@ class AbnormalCloseError extends Error {
   code = 'EWSABNORMALCLOSE'
 }
 
+export class DisconnectError extends Error {
+  constructor(
+    public wsCode: CloseCode = CloseCode.Policy,
+    public xrpcCode?: string,
+  ) {
+    super()
+  }
+}
+
+// https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+export enum CloseCode {
+  Normal = 1000,
+  Abnormal = 1006,
+  Policy = 1008,
+}
+
 function isReconnectable(err: unknown): boolean {
   // Network errors are reconnectable.
   // AuthenticationRequired and InvalidRequest XRPCErrors are not reconnectable.
   // @TODO method-specific XRPCErrors may be reconnectable, need to consider. Receiving
   // an invalid message is not current reconnectable, but the user can decide to skip them.
-  if (!err || typeof err['code'] !== 'string') return false
-  return networkErrorCodes.includes(err['code'])
+  if (isErrnoException(err) && typeof err.code === 'string') {
+    return networkErrorCodes.includes(err.code)
+  }
+  return false
 }
 
 const networkErrorCodes = [

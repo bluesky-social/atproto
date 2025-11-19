@@ -1,5 +1,34 @@
 # @atproto/bsky
 
+## 0.0.197
+
+### Patch Changes
+
+- [#4344](https://github.com/bluesky-social/atproto/pull/4344) [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc) Thanks [@foysalit](https://github.com/foysalit)! - Add targetServices param to takedown events allowing mods to specify which service to apply takedown on
+
+- Updated dependencies [[`032abf6b5`](https://github.com/bluesky-social/atproto/commit/032abf6b500fd36f3c0fc1af83bf62caae44fa6e), [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc), [`1dd20d3a8`](https://github.com/bluesky-social/atproto/commit/1dd20d3a81cda29392d8d63d13082254ec5f68a8)]:
+  - @atproto/api@0.18.1
+  - @atproto/xrpc-server@0.9.6
+  - @atproto-labs/xrpc-utils@0.0.23
+  - @atproto/sync@0.1.37
+
+## 0.0.196
+
+### Patch Changes
+
+- [#4333](https://github.com/bluesky-social/atproto/pull/4333) [`f8e56b387`](https://github.com/bluesky-social/atproto/commit/f8e56b387fcd3bc8405225c1bbdef66ca5dc1591) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Prevent usage of DPoP bound access tokens with bsky.social
+
+  Using DPoP bound access tokens against the bsky server would already fail, but
+  it would fail with a rather misleading error: "InvalidToken: Bad token scope",
+  because the `scope` on a DPoP bound access token is the actual OAuth scopes, not
+  the expected `com.atproto.access` string.
+
+  This change means the entryway explicit checks if the token is a DPoP bound
+  access token, and if it is, then it fails with an error "Malformed token: DPoP
+  not supported". A similar check is also done with Bearer tokens in the PDS.
+
+- [#4330](https://github.com/bluesky-social/atproto/pull/4330) [`3628cebfb`](https://github.com/bluesky-social/atproto/commit/3628cebfbb04ba49f326bbf411a2d15de2900302) Thanks [@mistydemeo](https://github.com/mistydemeo)! - adjust explicit-slurs regex
+
 ## 0.0.195
 
 ### Patch Changes

@@ -1,7 +1,7 @@
 import { ClientOptions } from 'ws'
 import { isPlainObject } from '@atproto/lex-data'
+import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream'
-import { WebSocketKeepAlive } from './websocket-keepalive'
 
 export class Subscription<T = unknown> {
   constructor(
@@ -34,7 +34,7 @@ export class Subscription<T = unknown> {
       },
     })
     for await (const chunk of ws) {
-      const message = await ensureChunkIsMessage(chunk)
+      const message = ensureChunkIsMessage(chunk)
       const t = message.header.t
 
       const typedBody = isPlainObject(message.body)

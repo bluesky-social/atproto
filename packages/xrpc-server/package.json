@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc-server",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) server library",
   "keywords": [
@@ -28,6 +28,7 @@
     "@atproto/lex-data": "workspace:*",
     "@atproto/lex-cbor": "workspace:*",
     "@atproto/lexicon": "workspace:^",
+    "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
