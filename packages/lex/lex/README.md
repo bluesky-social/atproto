@@ -2,7 +2,7 @@
 
 Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for managing Lexicon schemas and a client for making authenticated XRPC requests.
 
-- [Examples](#examples)
+- [Showcase Examples](#showcase-examples)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [JSON Schemas](#json-schemas)
@@ -26,26 +26,40 @@ Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for m
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
 - [License](#license)
 
-## Examples
+## Showcase Examples
 
 ```typescript
+import { Client } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+// Create an (authenticated) client
+const client = new Client(...)
+
+// call XRPC procedures and queries
 const profile = await client.call(app.bsky.actor.getProfile, {
-  actor: 'pfrazee.com',
+  actor: 'jcsalterego.bsky.social',
 })
 
+// Create records
 await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
   createdAt: new Date().toISOString(),
 })
 
-const list = await client.list(app.bsky.feed.post, {
+// List records
+const posts = await client.list(app.bsky.feed.post, {
   limit: 10,
-  repo: 'did:plc:pfrazee.com',
+  repo: 'jcsalterego.bsky.social',
 })
 
-for (const post of list.values) {
-  await client.call(likePost, post)
-}
+// Call actions
+await client.call(likeAll, posts)
+
+// validate data
+app.bsky.actor.profile.$validate({
+  $type: 'app.bsky.actor.profile',
+  displayName: 'Ha'.repeat(32) + '!',
+}) // { success: false, error: Error: grapheme too big (maximum 64) at $.displayName (got 65) }
 ```
 
 ## Installation
@@ -65,37 +79,30 @@ Install the Lexicon schemas you need for your application:
 ts-lex install app.bsky.feed.post app.bsky.feed.like
 ```
 
-> [!NOTE]
->
-> If you didn't install the CLI globally, or if you didn't setup your shell's
-> PATH to include your package manager's binaries directory, you can use
-> `npx @atproto/lex` or `pnpm exec lex` to run the command. The recommended
-> approach is to add `@atproto/lex` as part of your project's `devDependencies`
-> and run `lex` via your project's `scripts` (see
-> [Development Workflow](#development-workflow) below).
-
 This creates:
 
 - `lexicons.json` - manifest tracking installed Lexicons and their versions (CIDs)
 - `lexicons/` - directory containing the Lexicon JSON files
 
-Make sure to commit these files to version control.
+> [!NOTE]
+>
+> If you didn't install the CLI globally, or if you didn't setup your shell's
+> PATH to include your package manager's binaries directory, you can use
+> `npx @atproto/lex` or `pnpm exec ts-lex` to run the command. The recommended
+> approach is to add `@atproto/lex` as part of your project's `devDependencies`
+> and run `ts-lex` via your project's `scripts` (see
+> [Development Workflow](#development-workflow) below).
 
-**2. Generate TypeScript Definitions**
+**2. Verify and commit installed Lexicons**
 
-TypeScript definitions will be automatically built when installing the lexicons.
-
-If you wish to customize the output location, or any other options, you can run
-the build command separately. For that purpose, make sure to use the
-`--no-build` flag when installing lexicons to skip the automatic build step.
-
-Generate TypeScript definitions for your installed Lexicons:
+Make sure to commit the `lexicons.json` manifest and the `lexicons/` directory containing the JSON files to version control.
 
 ```bash
-ts-lex build --lexicons ./lexicons --out ./src/lexicons
+git add lexicons.json lexicons/
+git commit -m "Install Lexicons"
 ```
 
-**3. Use in Your Application**
+**3. Use in you code**
 
 ```typescript
 import { Client } from '@atproto/lex'
@@ -104,11 +111,15 @@ import * as app from './lexicons/app.js'
 // Create an unauthenticated client
 const client = new Client('https://public.api.bsky.app')
 
-// Make requests using generated schemas
+// Start making requests using generated schemas
 const response = await client.call(app.bsky.actor.getProfile, {
   actor: 'pfrazee.com',
 })
 ```
+
+> [!TIP]
+>
+> If you wish to customize the output location, or any other options, you can run the `ts-lex build` command separately. For that purpose, make sure to use the `--no-build` flag when installing lexicons to skip the automatic build step.
 
 ## JSON Schemas
 
@@ -549,7 +560,7 @@ const result = await client.list(app.bsky.feed.post, {
   reverse: true,
 })
 
-for (const record of result.values) {
+for (const record of result.records) {
   console.log(record.uri, record.value.text)
 }
 
@@ -581,6 +592,16 @@ client.assertAuthenticated()
 // After this call, TypeScript knows client.did is defined
 const did = client.did // Type: Did (not undefined)
 ```
+
+#### `client.assertDid`
+
+Get the authenticated user's DID, asserting that the client is authenticated.
+
+```typescript
+const did = client.assertDid // Type: Did (throws if not authenticated)
+```
+
+This is equivalent to calling `client.assertAuthenticated()` followed by accessing `client.did`, but provides a more concise way to get the DID when you know authentication is required.
 
 ### Labeler Configuration
 
