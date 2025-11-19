@@ -2,61 +2,32 @@
 
 Type-safe Lexicon tooling for AT Protocol. This package provides CLI tools for managing Lexicon schemas and a client for making authenticated XRPC requests.
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 - [Examples](#examples)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
   - [1. Install Lexicons](#1-install-lexicons)
   - [2. Generate TypeScript Definitions](#2-generate-typescript-definitions)
   - [3. Use in Your Application](#3-use-in-your-application)
-- [CLI Commands](#cli-commands)
-  - [`lex install`](#lex-install)
-  - [`lex build`](#lex-build)
+- [JSON Schema](#json-schema)
+- [TypeScript Schemas](#typescript-schemas)
+  - [Generated Schema Structure](#generated-schema-structure)
+  - [Type Extraction](#type-extraction)
+  - [Validation Helpers](#validation-helpers)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
-    - [Unauthenticated Client](#unauthenticated-client)
-    - [Authenticated Client with OAuth](#authenticated-client-with-oauth)
-    - [Creating a Client from Another Client](#creating-a-client-from-another-client)
-    - [Client with Service Proxy (authenticated only)](#client-with-service-proxy-authenticated-only)
   - [Core Methods](#core-methods)
-    - [`client.call()`](#clientcall)
-    - [`client.create()`](#clientcreate)
-    - [`client.get()`](#clientget)
-    - [`client.put()`](#clientput)
-    - [`client.delete()`](#clientdelete)
-    - [`client.list()`](#clientlist)
   - [Authentication Methods](#authentication-methods)
-    - [`client.did`](#clientdid)
-    - [`client.assertAuthenticated()`](#clientassertauthenticated)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
-- [Workflow Integration](#workflow-integration)
-  - [Development Workflow](#development-workflow)
 - [Advanced Usage](#advanced-usage)
+  - [Workflow Integration](#workflow-integration)
+  - [TypeScript Integration](#typescript-integration)
   - [Tree-Shaking](#tree-shaking)
   - [Custom Headers](#custom-headers)
   - [Request Options](#request-options)
-    - [Base Call Options](#base-call-options)
-    - [Query and Procedure Calls](#query-and-procedure-calls)
-    - [Record Operations (CRUD)](#record-operations-crud)
-- [Actions](#actions)
-  - [What are Actions?](#what-are-actions)
-  - [Using Actions](#using-actions)
-  - [Composing Multiple Operations](#composing-multiple-operations)
-  - [Higher-Order Actions](#higher-order-actions)
-- [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
-  - [Creating Posts](#creating-posts)
-  - [Following Users](#following-users)
-  - [Updating Profile with Retry Logic](#updating-profile-with-retry-logic)
-  - [Packaging Actions as a Library](#packaging-actions-as-a-library)
-  - [Best Practices for Actions](#best-practices-for-actions)
-- [TypeScript Integration](#typescript-integration)
-- [Related Packages](#related-packages)
+  - [Actions](#actions)
+  - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
 - [License](#license)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Examples
 
@@ -142,11 +113,9 @@ const response = await client.call(app.bsky.actor.getProfile, {
 })
 ```
 
-## CLI Commands
+## JSON Schema
 
-### `lex install`
-
-Install Lexicon schemas and their dependencies.
+The `lex install` command fetches Lexicon JSON schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
 
 ```bash
 # Install Lexicons and update lexicons.json (default behavior)
@@ -175,9 +144,9 @@ Options:
 - `--lexicons <dir>` - Directory containing lexicon JSON files (default: `./lexicons`)
 - `--out <dir>` - Output directory for generated TS files (default: `./src/lexicons`)
 
-### `lex build`
+## TypeScript Schemas
 
-Generate TypeScript definitions from Lexicon JSON files.
+The `lex build` command generates TypeScript schemas from Lexicon JSON files. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
 
 ```bash
 lex build --lexicons ./lexicons --out ./src/lexicons
@@ -196,6 +165,159 @@ Options:
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
 - `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
 - `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references
+
+### Generated Schema Structure
+
+Each Lexicon generates a TypeScript module with:
+
+- **Type definitions** - TypeScript types extracted from the schema
+- **Schema instances** - Runtime validation objects with methods
+- **Exported utilities** - Convenience functions for common operations
+
+### Type Extraction
+
+Use the `Infer` utility type to extract TypeScript types from schemas:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+// Extract the type for a post record
+type Post = app.bsky.feed.post.Main
+
+// Use the extracted types
+const post: Post = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello, AT Protocol!',
+  createdAt: new Date().toISOString(),
+}
+
+// Create a post using helpers
+const newPost = app.bsky.feed.post.$build({
+  // $type is auto-filled
+  text: 'Building a post with defaults!',
+  createdAt: new Date().toISOString(),
+})
+```
+
+### Validation Helpers
+
+Each schema provides multiple validation methods:
+
+#### `$nsid` - Namespace Identifier
+
+Returns the NSID of the schema:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+console.log(app.bsky.feed.defs.$nsid) // 'app.bsky.feed.defs'
+```
+
+#### `$type` - Type Identifier
+
+Returns the `$type` string of the schema (for record and object schemas):
+
+```typescript
+import * as app from './lexicons/app.js'
+
+console.log(app.bsky.feed.post.$type) // 'app.bsky.feed.post'
+console.log(app.bsky.actor.defs.profileViewBasic.$type) // 'app.bsky.actor.defs#profileViewBasic'
+```
+
+#### `$check(data)` - Type Guard
+
+Returns `true` if data matches the schema, `false` otherwise. Acts as a TypeScript type guard:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+const data = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: new Date().toISOString(),
+}
+
+if (app.bsky.feed.post.$check(data)) {
+  // TypeScript knows data is a Post here
+  console.log(data.text)
+}
+```
+
+#### `$parse(data)` - Parse and Validate
+
+Validates and returns typed data, throwing an error if validation fails:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+try {
+  const post = app.bsky.feed.post.$main.$parse({
+    $type: 'app.bsky.feed.post',
+    text: 'Hello!',
+    createdAt: new Date().toISOString(),
+  })
+  // post is now typed and validated
+  console.log(post.text)
+} catch (error) {
+  console.error('Validation failed:', error.message)
+}
+```
+
+#### `$validate(data)` - Get Validation Result
+
+Returns a detailed validation result object without throwing:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+const result = app.bsky.feed.post.$validate({
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: new Date().toISOString(),
+})
+
+if (result.success) {
+  console.log('Valid post:', result.value)
+} else {
+  console.error('Validation errors:', result.errors)
+}
+```
+
+#### `$build(data)` - Build with Defaults
+
+Creates a valid object by applying defaults for optional fields:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+// Build a like record with defaults
+const like = app.bsky.feed.like.$build({
+  subject: {
+    uri: 'at://did:plc:abc/app.bsky.feed.post/123',
+    cid: 'bafyrei...',
+  },
+  createdAt: new Date().toISOString(),
+})
+```
+
+#### `$isTypeOf(data)` - Type Discriminator
+
+Record schemas include additional metadata for AT Protocol record types:
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+declare const data:
+  | app.bsky.feed.post.Main
+  | app.bsky.feed.like.Main
+  | l.TypedObject
+
+// Discriminate by $type without re-validating
+if (app.bsky.feed.post.$isTypeOf(data)) {
+  // data is a post
+}
+```
 
 ## Client API
 
@@ -508,9 +630,11 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
-## Workflow Integration
+## Advanced Usage
 
-### Development Workflow
+### Workflow Integration
+
+#### Development Workflow
 
 Add these scripts to your `package.json`:
 
@@ -527,7 +651,29 @@ This ensures:
 
 1. `postinstall` - Lexicons are verified/installed after `npm install`
 
-## Advanced Usage
+### TypeScript Integration
+
+Generated schemas provide full type safety:
+
+```typescript
+import * as app from './lexicons/app.js'
+import type { Infer } from '@atproto/lex'
+
+// Extract types from schemas
+type Post = Infer<typeof app.bsky.feed.post.main>
+
+const post: Post = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: new Date().toISOString(),
+}
+
+// Validation methods
+app.bsky.feed.post.main.check(data) // Type guard
+app.bsky.feed.post.main.validate(data) // Returns ValidationResult
+app.bsky.feed.post.main.parse(data) // Returns typed value or throws
+app.bsky.feed.post.main.build(data) // Build with defaults
+```
 
 ### Tree-Shaking
 
@@ -715,11 +861,11 @@ await client.list(app.bsky.feed.post, {
 })
 ```
 
-## Actions
+### Actions
 
 Actions are composable functions that combine multiple XRPC calls into higher-level operations. They can be invoked using `client.call()` just like Lexicon methods, making them a powerful tool for building library-style APIs on top of the low-level client.
 
-### What are Actions?
+#### What are Actions?
 
 An `Action` is a function with this signature:
 
@@ -737,7 +883,7 @@ Actions receive:
 - `input` - The input data for the action
 - `options` - Call options (signal, headers)
 
-### Using Actions
+#### Using Actions
 
 Actions are called using `client.call()`, the same method used for XRPC queries and procedures:
 
@@ -746,7 +892,7 @@ import { Action, Client } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 // Define an action
-const likePost: Action<
+export const likePost: Action<
   { uri: string; cid: string },
   { uri: string; cid: string }
 > = async (client, { uri, cid }, options) => {
@@ -772,7 +918,7 @@ const like = await client.call(likePost, {
 })
 ```
 
-### Composing Multiple Operations
+#### Composing Multiple Operations
 
 Actions excel at combining multiple XRPC calls:
 
@@ -820,7 +966,7 @@ await client.call(
 )
 ```
 
-### Higher-Order Actions
+#### Higher-Order Actions
 
 Actions can call other actions, enabling powerful composition:
 
@@ -884,11 +1030,11 @@ const enableAdultContent: Action<void, Preference[]> = async (
 await client.call(enableAdultContent)
 ```
 
-## Building Library-Style APIs with Actions
+### Building Library-Style APIs with Actions
 
-Actions enable you to create high-level, convenience APIs similar to `@atproto/api`'s `Agent` class. Here are patterns for common operations:
+Actions enable you to create high-level, convenience APIs similar to [@atproto/api](https://www.npmjs.com/package/@atproto/api)'s `Agent` class. Here are patterns for common operations:
 
-### Creating Posts
+#### Creating Posts
 
 ```typescript
 import { Action } from '@atproto/lex'
@@ -919,7 +1065,7 @@ await client.call(post, {
 })
 ```
 
-### Following Users
+#### Following Users
 
 ```typescript
 import { Action } from '@atproto/lex'
@@ -957,7 +1103,7 @@ const { uri } = await client.call(follow, { did: 'did:plc:abc123' })
 await client.call(unfollow, { followUri: uri })
 ```
 
-### Updating Profile with Retry Logic
+#### Updating Profile with Retry Logic
 
 ```typescript
 import { Action } from '@atproto/lex'
@@ -1033,7 +1179,7 @@ await client.call(updateProfile, {
 })
 ```
 
-### Packaging Actions as a Library
+#### Packaging Actions as a Library
 
 Create a collection of actions for your application:
 
@@ -1096,45 +1242,13 @@ const client = new BskyClient(session)
 await client.post({ text: 'Hello!' })
 ```
 
-### Best Practices for Actions
+#### Best Practices for Actions
 
 1. **Type Safety**: Always provide explicit type parameters for `Action<Input, Output>`
 2. **Authentication**: Use `client.assertAuthenticated()` when auth is required
 3. **Abort Signals**: Check `options.signal?.throwIfAborted()` between long operations
 4. **Composition**: Build complex actions from simpler ones
 5. **Retries**: Implement retry logic for operations with optimistic concurrency control
-
-## TypeScript Integration
-
-Generated schemas provide full type safety:
-
-```typescript
-import * as app from './lexicons/app.js'
-import type { Infer } from '@atproto/lex'
-
-// Extract types from schemas
-type Post = Infer<typeof app.bsky.feed.post.main>
-
-const post: Post = {
-  $type: 'app.bsky.feed.post',
-  text: 'Hello!',
-  createdAt: new Date().toISOString(),
-}
-
-// Validation methods
-app.bsky.feed.post.main.check(data) // Type guard
-app.bsky.feed.post.main.validate(data) // Returns ValidationResult
-app.bsky.feed.post.main.parse(data) // Returns typed value or throws
-app.bsky.feed.post.main.build(data) // Build with defaults
-```
-
-## Related Packages
-
-- [@atproto/oauth-client](../../../oauth/oauth-client) - OAuth authentication
-- [@atproto/oauth-client-browser](../../../oauth/oauth-client-browser) - Browser OAuth
-- [@atproto/oauth-client-node](../../../oauth/oauth-client-node) - Node.js OAuth
-- [@atproto/lex-schema](../lex-schema) - Lexicon schema definitions
-- [@atproto/lex-builder](../lex-builder) - Schema builder (used by CLI)
 
 ## License
 
