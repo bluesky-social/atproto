@@ -20,6 +20,7 @@ import {
   isRevokeAccountCredentialsEvent,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
+import { httpLogger } from '../../logger'
 import { subjectFromInput } from '../../mod-service/subject'
 import { SettingService } from '../../setting/service'
 import { TagService } from '../../tag-service'
@@ -165,13 +166,20 @@ const handleModerationEvent = async ({
       throw new InvalidRequestError('Email can only be sent to a repo subject')
     }
     const { content, subjectLine } = event
-    await retryHttp(() =>
-      ctx.modService(db).sendEmail({
-        subject: subjectLine,
-        content,
-        recipientDid: subject.did,
-      }),
-    )
+    // on error, don't fail the whole event. instead, log the event data with isDelivered false
+    try {
+      await retryHttp(() =>
+        ctx.modService(db).sendEmail({
+          subject: subjectLine,
+          content,
+          recipientDid: subject.did,
+        }),
+      )
+      event.isDelivered = true
+    } catch (err) {
+      event.isDelivered = false
+      httpLogger.error({ err, event }, 'failed to send mod event email')
+    }
   }
 
   if (isModEventDivert(event) && subject.isRecord()) {

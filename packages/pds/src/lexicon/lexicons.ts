@@ -15206,6 +15206,11 @@ export const schemaDict = {
             description:
               'When the strike should expire. If not provided, the strike never expires.',
           },
+          isDelivered: {
+            type: 'boolean',
+            description:
+              "Indicates whether the email was successfully delivered to the user's inbox.",
+          },
         },
       },
       modEventDivert: {
@@ -16958,6 +16963,31 @@ export const schemaDict = {
             },
             description:
               'Names/Keywords of the policies that drove the decision.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user when takedown is applied.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          emailContent: {
+            type: 'string',
+            description: 'Email content to be sent to the user upon takedown.',
+          },
+          emailSubject: {
+            type: 'string',
+            description:
+              'Subject of the email to be sent to the user upon takedown.',
           },
         },
       },

@@ -636,6 +636,8 @@ export interface ModEventEmail {
   strikeCount?: number
   /** When the strike should expire. If not provided, the strike never expires. */
   strikeExpiresAt?: string
+  /** Indicates whether the email was successfully delivered to the user's inbox. */
+  isDelivered?: boolean
 }
 
 const hashModEventEmail = 'modEventEmail'

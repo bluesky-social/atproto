@@ -675,6 +675,10 @@
           "type": "string",
           "format": "datetime",
           "description": "When the strike should expire. If not provided, the strike never expires."
+        },
+        "isDelivered": {
+          "type": "boolean",
+          "description": "Indicates whether the email was successfully delivered to the user's inbox."
         }
       }
     },
