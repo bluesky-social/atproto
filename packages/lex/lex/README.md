@@ -157,7 +157,7 @@ Options:
 
 ## TypeScript Schemas
 
-The `lex install` comman automatically builds TypeScript schemas after installing Lexicon JSON files. You can also run the build step separately using the `lex build` command. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
+The `lex install` command automatically builds TypeScript schemas after installing Lexicon JSON files. You can also run the build step separately using the `lex build` command. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
 
 ```bash
 lex build --lexicons ./lexicons --out ./src/lexicons
