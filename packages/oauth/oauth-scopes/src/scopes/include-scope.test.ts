@@ -569,7 +569,7 @@ describe('IncludeScope', () => {
           type: 'permission',
           resource: 'account',
           attr: 'email',
-          action: 'read',
+          action: ['read'],
         } as const
 
         it('parses valid permission syntax', () => {
@@ -578,7 +578,7 @@ describe('IncludeScope', () => {
           expect(AccountPermission.fromSyntax(syntax)).toMatchObject({
             constructor: AccountPermission,
             attr: 'email',
-            action: 'read',
+            action: ['read'],
           })
         })
 
