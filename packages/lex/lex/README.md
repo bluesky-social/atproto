@@ -1,6 +1,6 @@
 # @atproto/lex
 
-Type-sfe Lexicon tooling for creating great API clients.
+Type-safe Lexicon tooling for creating great API clients.
 
 ```bash
 npm install -g @atproto/lex
