@@ -1,0 +1,41 @@
+{
+  "lexicon": 1,
+  "id": "chat.bsky.authChatAllConvos",
+  "defs": {
+    "main": {
+      "type": "permission-set",
+      "title": "All Chat Conversations",
+      "title:lang": {},
+      "detail": "General control of all chat conversations: read full history, send and delete messages, initiate, end, and mute conversations.",
+      "detail:lang": {
+        "en": "All Chat Conversations"
+      },
+      "permissions": [
+        {
+          "type": "permission",
+          "resource": "rpc",
+          "inheritAud": true,
+          "lxm": [
+            "chat.bsky.convo.acceptConvo",
+            "chat.bsky.convo.addReaction",
+            "chat.bsky.convo.deleteMessageForSelf",
+            "chat.bsky.convo.getConvo",
+            "chat.bsky.convo.getConvoAvailability",
+            "chat.bsky.convo.getConvoForMembers",
+            "chat.bsky.convo.getLog",
+            "chat.bsky.convo.getMessages",
+            "chat.bsky.convo.leaveConvo",
+            "chat.bsky.convo.listConvos",
+            "chat.bsky.convo.muteConvo",
+            "chat.bsky.convo.removeReaction",
+            "chat.bsky.convo.sendMessage",
+            "chat.bsky.convo.sendMessageBatch",
+            "chat.bsky.convo.unmuteConvo",
+            "chat.bsky.convo.updateAllRead",
+            "chat.bsky.convo.updateRead"
+          ]
+        }
+      ]
+    }
+  }
+}
