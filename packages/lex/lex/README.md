@@ -11,7 +11,7 @@ lex --help
 - Generate TypeScript client and data validators
 - Handle common tasks like OAuth
 
-**What is a this?**
+**What is this?**
 
 Working directly with XRPC endpoints requires manually tracking schema deffinitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
 
