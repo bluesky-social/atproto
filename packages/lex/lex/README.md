@@ -13,7 +13,7 @@ lex --help
 
 **What is this?**
 
-Working directly with XRPC endpoints requires manually tracking schema deffinitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
+Working directly with XRPC endpoints requires manually tracking schema definitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
 
 1. Fetching schemas from the network and generating TypeScript types
 2. Providing runtime validation to ensure data matches schemas
