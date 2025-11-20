@@ -32,33 +32,33 @@ describe('EventRunner utils', () => {
       const complete: number[] = []
       // partition 1 items start slow but get faster: slow should still complete first.
       runner.addTask('1', async () => {
-        await wait(30)
+        await wait(320)
         complete.push(11)
       })
       runner.addTask('1', async () => {
-        await wait(20)
+        await wait(160)
         complete.push(12)
       })
       runner.addTask('1', async () => {
-        await wait(1)
+        await wait(80)
         complete.push(13)
       })
       expect(runner.partitions.size).toEqual(1)
       // partition 2 items complete quickly except the last, which is slowest of all events.
       runner.addTask('2', async () => {
-        await wait(1)
+        await wait(80)
         complete.push(21)
       })
       runner.addTask('2', async () => {
-        await wait(1)
+        await wait(80)
         complete.push(22)
       })
       runner.addTask('2', async () => {
-        await wait(1)
+        await wait(80)
         complete.push(23)
       })
       runner.addTask('2', async () => {
-        await wait(60)
+        await wait(400)
         complete.push(24)
       })
       expect(runner.partitions.size).toEqual(2)
@@ -100,7 +100,7 @@ describe('EventRunner utils', () => {
       const complete: { partition: string; id: number }[] = []
       const partitions = new Set<string>()
       for (let i = 0; i < 500; ++i) {
-        const partition = Math.floor(Math.random() * 16).toString(10)
+        const partition = (i % 16).toString(10)
         partitions.add(partition)
         runner.addTask(partition, async () => {
           await wait((i % 2) * 2)

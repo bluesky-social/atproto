@@ -22,7 +22,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "../dev-infra/with-test-redis-and-db.sh jest"
+    "test": "workspace-cli with-test-redis-and-db jest"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
