@@ -18,7 +18,7 @@ Working directly with XRPC endpoints requires manually tracking schema definitio
 1. Fetching schemas from the network and generating TypeScript types
 2. Providing runtime validation to ensure data matches schemas
 3. Offering a type-safe client that knows which parameters each endpoint expects
-4. Support modern patters like thee-shaking and composition
+4. Support modern patterns like thee-shaking and composition
 
 ```typescript
 const profile = await client.call(app.bsky.actor.getProfile, {
