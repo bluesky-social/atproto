@@ -319,3 +319,7 @@ select {
     padding-top: 10vh;
   }
 }
+
+.text-text-lighter {
+  color: var(--color-contrast-600);
+}

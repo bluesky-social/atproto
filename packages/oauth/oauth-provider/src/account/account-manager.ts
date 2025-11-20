@@ -7,6 +7,7 @@ import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { constantTime } from '../lib/util/time.js'
+import { InvalidCredentialsError } from '../oauth-errors.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
 import { Customization } from '../oauth-provider.js'
 import { Sub } from '../oidc/sub.js'
@@ -183,6 +184,10 @@ export class AccountManager {
 
       return account
     } catch (err) {
+      if (err instanceof InvalidCredentialsError) {
+        throw err
+      }
+
       throw InvalidRequestError.from(
         err,
         'Unable to sign-in due to an unexpected server error',
