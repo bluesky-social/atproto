@@ -16744,6 +16744,12 @@ export const schemaDict = {
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',
+              knownValues: [
+                'tools.ozone.moderation.defs#reviewOpen',
+                'tools.ozone.moderation.defs#reviewClosed',
+                'tools.ozone.moderation.defs#reviewEscalated',
+                'tools.ozone.moderation.defs#reviewNone',
+              ],
             },
             ignoreSubjects: {
               type: 'array',
