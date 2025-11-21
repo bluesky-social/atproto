@@ -15,7 +15,7 @@ lex --help
 
 Working directly with XRPC endpoints requires manually tracking schema definitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
 
-1. Fetching schemas from the network and generating TypeScript types
+1. Fetching lexicons from the network and generating TypeScript types
 2. Providing runtime validation to ensure data matches schemas
 3. Offering a type-safe client that knows which parameters each endpoint expects
 4. Support modern patterns like thee-shaking and composition
