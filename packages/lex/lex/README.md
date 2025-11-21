@@ -32,7 +32,7 @@ await client.create(app.bsky.feed.post, {
 
 const posts = await client.list(app.bsky.feed.post, {
   limit: 10,
-  repo: 'jcsalterego.bsky.social',
+  repo: 'atproto.com',
 })
 
 app.bsky.actor.profile.$validate({
