@@ -124,7 +124,7 @@ const response = await client.call(app.bsky.actor.getProfile, {
 >
 > If you wish to customize the output location, or any other options, you can run the `lex build` command separately. For that purpose, make sure to use the `--no-build` flag when installing lexicons to skip the automatic build step.
 
-## JSON Schemas
+## Lexicon Schemas
 
 The `lex install` command fetches Lexicon schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
 
