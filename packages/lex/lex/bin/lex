@@ -81,7 +81,7 @@ yargs(hideBin(process.argv))
           type: 'boolean',
           default: false,
           describe:
-            'allow generating schemas that accept legacy blob references',
+            'allow generating schemas that accept legacy blob references (disabled by default; enabling this might cause compatibility issues with records created a long time ago)',
         },
       })
     },

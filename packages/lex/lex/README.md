@@ -175,7 +175,7 @@ Options:
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
 - `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
-- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references
+- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enabling this might cause compatibility issues with records created a long time ago)
 
 ### Generated Schema Structure
 
