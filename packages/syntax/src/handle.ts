@@ -6,7 +6,6 @@ export const INVALID_HANDLE = 'handle.invalid'
 // See also: https://en.wikipedia.org/wiki/Top-level_domain#Reserved_domains
 export const DISALLOWED_TLDS = [
   '.local',
-  '.arpa',
   '.invalid',
   '.localhost',
   '.internal',
