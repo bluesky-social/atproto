@@ -1,3 +1,3 @@
 export type JsonScalar = number | string | boolean | null
-export type Json = JsonScalar | Json[] | { [_ in string]?: Json }
-export type JsonObject = { [_ in string]?: Json }
+export type JsonValue = JsonScalar | JsonValue[] | { [_ in string]?: JsonValue }
+export type JsonObject = { [_ in string]?: JsonValue }

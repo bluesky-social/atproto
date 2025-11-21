@@ -8,7 +8,7 @@ import {
 } from '@atproto/lex-data'
 import { parseBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { Json, JsonObject } from './json.js'
+import { JsonValue, JsonObject } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
 export function lexStringify(input: LexValue): string {
@@ -30,7 +30,7 @@ export function lexParse(
   input: string,
   options: LexParseOptions = { strict: false },
 ): LexValue {
-  return JSON.parse(input, function (key: string, value: Json): LexValue {
+  return JSON.parse(input, function (key: string, value: JsonValue): LexValue {
     switch (typeof value) {
       case 'object':
         if (value === null) return null
@@ -49,7 +49,7 @@ export function lexParse(
 }
 
 export function jsonToLex(
-  value: Json,
+  value: JsonValue,
   options: LexParseOptions = { strict: false },
 ): LexValue {
   switch (typeof value) {
@@ -75,7 +75,7 @@ export function jsonToLex(
   }
 }
 
-function jsonArrayToLex(input: Json[], options: LexParseOptions): LexValue[] {
+function jsonArrayToLex(input: JsonValue[], options: LexParseOptions): LexValue[] {
   // Lazily copy value
   let copy: LexValue[] | undefined
   for (let i = 0; i < input.length; i++) {
@@ -117,7 +117,7 @@ function jsonObjectToLexMap(
   return copy ?? input
 }
 
-export function lexToJson(value: LexValue): Json {
+export function lexToJson(value: LexValue): JsonValue {
   switch (typeof value) {
     case 'object':
       if (value === null) {
@@ -140,18 +140,18 @@ export function lexToJson(value: LexValue): Json {
   }
 }
 
-function lexArrayToJson(input: LexArray): Json[] {
+function lexArrayToJson(input: LexArray): JsonValue[] {
   // Lazily copy value
-  let copy: Json[] | undefined
+  let copy: JsonValue[] | undefined
   for (let i = 0; i < input.length; i++) {
     const inputItem = input[i]
     const item = lexToJson(inputItem)
     if (item !== inputItem) {
-      copy ??= Array.from(input) as Json[]
+      copy ??= Array.from(input) as JsonValue[]
       copy[i] = item
     }
   }
-  return copy ?? (input as Json[])
+  return copy ?? (input as JsonValue[])
 }
 
 function encodeLexMap(input: LexMap): JsonObject {

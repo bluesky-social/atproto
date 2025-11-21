@@ -1,5 +1,5 @@
 import { fromBase64, toBase64 } from '@atproto/lex-data'
-import { Json } from './json.js'
+import { JsonValue } from './json.js'
 
 export function parseLexBytes(input?: {
   $bytes?: unknown
@@ -21,6 +21,6 @@ export function parseLexBytes(input?: {
   return fromBase64(input.$bytes)
 }
 
-export function encodeLexBytes(bytes: Uint8Array): Json {
+export function encodeLexBytes(bytes: Uint8Array): JsonValue {
   return { $bytes: toBase64(bytes) }
 }

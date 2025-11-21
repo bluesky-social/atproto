@@ -1,5 +1,5 @@
 import { CID } from '@atproto/lex-data'
-import { Json } from './json.js'
+import { JsonValue } from './json.js'
 
 export function parseLexLink(input?: { $link?: unknown }): CID | undefined {
   if (!input || !('$link' in input)) {
@@ -32,6 +32,6 @@ export function parseLexLink(input?: { $link?: unknown }): CID | undefined {
   }
 }
 
-export function encodeLexLink(cid: CID): Json {
+export function encodeLexLink(cid: CID): JsonValue {
   return { $link: cid.toString() }
 }

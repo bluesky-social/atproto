@@ -1,8 +1,8 @@
 import { CID, LexValue, lexEquals } from '@atproto/lex-data'
-import { Json, jsonToLex, lexToJson } from '@atproto/lex-json'
+import { JsonValue, jsonToLex, lexToJson } from '@atproto/lex-json'
 
 /**
- * @deprecated Use {@link Json} from `@atproto/lex-cbor` instead.
+ * @deprecated Use {@link JsonValue} from `@atproto/lex-cbor` instead.
  */
 export type JsonValue =
   | boolean
@@ -29,7 +29,7 @@ export type IpldValue =
  * @deprecated Use {@link jsonToLex} from `@atproto/lex-cbor` instead.
  */
 export const jsonToIpld = (val: JsonValue): IpldValue => {
-  return jsonToLex(val as Json, { strict: false })
+  return jsonToLex(val as JsonValue, { strict: false })
 }
 
 /**

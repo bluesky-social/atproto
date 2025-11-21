@@ -1,10 +1,10 @@
 import { CID, LexValue, lexEquals } from '@atproto/lex-data'
-import { Json } from './json.js'
+import { JsonValue } from './json.js'
 import { jsonToLex, lexParse, lexStringify, lexToJson } from './lex-json.js'
 
 export const validVectors: Array<{
   name: string
-  json: Json
+  json: JsonValue
   lex: LexValue
 }> = [
   {
@@ -252,7 +252,7 @@ export const validVectors: Array<{
 
 export const acceptableVectors: Array<{
   note: string
-  json: Json
+  json: JsonValue
 }> = [
   {
     note: 'non string $type',
@@ -335,7 +335,7 @@ export const acceptableVectors: Array<{
 
 export const invalidVectors: Array<{
   note: string
-  json: Json
+  json: JsonValue
 }> = [
   {
     note: 'bytes with wrong field type',
