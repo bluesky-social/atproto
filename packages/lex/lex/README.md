@@ -361,7 +361,7 @@ You can create a new `Client` instance from an existing client. The new client w
 
 > [!NOTE]
 >
-> When you create a client from another client, they share the same configuration objects. This means updates to the base client's configuration (like calling `baseClient.setLabelers()` or `baseClient.headers.set()`) will affect all derived clients that reference it.
+> When you create a client from another client, the child client inherits the base client's configuration. On every request, the child client merges its own configuration with the base client's current configuration, with the child's settings taking precedence. Changes to the base client's configuration (like `baseClient.setLabelers()`) will be reflected in child client requests, but changes to child clients do not affect the base client.
 
 ```typescript
 import { Client } from '@atproto/lex'
