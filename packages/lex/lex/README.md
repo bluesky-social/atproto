@@ -105,7 +105,7 @@ git add lexicons.json lexicons/
 git commit -m "Install Lexicons"
 ```
 
-**3. Use in you code**
+**3. Use in your code**
 
 ```typescript
 import { Client } from '@atproto/lex'
