@@ -53,6 +53,8 @@ import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 import { getRedisClient } from './redis'
 import { Sequencer } from './sequencer'
+import { SSOManager } from './sso/sso'
+import { CookieJar } from '@atproto/common/dist/cookie'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -64,6 +66,8 @@ export type AppContextOptions = {
   idResolver: IdResolver
   plcClient: plc.Client
   accountManager: AccountManager
+  ssoManager: SSOManager
+  cookieJar: CookieJar
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
@@ -91,6 +95,8 @@ export class AppContext {
   public idResolver: IdResolver
   public plcClient: plc.Client
   public accountManager: AccountManager
+  public ssoManager: SSOManager
+  public cookieJar: CookieJar
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
@@ -117,6 +123,8 @@ export class AppContext {
     this.idResolver = opts.idResolver
     this.plcClient = opts.plcClient
     this.accountManager = opts.accountManager
+    this.ssoManager = opts.ssoManager
+    this.cookieJar = opts.cookieJar
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
@@ -142,17 +150,17 @@ export class AppContext {
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({
-            bucket: cfg.blobstore.bucket,
-            region: cfg.blobstore.region,
-            endpoint: cfg.blobstore.endpoint,
-            forcePathStyle: cfg.blobstore.forcePathStyle,
-            credentials: cfg.blobstore.credentials,
-            uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
-          })
+          bucket: cfg.blobstore.bucket,
+          region: cfg.blobstore.region,
+          endpoint: cfg.blobstore.endpoint,
+          forcePathStyle: cfg.blobstore.forcePathStyle,
+          credentials: cfg.blobstore.credentials,
+          uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
+        })
         : DiskBlobStore.creator(
-            cfg.blobstore.location,
-            cfg.blobstore.tempLocation,
-          )
+          cfg.blobstore.location,
+          cfg.blobstore.tempLocation,
+        )
 
     const mailTransport =
       cfg.email !== null
@@ -246,14 +254,23 @@ export class AppContext {
     )
     await accountManager.migrateOrThrow()
 
+    const ssoManager = new SSOManager(
+      cfg.db.ssoDbLoc,
+      cfg.db.disableWalAutoCheckpoint
+    )
+
+    await ssoManager.migrateOrThrow()
+
+    const cookieJar = new CookieJar(cfg.service.cookieSecret, 3600, cfg.service.devMode);
+
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
-            keyId: secrets.plcRotationKey.keyId,
-          })
+          keyId: secrets.plcRotationKey.keyId,
+        })
         : await crypto.Secp256k1Keypair.import(
-            secrets.plcRotationKey.privateKeyHex,
-          )
+          secrets.plcRotationKey.privateKeyHex,
+        )
 
     const localViewer = LocalViewer.creator(
       accountManager,
@@ -270,16 +287,16 @@ export class AppContext {
       factory: cfg.proxy.disableSsrfProtection
         ? undefined
         : (origin, opts) => {
-            const { protocol, hostname } =
-              origin instanceof URL ? origin : new URL(origin)
-            if (protocol !== 'https:') {
-              throw new Error(`Forbidden protocol "${protocol}"`)
-            }
-            if (isUnicastIp(hostname) === false) {
-              throw new Error('Hostname resolved to non-unicast address')
-            }
-            return new undici.Pool(origin, opts)
-          },
+          const { protocol, hostname } =
+            origin instanceof URL ? origin : new URL(origin)
+          if (protocol !== 'https:') {
+            throw new Error(`Forbidden protocol "${protocol}"`)
+          }
+          if (isUnicastIp(hostname) === false) {
+            throw new Error('Hostname resolved to non-unicast address')
+          }
+          return new undici.Pool(origin, opts)
+        },
       connect: {
         lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
       },
@@ -287,10 +304,10 @@ export class AppContext {
     const proxyAgent =
       cfg.proxy.maxRetries > 0
         ? new undici.RetryAgent(proxyAgentBase, {
-            statusCodes: [], // Only retry on socket errors
-            methods: ['GET', 'HEAD'],
-            maxRetries: cfg.proxy.maxRetries,
-          })
+          statusCodes: [], // Only retry on socket errors
+          methods: ['GET', 'HEAD'],
+          maxRetries: cfg.proxy.maxRetries,
+        })
         : proxyAgentBase
 
     /**
@@ -372,44 +389,44 @@ export class AppContext {
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
-          issuer: cfg.oauth.issuer,
-          keyset: [await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256')],
-          store: new OAuthStore(
-            accountManager,
-            actorStore,
-            imageUrlBuilder,
-            backgroundQueue,
-            mailer,
-            sequencer,
-            plcClient,
-            plcRotationKey,
-            cfg.service.publicUrl,
-            cfg.identity.recoveryDidKey,
-          ),
-          redis: redisScratch,
-          dpopSecret: secrets.dpopSecret,
-          inviteCodeRequired: cfg.invites.required,
-          availableUserDomains: cfg.identity.serviceHandleDomains,
-          hcaptcha: cfg.oauth.provider.hcaptcha,
-          branding: cfg.oauth.provider.branding,
-          safeFetch,
-          lexiconResolver,
-          metadata: {
-            protected_resources: [new URL(cfg.oauth.issuer).origin],
-          },
-          // If the PDS is both an authorization server & resource server (no
-          // entryway), we can afford to check the token validity on every
-          // request. This allows revoked tokens to be rejected immediately.
-          // This also allows JWT to be shorter since some claims (notably the
-          // "scope" claim) do not need to be included in the token.
-          accessTokenMode: AccessTokenMode.stateful,
+        issuer: cfg.oauth.issuer,
+        keyset: [await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256')],
+        store: new OAuthStore(
+          accountManager,
+          actorStore,
+          imageUrlBuilder,
+          backgroundQueue,
+          mailer,
+          sequencer,
+          plcClient,
+          plcRotationKey,
+          cfg.service.publicUrl,
+          cfg.identity.recoveryDidKey,
+        ),
+        redis: redisScratch,
+        dpopSecret: secrets.dpopSecret,
+        inviteCodeRequired: cfg.invites.required,
+        availableUserDomains: cfg.identity.serviceHandleDomains,
+        hcaptcha: cfg.oauth.provider.hcaptcha,
+        branding: cfg.oauth.provider.branding,
+        safeFetch,
+        lexiconResolver,
+        metadata: {
+          protected_resources: [new URL(cfg.oauth.issuer).origin],
+        },
+        // If the PDS is both an authorization server & resource server (no
+        // entryway), we can afford to check the token validity on every
+        // request. This allows revoked tokens to be rejected immediately.
+        // This also allows JWT to be shorter since some claims (notably the
+        // "scope" claim) do not need to be included in the token.
+        accessTokenMode: AccessTokenMode.stateful,
 
-          getClientInfo(clientId) {
-            return {
-              isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
-            }
-          },
-        })
+        getClientInfo(clientId) {
+          return {
+            isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
+          }
+        },
+      })
       : undefined
 
     const scopeRefGetter = entrywayAgent
@@ -467,6 +484,8 @@ export class AppContext {
       idResolver,
       plcClient,
       accountManager,
+      ssoManager,
+      cookieJar,
       sequencer,
       backgroundQueue,
       redisScratch,
