@@ -126,7 +126,7 @@ const response = await client.call(app.bsky.actor.getProfile, {
 
 ## JSON Schemas
 
-The `lex install` command fetches Lexicon JSON schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
+The `lex install` command fetches Lexicon schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
 
 ```bash
 # Install Lexicons and update lexicons.json (default behavior)
