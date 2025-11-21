@@ -359,6 +359,10 @@ For detailed OAuth setup, see the [@atproto/oauth-client](../../../oauth/oauth-c
 
 You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the ability to override specific settings.
 
+> [!NOTE]
+>
+> When you create a client from another client, the child client inherits the base client's configuration. On every request, the child client merges its own configuration with the base client's current configuration, with the child's settings taking precedence. Changes to the base client's configuration (like `baseClient.setLabelers()`) will be reflected in child client requests, but changes to child clients do not affect the base client.
+
 ```typescript
 import { Client } from '@atproto/lex'
 
@@ -486,7 +490,6 @@ console.log(result.cid)
 Options:
 
 - `rkey` - Custom record key (auto-generated if not provided)
-- `repo` - Repository DID (defaults to authenticated user)
 - `validate` - Validate record against schema before creating
 - `swapCommit` - CID for optimistic concurrency control
 
@@ -527,7 +530,6 @@ await client.put(app.bsky.actor.profile, {
 Options:
 
 - `rkey` - Record key (required for non-literal keys)
-- `repo` - Repository DID (defaults to authenticated user)
 - `swapCommit` - Expected repo commit CID
 - `swapRecord` - Expected record CID
 
@@ -664,30 +666,6 @@ This ensures:
 
 1. `postinstall` - Lexicons are verified/installed after `npm install`
 
-### TypeScript Integration
-
-Generated schemas provide full type safety:
-
-```typescript
-import * as app from './lexicons/app.js'
-import type { Infer } from '@atproto/lex'
-
-// Extract types from schemas
-type Post = Infer<typeof app.bsky.feed.post.main>
-
-const post: Post = {
-  $type: 'app.bsky.feed.post',
-  text: 'Hello!',
-  createdAt: new Date().toISOString(),
-}
-
-// Validation methods
-app.bsky.feed.post.main.check(data) // Type guard
-app.bsky.feed.post.main.validate(data) // Returns ValidationResult
-app.bsky.feed.post.main.parse(data) // Returns typed value or throws
-app.bsky.feed.post.main.build(data) // Build with defaults
-```
-
 ### Tree-Shaking
 
 The generated TypeScript is optimized for tree-shaking. Import only what you need:
@@ -801,7 +779,6 @@ await client.create(
 
     // Create-specific options
     rkey: 'custom-key', // Custom record key (optional, auto-generated if omitted)
-    repo: 'did:plc:xyz', // Different repo (defaults to authenticated user)
     validate: true, // Validate before creating
     swapCommit: 'bafyrei...', // CID for optimistic concurrency
   },
@@ -817,7 +794,6 @@ await client.get(app.bsky.actor.profile, {
 
   // Get-specific options
   rkey: 'self', // Record key (required for non-literal keys)
-  repo: 'did:plc:xyz', // Different repo (defaults to authenticated user)
 })
 ```
 
@@ -836,7 +812,6 @@ await client.put(
 
     // Put-specific options
     rkey: 'self', // Record key
-    repo: 'did:plc:xyz', // Different repo
     validate: true, // Validate before updating
     swapCommit: 'bafyrei...', // Expected repo commit CID
     swapRecord: 'bafyrei...', // Expected record CID (for CAS)
@@ -853,7 +828,6 @@ await client.delete(app.bsky.feed.post, {
 
   // Delete-specific options
   rkey: '3jxf7z2k3q2', // Record key
-  repo: 'did:plc:xyz', // Different repo
   swapCommit: 'bafyrei...', // Expected repo commit CID
   swapRecord: 'bafyrei...', // Expected record CID
 })
@@ -867,7 +841,6 @@ await client.list(app.bsky.feed.post, {
   signal: abortController.signal,
 
   // List-specific options
-  repo: 'did:plc:xyz', // Different repo
   limit: 50, // Maximum records to return
   cursor: 'abc123', // Pagination cursor
   reverse: true, // Reverse chronological order
