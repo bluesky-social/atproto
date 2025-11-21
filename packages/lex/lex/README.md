@@ -22,7 +22,7 @@ Working directly with XRPC endpoints requires manually tracking schema definitio
 
 ```typescript
 const profile = await client.call(app.bsky.actor.getProfile, {
-  actor: 'jcsalterego.bsky.social',
+  actor: 'atproto.com',
 })
 
 await client.create(app.bsky.feed.post, {
