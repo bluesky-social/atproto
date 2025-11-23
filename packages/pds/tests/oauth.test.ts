@@ -7,10 +7,12 @@ import {
   createServer,
 } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { type Browser, type Page, launch } from 'puppeteer'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { type Browser, ElementHandle, type Page, launch } from 'puppeteer'
+import { SeedClientAccount, TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example'
+import { ServerMailer } from '../src/mailer'
+import { MailCatcher } from './utils/mailcatcher'
 
 class PageHelper implements AsyncDisposable {
   constructor(protected readonly page: Page) {}
@@ -60,6 +62,18 @@ class PageHelper implements AsyncDisposable {
     await this.page.waitForSelector(`${tag}::-p-text(${text})`)
   }
 
+  async getByTestId(testId: string) {
+    const selector = `[data-testid="${testId}"]`
+    await this.page.waitForSelector(selector)
+    const element = await this.page.$(selector)
+    assert(element, `Could not locate element with data-testid: ${testId}`)
+    return element
+  }
+
+  async getTextContent(element: ElementHandle) {
+    return await this.page.evaluate((el) => el.textContent, element)
+  }
+
   protected async getVisibleElement(selector: string) {
     const elementHandle = await this.page.waitForSelector(selector)
 
@@ -84,7 +98,10 @@ class PageHelper implements AsyncDisposable {
 describe('oauth', () => {
   let browser: Browser
   let network: TestNetworkNoAppView
+  let mailer: ServerMailer
+  let mailCatcher: MailCatcher
   let client: Server
+  let jane: SeedClientAccount
 
   let appUrl: string
 
@@ -104,6 +121,9 @@ describe('oauth', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'oauth',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
+    mailer = network.pds.ctx.mailer
+    mailCatcher = new MailCatcher(mailer)
 
     const sc = network.getSeedClient()
 
@@ -112,6 +132,22 @@ describe('oauth', () => {
       handle: 'alice.test',
       password: 'alice-pass',
     })
+
+    // Used for 2FA tests:
+    jane = await sc.createAccount('jane', {
+      email: 'jane@test.com',
+      handle: 'jane.test',
+      password: 'jane-pass',
+    })
+
+    const { mail } = await mailCatcher.getMailFrom(
+      sc.requestConfirmationEmail(jane.did),
+    )
+
+    const token = mailCatcher.getTokenFromMail(mail)
+
+    assert(token, 'Expected email confirmation token for Jane')
+    await sc.confirmEmail(jane.did, token)
 
     client = createServer(clientHandler)
     client.listen(0)
@@ -134,7 +170,13 @@ describe('oauth', () => {
     await browser?.close()
   })
 
-  it('Allows to sign-up trough OAuth', async () => {
+  it('Allows to sign-up through OAuth', async () => {
+    const sendConfirmEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
@@ -158,7 +200,18 @@ describe('oauth', () => {
     await page.typeInInput('email', 'bob@test.com')
     await page.typeInInput('password', 'bob-pass')
 
+    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(0)
+
     await page.clickOnButton("S'inscrire")
+
+    await page.waitForNetworkIdle()
+
+    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendConfirmEmailMock.mock.lastCall
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
 
     await page.ensureTextVisibility(
       `L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait casser de façon permanente, ou même usurper, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance.`,
@@ -243,7 +296,13 @@ describe('oauth', () => {
     sendTemplateMock.mockRestore()
   })
 
-  it('Allows to sign-in trough OAuth', async () => {
+  it('Allows to sign-in through OAuth', async () => {
+    const sendConfirmSigninMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmSignin')
+      .mockImplementation(async () => {
+        // noop
+      })
+
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
@@ -267,7 +326,15 @@ describe('oauth', () => {
       'label::-p-text(Se souvenir de ce compte sur cet appareil)',
     )
 
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(0)
+
     await page.clickOnButton('Se connecter')
+
+    await page.waitForNetworkIdle()
+
+    // Alice doesn't have a confirmed email address, so shouldn't receive a
+    // Email OTP challenge:
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(0)
 
     await page.checkTitle("Authoriser l'accès")
 
@@ -301,6 +368,76 @@ describe('oauth', () => {
 
       await input.press('Enter')
     })
+
+    await page.checkTitle("Authoriser l'accès")
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton("Authoriser l'accès")
+    })
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Token info', 'h2')
+
+    await page.clickOn('button[aria-label="User menu"]')
+
+    await page.clickOnButton('Sign out')
+
+    await page.waitForNetworkIdle()
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('Allows to sign-in through OAuth when Email OTP is required', async () => {
+    const sendConfirmSigninMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmSignin')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeIn('input[name="identifier"]', 'jane.test')
+
+      await input.press('Enter')
+    })
+
+    await page.checkTitle('Connexion')
+
+    await page.typeIn('input[type="password"]', 'jane-pass')
+
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(0)
+
+    await page.clickOnButton('Se connecter')
+
+    await page.waitForNetworkIdle()
+
+    expect(sendConfirmSigninMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendConfirmSigninMock.mock.lastCall
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+
+    const token = params.token
+
+    await page.ensureTextVisibility('Confirmation 2FA', 'legend')
+
+    const signinOptHint = await page.getByTestId('signin-otp-hint')
+    const hintText = await page.getTextContent(signinOptHint)
+
+    // The email address for the account should not be reveal in cleartext:
+    expect(hintText).not.toContain(jane.email)
+
+    await page.typeIn('input[placeholder="Ressemble à XXXXX-XXXXX"]', token)
+
+    await page.clickOnButton('Confirmer')
 
     await page.checkTitle("Authoriser l'accès")
 

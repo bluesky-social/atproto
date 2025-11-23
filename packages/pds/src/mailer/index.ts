@@ -21,6 +21,13 @@ export class ServerMailer {
     return {}
   }
 
+  async sendConfirmSignin(params: { token: string }, mailOpts: Mail.Options) {
+    await this.sendTemplate('confirmSignin', params, {
+      subject: 'Sign-in Confirmation',
+      ...mailOpts,
+    })
+  }
+
   async sendResetPassword(
     params: { handle: string; token: string },
     mailOpts: Mail.Options,

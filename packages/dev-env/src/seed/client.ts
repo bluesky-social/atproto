@@ -60,20 +60,19 @@ export class RecordRef {
   }
 }
 
+export type SeedClientAccount = {
+  did: string
+  accessJwt: string
+  refreshJwt: string
+  handle: string
+  email: string
+  password: string
+}
+
 export class SeedClient<
   Network extends TestNetworkNoAppView = TestNetworkNoAppView,
 > {
-  accounts: Record<
-    string,
-    {
-      did: string
-      accessJwt: string
-      refreshJwt: string
-      handle: string
-      email: string
-      password: string
-    }
-  >
+  accounts: Record<string, SeedClientAccount>
   profiles: Record<
     string,
     {
@@ -160,6 +159,25 @@ export class SeedClient<
       password: params.password,
     }
     return this.accounts[account.did]
+  }
+
+  async requestConfirmationEmail(by: string) {
+    await this.agent.com.atproto.server.requestEmailConfirmation(undefined, {
+      headers: this.getHeaders(by),
+    })
+  }
+
+  async confirmEmail(by: string, token: string) {
+    const email = this.accounts[by].email
+    await this.agent.com.atproto.server.confirmEmail(
+      {
+        email,
+        token,
+      },
+      {
+        headers: this.getHeaders(by),
+      },
+    )
   }
 
   async updateHandle(by: string, handle: string) {

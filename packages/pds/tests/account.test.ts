@@ -1,11 +1,10 @@
-import { EventEmitter, once } from 'node:events'
-import Mail from 'nodemailer/lib/mailer'
 import { AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
 import { AppContext } from '../src'
 import { ServerMailer } from '../src/mailer'
+import { MailCatcher } from './utils/mailcatcher'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -19,7 +18,7 @@ describe('account', () => {
   let agent: AtpAgent
   let mailer: ServerMailer
   let idResolver: IdResolver
-  const mailCatcher = new EventEmitter()
+  let mailCatcher: MailCatcher
   let _origSendMail
 
   beforeAll(async () => {
@@ -38,13 +37,7 @@ describe('account', () => {
     idResolver = network.pds.ctx.idResolver
     agent = network.pds.getClient()
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+    mailCatcher = new MailCatcher(mailer)
   })
 
   afterAll(async () => {
@@ -389,16 +382,8 @@ describe('account', () => {
     expect(res.data.email).toBe(email)
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
-
   it('can reset account password', async () => {
-    const mail = await getMailFrom(
+    const { mail } = await mailCatcher.getMailFrom(
       agent.api.com.atproto.server.requestPasswordReset({ email }),
     )
 
@@ -406,7 +391,7 @@ describe('account', () => {
     expect(mail.html).toContain('Reset password')
     expect(mail.html).toContain('alice.test')
 
-    const token = getTokenFromMail(mail)
+    const token = mailCatcher.getTokenFromMail(mail)
 
     if (token === undefined) {
       return expect(token).toBeDefined()
@@ -434,11 +419,11 @@ describe('account', () => {
   })
 
   it('allows only single-use of password reset token', async () => {
-    const mail = await getMailFrom(
+    const { mail } = await mailCatcher.getMailFrom(
       agent.api.com.atproto.server.requestPasswordReset({ email }),
     )
 
-    const token = getTokenFromMail(mail)
+    const token = mailCatcher.getTokenFromMail(mail)
 
     if (token === undefined) {
       return expect(token).toBeDefined()
@@ -469,7 +454,7 @@ describe('account', () => {
   })
 
   it('changing password invalidates past refresh tokens', async () => {
-    const mail = await getMailFrom(
+    const { mail } = await mailCatcher.getMailFrom(
       agent.api.com.atproto.server.requestPasswordReset({ email }),
     )
 
@@ -477,7 +462,7 @@ describe('account', () => {
     expect(mail.html).toContain('Reset password')
     expect(mail.html).toContain('alice.test')
 
-    const token = getTokenFromMail(mail)
+    const token = mailCatcher.getTokenFromMail(mail)
 
     if (token === undefined) {
       return expect(token).toBeDefined()
