@@ -604,13 +604,13 @@ if (result.success) {
   // Handle error based on type
   if (result.name === 'UnexpectedError') {
     // Network error, invalid response, etc.
-    console.error('Unexpected error:', result.error)
+    result.error // "unknown" type
   } else if (result.name === 'Unknown') {
-    // Server returned a valid XRPC error response with a non-declared error type
-    console.error('Unknown error response:', result.error) // XrpcResponseError<string>
+    // Server returned a valid XRPC error response with an unknown error type
+    result.error // XrpcResponseError<string>
   } else {
     // Declared error from the method's errors list
-    console.error('Known error:', result.error) // XrpcResponseError<"FooError" | "BarError">
+    result.error // XrpcResponseError<"FooError" | "BarError">
   }
 }
 ```
