@@ -146,7 +146,7 @@ export class ParamsSchema<
           for (const v of value) {
             urlSearchParams.append(key, String(v))
           }
-        } else if (value === undefined) {
+        } else if (value !== undefined) {
           urlSearchParams.append(key, String(value))
         }
       }
