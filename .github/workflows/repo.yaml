@@ -66,6 +66,8 @@ jobs:
           cache: 'pnpm'
       - name: Get current month
         run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - name: Disable AppArmor
+        run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
       - uses: actions/cache@v4
         name: Cache Puppeteer browser binaries
         with:
