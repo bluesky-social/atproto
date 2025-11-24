@@ -85,10 +85,13 @@ export interface ConfigRegion {
   regionCode?: string
   /** The ordered list of Age Assurance rules that apply to this region. Rules should be applied in order, and the first matching rule determines the access level granted. The rules array should always include a default rule as the last item. */
   rules: (
-    | $Typed<ConfigRegionRuleIfAccountNewerThan>
-    | $Typed<ConfigRegionRuleIfDeclaredOverAge>
-    | $Typed<ConfigRegionRuleIfAssuredOverAge>
     | $Typed<ConfigRegionRuleDefault>
+    | $Typed<ConfigRegionRuleIfDeclaredOverAge>
+    | $Typed<ConfigRegionRuleIfDeclaredUnderAge>
+    | $Typed<ConfigRegionRuleIfAssuredOverAge>
+    | $Typed<ConfigRegionRuleIfAssuredUnderAge>
+    | $Typed<ConfigRegionRuleIfAccountNewerThan>
+    | $Typed<ConfigRegionRuleIfAccountOlderThan>
     | { $type: string }
   )[]
 }
@@ -146,28 +149,6 @@ export function validateConfigRegionRuleIfDeclaredOverAge<V>(v: V) {
   )
 }
 
-/** Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age. */
-export interface ConfigRegionRuleIfAssuredOverAge {
-  $type?: 'app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge'
-  /** The age threshold as a whole integer. */
-  age: number
-  access: Access
-}
-
-const hashConfigRegionRuleIfAssuredOverAge = 'configRegionRuleIfAssuredOverAge'
-
-export function isConfigRegionRuleIfAssuredOverAge<V>(v: V) {
-  return is$typed(v, id, hashConfigRegionRuleIfAssuredOverAge)
-}
-
-export function validateConfigRegionRuleIfAssuredOverAge<V>(v: V) {
-  return validate<ConfigRegionRuleIfAssuredOverAge & V>(
-    v,
-    id,
-    hashConfigRegionRuleIfAssuredOverAge,
-  )
-}
-
 /** Age Assurance rule that applies if the user has declared themselves under a certain age. */
 export interface ConfigRegionRuleIfDeclaredUnderAge {
   $type?: 'app.bsky.ageassurance.defs#configRegionRuleIfDeclaredUnderAge'
@@ -188,6 +169,28 @@ export function validateConfigRegionRuleIfDeclaredUnderAge<V>(v: V) {
     v,
     id,
     hashConfigRegionRuleIfDeclaredUnderAge,
+  )
+}
+
+/** Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age. */
+export interface ConfigRegionRuleIfAssuredOverAge {
+  $type?: 'app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge'
+  /** The age threshold as a whole integer. */
+  age: number
+  access: Access
+}
+
+const hashConfigRegionRuleIfAssuredOverAge = 'configRegionRuleIfAssuredOverAge'
+
+export function isConfigRegionRuleIfAssuredOverAge<V>(v: V) {
+  return is$typed(v, id, hashConfigRegionRuleIfAssuredOverAge)
+}
+
+export function validateConfigRegionRuleIfAssuredOverAge<V>(v: V) {
+  return validate<ConfigRegionRuleIfAssuredOverAge & V>(
+    v,
+    id,
+    hashConfigRegionRuleIfAssuredOverAge,
   )
 }
 

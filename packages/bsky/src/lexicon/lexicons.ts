@@ -1341,10 +1341,13 @@ export const schemaDict = {
             items: {
               type: 'union',
               refs: [
-                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountNewerThan',
-                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredOverAge',
-                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge',
                 'lex:app.bsky.ageassurance.defs#configRegionRuleDefault',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountNewerThan',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountOlderThan',
               ],
             },
           },
@@ -1377,10 +1380,10 @@ export const schemaDict = {
           },
         },
       },
-      configRegionRuleIfAssuredOverAge: {
+      configRegionRuleIfDeclaredUnderAge: {
         type: 'object',
         description:
-          'Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.',
+          'Age Assurance rule that applies if the user has declared themselves under a certain age.',
         required: ['age', 'access'],
         properties: {
           age: {
@@ -1393,10 +1396,10 @@ export const schemaDict = {
           },
         },
       },
-      configRegionRuleIfDeclaredUnderAge: {
+      configRegionRuleIfAssuredOverAge: {
         type: 'object',
         description:
-          'Age Assurance rule that applies if the user has declared themselves under a certain age.',
+          'Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.',
         required: ['age', 'access'],
         properties: {
           age: {

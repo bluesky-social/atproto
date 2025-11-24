@@ -78,10 +78,13 @@
           "items": {
             "type": "union",
             "refs": [
-              "#configRegionRuleIfAccountNewerThan",
+              "#configRegionRuleDefault",
               "#configRegionRuleIfDeclaredOverAge",
+              "#configRegionRuleIfDeclaredUnderAge",
               "#configRegionRuleIfAssuredOverAge",
-              "#configRegionRuleDefault"
+              "#configRegionRuleIfAssuredUnderAge",
+              "#configRegionRuleIfAccountNewerThan",
+              "#configRegionRuleIfAccountOlderThan"
             ]
           }
         }
@@ -113,9 +116,9 @@
         }
       }
     },
-    "configRegionRuleIfAssuredOverAge": {
+    "configRegionRuleIfDeclaredUnderAge": {
       "type": "object",
-      "description": "Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.",
+      "description": "Age Assurance rule that applies if the user has declared themselves under a certain age.",
       "required": ["age", "access"],
       "properties": {
         "age": {
@@ -128,9 +131,9 @@
         }
       }
     },
-    "configRegionRuleIfDeclaredUnderAge": {
+    "configRegionRuleIfAssuredOverAge": {
       "type": "object",
-      "description": "Age Assurance rule that applies if the user has declared themselves under a certain age.",
+      "description": "Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.",
       "required": ["age", "access"],
       "properties": {
         "age": {
