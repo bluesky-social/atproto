@@ -32,8 +32,8 @@ export const toBase64Node = Buffer
       // uint8arrays.toString behavior. Tests failing because of the presence of
       // padding are not really synonymous with an actual error and we might
       // (should?) actually want to keep the padding at some point.
-      return b64.charCodeAt(b64.length - 1) === 61
-        ? b64.charCodeAt(b64.length - 2) === 61
+      return b64.charCodeAt(b64.length - 1) === /* '=' */ 0x3d
+        ? b64.charCodeAt(b64.length - 2) === /* '=' */ 0x3d
           ? b64.slice(0, -2) // '=='
           : b64.slice(0, -1) // '='
         : b64
