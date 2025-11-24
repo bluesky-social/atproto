@@ -11,4 +11,4 @@
 "@atproto/lex-schema": patch
 ---
 
-Beta release of `@atproto/lex` packages
+Beta release of new Lexicon tooling
