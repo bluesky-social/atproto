@@ -1,5 +1,12 @@
 # @atproto/oauth-types
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/did@0.2.2
+
 ## 0.5.0
 
 ### Minor Changes
