@@ -89,7 +89,8 @@ export class StringSchema<
 
     if (options.format !== undefined) {
       try {
-        // @TODO optimize (avoid throw cost)
+        // @TODO optimize to avoid throw cost (requires re-writing utilities
+        // from @atproto/syntax)
         assertStringFormat(str, options.format)
       } catch (err) {
         const message = err instanceof Error ? err.message : undefined

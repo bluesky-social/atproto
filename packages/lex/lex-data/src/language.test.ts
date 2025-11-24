@@ -1,27 +1,27 @@
-import { parseLanguage, validateLanguage } from '../src'
+import { isLanguage, parseLanguage } from './language'
 
 describe('string', () => {
   describe('languages', () => {
     it('validates BCP 47', () => {
       // valid
-      expect(validateLanguage('de')).toEqual(true)
-      expect(validateLanguage('de-CH')).toEqual(true)
-      expect(validateLanguage('de-DE-1901')).toEqual(true)
-      expect(validateLanguage('es-419')).toEqual(true)
-      expect(validateLanguage('sl-IT-nedis')).toEqual(true)
-      expect(validateLanguage('mn-Cyrl-MN')).toEqual(true)
-      expect(validateLanguage('x-fr-CH')).toEqual(true)
-      expect(
-        validateLanguage('en-GB-boont-r-extended-sequence-x-private'),
-      ).toEqual(true)
-      expect(validateLanguage('sr-Cyrl')).toEqual(true)
-      expect(validateLanguage('hy-Latn-IT-arevela')).toEqual(true)
-      expect(validateLanguage('i-klingon')).toEqual(true)
+      expect(isLanguage('de')).toEqual(true)
+      expect(isLanguage('de-CH')).toEqual(true)
+      expect(isLanguage('de-DE-1901')).toEqual(true)
+      expect(isLanguage('es-419')).toEqual(true)
+      expect(isLanguage('sl-IT-nedis')).toEqual(true)
+      expect(isLanguage('mn-Cyrl-MN')).toEqual(true)
+      expect(isLanguage('x-fr-CH')).toEqual(true)
+      expect(isLanguage('en-GB-boont-r-extended-sequence-x-private')).toEqual(
+        true,
+      )
+      expect(isLanguage('sr-Cyrl')).toEqual(true)
+      expect(isLanguage('hy-Latn-IT-arevela')).toEqual(true)
+      expect(isLanguage('i-klingon')).toEqual(true)
       // invalid
-      expect(validateLanguage('')).toEqual(false)
-      expect(validateLanguage('x')).toEqual(false)
-      expect(validateLanguage('de-CH-')).toEqual(false)
-      expect(validateLanguage('i-bad-grandfathered')).toEqual(false)
+      expect(isLanguage('')).toEqual(false)
+      expect(isLanguage('x')).toEqual(false)
+      expect(isLanguage('de-CH-')).toEqual(false)
+      expect(isLanguage('i-bad-grandfathered')).toEqual(false)
     })
 
     it('parses BCP 47', () => {

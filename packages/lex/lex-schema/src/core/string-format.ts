@@ -1,4 +1,4 @@
-import { ensureValidCidString } from '@atproto/lex-data'
+import { ensureValidCidString, isLanguage } from '@atproto/lex-data'
 import {
   ensureValidAtUri,
   ensureValidDatetime,
@@ -8,13 +8,6 @@ import {
   ensureValidRecordKey,
   ensureValidTid,
 } from '@atproto/syntax'
-
-// @NOTE This was copied from @atproto/common-web to avoid loading a full extra
-// dependency just for this regexp.
-
-// Validates well-formed BCP 47 syntax: https://www.rfc-editor.org/rfc/rfc5646.html#section-2.1
-export const bcp47Regexp =
-  /^((?<grandfathered>(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)|(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang))|((?<language>([A-Za-z]{2,3}(-(?<extlang>[A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?)|[A-Za-z]{4}|[A-Za-z]{5,8})(-(?<script>[A-Za-z]{4}))?(-(?<region>[A-Za-z]{2}|[0-9]{3}))?(-(?<variant>[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-(?<extension>[0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(?<privateUseA>x(-[A-Za-z0-9]{1,8})+))?)|(?<privateUseB>x(-[A-Za-z0-9]{1,8})+))$/
 
 // Allow (date as Date).toISOString() to be used where datetime format is expected
 declare global {
@@ -88,7 +81,7 @@ export const assertUri: AssertFn<Uri> = (input) => {
   }
 }
 export const assertLanguage: AssertFn<string> = (input) => {
-  if (!bcp47Regexp.test(input)) {
+  if (!isLanguage(input)) {
     throw new Error('Invalid BCP 47 string')
   }
 }
