@@ -8,7 +8,6 @@ import {
   StringSchema,
   Validator,
 } from '@atproto/lex-schema'
-import { Namespace, getMain } from './types.js'
 
 export enum KnownError {
   Unknown = 'Unknown',
@@ -73,11 +72,6 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
     return this
   }
 
-  static catcher(err: unknown): XrpcError {
-    if (err instanceof XrpcError) return err
-    throw err
-  }
-
   static from(cause: unknown, message?: string): XrpcError {
     if (cause instanceof XrpcError) {
       return cause
@@ -103,11 +97,6 @@ export class XrpcServiceError<
   ) {
     super(name, message, options)
   }
-
-  catcher(err: unknown): XrpcServiceError {
-    if (err instanceof XrpcServiceError) return err
-    throw err
-  }
 }
 
 export class XrpcResponseError<
@@ -123,29 +112,35 @@ export class XrpcResponseError<
   ) {
     super(body.error, body.message, options)
   }
-
-  static catcherFor<const M extends Procedure | Query>(ns: Namespace<M>) {
-    const method = getMain(ns)
-    return catcherFor.bind(method) as (
-      err: unknown,
-    ) => M extends { errors: readonly (infer N extends string)[] }
-      ? XrpcResponseError<N>
-      : never
-  }
-
-  static catcher(err: unknown): XrpcResponseError {
-    if (err instanceof XrpcResponseError) return err
-    throw err
-  }
 }
 
-function catcherFor(this: Procedure | Query, err: unknown): XrpcResponseError {
-  if (
-    this.errors?.length &&
-    err instanceof XrpcResponseError &&
-    this.errors.includes(err.name)
-  ) {
-    return err
+export type ResponseFailure<M extends Procedure | Query> =
+  // The server responded with a declared error.
+  | (M extends { errors: readonly (infer N extends string)[] }
+      ? XrpcResponseError<N>
+      : never)
+  // The server responded with an error that is not declared in the method's
+  // `errors` list.
+  | (ResultFailure<XrpcResponseError> & { name: 'Unknown' })
+  // An unexpected error occurred (e.g., network error, invalid response, etc.)
+  | (ResultFailure<unknown> & { name: 'UnexpectedError' })
+
+export function createMethodCatcher<M extends Procedure | Query>(schema: M) {
+  // @NOTE Using .bind instead of arrow function to avoid creating a closure (perf)
+  return methodCatcher.bind(schema) as (error: unknown) => ResponseFailure<M>
+}
+
+function methodCatcher<M extends Procedure | Query>(
+  this: M,
+  error: unknown,
+): ResponseFailure<M> {
+  if (!(error instanceof XrpcResponseError)) {
+    return { success: false, error, name: 'UnexpectedError' }
   }
-  throw err
+
+  if (!this.errors.includes(error.name)) {
+    return { success: false, error, name: 'Unknown' }
+  }
+
+  return error
 }

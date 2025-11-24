@@ -53,6 +53,7 @@ app.bsky.actor.profile.$validate({
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
+  - [Error Handling](#error-handling)
   - [Authentication Methods](#authentication-methods)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
@@ -566,6 +567,72 @@ if (result.cursor) {
   })
 }
 ```
+
+### Error Handling
+
+By default, all client methods throw errors when requests fail. For more ergonomic error handling, the client provides "Safe" variants that return errors instead of throwing them.
+
+#### Safe Methods
+
+Each client method has a corresponding "Safe" variant that catches errors and returns them as part of the result type:
+
+- `xrpcSafe()` - Safe version of `xrpc()`
+- `createRecordsSafe()` - Safe version of `createRecord()`
+- `deleteRecordsSafe()` - Safe version of `deleteRecord()`
+- `getRecordsSafe()` - Safe version of `getRecord()`
+- `putRecordsSafe()` - Safe version of `putRecord()`
+
+#### ResponseFailure Type
+
+Safe methods return a union type that includes the success case and all possible failure cases:
+
+```typescript
+import { Client, ResponseFailure } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const client = new Client(session)
+
+// Using a safe method
+const result = await client.xrpcSafe(app.bsky.feed.getTimeline, {
+  params: { limit: 50 },
+})
+
+if (result.success) {
+  // Success - result is an XrpcResponse
+  console.log(result.body)
+} else {
+  // Handle error based on type
+  if (result.name === 'UnexpectedError') {
+    // Network error, invalid response, etc.
+    console.error('Unexpected error:', result.error)
+  } else if (result.name === 'Unknown') {
+    // Server returned a valid XRPC error response with a non-declared error type
+    console.error('Unknown error response:', result.error) // XrpcResponseError<string>
+  } else {
+    // Declared error from the method's errors list
+    console.error('Known error:', result.error) // XrpcResponseError<"FooError" | "BarError">
+  }
+}
+```
+
+The `ResponseFailure<M>` type is a union with three possible error types:
+
+1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema:
+
+   ```typescript
+   XrpcResponseError<N> // where N is one of the declared error names (string)
+   ```
+
+2. **Unknown errors** - Server errors not declared in the method's schema:
+
+   ```typescript
+   ResultFailure<XrpcResponseError> & { name: 'Unknown' }
+   ```
+
+3. **Unexpected errors** - Network errors, invalid responses, or other client-side errors:
+   ```typescript
+   ResultFailure<unknown> & { name: 'UnexpectedError' }
+   ```
 
 ### Authentication Methods
 
