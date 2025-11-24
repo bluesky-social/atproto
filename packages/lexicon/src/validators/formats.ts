@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { validateLanguage } from '@atproto/common-web'

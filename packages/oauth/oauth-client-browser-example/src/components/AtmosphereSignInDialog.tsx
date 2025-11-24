@@ -1,5 +1,5 @@
 import { JSX } from 'react'
-import { Button } from '../components/_button.tsx'
+import { Button } from '../components/Button.tsx'
 import { AtmosphereSignInForm } from './AtmosphereSignInForm.tsx'
 
 export type AtmosphereSignInDialogProps = JSX.IntrinsicElements['div'] & {

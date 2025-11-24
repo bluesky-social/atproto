@@ -1,0 +1,157 @@
+import { isPlainObject } from '@atproto/lex-data'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Param, ParamScalar, paramSchema } from './_parameters.js'
+import { ObjectSchemaPropertiesOutput } from './object.js'
+import { StringSchema } from './string.js'
+
+export type ParamsSchemaProperties = {
+  [_ in string]: Validator<Param>
+}
+
+export type ParamsSchemaOptions = {
+  required?: readonly string[]
+}
+
+export type ParamsSchemaOutput<
+  P extends ParamsSchemaProperties,
+  O extends ParamsSchemaOptions,
+> = ObjectSchemaPropertiesOutput<P, O>
+
+export type InferParamsSchema<T> =
+  T extends ParamsSchema<infer P, infer O>
+    ? NonNullable<unknown> extends ParamsSchemaOutput<P, O>
+      ? ParamsSchemaOutput<P, O> | undefined
+      : ParamsSchemaOutput<P, O>
+    : never
+
+export class ParamsSchema<
+  const Validators extends ParamsSchemaProperties = ParamsSchemaProperties,
+  const Options extends ParamsSchemaOptions = ParamsSchemaOptions,
+  Output extends ParamsSchemaOutput<Validators, Options> = ParamsSchemaOutput<
+    Validators,
+    Options
+  >,
+> extends Validator<Output> {
+  readonly lexiconType = 'params' as const
+
+  constructor(
+    readonly validators: Validators,
+    readonly options: Options,
+  ) {
+    super()
+  }
+
+  get validatorsMap(): Map<string, Validator<Param>> {
+    const map = new Map(Object.entries(this.validators))
+
+    // Cache the map on the instance (to avoid re-creating it)
+    Object.defineProperty(this, 'validatorsMap', {
+      value: map,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
+    return map
+  }
+
+  override validateInContext(
+    input: unknown = {},
+    ctx: ValidatorContext,
+  ): ValidationResult<Output> {
+    if (!isPlainObject(input)) {
+      return ctx.issueInvalidType(input, 'object')
+    }
+
+    // Lazily copy value
+    let copy: undefined | Record<string, unknown>
+
+    // Ensure that non-specified params conform to param schema
+    for (const key in input) {
+      if (this.validatorsMap.has(key)) continue
+
+      const result = ctx.validateChild(input, key, paramSchema)
+      if (!result.success) return result
+
+      if (result.value !== input[key]) {
+        copy ??= { ...input }
+        copy[key] = result.value
+      }
+    }
+
+    for (const [key, propDef] of this.validatorsMap) {
+      const result = ctx.validateChild(input, key, propDef)
+      if (!result.success) {
+        // Because default values are provided by child validators, we need to
+        // run the validator to get the default value and, in case of failure,
+        // ignore validation error that were caused by missing keys.
+        if (!(key in input)) {
+          if (!this.options.required?.includes(key)) {
+            // Ignore missing non-required key
+            continue
+          } else {
+            // Transform into "required key" issue
+            return ctx.issueRequiredKey(input, key)
+          }
+        }
+
+        return result
+      }
+
+      if (result.value !== input[key]) {
+        // Copy on write
+        copy ??= { ...input }
+        copy[key] = result.value
+      }
+    }
+
+    return ctx.success((copy ?? input) as Output)
+  }
+
+  fromURLSearchParams(urlSearchParams: URLSearchParams): Output {
+    const params: Record<string, Param> = {}
+
+    for (const [key, value] of urlSearchParams.entries()) {
+      const validator = this.validatorsMap.get(key)
+
+      const coerced: ParamScalar =
+        validator != null && validator instanceof StringSchema
+          ? value
+          : value === 'true'
+            ? true
+            : value === 'false'
+              ? false
+              : /^-?\d+$/.test(value)
+                ? Number(value)
+                : value
+
+      if (params[key] === undefined) {
+        params[key] = coerced
+      } else if (Array.isArray(params[key])) {
+        params[key].push(coerced)
+      } else {
+        params[key] = [params[key] as ParamScalar, coerced]
+      }
+    }
+
+    return this.parse(params)
+  }
+
+  toURLSearchParams(input: Output): URLSearchParams {
+    const urlSearchParams = new URLSearchParams()
+
+    if (input !== undefined) {
+      for (const [key, value] of Object.entries(input)) {
+        if (Array.isArray(value)) {
+          for (const v of value) {
+            urlSearchParams.append(key, String(v))
+          }
+        } else if (value !== undefined) {
+          urlSearchParams.append(key, String(value))
+        }
+      }
+    }
+
+    return urlSearchParams
+  }
+}

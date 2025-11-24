@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "com.example.stringConst",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string",
+            "const": "a"
+          }
+        }
+      }
+    }
+  }
+}

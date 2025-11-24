@@ -1,8 +1,8 @@
-import { ifString } from '../lib/util.ts'
 import { useOAuthContext } from '../providers/OAuthProvider.tsx'
 import { useGetActorProfileQuery } from '../queries/use-get-actor-profile-query.ts'
 import { useGetSessionQuery } from '../queries/use-get-session-query.ts'
 import { ButtonDropdown } from './ButtonDropdown.tsx'
+import { ClipboardIcon, SquareArrowTopRightIcon } from './Icons.tsx'
 
 export function UserMenu() {
   const { session, signOut } = useOAuthContext()
@@ -13,7 +13,7 @@ export function UserMenu() {
 
   const { did } = session
 
-  const displayName = ifString(getProfile.data?.value?.displayName)
+  const displayName = getProfile.data?.value?.displayName
   const handle = getSession.data?.handle
 
   return (
@@ -22,16 +22,29 @@ export function UserMenu() {
       aria-label="User menu"
       menu={[
         {
-          label: handle && <b>{handle}</b>,
+          label: handle && <b className="flex-1">{handle}</b>,
+          onClick: () => {
+            if (handle) navigator.clipboard.writeText(handle)
+          },
           items: [
             {
-              label: did,
+              label: (
+                <>
+                  <span className="flex-1">{did}</span>
+                  <ClipboardIcon className="w-4" />
+                </>
+              ),
               onClick: () => {
                 navigator.clipboard.writeText(did)
               },
             },
             {
-              label: 'Profile',
+              label: (
+                <>
+                  <span className="flex-1">Profile</span>
+                  <SquareArrowTopRightIcon className="w-4" />
+                </>
+              ),
               onClick: () => {
                 window.open(`https://bsky.app/profile/${did}`, '_blank')
               },

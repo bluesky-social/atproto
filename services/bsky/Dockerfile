@@ -18,6 +18,7 @@ COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/did ./packages/did
 COPY ./packages/identity ./packages/identity
+COPY ./packages/lex ./packages/lex
 COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/lexicon ./packages/lexicon

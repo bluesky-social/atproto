@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "com.example.integerConst",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "properties": {
+          "integer": {
+            "type": "integer",
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,7 @@ COPY ./tsconfig ./tsconfig
 COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
+COPY ./packages/lex ./packages/lex
 COPY ./packages/syntax ./packages/syntax
 COPY ./services/bsync ./services/bsync
 

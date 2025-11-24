@@ -22,6 +22,7 @@ COPY ./packages/crypto ./packages/crypto
 COPY ./packages/did ./packages/did
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/identity ./packages/identity
+COPY ./packages/lex ./packages/lex
 COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/lexicon-resolver ./packages/lexicon-resolver

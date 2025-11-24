@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { InvalidDidError } from './did-error.js'
+import { DidDocument, DidService } from './did-document.js'
+import { DidError, InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
 import { isFragment } from './lib/uri.js'
 import {
@@ -120,5 +121,51 @@ export const isAtprotoAudience = (value: unknown): value is AtprotoAudience => {
   if (value.indexOf('#', hashIndex + 1) !== -1) return false
   return (
     isFragment(value, hashIndex + 1) && isAtprotoDid(value.slice(0, hashIndex))
+  )
+}
+
+export function extractPdsUrl(
+  document: DidDocument<AtprotoIdentityDidMethods>,
+): URL {
+  const service = document.service?.find(
+    isAtprotoPersonalDataServerService<AtprotoIdentityDidMethods>,
+    document,
+  )
+
+  if (!service) {
+    throw new DidError(
+      document.id,
+      `Identity "${document.id}" does not have a PDS URL`,
+      'did-service-not-found',
+    )
+  }
+
+  try {
+    return new URL(service.serviceEndpoint)
+  } catch (cause) {
+    throw new DidError(
+      document.id,
+      `Invalid PDS URL in DID document: ${service.serviceEndpoint}`,
+      'did-document-format-error',
+      undefined,
+      cause,
+    )
+  }
+}
+
+function isAtprotoPersonalDataServerService<M extends string>(
+  this: DidDocument<M>,
+  s: DidService,
+): s is {
+  id: '#atproto_pds' | `${Did<M>}#atproto_pds`
+  type: 'AtprotoPersonalDataServer'
+  serviceEndpoint: string
+} {
+  return (
+    typeof s.serviceEndpoint === 'string' &&
+    s.type === 'AtprotoPersonalDataServer' &&
+    (s.id.startsWith('#')
+      ? s.id === '#atproto_pds'
+      : s.id === `${this.id}#atproto_pds`)
   )
 }

@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "com.example.boolConst",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "properties": {
+          "boolean": {
+            "type": "boolean",
+            "const": false
+          }
+        }
+      }
+    }
+  }
+}
