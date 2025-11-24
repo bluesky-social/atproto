@@ -21,7 +21,6 @@ yargs(hideBin(process.argv))
     (yargs) => {
       return yargs.strict().options({
         lexicons: {
-          array: true,
           type: 'string',
           demandOption: true,
           default: './lexicons',
@@ -125,7 +124,6 @@ yargs(hideBin(process.argv))
             'error if the installed lexicons do not match the CIDs in the lexicons.json manifest',
         },
         lexicons: {
-          array: true,
           type: 'string',
           demandOption: true,
           default: './lexicons',
