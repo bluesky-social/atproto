@@ -1,9 +1,9 @@
 import { CID, LexValue } from '@atproto/lex-data'
-import { cborDecode, cborDecodeAll, cborEncode } from '..'
+import { decode, decodeAll, encode } from '..'
 
-describe('cborEncode', () => {
+describe('encode', () => {
   it('encodes data to CBOR format', () => {
-    expect(cborEncode({ hello: 'world' })).toEqual(
+    expect(encode({ hello: 'world' })).toEqual(
       Uint8Array.from([
         0xa1, 0x65, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x65, 0x77, 0x6f, 0x72, 0x6c,
         0x64,
@@ -12,17 +12,17 @@ describe('cborEncode', () => {
   })
 
   it('throws when encoding floats', () => {
-    expect(() => cborEncode({ value: 3.14 })).toThrow()
+    expect(() => encode({ value: 3.14 })).toThrow()
   })
 
   it('throws when encoding "undefined" values', () => {
-    expect(() => cborEncode({ value: undefined })).toThrow()
+    expect(() => encode({ value: undefined })).toThrow()
   })
 
   it('throws when encoding Maps with non-string keys', () => {
     expect(() =>
       // @ts-expect-error
-      cborEncode({
+      encode({
         foo: new Map<any, any>([
           [42, 'value'],
           ['key', 'value2'],
@@ -32,13 +32,13 @@ describe('cborEncode', () => {
   })
 })
 
-describe('cborDecode', () => {
+describe('decode', () => {
   it('decodes CBOR data to original format', () => {
     const bytes = Uint8Array.from([
       0xa1, 0x65, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x65, 0x77, 0x6f, 0x72, 0x6c,
       0x64,
     ])
-    expect(cborDecode(bytes)).toEqual({ hello: 'world' })
+    expect(decode(bytes)).toEqual({ hello: 'world' })
   })
 })
 
@@ -76,10 +76,10 @@ describe('identity', () => {
     },
   ] as LexValue[]) {
     it(JSON.stringify(vector), () => {
-      const cbor = cborEncode(vector)
-      const decoded = cborDecode(cbor)
+      const cbor = encode(vector)
+      const decoded = decode(cbor)
       expect(decoded).toEqual(vector)
-      expect(cborEncode(decoded)).toEqual(cbor)
+      expect(encode(decoded)).toEqual(cbor)
     })
   }
 })
@@ -98,8 +98,8 @@ describe('ipld decode multi', () => {
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }
-    const encoded = Buffer.concat([cborEncode(one), cborEncode(two)])
-    const decoded = Array.from(cborDecodeAll(encoded))
+    const encoded = Buffer.concat([encode(one), encode(two)])
+    const decoded = Array.from(decodeAll(encoded))
     expect(decoded.length).toBe(2)
     expect(decoded[0]).toEqual(one)
     expect(decoded[1]).toEqual(two)
@@ -109,8 +109,8 @@ describe('ipld decode multi', () => {
     const one = {
       test: Number.MAX_SAFE_INTEGER,
     }
-    const encoded = cborEncode(one)
-    const decoded = Array.from(cborDecodeAll(encoded))
+    const encoded = encode(one)
+    const decoded = Array.from(decodeAll(encoded))
     expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
   })
 })

@@ -16,10 +16,19 @@ export type CreateIdentityResolverOptions = {
 export function createIdentityResolver(
   options: CreateIdentityResolverOptions,
 ): IdentityResolver {
-  const { identityResolver } = options
-  if (identityResolver != null) return identityResolver
+  if ('identityResolver' in options && options.identityResolver != null) {
+    return options.identityResolver
+  }
 
-  const didResolver = createDidResolver(options)
-  const handleResolver = createHandleResolver(options)
-  return new AtprotoIdentityResolver(didResolver, handleResolver)
+  if ('handleResolver' in options && options.handleResolver != null) {
+    const didResolver = createDidResolver(options)
+    const handleResolver = createHandleResolver(
+      options as typeof options & {
+        handleResolver: NonNullable<(typeof options)['handleResolver']>
+      },
+    )
+    return new AtprotoIdentityResolver(didResolver, handleResolver)
+  }
+
+  throw new TypeError('identityResolver or handleResolver option is required')
 }

@@ -1,6 +1,51 @@
-import { cborEncode, cborToTypedLexMap } from '..'
+import { isTypedLexMap } from './lex'
 
-describe('cborToLexRecord', () => {
+describe('isLexMap', () => {
+  it('returns true for valid LexMap', () => {
+    const record = {
+      a: 123,
+      b: 'blah',
+      c: true,
+      d: null,
+      e: new Uint8Array([1, 2, 3]),
+      f: {
+        nested: 'value',
+      },
+      g: [1, 2, 3],
+    }
+    expect(isTypedLexMap(record)).toBe(false)
+  })
+
+  it('returns false for non-records', () => {
+    const values = [
+      123,
+      'blah',
+      true,
+      null,
+      new Uint8Array([1, 2, 3]),
+      [1, 2, 3],
+    ]
+    for (const value of values) {
+      expect(isTypedLexMap(value)).toBe(false)
+    }
+  })
+
+  it('returns false for records with non-Lex values', () => {
+    const recordWithFunction = {
+      a: 123,
+      b: () => {},
+    }
+    const recordWithUndefined = {
+      a: 123,
+      b: undefined,
+    }
+    // @ts-expect-error
+    expect(isTypedLexMap(recordWithFunction)).toBe(false)
+    expect(isTypedLexMap(recordWithUndefined)).toBe(false)
+  })
+})
+
+describe('isTypedLexMap', () => {
   describe('valid records', () => {
     for (const { note, json } of [
       {
@@ -29,7 +74,7 @@ describe('cborToLexRecord', () => {
       },
     ]) {
       it(note, () => {
-        expect(cborToTypedLexMap(cborEncode(json))).toEqual(json)
+        expect(isTypedLexMap(json)).toBe(true)
       })
     }
   })
@@ -70,7 +115,7 @@ describe('cborToLexRecord', () => {
       },
     ]) {
       it(note, () => {
-        expect(() => cborToTypedLexMap(cborEncode(json))).toThrow()
+        expect(isTypedLexMap(json)).toBe(false)
       })
     }
   })

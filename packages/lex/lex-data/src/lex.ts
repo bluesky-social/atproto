@@ -69,3 +69,10 @@ export function isLexValue(value: unknown): value is LexValue {
       return false
   }
 }
+
+export type TypedLexMap = LexMap & { $type: string }
+export function isTypedLexMap(value: LexValue): value is TypedLexMap {
+  return (
+    isLexMap(value) && typeof value.$type === 'string' && value.$type.length > 0
+  )
+}

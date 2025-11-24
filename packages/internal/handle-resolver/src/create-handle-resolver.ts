@@ -6,21 +6,14 @@ import {
 } from './xrpc-handle-resolver.js'
 
 export type CreateHandleResolverOptions = {
+  handleResolver: URL | string | HandleResolver
   handleCache?: HandleCache
-  handleResolver?: URL | string | HandleResolver
 } & Partial<XrpcHandleResolverOptions>
 
 export function createHandleResolver(
   options: CreateHandleResolverOptions,
 ): HandleResolver {
   const { handleResolver, handleCache } = options
-
-  if (handleResolver == null) {
-    // Because the handle resolution mechanism requires either a DNS based
-    // handle resolver or an XRPC based handle resolver, we require the
-    // handleResolver option to be provided.
-    throw new TypeError('handleResolver is required')
-  }
 
   if (handleResolver instanceof CachedHandleResolver && !handleCache) {
     return handleResolver

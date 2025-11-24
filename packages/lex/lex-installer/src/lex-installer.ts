@@ -298,7 +298,6 @@ function* defRefs(
       }
       return
     case 'boolean':
-    case 'null':
     case 'cid-link':
     case 'token':
     case 'bytes':

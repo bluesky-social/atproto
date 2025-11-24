@@ -1,8 +1,7 @@
 import { CID } from 'multiformats/cid'
-import { code as rawCodecCode } from 'multiformats/codecs/raw'
 
 export const DAG_CBOR_MULTICODEC = 0x71
-export const RAW_BIN_MULTICODEC = rawCodecCode
+export const RAW_BIN_MULTICODEC = 0x55
 
 export const SHA2_256_MULTIHASH_CODE = 0x12
 

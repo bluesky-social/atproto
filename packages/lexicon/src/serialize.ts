@@ -14,17 +14,19 @@ import { BlobRef, jsonBlobRef } from './blob-refs'
  * @note this is equivalent to `unknown` because of {@link IpldValue} being `unknown`.
  * @deprecated Use {@link Lex} from `@atproto/lex-data` instead.
  */
-export type LexValue =
-  | IpldValue
-  | BlobRef
-  | Array<LexValue>
-  | { [key: string]: LexValue }
+export type LexValue = unknown
 
+/**
+ * @deprecated Use {@link TypedLexMap} from `@atproto/lex-data` instead.
+ */
 export type RepoRecord = Record<string, LexValue>
 
 // @NOTE avoiding use of check.is() here only because it makes
 // these implementations slow, and they often live in hot paths.
 
+/**
+ * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
+ */
 export const lexToIpld = (val: LexValue): IpldValue => {
   // walk arrays
   if (Array.isArray(val)) {
@@ -51,6 +53,9 @@ export const lexToIpld = (val: LexValue): IpldValue => {
   return val
 }
 
+/**
+ * @deprecated Use `LexValue` from `@atproto/lex-data` instead instead (which doesn't need conversion to IPLD).
+ */
 export const ipldToLex = (val: IpldValue): LexValue => {
   // map arrays
   if (Array.isArray(val)) {

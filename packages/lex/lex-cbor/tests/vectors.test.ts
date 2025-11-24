@@ -1,6 +1,6 @@
 import { lexEquals } from '@atproto/lex-data'
 import { jsonToLex, lexToJson } from '@atproto/lex-json'
-import { cborDecode, cborEncode, cidForLex } from '..'
+import { cidForLex, decode, encode } from '..'
 import { vectors } from './vectors'
 
 describe('lex', () => {
@@ -8,8 +8,8 @@ describe('lex', () => {
     it(`passes test vector: ${vector.name}`, async () => {
       const lex = jsonToLex(vector.json)
       const json = lexToJson(lex)
-      const cbor = cborEncode(lex)
-      const ipldAgain = cborDecode(cbor)
+      const cbor = encode(lex)
+      const ipldAgain = decode(cbor)
       const jsonAgain = lexToJson(ipldAgain)
       const cid = await cidForLex(lex)
       expect(json).toEqual(vector.json)

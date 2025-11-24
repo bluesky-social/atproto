@@ -26,6 +26,7 @@
     "@atproto/lex-cbor": "workspace:*",
     "@atproto/lex-data": "workspace:*",
     "iso-datestring-validator": "^2.2.2",
+    "multiformats": "^9.9.0",
     "pino": "^8.21.0"
   },
   "devDependencies": {

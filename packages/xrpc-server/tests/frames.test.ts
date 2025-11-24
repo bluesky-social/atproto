@@ -1,4 +1,4 @@
-import { cborEncode } from '@atproto/lex-cbor'
+import { encode } from '@atproto/lex-cbor'
 import { ui8Equals } from '@atproto/lex-data'
 import { ErrorFrame, Frame, FrameType, MessageFrame } from '../src'
 
@@ -88,8 +88,8 @@ describe('Frames', () => {
 
   it('parsing fails when frame header is malformed.', async () => {
     const bytes = Buffer.concat([
-      cborEncode({ op: -2 }), // Unknown op
-      cborEncode({ a: 'b', c: [1, 2, 3] }),
+      encode({ op: -2 }), // Unknown op
+      encode({ a: 'b', c: [1, 2, 3] }),
     ])
 
     expect(() => Frame.fromBytes(bytes)).toThrow('Invalid frame header:')
@@ -101,7 +101,7 @@ describe('Frames', () => {
       { type: '#d' },
     )
 
-    const headerBytes = cborEncode(messageFrame.header)
+    const headerBytes = encode(messageFrame.header)
 
     expect(() => Frame.fromBytes(headerBytes)).toThrow('Missing frame body')
   })
@@ -114,7 +114,7 @@ describe('Frames', () => {
 
     const bytes = Buffer.concat([
       messageFrame.toBytes(),
-      cborEncode({ d: 'e', f: [4, 5, 6] }),
+      encode({ d: 'e', f: [4, 5, 6] }),
     ])
 
     expect(() => Frame.fromBytes(bytes)).toThrow(
@@ -126,8 +126,8 @@ describe('Frames', () => {
     const errorFrame = new ErrorFrame({ error: 'BadOops' })
 
     const bytes = Buffer.concat([
-      cborEncode(errorFrame.header),
-      cborEncode({ blah: 1 }),
+      encode(errorFrame.header),
+      encode({ blah: 1 }),
     ])
 
     expect(() => Frame.fromBytes(bytes)).toThrow('Invalid error frame body:')

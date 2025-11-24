@@ -8,14 +8,11 @@ import {
   decodeFirst as cborgDecodeFirst,
   encode as cborgEncode,
 } from 'cborg'
-import type { BlockDecoder, BlockEncoder, ByteView } from 'multiformats/block'
-import { CID, DAG_CBOR_MULTICODEC, LexValue } from '@atproto/lex-data'
-
-export { CID }
-export type { ByteView, LexValue }
+import type { ByteView } from 'multiformats/block'
+import { CID, LexValue } from '@atproto/lex-data'
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
-// match ATPROTO Data Model constraints. Floats, in particular, are not allowed.
+// match the AT Data Model constraints. Floats, in particular, are not allowed.
 
 // @NOTE "cborg" version 4 is required to support multi-decoding via the
 // "decodeFirst" function. However, that version only exposes ES modules.
@@ -40,14 +37,14 @@ function undefinedEncoder(): null {
 function numberEncoder(num: number): null {
   if (Number.isInteger(num)) return null
 
-  throw new Error('Non-integer numbers are not allowed by ATPROTO Data Model')
+  throw new Error('Non-integer numbers are not allowed by the AT Data Model')
 }
 
 function mapEncoder(map: Map<unknown, unknown>): null {
   for (const key of map.keys()) {
     if (typeof key !== 'string') {
       throw new Error(
-        'Only string keys are allowed in CBOR "map" by ATPROTO Data Model',
+        'Only string keys are allowed in CBOR "map" by the AT Data Model',
       )
     }
   }
@@ -85,26 +82,15 @@ const decodeOptions: DecodeOptions = {
   tags: tagDecoders,
 }
 
-export function cborEncode<T extends LexValue>(data: T): ByteView<T> {
+export function encode<T extends LexValue>(data: T): ByteView<T> {
   return cborgEncode(data, encodeOptions)
 }
 
-export function cborDecode<T extends LexValue>(bytes: ByteView<T>): T {
+export function decode<T extends LexValue>(bytes: ByteView<T>): T {
   return cborgDecode(bytes, decodeOptions)
 }
 
-// @NOTE ATP uses the "dag-cbor" code (0x71) for block encoding/decoding but
-// does not actually support the full "dag-cbor" specification. Instead, it uses
-// a restricted subset defined in the atproto.com "Data Model".
-export const atpCodec: BlockEncoder<0x71, LexValue> &
-  BlockDecoder<0x71, LexValue> = {
-  name: 'atp-cbor',
-  code: DAG_CBOR_MULTICODEC,
-  encode: cborEncode,
-  decode: cborDecode,
-}
-
-export function* cborDecodeAll<T = LexValue>(
+export function* decodeAll<T = LexValue>(
   data: ByteView<T>,
 ): Generator<T, void, unknown> {
   do {

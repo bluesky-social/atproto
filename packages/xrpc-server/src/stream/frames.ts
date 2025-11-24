@@ -1,6 +1,6 @@
 /* eslint-disable import/no-deprecated */
 
-import { LexValue, cborDecodeAll, cborEncode } from '@atproto/lex-cbor'
+import { LexValue, decodeAll, encode } from '@atproto/lex-cbor'
 import {
   ErrorFrameBody,
   ErrorFrameHeader,
@@ -19,7 +19,7 @@ export abstract class Frame<T extends LexValue = LexValue> {
     return this.header.op
   }
   toBytes(): Uint8Array {
-    return Buffer.concat([cborEncode(this.header), cborEncode(this.body)])
+    return Buffer.concat([encode(this.header), encode(this.body)])
   }
   isMessage(): this is MessageFrame {
     return this.op === FrameType.Message
@@ -28,7 +28,7 @@ export abstract class Frame<T extends LexValue = LexValue> {
     return this.op === FrameType.Error
   }
   static fromBytes(bytes: Uint8Array) {
-    const [header, body, ...rest] = cborDecodeAll(bytes)
+    const [header, body, ...rest] = decodeAll(bytes)
     if (rest.length) {
       throw new Error('Too many CBOR data items in frame')
     } else if (body === undefined) {

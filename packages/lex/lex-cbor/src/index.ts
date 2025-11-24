@@ -1,33 +1,35 @@
-import { Block, encode as encodeBlock } from 'multiformats/block'
 import { create as createDigest } from 'multiformats/hashes/digest'
-import { sha256 } from 'multiformats/hashes/sha2'
+import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import {
   CID,
   DAG_CBOR_MULTICODEC,
-  LexMap,
   LexValue,
   RAW_BIN_MULTICODEC,
   SHA2_256_MULTIHASH_CODE,
 } from '@atproto/lex-data'
-import { atpCodec } from './codec.js'
+import { encode } from './encoding.js'
 
-export * from './codec.js'
-export { CID, DAG_CBOR_MULTICODEC, RAW_BIN_MULTICODEC, SHA2_256_MULTIHASH_CODE }
-export type { Block, LexValue }
-
-export async function lexToCborBlock<T extends LexValue>(
-  value: T,
-): Promise<Block<T>> {
-  return encodeBlock<T, 0x71, 0x12>({ value, codec: atpCodec, hasher: sha256 })
+export { decode, decodeAll, encode } from './encoding.js'
+export {
+  CID,
+  DAG_CBOR_MULTICODEC,
+  RAW_BIN_MULTICODEC,
+  SHA2_256_MULTIHASH_CODE,
+  hasher,
 }
+export type { LexValue }
 
 export async function cidForLex(value: LexValue): Promise<CID> {
-  const { cid } = await lexToCborBlock(value)
-  return cid
+  return cidForCbor(encode(value))
+}
+
+export async function cidForCbor(bytes: Uint8Array): Promise<CID> {
+  const digest = await hasher.digest(bytes)
+  return CID.createV1(DAG_CBOR_MULTICODEC, digest)
 }
 
 export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
-  const digest = await sha256.digest(bytes)
+  const digest = await hasher.digest(bytes)
   const expected = CID.createV1(cid.code, digest)
   if (!cid.equals(expected)) {
     throw new Error(
@@ -36,29 +38,13 @@ export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
   }
 }
 
-export type TypedLexMap = LexMap & { $type: string }
-export function cborToTypedLexMap(bytes: Uint8Array): TypedLexMap {
-  const data = atpCodec.decode(bytes)
-  if (
-    data == null ||
-    typeof data !== 'object' ||
-    // @NOTE Array, Uint8Array and CID don't have a "$type" property
-    !('$type' in data) ||
-    !data.$type ||
-    typeof data.$type !== 'string'
-  ) {
-    throw new Error(`Expected record with $type property`)
-  }
-  return data as TypedLexMap
-}
-
 export async function cidForRawBytes(bytes: Uint8Array): Promise<CID> {
-  const digest = await sha256.digest(bytes)
+  const digest = await hasher.digest(bytes)
   return CID.createV1(RAW_BIN_MULTICODEC, digest)
 }
 
 export function cidForRawHash(hash: Uint8Array): CID {
-  const digest = createDigest(sha256.code, hash)
+  const digest = createDigest(hasher.code, hash)
   return CID.createV1(RAW_BIN_MULTICODEC, digest)
 }
 
