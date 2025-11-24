@@ -527,14 +527,26 @@
           "format": "datetime",
           "description": "The date and time of this write operation."
         },
-        "status": {
-          "type": "string",
-          "description": "The status of the age assurance process.",
-          "knownValues": ["unknown", "pending", "assured"]
-        },
         "attemptId": {
           "type": "string",
           "description": "The unique identifier for this instance of the age assurance flow, in UUID format."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the Age Assurance process.",
+          "knownValues": ["unknown", "pending", "assured"]
+        },
+        "access": {
+          "type": "ref",
+          "ref": "app.bsky.ageassurance.defs#access"
+        },
+        "countryCode": {
+          "type": "string",
+          "description": "The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow."
+        },
+        "regionCode": {
+          "type": "string",
+          "description": "The ISO 3166-2 region code provided when beginning the Age Assurance flow."
         },
         "initIp": {
           "type": "string",
@@ -563,6 +575,10 @@
           "type": "string",
           "description": "The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.",
           "knownValues": ["assured", "reset", "blocked"]
+        },
+        "access": {
+          "type": "ref",
+          "ref": "app.bsky.ageassurance.defs#access"
         },
         "comment": {
           "type": "string",
