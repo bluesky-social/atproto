@@ -51,7 +51,7 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
 
       if (returned.has(value.id)) {
         const err = new Error(`Duplicate lexicon document id: ${value.id}`)
-        this.#iterator.throw?.(err)
+        await this.#iterator.throw?.(err)
         throw err // In case iterator.throw does not exist or does not throw
       }
 
