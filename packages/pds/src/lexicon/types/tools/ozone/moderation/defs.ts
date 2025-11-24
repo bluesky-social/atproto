@@ -282,10 +282,10 @@ export function validateAccountStrike<V>(v: V) {
 }
 
 export type SubjectReviewState =
-  | 'lex:tools.ozone.moderation.defs#reviewOpen'
-  | 'lex:tools.ozone.moderation.defs#reviewEscalated'
-  | 'lex:tools.ozone.moderation.defs#reviewClosed'
-  | 'lex:tools.ozone.moderation.defs#reviewNone'
+  | 'tools.ozone.moderation.defs#reviewOpen'
+  | 'tools.ozone.moderation.defs#reviewEscalated'
+  | 'tools.ozone.moderation.defs#reviewClosed'
+  | 'tools.ozone.moderation.defs#reviewNone'
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
