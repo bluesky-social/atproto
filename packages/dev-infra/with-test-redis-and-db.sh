@@ -5,6 +5,4 @@
 # ./with-test-redis-and-db.sh redis-cli -h localhost -p 6380 ping
 
 dir=$(dirname $0)
-. ${dir}/_common.sh
-
-SERVICES="db_test redis_test" main "$@"
+node ${dir}/src/workspace-cli.js with-test-redis-and-db "$@"

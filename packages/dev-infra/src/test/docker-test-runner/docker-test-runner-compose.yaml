@@ -1,0 +1,42 @@
+services:
+  # An ephermerally-stored postgres database for single-use test runs
+  db_test:
+    image: postgres:14.4-alpine
+    environment:
+      - POSTGRES_USER=pg
+      - POSTGRES_PASSWORD=password
+    # Healthcheck ensures db is queryable when `docker-compose up --wait` completes
+    healthcheck:
+      test: 'pg_isready -U pg'
+      interval: 500ms
+      timeout: 10s
+      retries: 20
+
+  # An ephermerally-stored redis cache for single-use test runs
+  redis_test:
+    image: redis:7.0-alpine
+    # Healthcheck ensures redis is queryable when `docker-compose up --wait` completes
+    healthcheck:
+      test: ['CMD-SHELL', '[ "$$(redis-cli ping)" = "PONG" ]']
+      interval: 500ms
+      timeout: 10s
+      retries: 20
+
+  docker_test_env:
+    build:
+      context: ../../../../../
+      dockerfile: packages/dev-infra/src/test/docker-test-runner/docker-test-runner-Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../../../../:/mnt/code:ro
+      - pnpm-store:/pnpm-store
+    working_dir: /app
+    command: tail -f /dev/null
+    depends_on:
+      db_test:
+        condition: service_healthy
+      redis_test:
+        condition: service_healthy
+
+volumes:
+  pnpm-store:

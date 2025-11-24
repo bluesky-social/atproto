@@ -89,12 +89,18 @@ describe('oauth', () => {
   let appUrl: string
 
   beforeAll(async () => {
+    // @NOTE We are using another language than "en" as default language to
+    // test the language negotiation.
+    const args = ['--accept-lang=fr-BE,en-GB,en']
+
+    if (process.env.NO_SANDBOX === 'true') {
+      // see https://github.com/docker/for-linux/issues/496
+      args.unshift('--no-sandbox')
+    }
+
     browser = await launch({
       browser: 'chrome',
-      // @NOTE We are using another language than "en" as default language to
-      // test the language negotiation.
-      args: ['--accept-lang=fr-BE,en-GB,en'],
-
+      args,
       // For debugging:
       // headless: false,
       // devtools: true,
