@@ -6,7 +6,6 @@ import {
   InferPayloadBody,
   Params,
   ParamsSchema,
-  Payload,
   Procedure,
   Query,
   Restricted,
@@ -62,7 +61,7 @@ export function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   const path = `/xrpc/${method.nsid}`
 
   const queryString = options.params
-    ? xrpcRequestParams(method.parameters, options.params)
+    ? xrpcRequestParams(method.parameters, options.params, options)
     : undefined
 
   return queryString ? `${path}?${queryString}` : path
@@ -71,31 +70,20 @@ export function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
 export function xrpcRequestParams(
   schema: ParamsSchema | undefined,
   params: Params | undefined,
+  options: CallOptions,
 ): undefined | string {
-  // @NOTE We don't validate params against schema here, as it should be covered
-  // by type-checking at compile time, and will be validated server-side.
-  if (!params) return ''
-  const urlSearchParams = new URLSearchParams()
-  for (const [key, value] of Object.entries(params)) {
-    if (Array.isArray(value)) {
-      for (const v of value) {
-        urlSearchParams.append(key, String(v))
-      }
-    } else if (value !== undefined) {
-      urlSearchParams.append(key, String(value))
-    }
-  }
-  return urlSearchParams.size ? urlSearchParams.toString() : undefined
+  const urlSearchParams = schema?.toURLSearchParams(
+    options.validateRequest ? schema.parse(params) : (params as any),
+  )
+  return urlSearchParams?.size ? urlSearchParams.toString() : undefined
 }
 
-export type XrpcRequestInitOptions<T extends Query | Procedure> =
-  CallOptions & {
-    // validateRequest?: boolean // TODO ?
-  } & (T extends Procedure
-      ? never extends InferPayloadBody<T['input']>
-        ? { body?: InferPayloadBody<T['input']> }
-        : { body: InferPayloadBody<T['input']> }
-      : { body?: never })
+export type XrpcRequestInitOptions<T extends Query | Procedure> = CallOptions &
+  (T extends Procedure
+    ? never extends InferPayloadBody<T['input']>
+      ? { body?: InferPayloadBody<T['input']> }
+      : { body: InferPayloadBody<T['input']> }
+    : { body?: never })
 
 export function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
@@ -105,6 +93,16 @@ export function xrpcRequestInit<T extends Procedure | Query>(
 
   // Requests with body
   if ('input' in schema && schema.input?.encoding) {
+    if (
+      options.validateRequest &&
+      schema.input == null &&
+      options.body !== undefined
+    ) {
+      throw new TypeError(
+        `XRPC method ${schema.nsid} does not accept a request body`,
+      )
+    }
+
     headers.set('content-type', schema.input.encoding)
     return {
       duplex: 'half',
@@ -114,7 +112,12 @@ export function xrpcRequestInit<T extends Procedure | Query>(
       signal: options.signal,
       method: 'POST',
       headers,
-      body: xrpcRequestBody(schema.input, options.body),
+      body: xrpcRequestBody(
+        schema.input?.encoding,
+        options.validateRequest
+          ? schema.input?.body.parse(options.body)
+          : options.body,
+      ),
     }
   }
 
@@ -154,24 +157,22 @@ export function xrpcRequestHeaders(options: {
 }
 
 function xrpcRequestBody(
-  payload: Payload | undefined,
+  encoding: string | undefined,
   body: LexValue | undefined,
 ): BodyInit | null {
-  if (payload?.encoding === undefined) {
+  if (encoding === undefined) {
     return null
   }
 
-  if (payload.encoding === 'application/json') {
+  if (encoding === 'application/json') {
     if (body !== undefined) return lexStringify(body)
-  } else if (payload.encoding.startsWith('text/')) {
+  } else if (encoding.startsWith('text/')) {
     if (typeof body === 'string') return body
   } else {
     if (ArrayBuffer.isView(body) || body instanceof ArrayBuffer) return body
   }
 
-  throw new TypeError(
-    `Invalid ${typeof body} body for ${payload.encoding} encoding`,
-  )
+  throw new TypeError(`Invalid ${typeof body} body for ${encoding} encoding`)
 }
 
 export async function xrpcResponseHandler<M extends Procedure | Query>(

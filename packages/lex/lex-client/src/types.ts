@@ -10,6 +10,7 @@ export type CallOptions = {
   signal?: AbortSignal
   headers?: HeadersInit
   service?: Service
+  validateRequest?: boolean
   validateResponse?: boolean
 }
 

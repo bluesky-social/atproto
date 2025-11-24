@@ -1,7 +1,8 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
-import { Param, paramSchema } from './_parameters.js'
+import { Param, ParamScalar, paramSchema } from './_parameters.js'
 import { ObjectSchemaPropertiesOutput } from './object.js'
+import { StringSchema } from './string.js'
 
 export type ParamsSchemaProperties = {
   [_ in string]: Validator<Param>
@@ -107,19 +108,50 @@ export class ParamsSchema<
     return ctx.success((copy ?? input) as Output)
   }
 
-  stringify(input: unknown): string {
-    const urlSearchParams = new URLSearchParams()
+  fromURLSearchParams(urlSearchParams: URLSearchParams): Output {
+    const params: Record<string, Param> = {}
 
-    for (const [key, value] of Object.entries(this.parse(input))) {
-      if (Array.isArray(value)) {
-        for (const v of value) {
-          urlSearchParams.append(key, String(v))
-        }
-      } else if (value === undefined) {
-        urlSearchParams.append(key, String(value))
+    for (const [key, value] of urlSearchParams.entries()) {
+      const validator = this.validatorsMap.get(key)
+
+      const coerced: ParamScalar =
+        validator != null && validator instanceof StringSchema
+          ? value
+          : value === 'true'
+            ? true
+            : value === 'false'
+              ? false
+              : /^-?\d+$/.test(value)
+                ? Number(value)
+                : value
+
+      if (params[key] === undefined) {
+        params[key] = coerced
+      } else if (Array.isArray(params[key])) {
+        params[key].push(coerced)
+      } else {
+        params[key] = [params[key] as ParamScalar, coerced]
       }
     }
 
-    return urlSearchParams.toString()
+    return this.parse(params)
+  }
+
+  toURLSearchParams(input: Output): URLSearchParams {
+    const urlSearchParams = new URLSearchParams()
+
+    if (input !== undefined) {
+      for (const [key, value] of Object.entries(input)) {
+        if (Array.isArray(value)) {
+          for (const v of value) {
+            urlSearchParams.append(key, String(v))
+          }
+        } else if (value === undefined) {
+          urlSearchParams.append(key, String(value))
+        }
+      }
+    }
+
+    return urlSearchParams
   }
 }

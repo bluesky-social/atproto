@@ -15,10 +15,10 @@ export class BooleanSchema extends Validator<boolean> {
     input: unknown = this.options.default,
     ctx: ValidatorContext,
   ): ValidationResult<boolean> {
-    if (typeof input !== 'boolean') {
-      return ctx.issueInvalidType(input, 'boolean')
+    if (typeof input === 'boolean') {
+      return ctx.success(input)
     }
 
-    return ctx.success(input as boolean)
+    return ctx.issueInvalidType(input, 'boolean')
   }
 }

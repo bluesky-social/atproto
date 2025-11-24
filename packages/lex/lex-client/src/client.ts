@@ -357,7 +357,7 @@ export class Client implements Agent {
   ): Promise<InferQueryOutputBody<T>>
   public async call(
     ns: Namespace<Action> | Namespace<Procedure> | Namespace<Query>,
-    arg?: LexValue,
+    arg?: LexValue | Params,
     options: CallOptions = {},
   ): Promise<unknown> {
     const method = getMain(ns)

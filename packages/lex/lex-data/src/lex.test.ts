@@ -31,17 +31,19 @@ describe('isLexMap', () => {
   })
 
   it('returns false for records with non-Lex values', () => {
-    const recordWithFunction = {
-      a: 123,
-      b: () => {},
-    }
-    const recordWithUndefined = {
-      a: 123,
-      b: undefined,
-    }
-    // @ts-expect-error
-    expect(isTypedLexMap(recordWithFunction)).toBe(false)
-    expect(isTypedLexMap(recordWithUndefined)).toBe(false)
+    expect(
+      // @ts-expect-error
+      isTypedLexMap({
+        a: 123,
+        b: () => {},
+      }),
+    ).toBe(false)
+    expect(
+      isTypedLexMap({
+        a: 123,
+        b: undefined,
+      }),
+    ).toBe(false)
   })
 })
 

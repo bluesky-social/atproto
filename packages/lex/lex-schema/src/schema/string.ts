@@ -104,11 +104,6 @@ export class StringSchema<
 const utf8Decoder = /*#__PURE__*/ new TextDecoder('utf-8', { fatal: false })
 export function coerceToString(input: unknown): string | null {
   switch (typeof input) {
-    case 'number':
-      if (!Number.isFinite(input)) return null
-    // falls through
-    case 'bigint':
-      return String(input)
     case 'string':
       return input
     case 'object': {

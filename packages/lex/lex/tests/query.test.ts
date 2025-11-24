@@ -70,14 +70,36 @@ describe('com.example.query', () => {
       expect(() =>
         com.example.query.$params.$parse({
           boolean: true,
-          float: 123.45,
           integer: 123,
-          string: 'string',
-          array: 'x',
+          float: 123.45,
         }),
       ).toThrow(
         'Expected one of boolean, integer, string or array value type at $.float (got float)',
       )
+
+      expect(() =>
+        com.example.query.$params.$parse({
+          boolean: true,
+          integer: 123,
+          array: 'x',
+        }),
+      ).toThrow('Expected array value type at $.array (got string)')
+
+      expect(() =>
+        com.example.query.$params.$parse({
+          boolean: true,
+          integer: 123,
+          array: 3,
+        }),
+      ).toThrow('Expected array value type at $.array (got integer)')
+
+      expect(() =>
+        com.example.query.$params.$parse({
+          boolean: true,
+          integer: 123,
+          array: NaN,
+        }),
+      ).toThrow('Expected array value type at $.array (got NaN)')
     })
   })
 
