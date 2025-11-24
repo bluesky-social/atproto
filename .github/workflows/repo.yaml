@@ -32,7 +32,7 @@ jobs:
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache
-          key: ${{ env.CURRENT_MONTH }}-${{ runner.name }}
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{runner.arch}}
       - run: pnpm i --frozen-lockfile
       - run: pnpm build
       - uses: actions/upload-artifact@v4
@@ -70,7 +70,7 @@ jobs:
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache
-          key: ${{ env.CURRENT_MONTH }}-${{ runner.name }}
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{runner.arch}}
       - run: pnpm i --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
@@ -100,7 +100,7 @@ jobs:
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache
-          key: ${{ env.CURRENT_MONTH }}-${{ runner.name }}
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{runner.arch}}
       - run: pnpm i --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
