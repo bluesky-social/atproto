@@ -33,8 +33,8 @@
   },
   "devDependencies": {
     "@atproto/dev-env": "workspace:^",
-    "@changesets/changelog-github": "^0.4.8",
-    "@changesets/cli": "^2.26.2",
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
     "@types/jest": "^28.1.4",
@@ -64,6 +64,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
+      "packages/lex/*",
       "packages/oauth/*",
       "packages/internal/*"
     ]
