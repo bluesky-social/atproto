@@ -9,14 +9,8 @@ import {
 } from '@atproto/lex-data'
 import { encode } from './encoding.js'
 
+export { CID, hasher }
 export { decode, decodeAll, encode } from './encoding.js'
-export {
-  CID,
-  DAG_CBOR_MULTICODEC,
-  RAW_BIN_MULTICODEC,
-  SHA2_256_MULTIHASH_CODE,
-  hasher,
-}
 export type { LexValue }
 
 export async function cidForLex(value: LexValue): Promise<CID> {
