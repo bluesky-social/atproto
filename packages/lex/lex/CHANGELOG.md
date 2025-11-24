@@ -1,5 +1,16 @@
 # @atproto/lex
 
+## 0.0.2
+
+### Patch Changes
+
+- [#4372](https://github.com/bluesky-social/atproto/pull/4372) [`7456f53`](https://github.com/bluesky-social/atproto/commit/7456f53e45fb3eef2f3bbdf2513da2d8ab078d80) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix error when running `install` command
+
+- Updated dependencies [[`7456f53`](https://github.com/bluesky-social/atproto/commit/7456f53e45fb3eef2f3bbdf2513da2d8ab078d80)]:
+  - @atproto/lex-builder@0.0.2
+  - @atproto/lex-client@0.0.1
+  - @atproto/lex-installer@0.0.2
+
 ## 0.0.1
 
 ### Patch Changes
