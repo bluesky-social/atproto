@@ -18,7 +18,7 @@ Working directly with XRPC endpoints requires manually tracking schema definitio
 1. Fetching lexicons from the network and generating TypeScript types
 2. Providing runtime validation to ensure data matches schemas
 3. Offering a type-safe client that knows which parameters each endpoint expects
-4. Support modern patterns like thee-shaking and composition
+4. Support modern patterns like tree-shaking and composition
 
 ```typescript
 const profile = await client.call(app.bsky.actor.getProfile, {
@@ -44,9 +44,8 @@ app.bsky.actor.profile.$validate({
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
-- [Installation](#installation)
 - [Quick Start](#quick-start)
-- [JSON Schemas](#json-schemas)
+- [Lexicon Schemas](#lexicon-schemas)
 - [TypeScript Schemas](#typescript-schemas)
   - [Generated Schema Structure](#generated-schema-structure)
   - [Type definitions](#type-definitions)
@@ -59,20 +58,12 @@ app.bsky.actor.profile.$validate({
   - [Low-Level XRPC](#low-level-xrpc)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
-  - [TypeScript Integration](#typescript-integration)
   - [Tree-Shaking](#tree-shaking)
   - [Custom Headers](#custom-headers)
   - [Request Options](#request-options)
   - [Actions](#actions)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
 - [License](#license)
-
-## Installation
-
-```bash
-npm install -g @atproto/lex
-lex --help
-```
 
 ## Quick Start
 
@@ -104,6 +95,10 @@ echo "./src/lexicons" >> .gitignore
 git add lexicons.json lexicons/
 git commit -m "Install Lexicons"
 ```
+
+> [!NOTE]
+>
+> The generated TypeScript files don't need to be committed to version control. Instead, they can be pre-built during your project's build step or post-install step. See [Workflow Integration](#workflow-integration) for details.
 
 **3. Use in your code**
 
@@ -657,14 +652,15 @@ Add these scripts to your `package.json`:
 {
   "scripts": {
     "lex:update": "lex install --update --save",
-    "postinstall": "lex install --ci"
+    "prebuild": "lex install --ci"
   }
 }
 ```
 
-This ensures:
+This ensures that:
 
-1. `postinstall` - Lexicons are verified/installed after `npm install`
+1. Lexicons are installed/verified before every build.
+2. You can easily update lexicons with `npm run lex:update` or `pnpm lex:update`.
 
 ### Tree-Shaking
 

@@ -34,7 +34,7 @@ function cidEncoder(obj: object): Token[] | null {
 }
 
 function undefinedEncoder(): null {
-  throw new Error('`undefined` is not allowed by the ATPROTO Data Model')
+  throw new Error('`undefined` is not allowed by the AT Data Model')
 }
 
 function numberEncoder(num: number): null {

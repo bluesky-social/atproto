@@ -199,8 +199,6 @@ export class LexiconSchemaBuilder {
         return l.bytes(def)
       case 'unknown':
         return l.unknown()
-      case 'null':
-        return l.null()
       case 'array':
         return l.array(this.compileLeaf(doc, def.items), def)
       default:

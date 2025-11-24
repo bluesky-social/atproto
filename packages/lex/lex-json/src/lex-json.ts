@@ -8,7 +8,7 @@ import {
 } from '@atproto/lex-data'
 import { parseBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { JsonValue, JsonObject } from './json.js'
+import { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
 export function lexStringify(input: LexValue): string {
@@ -75,7 +75,10 @@ export function jsonToLex(
   }
 }
 
-function jsonArrayToLex(input: JsonValue[], options: LexParseOptions): LexValue[] {
+function jsonArrayToLex(
+  input: JsonValue[],
+  options: LexParseOptions,
+): LexValue[] {
   // Lazily copy value
   let copy: LexValue[] | undefined
   for (let i = 0; i < input.length; i++) {

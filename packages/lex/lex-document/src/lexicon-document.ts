@@ -4,17 +4,6 @@ import { l } from '@atproto/lex-schema'
 
 // "Concrete" Types
 
-export const lexiconNullSchema = l.object(
-  {
-    type: l.literal('null'),
-    description: l.string(),
-  },
-  {
-    required: ['type'],
-  },
-)
-export type LexiconNull = l.Infer<typeof lexiconNullSchema>
-
 export const lexiconBooleanSchema = l.object(
   {
     type: l.literal('boolean'),
@@ -107,7 +96,6 @@ export const lexiconBlobSchema = l.object(
 export type LexiconBlob = l.Infer<typeof lexiconBlobSchema>
 
 const CONCRETE_TYPES = [
-  lexiconNullSchema,
   lexiconBooleanSchema,
   lexiconIntegerSchema,
   lexiconStringSchema,

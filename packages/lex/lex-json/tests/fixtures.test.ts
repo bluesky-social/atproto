@@ -1,9 +1,9 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { Json, jsonToLex } from '..'
+import { JsonValue, jsonToLex } from '..'
 import invalidFixtures from './data-model-invalid.json' with { type: 'json' }
 import validFixtures from './data-model-valid.json' with { type: 'json' }
 
-function parseLexFixture(input: Json) {
+function parseLexFixture(input: JsonValue) {
   const lex = jsonToLex(input, { strict: true })
   if (!isPlainObject(lex)) {
     throw new Error('Expected a plain object')

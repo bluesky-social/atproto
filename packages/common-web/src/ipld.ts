@@ -1,34 +1,23 @@
-import { CID, LexValue, lexEquals } from '@atproto/lex-data'
+import { LexValue, lexEquals } from '@atproto/lex-data'
 import { JsonValue, jsonToLex, lexToJson } from '@atproto/lex-json'
 
 /**
  * @deprecated Use {@link JsonValue} from `@atproto/lex-cbor` instead.
  */
-export type JsonValue =
-  | boolean
-  | number
-  | string
-  | null
-  | undefined
-  | unknown // @NOTE this makes the whole type "unknown"
-  | Array<JsonValue>
-  | { [key: string]: JsonValue }
+export type LegacyJsonValue = unknown
+
+export type { LegacyJsonValue as JsonValue }
 
 /**
  * @deprecated Use {@link LexValue} from `@atproto/lex-cbor` instead.
  */
-export type IpldValue =
-  | JsonValue
-  | CID
-  | Uint8Array
-  | Array<IpldValue>
-  | { [key: string]: IpldValue }
+export type IpldValue = unknown
 
 /**
  * Converts a JSON-compatible value to an IPLD-compatible value.
  * @deprecated Use {@link jsonToLex} from `@atproto/lex-cbor` instead.
  */
-export const jsonToIpld = (val: JsonValue): IpldValue => {
+export const jsonToIpld = (val: LegacyJsonValue): IpldValue => {
   return jsonToLex(val as JsonValue, { strict: false })
 }
 
@@ -36,7 +25,7 @@ export const jsonToIpld = (val: JsonValue): IpldValue => {
  * Converts an IPLD-compatible value to a JSON-compatible value.
  * @deprecated Use {@link lexToJson} from `@atproto/lex-cbor` instead.
  */
-export const ipldToJson = (val: IpldValue): JsonValue => {
+export const ipldToJson = (val: IpldValue): LegacyJsonValue => {
   // Legacy behavior(s)
   if (val === undefined) return val
   if (Number.isNaN(val)) return val

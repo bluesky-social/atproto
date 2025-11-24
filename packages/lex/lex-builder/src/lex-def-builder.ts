@@ -11,7 +11,6 @@ import {
   LexiconError,
   LexiconIndexer,
   LexiconInteger,
-  LexiconNull,
   LexiconObject,
   LexiconParameters,
   LexiconPayload,
@@ -547,8 +546,6 @@ export class LexDefBuilder {
     switch (def.type) {
       case 'unknown':
         return this.compileUnknownSchema(def)
-      case 'null':
-        return this.compileNullSchema(def)
       case 'boolean':
         return this.compileBooleanSchema(def)
       case 'integer':
@@ -579,8 +576,6 @@ export class LexDefBuilder {
     switch (def.type) {
       case 'unknown':
         return this.compileUnknownType(def)
-      case 'null':
-        return this.compileNullType(def)
       case 'boolean':
         return this.compileBooleanType(def)
       case 'integer':
@@ -625,14 +620,6 @@ export class LexDefBuilder {
 
   private async compileUnknownType(_def: LexiconUnknown): Promise<string> {
     return `l.UnknownObject`
-  }
-
-  private async compileNullSchema(_def: LexiconNull): Promise<string> {
-    return this.pure(`l.null()`)
-  }
-
-  private async compileNullType(_def: LexiconNull): Promise<string> {
-    return `null`
   }
 
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
