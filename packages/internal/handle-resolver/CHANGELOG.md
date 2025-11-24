@@ -1,5 +1,14 @@
 # @atproto-labs/handle-resolver
 
+## 0.3.3
+
+### Patch Changes
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `createHandleResolver` util
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/did@0.2.2
+
 ## 0.3.2
 
 ### Patch Changes
