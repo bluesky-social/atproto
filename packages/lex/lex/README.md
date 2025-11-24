@@ -41,9 +41,9 @@ app.bsky.actor.profile.$validate({
 }) // { success: false, error: Error: grapheme too big (maximum 64) at $.displayName (got 65) }
 ```
 
-## Table of Contents
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Table of Contents](#table-of-contents)
 - [Quick Start](#quick-start)
 - [Lexicon Schemas](#lexicon-schemas)
 - [TypeScript Schemas](#typescript-schemas)
@@ -64,6 +64,8 @@ app.bsky.actor.profile.$validate({
   - [Actions](#actions)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
 - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Quick Start
 
