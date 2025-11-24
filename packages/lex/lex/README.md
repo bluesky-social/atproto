@@ -593,7 +593,7 @@ import * as app from './lexicons/app.js'
 const client = new Client(session)
 
 // Using a safe method
-const result = await client.xrpcSafe(app.bsky.feed.getTimeline, {
+const result = await client.xrpcSafe(com.atproto.identity.resolveHandle, {
   params: { limit: 50 },
 })
 
@@ -601,6 +601,10 @@ if (result.success) {
   // Success - result is an XrpcResponse
   console.log(result.body)
 } else {
+  // Failure - result is a ResponseFailure, the type depends on the method's error definitions
+
+  result // ResponseFailure<"HandleNotFound">
+
   // Handle error based on type
   if (result.name === 'UnexpectedError') {
     // Network error, invalid response, etc.
@@ -610,7 +614,7 @@ if (result.success) {
     result.error // XrpcResponseError<string>
   } else {
     // Declared error from the method's errors list
-    result.error // XrpcResponseError<"FooError" | "BarError">
+    result.error // XrpcResponseError<"HandleNotFound">
   }
 }
 ```
