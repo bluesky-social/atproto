@@ -27,6 +27,10 @@ export enum KnownError {
   XRPCNotSupported = 'XRPCNotSupported',
 }
 
+export type XrpcFailure<N extends string, E> = ResultFailure<E> & {
+  name: N
+}
+
 export type XrpcErrorName = Infer<typeof xrpcErrorNameSchema>
 export const xrpcErrorNameSchema = new StringSchema({
   minLength: 1,
@@ -43,11 +47,11 @@ export const xrpcErrorBodySchema = new ObjectSchema(
 ) satisfies Validator<XrpcErrorBody>
 
 /**
- * @implements {ResultFailure<XrpcError<N>>} for convenience in result handling contexts.
+ * @implements {XrpcFailure<N, XrpcError<N>>} for convenience in result handling contexts.
  */
 export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
   extends Error
-  implements ResultFailure<XrpcError<N>>
+  implements XrpcFailure<N, XrpcError<N>>
 {
   constructor(
     public readonly name: N,
@@ -114,26 +118,30 @@ export class XrpcResponseError<
   }
 }
 
-export type ResponseFailure<M extends Procedure | Query> =
+export type XrpcRequestFailure<M extends Procedure | Query> =
   // The server responded with a declared error.
   | (M extends { errors: readonly (infer N extends string)[] }
-      ? XrpcResponseError<N>
+      ? XrpcResponseError<N> // implements XrpcRequestFailure<N, XrpcResponseError<N>>
       : never)
   // The server responded with an error that is not declared in the method's
   // `errors` list.
-  | (ResultFailure<XrpcResponseError> & { name: 'Unknown' })
+  | XrpcFailure<'Unknown', XrpcResponseError<string>>
   // An unexpected error occurred (e.g., network error, invalid response, etc.)
-  | (ResultFailure<unknown> & { name: 'UnexpectedError' })
+  | XrpcFailure<'UnexpectedError', unknown>
 
-export function createMethodCatcher<M extends Procedure | Query>(schema: M) {
-  // @NOTE Using .bind instead of arrow function to avoid creating a closure (perf)
-  return methodCatcher.bind(schema) as (error: unknown) => ResponseFailure<M>
+export function asXrpcRequestFailureFor<M extends Procedure | Query>(
+  schema: M,
+) {
+  // Performance: Using .bind instead of arrow function to avoid creating a closure
+  return asXrpcRequestFailure.bind(schema) as (
+    error: unknown,
+  ) => XrpcRequestFailure<M>
 }
 
-function methodCatcher<M extends Procedure | Query>(
+function asXrpcRequestFailure<M extends Procedure | Query>(
   this: M,
   error: unknown,
-): ResponseFailure<M> {
+): XrpcRequestFailure<M> {
   if (!(error instanceof XrpcResponseError)) {
     return { success: false, error, name: 'UnexpectedError' }
   }

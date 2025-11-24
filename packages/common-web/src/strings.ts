@@ -16,7 +16,7 @@ export { graphemeLenLegacy as graphemeLen }
  * @deprecated Use {@link utf8Len} from `@atproto/lex-data` instead.
  */
 const utf8LenLegacy = utf8Len
-export { utf8LenLegacy as utf8ByteLen }
+export { utf8LenLegacy as utf8Len }
 
 /**
  * @deprecated Use {@link LanguageTag} from `@atproto/lex-data` instead.

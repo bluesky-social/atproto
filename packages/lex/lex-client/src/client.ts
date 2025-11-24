@@ -20,16 +20,14 @@ import {
 import { Agent, AgentOptions, buildAgent } from './agent.js'
 import {
   KnownError,
-  ResponseFailure,
   XrpcError,
-  createMethodCatcher,
+  XrpcRequestFailure,
+  asXrpcRequestFailureFor,
 } from './error.js'
 import * as com from './lexicons/com.js'
 import { XrpcResponse, XrpcResponseBody } from './response.js'
 import { CallOptions, Namespace, Service, getMain } from './types.js'
 import { XrpcOptions, xrpc, xrpcRequestHeaders } from './xrpc.js'
-
-export type { ResponseFailure }
 
 export type ClientOptions = {
   labelers?: Iterable<Did>
@@ -211,17 +209,17 @@ export class Client implements Agent {
     ns: NonNullable<unknown> extends XrpcOptions<M>
       ? Namespace<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<XrpcResponse<M> | ResponseFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcRequestFailure<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Namespace<M>,
     options: XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | ResponseFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcRequestFailure<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Namespace<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<unknown> {
     const schema = getMain(ns)
-    return this.xrpc(schema, options).catch(createMethodCatcher(schema))
+    return this.xrpc(schema, options).catch(asXrpcRequestFailureFor(schema))
   }
 
   /**
@@ -247,7 +245,7 @@ export class Client implements Agent {
 
   async createRecordsSafe(...args: Parameters<Client['createRecord']>) {
     return this.createRecord(...args).catch(
-      createMethodCatcher(com.atproto.repo.createRecord.main),
+      asXrpcRequestFailureFor(com.atproto.repo.createRecord.main),
     )
   }
 
@@ -270,7 +268,7 @@ export class Client implements Agent {
 
   async deleteRecordsSafe(...args: Parameters<Client['deleteRecord']>) {
     return this.deleteRecord(...args).catch(
-      createMethodCatcher(com.atproto.repo.deleteRecord.main),
+      asXrpcRequestFailureFor(com.atproto.repo.deleteRecord.main),
     )
   }
 
@@ -291,7 +289,7 @@ export class Client implements Agent {
 
   async getRecordsSafe(...args: Parameters<Client['getRecord']>) {
     return this.getRecord(...args).catch(
-      createMethodCatcher(com.atproto.repo.getRecord.main),
+      asXrpcRequestFailureFor(com.atproto.repo.getRecord.main),
     )
   }
 
@@ -316,7 +314,7 @@ export class Client implements Agent {
 
   async putRecordsSafe(...args: Parameters<Client['putRecord']>) {
     return this.putRecord(...args).catch(
-      createMethodCatcher(com.atproto.repo.putRecord.main),
+      asXrpcRequestFailureFor(com.atproto.repo.putRecord.main),
     )
   }
 

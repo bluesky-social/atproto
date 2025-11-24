@@ -621,21 +621,42 @@ if (result.success) {
 
 The `ResponseFailure<M>` type is a union with three possible error types:
 
-1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema:
+1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `XrpcResponseError<N>` instance:
 
    ```typescript
-   XrpcResponseError<N> // where N is one of the declared error names (string)
+   // XrpcResponseError<N>
+   type KnownXrpcResponseFailure<N extends string> = {
+     success: false
+     name: N
+     error: XrpcResponseError<N>
+
+     // Additional response details
+     status: number
+     headers: Headers
+     encoding: undefined | string
+     body: XrpcErrorBody<N>
+   }
    ```
 
 2. **Unknown errors** - Server errors not declared in the method's schema:
 
    ```typescript
-   ResultFailure<XrpcResponseError> & { name: 'Unknown' }
+   // XrpcResponseFailure<'Unknown', XrpcResponseError>
+   type UnknownXrpcResponseFailure = {
+     success: false
+     name: 'Unknown'
+     error: XrpcResponseError<string>
+   }
    ```
 
 3. **Unexpected errors** - Network errors, invalid responses, or other client-side errors:
    ```typescript
-   ResultFailure<unknown> & { name: 'UnexpectedError' }
+   // XrpcResponseFailure<'UnexpectedError', unknown>
+   type UnexpectedXrpcResponseFailure = {
+     success: false
+     name: 'UnexpectedError'
+     error: unknown // Could be anything (network error, parsing error, etc.)
+   }
    ```
 
 ### Authentication Methods
@@ -1001,9 +1022,6 @@ const upsertPreference: Action<Preference, Preference[]> = async (
     newPref,
   ]
 
-  // Check for abort
-  options.signal?.throwIfAborted()
-
   // Save updated preferences
   await client.call(
     app.bsky.actor.putPreferences,
@@ -1043,8 +1061,6 @@ const updatePreferences: Action<
 
   const updated = updateFn(preferences)
   if (updated === false) return preferences
-
-  options.signal?.throwIfAborted()
 
   await client.call(
     app.bsky.actor.putPreferences,
@@ -1173,58 +1189,46 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
   options,
 ) => {
   const maxRetries = 5
-  let lastError: unknown
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+  for (let attempt = 0; ; attempt++) {
     try {
-      options?.signal?.throwIfAborted()
-
       // Get current profile and its CID
-      const record = await client
-        .xrpc(com.atproto.repo.getRecord, {
-          params: {
-            repo: client.assertDid,
-            collection: 'app.bsky.actor.profile',
-            rkey: 'self',
-          },
-        })
-        .catch(() => undefined)
+      const res = await client.xrpc(com.atproto.repo.getRecord, {
+        ...options,
+        params: {
+          repo: client.assertDid,
+          collection: 'app.bsky.actor.profile',
+          rkey: 'self',
+        },
+      })
 
-      // Merge updates with current profile
+      const current = app.bsky.actor.profile.main.validate(res.body.record)
+
+      // Merge updates with current profile (if valid)
       const updated = app.bsky.actor.profile.main.build({
-        ...(record?.body.value as any),
+        ...(current.success ? current.value : undefined),
         ...updates,
       })
 
-      // Validate
-      const validated = app.bsky.actor.profile.main.parse(updated)
-
       // Save with optimistic concurrency control
-      await client.put(app.bsky.actor.profile, validated, {
+      await client.put(app.bsky.actor.profile, updated, {
         ...options,
-        swapRecord: record?.body.cid ?? null,
+        swapRecord: res?.body.cid ?? null,
       })
 
       return
     } catch (error) {
       // Retry on swap/concurrent modification errors
-      const isSwapError =
-        error &&
-        typeof error === 'object' &&
-        'message' in error &&
-        typeof error.message === 'string' &&
-        error.message.includes('swap')
-
-      if (isSwapError && attempt < maxRetries - 1) {
-        lastError = error
+      if (
+        error instanceof XrpcRequestFailure &&
+        error.name === 'SwapError' &&
+        attempt < maxRetries - 1
+      ) {
         continue
       }
 
       throw error
     }
   }
-
-  throw new Error('Max retries exceeded', { cause: lastError })
 }
 
 // Usage
@@ -1259,42 +1263,14 @@ export const updateProfile: Action</* ... */> = async (
 ) => {
   /* ... */
 }
-
-// Optional: Create a class-based wrapper for convenience
-export class BskyClient extends Client {
-  async post(input: /* ... */) {
-    return this.call(post, input)
-  }
-
-  async like(input: /* ... */) {
-    return this.call(like, input)
-  }
-
-  async follow(input: /* ... */) {
-    return this.call(follow, input)
-  }
-
-  async updateProfile(input: /* ... */) {
-    return this.call(updateProfile, input)
-  }
-}
 ```
 
 Usage:
 
 ```typescript
-// Direct usage with actions
-import { Client } from '@atproto/lex'
 import * as actions from './actions.js'
 
-const client = new Client(session)
 await client.call(actions.post, { text: 'Hello!' })
-
-// Or with the wrapper class
-import { BskyClient } from './actions.js'
-
-const client = new BskyClient(session)
-await client.post({ text: 'Hello!' })
 ```
 
 #### Best Practices for Actions
@@ -1304,6 +1280,7 @@ await client.post({ text: 'Hello!' })
 3. **Abort Signals**: Check `options.signal?.throwIfAborted()` between long operations
 4. **Composition**: Build complex actions from simpler ones
 5. **Retries**: Implement retry logic for operations with optimistic concurrency control
+6. **Tree-shaking**: Export actions individually to allow tree-shaking (instead of bundling them in a single class)
 
 ## License
 
