@@ -105,12 +105,6 @@ yargs(hideBin(process.argv))
           describe:
             'Updates lexicons.json with installed lexicons (use --no-save to disable)',
         },
-        build: {
-          type: 'boolean',
-          default: true,
-          describe:
-            'automatically build TypeScript lexicon schema files after installation (use --no-build to disable)',
-        },
         update: {
           type: 'boolean',
           default: false,
@@ -129,12 +123,6 @@ yargs(hideBin(process.argv))
           default: './lexicons',
           describe: 'directory containing lexicon JSON files',
         },
-        out: {
-          type: 'string',
-          demandOption: true,
-          default: './src/lexicons',
-          describe: 'output directory for generated TS files',
-        },
       })
     },
     async (argv) => {
@@ -146,18 +134,6 @@ yargs(hideBin(process.argv))
         lexicons: argv.lexicons,
         manifest: argv.manifest,
       })
-
-      if (argv.build) {
-        await build({
-          lexicons: argv.lexicons,
-          out: argv.out,
-          clear: true,
-          pretty: true,
-          pureAnnotations: true,
-          ignoreErrors: false,
-          lib: '@atproto/lex',
-        })
-      }
     },
   )
   .parseAsync()
