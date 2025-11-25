@@ -1,13 +1,17 @@
 /* eslint-env node  */
 
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { build } from '@atproto/lex-builder'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 Promise.all([
   // For src
   build({
-    lexicons: '../../../lexicons',
-    out: './src/lexicons',
-    override: true,
+    lexicons: join(__dirname, '..', '..', '..', '..', 'lexicons'),
+    out: join(__dirname, '..', 'src', 'lexicons'),
+    clear: true,
     include: [
       'com.atproto.repo.createRecord',
       'com.atproto.repo.deleteRecord',
@@ -23,9 +27,9 @@ Promise.all([
 
   // For tests
   build({
-    lexicons: '../../../lexicons',
-    out: './tests/lexicons',
-    override: true,
+    lexicons: join(__dirname, '..', '..', '..', '..', 'lexicons'),
+    out: join(__dirname, '..', 'tests', 'lexicons'),
+    clear: true,
     include: [
       'app.bsky.*',
       'com.atproto.repo.createRecord',
