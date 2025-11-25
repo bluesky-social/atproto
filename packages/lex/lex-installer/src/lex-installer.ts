@@ -16,7 +16,10 @@ import { LexResolver, LexResolverOptions } from '@atproto/lex-resolver'
 import { AtUri as AtUriString, Nsid as NsidString } from '@atproto/lex-schema'
 import { AtUri, NSID } from '@atproto/syntax'
 import { isEnoentError, writeJsonFile } from './fs.js'
-import { LexiconsManifest } from './lexicons-manifest.js'
+import {
+  LexiconsManifest,
+  lexiconsManifestSchema,
+} from './lexicons-manifest.js'
 import { NsidMap } from './nsid-map.js'
 import { NsidSet } from './nsid-set.js'
 
@@ -107,7 +110,6 @@ export class LexInstaller implements AsyncDisposable {
 
         // Store the direct reference in the new manifest
         this.manifest.lexicons.push(document.id)
-        this.manifest.lexicons.sort()
       }),
     )
 
@@ -191,7 +193,18 @@ export class LexInstaller implements AsyncDisposable {
   }
 
   async save(): Promise<void> {
-    await writeJsonFile(this.options.manifest, this.manifest)
+    await writeJsonFile(
+      this.options.manifest,
+      lexiconsManifestSchema.parse({
+        version: 1,
+        lexicons: [...this.manifest.lexicons].sort(),
+        resolutions: Object.fromEntries(
+          Object.entries(this.manifest.resolutions).sort(([a], [b]) =>
+            a > b ? 1 : -1,
+          ),
+        ),
+      }),
+    )
   }
 }
 
