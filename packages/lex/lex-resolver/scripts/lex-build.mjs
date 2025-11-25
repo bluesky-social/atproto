@@ -9,9 +9,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 build({
   lexicons: join(__dirname, '..', '..', '..', '..', 'lexicons'),
   out: join(__dirname, '..', 'src', 'lexicons'),
-  override: true,
+  clear: true,
   include: ['com.atproto.sync.getRecord'],
-  lib: '@atproto/lex-schema',
+  lib: '@atproto/lex',
   pretty: true,
   pureAnnotations: true,
 }).catch((err) => {

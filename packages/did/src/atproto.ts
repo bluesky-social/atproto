@@ -162,22 +162,12 @@ export function extractPdsUrl(
   if (!service) {
     throw new DidError(
       document.id,
-      `Identity "${document.id}" does not have a PDS URL`,
+      `Document ${document.id} does not contain a (valid) #atproto_pds service URL`,
       'did-service-not-found',
     )
   }
 
-  try {
-    return new URL(service.serviceEndpoint)
-  } catch (cause) {
-    throw new DidError(
-      document.id,
-      `Invalid PDS URL in DID document: ${service.serviceEndpoint}`,
-      'did-document-format-error',
-      undefined,
-      cause,
-    )
-  }
+  return new URL(service.serviceEndpoint)
 }
 
 export type AtprotoAka = `at://${string}`
