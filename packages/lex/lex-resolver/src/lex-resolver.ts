@@ -35,8 +35,7 @@ export class LexResolver {
     lexicon: LexiconDocument
   }> {
     const uri = await this.resolve(nsidStr)
-    const lexicon = await this.fetch(uri, options)
-    return { uri, lexicon }
+    return this.fetch(uri, options)
   }
 
   async resolve(nsidStr: NSID | string): Promise<AtUri> {
@@ -57,7 +56,10 @@ export class LexResolver {
   async fetch(
     uriStr: AtUri | string,
     options?: ResolveDidOptions,
-  ): Promise<LexiconDocument> {
+  ): Promise<{
+    uri: AtUri
+    lexicon: LexiconDocument
+  }> {
     const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
     const { did, nsid } = parseLexiconUri(uri)
 
@@ -113,16 +115,15 @@ export class LexResolver {
       })
     }
 
-    const document = result.value
-
-    if (document.id !== nsid.toString()) {
+    const lexicon = result.value
+    if (lexicon.id !== nsid.toString()) {
       throw new LexResolverError(
         nsid,
-        `Invalid document id "${document.id}" for ${uri}`,
+        `Invalid document id "${lexicon.id}" for ${uri}`,
       )
     }
 
-    return document
+    return { lexicon, uri }
   }
 }
 
