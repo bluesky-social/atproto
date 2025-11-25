@@ -11,7 +11,7 @@ build({
   out: join(__dirname, '..', 'src', 'lexicons'),
   clear: true,
   include: ['com.atproto.sync.getRecord'],
-  lib: '@atproto/lex',
+  lib: '@atproto/lex-schema',
   pretty: true,
   pureAnnotations: true,
 }).catch((err) => {
