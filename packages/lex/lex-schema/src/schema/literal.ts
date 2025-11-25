@@ -8,7 +8,7 @@ export class LiteralSchema<
   }
 
   override validateInContext(
-    input: unknown,
+    input: unknown = this.value,
     ctx: ValidatorContext,
   ): ValidationResult<Output> {
     if (input !== this.value) {
