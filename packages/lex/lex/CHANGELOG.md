@@ -1,5 +1,16 @@
 # @atproto/lex
 
+## 0.0.3
+
+### Patch Changes
+
+- [#4374](https://github.com/bluesky-social/atproto/pull/4374) [`5ffd612`](https://github.com/bluesky-social/atproto/commit/5ffd6129909071e979c30f31266119865ab582b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing files from package.json
+
+- Updated dependencies []:
+  - @atproto/lex-builder@0.0.3
+  - @atproto/lex-installer@0.0.3
+  - @atproto/lex-client@0.0.1
+
 ## 0.0.2
 
 ### Patch Changes
