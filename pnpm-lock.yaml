@@ -1772,9 +1772,6 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      '@atproto/lexicon-resolver':
-        specifier: workspace:^
-        version: link:../lexicon-resolver
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider

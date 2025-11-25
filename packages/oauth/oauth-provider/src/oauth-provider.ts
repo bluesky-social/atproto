@@ -27,7 +27,6 @@ import {
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-import { CreateDidResolverOptions } from '../../../internal/did-resolver/dist/create-did-resolver.js'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
 import { AccountManager } from './account/account-manager.js'
 import {
@@ -107,7 +106,7 @@ import {
 } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
-export { AccessTokenMode, Keyset }
+export { AccessTokenMode, Keyset, LexResolver }
 export type {
   AccessTokenPayload,
   AuthorizationRedirectParameters,
@@ -120,7 +119,6 @@ export type {
   CustomizationInput,
   ErrorHandler,
   HcaptchaConfig,
-  LexResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
   VerifyTokenPayloadOptions,
@@ -158,6 +156,11 @@ type OAuthProviderConfig = {
    * Additional metadata to be included in the discovery document.
    */
   metadata?: CustomMetadata
+
+  /**
+   * A Lexicon resolver instance to use for fetching lexicon schemas.
+   */
+  lexResolver?: LexResolver
 
   /**
    * A custom fetch function that can be used to fetch the client metadata from
@@ -230,7 +233,6 @@ export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
   OAuthHooks &
   DeviceManagerOptions &
-  CreateDidResolverOptions &
   CustomizationInput
 
 export class OAuthProvider extends OAuthVerifier {
@@ -259,6 +261,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
+    lexResolver = new LexResolver({ fetch: safeFetch }),
 
     // Required stores
     accountStore = asAccountStore(store),
@@ -285,7 +288,6 @@ export class OAuthProvider extends OAuthVerifier {
     // OAuthHooks &
     // OAuthVerifierOptions &
     // DeviceManagerOptions &
-    // CreateDidResolverOptions &
     // Customization
     ...rest
   }: OAuthProviderOptions) {
@@ -323,10 +325,7 @@ export class OAuthProvider extends OAuthVerifier {
       clientJwksCache,
       clientMetadataCache,
     )
-    this.lexiconManager = new LexiconManager(
-      lexiconStore,
-      new LexResolver({ ...rest, fetch: safeFetch }),
-    )
+    this.lexiconManager = new LexiconManager(lexiconStore, lexResolver)
     this.requestManager = new RequestManager(
       requestStore,
       this.lexiconManager,
