@@ -353,9 +353,12 @@ export class AppContext {
               const nsid: string = String(input)
               try {
                 const result = await super.get(nsid)
-                // const cid = result.cid.toString()
+                const cid = result.cid.toString()
                 const uri = result.uri.toString()
-                lexiconResolverLogger.info({ nsid, uri }, 'Resolved lexicon')
+                lexiconResolverLogger.info(
+                  { nsid, uri, cid },
+                  'Resolved lexicon',
+                )
                 return result
               } catch (err) {
                 lexiconResolverLogger.error(
