@@ -30,10 +30,6 @@ export class IncludeScope {
     return IncludeScope.parser.format(this)
   }
 
-  /**
-   * Converts an "include:" to the list of permissions it includes, based on the
-   * lexicon defined permission set.
-   */
   toPermissions(
     permissionSet: LexPermissionSet,
   ): Array<RepoPermission | RpcPermission> {
@@ -46,6 +42,10 @@ export class IncludeScope {
     return Array.from(this.buildPermissions(permissionSet), (p) => p.toString())
   }
 
+  /**
+   * Converts an "include:" to the list of permissions it includes, based on the
+   * lexicon defined permission set.
+   */
   *buildPermissions(
     permissionSet: LexPermissionSet,
   ): Generator<RepoPermission | RpcPermission, void, unknown> {
@@ -109,8 +109,8 @@ export class IncludeScope {
    * and that it only contains "repo:", "rpc:", or "blob:" permissions.
    */
   protected isAllowedPermission(
-    permission: RpcPermission | RepoPermission | null,
-  ): permission is RpcPermission | RepoPermission {
+    permission: RpcPermission | RepoPermission,
+  ): boolean {
     if (permission instanceof RpcPermission) {
       return permission.lxm.every(this.isParentAuthorityOf, this)
     }
@@ -119,7 +119,7 @@ export class IncludeScope {
       return permission.collection.every(this.isParentAuthorityOf, this)
     }
 
-    return false
+    throw new TypeError(`Unexpected permission ${permission}`)
   }
 
   /**
