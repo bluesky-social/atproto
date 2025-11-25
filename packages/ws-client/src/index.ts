@@ -12,6 +12,7 @@ export class WebSocketKeepAlive {
       maxReconnectSeconds?: number
       signal?: AbortSignal
       heartbeatIntervalMs?: number
+      onReconnect?: () => void
       onReconnectError?: (
         error: unknown,
         n: number,
@@ -36,6 +37,9 @@ export class WebSocketKeepAlive {
         forwardSignal(this.opts.signal, ac)
       }
       this.ws.once('open', () => {
+        if (!this.initialSetup && this.opts.onReconnect) {
+          this.opts.onReconnect()
+        }
         this.initialSetup = false
         this.reconnects = 0
         if (this.ws) {
@@ -80,6 +84,26 @@ export class WebSocketKeepAlive {
       }
       break // Other side cleanly ended stream and disconnected
     }
+  }
+
+  send(data: string | Buffer): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.ws || this.ws.readyState !== 1 /* OPEN */) {
+        reject(new Error('WebSocket is not connected'))
+        return
+      }
+      this.ws.send(data, (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
+  }
+
+  isConnected(): boolean {
+    return this.ws !== null && this.ws.readyState === 1
   }
 
   startHeartbeat(ws: WebSocket) {
