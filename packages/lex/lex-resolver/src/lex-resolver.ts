@@ -38,7 +38,14 @@ export class LexResolver {
     this.didResolver = createDidResolver(options)
   }
 
-  async get(nsidStr: NSID | string, options?: ResolveDidOptions) {
+  async get(
+    nsidStr: NSID | string,
+    options?: ResolveDidOptions,
+  ): Promise<{
+    uri: AtUri
+    cid: CID
+    lexicon: LexiconDocument
+  }> {
     const uri = await this.resolve(nsidStr)
     return this.fetch(uri, options)
   }
