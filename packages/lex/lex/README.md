@@ -11,6 +11,10 @@ lex --help
 - Generate TypeScript client and data validators
 - Handle common tasks like OAuth
 
+> [!IMPORTANT]
+>
+> This package is currently in **preview**. The API and features are subject to change before the stable release.
+
 **What is this?**
 
 Working directly with XRPC endpoints requires manually tracking schema definitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
@@ -94,16 +98,35 @@ This creates:
 Make sure to commit the `lexicons.json` manifest and the `lexicons/` directory containing the JSON files to version control.
 
 ```bash
-echo "./src/lexicons" >> .gitignore
 git add lexicons.json lexicons/
 git commit -m "Install Lexicons"
 ```
 
+**3. Build TypeScript schemas**
+
+Generate TypeScript schemas from the installed Lexicons:
+
+```bash
+lex build
+```
+
+This generates TypeScript files in `./src/lexicons` (by default) with type-safe validation, type guards, and builder utilities.
+
+> [!TIP]
+>
+> If you wish to customize the output location or any other build options, pass the appropriate flags to the `lex build` command. See the [TypeScript Schemas](#typescript-schemas) section for available options.
+
 > [!NOTE]
 >
-> The generated TypeScript files don't need to be committed to version control. Instead, they can be pre-built during your project's build step or post-install step. See [Workflow Integration](#workflow-integration) for details.
+> The generated TypeScript files don't need to be committed to version control. Instead, they can be generated during your project's build step. See [Workflow Integration](#workflow-integration) for details.
+>
+> To avoid committing generated files, add the output directory to your `.gitignore`:
+>
+> ```bash
+> echo "./src/lexicons" >> .gitignore
+> ```
 
-**3. Use in your code**
+**4. Use in your code**
 
 ```typescript
 import { Client } from '@atproto/lex'
@@ -117,10 +140,6 @@ const response = await client.call(app.bsky.actor.getProfile, {
   actor: 'pfrazee.com',
 })
 ```
-
-> [!TIP]
->
-> If you wish to customize the output location, or any other options, you can run the `lex build` command separately. For that purpose, make sure to use the `--no-build` flag when installing lexicons to skip the automatic build step.
 
 ## Lexicon Schemas
 
@@ -147,15 +166,13 @@ Options:
 
 - `--manifest <path>` - Path to lexicons.json manifest file (default: `./lexicons.json`)
 - `--no-save` - Don't update lexicons.json with installed lexicons (save is enabled by default)
-- `--no-build` - Skip building TypeScript lexicon schema files after installation (build is enabled by default)
 - `--update` - Update all installed lexicons to their latest versions by re-resolving and re-installing them
 - `--ci` - Error if the installed lexicons do not match the CIDs in the lexicons.json manifest
 - `--lexicons <dir>` - Directory containing lexicon JSON files (default: `./lexicons`)
-- `--out <dir>` - Output directory for generated TS files (default: `./src/lexicons`)
 
 ## TypeScript Schemas
 
-The `lex install` command automatically builds TypeScript schemas after installing Lexicon JSON files. You can also run the build step separately using the `lex build` command. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
+After installing Lexicon JSON files, use the `lex build` command to generate TypeScript schemas. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
 
 ```bash
 lex build --lexicons ./lexicons --out ./src/lexicons
@@ -173,7 +190,9 @@ Options:
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
 - `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
-- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enabling this might cause compatibility issues with records created a long time ago)
+- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
+- `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
+- `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
 
 ### Generated Schema Structure
 
@@ -745,16 +764,19 @@ Add these scripts to your `package.json`:
 ```json
 {
   "scripts": {
-    "lex:update": "lex install --update --save",
-    "prebuild": "lex install --ci"
+    "update-lexicons": "lex install --update --save",
+    "postinstall": "lex install --ci",
+    "prebuild": "lex build",
+    "build": "# Your build command here"
   }
 }
 ```
 
 This ensures that:
 
-1. Lexicons are installed/verified before every build.
-2. You can easily update lexicons with `npm run lex:update` or `pnpm lex:update`.
+1. Lexicons are verified against the manifest after every `npm install` or `pnpm install`.
+2. TypeScript schemas are built before your project is built.
+3. You can easily update lexicons with `npm run update-lexicons` or `pnpm update-lexicons`.
 
 ### Tree-Shaking
 
@@ -775,7 +797,7 @@ For library authors, use `--pure-annotations` when building:
 lex build --pure-annotations
 ```
 
-This will make the generated code more tree-shakeable from places that import your library.
+This will make the generated code more easily tree-shakeable from places that import your library.
 
 ### Custom Headers
 
@@ -800,8 +822,11 @@ All methods support these base options:
 ```typescript
 type CallOptions = {
   signal?: AbortSignal // Abort the request
-  headers?: HeadersInit // Custom request headers
+  headers?: HeadersInit // Additional request headers
   service?: Service // Override service proxy for this request
+  labelers?: Iterable<Did> // Additional labelers for this request
+  validateRequest?: boolean // Set to "true" to enable request schema validation
+  validateResponse?: boolean // Set to "false" to skip response schema validation
 }
 ```
 

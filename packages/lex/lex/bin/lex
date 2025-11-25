@@ -80,7 +80,19 @@ yargs(hideBin(process.argv))
           type: 'boolean',
           default: false,
           describe:
-            'allow generating schemas that accept legacy blob references (disabled by default; enabling this might cause compatibility issues with records created a long time ago)',
+            'generate schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)',
+        },
+        importExt: {
+          type: 'string',
+          default: '.js',
+          describe:
+            'file extension to use for import statements in generated files (e.g. ".ts", ".mts", ".cts"). Use --import-ext "" to generate extension-less imports.',
+        },
+        fileExt: {
+          type: 'string',
+          default: '.ts',
+          describe:
+            'file extension to use for generated files (e.g. ".ts", ".mts", ".cts")',
         },
       })
     },
@@ -105,12 +117,6 @@ yargs(hideBin(process.argv))
           describe:
             'Updates lexicons.json with installed lexicons (use --no-save to disable)',
         },
-        build: {
-          type: 'boolean',
-          default: true,
-          describe:
-            'automatically build TypeScript lexicon schema files after installation (use --no-build to disable)',
-        },
         update: {
           type: 'boolean',
           default: false,
@@ -129,12 +135,6 @@ yargs(hideBin(process.argv))
           default: './lexicons',
           describe: 'directory containing lexicon JSON files',
         },
-        out: {
-          type: 'string',
-          demandOption: true,
-          default: './src/lexicons',
-          describe: 'output directory for generated TS files',
-        },
       })
     },
     async (argv) => {
@@ -146,18 +146,6 @@ yargs(hideBin(process.argv))
         lexicons: argv.lexicons,
         manifest: argv.manifest,
       })
-
-      if (argv.build) {
-        await build({
-          lexicons: argv.lexicons,
-          out: argv.out,
-          clear: true,
-          pretty: true,
-          pureAnnotations: true,
-          ignoreErrors: false,
-          lib: '@atproto/lex',
-        })
-      }
     },
   )
   .parseAsync()

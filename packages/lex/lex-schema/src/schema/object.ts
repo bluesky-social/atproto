@@ -132,23 +132,16 @@ export class ObjectSchema<
         }
 
         return result
-      } else if (result.value === undefined) {
-        // Special case for validators that output "undefined" values (typically
-        // UnknownSchema) since they cannot differentiate between "missing key"
-        // and "key with undefined value"
+      }
 
-        if (!(key in input)) {
-          // Input was missing the key (was "undefined")
-          if (this.options.required?.includes(key)) {
-            return ctx.issueRequiredKey(input, key)
-          }
-
-          // Ignore missing non-required key
-          continue
+      // Skip copying if key is not present in input (and value is undefined)
+      if (result.value === undefined && !(key in input)) {
+        // Except if the key is required
+        if (this.options.required?.includes(key)) {
+          return ctx.issueRequiredKey(input, key)
         }
 
-        // if "key" existed in input (would typically be "undefined"), we keep
-        // it as-is by continuing processing as if it was any other value.
+        continue
       }
 
       if (result.value !== input[key]) {

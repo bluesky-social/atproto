@@ -28,12 +28,13 @@ import {
 import { l } from '@atproto/lex-schema'
 import {
   RefResolver,
+  RefResolverOptions,
   ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
 import { isSafeIdentifier } from './ts-lang.js'
 
-export type LexDefBuilderOptions = {
+export type LexDefBuilderOptions = RefResolverOptions & {
   lib?: string
   allowLegacyBlobs?: boolean
   pureAnnotations?: boolean
@@ -51,7 +52,7 @@ export class LexDefBuilder {
     private readonly doc: LexiconDocument,
     indexer: LexiconIndexer,
   ) {
-    this.refResolver = new RefResolver(doc, file, indexer)
+    this.refResolver = new RefResolver(doc, file, indexer, options)
   }
 
   private pure(code: string) {
