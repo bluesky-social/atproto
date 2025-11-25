@@ -36,7 +36,9 @@ export class IncludeScope {
       .filter(this.isAllowedPermission, this)
   }
 
-  protected parsePermission(permission: LexPermission) {
+  protected parsePermission(
+    permission: LexPermission,
+  ): RepoPermission | RpcPermission | null {
     if (
       permission.resource === 'rpc' &&
       permission.inheritAud === true &&
@@ -153,9 +155,6 @@ function parsePermission(permission: LexPermission) {
   }
   if (isPermissionForResource(permission, 'rpc')) {
     return RpcPermission.fromSyntax(new LexPermissionSyntax(permission))
-  }
-  if (isPermissionForResource(permission, 'blob')) {
-    return BlobPermission.fromSyntax(new LexPermissionSyntax(permission))
   }
   return null
 }

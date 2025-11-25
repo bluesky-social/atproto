@@ -169,7 +169,7 @@ describe('IncludeScope', () => {
         IncludeScope.fromString(scope)?.toPermissions(permissionSet).map(String)
 
       describe('blob', () => {
-        describe('enables', () => {
+        describe('rejects', () => {
           it('valid permissions', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
@@ -182,11 +182,9 @@ describe('IncludeScope', () => {
                   },
                 ],
               }),
-            ).toEqual(['blob:image/*'])
+            ).toEqual([])
           })
-        })
 
-        describe('rejects', () => {
           it('invalid permissions', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
