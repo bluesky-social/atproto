@@ -1,5 +1,5 @@
 import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
-import { LexPermission, LexPermissionSet } from '../lib/lexicon.js'
+import { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
@@ -13,7 +13,12 @@ import {
 import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
 
-export { type LexPermission, type LexPermissionSet, type Nsid, isNsid }
+export {
+  type LexiconPermission as LexPermission,
+  type LexiconPermissionSet as LexPermissionSet,
+  type Nsid,
+  isNsid,
+}
 
 /**
  * This is used to handle "include:" oauth scope values, used to include
@@ -31,13 +36,13 @@ export class IncludeScope {
   }
 
   toPermissions(
-    permissionSet: LexPermissionSet,
+    permissionSet: LexiconPermissionSet,
   ): Array<RepoPermission | RpcPermission> {
     return Array.from(this.buildPermissions(permissionSet))
   }
 
   toScopes(
-    permissionSet: LexPermissionSet,
+    permissionSet: LexiconPermissionSet,
   ): Array<ScopeStringFor<'repo' | 'rpc'>> {
     return Array.from(this.buildPermissions(permissionSet), (p) => p.toString())
   }
@@ -47,7 +52,7 @@ export class IncludeScope {
    * lexicon defined permission set.
    */
   *buildPermissions(
-    permissionSet: LexPermissionSet,
+    permissionSet: LexiconPermissionSet,
   ): Generator<RepoPermission | RpcPermission, void, unknown> {
     for (const lexPermission of permissionSet.permissions) {
       const syntax = this.parseLexPermission(lexPermission)
@@ -63,7 +68,7 @@ export class IncludeScope {
   }
 
   protected parseLexPermission(
-    permission: LexPermission,
+    permission: LexiconPermission,
   ): ScopeSyntax<'repo' | 'rpc'> | null {
     // This function converts permissions listed in the permission set into
     // their respective ScopeSyntax representations, handling special cases as
