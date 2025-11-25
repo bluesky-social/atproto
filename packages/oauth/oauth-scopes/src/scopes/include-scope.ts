@@ -13,12 +13,7 @@ import {
 import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
 
-export {
-  type LexiconPermission as LexPermission,
-  type LexiconPermissionSet as LexPermissionSet,
-  type Nsid,
-  isNsid,
-}
+export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
 
 /**
  * This is used to handle "include:" oauth scope values, used to include
