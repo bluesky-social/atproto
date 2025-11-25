@@ -1,5 +1,15 @@
 # @atproto/lex-builder
 
+## 0.0.4
+
+### Patch Changes
+
+- [#4380](https://github.com/bluesky-social/atproto/pull/4380) [`23c271f`](https://github.com/bluesky-social/atproto/commit/23c271fcac27f090727e2f835697d4733784bdb4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to configure file extenstion and import file extension in `lex build`
+
+- Updated dependencies [[`23c271f`](https://github.com/bluesky-social/atproto/commit/23c271fcac27f090727e2f835697d4733784bdb4)]:
+  - @atproto/lex-schema@0.0.2
+  - @atproto/lex-document@0.0.3
+
 ## 0.0.3
 
 ### Patch Changes
