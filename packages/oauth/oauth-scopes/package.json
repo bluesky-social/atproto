@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "@atproto/did": "workspace:^",
-    "@atproto/lex-document": "workspace:^",
     "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {

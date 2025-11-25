@@ -1605,9 +1605,6 @@ importers:
       '@atproto/did':
         specifier: workspace:^
         version: link:../../did
-      '@atproto/lex-document':
-        specifier: workspace:^
-        version: link:../../lex/lex-document
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../../syntax
