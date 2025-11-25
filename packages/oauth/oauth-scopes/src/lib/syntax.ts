@@ -43,7 +43,7 @@ export interface ScopeSyntax<P extends string> {
   readonly positional?: ParamValue
   keys(): Iterable<string, void, unknown>
   getSingle(key: string): ParamValue | null | undefined
-  getMulti(key: string): ParamValue[] | null | undefined
+  getMulti(key: string): readonly ParamValue[] | null | undefined
 }
 
 export function isScopeSyntaxFor<P extends string>(

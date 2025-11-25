@@ -2,7 +2,7 @@ import { ScopeStringFor } from '../lib/syntax'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon'
 import { AccountPermission } from './account-permission'
 import { IdentityPermission } from './identity-permission'
-import { IncludeScope, LexPermissionSet } from './include-scope'
+import { IncludeScope, LexiconPermissionSet } from './include-scope'
 
 describe('IncludeScope', () => {
   describe('static', () => {
@@ -164,7 +164,7 @@ describe('IncludeScope', () => {
        */
       const compilePermissions = (
         scope: ScopeStringFor<'include'>,
-        permissionSet: LexPermissionSet,
+        permissionSet: LexiconPermissionSet,
       ) => IncludeScope.fromString(scope)!.toScopes(permissionSet)
 
       describe('blob', () => {
@@ -580,7 +580,7 @@ describe('IncludeScope', () => {
           type: 'permission',
           resource: 'account',
           attr: 'email',
-          action: 'read',
+          action: ['read'],
         } as const
 
         it('parses valid permission syntax', () => {
@@ -589,7 +589,7 @@ describe('IncludeScope', () => {
           expect(AccountPermission.fromSyntax(syntax)).toMatchObject({
             constructor: AccountPermission,
             attr: 'email',
-            action: 'read',
+            action: ['read'],
           })
         })
 
