@@ -50,7 +50,7 @@ export class LexInstaller implements AsyncDisposable {
     await this.indexer[Symbol.asyncDispose]()
   }
 
-  matches(manifest: LexiconsManifest): boolean {
+  equals(manifest: LexiconsManifest): boolean {
     return (
       this.manifest.version === manifest.version &&
       lexEquals(this.manifest.resolutions, manifest.resolutions) &&

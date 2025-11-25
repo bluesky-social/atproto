@@ -2,4 +2,4 @@
 '@atproto/lex-installer': patch
 ---
 
-Properly order lexicons in `--ci` mode
+Properly check for lexicon manifest changes by sorting lexicons before comparison
