@@ -979,18 +979,34 @@ importers:
       '@atproto-labs/did-resolver':
         specifier: workspace:*
         version: link:../../internal/did-resolver
+      '@atproto/crypto':
+        specifier: workspace:*
+        version: link:../../crypto
       '@atproto/lex-client':
         specifier: workspace:*
         version: link:../lex-client
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex-data
       '@atproto/lex-document':
         specifier: workspace:*
         version: link:../lex-document
+      '@atproto/lex-schema':
+        specifier: workspace:*
+        version: link:../lex-schema
+      '@atproto/repo':
+        specifier: workspace:*
+        version: link:../../repo
       '@atproto/syntax':
         specifier: workspace:*
         version: link:../../syntax
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
+    devDependencies:
+      '@atproto/lex-builder':
+        specifier: workspace:*
+        version: link:../lex-builder
 
   packages/lex/lex-schema:
     dependencies:

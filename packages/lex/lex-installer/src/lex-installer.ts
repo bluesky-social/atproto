@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { LexiconDirectoryIndexer } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
-import { lexEquals } from '@atproto/lex-data'
+import { CID, lexEquals } from '@atproto/lex-data'
 import {
   LexiconDocument,
   LexiconParameters,
@@ -107,7 +107,7 @@ export class LexInstaller implements AsyncDisposable {
       Array.from(roots, async ([nsid, sourceUri]) => {
         console.debug(`Installing lexicon: ${nsid}`)
 
-        const { document } = sourceUri
+        const { lexicon: document } = sourceUri
           ? await this.installFromUri(sourceUri)
           : await this.installFromNsid(nsid)
 
@@ -157,15 +157,16 @@ export class LexInstaller implements AsyncDisposable {
   }
 
   protected async installFromUri(uri: AtUri): Promise<{
-    document: LexiconDocument
+    lexicon: LexiconDocument
     uri: AtUri
   }> {
-    const document = this.options.update
+    const { lexicon, cid } = this.options.update
       ? await this.fetch(uri)
       : await this.indexer.get(uri.rkey).then(
-          (document) => {
+          async (lexicon) => {
             console.debug(`Re-using existing lexicon ${uri.rkey} from indexer`)
-            return document
+            const cid = await cidForLex(lexicon)
+            return { cid, lexicon }
           },
           (err) => {
             if (isEnoentError(err)) return this.fetch(uri)
@@ -173,26 +174,26 @@ export class LexInstaller implements AsyncDisposable {
           },
         )
 
-    this.documents.set(NSID.from(document.id), document)
-    this.manifest.resolutions[document.id] = {
-      cid: (await cidForLex(document)).toString(),
+    this.documents.set(NSID.from(lexicon.id), lexicon)
+    this.manifest.resolutions[lexicon.id] = {
+      cid: cid.toString(),
       uri: uri.toString() as AtUriString,
     }
 
-    return { document, uri }
+    return { lexicon, uri }
   }
 
-  async fetch(uri: AtUri): Promise<LexiconDocument> {
+  async fetch(uri: AtUri): Promise<{ lexicon: LexiconDocument; cid: CID }> {
     console.debug(`Fetching lexicon from ${uri}...`)
 
-    const { lexicon } = await this.lexiconResolver.fetch(uri, {
+    const { lexicon, cid } = await this.lexiconResolver.fetch(uri, {
       noCache: this.options.update,
     })
 
     const basePath = join(this.options.lexicons, ...lexicon.id.split('.'))
     await writeJsonFile(`${basePath}.json`, lexicon)
 
-    return lexicon
+    return { lexicon, cid }
   }
 
   async save(): Promise<void> {

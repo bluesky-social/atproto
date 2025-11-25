@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { DidDocument, DidService } from './did-document.js'
 import { DidError, InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
-import { isFragment } from './lib/uri.js'
+import { canParse, isFragment } from './lib/uri.js'
 import {
   DID_PLC_PREFIX,
   DID_WEB_PREFIX,
@@ -11,6 +11,7 @@ import {
   isDidPlc,
   isDidWeb,
 } from './methods.js'
+import { Identifier, matchesIdentifier } from './utils.js'
 
 // This file contains atproto-specific DID validation utilities.
 
@@ -124,48 +125,110 @@ export const isAtprotoAudience = (value: unknown): value is AtprotoAudience => {
   )
 }
 
+type AtprotoData<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+> = {
+  did: Did<M>
+  aka?: string
+  key?: AtprotoVerificationMethod<M>
+  pds?: AtprotoPersonalDataServerService<M>
+}
+
+export function extractAtprotoData<M extends AtprotoIdentityDidMethods>(
+  document: DidDocument<M>,
+): AtprotoData<M> {
+  return {
+    did: document.id,
+    aka: document.alsoKnownAs?.find(isAtprotoAka)?.slice(5),
+    key: document.verificationMethod?.find(
+      isAtprotoVerificationMethod<M>,
+      document,
+    ),
+    pds: document.service?.find(
+      isAtprotoPersonalDataServerService<M>,
+      document,
+    ),
+  }
+}
+
 export function extractPdsUrl(
   document: DidDocument<AtprotoIdentityDidMethods>,
 ): URL {
   const service = document.service?.find(
-    isAtprotoPersonalDataServerService<AtprotoIdentityDidMethods>,
+    isAtprotoPersonalDataServerService,
     document,
   )
 
   if (!service) {
     throw new DidError(
       document.id,
-      `Identity "${document.id}" does not have a PDS URL`,
+      `Document ${document.id} does not contain a (valid) #atproto_pds service URL`,
       'did-service-not-found',
     )
   }
 
-  try {
-    return new URL(service.serviceEndpoint)
-  } catch (cause) {
-    throw new DidError(
-      document.id,
-      `Invalid PDS URL in DID document: ${service.serviceEndpoint}`,
-      'did-document-format-error',
-      undefined,
-      cause,
-    )
-  }
+  return new URL(service.serviceEndpoint)
 }
 
-function isAtprotoPersonalDataServerService<M extends string>(
-  this: DidDocument<M>,
-  s: DidService,
-): s is {
-  id: '#atproto_pds' | `${Did<M>}#atproto_pds`
+export type AtprotoAka = `at://${string}`
+export function isAtprotoAka(value: string): value is AtprotoAka {
+  return value.startsWith('at://')
+}
+
+export type AtprotoPersonalDataServerService<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+> = DidService & {
+  id: Identifier<Did<M>, 'atproto_pds'>
   type: 'AtprotoPersonalDataServer'
   serviceEndpoint: string
-} {
+}
+
+export function isAtprotoPersonalDataServerService<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+>(
+  this: DidDocument<M>,
+  service: null | undefined | DidService,
+): service is AtprotoPersonalDataServerService<M> {
   return (
-    typeof s.serviceEndpoint === 'string' &&
-    s.type === 'AtprotoPersonalDataServer' &&
-    (s.id.startsWith('#')
-      ? s.id === '#atproto_pds'
-      : s.id === `${this.id}#atproto_pds`)
+    service?.type === 'AtprotoPersonalDataServer' &&
+    typeof service.serviceEndpoint === 'string' &&
+    canParse(service.serviceEndpoint) &&
+    matchesIdentifier(this.id, 'atproto_pds', service.id)
+  )
+}
+
+export const ATPROTO_VERIFICATION_METHOD_TYPES = Object.freeze([
+  'EcdsaSecp256r1VerificationKey2019',
+  'EcdsaSecp256k1VerificationKey2019',
+  'Multikey',
+] as const)
+export type SupportedAtprotoVerificationMethodType =
+  (typeof ATPROTO_VERIFICATION_METHOD_TYPES)[number]
+
+type VerificationMethod = NonNullable<DidDocument['verificationMethod']>[number]
+export type AtprotoVerificationMethod<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+> = Extract<VerificationMethod, object> & {
+  id: Identifier<Did<M>, 'atproto'>
+  type: SupportedAtprotoVerificationMethodType
+  publicKeyMultibase: string
+}
+
+export function isAtprotoVerificationMethod<
+  M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
+>(
+  this: DidDocument<M>,
+  method:
+    | null
+    | undefined
+    | NonNullable<DidDocument<M>['verificationMethod']>[number],
+): method is AtprotoVerificationMethod<M> {
+  return (
+    typeof method === 'object' &&
+    typeof method?.publicKeyMultibase === 'string' &&
+    (ATPROTO_VERIFICATION_METHOD_TYPES as readonly unknown[]).includes(
+      method.type,
+    ) &&
+    matchesIdentifier(this.id, 'atproto', method.id)
   )
 }
