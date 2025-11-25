@@ -22,7 +22,7 @@ import {
   extractAtprotoData,
 } from '@atproto-labs/did-resolver'
 import { LexResolverError } from './lex-resolver-error.js'
-import { main as getRecord } from './lexicons/com/atproto/sync/getRecord.defs.js'
+import * as com from './lexicons/com.js'
 
 export type LexResolverOptions = CreateDidResolverOptions & {
   didAuthority?: Did
@@ -69,13 +69,6 @@ export class LexResolver {
     const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
     const { nsid, did } = parseLexiconUri(uri)
 
-    if (this.options.didAuthority && this.options.didAuthority !== did) {
-      throw new LexResolverError(
-        nsid,
-        `DID authority mismatch: expected ${this.options.didAuthority}, got ${did}`,
-      )
-    }
-
     const { pds, key } = await this.didResolver
       .resolve(did, options)
       .then(extractAtprotoData)
@@ -99,7 +92,7 @@ export class LexResolver {
       fetch: this.options.fetch,
     })
 
-    const response = await xrpc(agent, getRecord, {
+    const response = await xrpc(agent, com.atproto.sync.getRecord, {
       signal: options?.signal,
       headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
       params: {
@@ -180,21 +173,17 @@ async function resolveLexiconDidAuthority(nsid: NSID): Promise<Did> {
 }
 
 async function getDomainTxtDid(domain: string): Promise<Did> {
-  return parseDnsResult(await resolveTxt(domain))
-}
-
-function parseDnsResult(chunkedResults: string[][]): Did {
-  const didDefs = chunkedResults
+  const didLines = (await resolveTxt(domain))
     .map((chunks) => chunks.join(''))
     .filter((i) => i.startsWith('did='))
 
-  if (didDefs.length === 1) {
-    const did = didDefs[0].slice(4)
+  if (didLines.length === 1) {
+    const did = didLines[0].slice(4)
     assertDid(did)
     return did
   }
 
-  throw didDefs.length > 1
+  throw didLines.length > 1
     ? new Error('Multiple DIDs found in DNS TXT records')
     : new Error('No DID found in DNS TXT records')
 }
