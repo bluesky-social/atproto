@@ -4,8 +4,12 @@ import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
-import { ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
-import { BlobPermission } from './blob-permission.js'
+import {
+  ScopeStringFor,
+  ScopeSyntax,
+  isScopeStringFor,
+  isScopeSyntaxFor,
+} from '../lib/syntax.js'
 import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
 
@@ -30,42 +34,72 @@ export class IncludeScope {
    * Converts an "include:" to the list of permissions it includes, based on the
    * lexicon defined permission set.
    */
-  toPermissions(permissionSet: LexPermissionSet) {
-    return permissionSet.permissions
-      .map(this.parsePermission, this)
-      .filter(this.isAllowedPermission, this)
+  toPermissions(
+    permissionSet: LexPermissionSet,
+  ): Array<RepoPermission | RpcPermission> {
+    return Array.from(this.buildPermissions(permissionSet))
   }
 
-  protected parsePermission(
+  toScopes(
+    permissionSet: LexPermissionSet,
+  ): Array<ScopeStringFor<'repo' | 'rpc'>> {
+    return Array.from(this.buildPermissions(permissionSet), (p) => p.toString())
+  }
+
+  *buildPermissions(
+    permissionSet: LexPermissionSet,
+  ): Generator<RepoPermission | RpcPermission, void, unknown> {
+    for (const lexPermission of permissionSet.permissions) {
+      const syntax = this.parseLexPermission(lexPermission)
+      if (!syntax) continue
+
+      const resourcePermission = toResourcePermission(syntax)
+      if (!resourcePermission) continue
+
+      if (this.isAllowedPermission(resourcePermission)) {
+        yield resourcePermission
+      }
+    }
+  }
+
+  protected parseLexPermission(
     permission: LexPermission,
-  ): RepoPermission | RpcPermission | null {
-    if (
-      permission.resource === 'rpc' &&
-      permission.aud !== undefined &&
-      permission.aud !== '*'
-    ) {
-      // "rpc" permissions with a defined audience are not allowed in permission
-      // sets
-      return null
+  ): ScopeSyntax<'repo' | 'rpc'> | null {
+    // This function converts permissions listed in the permission set into
+    // their respective ScopeSyntax representations, handling special cases as
+    // needed.
+
+    if (isLexPermissionForResource(permission, 'repo')) {
+      return new LexPermissionSyntax(permission)
     }
 
-    if (
-      permission.resource === 'rpc' &&
-      permission.inheritAud === true &&
-      permission.aud === undefined &&
-      this.aud !== undefined
-    ) {
+    if (isLexPermissionForResource(permission, 'rpc')) {
+      // "rpc" permissions with a defined audience are not allowed in permission
+      // sets
+      if (permission.aud !== undefined && permission.aud !== '*') {
+        return null
+      }
+
       // "rpc" permissions can "inherit" their audience from "aud" param defined
       // in the "include:<nsid>?aud=<audience>" scope the permission set was
       // loaded from.
-      return parsePermission({
-        ...permission,
-        inheritAud: undefined,
-        aud: this.aud,
-      })
+      if (
+        permission.inheritAud === true &&
+        permission.aud === undefined &&
+        this.aud !== undefined
+      ) {
+        return new LexPermissionSyntax({
+          ...permission,
+          resource: permission.resource,
+          inheritAud: undefined,
+          aud: this.aud,
+        })
+      }
+
+      return new LexPermissionSyntax(permission)
     }
 
-    return parsePermission(permission)
+    return null
   }
 
   /**
@@ -75,18 +109,14 @@ export class IncludeScope {
    * and that it only contains "repo:", "rpc:", or "blob:" permissions.
    */
   protected isAllowedPermission(
-    permission: unknown,
-  ): permission is RpcPermission | RepoPermission | BlobPermission {
+    permission: RpcPermission | RepoPermission | null,
+  ): permission is RpcPermission | RepoPermission {
     if (permission instanceof RpcPermission) {
       return permission.lxm.every(this.isParentAuthorityOf, this)
     }
 
     if (permission instanceof RepoPermission) {
       return permission.collection.every(this.isParentAuthorityOf, this)
-    }
-
-    if (permission instanceof BlobPermission) {
-      return true
     }
 
     return false
@@ -159,19 +189,21 @@ export class IncludeScope {
   }
 }
 
-function parsePermission(permission: LexPermission) {
-  if (isPermissionForResource(permission, 'repo')) {
-    return RepoPermission.fromSyntax(new LexPermissionSyntax(permission))
+function toResourcePermission(
+  syntax: ScopeSyntax<'repo' | 'rpc'>,
+): RepoPermission | RpcPermission | null {
+  if (isScopeSyntaxFor(syntax, 'repo')) {
+    return RepoPermission.fromSyntax(syntax)
   }
-  if (isPermissionForResource(permission, 'rpc')) {
-    return RpcPermission.fromSyntax(new LexPermissionSyntax(permission))
+  if (isScopeSyntaxFor(syntax, 'rpc')) {
+    return RpcPermission.fromSyntax(syntax)
   }
   return null
 }
 
-function isPermissionForResource<P extends LexPermission, T extends string>(
-  permission: P,
-  type: T,
-): permission is P & { resource: T } {
+function isLexPermissionForResource<
+  P extends { resource: unknown },
+  T extends string,
+>(permission: P, type: T): permission is P & { resource: T } {
   return permission.resource === type
 }

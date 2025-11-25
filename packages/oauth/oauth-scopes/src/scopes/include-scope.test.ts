@@ -157,16 +157,15 @@ describe('IncludeScope', () => {
       })
     })
 
-    describe('toPermissions', () => {
+    describe('buildPermissions', () => {
       /**
-       * Utility that transforms an "include:<nsid>" scope and matching
+       * Utility that transforms a (valid) "include:<nsid>" scope and matching
        * (resolved) permission set into the list of permission scopes.
        */
       const compilePermissions = (
         scope: ScopeStringFor<'include'>,
         permissionSet: LexPermissionSet,
-      ) =>
-        IncludeScope.fromString(scope)?.toPermissions(permissionSet).map(String)
+      ) => IncludeScope.fromString(scope)!.toScopes(permissionSet)
 
       describe('blob', () => {
         describe('rejects', () => {
