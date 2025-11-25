@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
-import { LexiconResolver } from '@atproto/lexicon-resolver'
+import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -27,6 +27,7 @@ import {
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
+import { CreateDidResolverOptions } from '../../../internal/did-resolver/dist/create-did-resolver.js'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
 import { AccountManager } from './account/account-manager.js'
 import {
@@ -119,7 +120,7 @@ export type {
   CustomizationInput,
   ErrorHandler,
   HcaptchaConfig,
-  LexiconResolver,
+  LexResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
   VerifyTokenPayloadOptions,
@@ -166,11 +167,6 @@ type OAuthProviderConfig = {
    * fetch function.
    */
   safeFetch?: typeof globalThis.fetch
-
-  /**
-   * A custom ATProto lexicon resolver
-   */
-  lexiconResolver?: LexiconResolver
 
   /**
    * A redis instance to use for replay protection. If not provided, replay
@@ -234,6 +230,7 @@ export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
   OAuthHooks &
   DeviceManagerOptions &
+  CreateDidResolverOptions &
   CustomizationInput
 
 export class OAuthProvider extends OAuthVerifier {
@@ -260,7 +257,6 @@ export class OAuthProvider extends OAuthVerifier {
 
     metadata,
 
-    lexiconResolver,
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
 
@@ -289,6 +285,7 @@ export class OAuthProvider extends OAuthVerifier {
     // OAuthHooks &
     // OAuthVerifierOptions &
     // DeviceManagerOptions &
+    // CreateDidResolverOptions &
     // Customization
     ...rest
   }: OAuthProviderOptions) {
@@ -326,7 +323,10 @@ export class OAuthProvider extends OAuthVerifier {
       clientJwksCache,
       clientMetadataCache,
     )
-    this.lexiconManager = new LexiconManager(lexiconStore, lexiconResolver)
+    this.lexiconManager = new LexiconManager(
+      lexiconStore,
+      new LexResolver({ ...rest, fetch: safeFetch }),
+    )
     this.requestManager = new RequestManager(
       requestStore,
       this.lexiconManager,

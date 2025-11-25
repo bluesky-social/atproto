@@ -1,14 +1,14 @@
-import { LexPermission } from './lexicon.js'
+import { LexiconPermission } from './lexicon.js'
 import { ScopeSyntax } from './syntax.js'
 
 /**
- * Translates a {@link LexPermission} into a {@link ScopeSyntax}.
+ * Translates a {@link LexiconPermission} into a {@link ScopeSyntax}.
  */
 export class LexPermissionSyntax<P extends string = string>
   implements ScopeSyntax<P>
 {
   constructor(
-    readonly lexPermission: Readonly<LexPermission & { resource: P }>,
+    readonly lexPermission: Readonly<LexiconPermission & { resource: P }>,
   ) {}
 
   get prefix() {

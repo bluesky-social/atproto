@@ -32,11 +32,11 @@ export class LexResolver {
     options?: ResolveDidOptions,
   ): Promise<{
     uri: AtUri
-    document: LexiconDocument
+    lexicon: LexiconDocument
   }> {
     const uri = await this.resolve(nsidStr)
-    const document = await this.fetch(uri, options)
-    return { uri, document }
+    const lexicon = await this.fetch(uri, options)
+    return { uri, lexicon }
   }
 
   async resolve(nsidStr: NSID | string): Promise<AtUri> {

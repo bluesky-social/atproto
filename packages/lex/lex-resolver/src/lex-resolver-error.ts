@@ -10,4 +10,11 @@ export class LexResolverError extends Error {
   ) {
     super(`${description} (${nsid})`, options)
   }
+
+  static from(nsid: NSID | string, description?: string) {
+    return new LexResolverError(
+      typeof nsid === 'string' ? NSID.from(nsid) : nsid,
+      description,
+    )
+  }
 }

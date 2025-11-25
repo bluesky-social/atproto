@@ -1,1 +1,4 @@
-export type { LexPermission, LexPermissionSet } from '@atproto/lexicon'
+export type {
+  LexiconPermission,
+  LexiconPermissionSet,
+} from '@atproto/lex-document'

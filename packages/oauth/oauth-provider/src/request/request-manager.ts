@@ -1,5 +1,5 @@
 import { isAtprotoDid } from '@atproto/did'
-import { LexiconResolutionError } from '@atproto/lexicon-resolver'
+import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
@@ -296,7 +296,7 @@ export class RequestManager {
         await this.lexiconManager.getPermissionSetsFromScope(parameters.scope)
       } catch (err) {
         // Parse expected errors
-        if (err instanceof LexiconResolutionError) {
+        if (err instanceof LexResolverError) {
           throw new AuthorizationError(
             parameters,
             err.message,

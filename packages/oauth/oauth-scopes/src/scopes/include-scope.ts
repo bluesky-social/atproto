@@ -1,5 +1,5 @@
 import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
-import { LexPermission, LexPermissionSet } from '../lib/lexicon.js'
+import { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
@@ -9,7 +9,7 @@ import { BlobPermission } from './blob-permission.js'
 import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
 
-export { type LexPermission, type LexPermissionSet, type Nsid, isNsid }
+export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
 
 /**
  * This is used to handle "include:" oauth scope values, used to include
@@ -30,13 +30,13 @@ export class IncludeScope {
    * Converts an "include:" to the list of permissions it includes, based on the
    * lexicon defined permission set.
    */
-  toPermissions(permissionSet: LexPermissionSet) {
+  toPermissions(permissionSet: LexiconPermissionSet) {
     return permissionSet.permissions
       .map(this.parsePermission, this)
       .filter(this.isAllowedPermission, this)
   }
 
-  protected parsePermission(permission: LexPermission) {
+  protected parsePermission(permission: LexiconPermission) {
     if (
       permission.resource === 'rpc' &&
       permission.inheritAud === true &&
@@ -46,11 +46,8 @@ export class IncludeScope {
       // "rpc" permissions can "inherit" their audience from "aud" param defined
       // in the "include:<nsid>?aud=<audience>" scope the permission set was
       // loaded from.
-      return parsePermission({
-        ...permission,
-        inheritAud: undefined,
-        aud: this.aud,
-      })
+      const { inheritAud, ...rest } = permission
+      return parsePermission({ ...rest, aud: this.aud })
     }
 
     return parsePermission(permission)
@@ -147,7 +144,7 @@ export class IncludeScope {
   }
 }
 
-function parsePermission(permission: LexPermission) {
+function parsePermission(permission: LexiconPermission) {
   if (isPermissionForResource(permission, 'repo')) {
     return RepoPermission.fromSyntax(new LexPermissionSyntax(permission))
   }
@@ -160,7 +157,7 @@ function parsePermission(permission: LexPermission) {
   return null
 }
 
-function isPermissionForResource<P extends LexPermission, T extends string>(
+function isPermissionForResource<P extends LexiconPermission, T extends string>(
   permission: P,
   type: T,
 ): permission is P & { resource: T } {
