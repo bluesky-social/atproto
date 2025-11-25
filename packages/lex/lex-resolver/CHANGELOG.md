@@ -1,5 +1,13 @@
 # @atproto/lex-resolver
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-client@0.0.2
+  - @atproto/lex-document@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
