@@ -195,6 +195,15 @@ export class ModerationViews {
       }
     }
 
+    if (isModEventTakedown(event)) {
+      if (
+        typeof meta.targetServices === 'string' &&
+        meta.targetServices.length > 0
+      ) {
+        event.targetServices = meta.targetServices.split(',')
+      }
+    }
+
     if (isModEventLabel(event)) {
       event.createLabelVals = row.createLabelVals?.length
         ? row.createLabelVals.split(' ')
@@ -229,6 +238,7 @@ export class ModerationViews {
     if (isModEventEmail(event)) {
       event.content = ifString(meta.content)!
       event.subjectLine = ifString(meta.subjectLine)!
+      event.isDelivered = !!meta.isDelivered
     }
 
     if (isModEventComment(event) && meta.sticky) {

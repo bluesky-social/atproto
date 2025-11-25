@@ -19,6 +19,10 @@ import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+import * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+import * as AppBskyAgeassuranceDefs from './types/app/bsky/ageassurance/defs.js'
+import * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+import * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 import * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
@@ -313,6 +317,10 @@ export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+export * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+export * as AppBskyAgeassuranceDefs from './types/app/bsky/ageassurance/defs.js'
+export * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+export * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 export * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 export * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 export * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
@@ -738,6 +746,7 @@ export class AppNS {
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
+  ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
@@ -751,6 +760,7 @@ export class AppBskyNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
+    this.ageassurance = new AppBskyAgeassuranceNS(client)
     this.bookmark = new AppBskyBookmarkNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
@@ -1023,6 +1033,49 @@ export class AppBskyActorStatusRecord {
       undefined,
       { collection: 'app.bsky.actor.status', ...params },
       { headers },
+    )
+  }
+}
+
+export class AppBskyAgeassuranceNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  begin(
+    data?: AppBskyAgeassuranceBegin.InputSchema,
+    opts?: AppBskyAgeassuranceBegin.CallOptions,
+  ): Promise<AppBskyAgeassuranceBegin.Response> {
+    return this._client
+      .call('app.bsky.ageassurance.begin', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyAgeassuranceBegin.toKnownErr(e)
+      })
+  }
+
+  getConfig(
+    params?: AppBskyAgeassuranceGetConfig.QueryParams,
+    opts?: AppBskyAgeassuranceGetConfig.CallOptions,
+  ): Promise<AppBskyAgeassuranceGetConfig.Response> {
+    return this._client.call(
+      'app.bsky.ageassurance.getConfig',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getState(
+    params?: AppBskyAgeassuranceGetState.QueryParams,
+    opts?: AppBskyAgeassuranceGetState.CallOptions,
+  ): Promise<AppBskyAgeassuranceGetState.Response> {
+    return this._client.call(
+      'app.bsky.ageassurance.getState',
+      params,
+      undefined,
+      opts,
     )
   }
 }

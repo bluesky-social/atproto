@@ -1,5 +1,9 @@
 import assert from 'node:assert'
-import { ComAtprotoAdminDefs, ToolsOzoneModerationDefs } from '@atproto/api'
+import {
+  AtpAgent,
+  ComAtprotoAdminDefs,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -12,6 +16,8 @@ describe('moderation', () => {
 
   let sc: SeedClient
   let modClient: ModeratorClient
+  let pdsAgent: AtpAgent
+  let bskyAgent: AtpAgent
 
   const repoSubject = (did: string) => ({
     $type: 'com.atproto.admin.defs#repoRef',
@@ -24,6 +30,8 @@ describe('moderation', () => {
     })
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
+    pdsAgent = network.pds.getClient()
+    bskyAgent = network.bsky.getClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -59,5 +67,39 @@ describe('moderation', () => {
 
     assert(ComAtprotoAdminDefs.isRepoRef(subject))
     expect(subject.did).toEqual(sc.dids.bob)
+  })
+
+  it('applies takedown only to specified service when targetServices is set', async () => {
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
+        targetServices: ['appview'],
+      },
+      subject: repoSubject(sc.dids.carol),
+    })
+
+    await network.processAll()
+
+    const [pdsStatus, appviewStatus, carolsEvents] = await Promise.all([
+      pdsAgent.com.atproto.admin.getSubjectStatus(
+        { did: sc.dids.carol },
+        { headers: network.pds.adminAuthHeaders() },
+      ),
+      bskyAgent.com.atproto.admin.getSubjectStatus(
+        { did: sc.dids.carol },
+        { headers: network.bsky.adminAuthHeaders() },
+      ),
+      modClient.queryEvents({
+        subject: sc.dids.carol,
+        types: ['tools.ozone.moderation.defs#modEventTakedown'],
+      }),
+    ])
+
+    expect(pdsStatus.data.takedown?.applied).toBe(false)
+    expect(appviewStatus.data.takedown?.applied).toBe(true)
+
+    const event = carolsEvents.events[0].event
+    assert(ToolsOzoneModerationDefs.isModEventTakedown(event))
+    expect(event.targetServices).toEqual(['appview'])
   })
 })

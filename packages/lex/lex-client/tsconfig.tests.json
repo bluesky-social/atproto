@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig/tests.json",
+  "include": ["./tests"],
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "rootDir": "./tests",
+    "baseUrl": "./tests",
+    "paths": {
+      "@atproto/lex-client": ["./dist/index.js"]
+    }
+  }
+}

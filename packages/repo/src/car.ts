@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { setImmediate } from 'node:timers/promises'
 import * as cbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'

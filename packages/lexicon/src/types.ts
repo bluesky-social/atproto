@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { z } from 'zod'
 import { validateLanguage } from '@atproto/common-web'
 import { isValidNsid } from '@atproto/syntax'

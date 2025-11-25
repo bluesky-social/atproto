@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { AppBskyFeedPostRecord, AtpAgent } from '@atproto/api'
@@ -1218,7 +1220,6 @@ describe('crud operations', () => {
       await expect(result).rejects.toMatchObject({
         status: 400,
         error: 'InvalidRequest',
-        message: 'Bad record',
       })
     })
   })

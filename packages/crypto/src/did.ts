@@ -45,6 +45,9 @@ export const parseDidKey = (did: string): ParsedMultikey => {
   return parseMultikey(multikey)
 }
 
-export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
-  return DID_KEY_PREFIX + formatMultikey(jwtAlg, keyBytes)
+export function formatDidKey(
+  jwtAlg: string,
+  keyBytes: Uint8Array,
+): `did:key:${string}` {
+  return `${DID_KEY_PREFIX}${formatMultikey(jwtAlg, keyBytes)}` as const
 }

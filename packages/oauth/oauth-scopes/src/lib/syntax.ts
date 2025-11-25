@@ -45,3 +45,10 @@ export interface ScopeSyntax<P extends string> {
   getSingle(key: string): ParamValue | null | undefined
   getMulti(key: string): readonly ParamValue[] | null | undefined
 }
+
+export function isScopeSyntaxFor<P extends string>(
+  syntax: ScopeSyntax<string>,
+  prefix: P,
+): syntax is ScopeSyntax<P> {
+  return syntax.prefix === prefix
+}
