@@ -9,7 +9,7 @@ import {
 export type DictSchemaOutput<
   KeySchema extends Validator,
   ValueSchema extends Validator,
-> = { [K in string & Infer<KeySchema>]?: Infer<ValueSchema> }
+> = Record<string & Infer<KeySchema>, Infer<ValueSchema>>
 
 /**
  * @note There is no dictionary in Lexicon schemas. This is a custom extension
