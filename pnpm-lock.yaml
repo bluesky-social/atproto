@@ -991,6 +991,9 @@ importers:
       '@atproto/lex-document':
         specifier: workspace:*
         version: link:../lex-document
+      '@atproto/lex-schema':
+        specifier: workspace:*
+        version: link:../lex-schema
       '@atproto/repo':
         specifier: workspace:*
         version: link:../../repo
