@@ -11,6 +11,10 @@ import {
   ucFirst,
 } from './util.js'
 
+export type RefResolverOptions = {
+  importExt?: string
+}
+
 export type ResolvedRef = {
   varName: string
   typeName: string
@@ -25,6 +29,7 @@ export class RefResolver {
     private doc: LexiconDocument,
     private file: SourceFile,
     private indexer: LexiconIndexer,
+    private options: RefResolverOptions,
   ) {}
 
   public readonly resolve = memoize(
@@ -124,7 +129,7 @@ export class RefResolver {
       const moduleSpecifier = `${asRelativePath(
         this.file.getDirectoryPath(),
         join('/', ...nsid.split('.')),
-      )}.defs.js`
+      )}.defs${this.options.importExt ?? '.js'}`
 
       // Lets first make sure the referenced lexicon exists
       const srcDoc = await this.indexer.get(nsid)

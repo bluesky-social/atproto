@@ -12,8 +12,12 @@ import {
 } from './lexicon-directory-indexer.js'
 import { isSafeIdentifier } from './ts-lang.js'
 
-export type LexBuilderLoadOptions = LexDefBuilderOptions &
-  LexiconDirectoryIndexerOptions &
+export type LexBuilderOptions = LexDefBuilderOptions & {
+  importExt?: string
+  fileExt?: string
+}
+
+export type LexBuilderLoadOptions = LexiconDirectoryIndexerOptions &
   BuildFilterOptions
 
 export type LexBuilderSaveOptions = FormatterOptions & {
@@ -29,6 +33,16 @@ export class LexBuilder {
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
 
+  constructor(private readonly options: LexBuilderOptions = {}) {}
+
+  get fileExt() {
+    return this.options.fileExt ?? '.ts'
+  }
+
+  get importExt() {
+    return this.options.importExt ?? '.js'
+  }
+
   public async load(options: LexBuilderLoadOptions) {
     await using indexer = new FilteredIndexer(
       new LexiconDirectoryIndexer(options),
@@ -42,7 +56,7 @@ export class LexBuilder {
         throw new Error(`Duplicate lexicon document id: ${doc.id}`)
       }
 
-      await this.createDefsFile(doc, indexer, options)
+      await this.createDefsFile(doc, indexer)
       await this.createExportTree(doc)
     }
   }
@@ -92,9 +106,9 @@ export class LexBuilder {
       const childNs = namespaces[i + 1]
 
       const path = join('/', ...namespaces.slice(0, i + 1))
-      const file = this.getFile(`${path}.ts`)
+      const file = this.getFile(`${path}${this.fileExt}`)
 
-      const childModuleSpecifier = `./${currentNs}/${childNs}.js`
+      const childModuleSpecifier = `./${currentNs}/${childNs}${this.importExt}`
       const dec = file.getExportDeclaration(childModuleSpecifier)
       if (!dec) {
         file.addExportDeclaration({
@@ -108,19 +122,19 @@ export class LexBuilder {
 
     // The child file exports the schemas (as *)
     const path = join('/', ...namespaces)
-    const file = this.getFile(`${path}.ts`)
+    const file = this.getFile(`${path}${this.fileExt}`)
 
     file.addExportDeclaration({
-      moduleSpecifier: `./${namespaces.at(-1)}.defs.js`,
+      moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
     })
 
     // @NOTE Individual exports exports from the defs file might conflict with
     // child namespaces. For this reason, we also add a namespace export for the
-    // defs (export * as $defs from './xyz.defs.js'). This is an escape hatch
+    // defs (export * as $defs from './xyz.defs'). This is an escape hatch
     // allowing to still access the definitions if a hash get shadowed by a
     // child namespace.
     file.addExportDeclaration({
-      moduleSpecifier: `./${namespaces.at(-1)}.defs.js`,
+      moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
       namespaceExport: '$defs',
     })
   }
@@ -128,12 +142,11 @@ export class LexBuilder {
   private async createDefsFile(
     doc: LexiconDocument,
     indexer: LexiconIndexer,
-    options: LexDefBuilderOptions,
   ): Promise<void> {
     const path = join('/', ...doc.id.split('.'))
-    const file = this.createFile(`${path}.defs.ts`)
+    const file = this.createFile(`${path}.defs${this.fileExt}`)
 
-    const fileBuilder = new LexDefBuilder(options, file, doc, indexer)
+    const fileBuilder = new LexDefBuilder(this.options, file, doc, indexer)
     await fileBuilder.build()
   }
 }
