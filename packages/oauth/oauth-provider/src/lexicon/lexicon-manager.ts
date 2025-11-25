@@ -108,6 +108,9 @@ export function nsidToPermissionScopes(
   this: Map<string, LexiconPermissionSet>,
   includeScope: IncludeScope,
 ): string[] {
-  const permissionSet = this.get(includeScope.nsid)!
-  return includeScope.toPermissions(permissionSet).map(String)
+  const permissionSet = this.get(includeScope.nsid)
+  if (permissionSet) return includeScope.toScopes(permissionSet)
+
+  // Should never happen (mostly there for type safety & future proofing)
+  throw new Error(`Missing permission set for NSID: ${includeScope.nsid}`)
 }

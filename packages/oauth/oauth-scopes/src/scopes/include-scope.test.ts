@@ -157,19 +157,18 @@ describe('IncludeScope', () => {
       })
     })
 
-    describe('toPermissions', () => {
+    describe('buildPermissions', () => {
       /**
-       * Utility that transforms an "include:<nsid>" scope and matching
+       * Utility that transforms a (valid) "include:<nsid>" scope and matching
        * (resolved) permission set into the list of permission scopes.
        */
       const compilePermissions = (
         scope: ScopeStringFor<'include'>,
         permissionSet: LexPermissionSet,
-      ) =>
-        IncludeScope.fromString(scope)?.toPermissions(permissionSet).map(String)
+      ) => IncludeScope.fromString(scope)!.toScopes(permissionSet)
 
       describe('blob', () => {
-        describe('enables', () => {
+        describe('rejects', () => {
           it('valid permissions', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
@@ -182,11 +181,9 @@ describe('IncludeScope', () => {
                   },
                 ],
               }),
-            ).toEqual(['blob:image/*'])
+            ).toEqual([])
           })
-        })
 
-        describe('rejects', () => {
           it('invalid permissions', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
@@ -220,7 +217,7 @@ describe('IncludeScope', () => {
 
       describe('rpc', () => {
         describe('enables', () => {
-          it('valid permissions', () => {
+          it('allows * aud', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
                 type: 'permission-set',
@@ -228,17 +225,15 @@ describe('IncludeScope', () => {
                   {
                     type: 'permission',
                     resource: 'rpc',
-                    aud: 'did:web:example.com#foo',
+                    aud: '*',
                     lxm: ['com.example.calendar.listEvents'],
                   },
                 ],
               }),
-            ).toEqual([
-              'rpc:com.example.calendar.listEvents?aud=did:web:example.com%23foo',
-            ])
+            ).toEqual(['rpc:com.example.calendar.listEvents?aud=*'])
           })
 
-          it('valid inherited-aud permissions', () => {
+          it('inherits aud', () => {
             expect(
               compilePermissions(
                 'include:com.example.calendar.auth?aud=did:web:example.com#foo',
@@ -268,6 +263,22 @@ describe('IncludeScope', () => {
         })
 
         describe('rejects', () => {
+          it('forbids use of specific "aud"', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'rpc',
+                    aud: 'did:web:example.com#foo',
+                    lxm: ['com.example.calendar.listEvents'],
+                  },
+                ],
+              }),
+            ).toEqual([])
+          })
+
           it('invalid "lxm" syntax', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
