@@ -41,6 +41,16 @@ export class IncludeScope {
   ): RepoPermission | RpcPermission | null {
     if (
       permission.resource === 'rpc' &&
+      permission.aud !== undefined &&
+      permission.aud !== '*'
+    ) {
+      // "rpc" permissions with a defined audience are not allowed in permission
+      // sets
+      return null
+    }
+
+    if (
+      permission.resource === 'rpc' &&
       permission.inheritAud === true &&
       permission.aud === undefined &&
       this.aud !== undefined

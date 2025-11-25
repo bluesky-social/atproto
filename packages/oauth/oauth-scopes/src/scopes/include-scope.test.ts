@@ -218,7 +218,7 @@ describe('IncludeScope', () => {
 
       describe('rpc', () => {
         describe('enables', () => {
-          it('valid permissions', () => {
+          it('allows * aud', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
                 type: 'permission-set',
@@ -226,17 +226,15 @@ describe('IncludeScope', () => {
                   {
                     type: 'permission',
                     resource: 'rpc',
-                    aud: 'did:web:example.com#foo',
+                    aud: '*',
                     lxm: ['com.example.calendar.listEvents'],
                   },
                 ],
               }),
-            ).toEqual([
-              'rpc:com.example.calendar.listEvents?aud=did:web:example.com%23foo',
-            ])
+            ).toEqual(['rpc:com.example.calendar.listEvents?aud=*'])
           })
 
-          it('valid inherited-aud permissions', () => {
+          it('inherits aud', () => {
             expect(
               compilePermissions(
                 'include:com.example.calendar.auth?aud=did:web:example.com#foo',
@@ -266,6 +264,22 @@ describe('IncludeScope', () => {
         })
 
         describe('rejects', () => {
+          it('forbids use of specific "aud"', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'rpc',
+                    aud: 'did:web:example.com#foo',
+                    lxm: ['com.example.calendar.listEvents'],
+                  },
+                ],
+              }),
+            ).toEqual([])
+          })
+
           it('invalid "lxm" syntax', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
