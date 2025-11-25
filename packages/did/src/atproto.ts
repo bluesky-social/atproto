@@ -187,7 +187,7 @@ export function isAtprotoPersonalDataServerService<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
 >(
   this: DidDocument<M>,
-  service: DidService,
+  service: null | undefined | DidService,
 ): service is AtprotoPersonalDataServerService<M> {
   return (
     service?.type === 'AtprotoPersonalDataServer' &&
@@ -208,7 +208,7 @@ export type SupportedAtprotoVerificationMethodType =
 type VerificationMethod = NonNullable<DidDocument['verificationMethod']>[number]
 export type AtprotoVerificationMethod<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
-> = Exclude<VerificationMethod, string> & {
+> = Extract<VerificationMethod, object> & {
   id: Identifier<Did<M>, 'atproto'>
   type: SupportedAtprotoVerificationMethodType
   publicKeyMultibase: string
@@ -218,11 +218,14 @@ export function isAtprotoVerificationMethod<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
 >(
   this: DidDocument<M>,
-  method: NonNullable<DidDocument<M>['verificationMethod']>[number],
+  method:
+    | null
+    | undefined
+    | NonNullable<DidDocument<M>['verificationMethod']>[number],
 ): method is AtprotoVerificationMethod<M> {
   return (
     typeof method === 'object' &&
-    method?.publicKeyMultibase != null &&
+    typeof method?.publicKeyMultibase === 'string' &&
     (ATPROTO_VERIFICATION_METHOD_TYPES as readonly unknown[]).includes(
       method.type,
     ) &&
