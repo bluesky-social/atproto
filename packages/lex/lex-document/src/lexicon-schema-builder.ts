@@ -81,7 +81,6 @@ export class LexiconSchemaBuilder {
     const { nsid, hash } = parseRef(fullRef)
 
     const doc = await this.indexer.get(nsid)
-    if (!doc) throw new Error(`No lexicon found for NSID: ${nsid}`)
 
     return this.compileDef(doc, hash)
   })

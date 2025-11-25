@@ -15,7 +15,8 @@
     "directory": "packages/lex/lex"
   },
   "files": [
-    "./index.js",
+    "./index.cjs",
+    "./index.mjs",
     "./index.d.ts",
     "./bin"
   ],
