@@ -51,6 +51,10 @@ export class LexInstaller implements AsyncDisposable {
   }
 
   matches(manifest: LexiconsManifest): boolean {
+    // Make sure that any lexicon that was added is properly sorted before
+    // comparison
+    // @TODO use a comparison method that doesn't require sorting
+    this.manifest.lexicons.sort()
     return lexEquals(this.manifest, manifest)
   }
 
@@ -193,11 +197,12 @@ export class LexInstaller implements AsyncDisposable {
   }
 
   async save(): Promise<void> {
+    this.manifest.lexicons.sort()
     await writeJsonFile(
       this.options.manifest,
       lexiconsManifestSchema.parse({
         version: 1,
-        lexicons: [...this.manifest.lexicons].sort(),
+        lexicons: this.manifest.lexicons,
         resolutions: Object.fromEntries(
           Object.entries(this.manifest.resolutions).sort(([a], [b]) =>
             a > b ? 1 : -1,
