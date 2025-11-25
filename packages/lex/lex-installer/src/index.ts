@@ -30,7 +30,7 @@ export async function install(options: LexInstallOptions) {
   await installer.install({ additions, manifest })
 
   // Verify lockfile
-  if (options.ci && (!manifest || !installer.matches(manifest))) {
+  if (options.ci && (!manifest || !installer.equals(manifest))) {
     throw new Error('Lexicons manifest is out of date')
   }
 

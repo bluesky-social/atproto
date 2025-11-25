@@ -8,11 +8,11 @@ export const lexiconsManifestSchema = l.object(
       l.string({ format: 'nsid' }),
       l.object(
         {
-          cid: l.string({ format: 'cid' }),
           uri: l.string({ format: 'at-uri' }),
+          cid: l.string({ format: 'cid' }),
         },
         {
-          required: ['cid', 'uri'],
+          required: ['uri', 'cid'],
         },
       ),
     ),
@@ -21,3 +21,26 @@ export const lexiconsManifestSchema = l.object(
 )
 
 export type LexiconsManifest = l.Infer<typeof lexiconsManifestSchema>
+
+export function normalizeLexiconsManifest(
+  manifest: LexiconsManifest,
+): LexiconsManifest {
+  const normalized: LexiconsManifest = {
+    version: manifest.version,
+    lexicons: [...manifest.lexicons].sort(),
+    resolutions: Object.fromEntries(
+      Object.entries(manifest.resolutions)
+        .sort(compareObjectEntriesFn)
+        .map(([k, { uri, cid }]) => [k, { uri, cid }]),
+    ),
+  }
+  // For good measure:
+  return lexiconsManifestSchema.parse(normalized)
+}
+
+function compareObjectEntriesFn(
+  a: [string, unknown],
+  b: [string, unknown],
+): number {
+  return a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0
+}
