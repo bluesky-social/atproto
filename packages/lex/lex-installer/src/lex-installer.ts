@@ -185,14 +185,14 @@ export class LexInstaller implements AsyncDisposable {
   async fetch(uri: AtUri): Promise<LexiconDocument> {
     console.debug(`Fetching lexicon from ${uri}...`)
 
-    const document = await this.lexiconResolver.fetch(uri, {
+    const { lexicon } = await this.lexiconResolver.fetch(uri, {
       noCache: this.options.update,
     })
 
-    const basePath = join(this.options.lexicons, ...document.id.split('.'))
-    await writeJsonFile(`${basePath}.json`, document)
+    const basePath = join(this.options.lexicons, ...lexicon.id.split('.'))
+    await writeJsonFile(`${basePath}.json`, lexicon)
 
-    return document
+    return lexicon
   }
 
   async save(): Promise<void> {
