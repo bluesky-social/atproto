@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { DidDocument, DidService } from './did-document.js'
 import { DidError, InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
-import { isFragment } from './lib/uri.js'
+import { canParse, isFragment } from './lib/uri.js'
 import {
   DID_PLC_PREFIX,
   DID_WEB_PREFIX,
@@ -202,6 +202,7 @@ export function isAtprotoPersonalDataServerService<
   return (
     service?.type === 'AtprotoPersonalDataServer' &&
     typeof service.serviceEndpoint === 'string' &&
+    canParse(service.serviceEndpoint) &&
     matchesIdentifier(this.id, 'atproto_pds', service.id)
   )
 }
