@@ -370,6 +370,7 @@ export class AppContext {
             }
           })({
             fetch: safeFetch,
+            didAuthority: cfg.lexicon.didAuthority,
             plcDirectoryUrl: cfg.identity.plcUrl,
           }),
           metadata: {
