@@ -9,7 +9,7 @@ export class OptionalSchema<T> extends Validator<T | undefined> {
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<T | undefined> {
-    const result = this.schema.validateInContext(input, ctx)
+    const result = ctx.validate(input, this.schema)
 
     // @NOTE A default value may have been applied during validation
     if (result.success) {

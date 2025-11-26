@@ -13,6 +13,6 @@ export class NullableSchema<T> extends Validator<T | null> {
       return ctx.success(null)
     }
 
-    return this.schema.validateInContext(input, ctx)
+    return ctx.validate(input, this.schema)
   }
 }
