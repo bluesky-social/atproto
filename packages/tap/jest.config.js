@@ -1,6 +1,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  displayName: 'Nexus',
+  displayName: 'Tap',
   transform: { '^.+\\.ts$': '@swc/jest' },
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],

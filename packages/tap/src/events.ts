@@ -36,7 +36,7 @@ export const userEventSchema = z.object({
   user: userEventDataSchema,
 })
 
-export const nexusEventSchema = z.union([recordEventSchema, userEventSchema])
+export const tapEventSchema = z.union([recordEventSchema, userEventSchema])
 
 export type RecordEvent = {
   id: number
@@ -60,10 +60,10 @@ export type UserEvent = {
   status: 'active' | 'takendown' | 'suspended' | 'deactivated' | 'deleted'
 }
 
-export type NexusEvent = UserEvent | RecordEvent
+export type TapEvent = UserEvent | RecordEvent
 
-export const parseNexusEvent = (data: unknown): NexusEvent => {
-  const parsed = nexusEventSchema.parse(data)
+export const parseTapEvent = (data: unknown): TapEvent => {
+  const parsed = tapEventSchema.parse(data)
   if (parsed.type === 'user') {
     return {
       id: parsed.id,

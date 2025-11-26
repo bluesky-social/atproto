@@ -1,5 +1,5 @@
-import { HandlerOpts, NexusHandler } from './channel'
-import { NexusEvent, RecordEvent, UserEvent } from './events'
+import { HandlerOpts, TapHandler } from './channel'
+import { TapEvent, RecordEvent, UserEvent } from './events'
 
 type UserEventHandler = (evt: UserEvent, opts?: HandlerOpts) => Promise<void>
 type RecordEventHandler = (
@@ -8,7 +8,7 @@ type RecordEventHandler = (
 ) => Promise<void>
 type ErrorHandler = (err: Error) => void
 
-export class SimpleIndexer implements NexusHandler {
+export class SimpleIndexer implements TapHandler {
   private userHandler: UserEventHandler | undefined
   private recordHandler: RecordEventHandler | undefined
   private errorHandler: ErrorHandler | undefined
@@ -25,7 +25,7 @@ export class SimpleIndexer implements NexusHandler {
     this.errorHandler = fn
   }
 
-  async onEvent(evt: NexusEvent, opts?: HandlerOpts): Promise<void> {
+  async onEvent(evt: TapEvent, opts?: HandlerOpts): Promise<void> {
     if (evt.type === 'record') {
       return this.recordHandler?.(evt, opts)
     } else {

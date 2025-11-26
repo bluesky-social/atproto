@@ -1,18 +1,18 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
-import { NexusEvent, parseNexusEvent } from './events'
+import { TapEvent, parseTapEvent } from './events'
 
 export interface HandlerOpts {
   signal: AbortSignal
 }
 
-export interface NexusHandler {
-  onEvent: (evt: NexusEvent, opts?: HandlerOpts) => void | Promise<void>
+export interface TapHandler {
+  onEvent: (evt: TapEvent, opts?: HandlerOpts) => void | Promise<void>
   onError: (err: Error) => void
 }
 
-export type NexusWebsocketOptions = ClientOptions & {
+export type TapWebsocketOptions = ClientOptions & {
   maxReconnectSeconds?: number
   heartbeatIntervalMs?: number
   onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
@@ -23,9 +23,9 @@ type BufferedAck = {
   defer: Deferrable
 }
 
-export class NexusChannel {
+export class TapChannel {
   private ws: WebSocketKeepAlive
-  private handler: NexusHandler
+  private handler: TapHandler
 
   private abortController: AbortController
   private destroyDefer: Deferrable
@@ -34,8 +34,8 @@ export class NexusChannel {
 
   constructor(
     url: string,
-    handler: NexusHandler,
-    wsOpts: NexusWebsocketOptions = {},
+    handler: TapHandler,
+    wsOpts: TapWebsocketOptions = {},
   ) {
     this.abortController = new AbortController()
     this.destroyDefer = createDeferrable()
@@ -113,10 +113,10 @@ export class NexusChannel {
   }
 
   private async processWsEvent(chunk: Uint8Array) {
-    let evt: NexusEvent
+    let evt: TapEvent
     try {
       const data = chunk.toString()
-      evt = parseNexusEvent(JSON.parse(data))
+      evt = parseTapEvent(JSON.parse(data))
     } catch (err) {
       this.handler.onError(new Error('Failed to parse message', { cause: err }))
       return
@@ -126,7 +126,7 @@ export class NexusChannel {
       await this.handler.onEvent(evt, { signal: this.abortController.signal })
       await this.ackEvent(evt.id)
     } catch (err) {
-      // Don't ack on error - let Nexus retry
+      // Don't ack on error - let Tap retry
       this.handler.onError(
         new Error(`Failed to process event ${evt.id}`, { cause: err }),
       )

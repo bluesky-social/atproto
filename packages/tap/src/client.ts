@@ -1,6 +1,6 @@
-import { NexusChannel, NexusHandler, NexusWebsocketOptions } from './channel'
+import { TapChannel, TapHandler, TapWebsocketOptions } from './channel'
 
-export class Nexus {
+export class Tap {
   url: string
 
   constructor(url: string) {
@@ -10,11 +10,11 @@ export class Nexus {
     this.url = url
   }
 
-  channel(handler: NexusHandler, opts?: NexusWebsocketOptions): NexusChannel {
+  channel(handler: TapHandler, opts?: TapWebsocketOptions): TapChannel {
     const url = new URL(this.url)
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
     url.pathname = '/channel'
-    return new NexusChannel(url.toString(), handler, opts)
+    return new TapChannel(url.toString(), handler, opts)
   }
 
   async addRepos(dids: string[]): Promise<void> {

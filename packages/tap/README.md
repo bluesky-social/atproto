@@ -1,15 +1,15 @@
-# @atproto/nexus
+# @atproto/tap
 
-Library for connecting with [Nexus](#), a utility for syncing subsets of the AT network.
+Library for connecting with [Tap](#), a utility for syncing subsets of the AT network.
 
 ## Usage
 
-Before you get started you'll need to get an instance of Nexus running for your app. See more in the [Nexus project](#).
+Before you get started you'll need to get an instance of Tap running for your app. See more in the [Tap project](#).
 
 ```ts
-import { Nexus, SimpleIndexer } from '@atproto/nexus'
+import { Tap, SimpleIndexer } from '@atproto/tap'
 
-const nexus = new Nexus('http://localhost:8080')
+const tap = new Tap('http://localhost:8080')
 
 const indexer = new SimpleIndexer()
 // handle events pertaining to a repo's account or identity
@@ -32,37 +32,37 @@ indexer.record(async (evt) => {
 // without a handler, errors will end up as unhandled exceptions
 indexer.error((err) => console.error(err))
 
-const channel = nexus.channel(indexer)
+const channel = tap.channel(indexer)
 channel.start()
 
 // Open websocket connection. Note that only one connection can be open at a time.
 // The library will handle reconnects and keeping the websocket alive
-const channel = nexus.connect()
+const channel = tap.connect()
 
 channel.start()
 
 // dyanmically add/remove repos from the channel
 // as you add repos, they will be backfilled and all existing records will be sent over the channel
-await nexus.addRepos(['did:example:alice'])
-await nexus.removeRepos(['did:example:bob'])
+await tap.addRepos(['did:example:alice'])
+await tap.removeRepos(['did:example:bob'])
 
 // on shutdown
 await channel.destory()
 ```
 
 ## Usage with webhooks
-If you don't want to maintain a persistent websocket connection, you can register a webhook with Nexus. The same events will be sent to the webhook URL you provide.
+If you don't want to maintain a persistent websocket connection, you can register a webhook with Tap. The same events will be sent to the webhook URL you provide.
 
 ```ts
 import express from 'express'
-import { Nexus, parseNexusEvent } from '@atproto/nexus'
+import { Tap, parseTapEvent } from '@atproto/tap'
 
 const app = express()
 app.use(express.json())
 
 app.post('/webhook', async (req, res) => {
   try {
-    const evt = parseNexusEvent(req.body)
+    const evt = parseTapEvent(req.body)
     // ...
     res.sendStatus(200)
   } catch (err) {
