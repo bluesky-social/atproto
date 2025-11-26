@@ -8,39 +8,23 @@ import {
 } from '../validation.js'
 import { DictSchema } from './dict.js'
 
-export type ObjectSchemaProperties = { [_ in string]: Validator<any> }
+export type ObjectSchemaProperties = Record<string, Validator>
 export type ObjectSchemaOptions = {
-  required?: readonly string[]
-  nullable?: readonly string[]
-  unknownProperties?: 'strict' | DictSchema
+  readonly required?: readonly string[]
+  readonly unknownProperties?: 'strict' | DictSchema
 }
-
-export type ObjectSchemaNullValue<
-  O extends ObjectSchemaOptions,
-  K extends string,
-> = O extends { nullable: readonly (infer N extends string)[] }
-  ? K extends N
-    ? null
-    : never
-  : never
 
 export type ObjectSchemaPropertiesOutput<
   P extends ObjectSchemaProperties,
   O extends ObjectSchemaOptions,
-> = O extends { required: readonly (infer R extends string)[] }
+> = O extends { readonly required: readonly (infer R extends string)[] }
   ? {
-      -readonly [K in string & keyof P & R]-?:
-        | Infer<P[K]>
-        | ObjectSchemaNullValue<O, K>
+      -readonly [K in string & keyof P & R]-?: Infer<P[K]>
     } & {
-      -readonly [K in Exclude<string & keyof P, R>]?:
-        | Infer<P[K]>
-        | ObjectSchemaNullValue<O, K>
+      -readonly [K in Exclude<string & keyof P, R>]?: Infer<P[K]>
     }
   : {
-      -readonly [K in string & keyof P]?:
-        | Infer<P[K]>
-        | ObjectSchemaNullValue<O, K>
+      -readonly [K in string & keyof P]?: Infer<P[K]>
     }
 
 /**
@@ -112,10 +96,6 @@ export class ObjectSchema<
     let copy: undefined | Record<string, unknown>
 
     for (const [key, propDef] of this.validatorsMap) {
-      if (input[key] === null && this.options.nullable?.includes(key)) {
-        continue
-      }
-
       const result = ctx.validateChild(input, key, propDef)
       if (!result.success) {
         // Because default values are provided by child validators, we need to

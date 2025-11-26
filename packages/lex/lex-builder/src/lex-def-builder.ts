@@ -478,6 +478,7 @@ export class LexDefBuilder {
       'type',
       'description',
       'properties',
+      'nullable',
     ])
     return this.pure(`l.object({${properties.join(',')}}, ${options})`)
   }
@@ -485,18 +486,22 @@ export class LexDefBuilder {
   private async compilePropertiesSchemas(options: {
     properties: Record<string, LexiconArray | LexiconArrayItems>
     required?: readonly string[]
-  }) {
-    for (const prop of options.required || []) {
-      if (!Object.hasOwn(options.properties, prop)) {
-        throw new Error(`Required property "${prop}" not found in properties`)
+    nullable?: readonly string[]
+  }): Promise<string[]> {
+    for (const opt of ['required', 'nullable'] as const) {
+      if (options[opt]) {
+        for (const prop of options[opt]) {
+          if (!Object.hasOwn(options.properties, prop)) {
+            throw new Error(`No schema found for ${opt} property "${prop}"`)
+          }
+        }
       }
     }
 
     return Promise.all(
-      Object.entries(options.properties).map(
-        this.compilePropertyEntrySchema,
-        this,
-      ),
+      Object.entries(options.properties).map((entry) => {
+        return this.compilePropertyEntrySchema(entry, options)
+      }),
     )
   }
 
@@ -512,13 +517,22 @@ export class LexDefBuilder {
     )
   }
 
-  private async compilePropertyEntrySchema([key, def]: [
-    string,
-    LexiconArray | LexiconArrayItems,
-  ]) {
-    const name = JSON.stringify(key)
-    const schema = await this.compileContainedSchema(def)
-    return `${name}:${schema}`
+  private async compilePropertyEntrySchema(
+    [key, def]: [string, LexiconArray | LexiconArrayItems],
+    options: {
+      required?: readonly string[]
+      nullable?: readonly string[]
+    },
+  ) {
+    const isNullable = options.nullable?.includes(key)
+
+    let schema = await this.compileContainedSchema(def)
+
+    if (isNullable) {
+      schema = this.pure(`l.nullable(${schema})`)
+    }
+
+    return `${JSON.stringify(key)}:${schema}`
   }
 
   private async compilePropertyEntryType(

@@ -22,6 +22,8 @@ export * from './schema/unknown.js'
 export * from './schema/custom.js'
 export * from './schema/discriminated-union.js'
 export * from './schema/intersection.js'
+export * from './schema/nullable.js'
+export * from './schema/optional.js'
 export * from './schema/ref.js'
 export * from './schema/union.js'
 

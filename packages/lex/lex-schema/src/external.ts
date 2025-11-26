@@ -22,9 +22,11 @@ import {
   LiteralSchema,
   NeverSchema,
   NullSchema,
+  NullableSchema,
   ObjectSchema,
   ObjectSchemaOptions,
   ObjectSchemaProperties,
+  OptionalSchema,
   ParamsSchema,
   ParamsSchemaOptions,
   ParamsSchemaProperties,
@@ -172,6 +174,16 @@ export function custom<T>(
   path?: PropertyKey | readonly PropertyKey[],
 ) {
   return new CustomSchema<T>(assertion, message, path)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function nullable<T>(schema: Validator<T>) {
+  return new NullableSchema<T>(schema)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function optional<T>(schema: Validator<T>) {
+  return new OptionalSchema<T>(schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
