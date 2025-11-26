@@ -1,6 +1,12 @@
-import { ensureValidDid, ensureValidDidRegex } from './did'
-import { ensureValidHandle, ensureValidHandleRegex } from './handle'
-import { isValidNsid } from './nsid'
+import { AtIdentifierString, ensureValidAtIdentifier } from './at-identifier.js'
+import { ensureValidDidRegex } from './did.js'
+import { ensureValidHandleRegex } from './handle.js'
+import { NsidString, isValidNsid } from './nsid.js'
+
+export type AtUriString =
+  | `at://${AtIdentifierString}`
+  | `at://${AtIdentifierString}/${NsidString}`
+  | `at://${AtIdentifierString}/${NsidString}/${string}`
 
 // Human-readable constraints on ATURI:
 //   - following regular URLs, a 8KByte hard total length limit
@@ -15,53 +21,60 @@ import { isValidNsid } from './nsid'
 //          [a-zA-Z0-9._~:@!$&'\(\)*+,;=-]
 //      - rkey must have at least one char
 //      - regardless of path component, a fragment can follow  as "#" and then a JSON pointer (RFC-6901)
-export const ensureValidAtUri = (uri: string) => {
+
+export function ensureValidAtUri(input: string): asserts input is AtUriString {
   // JSON pointer is pretty different from rest of URI, so split that out first
-  const uriParts = uri.split('#')
-  if (uriParts.length > 2) {
+  const { 0: uri, 1: fragmentPart, length: fragmentCount } = input.split('#', 3)
+  if (fragmentCount > 2) {
     throw new Error('ATURI can have at most one "#", separating fragment out')
   }
-  const fragmentPart = uriParts[1] || null
-  uri = uriParts[0]
+
+  if (!uri.startsWith('at://')) {
+    throw new Error('ATURI must start with "at://"')
+  }
 
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9._~:@!$&')(*+,;=%/-]*$/.test(uri)) {
     throw new Error('Disallowed characters in ATURI (ASCII)')
   }
 
-  const parts = uri.split('/')
-  if (parts.length >= 3 && (parts[0] !== 'at:' || parts[1].length !== 0)) {
-    throw new Error('ATURI must start with "at://"')
-  }
-  if (parts.length < 3) {
-    throw new Error('ATURI requires at least method and authority sections')
-  }
-
+  const authorityEnd = uri.indexOf('/', 5)
+  const authority =
+    authorityEnd === -1 ? uri.slice(5) : uri.slice(5, authorityEnd)
   try {
-    if (parts[2].startsWith('did:')) {
-      ensureValidDid(parts[2])
-    } else {
-      ensureValidHandle(parts[2])
-    }
-  } catch {
-    throw new Error('ATURI authority must be a valid handle or DID')
+    ensureValidAtIdentifier(authority)
+  } catch (cause) {
+    throw new Error('ATURI authority must be a valid handle or DID', { cause })
   }
 
-  if (parts.length >= 4) {
-    if (parts[3].length === 0) {
+  const collectionStart = authorityEnd === -1 ? -1 : authorityEnd + 1
+  const collectionEnd =
+    collectionStart === -1 ? -1 : uri.indexOf('/', collectionStart)
+
+  if (collectionStart !== -1) {
+    const collection =
+      collectionEnd === -1
+        ? uri.slice(collectionStart)
+        : uri.slice(collectionStart, collectionEnd)
+
+    if (collection.length === 0) {
       throw new Error(
         'ATURI can not have a slash after authority without a path segment',
       )
     }
-    if (!isValidNsid(parts[3])) {
+    if (!isValidNsid(collection)) {
       throw new Error(
         'ATURI requires first path segment (if supplied) to be valid NSID',
       )
     }
   }
 
-  if (parts.length >= 5) {
-    if (parts[4].length === 0) {
+  const recordKeyStart = collectionEnd === -1 ? -1 : collectionEnd + 1
+  const recordKeyEnd =
+    recordKeyStart === -1 ? -1 : uri.indexOf('/', recordKeyStart)
+
+  if (recordKeyStart !== -1) {
+    if (recordKeyStart === uri.length) {
       throw new Error(
         'ATURI can not have a slash after collection, unless record key is provided',
       )
@@ -69,18 +82,14 @@ export const ensureValidAtUri = (uri: string) => {
     // would validate rkey here, but there are basically no constraints!
   }
 
-  if (parts.length >= 6) {
+  if (recordKeyEnd !== -1) {
     throw new Error(
       'ATURI path can have at most two parts, and no trailing slash',
     )
   }
 
-  if (uriParts.length >= 2 && fragmentPart == null) {
-    throw new Error('ATURI fragment must be non-empty and start with slash')
-  }
-
   if (fragmentPart != null) {
-    if (fragmentPart.length === 0 || fragmentPart[0] !== '/') {
+    if (fragmentPart.charCodeAt(0) !== 47) {
       throw new Error('ATURI fragment must be non-empty and start with slash')
     }
     // NOTE: enforcing *some* checks here for sanity. Eg, at least no whitespace
@@ -94,7 +103,7 @@ export const ensureValidAtUri = (uri: string) => {
   }
 }
 
-export const ensureValidAtUriRegex = (uri: string): void => {
+export function ensureValidAtUriRegex(uri: string): asserts uri is AtUriString {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints. whew!
   const aturiRegex =
