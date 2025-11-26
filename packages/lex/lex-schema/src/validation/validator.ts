@@ -20,16 +20,18 @@ type ValidationOptions = {
   allowTransform?: boolean
 }
 
-export type Infer<T extends Validator> = T['_lex']['output']
+declare const kType: unique symbol
+
+export type Infer<T extends Validator> = T[typeof kType]['out']
 
 export abstract class Validator<Output = any> {
   /**
    * This property is used for type inference purposes and does not actually
    * exist at runtime.
    *
-   * @deprecated For internal use only (not actually deprecated)
+   * @internal
    */
-  _lex!: { output: Output }
+  declare readonly [kType]: { out: Output }
 
   readonly lexiconType?: string
 
