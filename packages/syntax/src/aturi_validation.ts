@@ -23,10 +23,26 @@ export type AtUriString =
 //      - regardless of path component, a fragment can follow  as "#" and then a JSON pointer (RFC-6901)
 
 export function ensureValidAtUri(input: string): asserts input is AtUriString {
-  // JSON pointer is pretty different from rest of URI, so split that out first
-  const { 0: uri, 1: fragmentPart, length: fragmentCount } = input.split('#', 3)
-  if (fragmentCount > 2) {
-    throw new Error('ATURI can have at most one "#", separating fragment out')
+  const fragmentIndex = input.indexOf('#')
+  if (fragmentIndex !== -1) {
+    if (input.charCodeAt(fragmentIndex + 1) !== 47) {
+      throw new Error('ATURI fragment must be non-empty and start with slash')
+    }
+    if (input.includes('#', fragmentIndex + 1)) {
+      throw new Error('ATURI can have at most one "#", separating fragment out')
+    }
+
+    // NOTE: enforcing *some* checks here for sanity. Eg, at least no whitespace
+    const fragment = input.slice(fragmentIndex + 1)
+    if (!/^\/[a-zA-Z0-9._~:@!$&')(*+,;=%[\]/-]*$/.test(fragment)) {
+      throw new Error('Disallowed characters in ATURI fragment (ASCII)')
+    }
+  }
+
+  const uri = fragmentIndex === -1 ? input : input.slice(0, fragmentIndex)
+
+  if (uri.length > 8 * 1024) {
+    throw new Error('ATURI is far too long')
   }
 
   if (!uri.startsWith('at://')) {
@@ -86,20 +102,6 @@ export function ensureValidAtUri(input: string): asserts input is AtUriString {
     throw new Error(
       'ATURI path can have at most two parts, and no trailing slash',
     )
-  }
-
-  if (fragmentPart != null) {
-    if (fragmentPart.charCodeAt(0) !== 47) {
-      throw new Error('ATURI fragment must be non-empty and start with slash')
-    }
-    // NOTE: enforcing *some* checks here for sanity. Eg, at least no whitespace
-    if (!/^\/[a-zA-Z0-9._~:@!$&')(*+,;=%[\]/-]*$/.test(fragmentPart)) {
-      throw new Error('Disallowed characters in ATURI fragment (ASCII)')
-    }
-  }
-
-  if (uri.length > 8 * 1024) {
-    throw new Error('ATURI is far too long')
   }
 }
 
