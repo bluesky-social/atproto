@@ -1,58 +1,39 @@
 import { isPlainObject } from '@atproto/lex-data'
+import { lazyProperty } from '../util/lazy-property.js'
 import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 import { Param, ParamScalar, paramSchema } from './_parameters.js'
-import { ObjectSchemaPropertiesOutput } from './object.js'
+import { ObjectSchemaOutput } from './object.js'
 import { StringSchema } from './string.js'
 
 export type ParamsSchemaProperties = {
-  [_ in string]: Validator<Param>
+  [_ in string]: Validator<Param | undefined>
 }
 
-export type ParamsSchemaOptions = {
-  required?: readonly string[]
-}
-
-export type ParamsSchemaOutput<
-  P extends ParamsSchemaProperties,
-  O extends ParamsSchemaOptions,
-> = ObjectSchemaPropertiesOutput<P, O>
+export type ParamsSchemaOutput<P extends ParamsSchemaProperties> =
+  ObjectSchemaOutput<P>
 
 export type InferParamsSchema<T> =
-  T extends ParamsSchema<infer P, infer O>
-    ? NonNullable<unknown> extends ParamsSchemaOutput<P, O>
-      ? ParamsSchemaOutput<P, O> | undefined
-      : ParamsSchemaOutput<P, O>
+  T extends ParamsSchema<infer P>
+    ? NonNullable<unknown> extends ParamsSchemaOutput<P>
+      ? ParamsSchemaOutput<P> | undefined
+      : ParamsSchemaOutput<P>
     : never
 
 export class ParamsSchema<
   const Validators extends ParamsSchemaProperties = ParamsSchemaProperties,
-  const Options extends ParamsSchemaOptions = ParamsSchemaOptions,
-  Output extends ParamsSchemaOutput<Validators, Options> = ParamsSchemaOutput<
-    Validators,
-    Options
-  >,
+  Output extends
+    ParamsSchemaOutput<Validators> = ParamsSchemaOutput<Validators>,
 > extends Validator<Output> {
   readonly lexiconType = 'params' as const
 
-  constructor(
-    readonly validators: Validators,
-    readonly options: Options,
-  ) {
+  constructor(readonly validators: Validators) {
     super()
   }
 
-  get validatorsMap(): Map<string, Validator<Param>> {
+  get validatorsMap(): Map<string, Validator<Param | undefined>> {
     const map = new Map(Object.entries(this.validators))
 
-    // Cache the map on the instance (to avoid re-creating it)
-    Object.defineProperty(this, 'validatorsMap', {
-      value: map,
-      writable: false,
-      enumerable: false,
-      configurable: true,
-    })
-
-    return map
+    return lazyProperty(this, 'validatorsMap', map)
   }
 
   override validateInContext(
@@ -82,20 +63,17 @@ export class ParamsSchema<
     for (const [key, propDef] of this.validatorsMap) {
       const result = ctx.validateChild(input, key, propDef)
       if (!result.success) {
-        // Because default values are provided by child validators, we need to
-        // run the validator to get the default value and, in case of failure,
-        // ignore validation error that were caused by missing keys.
         if (!(key in input)) {
-          if (!this.options.required?.includes(key)) {
-            // Ignore missing non-required key
-            continue
-          } else {
-            // Transform into "required key" issue
-            return ctx.issueRequiredKey(input, key)
-          }
+          // Transform into "required key" issue
+          return ctx.issueRequiredKey(input, key)
         }
 
         return result
+      }
+
+      // Skip copying if key is not present in input (and value is undefined)
+      if (result.value === undefined && !(key in input)) {
+        continue
       }
 
       if (result.value !== input[key]) {

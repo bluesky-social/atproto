@@ -232,9 +232,23 @@ export class LexiconSchemaBuilder {
     const props: Record<string, l.Validator> = {}
     for (const [key, propDef] of Object.entries(def.properties)) {
       if (propDef === undefined) continue
-      props[key] = this.compileLeaf(doc, propDef)
+
+      const isNullable = def.nullable?.includes(key)
+      const isRequired = def.required?.includes(key)
+
+      let schema = this.compileLeaf(doc, propDef)
+
+      if (isNullable) {
+        schema = l.nullable(schema)
+      }
+
+      if (!isRequired) {
+        schema = l.optional(schema)
+      }
+
+      props[key] = schema
     }
-    return l.object(props, def)
+    return l.object(props)
   }
 
   protected compilePayload(
@@ -273,9 +287,18 @@ export class LexiconSchemaBuilder {
     const props: Record<string, l.Validator> = {}
     for (const [key, propDef] of Object.entries(def.properties)) {
       if (propDef === undefined) continue
-      props[key] = this.compileLeaf(doc, propDef)
+
+      const isRequired = def.required?.includes(key)
+
+      let schema = this.compileLeaf(doc, propDef)
+
+      if (!isRequired) {
+        schema = l.optional(schema)
+      }
+
+      props[key] = schema
     }
-    return l.params(props, def)
+    return l.params(props)
   }
 }
 

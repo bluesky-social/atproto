@@ -1,6 +1,7 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { ArrayContaining } from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 import {
+  Infer,
   ValidationError,
   ValidationFailure,
   ValidationResult,
@@ -12,10 +13,7 @@ import { LiteralSchema } from './literal.js'
 import { ObjectSchema } from './object.js'
 
 export type DiscriminatedUnionSchemaVariant<Discriminator extends string> =
-  ObjectSchema<
-    { [_ in Discriminator]: Validator },
-    { required: ArrayContaining<Discriminator, string> }
-  >
+  ObjectSchema<Record<Discriminator, Validator>>
 
 export type DiscriminatedUnionSchemaVariants<Discriminator extends string> =
   readonly [
@@ -25,13 +23,13 @@ export type DiscriminatedUnionSchemaVariants<Discriminator extends string> =
 
 export type DiscriminatedUnionSchemaOutput<
   Options extends readonly Validator[],
-> = Options extends readonly [Validator<infer V>]
-  ? V
+> = Options extends readonly [infer V extends Validator]
+  ? Infer<V>
   : Options extends readonly [
-        Validator<infer V>,
-        ...infer Rest extends Validator[],
+        infer V extends Validator,
+        ...infer Rest extends readonly Validator[],
       ]
-    ? V | DiscriminatedUnionSchemaOutput<Rest>
+    ? Infer<V> | DiscriminatedUnionSchemaOutput<Rest>
     : never
 
 /**
@@ -55,7 +53,10 @@ export class DiscriminatedUnionSchema<
    * and there are no overlapping values, returns a map of discriminator values
    * to variants. Otherwise, returns null.
    */
-  protected get variantsMap() {
+  get variantsMap(): null | Map<
+    unknown,
+    DiscriminatedUnionSchemaVariant<Discriminator>
+  > {
     const map = new Map<
       unknown,
       DiscriminatedUnionSchemaVariant<Discriminator>
@@ -63,27 +64,23 @@ export class DiscriminatedUnionSchema<
     for (const variant of this.variants) {
       const schema = variant.validators[this.discriminator]
       if (schema instanceof LiteralSchema) {
-        if (map.has(schema.value)) return null // overlapping value
+        if (map.has(schema.value)) {
+          return lazyProperty(this, 'variantsMap', null) // overlapping value
+        }
         map.set(schema.value, variant)
       } else if (schema instanceof EnumSchema) {
         for (const val of schema.values) {
-          if (map.has(val)) return null // overlapping value
+          if (map.has(val)) {
+            return lazyProperty(this, 'variantsMap', null) // overlapping value
+          }
           map.set(val, variant)
         }
       } else {
-        return null // not a literal or enum
+        return lazyProperty(this, 'variantsMap', null) // not a literal or enum
       }
     }
 
-    // Cache the map on the instance (to avoid re-computing)
-    Object.defineProperty(this, 'variantsMap', {
-      value: map,
-      writable: false,
-      enumerable: false,
-      configurable: true,
-    })
-
-    return map
+    return lazyProperty(this, 'variantsMap', map)
   }
 
   override validateInContext(

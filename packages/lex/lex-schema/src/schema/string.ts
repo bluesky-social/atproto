@@ -104,6 +104,10 @@ export class StringSchema<
 
 export function coerceToString(input: unknown): string | null {
   switch (typeof input) {
+    // @NOTE We do *not* coerce numbers/booleans to strings because that can
+    // lead to them being accepted as string instead of being coerced to
+    // number/boolean when the input is a string and the expected result is
+    // number/boolean (e.g. in params).
     case 'string':
       return input
     case 'object': {

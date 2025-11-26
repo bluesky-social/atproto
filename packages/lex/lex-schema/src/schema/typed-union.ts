@@ -1,5 +1,6 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { Restricted, UnknownString } from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 import {
   Infer,
   ValidationResult,
@@ -57,19 +58,11 @@ export class TypedUnionSchema<
     super()
   }
 
-  protected get refsMap() {
+  get refsMap(): Map<unknown, TypedRefs[number]> {
     const map = new Map<unknown, TypedRefs[number]>()
     for (const ref of this.refs) map.set(ref.$type, ref)
 
-    // Cache the map on the instance
-    Object.defineProperty(this, 'refsMap', {
-      value: map,
-      writable: false,
-      enumerable: false,
-      configurable: true,
-    })
-
-    return map
+    return lazyProperty(this, 'refsMap', map)
   }
 
   get $types() {

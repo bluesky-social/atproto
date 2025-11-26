@@ -1,37 +1,28 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { $Type, Simplify } from '../core.js'
-import {
-  Infer,
-  ValidationResult,
-  Validator,
-  ValidatorContext,
-} from '../validation.js'
+import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 
 export class TypedObjectSchema<
-  Type extends $Type = any,
-  Schema extends Validator<Record<string, unknown>> = any,
-  Output extends Infer<Schema> & { $type?: Type } = Infer<Schema> & {
-    $type?: Type
-  },
+  Output extends { $type?: $Type } = any,
 > extends Validator<Output> {
   readonly lexiconType = 'object' as const
 
   constructor(
-    readonly $type: Type,
-    readonly schema: Schema,
+    readonly $type: NonNullable<Output['$type']>,
+    readonly schema: Validator<Omit<Output, '$type'>>,
   ) {
     super()
   }
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X extends { $type?: Type } ? X : never {
+  ): value is X extends Output ? X : never {
     return value.$type === undefined || value.$type === this.$type
   }
 
   build<X extends Omit<Output, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: Type }> {
+  ): Simplify<Omit<X, '$type'> & { $type: NonNullable<Output['$type']> }> {
     return { ...input, $type: this.$type }
   }
 
@@ -59,6 +50,6 @@ export class TypedObjectSchema<
       return ctx.issueInvalidPropertyValue(input, '$type', [this.$type])
     }
 
-    return ctx.validate(input, this.schema as Validator<Output>)
+    return ctx.validate(input, this.schema) as ValidationResult<Output>
   }
 }

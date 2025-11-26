@@ -459,12 +459,7 @@ export class LexDefBuilder {
     if (!def) return this.pure(`l.params({})`)
 
     const properties = await this.compilePropertiesSchemas(def)
-    const options = stringifyOptionalOptions(def, [
-      'type',
-      'description',
-      'properties',
-    ])
-    return this.pure(`l.params({${properties.join(',')}}, ${options})`)
+    return this.pure(`l.params({${properties.join(',')}})`)
   }
 
   private async compileErrors(defs?: readonly LexiconError[]) {
@@ -474,13 +469,7 @@ export class LexDefBuilder {
 
   private async compileObjectSchema(def: LexiconObject): Promise<string> {
     const properties = await this.compilePropertiesSchemas(def)
-    const options = stringifyOptionalOptions(def, [
-      'type',
-      'description',
-      'properties',
-      'nullable',
-    ])
-    return this.pure(`l.object({${properties.join(',')}}, ${options})`)
+    return this.pure(`l.object({${properties.join(',')}})`)
   }
 
   private async compilePropertiesSchemas(options: {
@@ -525,11 +514,16 @@ export class LexDefBuilder {
     },
   ) {
     const isNullable = options.nullable?.includes(key)
+    const isRequired = options.required?.includes(key)
 
     let schema = await this.compileContainedSchema(def)
 
     if (isNullable) {
       schema = this.pure(`l.nullable(${schema})`)
+    }
+
+    if (!isRequired) {
+      schema = this.pure(`l.optional(${schema})`)
     }
 
     return `${JSON.stringify(key)}:${schema}`
