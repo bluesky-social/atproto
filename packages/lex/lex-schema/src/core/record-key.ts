@@ -1,6 +1,8 @@
-export type RecordKey = 'any' | 'nsid' | 'tid' | `literal:${string}`
+export type RecordKeyDefinition = 'any' | 'nsid' | 'tid' | `literal:${string}`
 
-export function isRecordKey<T>(key: T): key is T & RecordKey {
+export function isRecordKeyDefinition<T>(
+  key: T,
+): key is T & RecordKeyDefinition {
   return (
     key === 'any' ||
     key === 'nsid' ||
@@ -9,7 +11,7 @@ export function isRecordKey<T>(key: T): key is T & RecordKey {
   )
 }
 
-export function asRecordKey(key: unknown): RecordKey {
-  if (isRecordKey(key)) return key
+export function asRecordKeyDefinition(key: unknown): RecordKeyDefinition {
+  if (isRecordKeyDefinition(key)) return key
   throw new Error(`Invalid record key: ${String(key)}`)
 }

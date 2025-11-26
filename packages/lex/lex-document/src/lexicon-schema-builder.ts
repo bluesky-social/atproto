@@ -168,7 +168,7 @@ export class LexiconSchemaBuilder {
         return l.token(doc.id, hash)
       case 'record':
         return l.record(
-          def.key ? l.asRecordKey(def.key) : 'any',
+          def.key ? l.asRecordKeyDefinition(def.key) : 'any',
           doc.id,
           this.compileObject(doc, def.record),
         )
@@ -311,7 +311,7 @@ class AsyncTasks {
 }
 
 function parseRef(fullRef: string) {
-  const { length, 0: nsid, 1: hash } = fullRef.split('#')
+  const { length: length, 0: nsid, 1: hash } = fullRef.split('#')
   if (length !== 2) throw new Error('Uri can only have one hash segment')
   if (!nsid || !hash) throw new Error('Invalid ref, missing hash')
   return { nsid, hash }

@@ -1,3 +1,4 @@
+import { NsidString } from '../core.js'
 import { Permission } from './permission.js'
 
 export type PermissionSetOptions = {
@@ -8,15 +9,15 @@ export type PermissionSetOptions = {
 }
 
 export class PermissionSet<
-  const Nsid extends string = any,
-  const Permissions extends readonly Permission[] = any,
-  const Options extends PermissionSetOptions = any,
+  const TNsid extends NsidString = any,
+  const TPermissions extends readonly Permission[] = any,
+  const TOptions extends PermissionSetOptions = any,
 > {
   readonly lexiconType = 'permission-set' as const
 
   constructor(
-    readonly nsid: Nsid,
-    readonly permissions: Permissions,
-    readonly options: Options,
+    readonly nsid: TNsid,
+    readonly permissions: TPermissions,
+    readonly options: TOptions,
   ) {}
 }

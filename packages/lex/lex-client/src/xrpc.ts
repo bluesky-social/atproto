@@ -1,7 +1,7 @@
 import { LexValue } from '@atproto/lex-data'
 import { lexParse, lexStringify } from '@atproto/lex-json'
 import {
-  Did,
+  DidString,
   InferParamsSchema,
   InferPayloadBody,
   Params,
@@ -136,7 +136,7 @@ export function xrpcRequestInit<T extends Procedure | Query>(
 export function xrpcRequestHeaders(options: {
   headers?: HeadersInit
   service?: Service
-  labelers?: Iterable<Did>
+  labelers?: Iterable<DidString>
 }): Headers {
   const headers = new Headers(options.headers)
 
