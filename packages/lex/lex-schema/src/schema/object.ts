@@ -44,7 +44,7 @@ export class ObjectSchema<
     ctx: ValidatorContext,
   ): ValidationResult<ObjectSchemaOutput<Shape>> {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, ['object'])
+      return ctx.issueInvalidType(input, 'object')
     }
 
     // Lazily copy value

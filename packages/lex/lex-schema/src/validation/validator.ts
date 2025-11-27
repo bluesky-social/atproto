@@ -2,9 +2,14 @@ import { ResultFailure, ResultSuccess, failure, success } from '../core.js'
 import { PropertyKey } from './property-key.js'
 import { ValidationError } from './validation-error.js'
 import {
+  Issue,
+  IssueInvalidFormat,
+  IssueInvalidType,
+  IssueInvalidValue,
+  IssueRequiredKey,
   IssueTooBig,
   IssueTooSmall,
-  ValidationIssue,
+  MeasurableType,
 } from './validation-issue.js'
 
 export type ValidationSuccess<Value = any> = ResultSuccess<Value>
@@ -146,21 +151,6 @@ export abstract class Validator<Output = any> {
   }
 }
 
-export type ContextualIssue = {
-  [Code in ValidationIssue['code']]: Omit<
-    Extract<ValidationIssue, { code: Code }>,
-    'path'
-  > & { path?: PropertyKey | readonly PropertyKey[] }
-}[ValidationIssue['code']]
-
-const asIssue = (
-  { path, ...issue }: ContextualIssue,
-  currentPath: readonly PropertyKey[],
-): ValidationIssue & { path: PropertyKey[] } => ({
-  ...issue,
-  path: path != null ? currentPath.concat(path) : [...currentPath],
-})
-
 export class ValidatorContext {
   /**
    * Creates a new validation context and validates the input using the
@@ -176,20 +166,20 @@ export class ValidatorContext {
   }
 
   private readonly currentPath: PropertyKey[]
-  private readonly issues: ValidationIssue[] = []
+  private readonly issues: Issue[] = []
 
   protected constructor(readonly options: ValidationOptions) {
     // Create a copy because we will be mutating the array during validation.
-    this.currentPath = options?.path != null ? [...options.path] : []
+    this.currentPath = options?.path != null ? Array.from(options.path) : []
   }
 
   get path() {
-    return [...this.currentPath]
+    return Array.from(this.currentPath)
   }
 
-  get allowTransform() {
-    // Default to true
-    return this.options?.allowTransform !== false
+  concatPath(path?: PropertyKey | readonly PropertyKey[]) {
+    if (path == null) return this.path
+    return this.currentPath.concat(path)
   }
 
   /**
@@ -201,7 +191,11 @@ export class ValidatorContext {
     const result = validator.validateInContext(input, this)
 
     if (result.success) {
-      if (!this.allowTransform && !Object.is(result.value, input)) {
+      if (
+        // Defaults to true
+        this.options?.allowTransform === false &&
+        !Object.is(result.value, input)
+      ) {
         // If the value changed, it means that a default (or some other
         // transformation) was applied, meaning that the original value did
         // *not* match the (output) schema. When "allowTransform" is false, we
@@ -221,7 +215,7 @@ export class ValidatorContext {
       if (this.issues.length > 0) {
         // Validator returned a success but issues were added via the context.
         // This means the overall validation failed.
-        return { success: false, error: new ValidationError(this.issues) }
+        return failure(new ValidationError(Array.from(this.issues)))
       }
     }
 
@@ -242,44 +236,50 @@ export class ValidatorContext {
     }
   }
 
-  addIssue(issue: ContextualIssue): void {
-    this.issues.push(asIssue(issue, this.currentPath))
+  addIssue(issue: Issue): void {
+    this.issues.push(issue)
   }
 
   success<V>(value: V): ValidationResult<V> {
     return success(value)
   }
 
-  failure(issue: ContextualIssue): ValidationFailure {
-    return failure(
-      new ValidationError([...this.issues, asIssue(issue, this.currentPath)]),
-    )
+  failure(issue: Issue): ValidationFailure {
+    return failure(new ValidationError([...this.issues, issue]))
   }
 
-  issueInvalidValue(
-    input: unknown,
-    values: readonly unknown[],
-    path?: PropertyKey | readonly PropertyKey[],
-  ) {
-    return this.failure({
-      code: 'invalid_value',
-      input,
-      values,
-      path,
-    })
+  issueInvalidValue(input: unknown, values: readonly unknown[]) {
+    return this.failure(new IssueInvalidValue(this.path, input, values))
   }
 
-  issueInvalidType(
+  issueInvalidType(input: unknown, expected: string) {
+    return this.failure(new IssueInvalidType(this.path, input, [expected]))
+  }
+
+  issueRequiredKey(input: object, key: PropertyKey) {
+    return this.failure(new IssueRequiredKey(this.path, input, key))
+  }
+
+  issueInvalidFormat(input: unknown, format: string, msg?: string) {
+    return this.failure(new IssueInvalidFormat(this.path, input, format, msg))
+  }
+
+  issueTooBig(
     input: unknown,
-    expected: string | readonly string[],
-    path?: PropertyKey | readonly PropertyKey[],
+    type: MeasurableType,
+    max: number,
+    actual: number,
   ) {
-    return this.failure({
-      code: 'invalid_type',
-      input,
-      expected: Array.isArray(expected) ? expected : [expected],
-      path,
-    })
+    return this.failure(new IssueTooBig(this.path, input, max, type, actual))
+  }
+
+  issueTooSmall(
+    input: unknown,
+    type: MeasurableType,
+    min: number,
+    actual: number,
+  ) {
+    return this.failure(new IssueTooSmall(this.path, input, min, type, actual))
   }
 
   issueInvalidPropertyValue<I>(
@@ -287,75 +287,18 @@ export class ValidatorContext {
     property: keyof I & PropertyKey,
     values: readonly unknown[],
   ) {
-    return this.issueInvalidValue(input[property], values, property)
+    const value = input[property]
+    const path = this.concatPath(property)
+    return this.failure(new IssueInvalidValue(path, value, values))
   }
 
   issueInvalidPropertyType<I>(
     input: I,
     property: keyof I & PropertyKey,
-    expected: string | readonly string[],
+    expected: string,
   ) {
-    return this.issueInvalidType(input[property], expected, property)
-  }
-
-  issueRequiredKey(input: object, key: PropertyKey) {
-    return this.failure({
-      code: 'required_key',
-      key,
-      input,
-      path: key,
-    })
-  }
-
-  issueInvalidFormat(input: unknown, format: string, message?: string) {
-    return this.failure({
-      code: 'invalid_format',
-      message,
-      format,
-      input,
-    })
-  }
-
-  issueTooBig(
-    input: unknown,
-    type: IssueTooBig['type'],
-    maximum: number,
-    actual: number,
-  ) {
-    return this.failure({
-      code: 'too_big',
-      type,
-      maximum,
-      actual,
-      input,
-    })
-  }
-
-  issueTooSmall(
-    input: unknown,
-    type: IssueTooSmall['type'],
-    minimum: number,
-    actual: number,
-  ) {
-    return this.failure({
-      code: 'too_small',
-      type,
-      minimum,
-      actual,
-      input,
-    })
-  }
-
-  custom(
-    input: unknown,
-    message: string,
-    path?: PropertyKey | readonly PropertyKey[],
-  ) {
-    return this.failure({
-      code: 'custom',
-      input,
-      message,
-      path,
-    })
+    const value = input[property]
+    const path = this.concatPath(property)
+    return this.failure(new IssueInvalidType(path, value, [expected]))
   }
 }

@@ -22,10 +22,10 @@ export type DiscriminatedUnionSchemaVariants<Discriminator extends string> =
   ]
 
 export type DiscriminatedUnionSchemaOutput<
-  Options extends readonly Validator[],
-> = Options extends readonly [infer V extends Validator]
+  Variants extends readonly Validator[],
+> = Variants extends readonly [infer V extends Validator]
   ? Infer<V>
-  : Options extends readonly [
+  : Variants extends readonly [
         infer V extends Validator,
         ...infer Rest extends readonly Validator[],
       ]
@@ -39,11 +39,11 @@ export type DiscriminatedUnionSchemaOutput<
  */
 export class DiscriminatedUnionSchema<
   const Discriminator extends string = any,
-  const Options extends DiscriminatedUnionSchemaVariants<Discriminator> = any,
-> extends Validator<DiscriminatedUnionSchemaOutput<Options>> {
+  const Variants extends DiscriminatedUnionSchemaVariants<Discriminator> = any,
+> extends Validator<DiscriminatedUnionSchemaOutput<Variants>> {
   constructor(
     readonly discriminator: Discriminator,
-    readonly variants: Options,
+    readonly variants: Variants,
   ) {
     super()
   }
@@ -86,7 +86,7 @@ export class DiscriminatedUnionSchema<
   override validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<DiscriminatedUnionSchemaOutput<Options>> {
+  ): ValidationResult<DiscriminatedUnionSchemaOutput<Variants>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -95,10 +95,12 @@ export class DiscriminatedUnionSchema<
       return ctx.issueRequiredKey(input, this.discriminator)
     }
 
-    // Fast path: if we have a mapping of discriminator values to variants,
-    // we can directly select the correct variant to validate against. This also
-    // outputs a better error (with a single failure issue) when the discriminator.
     if (this.variantsMap) {
+      // Fast path: if we have a mapping of discriminator values to variants, we
+      // can directly select the correct variant to validate against. This also
+      // outputs a better error (with a single failure issue) when the
+      // discriminator.
+
       const variant = this.variantsMap.get(input[this.discriminator])
       if (!variant) {
         return ctx.issueInvalidPropertyValue(input, this.discriminator, [
@@ -107,35 +109,35 @@ export class DiscriminatedUnionSchema<
       }
 
       return ctx.validate(input, variant) as ValidationResult<
-        DiscriminatedUnionSchemaOutput<Options>
+        DiscriminatedUnionSchemaOutput<Variants>
       >
-    }
+    } else {
+      // Slow path: try validating against each variant and return the first
+      // successful one (or aggregate all failures if none match).
+      const failures: ValidationFailure[] = []
 
-    // Slow path: try validating against each variant and return the first
-    // successful one (or aggregate all failures if none match).
-    const failures: ValidationFailure[] = []
+      for (const variant of this.variants) {
+        const discSchema = variant.validators[this.discriminator]
+        const discResult = ctx.validateChild(
+          input,
+          this.discriminator,
+          discSchema,
+        )
 
-    for (const variant of this.variants) {
-      const discSchema = variant.validators[this.discriminator]
-      const discResult = ctx.validateChild(
-        input,
-        this.discriminator,
-        discSchema,
-      )
+        if (!discResult.success) {
+          failures.push(discResult)
+          continue
+        }
 
-      if (!discResult.success) {
-        failures.push(discResult)
-        continue
+        return ctx.validate(input, variant) as ValidationResult<
+          DiscriminatedUnionSchemaOutput<Variants>
+        >
       }
 
-      return ctx.validate(input, variant) as ValidationResult<
-        DiscriminatedUnionSchemaOutput<Options>
-      >
-    }
-
-    return {
-      success: false,
-      error: ValidationError.fromFailures(failures),
+      return {
+        success: false,
+        error: ValidationError.fromFailures(failures),
+      }
     }
   }
 }

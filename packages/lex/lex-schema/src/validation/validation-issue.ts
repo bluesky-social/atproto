@@ -1,83 +1,143 @@
 import { CID, isPlainObject } from '@atproto/lex-data'
-import { arrayAgg } from '../util/array-agg.js'
 import { PropertyKey } from './property-key.js'
 
-export interface Issue<I = unknown> {
-  readonly input: I
-  readonly code: string
-  readonly message?: string
-  readonly path: readonly PropertyKey[]
+export abstract class Issue {
+  constructor(
+    readonly code: string,
+    readonly path: readonly PropertyKey[],
+    readonly input: unknown,
+  ) {}
+
+  abstract toString(): string
 }
 
-export interface IssueCustom extends Issue {
-  readonly code: 'custom'
-  readonly message: string
+export class IssueCustom extends Issue {
+  constructor(
+    readonly path: readonly PropertyKey[],
+    readonly input: unknown,
+    readonly message: string,
+  ) {
+    super('custom', path, input)
+  }
+
+  toString() {
+    return `${this.message}${stringifyPath(this.path)}`
+  }
 }
 
-export interface IssueInvalidFormat extends Issue {
-  readonly code: 'invalid_format'
-  readonly format: string
+export class IssueInvalidFormat extends Issue {
+  constructor(
+    path: readonly PropertyKey[],
+    input: unknown,
+    readonly format: string,
+    readonly message?: string,
+  ) {
+    super('invalid_format', path, input)
+  }
+
+  toString() {
+    return `Invalid ${this.formatDescription} format${this.message ? ` (${this.message})` : ''}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+  }
+
+  get formatDescription(): string {
+    switch (this.format) {
+      case 'at-identifier':
+        return `AT identifier`
+      case 'did':
+        return `DID`
+      case 'nsid':
+        return `NSID`
+      case 'cid':
+        return `CID string`
+      case 'tid':
+        return `TID string`
+      case 'record-key':
+        return `record key`
+      default:
+        return this.format
+    }
+  }
 }
 
-export interface IssueInvalidType extends Issue {
-  readonly code: 'invalid_type'
-  readonly expected: readonly string[]
+export class IssueInvalidType extends Issue {
+  constructor(
+    path: readonly PropertyKey[],
+    input: unknown,
+    readonly expected: readonly string[],
+  ) {
+    super('invalid_type', path, input)
+  }
+
+  toString() {
+    return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type${stringifyPath(this.path)} (got ${stringifyType(this.input)})`
+  }
 }
 
-export interface IssueInvalidValue extends Issue {
-  readonly code: 'invalid_value'
-  readonly values: readonly unknown[]
+export class IssueInvalidValue extends Issue {
+  constructor(
+    path: readonly PropertyKey[],
+    input: unknown,
+    readonly values: readonly unknown[],
+  ) {
+    super('invalid_value', path, input)
+  }
+
+  toString() {
+    return `Expected ${oneOf(this.values.map(stringifyValue))}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+  }
 }
 
-export interface IssueRequiredKey extends Issue {
-  readonly code: 'required_key'
-  readonly key: PropertyKey
+export class IssueRequiredKey extends Issue {
+  constructor(
+    path: readonly PropertyKey[],
+    input: unknown,
+    readonly key: PropertyKey,
+  ) {
+    super('required_key', path, input)
+  }
+
+  toString() {
+    return `Missing required key "${String(this.key)}"${stringifyPath(this.path)}`
+  }
 }
 
-export interface IssueTooBig extends Issue {
-  readonly code: 'too_big'
-  readonly maximum: number
-  readonly type: 'array' | 'string' | 'integer' | 'grapheme' | 'bytes' | 'blob'
-  readonly actual: number
+export type MeasurableType =
+  | 'array'
+  | 'string'
+  | 'integer'
+  | 'grapheme'
+  | 'bytes'
+  | 'blob'
+
+export class IssueTooBig extends Issue {
+  constructor(
+    path: readonly PropertyKey[],
+    input: unknown,
+    readonly maximum: number,
+    readonly type: MeasurableType,
+    readonly actual: number,
+  ) {
+    super('too_big', path, input)
+  }
+
+  toString() {
+    return `${this.type} too big (maximum ${this.maximum})${stringifyPath(this.path)} (got ${this.actual})`
+  }
 }
 
-export interface IssueTooSmall extends Issue {
-  readonly code: 'too_small'
-  readonly minimum: number
-  readonly type: 'array' | 'string' | 'integer' | 'grapheme' | 'bytes'
-  readonly actual: number
-}
+export class IssueTooSmall extends Issue {
+  constructor(
+    path: readonly PropertyKey[],
+    input: unknown,
+    readonly minimum: number,
+    readonly type: MeasurableType,
+    readonly actual: number,
+  ) {
+    super('too_small', path, input)
+  }
 
-export type ValidationIssue =
-  | IssueCustom
-  | IssueInvalidFormat
-  | IssueInvalidType
-  | IssueInvalidValue
-  | IssueRequiredKey
-  | IssueTooBig
-  | IssueTooSmall
-
-export function stringifyIssue(issue: ValidationIssue): string {
-  const pathStr = issue.path.length ? ` at ${buildJsonPath(issue.path)}` : ''
-
-  switch (issue.code) {
-    case 'invalid_format':
-      return `Invalid ${stringifyStringFormat(issue.format)} format${issue.message ? ` (${issue.message})` : ''}${pathStr} (got ${stringifyValue(issue.input)})`
-    case 'invalid_type':
-      return `Expected ${oneOf(issue.expected.map(stringifyExpectedType))} value type${pathStr} (got ${stringifyType(issue.input)})`
-    case 'invalid_value':
-      return `Expected ${oneOf(issue.values.map(stringifyValue))}${pathStr} (got ${stringifyValue(issue.input)})`
-    case 'required_key':
-      return `Missing required key "${String(issue.key)}"${pathStr}`
-    case 'too_big':
-      return `${issue.type} too big (maximum ${issue.maximum})${pathStr} (got ${issue.actual})`
-    case 'too_small':
-      return `${issue.type} too small (minimum ${issue.minimum})${pathStr} (got ${issue.actual})`
-    case 'custom':
-      return `${issue.message}${pathStr}`
-    default:
-      // @ts-expect-error fool-proofing
-      return `${issue.code} validation error${pathStr}`
+  toString() {
+    return `${this.type} too small (minimum ${this.minimum})${stringifyPath(this.path)} (got ${this.actual})`
   }
 }
 
@@ -85,22 +145,25 @@ function stringifyExpectedType(expected: string): string {
   if (expected === '$typed') {
     return 'an object or record which includes a "$type" property'
   }
-
   return expected
 }
 
+function stringifyPath(path: readonly PropertyKey[]) {
+  return ` at ${buildJsonPath(path)}`
+}
+
 function buildJsonPath(path: readonly PropertyKey[]): string {
-  let jsonPath = '$'
-  for (const segment of path) {
-    if (typeof segment === 'number') {
-      jsonPath += `[${segment}]`
-    } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(segment as string)) {
-      jsonPath += `.${segment}`
-    } else {
-      jsonPath += `[${JSON.stringify(segment)}]`
-    }
+  return `$${path.map(toJsonPathSegment).join('')}`
+}
+
+function toJsonPathSegment(segment: PropertyKey): string {
+  if (typeof segment === 'number') {
+    return `[${segment}]`
+  } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(segment as string)) {
+    return `.${segment}`
+  } else {
+    return `[${JSON.stringify(segment)}]`
   }
-  return jsonPath
 }
 
 function oneOf(arr: readonly string[]): string {
@@ -109,32 +172,7 @@ function oneOf(arr: readonly string[]): string {
   return `one of ${arr.slice(0, -1).join(', ')} or ${arr.at(-1)}`
 }
 
-function stringifyStringFormat(format: string): string {
-  switch (format) {
-    case 'datetime':
-      return 'datetime'
-    case 'language':
-      return 'language'
-    case 'at-identifier':
-      return `AT identifier`
-    case 'did':
-      return `DID`
-    case 'handle':
-      return `handle`
-    case 'nsid':
-      return `NSID`
-    case 'cid':
-      return `CID string`
-    case 'tid':
-      return `TID string`
-    case 'record-key':
-      return `record key`
-    default:
-      return format
-  }
-}
-
-export function stringifyType(value: unknown): string {
+function stringifyType(value: unknown): string {
   switch (typeof value) {
     case 'object':
       if (value === null) return 'null'
@@ -154,7 +192,7 @@ export function stringifyType(value: unknown): string {
   }
 }
 
-export function stringifyValue(value: unknown): string {
+function stringifyValue(value: unknown): string {
   switch (typeof value) {
     case 'bigint':
       return `${value}n`
@@ -185,47 +223,4 @@ function stringifyArray<T>(
   n = 2,
 ): string {
   return arr.slice(0, n).map(fn).join(', ') + (arr.length > n ? ', ...' : '')
-}
-
-export function aggregateIssues(issues: ValidationIssue[]): ValidationIssue[] {
-  // Quick path for common cases
-  if (issues.length <= 1) return issues
-  if (issues.length === 2 && issues[0].code !== issues[1].code) return issues
-
-  return [
-    // Aggregate invalid_type with identical paths
-    ...arrayAgg(
-      issues.filter((issue) => issue.code === 'invalid_type'),
-      (a, b) => comparePropertyPaths(a.path, b.path),
-      (issues) => ({
-        ...issues[0],
-        expected: Array.from(new Set(issues.flatMap((iss) => iss.expected))),
-      }),
-    ),
-    // Aggregate invalid_value with identical paths
-    ...arrayAgg(
-      issues.filter((issue) => issue.code === 'invalid_value'),
-      (a, b) => comparePropertyPaths(a.path, b.path),
-      (issues) => ({
-        ...issues[0],
-        values: Array.from(new Set(issues.flatMap((iss) => iss.values))),
-      }),
-    ),
-    // Pass through other issues
-    ...issues.filter(
-      (issue) =>
-        issue.code !== 'invalid_type' && issue.code !== 'invalid_value',
-    ),
-  ]
-}
-
-function comparePropertyPaths(
-  a: readonly PropertyKey[],
-  b: readonly PropertyKey[],
-) {
-  if (a.length !== b.length) return false
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false
-  }
-  return true
 }
