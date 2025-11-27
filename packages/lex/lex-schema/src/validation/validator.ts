@@ -20,9 +20,7 @@ type ValidationOptions = {
   allowTransform?: boolean
 }
 
-declare const kType: unique symbol
-
-export type Infer<T extends Validator> = T[typeof kType]['out']
+export type Infer<T extends Validator> = T['_lex']['out']
 
 export abstract class Validator<Output = any> {
   /**
@@ -31,7 +29,7 @@ export abstract class Validator<Output = any> {
    *
    * @internal
    */
-  declare readonly [kType]: { out: Output }
+  declare readonly ['_lex']: { out: Output }
 
   readonly lexiconType?: string
 
