@@ -23,10 +23,9 @@ export type XrpcFailure<N extends string, E> = l.ResultFailure<E> & {
   name: N
 }
 
-export type XrpcErrorName = l.Infer<typeof xrpcErrorNameSchema>
+export type XrpcErrorName = l.UnknownString | KnownError
 export const xrpcErrorNameSchema = l.string({
   minLength: 1,
-  knownValues: Object.keys(KnownError) as KnownError[],
 })
 
 export type XrpcErrorBody<N extends XrpcErrorName = XrpcErrorName> = {

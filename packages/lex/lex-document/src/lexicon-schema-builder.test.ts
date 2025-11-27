@@ -59,19 +59,25 @@ describe('LexiconSchemaBuilder', () => {
             type: 'object',
             required: ['object', 'array', 'boolean', 'integer', 'string'],
             properties: {
-              object: { type: 'ref', ref: '#subobject' },
+              object: { type: 'ref', ref: '#subObject' },
               array: { type: 'array', items: { type: 'string' } },
               boolean: { type: 'boolean' },
               integer: { type: 'integer' },
               string: { type: 'string' },
+              refToEnumWithDefault: { type: 'ref', ref: '#enumWithDefault' },
             },
           },
-          subobject: {
+          subObject: {
             type: 'object',
             required: ['boolean'],
             properties: {
               boolean: { type: 'boolean' },
             },
+          },
+          enumWithDefault: {
+            type: 'string',
+            default: 'option3',
+            enum: ['option1', 'option2', 'option3'],
           },
         },
       }),
@@ -90,6 +96,7 @@ describe('LexiconSchemaBuilder', () => {
         boolean: true,
         integer: 123,
         string: 'string',
+        refToEnumWithDefault: 'option3',
       },
       array: ['one', 'two'],
       boolean: true,
@@ -122,7 +129,89 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.validate(value)).toStrictEqual({ success: true, value })
+    expect(schema.validate(value)).toStrictEqual({
+      success: true,
+      value: {
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        integer: 123,
+        string: 'string',
+        refToEnumWithDefault: 'option3',
+      },
+    })
+  })
+
+  it('rejects invalid enum values', () => {
+    const schema = getSchema(
+      'com.example.kitchenSink#object',
+      l.TypedObjectSchema,
+    )
+
+    const value = {
+      object: { boolean: true },
+      array: ['one', 'two'],
+      boolean: true,
+      integer: 123,
+      string: 'string',
+      refToEnumWithDefault: 'invalidOption',
+    }
+
+    expect(schema.validate(value)).toMatchObject({
+      success: false,
+      error: {
+        issues: [
+          {
+            code: 'invalid_value',
+            input: 'invalidOption',
+            values: ['option1', 'option2', 'option3'],
+          },
+        ],
+      },
+    })
+  })
+
+  it('does not apply defaults when allowTransform is false', () => {
+    const schema = getSchema(
+      'com.example.kitchenSink#object',
+      l.TypedObjectSchema,
+    )
+
+    const value = {
+      object: { boolean: true },
+      array: ['one', 'two'],
+      boolean: true,
+      integer: 123,
+      string: 'string',
+    }
+
+    expect(schema.validate(value, { allowTransform: false })).toStrictEqual({
+      success: true,
+      value: {
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        integer: 123,
+        string: 'string',
+      },
+    })
+  })
+
+  it('allows missing optional record fields', () => {
+    const schema = getSchema(
+      'com.example.kitchenSink#object',
+      l.TypedObjectSchema,
+    )
+
+    expect(
+      schema.check({
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        integer: 123,
+        string: 'string',
+      }),
+    ).toBe(true)
   })
 
   it('Rejects missing required record fields', () => {

@@ -132,17 +132,18 @@ export class LexDefBuilder {
 
   private async addPermissionSet(hash: string, def: LexiconPermissionSet) {
     const permission = def.permissions.map((def) => {
-      const options = stringifyOptionalOptions(def, ['resource', 'type'])
+      const options = stringifyOptions(def, undefined, ['resource', 'type'])
       return this.pure(
         `l.permission(${JSON.stringify(def.resource)}, ${options})`,
       )
     })
 
-    const options = stringifyOptionalOptions(def, [
-      'type',
-      'description',
-      'permissions',
-    ])
+    const options = stringifyOptions(def, [
+      'title',
+      'title:lang',
+      'detail',
+      'detail:lang',
+    ] satisfies (keyof l.PermissionSetOptions)[])
 
     await this.addSchema(hash, def, {
       schema: this.pure(
@@ -326,11 +327,10 @@ export class LexDefBuilder {
     // collisions.
 
     const itemSchema = await this.compileContainedSchema(def.items)
-    const options = stringifyOptionalOptions(def, [
-      'type',
-      'description',
-      'items',
-    ])
+    const options = stringifyOptions(def, [
+      'minLength',
+      'maxLength',
+    ] satisfies (keyof l.ArraySchemaOptions)[])
 
     await this.addSchema(hash, def, {
       type: `(${await this.compileContainedType(def.items)})[]`,
@@ -611,11 +611,10 @@ export class LexDefBuilder {
 
   private async compileArraySchema(def: LexiconArray): Promise<string> {
     const itemSchema = await this.compileContainedSchema(def.items)
-    const options = stringifyOptionalOptions(def, [
-      'type',
-      'description',
-      'items',
-    ])
+    const options = stringifyOptions(def, [
+      'minLength',
+      'maxLength',
+    ] satisfies (keyof l.ArraySchemaOptions)[])
     return this.pure(`l.array(${itemSchema}, ${options})`)
   }
 
@@ -634,7 +633,9 @@ export class LexDefBuilder {
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
     if (hasConst(def)) return this.compileConstSchema(def)
 
-    const options = stringifyOptionalOptions(def, ['type', 'description'])
+    const options = stringifyOptions(def, [
+      'default',
+    ] satisfies (keyof l.BooleanSchemaOptions)[])
     return this.pure(`l.boolean(${options})`)
   }
 
@@ -646,23 +647,28 @@ export class LexDefBuilder {
   private async compileIntegerSchema(def: LexiconInteger): Promise<string> {
     if (hasConst(def)) {
       const schema = l.integer(def)
-      assert(
-        schema.check(def.const),
-        `Integer const ${def.const} is out of bounds`,
-      )
+      if (!schema.check(def.const)) {
+        throw new Error(`Integer const ${def.const} is out of bounds`)
+      }
     }
 
     if (hasEnum(def)) {
       const schema = l.integer(def)
       for (const val of def.enum) {
-        assert(schema.check(val), `Integer enum value ${val} is out of bounds`)
+        if (!schema.check(val)) {
+          throw new Error(`Integer enum value ${val} is out of bounds`)
+        }
       }
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
-    const options = stringifyOptionalOptions(def, ['type', 'description'])
+    const options = stringifyOptions(def, [
+      'default',
+      'maximum',
+      'minimum',
+    ] satisfies (keyof l.IntegerSchemaOptions)[])
     return this.pure(`l.integer(${options})`)
   }
 
@@ -676,24 +682,29 @@ export class LexDefBuilder {
   private async compileStringSchema(def: LexiconString): Promise<string> {
     if (hasConst(def)) {
       const schema = l.string(def)
-      assert(
-        schema.check(def.const),
-        `String const "${def.const}" does not match format`,
-      )
+      if (!schema.check(def.const)) {
+        throw new Error(`String const "${def.const}" does not match format`)
+      }
     } else if (hasEnum(def)) {
       const schema = l.string(def)
       for (const val of def.enum) {
-        assert(
-          schema.check(val),
-          `String enum value "${val}" does not match format`,
-        )
+        if (!schema.check(val)) {
+          throw new Error(`String enum value "${val}" does not match format`)
+        }
       }
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
-    const options = stringifyOptionalOptions(def, ['type', 'description'])
+    const options = stringifyOptions(def, [
+      'default',
+      'format',
+      'maxGraphemes',
+      'minGraphemes',
+      'maxLength',
+      'minLength',
+    ] satisfies (keyof l.StringSchemaOptions)[])
     return this.pure(`l.string(${options})`)
   }
 
@@ -729,7 +740,10 @@ export class LexDefBuilder {
   }
 
   private async compileBytesSchema(def: LexiconBytes): Promise<string> {
-    const options = stringifyOptionalOptions(def, ['type', 'description'])
+    const options = stringifyOptions(def, [
+      'minLength',
+      'maxLength',
+    ] satisfies (keyof l.BytesSchemaOptions)[])
     return this.pure(`l.bytes(${options})`)
   }
 
@@ -738,10 +752,12 @@ export class LexDefBuilder {
   }
 
   private async compileBlobSchema(def: LexiconBlob): Promise<string> {
-    const opts = this.options.allowLegacyBlobs
-      ? { ...def, allowLegacy: true }
-      : def
-    const options = stringifyOptionalOptions(opts, ['type', 'description'])
+    const opts = { ...def, allowLegacy: this.options.allowLegacyBlobs === true }
+    const options = stringifyOptions(opts, [
+      'maxSize',
+      'accept',
+      'allowLegacy',
+    ] satisfies (keyof l.BlobSchemaOptions)[])
     return this.pure(`l.blob(${options})`)
   }
 
@@ -751,9 +767,8 @@ export class LexDefBuilder {
       : 'l.BlobRef'
   }
 
-  private async compileCidLinkSchema(def: LexiconCid): Promise<string> {
-    const options = stringifyOptionalOptions(def, ['type', 'description'])
-    return this.pure(`l.cidLink(${options})`)
+  private async compileCidLinkSchema(_def: LexiconCid): Promise<string> {
+    return this.pure(`l.cidLink()`)
   }
 
   private async compileCidLinkType(_def: LexiconCid): Promise<string> {
@@ -804,12 +819,15 @@ export class LexDefBuilder {
 
   private async compileConstSchema<
     T extends null | number | string | boolean,
-  >(def: { const: T; enum?: readonly T[] }): Promise<string> {
+  >(def: { const: T; enum?: readonly T[]; default?: T }): Promise<string> {
     if (hasEnum(def) && !def.enum.includes(def.const)) {
       return this.pure(`l.never()`)
     }
 
-    return this.pure(`l.literal(${JSON.stringify(def.const)})`)
+    const options = stringifyOptions(def, [
+      'default',
+    ] satisfies (keyof l.LiteralSchemaOptions<any>)[])
+    return this.pure(`l.literal(${JSON.stringify(def.const)}, ${options})`)
   }
 
   private async compileConstType<
@@ -823,14 +841,18 @@ export class LexDefBuilder {
 
   private async compileEnumSchema<T extends null | number | string>(def: {
     enum: readonly T[]
+    default?: T
   }): Promise<string> {
     if (def.enum.length === 0) {
       return this.pure(`l.never()`)
     }
-    if (def.enum.length === 1) {
+    if (def.enum.length === 1 && def.default === undefined) {
       return this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
     }
-    return this.pure(`l.enum(${JSON.stringify(def.enum)})`)
+    const options = stringifyOptions(def, [
+      'default',
+    ] satisfies (keyof l.EnumSchemaOptions<any>)[])
+    return this.pure(`l.enum(${JSON.stringify(def.enum)}, ${options})`)
   }
 
   private async compileEnumType<T extends null | number | string>(def: {
@@ -896,11 +918,14 @@ function compileJsDoc(description: string) {
   }`
 }
 
-function stringifyOptionalOptions<O extends Record<string, unknown>>(
+function stringifyOptions<O extends Record<string, unknown>>(
   obj: O,
-  omit?: (keyof O)[],
+  include?: (keyof O)[],
+  exclude?: (keyof O)[],
 ) {
-  const filtered = Object.entries(obj).filter(([k]) => !omit?.includes(k))
+  const filtered = Object.entries(obj).filter(
+    ([k]) => (!include || include.includes(k)) && !exclude?.includes(k),
+  )
   return filtered.length ? JSON.stringify(Object.fromEntries(filtered)) : ''
 }
 

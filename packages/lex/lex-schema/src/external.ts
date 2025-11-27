@@ -15,10 +15,12 @@ import {
   DiscriminatedUnionSchema,
   DiscriminatedUnionSchemaVariants,
   EnumSchema,
+  EnumSchemaOptions,
   IntegerSchema,
   IntegerSchemaOptions,
   IntersectionSchema,
   LiteralSchema,
+  LiteralSchemaOptions,
   NeverSchema,
   NullSchema,
   NullableSchema,
@@ -78,15 +80,17 @@ export { _null as null }
 /*@__NO_SIDE_EFFECTS__*/
 export function literal<const V extends null | string | number | boolean>(
   value: V,
+  options?: LiteralSchemaOptions<V>,
 ) {
-  return new LiteralSchema<V>(value)
+  return new LiteralSchema<V>(value, options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function _enum<const V extends null | string | number | boolean>(
   value: readonly V[],
+  options?: EnumSchemaOptions<V>,
 ) {
-  return new EnumSchema<V>(value)
+  return new EnumSchema<V>(value, options)
 }
 
 // @NOTE "enum" is a reserved keyword in JS/TS

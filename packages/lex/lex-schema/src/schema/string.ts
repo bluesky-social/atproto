@@ -1,16 +1,10 @@
 import { CID, graphemeLen, utf8Len } from '@atproto/lex-data'
-import {
-  InferStringFormat,
-  StringFormat,
-  UnknownString,
-  assertStringFormat,
-} from '../core.js'
+import { InferStringFormat, StringFormat, assertStringFormat } from '../core.js'
 import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
 import { TokenSchema } from './token.js'
 
 export type StringSchemaOptions = {
   default?: string
-  knownValues?: readonly string[]
   format?: StringFormat
   minLength?: number
   maxLength?: number
@@ -22,9 +16,7 @@ export type StringSchemaOutput<Options> =
   //
   Options extends { format: infer F extends StringFormat }
     ? InferStringFormat<F>
-    : Options extends { knownValues: readonly (infer K extends string)[] }
-      ? K | UnknownString
-      : string
+    : string
 
 export class StringSchema<
   const Options extends StringSchemaOptions = any,

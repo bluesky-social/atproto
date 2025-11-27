@@ -183,13 +183,48 @@ export class LexiconSchemaBuilder {
     doc: LexiconDocument,
     def: LexiconArray | LexiconArrayItems,
   ): l.Validator<unknown> {
+    if (
+      'const' in def &&
+      'enum' in def &&
+      def.enum != null &&
+      def.const !== undefined &&
+      !(def.enum as readonly unknown[]).includes(def.const)
+    ) {
+      return l.never()
+    }
+
     switch (def.type) {
-      case 'string':
-        return l.string(def)
-      case 'integer':
-        return l.integer(def)
-      case 'boolean':
-        return l.boolean(def)
+      case 'string': {
+        const schema = l.string(def)
+        if (def.const != null) {
+          if (!schema.check(def.const)) throw new Error()
+          return l.literal(def.const, def)
+        } else if (def.enum != null) {
+          if (!def.enum.every((v) => schema.check(v))) throw new Error()
+          return l.enum(def.enum, def)
+        } else {
+          return schema
+        }
+      }
+      case 'integer': {
+        const schema = l.integer(def)
+        if (def.const != null) {
+          if (!schema.check(def.const)) throw new Error()
+          return l.literal(def.const, def)
+        } else if (def.enum != null) {
+          if (!def.enum.every((v) => schema.check(v))) throw new Error()
+          return l.enum(def.enum, def)
+        } else {
+          return schema
+        }
+      }
+      case 'boolean': {
+        if (def.const != null) {
+          return l.literal(def.const, def)
+        } else {
+          return l.boolean(def)
+        }
+      }
       case 'blob':
         return l.blob(def)
       case 'cid-link':
