@@ -97,12 +97,12 @@ export function _enum<const V extends null | string | number | boolean>(
 export { _enum as enum }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function boolean(options: BooleanSchemaOptions = {}) {
+export function boolean(options?: BooleanSchemaOptions) {
   return new BooleanSchema(options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function integer(options: IntegerSchemaOptions = {}) {
+export function integer(options?: IntegerSchemaOptions) {
   return new IntegerSchema(options)
 }
 
@@ -112,12 +112,14 @@ export function cidLink() {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function bytes(options: BytesSchemaOptions = {}) {
+export function bytes(options?: BytesSchemaOptions) {
   return new BytesSchema(options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function blob(options: BlobSchemaOptions = {}) {
+export function blob<O extends BlobSchemaOptions = NonNullable<unknown>>(
+  options: O = {} as O,
+) {
   return new BlobSchema(options)
 }
 
@@ -131,7 +133,7 @@ export function string<
 /*@__NO_SIDE_EFFECTS__*/
 export function array<const V extends Validator>(
   items: V,
-  options: ArraySchemaOptions = {},
+  options?: ArraySchemaOptions,
 ) {
   return new ArraySchema<V>(items, options)
 }

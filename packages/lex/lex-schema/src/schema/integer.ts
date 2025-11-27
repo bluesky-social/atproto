@@ -9,12 +9,12 @@ export type IntegerSchemaOptions = {
 export class IntegerSchema extends Validator<number> {
   readonly lexiconType = 'integer' as const
 
-  constructor(readonly options: IntegerSchemaOptions) {
+  constructor(readonly options: IntegerSchemaOptions = {}) {
     super()
   }
 
   override validateInContext(
-    input: unknown = this.options.default,
+    input: unknown = this.options?.default,
     ctx: ValidatorContext,
   ): ValidationResult<number> {
     if (!isInteger(input)) {

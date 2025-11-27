@@ -7,12 +7,12 @@ export type BooleanSchemaOptions = {
 export class BooleanSchema extends Validator<boolean> {
   readonly lexiconType = 'boolean' as const
 
-  constructor(readonly options: BooleanSchemaOptions) {
+  constructor(readonly options?: BooleanSchemaOptions) {
     super()
   }
 
   override validateInContext(
-    input: unknown = this.options.default,
+    input: unknown = this.options?.default,
     ctx: ValidatorContext,
   ): ValidationResult<boolean> {
     if (typeof input === 'boolean') {

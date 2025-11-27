@@ -9,7 +9,7 @@ export type BytesSchemaOptions = {
 export class BytesSchema extends Validator<Uint8Array> {
   readonly lexiconType = 'bytes' as const
 
-  constructor(readonly options: BytesSchemaOptions) {
+  constructor(readonly options: BytesSchemaOptions = {}) {
     super()
   }
 
