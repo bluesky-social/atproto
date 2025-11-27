@@ -19,4 +19,71 @@ describe('General validation', () => {
       value,
     })
   })
+
+  it('validates a minimal lexicons document', () => {
+    expect(
+      lexiconDocumentSchema.validate({
+        lexicon: 1,
+        id: 'com.example.lexicon',
+        defs: {
+          demo: {
+            type: 'integer',
+          },
+        },
+      }),
+    ).toMatchObject({
+      success: true,
+    })
+  })
+
+  it('rejects lexicons with invalid lexicon field', () => {
+    expect(
+      lexiconDocumentSchema.validate({
+        lexicon: 'one',
+        id: 'com.example.lexicon',
+        defs: {
+          demo: {
+            type: 'integer',
+          },
+        },
+      }),
+    ).toMatchObject({
+      success: false,
+      error: { issues: [{ code: 'invalid_value', values: [1] }] },
+    })
+  })
+
+  it('rejects lexicons with invalid NSID in id field', () => {
+    expect(
+      lexiconDocumentSchema.validate({
+        lexicon: 1,
+        id: 'not-an-nsid',
+        defs: {
+          demo: {
+            type: 'integer',
+          },
+        },
+      }),
+    ).toMatchObject({
+      success: false,
+      error: { issues: [{ code: 'invalid_format', format: 'nsid' }] },
+    })
+  })
+
+  it('rejects lexicons with numeric id field', () => {
+    expect(
+      lexiconDocumentSchema.validate({
+        lexicon: 1,
+        id: 2,
+        defs: {
+          demo: {
+            type: 'integer',
+          },
+        },
+      }),
+    ).toMatchObject({
+      success: false,
+      error: { issues: [{ code: 'invalid_type', expected: ['string'] }] },
+    })
+  })
 })
