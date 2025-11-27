@@ -25,6 +25,7 @@ export * from './schema/intersection.js'
 export * from './schema/nullable.js'
 export * from './schema/optional.js'
 export * from './schema/ref.js'
+export * from './schema/refined.js'
 export * from './schema/union.js'
 
 // Lexicon specific Types

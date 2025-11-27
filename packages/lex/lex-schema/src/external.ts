@@ -40,6 +40,8 @@ import {
   RecordSchema,
   RefSchema,
   RefSchemaGetter,
+  RefinedSchema,
+  Refinement,
   StringSchema,
   StringSchemaOptions,
   Subscription,
@@ -194,6 +196,13 @@ export function intersection<
   const Right extends DictSchema,
 >(left: Left, right: Right) {
   return new IntersectionSchema<Left, Right>(left, right)
+}
+
+export function refined<T>(
+  schema: Validator<T>,
+  refinements: [Refinement<T>, ...Refinement<T>[]],
+) {
+  return new RefinedSchema<T>(schema, refinements)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
