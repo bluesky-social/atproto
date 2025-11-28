@@ -27,6 +27,14 @@ import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/create
 import * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+import * as AppBskyContactDefs from './types/app/bsky/contact/defs.js'
+import * as AppBskyContactDismissMatch from './types/app/bsky/contact/dismissMatch.js'
+import * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.js'
+import * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
+import * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
+import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
+import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -325,6 +333,14 @@ export * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/create
 export * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 export * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 export * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+export * as AppBskyContactDefs from './types/app/bsky/contact/defs.js'
+export * as AppBskyContactDismissMatch from './types/app/bsky/contact/dismissMatch.js'
+export * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.js'
+export * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
+export * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
+export * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+export * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
+export * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -748,6 +764,7 @@ export class AppBskyNS {
   actor: AppBskyActorNS
   ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
+  contact: AppBskyContactNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -762,6 +779,7 @@ export class AppBskyNS {
     this.actor = new AppBskyActorNS(client)
     this.ageassurance = new AppBskyAgeassuranceNS(client)
     this.bookmark = new AppBskyBookmarkNS(client)
+    this.contact = new AppBskyContactNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -1119,6 +1137,91 @@ export class AppBskyBookmarkNS {
       undefined,
       opts,
     )
+  }
+}
+
+export class AppBskyContactNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  dismissMatch(
+    data?: AppBskyContactDismissMatch.InputSchema,
+    opts?: AppBskyContactDismissMatch.CallOptions,
+  ): Promise<AppBskyContactDismissMatch.Response> {
+    return this._client
+      .call('app.bsky.contact.dismissMatch', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactDismissMatch.toKnownErr(e)
+      })
+  }
+
+  getMatches(
+    params?: AppBskyContactGetMatches.QueryParams,
+    opts?: AppBskyContactGetMatches.CallOptions,
+  ): Promise<AppBskyContactGetMatches.Response> {
+    return this._client
+      .call('app.bsky.contact.getMatches', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyContactGetMatches.toKnownErr(e)
+      })
+  }
+
+  getSyncStatus(
+    params?: AppBskyContactGetSyncStatus.QueryParams,
+    opts?: AppBskyContactGetSyncStatus.CallOptions,
+  ): Promise<AppBskyContactGetSyncStatus.Response> {
+    return this._client
+      .call('app.bsky.contact.getSyncStatus', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyContactGetSyncStatus.toKnownErr(e)
+      })
+  }
+
+  importContacts(
+    data?: AppBskyContactImportContacts.InputSchema,
+    opts?: AppBskyContactImportContacts.CallOptions,
+  ): Promise<AppBskyContactImportContacts.Response> {
+    return this._client
+      .call('app.bsky.contact.importContacts', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactImportContacts.toKnownErr(e)
+      })
+  }
+
+  removeData(
+    data?: AppBskyContactRemoveData.InputSchema,
+    opts?: AppBskyContactRemoveData.CallOptions,
+  ): Promise<AppBskyContactRemoveData.Response> {
+    return this._client
+      .call('app.bsky.contact.removeData', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactRemoveData.toKnownErr(e)
+      })
+  }
+
+  startPhoneVerification(
+    data?: AppBskyContactStartPhoneVerification.InputSchema,
+    opts?: AppBskyContactStartPhoneVerification.CallOptions,
+  ): Promise<AppBskyContactStartPhoneVerification.Response> {
+    return this._client
+      .call('app.bsky.contact.startPhoneVerification', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactStartPhoneVerification.toKnownErr(e)
+      })
+  }
+
+  verifyPhone(
+    data?: AppBskyContactVerifyPhone.InputSchema,
+    opts?: AppBskyContactVerifyPhone.CallOptions,
+  ): Promise<AppBskyContactVerifyPhone.Response> {
+    return this._client
+      .call('app.bsky.contact.verifyPhone', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyContactVerifyPhone.toKnownErr(e)
+      })
   }
 }
 
