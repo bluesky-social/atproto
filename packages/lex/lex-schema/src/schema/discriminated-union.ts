@@ -1,6 +1,7 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
   Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -9,13 +10,13 @@ import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
 import { ObjectSchema } from './object.js'
 
-export type DiscriminatedUnionSchemaVariant<Discriminator extends string> =
+export type DiscriminatedUnionVariant<Discriminator extends string> =
   ObjectSchema<Record<Discriminator, EnumSchema | LiteralSchema>>
 
-export type DiscriminatedUnionSchemaVariants<Discriminator extends string> =
+export type DiscriminatedUnionVariants<Discriminator extends string> =
   readonly [
-    DiscriminatedUnionSchemaVariant<Discriminator>,
-    ...DiscriminatedUnionSchemaVariant<Discriminator>[],
+    DiscriminatedUnionVariant<Discriminator>,
+    ...DiscriminatedUnionVariant<Discriminator>[],
   ]
 
 export type DiscriminatedUnionSchemaOutput<
@@ -34,12 +35,9 @@ export type DiscriminatedUnionSchemaOutput<
  */
 export class DiscriminatedUnionSchema<
   const Discriminator extends string = any,
-  const Variants extends DiscriminatedUnionSchemaVariants<Discriminator> = any,
-> extends Validator<DiscriminatedUnionSchemaOutput<Variants>> {
-  readonly variantsMap: Map<
-    unknown,
-    DiscriminatedUnionSchemaVariant<Discriminator>
-  >
+  const Variants extends DiscriminatedUnionVariants<Discriminator> = any,
+> extends Schema<DiscriminatedUnionSchemaOutput<Variants>> {
+  readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<Discriminator>>
 
   constructor(
     readonly discriminator: Discriminator,
@@ -48,12 +46,12 @@ export class DiscriminatedUnionSchema<
     super()
 
     // Although we usually try to avoid initialization work in constructors,
-    // here it is necessary to ensure that invalid discriminated unions are
-    // caught when constructed.
+    // here it is necessary to ensure that invalid discriminated throw from the
+    // place of construction, rather than later during validation.
     this.variantsMap = buildVariantsMap(discriminator, variants)
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<DiscriminatedUnionSchemaOutput<Variants>> {
@@ -84,11 +82,11 @@ export class DiscriminatedUnionSchema<
 
 function buildVariantsMap<Discriminator extends string>(
   discriminator: Discriminator,
-  variants: DiscriminatedUnionSchemaVariants<Discriminator>,
+  variants: DiscriminatedUnionVariants<Discriminator>,
 ) {
   const variantsMap = new Map<
     unknown,
-    DiscriminatedUnionSchemaVariant<Discriminator>
+    DiscriminatedUnionVariant<Discriminator>
   >()
 
   for (const variant of variants) {

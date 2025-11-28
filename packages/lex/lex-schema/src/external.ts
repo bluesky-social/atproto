@@ -13,7 +13,7 @@ import {
   CustomSchema,
   DictSchema,
   DiscriminatedUnionSchema,
-  DiscriminatedUnionSchemaVariants,
+  DiscriminatedUnionVariants,
   EnumSchema,
   EnumSchemaOptions,
   IntegerSchema,
@@ -25,7 +25,7 @@ import {
   NullSchema,
   NullableSchema,
   ObjectSchema,
-  ObjectSchemaShape,
+  ObjectSchemaProperties,
   OptionalSchema,
   ParamsSchema,
   ParamsSchemaProperties,
@@ -133,15 +133,12 @@ export function string<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function array<const V extends Validator>(
-  items: V,
-  options?: ArraySchemaOptions,
-) {
-  return new ArraySchema<V>(items, options)
+export function array<T>(items: Validator<T>, options?: ArraySchemaOptions) {
+  return new ArraySchema<T>(items, options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function object<const P extends ObjectSchemaShape>(properties: P) {
+export function object<const P extends ObjectSchemaProperties>(properties: P) {
   return new ObjectSchema<P>(properties)
 }
 
@@ -176,13 +173,13 @@ export function custom<T>(
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function nullable<T>(schema: Validator<T>) {
-  return new NullableSchema<T>(schema)
+export function nullable<const S extends Validator>(schema: S) {
+  return new NullableSchema<Infer<S>>(schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function optional<T>(schema: Validator<T>) {
-  return new OptionalSchema<T>(schema)
+export function optional<const S extends Validator>(schema: S) {
+  return new OptionalSchema<Infer<S>>(schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -208,7 +205,7 @@ export function refined<T>(
 /*@__NO_SIDE_EFFECTS__*/
 export function discriminatedUnion<
   const Discriminator extends string,
-  const Options extends DiscriminatedUnionSchemaVariants<Discriminator>,
+  const Options extends DiscriminatedUnionVariants<Discriminator>,
 >(discriminator: Discriminator, variants: Options) {
   return new DiscriminatedUnionSchema<Discriminator, Options>(
     discriminator,

@@ -1,4 +1,4 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export type IntegerSchemaOptions = {
   default?: number
@@ -6,14 +6,14 @@ export type IntegerSchemaOptions = {
   maximum?: number
 }
 
-export class IntegerSchema extends Validator<number> {
+export class IntegerSchema extends Schema<number> {
   readonly lexiconType = 'integer' as const
 
   constructor(readonly options: IntegerSchemaOptions = {}) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown = this.options?.default,
     ctx: ValidatorContext,
   ): ValidationResult<number> {

@@ -9,7 +9,7 @@ import {
   encode as cborgEncode,
 } from 'cborg'
 import type { ByteView } from 'multiformats/block'
-import { CID, LexValue } from '@atproto/lex-data'
+import { Cid, LexValue, asCid, decodeCid } from '@atproto/lex-data'
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
 // match the AT Data Model constraints. Floats, in particular, are not allowed.
@@ -22,7 +22,7 @@ import { CID, LexValue } from '@atproto/lex-data'
 const CID_CBOR_TAG = 42
 
 function cidEncoder(obj: object): Token[] | null {
-  const cid = CID.asCID(obj)
+  const cid = asCid(obj)
   if (!cid) return null
 
   const bytes = new Uint8Array(cid.bytes.byteLength + 1)
@@ -61,11 +61,11 @@ const encodeOptions: EncodeOptions = {
   },
 }
 
-function cidDecoder(bytes: Uint8Array): CID {
+function cidDecoder(bytes: Uint8Array): Cid {
   if (bytes[0] !== 0) {
     throw new Error('Invalid CID for CBOR tag 42; expected leading 0x00')
   }
-  return CID.decode(bytes.subarray(1)) // ignore leading 0x00
+  return decodeCid(bytes.subarray(1)) // ignore leading 0x00
 }
 
 const tagDecoders: TagDecoder[] = []

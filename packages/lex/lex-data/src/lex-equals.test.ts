@@ -1,4 +1,4 @@
-import { CID } from './cid.js'
+import { parseCid } from './cid.js'
 import { lexEquals } from './lex-equals.js'
 import { LexValue } from './lex.js'
 
@@ -48,11 +48,11 @@ describe('lexEquals', () => {
   })
 
   it('compares CIDs', () => {
-    const cid1 = CID.parse(
+    const cid1 = parseCid(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     )
-    const cid2 = CID.parse(cid1.toString())
-    const cid3 = CID.parse(cid1.toString())
+    const cid2 = parseCid(cid1.toString())
+    const cid3 = parseCid(cid1.toString())
 
     expectLexEqual(cid1, cid2, true)
     expectLexEqual(cid1, cid3, true)
@@ -78,19 +78,19 @@ describe('lexEquals', () => {
   it('compares nested structures', () => {
     const lex1 = {
       foo: [1, 2, { bar: new Uint8Array([3, 4, 5]) }],
-      baz: CID.parse(
+      baz: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }
     const lex2 = {
       foo: [1, 2, { bar: new Uint8Array([3, 4, 5]) }],
-      baz: CID.parse(
+      baz: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }
     const lex3 = {
       foo: [1, 2, { bar: new Uint8Array([3, 4, 5 + 1]) }],
-      baz: CID.parse(
+      baz: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }
@@ -127,7 +127,7 @@ describe('lexEquals', () => {
     const u8 = new Uint8Array([1, 2, 3])
     expectLexEqual(u8, u8, true)
 
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     )
     expectLexEqual(cid, cid, true)

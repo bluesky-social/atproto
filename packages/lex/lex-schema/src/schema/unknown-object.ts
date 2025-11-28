@@ -1,13 +1,13 @@
 import { LexMap, isLexMap } from '@atproto/lex-data'
-import { ValidationResult, Validator, ValidatorContext } from '../validation'
+import { Schema, ValidationResult, ValidatorContext } from '../validation'
 
 export type { LexMap }
 export type UnknownObjectOutput = LexMap
 
-export class UnknownObjectSchema extends Validator<UnknownObjectOutput> {
+export class UnknownObjectSchema extends Schema<UnknownObjectOutput> {
   readonly lexiconType = 'unknown' as const
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<UnknownObjectOutput> {

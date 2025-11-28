@@ -1,6 +1,7 @@
 import {
   IssueCustom,
   PropertyKey,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -12,7 +13,7 @@ export type Refinement<T> = {
   path?: PropertyKey | readonly PropertyKey[]
 }
 
-export class RefinedSchema<T> extends Validator<T> {
+export class RefinedSchema<T> extends Schema<T> {
   constructor(
     readonly schema: Validator<T>,
     readonly refinements: [Refinement<T>, ...Refinement<T>[]],
@@ -20,11 +21,11 @@ export class RefinedSchema<T> extends Validator<T> {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<T> {
-    const result = this.schema.validateInContext(input, ctx)
+    const result = ctx.validate(input, this.schema)
     if (!result.success) return result
 
     for (const refinement of this.refinements) {

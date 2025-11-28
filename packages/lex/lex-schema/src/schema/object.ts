@@ -1,35 +1,26 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { Simplify } from '../core.js'
+import { WithOptionalProperties } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import {
   Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
 } from '../validation.js'
 
-export type ObjectSchemaShape = Record<string, Validator>
+export type ObjectSchemaProperties = Record<string, Validator>
 
-type OptionalObjectSchemaProperties<P extends ObjectSchemaShape> = {
-  [K in keyof P]: undefined extends Infer<P[K]> ? K : never
-}[keyof P]
+export type ObjectSchemaOutput<Properties extends ObjectSchemaProperties> =
+  WithOptionalProperties<{
+    [K in keyof Properties]: Infer<Properties[K]>
+  }>
 
-export type ObjectSchemaOutput<Shape extends ObjectSchemaShape> = Simplify<
-  {
-    -readonly [K in keyof Shape as K extends OptionalObjectSchemaProperties<Shape>
-      ? never
-      : K]: Infer<Shape[K]>
-  } & {
-    -readonly [K in keyof Shape as K extends OptionalObjectSchemaProperties<Shape>
-      ? K
-      : never]?: Infer<Shape[K]>
-  }
->
-
-export class ObjectSchema<
-  const Shape extends ObjectSchemaShape = any,
-> extends Validator<ObjectSchemaOutput<Shape>> {
-  constructor(readonly validators: Shape) {
+export class ObjectSchema<const Properties extends ObjectSchemaProperties = any>
+  extends Schema<ObjectSchemaOutput<Properties>>
+  implements Validator<ObjectSchemaOutput<Properties>>
+{
+  constructor(readonly validators: Properties) {
     super()
   }
 
@@ -39,10 +30,10 @@ export class ObjectSchema<
     return lazyProperty(this, 'validatorsMap', map)
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<ObjectSchemaOutput<Shape>> {
+  ): ValidationResult<ObjectSchemaOutput<Properties>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -72,7 +63,7 @@ export class ObjectSchema<
       }
     }
 
-    const output = (copy ?? input) as ObjectSchemaOutput<Shape>
+    const output = (copy ?? input) as ObjectSchemaOutput<Properties>
 
     return ctx.success(output)
   }

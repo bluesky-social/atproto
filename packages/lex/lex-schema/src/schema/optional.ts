@@ -1,23 +1,29 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  Schema,
+  ValidationResult,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 
-export class OptionalSchema<T> extends Validator<T | undefined> {
-  constructor(readonly schema: Validator<T>) {
+export class OptionalSchema<V> extends Schema<V | undefined> {
+  constructor(readonly schema: Validator<V>) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<T | undefined> {
+  ): ValidationResult<V | undefined> {
+    // @NOTE The inner schema might apply a default value so we need to run it
+    // first, even if input is undefined.
     const result = ctx.validate(input, this.schema)
 
-    // @NOTE A default value may have been applied during validation
     if (result.success) {
       return result
     }
 
     if (input === undefined) {
-      return ctx.success(undefined)
+      return ctx.success(input)
     }
 
     return result

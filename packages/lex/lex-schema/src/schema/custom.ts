@@ -2,8 +2,8 @@ import {
   Issue,
   IssueCustom,
   PropertyKey,
+  Schema,
   ValidationResult,
-  Validator,
   ValidatorContext,
 } from '../validation.js'
 
@@ -18,7 +18,7 @@ export type CustomAssertion<T = any> = (
   ctx: CustomAssertionContext,
 ) => input is T
 
-export class CustomSchema<T = unknown> extends Validator<T> {
+export class CustomSchema<T = unknown> extends Schema<T> {
   constructor(
     private readonly assertion: CustomAssertion<T>,
     private readonly message: string,
@@ -27,7 +27,7 @@ export class CustomSchema<T = unknown> extends Validator<T> {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<T> {

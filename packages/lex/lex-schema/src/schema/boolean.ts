@@ -1,17 +1,17 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export type BooleanSchemaOptions = {
   default?: boolean
 }
 
-export class BooleanSchema extends Validator<boolean> {
+export class BooleanSchema extends Schema<boolean> {
   readonly lexiconType = 'boolean' as const
 
   constructor(readonly options?: BooleanSchemaOptions) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown = this.options?.default,
     ctx: ValidatorContext,
   ): ValidationResult<boolean> {

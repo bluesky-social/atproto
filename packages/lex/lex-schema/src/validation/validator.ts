@@ -18,25 +18,23 @@ export type ValidationResult<Value = any> =
   | ValidationSuccess<Value>
   | ValidationFailure
 
-type ValidationOptions = {
+export type ValidationOptions = {
   path?: PropertyKey[]
 
   /** @default true */
   allowTransform?: boolean
 }
 
-export type Infer<T extends Validator> = T['_lex']['out']
+export type Infer<T extends Validator> = T['_lex']['output']
 
-export abstract class Validator<Output = any> {
+export interface Validator<Output = any> {
   /**
    * This property is used for type inference purposes and does not actually
    * exist at runtime.
    *
-   * @internal
+   * @deprecated **INTERNAL API, DO NOT USE**.
    */
-  declare readonly ['_lex']: { out: Output }
-
-  readonly lexiconType?: string
+  readonly ['_lex']: { output: Output }
 
   /**
    * @internal **INTERNAL API, DO NOT USE**.
@@ -68,87 +66,10 @@ export abstract class Validator<Output = any> {
    *
    * @see {@link ValidatorContext.validate}
    */
-  abstract validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Output>
-
-  assert(input: unknown): asserts input is Output {
-    const result = this.validate(input, { allowTransform: false })
-    if (!result.success) throw result.error
-  }
-
-  check(input: unknown): input is Output {
-    const result = this.validate(input, { allowTransform: false })
-    return result.success
-  }
-
-  maybe<I>(input: I): (I & Output) | undefined {
-    return this.check(input) ? input : undefined
-  }
-
-  parse<I>(
-    input: I,
-    options: ValidationOptions & { allowTransform: false },
-  ): I & Output
-  parse(input: unknown, options?: ValidationOptions): Output
-  parse(input: unknown, options?: ValidationOptions): Output {
-    const result = ValidatorContext.validate(input, this, options)
-    if (!result.success) throw result.error
-    return result.value
-  }
-
-  validate<I>(
-    input: I,
-    options: ValidationOptions & { allowTransform: false },
-  ): ValidationResult<I & Output>
-  validate(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output>
-  validate(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output> {
-    return ValidatorContext.validate(input, this, options)
-  }
-
-  // @NOTE The built lexicons namespaces will export utility functions that
-  // allow accessing the schema's methods without the need to specify ".main."
-  // as part of the namespace. This way, a utility for a particular record type
-  // can be called like "app.bsky.feed.post.<utility>()" instead of
-  // "app.bsky.feed.post.main.<utility>()". Because those utilities could
-  // conflict with other schemas (e.g. if there is a lexicon definition at
-  // "#<utility>"), those exported utilities will be prefixed with "$". In order
-  // to be able to consistently call the utilities, when using the "main" and
-  // non "main" definitions, we also expose the same methods with a "$" prefix.
-  // Thanks to this, both of the following call will be possible:
-  //
-  // - "app.bsky.feed.post.$parse(...)" // calls a utility function created by "lex build"
-  // - "app.bsky.feed.defs.postView.$parse(...)" // uses the alias defined below on the schema instance
-
-  $assert(input: unknown): asserts input is Output {
-    return this.assert(input)
-  }
-
-  $check(input: unknown): input is Output {
-    return this.check(input)
-  }
-
-  $maybe<I>(input: I): (I & Output) | undefined {
-    return this.maybe(input)
-  }
-
-  $parse(input: unknown, options?: ValidationOptions): Output {
-    return this.parse(input, options)
-  }
-
-  $validate(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output> {
-    return this.validate(input, options)
-  }
 }
 
 export class ValidatorContext {
@@ -219,14 +140,14 @@ export class ValidatorContext {
       }
     }
 
-    return result
+    return result as ValidationResult<V>
   }
 
-  validateChild<I extends object, K extends PropertyKey & keyof I, V>(
-    input: I,
-    key: K,
-    validator: Validator<V>,
-  ): ValidationResult<V> {
+  validateChild<
+    I extends object,
+    K extends PropertyKey & keyof I,
+    V extends Validator,
+  >(input: I, key: K, validator: V): ValidationResult<Infer<V>> {
     // Instead of creating a new context, we just push/pop the path segment.
     this.currentPath.push(key)
     try {

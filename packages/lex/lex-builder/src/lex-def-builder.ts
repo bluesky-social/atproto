@@ -772,7 +772,7 @@ export class LexDefBuilder {
   }
 
   private async compileCidLinkType(_def: LexiconCid): Promise<string> {
-    return 'l.CID'
+    return 'l.Cid'
   }
 
   private async compileRefSchema(def: LexiconRef): Promise<string> {

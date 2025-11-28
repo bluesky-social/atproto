@@ -1,10 +1,15 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { $Type, Simplify } from '../core.js'
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  Schema,
+  ValidationResult,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 
 export class TypedObjectSchema<
   Output extends { $type?: $Type } = any,
-> extends Validator<Output> {
+> extends Schema<Output> {
   readonly lexiconType = 'object' as const
 
   constructor(
@@ -34,7 +39,7 @@ export class TypedObjectSchema<
     return this.build<X>(input)
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Output> {

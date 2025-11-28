@@ -2,6 +2,7 @@ import { isPlainObject } from '@atproto/lex-data'
 import { Simplify } from '../core.js'
 import {
   Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -20,7 +21,7 @@ export type DictSchemaOutput<
 export class DictSchema<
   const KeySchema extends Validator<string> = any,
   const ValueSchema extends Validator = any,
-> extends Validator<DictSchemaOutput<KeySchema, ValueSchema>> {
+> extends Schema<DictSchemaOutput<KeySchema, ValueSchema>> {
   constructor(
     readonly keySchema: KeySchema,
     readonly valueSchema: ValueSchema,
@@ -28,7 +29,7 @@ export class DictSchema<
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
     options?: { ignoredKeys?: { has(k: string): boolean } },

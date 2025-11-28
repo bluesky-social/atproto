@@ -3,8 +3,8 @@ import { Restricted, UnknownString } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import {
   Infer,
+  Schema,
   ValidationResult,
-  Validator,
   ValidatorContext,
 } from '../validation.js'
 import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
@@ -44,7 +44,7 @@ export type TypedUnionSchemaOutput<
 export class TypedUnionSchema<
   TypedRefs extends readonly TypedRefSchema[] = any,
   Closed extends boolean = any,
-> extends Validator<TypedUnionSchemaOutput<TypedRefs, Closed>> {
+> extends Schema<TypedUnionSchemaOutput<TypedRefs, Closed>> {
   readonly lexiconType = 'union' as const
 
   constructor(
@@ -69,7 +69,7 @@ export class TypedUnionSchema<
     return Array.from(this.refsMap.keys())
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<TypedUnionSchemaOutput<TypedRefs, Closed>> {

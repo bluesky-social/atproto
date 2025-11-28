@@ -1,4 +1,4 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export type LiteralSchemaOptions<T extends null | string | number | boolean> = {
   default?: T
@@ -6,7 +6,7 @@ export type LiteralSchemaOptions<T extends null | string | number | boolean> = {
 
 export class LiteralSchema<
   Output extends null | string | number | boolean = any,
-> extends Validator<Output> {
+> extends Schema<Output> {
   constructor(
     readonly value: Output,
     readonly options?: LiteralSchemaOptions<Output>,

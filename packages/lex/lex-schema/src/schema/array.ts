@@ -1,5 +1,5 @@
 import {
-  Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -10,22 +10,20 @@ export type ArraySchemaOptions = {
   maxLength?: number
 }
 
-export class ArraySchema<
-  const ItemsSchema extends Validator = any,
-> extends Validator<Array<Infer<ItemsSchema>>> {
+export class ArraySchema<Item = any> extends Schema<Array<Item>> {
   readonly lexiconType = 'array' as const
 
   constructor(
-    readonly itemsSchema: ItemsSchema,
+    readonly itemsSchema: Validator<Item>,
     readonly options: ArraySchemaOptions = {},
   ) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<Array<Infer<ItemsSchema>>> {
+  ): ValidationResult<Array<Item>> {
     if (!Array.isArray(input)) {
       return ctx.issueInvalidType(input, 'array')
     }
@@ -40,7 +38,7 @@ export class ArraySchema<
       return ctx.issueTooBig(input, 'array', maxLength, input.length)
     }
 
-    let copy: undefined | Array<Infer<ItemsSchema>>
+    let copy: undefined | Array<Item>
 
     for (let i = 0; i < input.length; i++) {
       const result = ctx.validateChild(input, i, this.itemsSchema)
@@ -53,8 +51,6 @@ export class ArraySchema<
       }
     }
 
-    return ctx.success(copy ?? input) as ValidationResult<
-      Array<Infer<ItemsSchema>>
-    >
+    return ctx.success(copy ?? input) as ValidationResult<Array<Item>>
   }
 }

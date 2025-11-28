@@ -33,8 +33,8 @@ export class LexiconSchemaBuilder {
     const ctx = new LexiconSchemaBuilder(indexer)
     try {
       const result = await ctx.buildFullRef(fullRef)
-      if (!(result instanceof l.Validator)) {
-        throw new Error(`Ref ${fullRef} is not a validator schema type`)
+      if (!(result instanceof l.Schema)) {
+        throw new Error(`Ref ${fullRef} is not a schema type`)
       }
       return result
     } finally {
@@ -90,8 +90,8 @@ export class LexiconSchemaBuilder {
 
     this.#asyncTasks.add(
       this.buildFullRef(fullRef).then((v) => {
-        if (!(v instanceof l.Validator)) {
-          throw new Error(`Only refs to validator schema types are allowed`)
+        if (!(v instanceof l.Schema)) {
+          throw new Error(`Only refs to schema types are allowed`)
         }
         validator = v
       }),

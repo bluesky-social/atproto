@@ -1,4 +1,4 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export type EnumSchemaOptions<T extends null | string | number | boolean> = {
   default?: T
@@ -6,7 +6,7 @@ export type EnumSchemaOptions<T extends null | string | number | boolean> = {
 
 export class EnumSchema<
   Output extends null | string | number | boolean = any,
-> extends Validator<Output> {
+> extends Schema<Output> {
   constructor(
     readonly values: readonly Output[],
     readonly options?: EnumSchemaOptions<Output>,
@@ -14,7 +14,7 @@ export class EnumSchema<
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown = this.options?.default,
     ctx: ValidatorContext,
   ): ValidationResult<Output> {

@@ -1,8 +1,8 @@
 import { Simplify } from '../core.js'
 import {
   Infer,
+  Schema,
   ValidationResult,
-  Validator,
   ValidatorContext,
 } from '../validation.js'
 import { DictSchema } from './dict.js'
@@ -32,7 +32,7 @@ export type IntersectionSchemaOutput<
 export class IntersectionSchema<
   const Left extends ObjectSchema = any,
   const Right extends DictSchema = any,
-> extends Validator<IntersectionSchemaOutput<Left, Right>> {
+> extends Schema<IntersectionSchemaOutput<Left, Right>> {
   constructor(
     protected readonly left: Left,
     protected readonly right: Right,
@@ -40,7 +40,7 @@ export class IntersectionSchema<
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<IntersectionSchemaOutput<Left, Right>> {

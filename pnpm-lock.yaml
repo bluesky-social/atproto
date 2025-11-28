@@ -916,6 +916,9 @@ importers:
 
   packages/lex/lex-document:
     dependencies:
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex-data
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema

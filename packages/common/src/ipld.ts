@@ -81,7 +81,7 @@ export { verifyCidForBytesLegacy as verifyCidForBytes }
 /**
  * @deprecated Use {@link cidForRawHash} from `@atproto/lex-cbor` instead.
  */
-export const sha256RawToCid = cidForRawHash
+export const sha256RawToCid = cidForRawHash as (hash: Uint8Array) => CID
 
 /**
  * @deprecated Use {@link parseCidFromBytes} from `@atproto/lex-cbor` instead.
@@ -99,7 +99,7 @@ export class VerifyCidTransform extends Transform {
       },
       flush(callback) {
         try {
-          const actual = cidForRawHash(hasher.digest())
+          const actual = sha256RawToCid(hasher.digest())
           if (actual.equals(cid)) {
             return callback()
           } else {

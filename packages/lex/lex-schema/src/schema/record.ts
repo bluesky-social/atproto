@@ -1,5 +1,10 @@
 import { Nsid, RecordKey, Simplify } from '../core.js'
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  Schema,
+  ValidationResult,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
 
@@ -9,7 +14,7 @@ export type InferRecordKey<R extends RecordSchema> =
 export class RecordSchema<
   Key extends RecordKey = any,
   Output extends { $type: Nsid } = any,
-> extends Validator<Output> {
+> extends Schema<Output> {
   readonly lexiconType = 'record' as const
 
   keySchema: RecordKeySchema<Key>
@@ -43,7 +48,7 @@ export class RecordSchema<
     return this.build<X>(input)
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Output> {
@@ -71,7 +76,7 @@ export type RecordKeySchemaOutput<Key extends RecordKey> = Key extends 'any'
         ? L
         : never
 
-export type RecordKeySchema<Key extends RecordKey> = Validator<
+export type RecordKeySchema<Key extends RecordKey> = Schema<
   RecordKeySchemaOutput<Key>
 >
 

@@ -14,3 +14,19 @@ declare const __restricted: unique symbol
 export type Restricted<Message extends string> = typeof __restricted & {
   [__restricted]: Message
 }
+
+export type OptionalPropertyKeys<P> = {
+  [K in keyof P]: undefined extends P[K] ? K : never
+}[keyof P]
+
+/**
+ * Converts all properties of `P` that are optional (i.e. may be `undefined`)
+ * into actual optional properties on the resulting type.
+ */
+export type WithOptionalProperties<P> = Simplify<
+  {
+    -readonly [K in keyof P as undefined extends P[K] ? never : K]-?: P[K]
+  } & {
+    -readonly [K in keyof P as undefined extends P[K] ? K : never]?: P[K]
+  }
+>

@@ -1,7 +1,7 @@
 import { resolveTxt } from 'node:dns/promises'
 import * as crypto from '@atproto/crypto'
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { CID } from '@atproto/lex-data'
+import { Cid, asCid } from '@atproto/lex-data'
 import { LexiconDocument, lexiconDocumentSchema } from '@atproto/lex-document'
 import {
   MST,
@@ -28,7 +28,7 @@ export type LexResolverOptions = CreateDidResolverOptions & {
   didAuthority?: Did
 }
 
-export { AtUri, CID, NSID }
+export { AtUri, type Cid, NSID }
 export type { LexiconDocument, ResolveDidOptions }
 
 export class LexResolver {
@@ -43,7 +43,7 @@ export class LexResolver {
     options?: ResolveDidOptions,
   ): Promise<{
     uri: AtUri
-    cid: CID
+    cid: Cid
     lexicon: LexiconDocument
   }> {
     const uri = await this.resolve(nsidStr)
@@ -70,7 +70,7 @@ export class LexResolver {
     options?: ResolveDidOptions,
   ): Promise<{
     uri: AtUri
-    cid: CID
+    cid: Cid
     lexicon: LexiconDocument
   }> {
     const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
@@ -140,7 +140,7 @@ export class LexResolver {
       )
     }
 
-    const cid = CID.asCID(verified.cid)
+    const cid = asCid(verified.cid)
     if (!cid) {
       throw new LexResolverError(
         nsid,

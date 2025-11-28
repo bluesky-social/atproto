@@ -1,6 +1,11 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { lazyProperty } from '../util/lazy-property.js'
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  Schema,
+  ValidationResult,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 import { Param, ParamScalar, paramSchema } from './_parameters.js'
 import { ObjectSchemaOutput } from './object.js'
 import { StringSchema } from './string.js'
@@ -23,7 +28,7 @@ export class ParamsSchema<
   const Validators extends ParamsSchemaProperties = ParamsSchemaProperties,
   Output extends
     ParamsSchemaOutput<Validators> = ParamsSchemaOutput<Validators>,
-> extends Validator<Output> {
+> extends Schema<Output> {
   readonly lexiconType = 'params' as const
 
   constructor(readonly validators: Validators) {
@@ -36,7 +41,7 @@ export class ParamsSchema<
     return lazyProperty(this, 'validatorsMap', map)
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown = {},
     ctx: ValidatorContext,
   ): ValidationResult<Output> {

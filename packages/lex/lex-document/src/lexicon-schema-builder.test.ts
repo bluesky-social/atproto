@@ -1,4 +1,5 @@
-import { CID, l } from '@atproto/lex-schema'
+import { parseCid } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import { LexiconDocument, lexiconDocumentSchema } from './lexicon-document.js'
 import { LexiconIterableIndexer } from './lexicon-iterable-indexer.js'
 import { LexiconSchemaBuilder } from './lexicon-schema-builder.js'
@@ -107,7 +108,7 @@ describe('LexiconSchemaBuilder', () => {
       did: 'did:web:example.com',
       cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       bytes: new Uint8Array([0, 1, 2, 3]),
-      cidLink: CID.parse(
+      cidLink: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }

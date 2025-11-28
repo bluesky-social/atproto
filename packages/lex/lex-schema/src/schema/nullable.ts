@@ -1,14 +1,19 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  Schema,
+  ValidationResult,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 
-export class NullableSchema<T> extends Validator<T | null> {
-  constructor(readonly schema: Validator<T>) {
+export class NullableSchema<V> extends Schema<V | null> {
+  constructor(readonly schema: Validator<V>) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<T | null> {
+  ): ValidationResult<V | null> {
     if (input === null) {
       return ctx.success(null)
     }
