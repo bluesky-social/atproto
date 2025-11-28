@@ -242,8 +242,20 @@ export type ServerEnvironment = {
   // email
   emailSmtpUrl?: string
   emailFromAddress?: string
+  emailSmtpHost?: string
+  emailSmtpPort?: number
+  emailSmtpPool?: boolean
+  emailSmtpSecure?: boolean
+  emailSmtpAuthUser?: string
+  emailSmtpAuthPassword?: string
   moderationEmailSmtpUrl?: string
   moderationEmailAddress?: string
+  moderationEmailSmtpHost?: string
+  moderationEmailSmtpPort?: number
+  moderationEmailSmtpPool?: boolean
+  moderationEmailSmtpSecure?: boolean
+  moderationEmailSmtpAuthUser?: string
+  moderationEmailSmtpAuthPassword?: string
 
   // subscription
   maxSubscriptionBuffer?: number
