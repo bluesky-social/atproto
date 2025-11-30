@@ -11,4 +11,4 @@
 '@atproto/lex': patch
 ---
 
-Replace use of `CID
+Replace use of `CID` with `Cid`

@@ -2,4 +2,4 @@
 '@atproto/lex-builder': patch
 ---
 
-Ingore unknown properties when defining schema options
+Strip unknown properties from schema options

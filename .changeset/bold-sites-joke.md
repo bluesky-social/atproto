@@ -2,4 +2,4 @@
 '@atproto/lex-schema': patch
 ---
 
-`enum` schema values are no longer used as default.
+`literal` schemas no longer use the value as "default". The "default" must now be explicitly provided.
