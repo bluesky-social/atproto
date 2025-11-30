@@ -195,24 +195,24 @@ export class LexiconSchemaBuilder {
 
     switch (def.type) {
       case 'string': {
-        const schema = l.string(def)
+        const schema: l.StringSchema = l.string(def)
         if (def.const != null) {
-          if (!schema.check(def.const)) throw new Error()
+          schema.assert(def.const)
           return l.literal(def.const, def)
         } else if (def.enum != null) {
-          if (!def.enum.every((v) => schema.check(v))) throw new Error()
+          for (const v of def.enum) schema.assert(v)
           return l.enum(def.enum, def)
         } else {
           return schema
         }
       }
       case 'integer': {
-        const schema = l.integer(def)
+        const schema: l.IntegerSchema = l.integer(def)
         if (def.const != null) {
-          if (!schema.check(def.const)) throw new Error()
+          schema.assert(def.const)
           return l.literal(def.const, def)
         } else if (def.enum != null) {
-          if (!def.enum.every((v) => schema.check(v))) throw new Error()
+          for (const v of def.enum) schema.assert(v)
           return l.enum(def.enum, def)
         } else {
           return schema
