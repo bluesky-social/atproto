@@ -5,4 +5,4 @@
 '@atproto/lex': patch
 ---
 
-Properly apply default value with `const` and `enum` schemas
+Add `default` option to `const` and `enum` schemas

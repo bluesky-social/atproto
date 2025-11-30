@@ -3,4 +3,4 @@
 '@atproto/lex-schema': patch
 ---
 
-Use `l.nullable` wrapper for nullable properties and `l.optional` for optional properties in lex schemas.
+Use `l.nullable` for nullable object properties and `l.optional` for optional object properties in lex schemas.

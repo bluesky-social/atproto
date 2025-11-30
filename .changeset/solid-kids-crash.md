@@ -2,4 +2,4 @@
 '@atproto/lex-builder': patch
 ---
 
-Avoid generating `knownValues` option in schemas
+Remove `knownValues` from string options (as it had not runtime effect)
