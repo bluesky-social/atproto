@@ -1,6 +1,6 @@
 # @atproto/lex
 
-Type-safe Lexicon tooling for creating great API clients.
+Type-safe Lexicon tooling for creating great API clients. See the [Changelog](./CHANGELOG.md) for version history.
 
 ```bash
 npm install -g @atproto/lex

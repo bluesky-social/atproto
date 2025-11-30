@@ -19,7 +19,8 @@
     "./tsconfig.build.json",
     "./tsconfig.tests.json",
     "./tsconfig.json",
-    "./dist"
+    "./dist",
+    "./CHANGELOG.md"
   ],
   "sideEffects": false,
   "type": "commonjs",

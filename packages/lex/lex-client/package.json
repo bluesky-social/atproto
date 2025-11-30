@@ -15,6 +15,26 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lex/lex-client"
   },
+  "files": [
+    "./src",
+    "./tsconfig.build.json",
+    "./tsconfig.tests.json",
+    "./tsconfig.json",
+    "./dist",
+    "./CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./dist/index.js",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "dependencies": {
     "@atproto/lex-data": "workspace:*",
     "@atproto/lex-json": "workspace:*",
@@ -30,17 +50,5 @@
     "prebuild": "node ./scripts/lex-build.mjs",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
-  },
-  "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "browser": "./dist/index.js",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
   }
 }
