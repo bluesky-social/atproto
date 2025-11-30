@@ -11,6 +11,9 @@ export type $Type<
       : `${N}#${H}`
   : never
 
+export type $TypeOf<O extends { $type?: string }> = NonNullable<O['$type']>
+
+/*@__NO_SIDE_EFFECTS__*/
 export function $type<N extends NsidString, H extends string>(
   nsid: N,
   hash: H,

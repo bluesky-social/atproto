@@ -2,6 +2,7 @@ import { isValidRecordKey } from '@atproto/syntax'
 
 export type LexiconRecordKey = 'any' | 'nsid' | 'tid' | `literal:${string}`
 
+/*@__NO_SIDE_EFFECTS__*/
 export function isLexiconRecordKey<T>(key: T): key is T & LexiconRecordKey {
   return (
     key === 'any' ||
@@ -14,6 +15,7 @@ export function isLexiconRecordKey<T>(key: T): key is T & LexiconRecordKey {
   )
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 export function asLexiconRecordKey(key: unknown): LexiconRecordKey {
   if (isLexiconRecordKey(key)) return key
   throw new Error(`Invalid record key: ${String(key)}`)

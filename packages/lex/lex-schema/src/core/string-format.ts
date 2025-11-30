@@ -20,6 +20,8 @@ import {
 
 type AssertFn<T> = <I extends string>(input: I) => asserts input is I & T
 type CastFn<T> = <I extends string>(input: I) => I & T
+
+/*@__NO_SIDE_EFFECTS__*/
 function createCastFunction<T>(assertFn: AssertFn<T>): CastFn<T> {
   return <I extends string>(input: I) => {
     assertFn(input)
@@ -58,11 +60,14 @@ export type CidString = string
 export type UriString = `${string}:${string}`
 export type LanguageString = string
 
+/*@__NO_SIDE_EFFECTS__*/
 export function assertUri(input: string): asserts input is UriString {
   if (!/^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(input)) {
     throw new Error('Invalid URI')
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
 export function assertLanguage(input: string): asserts input is LanguageString {
   if (!isLanguage(input)) {
     throw new Error('Invalid BCP 47 string')
@@ -143,6 +148,7 @@ const formatters = /*#__PURE__*/ new Map<StringFormat, (str: string) => void>([
   ['record-key', assertRecordKey],
 ] as const)
 
+/*@__NO_SIDE_EFFECTS__*/
 export function assertStringFormat<F extends StringFormat>(
   input: string,
   format: F,

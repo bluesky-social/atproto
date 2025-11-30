@@ -1,5 +1,5 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { $Type, Simplify } from '../core.js'
+import { $Type, $TypeOf, Simplify } from '../core.js'
 import {
   Schema,
   ValidationResult,
@@ -13,7 +13,7 @@ export class TypedObjectSchema<
   readonly lexiconType = 'object' as const
 
   constructor(
-    readonly $type: NonNullable<Output['$type']>,
+    readonly $type: $TypeOf<Output>,
     readonly schema: Validator<Omit<Output, '$type'>>,
   ) {
     super()
@@ -27,7 +27,7 @@ export class TypedObjectSchema<
 
   build<X extends Omit<Output, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: NonNullable<Output['$type']> }> {
+  ): Simplify<Omit<X, '$type'> & { $type: $TypeOf<Output> }> {
     return { ...input, $type: this.$type }
   }
 

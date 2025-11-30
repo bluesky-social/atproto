@@ -1,4 +1,10 @@
-import { LexiconRecordKey, NsidString, Simplify, TidString } from '../core.js'
+import {
+  $TypeOf,
+  LexiconRecordKey,
+  NsidString,
+  Simplify,
+  TidString,
+} from '../core.js'
 import {
   Schema,
   ValidationResult,
@@ -21,7 +27,7 @@ export class RecordSchema<
 
   constructor(
     readonly key: Key,
-    readonly $type: Output['$type'],
+    readonly $type: $TypeOf<Output>,
     readonly schema: Validator<Omit<Output, '$type'>>,
   ) {
     super()
@@ -30,13 +36,13 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X extends { $type: Output['$type'] } ? X : never {
+  ): value is X extends { $type: $TypeOf<Output> } ? X : never {
     return value.$type === this.$type
   }
 
   build<X extends Omit<Output, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: Output['$type'] }> {
+  ): Simplify<Omit<X, '$type'> & { $type: $TypeOf<Output> }> {
     return { ...input, $type: this.$type }
   }
 

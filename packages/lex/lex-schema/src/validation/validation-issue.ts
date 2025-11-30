@@ -213,10 +213,12 @@ function stringifyValue(value: unknown): string {
   }
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 function stringifyObjectEntry([key, _value]: [PropertyKey, unknown]): string {
   return `${JSON.stringify(key)}: ...`
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 function stringifyArray<T>(
   arr: readonly T[],
   fn: (item: T) => string,
