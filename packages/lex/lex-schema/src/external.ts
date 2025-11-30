@@ -40,8 +40,6 @@ import {
   RecordSchema,
   RefSchema,
   RefSchemaGetter,
-  RefinedSchema,
-  Refinement,
   StringSchema,
   StringSchemaOptions,
   Subscription,
@@ -55,6 +53,7 @@ import {
   UnknownObjectOutput,
   UnknownObjectSchema,
   UnknownSchema,
+  refine,
 } from './schema.js'
 import { Infer, PropertyKey, Validator } from './validation.js'
 
@@ -195,12 +194,7 @@ export function intersection<
   return new IntersectionSchema<Left, Right>(left, right)
 }
 
-export function refined<T>(
-  schema: Validator<T>,
-  refinements: [Refinement<T>, ...Refinement<T>[]],
-) {
-  return new RefinedSchema<T>(schema, refinements)
-}
+export { refine }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function discriminatedUnion<

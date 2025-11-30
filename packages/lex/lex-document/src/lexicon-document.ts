@@ -133,16 +133,31 @@ export const lexiconArraySchema = l.object({
 })
 export type LexiconArray = l.Infer<typeof lexiconArraySchema>
 
-export const lexiconObjectSchema = l.object({
-  type: l.literal('object'),
-  properties: l.dict(
-    str,
-    l.discriminatedUnion('type', [...ARRAY_ITEMS_SCHEMAS, lexiconArraySchema]),
-  ),
-  required: strArrOpt,
-  nullable: strArrOpt,
-  description: strOpt,
-})
+const requirePropertiesRefinement: l.RefinementCheck<{
+  required?: string[]
+  properties: Record<string, unknown>
+}> = {
+  check: (v) => !v.required || v.required.every((k) => k in v.properties),
+  message: 'All required parameters must be defined in properties',
+  path: 'required',
+}
+
+export const lexiconObjectSchema = l.refine(
+  l.object({
+    type: l.literal('object'),
+    properties: l.dict(
+      str,
+      l.discriminatedUnion('type', [
+        ...ARRAY_ITEMS_SCHEMAS,
+        lexiconArraySchema,
+      ]),
+    ),
+    required: strArrOpt,
+    nullable: strArrOpt,
+    description: strOpt,
+  }),
+  requirePropertiesRefinement,
+)
 export type LexiconObject = l.Infer<typeof lexiconObjectSchema>
 
 // Records
@@ -157,30 +172,33 @@ export type LexiconRecord = l.Infer<typeof lexiconRecordSchema>
 
 // XRPC Methods
 
-export const lexiconParameters = l.object({
-  type: l.literal('params'),
-  properties: l.dict(
-    str,
-    l.discriminatedUnion('type', [
-      lexiconBooleanSchema,
-      lexiconIntegerSchema,
-      lexiconStringSchema,
-      l.object({
-        type: l.literal('array'),
-        items: l.discriminatedUnion('type', [
-          lexiconBooleanSchema,
-          lexiconIntegerSchema,
-          lexiconStringSchema,
-        ]),
-        minLength: intOpt,
-        maxLength: intOpt,
-        description: strOpt,
-      }),
-    ]),
-  ),
-  required: strArrOpt,
-  description: strOpt,
-})
+export const lexiconParameters = l.refine(
+  l.object({
+    type: l.literal('params'),
+    properties: l.dict(
+      str,
+      l.discriminatedUnion('type', [
+        lexiconBooleanSchema,
+        lexiconIntegerSchema,
+        lexiconStringSchema,
+        l.object({
+          type: l.literal('array'),
+          items: l.discriminatedUnion('type', [
+            lexiconBooleanSchema,
+            lexiconIntegerSchema,
+            lexiconStringSchema,
+          ]),
+          minLength: intOpt,
+          maxLength: intOpt,
+          description: strOpt,
+        }),
+      ]),
+    ),
+    required: strArrOpt,
+    description: strOpt,
+  }),
+  requirePropertiesRefinement,
+)
 export type LexiconParameters = l.Infer<typeof lexiconParameters>
 
 export const lexiconPayload = l.object({

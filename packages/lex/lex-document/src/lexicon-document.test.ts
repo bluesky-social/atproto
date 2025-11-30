@@ -86,4 +86,27 @@ describe('General validation', () => {
       error: { issues: [{ code: 'invalid_type', expected: ['string'] }] },
     })
   })
+
+  it('rejects object defs with invalid required fields', () => {
+    expect(
+      lexiconDocumentSchema.validate({
+        lexicon: 1,
+        id: 'com.example.lexicon',
+        defs: {
+          demo: {
+            type: 'object',
+            properties: {
+              foo: { type: 'string' },
+            },
+            required: ['bar'],
+          },
+        },
+      }),
+    ).toMatchObject({
+      success: false,
+      error: {
+        issues: [{ code: 'custom', path: ['defs', 'demo', 'required'] }],
+      },
+    })
+  })
 })
