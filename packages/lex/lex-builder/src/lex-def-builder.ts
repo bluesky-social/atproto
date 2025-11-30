@@ -646,19 +646,13 @@ export class LexDefBuilder {
 
   private async compileIntegerSchema(def: LexiconInteger): Promise<string> {
     if (hasConst(def)) {
-      const schema = l.integer(def)
-      if (!schema.check(def.const)) {
-        throw new Error(`Integer const ${def.const} is out of bounds`)
-      }
+      const schema: l.IntegerSchema = l.integer(def)
+      schema.assert(def.const)
     }
 
     if (hasEnum(def)) {
-      const schema = l.integer(def)
-      for (const val of def.enum) {
-        if (!schema.check(val)) {
-          throw new Error(`Integer enum value ${val} is out of bounds`)
-        }
-      }
+      const schema: l.IntegerSchema = l.integer(def)
+      for (const val of def.enum) schema.assert(val)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
@@ -681,17 +675,11 @@ export class LexDefBuilder {
 
   private async compileStringSchema(def: LexiconString): Promise<string> {
     if (hasConst(def)) {
-      const schema = l.string(def)
-      if (!schema.check(def.const)) {
-        throw new Error(`String const "${def.const}" does not match format`)
-      }
+      const schema: l.StringSchema = l.string(def)
+      schema.assert(def.const)
     } else if (hasEnum(def)) {
-      const schema = l.string(def)
-      for (const val of def.enum) {
-        if (!schema.check(val)) {
-          throw new Error(`String enum value "${val}" does not match format`)
-        }
-      }
+      const schema: l.StringSchema = l.string(def)
+      for (const val of def.enum) schema.assert(val)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
