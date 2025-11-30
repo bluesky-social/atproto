@@ -3,18 +3,22 @@ export type ResultFailure<E = Error> = { success: false; error: E }
 
 export type Result<V = any, E = Error> = ResultSuccess<V> | ResultFailure<E>
 
+/*@__NO_SIDE_EFFECTS__*/
 export function success<V>(value: V): ResultSuccess<V> {
   return { success: true, value }
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 export function failure<E>(error: E): ResultFailure<E> {
   return { success: false, error }
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 export function failureError<T>(result: ResultFailure<T>): T {
   return result.error
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 export function successValue<T>(result: ResultSuccess<T>): T {
   return result.value
 }
@@ -38,6 +42,7 @@ export function successValue<T>(result: ResultSuccess<T>): T {
  * }
  * ```
  */
+/*@__NO_SIDE_EFFECTS__*/
 export function catchall(err: unknown): ResultFailure<Error> {
   if (err instanceof Error) return failure(err)
   return failure(new Error('Unknown error', { cause: err }))
@@ -65,6 +70,7 @@ export function catchall(err: unknown): ResultFailure<Error> {
  *   console.error(result.error) // FooError | BarError
  * }
  */
+/*@__NO_SIDE_EFFECTS__*/
 export function createCatcher<T>(Ctor: new (...args: any[]) => T) {
   return (err: unknown): ResultFailure<T> => {
     if (err instanceof Ctor) return failure(err)

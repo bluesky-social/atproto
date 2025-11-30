@@ -13,7 +13,7 @@ import {
   NamedLexiconDefinition,
 } from '@atproto/lex-document'
 import { LexResolver, LexResolverOptions } from '@atproto/lex-resolver'
-import { AtUri as AtUriString, Nsid as NsidString } from '@atproto/lex-schema'
+import { AtUriString, NsidString } from '@atproto/lex-schema'
 import { AtUri, NSID } from '@atproto/syntax'
 import { isEnoentError, writeJsonFile } from './fs.js'
 import {

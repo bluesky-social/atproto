@@ -1,7 +1,20 @@
+/** An ISO 8601 formatted datetime string (YYYY-MM-DDTHH:mm:ss.sssZ) */
+export type DatetimeString =
+  `${string}-${string}-${string}T${string}:${string}:${string}${'Z' | `+${string}` | `-${string}`}`
+
+// Allow date.toISOString() to be used where datetime format is expected
+declare global {
+  interface Date {
+    toISOString(): `${string}-${string}-${string}T${string}:${string}:${string}Z`
+  }
+}
+
 /* Validates datetime string against atproto Lexicon 'datetime' format.
  * Syntax is described at: https://atproto.com/specs/lexicon#datetime
  */
-export const ensureValidDatetime = (dtStr: string): void => {
+export function ensureValidDatetime(
+  dtStr: string,
+): asserts dtStr is DatetimeString {
   const date = new Date(dtStr)
   // must parse as ISO 8601; this also verifies semantics like month is not 13 or 00
   if (isNaN(date.getTime())) {
@@ -33,7 +46,7 @@ export const ensureValidDatetime = (dtStr: string): void => {
 
 /* Same logic as ensureValidDatetime(), but returns a boolean instead of throwing an exception.
  */
-export const isValidDatetime = (dtStr: string): boolean => {
+export function isValidDatetime(dtStr: string): dtStr is DatetimeString {
   try {
     ensureValidDatetime(dtStr)
   } catch (err) {
@@ -56,7 +69,7 @@ export const isValidDatetime = (dtStr: string): boolean => {
  *
  * Expected output format: YYYY-MM-DDTHH:mm:ss.sssZ
  */
-export const normalizeDatetime = (dtStr: string): string => {
+export function normalizeDatetime(dtStr: string): DatetimeString {
   if (isValidDatetime(dtStr)) {
     const outStr = new Date(dtStr).toISOString()
     if (isValidDatetime(outStr)) {
@@ -96,7 +109,7 @@ export const normalizeDatetime = (dtStr: string): string => {
  *
  * If a InvalidDatetimeError is encountered, returns the UNIX epoch time as a UTC datetime (1970-01-01T00:00:00.000Z).
  */
-export const normalizeDatetimeAlways = (dtStr: string): string => {
+export const normalizeDatetimeAlways = (dtStr: string): DatetimeString => {
   try {
     return normalizeDatetime(dtStr)
   } catch (err) {

@@ -1,7 +1,7 @@
-import { Did } from '@atproto/lex-schema'
+import { DidString } from '@atproto/lex-schema'
 
 export interface Agent {
-  did?: Did
+  did?: DidString
 
   fetchHandler: (
     this: Agent,
@@ -19,7 +19,7 @@ export type AgentConfig = {
   /**
    * The identifier (DID) of the user represented by this agent.
    */
-  did?: Did
+  did?: DidString
 
   /**
    * The service URL to make requests to. This can be a string, URL, or a

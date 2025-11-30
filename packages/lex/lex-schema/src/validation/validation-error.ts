@@ -70,6 +70,7 @@ function aggregateIssues(issues: Issue[]): Issue[] {
   ]
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 function comparePropertyPaths(
   a: readonly PropertyKey[],
   b: readonly PropertyKey[],

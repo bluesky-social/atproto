@@ -1,12 +1,12 @@
-import { Did, UnknownString } from '@atproto/lex-schema'
+import { DidString, UnknownString } from '@atproto/lex-schema'
 
-export type { Did, UnknownString }
+export type { DidString, UnknownString }
 
 export type DidServiceIdentifier = 'atproto_labeler' | UnknownString
-export type Service = `${Did}#${DidServiceIdentifier}`
+export type Service = `${DidString}#${DidServiceIdentifier}`
 
 export type CallOptions = {
-  labelers?: Iterable<Did>
+  labelers?: Iterable<DidString>
   signal?: AbortSignal
   headers?: HeadersInit
   service?: Service

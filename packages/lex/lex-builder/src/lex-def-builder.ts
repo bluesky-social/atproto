@@ -701,20 +701,32 @@ export class LexDefBuilder {
     if (hasEnum(def)) return this.compileEnumType(def)
 
     switch (def.format) {
+      case undefined:
+        break
       case 'datetime':
-        return 'l.Datetime'
+        return 'l.DatetimeString'
       case 'uri':
-        return 'l.Uri'
+        return 'l.UriString'
       case 'at-uri':
-        return 'l.AtUri'
+        return 'l.AtUriString'
       case 'did':
-        return 'l.Did'
+        return 'l.DidString'
       case 'handle':
-        return 'l.Handle'
+        return 'l.HandleString'
       case 'at-identifier':
-        return 'l.AtIdentifier'
+        return 'l.AtIdentifierString'
       case 'nsid':
-        return 'l.Nsid'
+        return 'l.NsidString'
+      case 'tid':
+        return 'l.TidString'
+      case 'cid':
+        return 'l.CidString'
+      case 'language':
+        return 'l.LanguageString'
+      case 'record-key':
+        return 'l.RecordKeyString'
+      default:
+        throw new Error(`Unknown string format: ${def.format}`)
     }
 
     if (def.knownValues?.length) {

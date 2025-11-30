@@ -1,4 +1,10 @@
-import { Nsid, RecordKey, Simplify } from '../core.js'
+import {
+  $TypeOf,
+  LexiconRecordKey,
+  NsidString,
+  Simplify,
+  TidString,
+} from '../core.js'
 import {
   Schema,
   ValidationResult,
@@ -12,8 +18,8 @@ export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
 
 export class RecordSchema<
-  Key extends RecordKey = any,
-  Output extends { $type: Nsid } = any,
+  Key extends LexiconRecordKey = any,
+  Output extends { $type: NsidString } = any,
 > extends Schema<Output> {
   readonly lexiconType = 'record' as const
 
@@ -21,7 +27,7 @@ export class RecordSchema<
 
   constructor(
     readonly key: Key,
-    readonly $type: Output['$type'],
+    readonly $type: $TypeOf<Output>,
     readonly schema: Validator<Omit<Output, '$type'>>,
   ) {
     super()
@@ -30,13 +36,13 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X extends { $type: Output['$type'] } ? X : never {
+  ): value is X extends { $type: $TypeOf<Output> } ? X : never {
     return value.$type === this.$type
   }
 
   build<X extends Omit<Output, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: Output['$type'] }> {
+  ): Simplify<Omit<X, '$type'> & { $type: $TypeOf<Output> }> {
     return { ...input, $type: this.$type }
   }
 
@@ -66,17 +72,18 @@ export class RecordSchema<
   }
 }
 
-export type RecordKeySchemaOutput<Key extends RecordKey> = Key extends 'any'
-  ? string
-  : Key extends 'tid'
+export type RecordKeySchemaOutput<Key extends LexiconRecordKey> =
+  Key extends 'any'
     ? string
-    : Key extends 'nsid'
-      ? Nsid
-      : Key extends `literal:${infer L extends string}`
-        ? L
-        : never
+    : Key extends 'tid'
+      ? TidString
+      : Key extends 'nsid'
+        ? NsidString
+        : Key extends `literal:${infer L extends string}`
+          ? L
+          : never
 
-export type RecordKeySchema<Key extends RecordKey> = Schema<
+export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
   RecordKeySchemaOutput<Key>
 >
 
@@ -85,7 +92,9 @@ const tidSchema = new StringSchema({ format: 'tid' })
 const nsidSchema = new StringSchema({ format: 'nsid' })
 const selfLiteralSchema = new LiteralSchema('self')
 
-function recordKey<Key extends RecordKey>(key: Key): RecordKeySchema<Key> {
+function recordKey<Key extends LexiconRecordKey>(
+  key: Key,
+): RecordKeySchema<Key> {
   // @NOTE Use cached instances for common schemas
   if (key === 'any') return keySchema as any
   if (key === 'tid') return tidSchema as any

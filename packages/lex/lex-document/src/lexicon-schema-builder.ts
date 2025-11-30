@@ -167,11 +167,7 @@ export class LexiconSchemaBuilder {
       case 'token':
         return l.token(doc.id, hash)
       case 'record':
-        return l.record(
-          def.key ? l.asRecordKey(def.key) : 'any',
-          doc.id,
-          this.compileObject(doc, def.record),
-        )
+        return l.record(def.key, doc.id, this.compileObject(doc, def.record))
       case 'object':
         return l.typedObject(doc.id, hash, this.compileObject(doc, def))
       default:

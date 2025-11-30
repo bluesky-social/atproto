@@ -1,9 +1,9 @@
-import { Nsid } from './string-format.js'
+import { NsidString } from './string-format.js'
 
 export type $Type<
-  N extends Nsid = Nsid,
+  N extends NsidString = NsidString,
   H extends string = string,
-> = N extends Nsid
+> = N extends NsidString
   ? string extends H
     ? N | `${N}#${string}`
     : H extends 'main'
@@ -11,7 +11,10 @@ export type $Type<
       : `${N}#${H}`
   : never
 
-export function $type<N extends Nsid, H extends string>(
+export type $TypeOf<O extends { $type?: string }> = NonNullable<O['$type']>
+
+/*@__NO_SIDE_EFFECTS__*/
+export function $type<N extends NsidString, H extends string>(
   nsid: N,
   hash: H,
 ): $Type<N, H> {

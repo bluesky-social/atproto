@@ -43,6 +43,7 @@ export function refine<
   R extends Refinement,
   S extends Validator<InferRefinement<R>>,
 >(schema: S, refinement: R): S
+/*@__NO_SIDE_EFFECTS__*/
 export function refine<S extends Validator>(
   schema: S,
   refinement: Refinement<Infer<S>>,
@@ -62,6 +63,7 @@ export function refine<S extends Validator>(
   })
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 function validateInContextUnbound<S extends Validator>(
   this: {
     schema: S

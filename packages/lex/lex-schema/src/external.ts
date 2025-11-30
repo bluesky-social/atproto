@@ -1,4 +1,4 @@
-import { $Type, $type, Nsid, RecordKey, Simplify } from './core.js'
+import { $Type, $type, LexiconRecordKey, NsidString, Simplify } from './core.js'
 import {
   ArraySchema,
   ArraySchemaOptions,
@@ -40,6 +40,7 @@ import {
   RecordSchema,
   RefSchema,
   RefSchemaGetter,
+  RegexpSchema,
   StringSchema,
   StringSchemaOptions,
   Subscription,
@@ -132,6 +133,11 @@ export function string<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
+export function regexp<T extends string>(pattern: RegExp) {
+  return new RegexpSchema<T>(pattern)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
 export function array<T>(items: Validator<T>, options?: ArraySchemaOptions) {
   return new ArraySchema<T>(items, options)
 }
@@ -208,7 +214,7 @@ export function discriminatedUnion<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function token<const N extends Nsid, const H extends string>(
+export function token<const N extends NsidString, const H extends string>(
   nsid: N,
   hash: H,
 ) {
@@ -242,7 +248,7 @@ export function typedUnion<
  *   schemas that work even if they contain circular references.
  */
 export function typedObject<
-  const N extends Nsid,
+  const N extends NsidString,
   const H extends string,
   const Schema extends Validator<{ [_ in string]?: unknown }>,
 >(
@@ -265,7 +271,7 @@ export function typedObject<V extends { $type?: $Type }>(
 ): TypedObjectSchema<V>
 /*@__NO_SIDE_EFFECTS__*/
 export function typedObject<
-  const N extends Nsid,
+  const N extends NsidString,
   const H extends string,
   const Schema extends Validator<{ [_ in string]?: unknown }>,
 >(nsid: N, hash: H, schema: Schema) {
@@ -289,8 +295,8 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
  *   schemas that work even if they contain circular references.
  */
 export function record<
-  const K extends RecordKey,
-  const T extends Nsid,
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
 >(
   key: K,
@@ -298,8 +304,8 @@ export function record<
   schema: S,
 ): RecordSchema<K, Simplify<{ $type: T } & Infer<S>>>
 export function record<
-  const K extends RecordKey,
-  const V extends { $type: Nsid },
+  const K extends LexiconRecordKey,
+  const V extends { $type: NsidString },
 >(
   key: K,
   type: AsNsid<V['$type']>,
@@ -307,8 +313,8 @@ export function record<
 ): RecordSchema<K, V>
 /*@__NO_SIDE_EFFECTS__*/
 export function record<
-  const K extends RecordKey,
-  const T extends Nsid,
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
 >(key: K, type: T, schema: S) {
   return new RecordSchema(key, type, schema)
@@ -331,7 +337,7 @@ export function payload<
 
 /*@__NO_SIDE_EFFECTS__*/
 export function query<
-  const N extends Nsid,
+  const N extends NsidString,
   const P extends ParamsSchema,
   const O extends Payload,
   const E extends undefined | readonly string[] = undefined,
@@ -341,7 +347,7 @@ export function query<
 
 /*@__NO_SIDE_EFFECTS__*/
 export function procedure<
-  const N extends Nsid,
+  const N extends NsidString,
   const P extends ParamsSchema,
   const I extends Payload,
   const O extends Payload,
@@ -352,7 +358,7 @@ export function procedure<
 
 /*@__NO_SIDE_EFFECTS__*/
 export function subscription<
-  const N extends string,
+  const N extends NsidString,
   const P extends ParamsSchema,
   const M extends undefined | RefSchema | TypedUnionSchema | ObjectSchema,
   const E extends undefined | readonly string[] = undefined,
@@ -370,7 +376,7 @@ export function permission<
 
 /*@__NO_SIDE_EFFECTS__*/
 export function permissionSet<
-  const N extends string,
+  const N extends NsidString,
   const P extends readonly Permission[],
   const O extends PermissionSetOptions,
 >(nsid: N, permissions: P, options: PermissionSetOptions & O = {} as O) {

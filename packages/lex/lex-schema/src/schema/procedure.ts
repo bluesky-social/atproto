@@ -1,4 +1,4 @@
-import { Nsid } from '../core.js'
+import { NsidString } from '../core.js'
 import { Infer } from '../validation.js'
 import { ParamsSchema } from './params.js'
 import { InferPayloadBody, Payload } from './payload.js'
@@ -17,19 +17,19 @@ export type InferProcedureOutputBody<Q extends Procedure> =
     : never
 
 export class Procedure<
-  N extends Nsid = any,
-  P extends ParamsSchema = any,
-  I extends Payload = any,
-  O extends Payload = any,
-  E extends undefined | readonly string[] = any,
+  TNsid extends NsidString = any,
+  TParameters extends ParamsSchema = any,
+  TInputPayload extends Payload = any,
+  TOutputPayload extends Payload = any,
+  TErrors extends undefined | readonly string[] = any,
 > {
   readonly lexiconType = 'procedure' as const
 
   constructor(
-    readonly nsid: N,
-    readonly parameters: P,
-    readonly input: I,
-    readonly output: O,
-    readonly errors: E,
+    readonly nsid: TNsid,
+    readonly parameters: TParameters,
+    readonly input: TInputPayload,
+    readonly output: TOutputPayload,
+    readonly errors: TErrors,
   ) {}
 }

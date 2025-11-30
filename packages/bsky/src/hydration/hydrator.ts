@@ -1327,7 +1327,7 @@ export class Hydrator {
     const uri = new AtUri(uriStr)
     const [did] = await this.actor.getDids([uri.host])
     if (!did) return uriStr
-    uri.host = did
+    uri.hostname = did
     return uri.toString()
   }
 }

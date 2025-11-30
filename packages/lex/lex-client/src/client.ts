@@ -1,18 +1,18 @@
 import { LexMap, LexValue } from '@atproto/lex-data'
 import {
-  AtIdentifier,
-  Did,
+  AtIdentifierString,
+  DidString,
   Infer,
   InferProcedureInputBody,
   InferProcedureOutputBody,
   InferQueryOutputBody,
   InferQueryParameters,
   InferRecordKey,
-  Nsid,
+  LexiconRecordKey,
+  NsidString,
   Params,
   Procedure,
   Query,
-  RecordKey,
   RecordSchema,
   Restricted,
   Schema,
@@ -30,7 +30,7 @@ import { CallOptions, Namespace, Service, getMain } from './types.js'
 import { XrpcOptions, xrpc, xrpcRequestHeaders } from './xrpc.js'
 
 export type ClientOptions = {
-  labelers?: Iterable<Did>
+  labelers?: Iterable<DidString>
   headers?: HeadersInit
   service?: Service
 }
@@ -46,30 +46,30 @@ export type InferActionOutput<A extends Action> =
   A extends Action<any, infer O> ? O : never
 
 export type CreateRecordOptions = CallOptions & {
-  repo?: AtIdentifier
+  repo?: AtIdentifierString
   swapCommit?: string
   validate?: boolean
 }
 
 export type DeleteRecordOptions = CallOptions & {
-  repo?: AtIdentifier
+  repo?: AtIdentifierString
   swapCommit?: string
   swapRecord?: string
 }
 
 export type GetRecordOptions = CallOptions & {
-  repo?: AtIdentifier
+  repo?: AtIdentifierString
 }
 
 export type PutRecordOptions = CallOptions & {
-  repo?: AtIdentifier
+  repo?: AtIdentifierString
   swapCommit?: string
   swapRecord?: string
   validate?: boolean
 }
 
 export type ListRecordsOptions = CallOptions & {
-  repo?: AtIdentifier
+  repo?: AtIdentifierString
   limit?: number
   cursor?: string
   reverse?: boolean
@@ -77,7 +77,7 @@ export type ListRecordsOptions = CallOptions & {
 
 export type RecordKeyOptions<
   T extends RecordSchema,
-  AlsoOptionalWhenRecordKeyIs extends RecordKey = never,
+  AlsoOptionalWhenRecordKeyIs extends LexiconRecordKey = never,
 > = T['key'] extends `literal:${string}` | AlsoOptionalWhenRecordKeyIs
   ? { rkey?: InferRecordKey<T> }
   : { rkey: InferRecordKey<T> }
@@ -119,19 +119,19 @@ export type ListRecord<T extends RecordSchema> =
   }
 
 export class Client implements Agent {
-  static appLabelers: readonly Did[] = []
+  static appLabelers: readonly DidString[] = []
 
   /**
    * Configures the Client (or its sub classes) globally.
    */
-  static configure(opts: { appLabelers?: Iterable<Did> }) {
+  static configure(opts: { appLabelers?: Iterable<DidString> }) {
     if (opts.appLabelers) this.appLabelers = [...opts.appLabelers]
   }
 
   public readonly agent: Agent
   public readonly headers: Headers
   public readonly service?: Service
-  public readonly labelers: Set<Did>
+  public readonly labelers: Set<DidString>
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
     this.agent =
@@ -143,25 +143,25 @@ export class Client implements Agent {
     this.headers = new Headers(options.headers)
   }
 
-  get did(): Did | undefined {
+  get did(): DidString | undefined {
     return this.agent.did
   }
 
-  get assertDid(): Did {
+  get assertDid(): DidString {
     this.assertAuthenticated()
     return this.did
   }
 
-  public assertAuthenticated(): asserts this is { did: Did } {
+  public assertAuthenticated(): asserts this is { did: DidString } {
     if (!this.did) throw new XrpcError(KnownError.AuthenticationRequired)
   }
 
-  public setLabelers(labelers: Iterable<Did> = []) {
+  public setLabelers(labelers: Iterable<DidString> = []) {
     this.clearLabelers()
     this.addLabelers(labelers)
   }
 
-  public addLabelers(labelers: Iterable<Did>) {
+  public addLabelers(labelers: Iterable<DidString>) {
     for (const labeler of labelers) this.labelers.add(labeler)
   }
 
@@ -226,7 +226,7 @@ export class Client implements Agent {
    * @param rkey Leave `undefined` to have the server generate a TID.
    */
   public async createRecord(
-    record: { $type: Nsid } & LexMap,
+    record: { $type: NsidString } & LexMap,
     rkey?: string,
     options?: CreateRecordOptions,
   ) {
@@ -250,7 +250,7 @@ export class Client implements Agent {
   }
 
   async deleteRecord(
-    collection: Nsid,
+    collection: NsidString,
     rkey: string,
     options?: DeleteRecordOptions,
   ) {
@@ -273,7 +273,7 @@ export class Client implements Agent {
   }
 
   public async getRecord(
-    collection: Nsid,
+    collection: NsidString,
     rkey: string,
     options?: GetRecordOptions,
   ) {
@@ -294,7 +294,7 @@ export class Client implements Agent {
   }
 
   async putRecord(
-    record: { $type: Nsid } & LexMap,
+    record: { $type: NsidString } & LexMap,
     rkey: string,
     options?: PutRecordOptions,
   ) {
@@ -318,7 +318,7 @@ export class Client implements Agent {
     )
   }
 
-  async listRecords(nsid: Nsid, options?: ListRecordsOptions) {
+  async listRecords(nsid: NsidString, options?: ListRecordsOptions) {
     return this.xrpc(com.atproto.repo.listRecords.main, {
       ...options,
       params: {

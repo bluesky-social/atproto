@@ -1,7 +1,9 @@
+export type TidString = string
+
 const TID_LENGTH = 13
 const TID_REGEX = /^[234567abcdefghij][234567abcdefghijklmnopqrstuvwxyz]{12}$/
 
-export const ensureValidTid = (tid: string): void => {
+export function ensureValidTid(tid: string): asserts tid is TidString {
   if (tid.length !== TID_LENGTH) {
     throw new InvalidTidError(`TID must be ${TID_LENGTH} characters`)
   }
@@ -11,7 +13,7 @@ export const ensureValidTid = (tid: string): void => {
   }
 }
 
-export const isValidTid = (tid: string): boolean => {
+export function isValidTid(tid: string): tid is TidString {
   return tid.length === TID_LENGTH && TID_REGEX.test(tid)
 }
 
