@@ -1,14 +1,15 @@
-import { PropertyKey } from '../validation/property-key.js'
 import {
-  ContextualIssue,
+  Issue,
+  IssueCustom,
+  PropertyKey,
+  Schema,
   ValidationResult,
-  Validator,
   ValidatorContext,
-} from '../validation/validator.js'
+} from '../validation.js'
 
 export type CustomAssertionContext = {
   path: PropertyKey[]
-  addIssue(issue: ContextualIssue): void
+  addIssue(issue: Issue): void
 }
 
 export type CustomAssertion<T = any> = (
@@ -17,7 +18,7 @@ export type CustomAssertion<T = any> = (
   ctx: CustomAssertionContext,
 ) => input is T
 
-export class CustomSchema<T = unknown> extends Validator<T> {
+export class CustomSchema<T = unknown> extends Schema<T> {
   constructor(
     private readonly assertion: CustomAssertion<T>,
     private readonly message: string,
@@ -26,11 +27,12 @@ export class CustomSchema<T = unknown> extends Validator<T> {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<T> {
     if (this.assertion.call(null, input, ctx)) return ctx.success(input as T)
-    return ctx.custom(input, this.message, this.path)
+    const path = ctx.concatPath(this.path)
+    return ctx.failure(new IssueCustom(path, input, this.message))
   }
 }

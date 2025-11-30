@@ -15,7 +15,7 @@ import {
   RecordKeyDefinition,
   RecordSchema,
   Restricted,
-  ValidationResult,
+  Schema,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
 import {
@@ -478,7 +478,7 @@ export class Client implements Agent {
     const invalid: LexMap[] = []
 
     for (const record of body.records) {
-      const parsed = schema.validate(record.value) as ValidationResult<Infer<T>>
+      const parsed = (schema as Schema<Infer<T>>).safeParse(record.value)
       if (parsed.success) {
         records.push({ ...record, value: parsed.value })
       } else {

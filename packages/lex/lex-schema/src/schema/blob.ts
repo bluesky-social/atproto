@@ -4,7 +4,7 @@ import {
   isBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export type BlobSchemaOptions = {
   /**
@@ -32,7 +32,7 @@ export type BlobSchemaOutput<Options> = Options extends { allowLegacy: true }
   ? BlobRef | LegacyBlobRef
   : BlobRef
 
-export class BlobSchema<O extends BlobSchemaOptions> extends Validator<
+export class BlobSchema<O extends BlobSchemaOptions> extends Schema<
   BlobSchemaOutput<O>
 > {
   readonly lexiconType = 'blob' as const
@@ -41,7 +41,7 @@ export class BlobSchema<O extends BlobSchemaOptions> extends Validator<
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<BlobSchemaOutput<O>> {

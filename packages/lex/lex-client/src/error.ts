@@ -1,13 +1,5 @@
 import { LexValue } from '@atproto/lex-data'
-import {
-  Infer,
-  ObjectSchema,
-  Procedure,
-  Query,
-  ResultFailure,
-  StringSchema,
-  Validator,
-} from '@atproto/lex-schema'
+import { l } from '@atproto/lex-schema'
 
 export enum KnownError {
   Unknown = 'Unknown',
@@ -27,24 +19,23 @@ export enum KnownError {
   XRPCNotSupported = 'XRPCNotSupported',
 }
 
-export type XrpcFailure<N extends string, E> = ResultFailure<E> & {
+export type XrpcFailure<N extends string, E> = l.ResultFailure<E> & {
   name: N
 }
 
-export type XrpcErrorName = Infer<typeof xrpcErrorNameSchema>
-export const xrpcErrorNameSchema = new StringSchema({
+export type XrpcErrorName = l.UnknownString | KnownError
+export const xrpcErrorNameSchema = l.string({
   minLength: 1,
-  knownValues: Object.keys(KnownError) as KnownError[],
 })
 
 export type XrpcErrorBody<N extends XrpcErrorName = XrpcErrorName> = {
   error: N
   message?: string
 }
-export const xrpcErrorBodySchema = new ObjectSchema(
-  { error: xrpcErrorNameSchema, message: new StringSchema({}) },
-  { required: ['error'] },
-) satisfies Validator<XrpcErrorBody>
+export const xrpcErrorBodySchema = l.object({
+  error: xrpcErrorNameSchema,
+  message: l.optional(l.string()),
+})
 
 /**
  * @implements {XrpcFailure<N, XrpcError<N>>} for convenience in result handling contexts.
@@ -68,10 +59,10 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
     super(message, options)
   }
 
-  /** @see {@link ResultFailure.success} */
+  /** @see {@link l.ResultFailure.success} */
   readonly success = false as const
 
-  /** @see {@link ResultFailure.error} */
+  /** @see {@link l.ResultFailure.error} */
   get error(): this {
     return this
   }
@@ -118,7 +109,7 @@ export class XrpcResponseError<
   }
 }
 
-export type XrpcRequestFailure<M extends Procedure | Query> =
+export type XrpcRequestFailure<M extends l.Procedure | l.Query> =
   // The server responded with a declared error.
   | (M extends { errors: readonly (infer N extends string)[] }
       ? XrpcResponseError<N> // implements XrpcRequestFailure<N, XrpcResponseError<N>>
@@ -129,7 +120,7 @@ export type XrpcRequestFailure<M extends Procedure | Query> =
   // An unexpected error occurred (e.g., network error, invalid response, etc.)
   | XrpcFailure<'UnexpectedError', unknown>
 
-export function asXrpcRequestFailureFor<M extends Procedure | Query>(
+export function asXrpcRequestFailureFor<M extends l.Procedure | l.Query>(
   schema: M,
 ) {
   // Performance: Using .bind instead of arrow function to avoid creating a closure
@@ -138,7 +129,7 @@ export function asXrpcRequestFailureFor<M extends Procedure | Query>(
   ) => XrpcRequestFailure<M>
 }
 
-function asXrpcRequestFailure<M extends Procedure | Query>(
+function asXrpcRequestFailure<M extends l.Procedure | l.Query>(
   this: M,
   error: unknown,
 ): XrpcRequestFailure<M> {

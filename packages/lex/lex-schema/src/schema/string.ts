@@ -1,16 +1,10 @@
-import { CID, graphemeLen, utf8Len } from '@atproto/lex-data'
-import {
-  InferStringFormat,
-  StringFormat,
-  UnknownString,
-  assertStringFormat,
-} from '../core.js'
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { asCid, graphemeLen, utf8Len } from '@atproto/lex-data'
+import { InferStringFormat, StringFormat, assertStringFormat } from '../core.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 import { TokenSchema } from './token.js'
 
 export type StringSchemaOptions = {
   default?: string
-  knownValues?: readonly string[]
   format?: StringFormat
   minLength?: number
   maxLength?: number
@@ -22,20 +16,18 @@ export type StringSchemaOutput<Options> =
   //
   Options extends { format: infer F extends StringFormat }
     ? InferStringFormat<F>
-    : Options extends { knownValues: readonly (infer K extends string)[] }
-      ? K | UnknownString
-      : string
+    : string
 
 export class StringSchema<
   const Options extends StringSchemaOptions = any,
-> extends Validator<StringSchemaOutput<Options>> {
+> extends Schema<StringSchemaOutput<Options>> {
   readonly lexiconType = 'string' as const
 
   constructor(readonly options: Options) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     // @NOTE validation will be applied on the default value as well
     input: unknown = this.options.default,
     ctx: ValidatorContext,
@@ -104,6 +96,10 @@ export class StringSchema<
 
 export function coerceToString(input: unknown): string | null {
   switch (typeof input) {
+    // @NOTE We do *not* coerce numbers/booleans to strings because that can
+    // lead to them being accepted as string instead of being coerced to
+    // number/boolean when the input is a string and the expected result is
+    // number/boolean (e.g. in params).
     case 'string':
       return input
     case 'object': {
@@ -124,7 +120,7 @@ export function coerceToString(input: unknown): string | null {
         return input.toString()
       }
 
-      const cid = CID.asCID(input)
+      const cid = asCid(input)
       if (cid) return cid.toString()
 
       if (input instanceof String) {

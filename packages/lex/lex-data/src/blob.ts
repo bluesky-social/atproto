@@ -1,10 +1,16 @@
-import { CID, RAW_BIN_MULTICODEC, SHA2_256_MULTIHASH_CODE } from './cid.js'
+import {
+  Cid,
+  RAW_BIN_MULTICODEC,
+  SHA2_256_MULTIHASH_CODE,
+  asCid,
+  parseCid,
+} from './cid.js'
 import { isPlainObject } from './object.js'
 
 export type BlobRef = {
   $type: 'blob'
   mimeType: string
-  ref: CID
+  ref: Cid
   size: number
 }
 
@@ -44,7 +50,7 @@ export function isBlobRef(
     }
   }
 
-  const cid = CID.asCID(ref)
+  const cid = asCid(ref)
   if (!cid) {
     return false
   }
@@ -90,7 +96,7 @@ export function isLegacyBlobRef(input: unknown): input is LegacyBlobRef {
   }
 
   try {
-    CID.parse(cid)
+    parseCid(cid)
   } catch {
     return false
   }

@@ -1,4 +1,4 @@
-import { CID } from './cid.js'
+import { parseCid } from './cid.js'
 import { isObject, isPlainObject } from './object.js'
 describe('isObject', () => {
   it('returns true for plain objects', () => {
@@ -7,7 +7,7 @@ describe('isObject', () => {
   })
 
   it('returns true for CIDs', () => {
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     )
     expect(isObject(cid)).toBe(true)
@@ -54,7 +54,7 @@ describe('isPlainObject', () => {
   })
 
   it('returns false for CIDs', () => {
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     )
     expect(isPlainObject(cid)).toBe(false)

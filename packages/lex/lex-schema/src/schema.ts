@@ -1,5 +1,8 @@
-// Utilities (that depend on *and* are used by schemas)
+// Global schemas
 export * from './schema/_parameters.js'
+
+// Utilities
+export * from './schema/refine.js'
 
 // Concrete Types
 export * from './schema/array.js'
@@ -22,6 +25,8 @@ export * from './schema/unknown.js'
 export * from './schema/custom.js'
 export * from './schema/discriminated-union.js'
 export * from './schema/intersection.js'
+export * from './schema/nullable.js'
+export * from './schema/optional.js'
 export * from './schema/ref.js'
 export * from './schema/union.js'
 

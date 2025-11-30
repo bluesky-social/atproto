@@ -1,4 +1,10 @@
-import { $Type, $type, NsidString, RecordKeyDefinition } from './core.js'
+import {
+  $Type,
+  $type,
+  NsidString,
+  RecordKeyDefinition,
+  Simplify,
+} from './core.js'
 import {
   ArraySchema,
   ArraySchemaOptions,
@@ -13,20 +19,21 @@ import {
   CustomSchema,
   DictSchema,
   DiscriminatedUnionSchema,
-  DiscriminatedUnionSchemaVariants,
+  DiscriminatedUnionVariants,
   EnumSchema,
+  EnumSchemaOptions,
   IntegerSchema,
   IntegerSchemaOptions,
   IntersectionSchema,
-  IntersectionSchemaValidators,
   LiteralSchema,
+  LiteralSchemaOptions,
   NeverSchema,
   NullSchema,
+  NullableSchema,
   ObjectSchema,
-  ObjectSchemaOptions,
   ObjectSchemaProperties,
+  OptionalSchema,
   ParamsSchema,
-  ParamsSchemaOptions,
   ParamsSchemaProperties,
   Payload,
   PayloadBody,
@@ -52,6 +59,7 @@ import {
   UnknownObjectOutput,
   UnknownObjectSchema,
   UnknownSchema,
+  refine,
 } from './schema.js'
 import { Infer, PropertyKey, Validator } from './validation.js'
 
@@ -79,27 +87,29 @@ export { _null as null }
 /*@__NO_SIDE_EFFECTS__*/
 export function literal<const V extends null | string | number | boolean>(
   value: V,
+  options?: LiteralSchemaOptions<V>,
 ) {
-  return new LiteralSchema<V>(value)
+  return new LiteralSchema<V>(value, options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function _enum<const V extends null | string | number | boolean>(
   value: readonly V[],
+  options?: EnumSchemaOptions<V>,
 ) {
-  return new EnumSchema<V>(value)
+  return new EnumSchema<V>(value, options)
 }
 
 // @NOTE "enum" is a reserved keyword in JS/TS
 export { _enum as enum }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function boolean(options: BooleanSchemaOptions = {}) {
+export function boolean(options?: BooleanSchemaOptions) {
   return new BooleanSchema(options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function integer(options: IntegerSchemaOptions = {}) {
+export function integer(options?: IntegerSchemaOptions) {
   return new IntegerSchema(options)
 }
 
@@ -109,12 +119,14 @@ export function cidLink() {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function bytes(options: BytesSchemaOptions = {}) {
+export function bytes(options?: BytesSchemaOptions) {
   return new BytesSchema(options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function blob(options: BlobSchemaOptions = {}) {
+export function blob<O extends BlobSchemaOptions = NonNullable<unknown>>(
+  options: O = {} as O,
+) {
   return new BlobSchema(options)
 }
 
@@ -126,29 +138,20 @@ export function string<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function array<const T>(
-  items: Validator<T>,
-  options: ArraySchemaOptions = {},
-) {
-  return new ArraySchema(items, options)
+export function array<T>(items: Validator<T>, options?: ArraySchemaOptions) {
+  return new ArraySchema<T>(items, options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function object<
-  const P extends ObjectSchemaProperties,
-  const O extends ObjectSchemaOptions = NonNullable<unknown>,
->(
-  properties: ObjectSchemaProperties & P,
-  options: ObjectSchemaOptions & O = {} as O,
-) {
-  return new ObjectSchema<P, O>(properties, options)
+export function object<const P extends ObjectSchemaProperties>(properties: P) {
+  return new ObjectSchema<P>(properties)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function dict<const K extends Validator, const V extends Validator>(
-  key: K,
-  value: V,
-) {
+export function dict<
+  const K extends Validator<string>,
+  const V extends Validator,
+>(key: K, value: V) {
   return new DictSchema<K, V>(key, value)
 }
 
@@ -175,21 +178,34 @@ export function custom<T>(
 }
 
 /*@__NO_SIDE_EFFECTS__*/
+export function nullable<const S extends Validator>(schema: S) {
+  return new NullableSchema<Infer<S>>(schema)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function optional<const S extends Validator>(schema: S) {
+  return new OptionalSchema<Infer<S>>(schema)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
 export function union<const V extends UnionSchemaValidators>(validators: V) {
   return new UnionSchema<V>(validators)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function intersection<const V extends IntersectionSchemaValidators>(
-  validators: V,
-) {
-  return new IntersectionSchema<V>(validators)
+export function intersection<
+  const Left extends ObjectSchema,
+  const Right extends DictSchema,
+>(left: Left, right: Right) {
+  return new IntersectionSchema<Left, Right>(left, right)
 }
+
+export { refine }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function discriminatedUnion<
   const Discriminator extends string,
-  const Options extends DiscriminatedUnionSchemaVariants<Discriminator>,
+  const Options extends DiscriminatedUnionVariants<Discriminator>,
 >(discriminator: Discriminator, variants: Options) {
   return new DiscriminatedUnionSchema<Discriminator, Options>(
     discriminator,
@@ -235,8 +251,12 @@ export function typedObject<
   const N extends NsidString,
   const H extends string,
   const Schema extends Validator<{ [_ in string]?: unknown }>,
->(nsid: N, hash: H, schema: Schema): TypedObjectSchema<$Type<N, H>, Schema>
-export function typedObject<const V extends { $type?: $Type }>(
+>(
+  nsid: N,
+  hash: H,
+  schema: Schema,
+): TypedObjectSchema<Simplify<{ $type?: $Type<N, H> } & Infer<Schema>>>
+export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
     ? T extends `${infer N}#${string}`
       ? N
@@ -248,14 +268,14 @@ export function typedObject<const V extends { $type?: $Type }>(
       : 'main'
     : never,
   schema: Validator<Omit<V, '$type'>>,
-): TypedObjectSchema<NonNullable<V['$type']>, typeof schema, V>
+): TypedObjectSchema<V>
 /*@__NO_SIDE_EFFECTS__*/
 export function typedObject<
   const N extends NsidString,
   const H extends string,
   const Schema extends Validator<{ [_ in string]?: unknown }>,
 >(nsid: N, hash: H, schema: Schema) {
-  return new TypedObjectSchema<$Type<N, H>, Schema>($type(nsid, hash), schema)
+  return new TypedObjectSchema($type(nsid, hash), schema)
 }
 
 /**
@@ -282,7 +302,7 @@ export function record<
   key: K,
   type: AsNsid<T>,
   schema: S,
-): RecordSchema<K, T, S, Infer<S> & { $type: T }>
+): RecordSchema<K, Simplify<{ $type: T } & Infer<S>>>
 export function record<
   const K extends RecordKeyDefinition,
   const V extends { $type: NsidString },
@@ -290,22 +310,21 @@ export function record<
   key: K,
   type: AsNsid<V['$type']>,
   schema: Validator<Omit<V, '$type'>>,
-): RecordSchema<K, V['$type'], typeof schema, V>
+): RecordSchema<K, V>
 /*@__NO_SIDE_EFFECTS__*/
 export function record<
   const K extends RecordKeyDefinition,
   const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
 >(key: K, type: T, schema: S) {
-  return new RecordSchema<K, T, S, Infer<S> & { $type: T }>(key, type, schema)
+  return new RecordSchema(key, type, schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function params<
   const P extends ParamsSchemaProperties = NonNullable<unknown>,
-  const O extends ParamsSchemaOptions = ParamsSchemaOptions,
->(properties: P = {} as P, options: ParamsSchemaOptions & O = {} as O) {
-  return new ParamsSchema<P, O>(properties, options)
+>(properties: P = {} as P) {
+  return new ParamsSchema<P>(properties)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
