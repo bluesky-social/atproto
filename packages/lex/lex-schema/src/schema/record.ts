@@ -1,9 +1,4 @@
-import {
-  NsidString,
-  RecordKeyDefinition,
-  Simplify,
-  TidString,
-} from '../core.js'
+import { LexiconRecordKey, NsidString, Simplify, TidString } from '../core.js'
 import {
   Schema,
   ValidationResult,
@@ -17,7 +12,7 @@ export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
 
 export class RecordSchema<
-  Key extends RecordKeyDefinition = any,
+  Key extends LexiconRecordKey = any,
   Output extends { $type: NsidString } = any,
 > extends Schema<Output> {
   readonly lexiconType = 'record' as const
@@ -71,7 +66,7 @@ export class RecordSchema<
   }
 }
 
-export type RecordKeySchemaOutput<Key extends RecordKeyDefinition> =
+export type RecordKeySchemaOutput<Key extends LexiconRecordKey> =
   Key extends 'any'
     ? string
     : Key extends 'tid'
@@ -82,7 +77,7 @@ export type RecordKeySchemaOutput<Key extends RecordKeyDefinition> =
           ? L
           : never
 
-export type RecordKeySchema<Key extends RecordKeyDefinition> = Schema<
+export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
   RecordKeySchemaOutput<Key>
 >
 
@@ -91,7 +86,7 @@ const tidSchema = new StringSchema({ format: 'tid' })
 const nsidSchema = new StringSchema({ format: 'nsid' })
 const selfLiteralSchema = new LiteralSchema('self')
 
-function recordKey<Key extends RecordKeyDefinition>(
+function recordKey<Key extends LexiconRecordKey>(
   key: Key,
 ): RecordKeySchema<Key> {
   // @NOTE Use cached instances for common schemas

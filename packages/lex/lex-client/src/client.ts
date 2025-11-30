@@ -8,11 +8,11 @@ import {
   InferQueryOutputBody,
   InferQueryParameters,
   InferRecordKey,
+  LexiconRecordKey,
   NsidString,
   Params,
   Procedure,
   Query,
-  RecordKeyDefinition,
   RecordSchema,
   Restricted,
   Schema,
@@ -77,7 +77,7 @@ export type ListRecordsOptions = CallOptions & {
 
 export type RecordKeyOptions<
   T extends RecordSchema,
-  AlsoOptionalWhenRecordKeyIs extends RecordKeyDefinition = never,
+  AlsoOptionalWhenRecordKeyIs extends LexiconRecordKey = never,
 > = T['key'] extends `literal:${string}` | AlsoOptionalWhenRecordKeyIs
   ? { rkey?: InferRecordKey<T> }
   : { rkey: InferRecordKey<T> }

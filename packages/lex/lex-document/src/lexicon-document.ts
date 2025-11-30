@@ -162,11 +162,18 @@ export type LexiconObject = l.Infer<typeof lexiconObjectSchema>
 
 // Records
 
+export const lexiconRecordKeySchema = l.custom(
+  l.isLexiconRecordKey,
+  'Invalid record key definition (must be "any", "nsid", "tid", or "literal:<string>")',
+)
+
+export type LexiconRecordKey = l.LexiconRecordKey
+
 export const lexiconRecordSchema = l.object({
   type: l.literal('record'),
   record: lexiconObjectSchema,
   description: strOpt,
-  key: strOpt,
+  key: lexiconRecordKeySchema,
 })
 export type LexiconRecord = l.Infer<typeof lexiconRecordSchema>
 

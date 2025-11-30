@@ -1,10 +1,4 @@
-import {
-  $Type,
-  $type,
-  NsidString,
-  RecordKeyDefinition,
-  Simplify,
-} from './core.js'
+import { $Type, $type, LexiconRecordKey, NsidString, Simplify } from './core.js'
 import {
   ArraySchema,
   ArraySchemaOptions,
@@ -46,6 +40,7 @@ import {
   RecordSchema,
   RefSchema,
   RefSchemaGetter,
+  RegexpSchema,
   StringSchema,
   StringSchemaOptions,
   Subscription,
@@ -135,6 +130,11 @@ export function string<
   const O extends StringSchemaOptions = NonNullable<unknown>,
 >(options: StringSchemaOptions & O = {} as O) {
   return new StringSchema<O>(options)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function regexp<T extends string>(pattern: RegExp) {
+  return new RegexpSchema<T>(pattern)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -295,7 +295,7 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
  *   schemas that work even if they contain circular references.
  */
 export function record<
-  const K extends RecordKeyDefinition,
+  const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
 >(
@@ -304,7 +304,7 @@ export function record<
   schema: S,
 ): RecordSchema<K, Simplify<{ $type: T } & Infer<S>>>
 export function record<
-  const K extends RecordKeyDefinition,
+  const K extends LexiconRecordKey,
   const V extends { $type: NsidString },
 >(
   key: K,
@@ -313,7 +313,7 @@ export function record<
 ): RecordSchema<K, V>
 /*@__NO_SIDE_EFFECTS__*/
 export function record<
-  const K extends RecordKeyDefinition,
+  const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
 >(key: K, type: T, schema: S) {

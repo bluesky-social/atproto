@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
+      "key": "any",
       "record": {
         "type": "object",
         "properties": {
