@@ -94,6 +94,12 @@ yargs(hideBin(process.argv))
           describe:
             'file extension to use for generated files (e.g. ".ts", ".mts", ".cts")',
         },
+        ignoreInvalidLexicons: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'skip over invalid lexicon files instead of exiting with an error',
+        },
       })
     },
     async (argv) => {
