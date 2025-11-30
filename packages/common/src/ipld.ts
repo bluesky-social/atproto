@@ -86,7 +86,7 @@ export const sha256RawToCid = cidForRawHash as (hash: Uint8Array) => CID
 /**
  * @deprecated Use {@link parseCidFromBytes} from `@atproto/lex-cbor` instead.
  */
-const parseCidFromBytesLegacy = parseCidFromBytes
+const parseCidFromBytesLegacy = parseCidFromBytes as (bytes: Uint8Array) => CID
 export { parseCidFromBytesLegacy as parseCidFromBytes }
 
 export class VerifyCidTransform extends Transform {
