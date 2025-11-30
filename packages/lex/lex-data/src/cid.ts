@@ -53,8 +53,7 @@ declare module 'multiformats/cid' {
 //   in the future.
 
 // @NOTE Even though it is not portable, we still re-export CID here so that
-// dependent packages where it can be used, can still used it without import
-// issues. It is discouraged to use
+// dependent packages where it can be used, have access to it.
 export { CID }
 
 /**
