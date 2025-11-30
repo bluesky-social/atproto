@@ -209,7 +209,7 @@ export async function xrpcResponseHandler<M extends Procedure | Query>(
     if (
       body != null &&
       encoding === 'application/json' &&
-      xrpcErrorBodySchema.check(body)
+      xrpcErrorBodySchema.matches(body)
     ) {
       throw new XrpcResponseError(
         response.status,

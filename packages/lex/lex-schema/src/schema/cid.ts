@@ -1,23 +1,23 @@
-import { CID, isCid } from '@atproto/lex-data'
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Cid, isCid } from '@atproto/lex-data'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
-export { CID }
+export type { Cid }
 
 export type CidSchemaOptions = {
   strict?: boolean
 }
 
-export class CidSchema extends Validator<CID> {
+export class CidSchema extends Schema<Cid> {
   readonly lexiconType = 'cid-link' as const
 
   constructor(readonly options: CidSchemaOptions = {}) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<CID> {
+  ): ValidationResult<Cid> {
     if (!isCid(input, this.options)) {
       return ctx.issueInvalidType(input, 'cid')
     }

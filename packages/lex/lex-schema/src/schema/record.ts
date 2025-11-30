@@ -1,6 +1,6 @@
 import { Nsid, RecordKey, Simplify } from '../core.js'
 import {
-  Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -9,26 +9,20 @@ import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
 
 export type InferRecordKey<R extends RecordSchema> =
-  R extends RecordSchema<infer K, any, any, any>
-    ? RecordKeySchemaOutput<K>
-    : never
+  R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
 
 export class RecordSchema<
   Key extends RecordKey = any,
-  Type extends Nsid = any,
-  Schema extends Validator<object> = any,
-  Output extends Infer<Schema> & { $type: Type } = Infer<Schema> & {
-    $type: Type
-  },
-> extends Validator<Output> {
+  Output extends { $type: Nsid } = any,
+> extends Schema<Output> {
   readonly lexiconType = 'record' as const
 
   keySchema: RecordKeySchema<Key>
 
   constructor(
     readonly key: Key,
-    readonly $type: Type,
-    readonly schema: Schema,
+    readonly $type: Output['$type'],
+    readonly schema: Validator<Omit<Output, '$type'>>,
   ) {
     super()
     this.keySchema = recordKey(key)
@@ -36,13 +30,13 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X extends { $type: Type } ? X : never {
+  ): value is X extends { $type: Output['$type'] } ? X : never {
     return value.$type === this.$type
   }
 
   build<X extends Omit<Output, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: Type }> {
+  ): Simplify<Omit<X, '$type'> & { $type: Output['$type'] }> {
     return { ...input, $type: this.$type }
   }
 
@@ -54,7 +48,7 @@ export class RecordSchema<
     return this.build<X>(input)
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Output> {
@@ -82,7 +76,7 @@ export type RecordKeySchemaOutput<Key extends RecordKey> = Key extends 'any'
         ? L
         : never
 
-export type RecordKeySchema<Key extends RecordKey> = Validator<
+export type RecordKeySchema<Key extends RecordKey> = Schema<
   RecordKeySchemaOutput<Key>
 >
 

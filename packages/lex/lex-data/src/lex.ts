@@ -1,9 +1,9 @@
-import { CID, isCid } from './cid.js'
+import { Cid, isCid } from './cid.js'
 import { isPlainObject } from './object.js'
 
 // @NOTE BlobRef is just a special case of LexMap.
 
-export type LexScalar = number | string | boolean | null | CID | Uint8Array
+export type LexScalar = number | string | boolean | null | Cid | Uint8Array
 export type LexValue = LexScalar | LexValue[] | { [_ in string]?: LexValue }
 export type LexMap = { [_ in string]?: LexValue }
 export type LexArray = LexValue[]

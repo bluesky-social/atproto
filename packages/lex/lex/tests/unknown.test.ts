@@ -10,6 +10,6 @@ describe('unknown', () => {
       com.example.unknown.$parse({
         $type: 'com.example.unknown',
       }),
-    ).toThrow('Missing required key "unknown" at $.unknown')
+    ).toThrow('Missing required key "unknown" at $')
   })
 })

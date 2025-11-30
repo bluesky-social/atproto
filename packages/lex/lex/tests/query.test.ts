@@ -44,7 +44,7 @@ describe('com.example.query', () => {
         com.example.query.$params.$parse({
           boolean: true,
         }),
-      ).toThrow('Missing required key "integer" at $.integer')
+      ).toThrow('Missing required key "integer" at $')
     })
 
     it('rejects undefined parameters', () => {

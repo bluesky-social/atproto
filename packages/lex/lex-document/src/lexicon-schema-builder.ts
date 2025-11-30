@@ -33,8 +33,8 @@ export class LexiconSchemaBuilder {
     const ctx = new LexiconSchemaBuilder(indexer)
     try {
       const result = await ctx.buildFullRef(fullRef)
-      if (!(result instanceof l.Validator)) {
-        throw new Error(`Ref ${fullRef} is not a validator schema type`)
+      if (!(result instanceof l.Schema)) {
+        throw new Error(`Ref ${fullRef} is not a schema type`)
       }
       return result
     } finally {
@@ -90,8 +90,8 @@ export class LexiconSchemaBuilder {
 
     this.#asyncTasks.add(
       this.buildFullRef(fullRef).then((v) => {
-        if (!(v instanceof l.Validator)) {
-          throw new Error(`Only refs to validator schema types are allowed`)
+        if (!(v instanceof l.Schema)) {
+          throw new Error(`Only refs to schema types are allowed`)
         }
         validator = v
       }),
@@ -183,13 +183,48 @@ export class LexiconSchemaBuilder {
     doc: LexiconDocument,
     def: LexiconArray | LexiconArrayItems,
   ): l.Validator<unknown> {
+    if (
+      'const' in def &&
+      'enum' in def &&
+      def.enum != null &&
+      def.const !== undefined &&
+      !(def.enum as readonly unknown[]).includes(def.const)
+    ) {
+      return l.never()
+    }
+
     switch (def.type) {
-      case 'string':
-        return l.string(def)
-      case 'integer':
-        return l.integer(def)
-      case 'boolean':
-        return l.boolean(def)
+      case 'string': {
+        const schema: l.StringSchema = l.string(def)
+        if (def.const != null) {
+          schema.assert(def.const)
+          return l.literal(def.const, def)
+        } else if (def.enum != null) {
+          for (const v of def.enum) schema.assert(v)
+          return l.enum(def.enum, def)
+        } else {
+          return schema
+        }
+      }
+      case 'integer': {
+        const schema: l.IntegerSchema = l.integer(def)
+        if (def.const != null) {
+          schema.assert(def.const)
+          return l.literal(def.const, def)
+        } else if (def.enum != null) {
+          for (const v of def.enum) schema.assert(v)
+          return l.enum(def.enum, def)
+        } else {
+          return schema
+        }
+      }
+      case 'boolean': {
+        if (def.const != null) {
+          return l.literal(def.const, def)
+        } else {
+          return l.boolean(def)
+        }
+      }
       case 'blob':
         return l.blob(def)
       case 'cid-link':
@@ -232,9 +267,23 @@ export class LexiconSchemaBuilder {
     const props: Record<string, l.Validator> = {}
     for (const [key, propDef] of Object.entries(def.properties)) {
       if (propDef === undefined) continue
-      props[key] = this.compileLeaf(doc, propDef)
+
+      const isNullable = def.nullable?.includes(key)
+      const isRequired = def.required?.includes(key)
+
+      let schema = this.compileLeaf(doc, propDef)
+
+      if (isNullable) {
+        schema = l.nullable(schema)
+      }
+
+      if (!isRequired) {
+        schema = l.optional(schema)
+      }
+
+      props[key] = schema
     }
-    return l.object(props, def)
+    return l.object(props)
   }
 
   protected compilePayload(
@@ -273,9 +322,18 @@ export class LexiconSchemaBuilder {
     const props: Record<string, l.Validator> = {}
     for (const [key, propDef] of Object.entries(def.properties)) {
       if (propDef === undefined) continue
-      props[key] = this.compileLeaf(doc, propDef)
+
+      const isRequired = def.required?.includes(key)
+
+      let schema = this.compileLeaf(doc, propDef)
+
+      if (!isRequired) {
+        schema = l.optional(schema)
+      }
+
+      props[key] = schema
     }
-    return l.params(props, def)
+    return l.params(props)
   }
 }
 

@@ -1,13 +1,13 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
-export class NullSchema extends Validator<null> {
+export class NullSchema extends Schema<null> {
   readonly lexiconType = 'null' as const
 
   constructor() {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<null> {

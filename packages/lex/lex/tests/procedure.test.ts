@@ -45,7 +45,7 @@ describe('com.example.procedure', () => {
   it('Rejects missing properties', () => {
     expect(() => {
       com.example.procedure.$input.schema.$parse({})
-    }).toThrow('Missing required key "object" at $.object')
+    }).toThrow('Missing required key "object" at $')
   })
 
   it('Passes valid outputs', () => {
@@ -62,6 +62,6 @@ describe('com.example.procedure', () => {
   it('Rejects invalid output', () => {
     expect(() => {
       com.example.procedure.$output.schema.$parse({})
-    }).toThrow('Missing required key "object" at $.object')
+    }).toThrow('Missing required key "object" at $')
   })
 })

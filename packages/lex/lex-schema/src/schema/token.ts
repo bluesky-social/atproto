@@ -1,13 +1,13 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
-export class TokenSchema<V extends string = any> extends Validator<V> {
+export class TokenSchema<V extends string = any> extends Schema<V> {
   readonly lexiconType = 'token' as const
 
   constructor(protected readonly value: V) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<V> {

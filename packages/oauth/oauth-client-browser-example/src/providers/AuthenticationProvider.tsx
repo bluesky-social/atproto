@@ -124,7 +124,7 @@ async function configureClient(
   const { preferences } = await getPreferences(client, signal)
 
   const labelers = preferences
-    .findLast((v) => app.bsky.actor.defs.labelersPref.check(v))
+    .findLast((v) => app.bsky.actor.defs.labelersPref.matches(v))
     ?.labelers.map((l) => l.did)
 
   client.setLabelers(labelers)
