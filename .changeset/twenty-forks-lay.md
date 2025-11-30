@@ -3,4 +3,4 @@
 '@atproto/lex': patch
 ---
 
-Add `ignoreInvalidLexicons` when building lexicon schemas
+Add `ignoreInvalidLexicons` option when building lexicon schemas
