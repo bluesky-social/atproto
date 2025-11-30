@@ -14,7 +14,7 @@ describe('IntersectionSchema', () => {
   )
 
   it('validates extra properties with the provided validator', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       title: 'My Post',
       tag1: true,
       tag2: false,
@@ -23,7 +23,7 @@ describe('IntersectionSchema', () => {
   })
 
   it('rejects extra properties that fail the provided validator', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       title: 'My Post',
       tag1: 'not a boolean',
     })

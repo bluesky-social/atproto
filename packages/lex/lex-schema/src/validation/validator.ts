@@ -37,19 +37,15 @@ export interface Validator<Output = any> {
   readonly ['_lex']: { output: Output }
 
   /**
-   * @internal **INTERNAL API, DO NOT USE**.
-   *
-   * Use {@link Validator.assert assert}, {@link Validator.check check},
-   * {@link Validator.parse parse} or {@link Validator.validate validate}
-   * instead.
+   * @internal **INTERNAL API**: use {@link ValidatorContext.validate} instead
    *
    * This method is implemented by subclasses to perform transformation and
    * validation of the input value. Do not call this method directly; as the
    * {@link ValidatorContext.options.allowTransform} option will **not** be
    * enforced. See {@link ValidatorContext.validate} for details. When
    * delegating validation from one validator sub-class implementation to
-   * another schema, {@link ValidatorContext.validate} should be used instead
-   * of calling {@link Validator.validateInContext}. This will allow to stop the
+   * another schema, {@link ValidatorContext.validate} must be used instead of
+   * calling {@link Validator.validateInContext}. This will allow to stop the
    * validation process if the value was transformed (by the other schema) but
    * transformations are not allowed.
    *
@@ -109,6 +105,7 @@ export class ValidatorContext {
    * this method enforces the {@link ValidationOptions.allowTransform} option.
    */
   validate<V>(input: unknown, validator: Validator<V>): ValidationResult<V> {
+    // This is the only place where validateInContext should be called.
     const result = validator.validateInContext(input, this)
 
     if (result.success) {

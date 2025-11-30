@@ -6,7 +6,7 @@ describe('com.example.token', () => {
     const token = l.$type(`com.example.token`, hash)
     describe(token, () => {
       it('identifies the token correctly', () => {
-        expect(com.example.token[hash].$check(token)).toBe(true)
+        expect(com.example.token[hash].$matches(token)).toBe(true)
       })
 
       it('parses the token correctly', () => {

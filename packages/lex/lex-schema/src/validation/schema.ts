@@ -14,17 +14,17 @@ export abstract class Schema<Output> implements Validator<Output> {
   ): ValidationResult<Output>
 
   assert(input: unknown): asserts input is Output {
-    const result = this.validate(input, { allowTransform: false })
+    const result = this.safeParse(input, { allowTransform: false })
     if (!result.success) throw result.error
   }
 
-  check(input: unknown): input is Output {
-    const result = this.validate(input, { allowTransform: false })
+  matches(input: unknown): input is Output {
+    const result = this.safeParse(input, { allowTransform: false })
     return result.success
   }
 
-  maybe<I>(input: I): (I & Output) | undefined {
-    return this.check(input) ? input : undefined
+  ifMatches<I>(input: I): (I & Output) | undefined {
+    return this.matches(input) ? input : undefined
   }
 
   parse<I>(
@@ -33,20 +33,20 @@ export abstract class Schema<Output> implements Validator<Output> {
   ): I & Output
   parse(input: unknown, options?: ValidationOptions): Output
   parse(input: unknown, options?: ValidationOptions): Output {
-    const result = this.validate(input, options)
+    const result = this.safeParse(input, options)
     if (!result.success) throw result.error
     return result.value
   }
 
-  validate<I>(
+  safeParse<I>(
     input: I,
     options: ValidationOptions & { allowTransform: false },
   ): ValidationResult<I & Output>
-  validate(
+  safeParse(
     input: unknown,
     options?: ValidationOptions,
   ): ValidationResult<Output>
-  validate(
+  safeParse(
     input: unknown,
     options?: ValidationOptions,
   ): ValidationResult<Output> {
@@ -71,22 +71,22 @@ export abstract class Schema<Output> implements Validator<Output> {
     return this.assert(input)
   }
 
-  $check(input: unknown): input is Output {
-    return this.check(input)
+  $matches(input: unknown): input is Output {
+    return this.matches(input)
   }
 
-  $maybe<I>(input: I): (I & Output) | undefined {
-    return this.maybe(input)
+  $ifMatches<I>(input: I): (I & Output) | undefined {
+    return this.ifMatches(input)
   }
 
   $parse(input: unknown, options?: ValidationOptions): Output {
     return this.parse(input, options)
   }
 
-  $validate(
+  $safeParse(
     input: unknown,
     options?: ValidationOptions,
   ): ValidationResult<Output> {
-    return this.validate(input, options)
+    return this.safeParse(input, options)
   }
 }

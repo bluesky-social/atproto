@@ -125,7 +125,7 @@ export class LexResolver {
       },
     )
 
-    const result = lexiconDocumentSchema.validate(verified.record)
+    const result = lexiconDocumentSchema.safeParse(verified.record)
     if (!result.success) {
       throw new LexResolverError(nsid, `Invalid Lexicon document at ${uri}`, {
         cause: result.error,

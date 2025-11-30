@@ -15,7 +15,7 @@ describe('ObjectSchema', () => {
   })
 
   it('validates plain objects', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       name: 'Alice',
       age: 30,
       gender: 'female',
@@ -24,12 +24,12 @@ describe('ObjectSchema', () => {
   })
 
   it('rejects non-objects', () => {
-    const result = schema.validate('not an object')
+    const result = schema.safeParse('not an object')
     expect(result.success).toBe(false)
   })
 
   it('rejects missing properties', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       age: 30,
       gender: 'female',
     })
@@ -37,14 +37,14 @@ describe('ObjectSchema', () => {
   })
 
   it('validates optional properties', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       name: 'Alice',
     })
     expect(result.success).toBe(true)
   })
 
   it('validates nullable properties', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       name: 'Alice',
       gender: null,
     })
@@ -52,7 +52,7 @@ describe('ObjectSchema', () => {
   })
 
   it('rejects invalid property types', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       name: 'Alice',
       age: 'thirty',
     })
@@ -60,7 +60,7 @@ describe('ObjectSchema', () => {
   })
 
   it('ignores extra properties', () => {
-    const result = schema.validate({
+    const result = schema.safeParse({
       name: 'Alice',
       age: 30,
       extra: 'value',

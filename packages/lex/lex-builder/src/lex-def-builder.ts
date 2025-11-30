@@ -425,10 +425,10 @@ export class LexDefBuilder {
     if (hash === 'main' && validationUtils) {
       this.addUtils({
         $assert: markPure(`${ref.varName}.assert.bind(${ref.varName})`),
-        $check: markPure(`${ref.varName}.check.bind(${ref.varName})`),
-        $maybe: markPure(`${ref.varName}.maybe.bind(${ref.varName})`),
+        $ifMatches: markPure(`${ref.varName}.ifMatches.bind(${ref.varName})`),
+        $matches: markPure(`${ref.varName}.matches.bind(${ref.varName})`),
         $parse: markPure(`${ref.varName}.parse.bind(${ref.varName})`),
-        $validate: markPure(`${ref.varName}.validate.bind(${ref.varName})`),
+        $safeParse: markPure(`${ref.varName}.safeParse.bind(${ref.varName})`),
       })
     }
 

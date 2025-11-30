@@ -113,7 +113,7 @@ describe('LexiconSchemaBuilder', () => {
       ),
     }
 
-    expect(schema.validate(value)).toStrictEqual({ success: true, value })
+    expect(schema.safeParse(value)).toStrictEqual({ success: true, value })
   })
 
   it('Validates objects correctly', () => {
@@ -130,7 +130,7 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.validate(value)).toStrictEqual({
+    expect(schema.safeParse(value)).toStrictEqual({
       success: true,
       value: {
         object: { boolean: true },
@@ -158,7 +158,7 @@ describe('LexiconSchemaBuilder', () => {
       refToEnumWithDefault: 'invalidOption',
     }
 
-    expect(schema.validate(value)).toMatchObject({
+    expect(schema.safeParse(value)).toMatchObject({
       success: false,
       error: {
         issues: [
@@ -186,7 +186,7 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.validate(value, { allowTransform: false })).toStrictEqual({
+    expect(schema.safeParse(value, { allowTransform: false })).toStrictEqual({
       success: true,
       value: {
         object: { boolean: true },
@@ -205,7 +205,7 @@ describe('LexiconSchemaBuilder', () => {
     )
 
     expect(
-      schema.check({
+      schema.matches({
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
@@ -229,7 +229,7 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.validate(value)).toMatchObject({
+    expect(schema.safeParse(value)).toMatchObject({
       success: false,
       error: { issues: [{ code: 'required_key', key: 'array' }] },
     })

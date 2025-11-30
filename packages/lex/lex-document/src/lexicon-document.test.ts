@@ -14,7 +14,7 @@ describe('General validation', () => {
       },
     }
 
-    expect(lexiconDocumentSchema.validate(value)).toStrictEqual({
+    expect(lexiconDocumentSchema.safeParse(value)).toStrictEqual({
       success: true,
       value,
     })
@@ -22,7 +22,7 @@ describe('General validation', () => {
 
   it('validates a minimal lexicons document', () => {
     expect(
-      lexiconDocumentSchema.validate({
+      lexiconDocumentSchema.safeParse({
         lexicon: 1,
         id: 'com.example.lexicon',
         defs: {
@@ -38,7 +38,7 @@ describe('General validation', () => {
 
   it('rejects lexicons with invalid lexicon field', () => {
     expect(
-      lexiconDocumentSchema.validate({
+      lexiconDocumentSchema.safeParse({
         lexicon: 'one',
         id: 'com.example.lexicon',
         defs: {
@@ -55,7 +55,7 @@ describe('General validation', () => {
 
   it('rejects lexicons with invalid NSID in id field', () => {
     expect(
-      lexiconDocumentSchema.validate({
+      lexiconDocumentSchema.safeParse({
         lexicon: 1,
         id: 'not-an-nsid',
         defs: {
@@ -72,7 +72,7 @@ describe('General validation', () => {
 
   it('rejects lexicons with numeric id field', () => {
     expect(
-      lexiconDocumentSchema.validate({
+      lexiconDocumentSchema.safeParse({
         lexicon: 1,
         id: 2,
         defs: {
@@ -89,7 +89,7 @@ describe('General validation', () => {
 
   it('rejects object defs with invalid required fields', () => {
     expect(
-      lexiconDocumentSchema.validate({
+      lexiconDocumentSchema.safeParse({
         lexicon: 1,
         id: 'com.example.lexicon',
         defs: {
