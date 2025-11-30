@@ -15,10 +15,6 @@ export type Restricted<Message extends string> = typeof __restricted & {
   [__restricted]: Message
 }
 
-export type OptionalPropertyKeys<P> = {
-  [K in keyof P]: undefined extends P[K] ? K : never
-}[keyof P]
-
 /**
  * Converts all properties of `P` that are optional (i.e. may be `undefined`)
  * into actual optional properties on the resulting type.

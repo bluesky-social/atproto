@@ -2,4 +2,4 @@
 '@atproto/lex-schema': patch
 ---
 
-Add `l.refined` schema
+Add `l.refine` utility to add custom refinements to existing schemas.
