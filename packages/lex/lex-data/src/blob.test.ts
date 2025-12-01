@@ -1,12 +1,12 @@
 import { isBlobRef, isLegacyBlobRef } from './blob.js'
-import { CID } from './cid.js'
+import { parseCid } from './cid.js'
 
 // await cidForRawBytes(Buffer.from('Hello, World!'))
-const blobCid = CID.parse(
+const blobCid = parseCid(
   'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
 )
 // await cidForLex(Buffer.from('Hello, World!'))
-const lexCid = CID.parse(
+const lexCid = parseCid(
   'bafyreic52vzks7wdklat4evp3vimohl55i2unzqpshz2ytka5omzr7exdy',
 )
 

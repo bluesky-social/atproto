@@ -1,30 +1,31 @@
 import { create as createDigest } from 'multiformats/hashes/digest'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import {
-  CID,
+  Cid,
   DAG_CBOR_MULTICODEC,
   LexValue,
   RAW_BIN_MULTICODEC,
   SHA2_256_MULTIHASH_CODE,
+  createCid,
 } from '@atproto/lex-data'
 import { encode } from './encoding.js'
 
-export { CID, hasher }
+export { hasher }
 export { decode, decodeAll, encode } from './encoding.js'
-export type { LexValue }
+export type { Cid, LexValue }
 
-export async function cidForLex(value: LexValue): Promise<CID> {
+export async function cidForLex(value: LexValue): Promise<Cid> {
   return cidForCbor(encode(value))
 }
 
-export async function cidForCbor(bytes: Uint8Array): Promise<CID> {
+export async function cidForCbor(bytes: Uint8Array): Promise<Cid> {
   const digest = await hasher.digest(bytes)
-  return CID.createV1(DAG_CBOR_MULTICODEC, digest)
+  return createCid(DAG_CBOR_MULTICODEC, digest)
 }
 
-export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
+export async function verifyCidForBytes(cid: Cid, bytes: Uint8Array) {
   const digest = await hasher.digest(bytes)
-  const expected = CID.createV1(cid.code, digest)
+  const expected = createCid(cid.code, digest)
   if (!cid.equals(expected)) {
     throw new Error(
       `Not a valid CID for bytes. Expected: ${expected.toString()} Got: ${cid.toString()}`,
@@ -32,22 +33,22 @@ export async function verifyCidForBytes(cid: CID, bytes: Uint8Array) {
   }
 }
 
-export async function cidForRawBytes(bytes: Uint8Array): Promise<CID> {
+export async function cidForRawBytes(bytes: Uint8Array): Promise<Cid> {
   const digest = await hasher.digest(bytes)
-  return CID.createV1(RAW_BIN_MULTICODEC, digest)
+  return createCid(RAW_BIN_MULTICODEC, digest)
 }
 
-export function cidForRawHash(hash: Uint8Array): CID {
+export function cidForRawHash(hash: Uint8Array): Cid {
   const digest = createDigest(hasher.code, hash)
-  return CID.createV1(RAW_BIN_MULTICODEC, digest)
+  return createCid(RAW_BIN_MULTICODEC, digest)
 }
 
 /**
  * @note Only supports DASL CIDs
  * @see {@link https://dasl.ing/cid.html}
- * @throws if the input do not represent a valid DASL {@link CID}
+ * @throws if the input do not represent a valid DASL {@link Cid}
  */
-export function parseCidFromBytes(cidBytes: Uint8Array): CID {
+export function parseCidFromBytes(cidBytes: Uint8Array): Cid {
   const version = cidBytes[0]
   if (version !== 0x01) {
     throw new Error(`Unsupported CID version: ${version}`)
@@ -69,5 +70,5 @@ export function parseCidFromBytes(cidBytes: Uint8Array): CID {
   }
   const hashBytes = cidBytes.slice(4)
   const digest = createDigest(hashType, hashBytes)
-  return CID.create(version, code, digest)
+  return createCid(code, digest)
 }

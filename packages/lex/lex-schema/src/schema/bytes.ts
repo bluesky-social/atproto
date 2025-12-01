@@ -1,19 +1,19 @@
 import { asUint8Array } from '@atproto/lex-data'
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export type BytesSchemaOptions = {
   minLength?: number
   maxLength?: number
 }
 
-export class BytesSchema extends Validator<Uint8Array> {
+export class BytesSchema extends Schema<Uint8Array> {
   readonly lexiconType = 'bytes' as const
 
-  constructor(readonly options: BytesSchemaOptions) {
+  constructor(readonly options: BytesSchemaOptions = {}) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Uint8Array> {

@@ -2,9 +2,14 @@ import { ResultFailure, ResultSuccess, failure, success } from '../core.js'
 import { PropertyKey } from './property-key.js'
 import { ValidationError } from './validation-error.js'
 import {
+  Issue,
+  IssueInvalidFormat,
+  IssueInvalidType,
+  IssueInvalidValue,
+  IssueRequiredKey,
   IssueTooBig,
   IssueTooSmall,
-  ValidationIssue,
+  MeasurableType,
 } from './validation-issue.js'
 
 export type ValidationSuccess<Value = any> = ResultSuccess<Value>
@@ -13,7 +18,7 @@ export type ValidationResult<Value = any> =
   | ValidationSuccess<Value>
   | ValidationFailure
 
-type ValidationOptions = {
+export type ValidationOptions = {
   path?: PropertyKey[]
 
   /** @default true */
@@ -22,31 +27,25 @@ type ValidationOptions = {
 
 export type Infer<T extends Validator> = T['_lex']['output']
 
-export abstract class Validator<Output = any> {
+export interface Validator<Output = any> {
   /**
    * This property is used for type inference purposes and does not actually
    * exist at runtime.
    *
-   * @deprecated For internal use only (not actually deprecated)
+   * @deprecated **INTERNAL API, DO NOT USE**.
    */
-  _lex!: { output: Output }
-
-  readonly lexiconType?: string
+  readonly ['_lex']: { output: Output }
 
   /**
-   * @internal **INTERNAL API, DO NOT USE**.
-   *
-   * Use {@link Validator.assert assert}, {@link Validator.check check},
-   * {@link Validator.parse parse} or {@link Validator.validate validate}
-   * instead.
+   * @internal **INTERNAL API**: use {@link ValidatorContext.validate} instead
    *
    * This method is implemented by subclasses to perform transformation and
    * validation of the input value. Do not call this method directly; as the
    * {@link ValidatorContext.options.allowTransform} option will **not** be
    * enforced. See {@link ValidatorContext.validate} for details. When
    * delegating validation from one validator sub-class implementation to
-   * another schema, {@link ValidatorContext.validate} should be used instead
-   * of calling {@link Validator.validateInContext}. This will allow to stop the
+   * another schema, {@link ValidatorContext.validate} must be used instead of
+   * calling {@link Validator.validateInContext}. This will allow to stop the
    * validation process if the value was transformed (by the other schema) but
    * transformations are not allowed.
    *
@@ -63,103 +62,11 @@ export abstract class Validator<Output = any> {
    *
    * @see {@link ValidatorContext.validate}
    */
-  abstract validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Output>
-
-  assert(input: unknown): asserts input is Output {
-    const result = this.validate(input, { allowTransform: false })
-    if (!result.success) throw result.error
-  }
-
-  check(input: unknown): input is Output {
-    const result = this.validate(input, { allowTransform: false })
-    return result.success
-  }
-
-  maybe<I>(input: I): (I & Output) | undefined {
-    return this.check(input) ? input : undefined
-  }
-
-  parse<I>(
-    input: I,
-    options: ValidationOptions & { allowTransform: false },
-  ): I & Output
-  parse(input: unknown, options?: ValidationOptions): Output
-  parse(input: unknown, options?: ValidationOptions): Output {
-    const result = ValidatorContext.validate(input, this, options)
-    if (!result.success) throw result.error
-    return result.value
-  }
-
-  validate<I>(
-    input: I,
-    options: ValidationOptions & { allowTransform: false },
-  ): ValidationResult<I & Output>
-  validate(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output>
-  validate(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output> {
-    return ValidatorContext.validate(input, this, options)
-  }
-
-  // @NOTE The built lexicons namespaces will export utility functions that
-  // allow accessing the schema's methods without the need to specify ".main."
-  // as part of the namespace. This way, a utility for a particular record type
-  // can be called like "app.bsky.feed.post.<utility>()" instead of
-  // "app.bsky.feed.post.main.<utility>()". Because those utilities could
-  // conflict with other schemas (e.g. if there is a lexicon definition at
-  // "#<utility>"), those exported utilities will be prefixed with "$". In order
-  // to be able to consistently call the utilities, when using the "main" and
-  // non "main" definitions, we also expose the same methods with a "$" prefix.
-  // Thanks to this, both of the following call will be possible:
-  //
-  // - "app.bsky.feed.post.$parse(...)" // calls a utility function created by "lex build"
-  // - "app.bsky.feed.defs.postView.$parse(...)" // uses the alias defined below on the schema instance
-
-  $assert(input: unknown): asserts input is Output {
-    return this.assert(input)
-  }
-
-  $check(input: unknown): input is Output {
-    return this.check(input)
-  }
-
-  $maybe<I>(input: I): (I & Output) | undefined {
-    return this.maybe(input)
-  }
-
-  $parse(input: unknown, options?: ValidationOptions): Output {
-    return this.parse(input, options)
-  }
-
-  $validate(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output> {
-    return this.validate(input, options)
-  }
 }
-
-export type ContextualIssue = {
-  [Code in ValidationIssue['code']]: Omit<
-    Extract<ValidationIssue, { code: Code }>,
-    'path'
-  > & { path?: PropertyKey | readonly PropertyKey[] }
-}[ValidationIssue['code']]
-
-const asIssue = (
-  { path, ...issue }: ContextualIssue,
-  currentPath: readonly PropertyKey[],
-): ValidationIssue & { path: PropertyKey[] } => ({
-  ...issue,
-  path: path != null ? currentPath.concat(path) : [...currentPath],
-})
 
 export class ValidatorContext {
   /**
@@ -176,20 +83,20 @@ export class ValidatorContext {
   }
 
   private readonly currentPath: PropertyKey[]
-  private readonly issues: ValidationIssue[] = []
+  private readonly issues: Issue[] = []
 
   protected constructor(readonly options: ValidationOptions) {
     // Create a copy because we will be mutating the array during validation.
-    this.currentPath = options?.path != null ? [...options.path] : []
+    this.currentPath = options?.path != null ? Array.from(options.path) : []
   }
 
   get path() {
-    return [...this.currentPath]
+    return Array.from(this.currentPath)
   }
 
-  get allowTransform() {
-    // Default to true
-    return this.options?.allowTransform !== false
+  concatPath(path?: PropertyKey | readonly PropertyKey[]) {
+    if (path == null) return this.path
+    return this.currentPath.concat(path)
   }
 
   /**
@@ -198,10 +105,15 @@ export class ValidatorContext {
    * this method enforces the {@link ValidationOptions.allowTransform} option.
    */
   validate<V>(input: unknown, validator: Validator<V>): ValidationResult<V> {
+    // This is the only place where validateInContext should be called.
     const result = validator.validateInContext(input, this)
 
     if (result.success) {
-      if (!this.allowTransform && !Object.is(result.value, input)) {
+      if (
+        // Defaults to true
+        this.options?.allowTransform === false &&
+        !Object.is(result.value, input)
+      ) {
         // If the value changed, it means that a default (or some other
         // transformation) was applied, meaning that the original value did
         // *not* match the (output) schema. When "allowTransform" is false, we
@@ -221,18 +133,18 @@ export class ValidatorContext {
       if (this.issues.length > 0) {
         // Validator returned a success but issues were added via the context.
         // This means the overall validation failed.
-        return { success: false, error: new ValidationError(this.issues) }
+        return failure(new ValidationError(Array.from(this.issues)))
       }
     }
 
-    return result
+    return result as ValidationResult<V>
   }
 
-  validateChild<I extends object, K extends PropertyKey & keyof I, V>(
-    input: I,
-    key: K,
-    validator: Validator<V>,
-  ): ValidationResult<V> {
+  validateChild<
+    I extends object,
+    K extends PropertyKey & keyof I,
+    V extends Validator,
+  >(input: I, key: K, validator: V): ValidationResult<Infer<V>> {
     // Instead of creating a new context, we just push/pop the path segment.
     this.currentPath.push(key)
     try {
@@ -242,44 +154,50 @@ export class ValidatorContext {
     }
   }
 
-  addIssue(issue: ContextualIssue): void {
-    this.issues.push(asIssue(issue, this.currentPath))
+  addIssue(issue: Issue): void {
+    this.issues.push(issue)
   }
 
   success<V>(value: V): ValidationResult<V> {
     return success(value)
   }
 
-  failure(issue: ContextualIssue): ValidationFailure {
-    return failure(
-      new ValidationError([...this.issues, asIssue(issue, this.currentPath)]),
-    )
+  failure(issue: Issue): ValidationFailure {
+    return failure(new ValidationError([...this.issues, issue]))
   }
 
-  issueInvalidValue(
-    input: unknown,
-    values: readonly unknown[],
-    path?: PropertyKey | readonly PropertyKey[],
-  ) {
-    return this.failure({
-      code: 'invalid_value',
-      input,
-      values,
-      path,
-    })
+  issueInvalidValue(input: unknown, values: readonly unknown[]) {
+    return this.failure(new IssueInvalidValue(this.path, input, values))
   }
 
-  issueInvalidType(
+  issueInvalidType(input: unknown, expected: string) {
+    return this.failure(new IssueInvalidType(this.path, input, [expected]))
+  }
+
+  issueRequiredKey(input: object, key: PropertyKey) {
+    return this.failure(new IssueRequiredKey(this.path, input, key))
+  }
+
+  issueInvalidFormat(input: unknown, format: string, msg?: string) {
+    return this.failure(new IssueInvalidFormat(this.path, input, format, msg))
+  }
+
+  issueTooBig(
     input: unknown,
-    expected: string | readonly string[],
-    path?: PropertyKey | readonly PropertyKey[],
+    type: MeasurableType,
+    max: number,
+    actual: number,
   ) {
-    return this.failure({
-      code: 'invalid_type',
-      input,
-      expected: Array.isArray(expected) ? expected : [expected],
-      path,
-    })
+    return this.failure(new IssueTooBig(this.path, input, max, type, actual))
+  }
+
+  issueTooSmall(
+    input: unknown,
+    type: MeasurableType,
+    min: number,
+    actual: number,
+  ) {
+    return this.failure(new IssueTooSmall(this.path, input, min, type, actual))
   }
 
   issueInvalidPropertyValue<I>(
@@ -287,75 +205,18 @@ export class ValidatorContext {
     property: keyof I & PropertyKey,
     values: readonly unknown[],
   ) {
-    return this.issueInvalidValue(input[property], values, property)
+    const value = input[property]
+    const path = this.concatPath(property)
+    return this.failure(new IssueInvalidValue(path, value, values))
   }
 
   issueInvalidPropertyType<I>(
     input: I,
     property: keyof I & PropertyKey,
-    expected: string | readonly string[],
+    expected: string,
   ) {
-    return this.issueInvalidType(input[property], expected, property)
-  }
-
-  issueRequiredKey(input: object, key: PropertyKey) {
-    return this.failure({
-      code: 'required_key',
-      key,
-      input,
-      path: key,
-    })
-  }
-
-  issueInvalidFormat(input: unknown, format: string, message?: string) {
-    return this.failure({
-      code: 'invalid_format',
-      message,
-      format,
-      input,
-    })
-  }
-
-  issueTooBig(
-    input: unknown,
-    type: IssueTooBig['type'],
-    maximum: number,
-    actual: number,
-  ) {
-    return this.failure({
-      code: 'too_big',
-      type,
-      maximum,
-      actual,
-      input,
-    })
-  }
-
-  issueTooSmall(
-    input: unknown,
-    type: IssueTooSmall['type'],
-    minimum: number,
-    actual: number,
-  ) {
-    return this.failure({
-      code: 'too_small',
-      type,
-      minimum,
-      actual,
-      input,
-    })
-  }
-
-  custom(
-    input: unknown,
-    message: string,
-    path?: PropertyKey | readonly PropertyKey[],
-  ) {
-    return this.failure({
-      code: 'custom',
-      input,
-      message,
-      path,
-    })
+    const value = input[property]
+    const path = this.concatPath(property)
+    return this.failure(new IssueInvalidType(path, value, [expected]))
   }
 }

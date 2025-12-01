@@ -1,4 +1,4 @@
-import { CID, LexValue, lexEquals } from '@atproto/lex-data'
+import { LexValue, lexEquals, parseCid } from '@atproto/lex-data'
 import { JsonValue } from './json.js'
 import { jsonToLex, lexParse, lexStringify, lexToJson } from './lex-json.js'
 
@@ -57,7 +57,7 @@ export const validVectors: Array<{
       },
     },
     lex: {
-      a: CID.parse(
+      a: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
       b: new Uint8Array([
@@ -67,7 +67,7 @@ export const validVectors: Array<{
       ]),
       c: {
         $type: 'blob',
-        ref: CID.parse(
+        ref: parseCid(
           'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
         ),
         mimeType: 'image/jpeg',
@@ -92,10 +92,10 @@ export const validVectors: Array<{
       },
     ],
     lex: [
-      CID.parse('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
-      CID.parse('bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q'),
-      CID.parse('bafyreiaizynclnqiolq7byfpjjtgqzn4sfrsgn7z2hhf6bo4utdwkin7ke'),
-      CID.parse('bafyreifd4w4tcr5tluxz7osjtnofffvtsmgdqcfrfi6evjde4pl27lrjpy'),
+      parseCid('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
+      parseCid('bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q'),
+      parseCid('bafyreiaizynclnqiolq7byfpjjtgqzn4sfrsgn7z2hhf6bo4utdwkin7ke'),
+      parseCid('bafyreifd4w4tcr5tluxz7osjtnofffvtsmgdqcfrfi6evjde4pl27lrjpy'),
     ],
   },
   {
@@ -103,7 +103,7 @@ export const validVectors: Array<{
     json: {
       $link: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     },
-    lex: CID.parse(
+    lex: parseCid(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     ),
   },
@@ -151,10 +151,10 @@ export const validVectors: Array<{
         b: [
           {
             d: [
-              CID.parse(
+              parseCid(
                 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
               ),
-              CID.parse(
+              parseCid(
                 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
               ),
             ],
@@ -210,9 +210,7 @@ export const validVectors: Array<{
         123,
         true,
         null,
-        CID.parse(
-          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
-        ),
+        parseCid('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
         new Uint8Array([
           156, 81, 17, 142, 242, 203, 139, 15, 106, 155, 142, 73, 174, 161, 253,
           65, 60, 242, 11, 98, 238, 213, 118, 248, 157, 238, 190, 176, 26, 194,
@@ -237,7 +235,7 @@ export const validVectors: Array<{
       },
     },
     lex: {
-      c: CID.parse(
+      c: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
       d: {

@@ -1,4 +1,4 @@
-import { CID, LexValue } from '@atproto/lex-data'
+import { LexValue, parseCid } from '@atproto/lex-data'
 import { decode, decodeAll, encode } from '..'
 
 describe('encode', () => {
@@ -45,12 +45,12 @@ describe('decode', () => {
 describe('identity', () => {
   for (const vector of [
     null,
-    CID.parse('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
+    parseCid('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
     [
-      CID.parse('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
-      CID.parse('bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q'),
-      CID.parse('bafyreiaizynclnqiolq7byfpjjtgqzn4sfrsgn7z2hhf6bo4utdwkin7ke'),
-      CID.parse('bafyreifd4w4tcr5tluxz7osjtnofffvtsmgdqcfrfi6evjde4pl27lrjpy'),
+      parseCid('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
+      parseCid('bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q'),
+      parseCid('bafyreiaizynclnqiolq7byfpjjtgqzn4sfrsgn7z2hhf6bo4utdwkin7ke'),
+      parseCid('bafyreifd4w4tcr5tluxz7osjtnofffvtsmgdqcfrfi6evjde4pl27lrjpy'),
     ],
     new Uint8Array(Buffer.from('hello world')),
     true,
@@ -68,7 +68,7 @@ describe('identity', () => {
       nested: {
         array: { value: [1, 2, 3] },
         object: { key: 'value' },
-        cid: CID.parse(
+        cid: parseCid(
           'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         ),
         bytes: new Uint8Array(Buffer.from('byte array')),
@@ -88,13 +88,13 @@ describe('ipld decode multi', () => {
   it('decodes concatenated dag-cbor messages', async () => {
     const one = {
       a: 123,
-      b: CID.parse(
+      b: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }
     const two = {
       c: new Uint8Array([1, 2, 3]),
-      d: CID.parse(
+      d: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }

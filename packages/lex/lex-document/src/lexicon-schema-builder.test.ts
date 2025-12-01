@@ -1,4 +1,5 @@
-import { CID, l } from '@atproto/lex-schema'
+import { parseCid } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import { LexiconDocument, lexiconDocumentSchema } from './lexicon-document.js'
 import { LexiconIterableIndexer } from './lexicon-iterable-indexer.js'
 import { LexiconSchemaBuilder } from './lexicon-schema-builder.js'
@@ -59,19 +60,25 @@ describe('LexiconSchemaBuilder', () => {
             type: 'object',
             required: ['object', 'array', 'boolean', 'integer', 'string'],
             properties: {
-              object: { type: 'ref', ref: '#subobject' },
+              object: { type: 'ref', ref: '#subObject' },
               array: { type: 'array', items: { type: 'string' } },
               boolean: { type: 'boolean' },
               integer: { type: 'integer' },
               string: { type: 'string' },
+              refToEnumWithDefault: { type: 'ref', ref: '#enumWithDefault' },
             },
           },
-          subobject: {
+          subObject: {
             type: 'object',
             required: ['boolean'],
             properties: {
               boolean: { type: 'boolean' },
             },
+          },
+          enumWithDefault: {
+            type: 'string',
+            default: 'option3',
+            enum: ['option1', 'option2', 'option3'],
           },
         },
       }),
@@ -90,6 +97,7 @@ describe('LexiconSchemaBuilder', () => {
         boolean: true,
         integer: 123,
         string: 'string',
+        refToEnumWithDefault: 'option3',
       },
       array: ['one', 'two'],
       boolean: true,
@@ -100,12 +108,12 @@ describe('LexiconSchemaBuilder', () => {
       did: 'did:web:example.com',
       cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       bytes: new Uint8Array([0, 1, 2, 3]),
-      cidLink: CID.parse(
+      cidLink: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
     }
 
-    expect(schema.validate(value)).toStrictEqual({ success: true, value })
+    expect(schema.safeParse(value)).toStrictEqual({ success: true, value })
   })
 
   it('Validates objects correctly', () => {
@@ -122,7 +130,89 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.validate(value)).toStrictEqual({ success: true, value })
+    expect(schema.safeParse(value)).toStrictEqual({
+      success: true,
+      value: {
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        integer: 123,
+        string: 'string',
+        refToEnumWithDefault: 'option3',
+      },
+    })
+  })
+
+  it('rejects invalid enum values', () => {
+    const schema = getSchema(
+      'com.example.kitchenSink#object',
+      l.TypedObjectSchema,
+    )
+
+    const value = {
+      object: { boolean: true },
+      array: ['one', 'two'],
+      boolean: true,
+      integer: 123,
+      string: 'string',
+      refToEnumWithDefault: 'invalidOption',
+    }
+
+    expect(schema.safeParse(value)).toMatchObject({
+      success: false,
+      error: {
+        issues: [
+          {
+            code: 'invalid_value',
+            input: 'invalidOption',
+            values: ['option1', 'option2', 'option3'],
+          },
+        ],
+      },
+    })
+  })
+
+  it('does not apply defaults when allowTransform is false', () => {
+    const schema = getSchema(
+      'com.example.kitchenSink#object',
+      l.TypedObjectSchema,
+    )
+
+    const value = {
+      object: { boolean: true },
+      array: ['one', 'two'],
+      boolean: true,
+      integer: 123,
+      string: 'string',
+    }
+
+    expect(schema.safeParse(value, { allowTransform: false })).toStrictEqual({
+      success: true,
+      value: {
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        integer: 123,
+        string: 'string',
+      },
+    })
+  })
+
+  it('allows missing optional record fields', () => {
+    const schema = getSchema(
+      'com.example.kitchenSink#object',
+      l.TypedObjectSchema,
+    )
+
+    expect(
+      schema.matches({
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        integer: 123,
+        string: 'string',
+      }),
+    ).toBe(true)
   })
 
   it('Rejects missing required record fields', () => {
@@ -139,7 +229,7 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.validate(value)).toMatchObject({
+    expect(schema.safeParse(value)).toMatchObject({
       success: false,
       error: { issues: [{ code: 'required_key', key: 'array' }] },
     })

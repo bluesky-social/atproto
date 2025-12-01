@@ -18,7 +18,8 @@
     "./index.cjs",
     "./index.mjs",
     "./index.d.ts",
-    "./bin"
+    "./bin",
+    "./CHANGELOG.md"
   ],
   "bin": {
     "ts-lex": "./bin/lex",

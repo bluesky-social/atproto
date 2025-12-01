@@ -1,7 +1,7 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation'
+import { Schema, ValidationResult, ValidatorContext } from '../validation'
 
-export class UnknownSchema extends Validator<unknown> {
-  override validateInContext(
+export class UnknownSchema extends Schema<unknown> {
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<unknown> {

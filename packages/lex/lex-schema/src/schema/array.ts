@@ -1,21 +1,26 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  Schema,
+  ValidationResult,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 
 export type ArraySchemaOptions = {
   minLength?: number
   maxLength?: number
 }
 
-export class ArraySchema<Item = any> extends Validator<Array<Item>> {
+export class ArraySchema<Item = any> extends Schema<Array<Item>> {
   readonly lexiconType = 'array' as const
 
   constructor(
-    readonly items: Validator<Item>,
-    readonly options: ArraySchemaOptions,
+    readonly itemsSchema: Validator<Item>,
+    readonly options: ArraySchemaOptions = {},
   ) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Array<Item>> {
@@ -36,7 +41,7 @@ export class ArraySchema<Item = any> extends Validator<Array<Item>> {
     let copy: undefined | Array<Item>
 
     for (let i = 0; i < input.length; i++) {
-      const result = ctx.validateChild(input, i, this.items)
+      const result = ctx.validateChild(input, i, this.itemsSchema)
       if (!result.success) return result
 
       if (result.value !== input[i]) {

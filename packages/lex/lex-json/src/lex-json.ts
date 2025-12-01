@@ -1,6 +1,6 @@
 import {
   BlobRef,
-  CID,
+  Cid,
   LexArray,
   LexMap,
   LexValue,
@@ -185,7 +185,7 @@ function encodeLexMap(input: LexMap): JsonObject {
 function parseSpecialJsonObject(
   input: LexMap,
   options: LexParseOptions,
-): CID | Uint8Array | BlobRef | undefined {
+): Cid | Uint8Array | BlobRef | undefined {
   // Hot path: use hints to avoid parsing when possible
 
   if (input.$link !== undefined) {

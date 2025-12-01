@@ -16,6 +16,7 @@
  * // result is [{ value: 1, sum: 2 }, { value: 2, sum: 4 }, { value: 3, sum: 6 }]
  * ```
  */
+/*@__NO_SIDE_EFFECTS__*/
 export function arrayAgg<T, O>(
   arr: readonly T[],
   cmp: (a: T, b: T) => boolean,

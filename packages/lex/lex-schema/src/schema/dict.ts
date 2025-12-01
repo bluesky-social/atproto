@@ -1,15 +1,17 @@
 import { isPlainObject } from '@atproto/lex-data'
+import { Simplify } from '../core.js'
 import {
   Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
 } from '../validation.js'
 
 export type DictSchemaOutput<
-  KeySchema extends Validator,
+  KeySchema extends Validator<string>,
   ValueSchema extends Validator,
-> = Record<string & Infer<KeySchema>, Infer<ValueSchema>>
+> = Simplify<Record<Infer<KeySchema>, Infer<ValueSchema>>>
 
 /**
  * @note There is no dictionary in Lexicon schemas. This is a custom extension
@@ -17,9 +19,9 @@ export type DictSchemaOutput<
  * not code generated from a lexicon schema).
  */
 export class DictSchema<
-  const KeySchema extends Validator = any,
+  const KeySchema extends Validator<string> = any,
   const ValueSchema extends Validator = any,
-> extends Validator<DictSchemaOutput<KeySchema, ValueSchema>> {
+> extends Schema<DictSchemaOutput<KeySchema, ValueSchema>> {
   constructor(
     readonly keySchema: KeySchema,
     readonly valueSchema: ValueSchema,
@@ -27,7 +29,7 @@ export class DictSchema<
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
     options?: { ignoredKeys?: { has(k: string): boolean } },

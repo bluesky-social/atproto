@@ -2,4 +2,4 @@
 '@atproto/lex-resolver': patch
 ---
 
-Validate repo signature when fetching lexicon document
+Verify the signature when fetching lexicon document from a repo

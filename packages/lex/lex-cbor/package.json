@@ -19,7 +19,11 @@
   },
   "files": [
     "./src",
-    "./dist"
+    "./tsconfig.build.json",
+    "./tsconfig.tests.json",
+    "./tsconfig.json",
+    "./dist",
+    "./CHANGELOG.md"
   ],
   "sideEffects": false,
   "main": "./dist/index.cjs.js",

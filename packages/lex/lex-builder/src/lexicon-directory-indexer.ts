@@ -16,7 +16,7 @@ export class LexiconDirectoryIndexer extends LexiconIterableIndexer {
 
 type ReadLexiconsOptions = {
   lexicons: string
-  ignoreErrors?: boolean
+  ignoreInvalidLexicons?: boolean
 }
 
 async function* readLexicons(
@@ -29,7 +29,7 @@ async function* readLexicons(
         yield lexiconDocumentSchema.parse(JSON.parse(data))
       } catch (cause) {
         const message = `Error parsing lexicon document ${filePath}`
-        if (options.ignoreErrors) console.error(`${message}:`, cause)
+        if (options.ignoreInvalidLexicons) console.error(`${message}:`, cause)
         else throw new Error(message, { cause })
       }
     }

@@ -1,14 +1,21 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
+
+export type LiteralSchemaOptions<T extends null | string | number | boolean> = {
+  default?: T
+}
 
 export class LiteralSchema<
   Output extends null | string | number | boolean = any,
-> extends Validator<Output> {
-  constructor(readonly value: Output) {
+> extends Schema<Output> {
+  constructor(
+    readonly value: Output,
+    readonly options?: LiteralSchemaOptions<Output>,
+  ) {
     super()
   }
 
-  override validateInContext(
-    input: unknown = this.value,
+  validateInContext(
+    input: unknown = this.options?.default,
     ctx: ValidatorContext,
   ): ValidationResult<Output> {
     if (input !== this.value) {

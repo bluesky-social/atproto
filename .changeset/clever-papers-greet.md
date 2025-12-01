@@ -2,4 +2,4 @@
 '@atproto/lex-installer': patch
 ---
 
-Use new lex-resolver proof as CID
+Use the record CID in the lexicon manifest instead of the CID of the lexicon definition

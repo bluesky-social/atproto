@@ -1,4 +1,9 @@
-import { ValidationResult, Validator, ValidatorContext } from '../validation.js'
+import {
+  Schema,
+  ValidationResult,
+  Validator,
+  ValidatorContext,
+} from '../validation.js'
 
 // Basically a RecordSchema or TypedObjectSchema
 export type TypedRefSchemaValidator<V extends { $type?: string } = any> =
@@ -12,9 +17,9 @@ export type TypedRefGetter<V extends { $type?: string } = any> =
 export type TypedRefSchemaOutput<V extends { $type?: string } = any> =
   V extends { $type?: infer T extends string } ? V & { $type: T } : never
 
-export class TypedRefSchema<
-  V extends { $type?: string } = any,
-> extends Validator<TypedRefSchemaOutput<V>> {
+export class TypedRefSchema<V extends { $type?: string } = any> extends Schema<
+  TypedRefSchemaOutput<V>
+> {
   #getter: TypedRefGetter<V>
 
   constructor(getter: TypedRefGetter<V>) {
@@ -48,7 +53,7 @@ export class TypedRefSchema<
     return this.schema.$type
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<TypedRefSchemaOutput<V>> {

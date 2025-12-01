@@ -1,5 +1,6 @@
 import {
   Infer,
+  Schema,
   ValidationError,
   ValidationFailure,
   ValidationResult,
@@ -10,14 +11,14 @@ import {
 export type UnionSchemaValidators = readonly [Validator, ...Validator[]]
 export type UnionSchemaOutput<V extends readonly Validator[]> = Infer<V[number]>
 
-export class UnionSchema<
-  V extends UnionSchemaValidators = any,
-> extends Validator<UnionSchemaOutput<V>> {
+export class UnionSchema<V extends UnionSchemaValidators = any> extends Schema<
+  UnionSchemaOutput<V>
+> {
   constructor(protected readonly validators: V) {
     super()
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<UnionSchemaOutput<V>> {

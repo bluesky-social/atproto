@@ -1,37 +1,33 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { $Type, Simplify } from '../core.js'
+import { $Type, $TypeOf, Simplify } from '../core.js'
 import {
-  Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
 } from '../validation.js'
 
 export class TypedObjectSchema<
-  Type extends $Type = any,
-  Schema extends Validator<Record<string, unknown>> = any,
-  Output extends Infer<Schema> & { $type?: Type } = Infer<Schema> & {
-    $type?: Type
-  },
-> extends Validator<Output> {
+  Output extends { $type?: $Type } = any,
+> extends Schema<Output> {
   readonly lexiconType = 'object' as const
 
   constructor(
-    readonly $type: Type,
-    readonly schema: Schema,
+    readonly $type: $TypeOf<Output>,
+    readonly schema: Validator<Omit<Output, '$type'>>,
   ) {
     super()
   }
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X extends { $type?: Type } ? X : never {
+  ): value is X extends Output ? X : never {
     return value.$type === undefined || value.$type === this.$type
   }
 
   build<X extends Omit<Output, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: Type }> {
+  ): Simplify<Omit<X, '$type'> & { $type: $TypeOf<Output> }> {
     return { ...input, $type: this.$type }
   }
 
@@ -43,7 +39,7 @@ export class TypedObjectSchema<
     return this.build<X>(input)
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<Output> {
@@ -59,6 +55,6 @@ export class TypedObjectSchema<
       return ctx.issueInvalidPropertyValue(input, '$type', [this.$type])
     }
 
-    return ctx.validate(input, this.schema as Validator<Output>)
+    return ctx.validate(input, this.schema) as ValidationResult<Output>
   }
 }

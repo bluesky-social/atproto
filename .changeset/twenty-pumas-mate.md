@@ -3,4 +3,4 @@
 "@atproto/oauth-provider": minor
 ---
 
-Use arrays for "account" permission `action` attributes
+Use arrays to represent "account" permission's `action` attribute, allowing multiple actions to be specified for that resource.

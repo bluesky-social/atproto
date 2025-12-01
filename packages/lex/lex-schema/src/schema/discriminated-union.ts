@@ -1,8 +1,7 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { ArrayContaining } from '../core.js'
 import {
-  ValidationError,
-  ValidationFailure,
+  Infer,
+  Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -11,28 +10,23 @@ import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
 import { ObjectSchema } from './object.js'
 
-export type DiscriminatedUnionSchemaVariant<Discriminator extends string> =
-  ObjectSchema<
-    { [_ in Discriminator]: Validator },
-    { required: ArrayContaining<Discriminator, string> }
-  >
+export type DiscriminatedUnionVariant<Discriminator extends string> =
+  ObjectSchema<Record<Discriminator, EnumSchema | LiteralSchema>>
 
-export type DiscriminatedUnionSchemaVariants<Discriminator extends string> =
+export type DiscriminatedUnionVariants<Discriminator extends string> =
   readonly [
-    DiscriminatedUnionSchemaVariant<Discriminator>,
-    ...DiscriminatedUnionSchemaVariant<Discriminator>[],
+    DiscriminatedUnionVariant<Discriminator>,
+    ...DiscriminatedUnionVariant<Discriminator>[],
   ]
 
 export type DiscriminatedUnionSchemaOutput<
-  Options extends readonly Validator[],
-> = Options extends readonly [Validator<infer V>]
-  ? V
-  : Options extends readonly [
-        Validator<infer V>,
-        ...infer Rest extends Validator[],
-      ]
-    ? V | DiscriminatedUnionSchemaOutput<Rest>
-    : never
+  Variants extends readonly Validator[],
+> = Variants extends readonly [
+  infer V extends Validator,
+  ...infer Rest extends readonly Validator[],
+]
+  ? Infer<V> | DiscriminatedUnionSchemaOutput<Rest>
+  : never
 
 /**
  * @note There is no discriminated union in Lexicon schemas. This is a custom
@@ -41,104 +35,83 @@ export type DiscriminatedUnionSchemaOutput<
  */
 export class DiscriminatedUnionSchema<
   const Discriminator extends string = any,
-  const Options extends DiscriminatedUnionSchemaVariants<Discriminator> = any,
-> extends Validator<DiscriminatedUnionSchemaOutput<Options>> {
+  const Variants extends DiscriminatedUnionVariants<Discriminator> = any,
+> extends Schema<DiscriminatedUnionSchemaOutput<Variants>> {
+  readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<Discriminator>>
+
   constructor(
     readonly discriminator: Discriminator,
-    readonly variants: Options,
+    variants: Variants,
   ) {
     super()
+
+    // Although we usually try to avoid initialization work in constructors,
+    // here it is necessary to ensure that invalid discriminated throw from the
+    // place of construction, rather than later during validation.
+    this.variantsMap = buildVariantsMap(discriminator, variants)
   }
 
-  /**
-   * If all variants have a literal or enum for the discriminator property,
-   * and there are no overlapping values, returns a map of discriminator values
-   * to variants. Otherwise, returns null.
-   */
-  protected get variantsMap() {
-    const map = new Map<
-      unknown,
-      DiscriminatedUnionSchemaVariant<Discriminator>
-    >()
-    for (const variant of this.variants) {
-      const schema = variant.validators[this.discriminator]
-      if (schema instanceof LiteralSchema) {
-        if (map.has(schema.value)) return null // overlapping value
-        map.set(schema.value, variant)
-      } else if (schema instanceof EnumSchema) {
-        for (const val of schema.values) {
-          if (map.has(val)) return null // overlapping value
-          map.set(val, variant)
-        }
-      } else {
-        return null // not a literal or enum
-      }
-    }
-
-    // Cache the map on the instance (to avoid re-computing)
-    Object.defineProperty(this, 'variantsMap', {
-      value: map,
-      writable: false,
-      enumerable: false,
-      configurable: true,
-    })
-
-    return map
-  }
-
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<DiscriminatedUnionSchemaOutput<Options>> {
+  ): ValidationResult<DiscriminatedUnionSchemaOutput<Variants>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
 
-    if (!Object.hasOwn(input, this.discriminator)) {
-      return ctx.issueRequiredKey(input, this.discriminator)
+    const { discriminator } = this
+
+    if (!Object.hasOwn(input, discriminator)) {
+      return ctx.issueRequiredKey(input, discriminator)
     }
 
-    // Fast path: if we have a mapping of discriminator values to variants,
-    // we can directly select the correct variant to validate against. This also
-    // outputs a better error (with a single failure issue) when the discriminator.
-    if (this.variantsMap) {
-      const variant = this.variantsMap.get(input[this.discriminator])
-      if (!variant) {
-        return ctx.issueInvalidPropertyValue(input, this.discriminator, [
-          ...this.variantsMap.keys(),
-        ])
-      }
+    const discriminatorValue = input[discriminator]
 
+    const variant = this.variantsMap.get(discriminatorValue)
+    if (variant) {
       return ctx.validate(input, variant) as ValidationResult<
-        DiscriminatedUnionSchemaOutput<Options>
+        DiscriminatedUnionSchemaOutput<Variants>
       >
     }
 
-    // Slow path: try validating against each variant and return the first
-    // successful one (or aggregate all failures if none match).
-    const failures: ValidationFailure[] = []
+    return ctx.issueInvalidPropertyValue(input, discriminator, [
+      ...this.variantsMap.keys(),
+    ])
+  }
+}
 
-    for (const variant of this.variants) {
-      const discSchema = variant.validators[this.discriminator]
-      const discResult = ctx.validateChild(
-        input,
-        this.discriminator,
-        discSchema,
+function buildVariantsMap<Discriminator extends string>(
+  discriminator: Discriminator,
+  variants: DiscriminatedUnionVariants<Discriminator>,
+) {
+  const variantsMap = new Map<
+    unknown,
+    DiscriminatedUnionVariant<Discriminator>
+  >()
+
+  for (const variant of variants) {
+    const schema = variant.validators[discriminator]
+    if (schema instanceof LiteralSchema) {
+      if (variantsMap.has(schema.value)) {
+        throw new TypeError(`Overlapping discriminator value: ${schema.value}`)
+      }
+      variantsMap.set(schema.value, variant)
+    } else if (schema instanceof EnumSchema) {
+      for (const val of schema.values) {
+        if (variantsMap.has(val)) {
+          throw new TypeError(`Overlapping discriminator value: ${val}`)
+        }
+        variantsMap.set(val, variant)
+      }
+    } else {
+      // Only enumerable discriminator schemas are supported
+
+      // Should never happen if types are used correctly
+      throw new TypeError(
+        `Discriminator schema must be a LiteralSchema or EnumSchema`,
       )
-
-      if (!discResult.success) {
-        failures.push(discResult)
-        continue
-      }
-
-      return ctx.validate(input, variant) as ValidationResult<
-        DiscriminatedUnionSchemaOutput<Options>
-      >
-    }
-
-    return {
-      success: false,
-      error: ValidationError.fromFailures(failures),
     }
   }
+
+  return variantsMap
 }

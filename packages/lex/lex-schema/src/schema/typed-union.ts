@@ -1,9 +1,10 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { Restricted, UnknownString } from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 import {
   Infer,
+  Schema,
   ValidationResult,
-  Validator,
   ValidatorContext,
 } from '../validation.js'
 import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
@@ -43,7 +44,7 @@ export type TypedUnionSchemaOutput<
 export class TypedUnionSchema<
   TypedRefs extends readonly TypedRefSchema[] = any,
   Closed extends boolean = any,
-> extends Validator<TypedUnionSchemaOutput<TypedRefs, Closed>> {
+> extends Schema<TypedUnionSchemaOutput<TypedRefs, Closed>> {
   readonly lexiconType = 'union' as const
 
   constructor(
@@ -57,26 +58,18 @@ export class TypedUnionSchema<
     super()
   }
 
-  protected get refsMap() {
+  get refsMap(): Map<unknown, TypedRefs[number]> {
     const map = new Map<unknown, TypedRefs[number]>()
     for (const ref of this.refs) map.set(ref.$type, ref)
 
-    // Cache the map on the instance
-    Object.defineProperty(this, 'refsMap', {
-      value: map,
-      writable: false,
-      enumerable: false,
-      configurable: true,
-    })
-
-    return map
+    return lazyProperty(this, 'refsMap', map)
   }
 
   get $types() {
     return Array.from(this.refsMap.keys())
   }
 
-  override validateInContext(
+  validateInContext(
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<TypedUnionSchemaOutput<TypedRefs, Closed>> {
