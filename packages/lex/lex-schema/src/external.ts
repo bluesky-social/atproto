@@ -25,10 +25,10 @@ import {
   NullSchema,
   NullableSchema,
   ObjectSchema,
-  ObjectSchemaProperties,
+  ObjectSchemaShape,
   OptionalSchema,
   ParamsSchema,
-  ParamsSchemaProperties,
+  ParamsSchemaShape,
   Payload,
   PayloadBody,
   Permission,
@@ -133,17 +133,28 @@ export function string<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function regexp<T extends string>(pattern: RegExp) {
+export function regexp<T extends string = string>(pattern: RegExp) {
   return new RegexpSchema<T>(pattern)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function array<T>(items: Validator<T>, options?: ArraySchemaOptions) {
-  return new ArraySchema<T>(items, options)
+export function array<const S extends Validator>(
+  items: S,
+  options?: ArraySchemaOptions,
+): ArraySchema<S>
+export function array<T, const S extends Validator<T> = Validator<T>>(
+  items: S,
+  options?: ArraySchemaOptions,
+): ArraySchema<S>
+export function array<const S extends Validator>(
+  items: S,
+  options?: ArraySchemaOptions,
+) {
+  return new ArraySchema<S>(items, options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function object<const P extends ObjectSchemaProperties>(properties: P) {
+export function object<const P extends ObjectSchemaShape>(properties: P) {
   return new ObjectSchema<P>(properties)
 }
 
@@ -322,7 +333,7 @@ export function record<
 
 /*@__NO_SIDE_EFFECTS__*/
 export function params<
-  const P extends ParamsSchemaProperties = NonNullable<unknown>,
+  const P extends ParamsSchemaShape = NonNullable<unknown>,
 >(properties: P = {} as P) {
   return new ParamsSchema<P>(properties)
 }

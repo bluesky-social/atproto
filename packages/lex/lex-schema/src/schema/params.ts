@@ -10,11 +10,11 @@ import { Param, ParamScalar, paramSchema } from './_parameters.js'
 import { ObjectSchemaOutput } from './object.js'
 import { StringSchema } from './string.js'
 
-export type ParamsSchemaProperties = {
+export type ParamsSchemaShape = {
   [_ in string]: Validator<Param | undefined>
 }
 
-export type ParamsSchemaOutput<P extends ParamsSchemaProperties> =
+export type ParamsSchemaOutput<P extends ParamsSchemaShape> =
   ObjectSchemaOutput<P>
 
 export type InferParamsSchema<T> =
@@ -25,13 +25,12 @@ export type InferParamsSchema<T> =
     : never
 
 export class ParamsSchema<
-  const Validators extends ParamsSchemaProperties = ParamsSchemaProperties,
-  Output extends
-    ParamsSchemaOutput<Validators> = ParamsSchemaOutput<Validators>,
+  const Shape extends ParamsSchemaShape = ParamsSchemaShape,
+  Output extends ParamsSchemaOutput<Shape> = ParamsSchemaOutput<Shape>,
 > extends Schema<Output> {
   readonly lexiconType = 'params' as const
 
-  constructor(readonly validators: Validators) {
+  constructor(readonly validators: Shape) {
     super()
   }
 

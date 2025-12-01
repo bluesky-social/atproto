@@ -1,0 +1,418 @@
+import { NsidString } from '../core.js'
+import { ObjectSchema } from './object.js'
+import { ParamsSchema } from './params.js'
+import { Payload } from './payload.js'
+import {
+  InferProcedureInputBody,
+  InferProcedureOutputBody,
+  InferProcedureParameters,
+  Procedure,
+} from './procedure.js'
+import { StringSchema } from './string.js'
+
+describe('Procedure', () => {
+  describe('basic construction', () => {
+    it('creates a procedure with all parameters', () => {
+      const nsid = 'com.example.createPost' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload('application/json', undefined)
+      const errors = ['InvalidRequest', 'Unauthorized'] as const
+
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        errors,
+      )
+
+      expect(procedure.nsid).toBe(nsid)
+      expect(procedure.parameters).toBe(parameters)
+      expect(procedure.input).toBe(input)
+      expect(procedure.output).toBe(output)
+      expect(procedure.errors).toBe(errors)
+    })
+
+    it('creates a procedure without errors', () => {
+      const nsid = 'com.example.doSomething' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload('application/json', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.nsid).toBe(nsid)
+      expect(procedure.parameters).toBe(parameters)
+      expect(procedure.input).toBe(input)
+      expect(procedure.output).toBe(output)
+      expect(procedure.errors).toBeUndefined()
+    })
+
+    it('creates a procedure with empty errors array', () => {
+      const nsid = 'com.example.action' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload('application/json', undefined)
+      const errors = [] as const
+
+      const procedure = new Procedure(nsid, parameters, input, output, errors)
+
+      expect(procedure.errors).toEqual([])
+    })
+  })
+
+  describe('lexiconType property', () => {
+    it('has lexiconType set to "procedure"', () => {
+      const procedure = new Procedure(
+        'com.example.test' as NsidString,
+        new ParamsSchema({}),
+        new Payload('application/json', undefined),
+        new Payload('application/json', undefined),
+        undefined,
+      )
+
+      expect(procedure.lexiconType).toBe('procedure')
+    })
+
+    it('lexiconType is a constant', () => {
+      const procedure = new Procedure(
+        'com.example.test' as NsidString,
+        new ParamsSchema({}),
+        new Payload('application/json', undefined),
+        new Payload('application/json', undefined),
+        undefined,
+      )
+
+      // Verify it's always 'procedure'
+      expect(procedure.lexiconType).toBe('procedure')
+
+      // TypeScript enforces readonly, but in JavaScript we can verify the value doesn't change
+      const originalType = procedure.lexiconType
+      expect(originalType).toBe('procedure')
+    })
+  })
+
+  describe('with parameters schema', () => {
+    it('creates a procedure with query parameters', () => {
+      const nsid = 'com.example.listPosts' as NsidString
+      const parameters = new ParamsSchema({
+        limit: new StringSchema({}),
+        cursor: new StringSchema({}),
+      })
+      const input = new Payload(undefined, undefined)
+      const output = new Payload('application/json', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.parameters).toBe(parameters)
+      expect(procedure.parameters.validators).toHaveProperty('limit')
+      expect(procedure.parameters.validators).toHaveProperty('cursor')
+    })
+
+    it('creates a procedure with empty parameters', () => {
+      const nsid = 'com.example.action' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload('application/json', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.parameters).toBe(parameters)
+      expect(Object.keys(procedure.parameters.validators)).toHaveLength(0)
+    })
+  })
+
+  describe('with input payload', () => {
+    it('creates a procedure with JSON input', () => {
+      const nsid = 'com.example.createPost' as NsidString
+      const parameters = new ParamsSchema({})
+      const inputSchema = new ObjectSchema({
+        text: new StringSchema({}),
+      })
+      const input = new Payload('application/json', inputSchema)
+      const output = new Payload('application/json', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.input.encoding).toBe('application/json')
+      expect(procedure.input.schema).toBe(inputSchema)
+    })
+
+    it('creates a procedure with text input', () => {
+      const nsid = 'com.example.uploadText' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('text/plain', undefined)
+      const output = new Payload('application/json', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.input.encoding).toBe('text/plain')
+      expect(procedure.input.schema).toBeUndefined()
+    })
+
+    it('creates a procedure with binary input', () => {
+      const nsid = 'com.example.uploadBlob' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/octet-stream', undefined)
+      const output = new Payload('application/json', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.input.encoding).toBe('application/octet-stream')
+    })
+
+    it('creates a procedure with no input', () => {
+      const nsid = 'com.example.action' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload(undefined, undefined)
+      const output = new Payload('application/json', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.input.encoding).toBeUndefined()
+      expect(procedure.input.schema).toBeUndefined()
+    })
+  })
+
+  describe('with output payload', () => {
+    it('creates a procedure with JSON output', () => {
+      const nsid = 'com.example.getPost' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload(undefined, undefined)
+      const outputSchema = new ObjectSchema({
+        uri: new StringSchema({}),
+        cid: new StringSchema({}),
+      })
+      const output = new Payload('application/json', outputSchema)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.output.encoding).toBe('application/json')
+      expect(procedure.output.schema).toBe(outputSchema)
+    })
+
+    it('creates a procedure with text output', () => {
+      const nsid = 'com.example.export' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload(undefined, undefined)
+      const output = new Payload('text/plain', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.output.encoding).toBe('text/plain')
+    })
+
+    it('creates a procedure with binary output', () => {
+      const nsid = 'com.example.download' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload(undefined, undefined)
+      const output = new Payload('application/octet-stream', undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.output.encoding).toBe('application/octet-stream')
+    })
+
+    it('creates a procedure with no output', () => {
+      const nsid = 'com.example.deletePost' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload(undefined, undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.output.encoding).toBeUndefined()
+      expect(procedure.output.schema).toBeUndefined()
+    })
+  })
+
+  describe('with error definitions', () => {
+    it('creates a procedure with single error', () => {
+      const nsid = 'com.example.action' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload('application/json', undefined)
+      const errors = ['InvalidRequest'] as const
+
+      const procedure = new Procedure(nsid, parameters, input, output, errors)
+
+      expect(procedure.errors).toEqual(['InvalidRequest'])
+    })
+
+    it('creates a procedure with multiple errors', () => {
+      const nsid = 'com.example.createPost' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload('application/json', undefined)
+      const errors = [
+        'InvalidRequest',
+        'Unauthorized',
+        'RateLimitExceeded',
+      ] as const
+
+      const procedure = new Procedure(nsid, parameters, input, output, errors)
+
+      expect(procedure.errors).toHaveLength(3)
+      expect(procedure.errors).toContain('InvalidRequest')
+      expect(procedure.errors).toContain('Unauthorized')
+      expect(procedure.errors).toContain('RateLimitExceeded')
+    })
+  })
+
+  describe('type inference helpers', () => {
+    it('infers procedure parameters type', () => {
+      const parameters = new ParamsSchema({
+        limit: new StringSchema({}),
+      })
+      const procedure = new Procedure(
+        'com.example.list' as NsidString,
+        parameters,
+        new Payload(undefined, undefined),
+        new Payload(undefined, undefined),
+        undefined,
+      )
+
+      type Params = InferProcedureParameters<typeof procedure>
+      // Type test - this will fail at compile time if inference is wrong
+      const params: Params = { limit: 'test' }
+      expect(params).toBeDefined()
+    })
+
+    it('infers procedure input body type', () => {
+      const inputSchema = new ObjectSchema({
+        text: new StringSchema({}),
+      })
+      const procedure = new Procedure(
+        'com.example.create' as NsidString,
+        new ParamsSchema({}),
+        new Payload('application/json', inputSchema),
+        new Payload(undefined, undefined),
+        undefined,
+      )
+
+      type InputBody = InferProcedureInputBody<typeof procedure>
+      // Type test - this will fail at compile time if inference is wrong
+      const input: InputBody = { text: 'hello' }
+      expect(input).toBeDefined()
+    })
+
+    it('infers procedure output body type', () => {
+      const outputSchema = new ObjectSchema({
+        uri: new StringSchema({}),
+      })
+      const procedure = new Procedure(
+        'com.example.get' as NsidString,
+        new ParamsSchema({}),
+        new Payload(undefined, undefined),
+        new Payload('application/json', outputSchema),
+        undefined,
+      )
+
+      type OutputBody = InferProcedureOutputBody<typeof procedure>
+      // Type test - this will fail at compile time if inference is wrong
+      const output: OutputBody = { uri: 'at://did:plc:abc/post/123' }
+      expect(output).toBeDefined()
+    })
+  })
+
+  describe('property access', () => {
+    it('provides access to all properties', () => {
+      const nsid = 'com.example.test' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload('application/json', undefined)
+      const output = new Payload('application/json', undefined)
+      const errors = ['Error1', 'Error2'] as const
+
+      const procedure = new Procedure(nsid, parameters, input, output, errors)
+
+      // Verify all properties are accessible
+      expect(procedure.nsid).toBe(nsid)
+      expect(procedure.parameters).toBe(parameters)
+      expect(procedure.input).toBe(input)
+      expect(procedure.output).toBe(output)
+      expect(procedure.errors).toBe(errors)
+      expect(procedure.lexiconType).toBe('procedure')
+    })
+
+    it('maintains reference equality for complex properties', () => {
+      const parameters = new ParamsSchema({ test: new StringSchema({}) })
+      const inputSchema = new ObjectSchema({ field: new StringSchema({}) })
+      const outputSchema = new ObjectSchema({ result: new StringSchema({}) })
+      const input = new Payload('application/json', inputSchema)
+      const output = new Payload('application/json', outputSchema)
+
+      const procedure = new Procedure(
+        'com.example.test' as NsidString,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
+
+      // Verify references are maintained
+      expect(procedure.parameters).toBe(parameters)
+      expect(procedure.input).toBe(input)
+      expect(procedure.output).toBe(output)
+      expect(procedure.input.schema).toBe(inputSchema)
+      expect(procedure.output.schema).toBe(outputSchema)
+    })
+  })
+
+  describe('complex scenarios', () => {
+    it('creates a fully-featured procedure', () => {
+      const nsid = 'com.example.chat.sendMessage' as NsidString
+      const parameters = new ParamsSchema({
+        conversationId: new StringSchema({}),
+      })
+      const inputSchema = new ObjectSchema({
+        text: new StringSchema({}),
+        mentions: new StringSchema({}),
+      })
+      const outputSchema = new ObjectSchema({
+        messageId: new StringSchema({}),
+        timestamp: new StringSchema({}),
+      })
+      const input = new Payload('application/json', inputSchema)
+      const output = new Payload('application/json', outputSchema)
+      const errors = [
+        'ConversationNotFound',
+        'MessageTooLong',
+        'RateLimitExceeded',
+      ] as const
+
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        errors,
+      )
+
+      expect(procedure.nsid).toBe(nsid)
+      expect(procedure.parameters.validators).toHaveProperty('conversationId')
+      expect(procedure.input.encoding).toBe('application/json')
+      expect(procedure.input.schema).toBe(inputSchema)
+      expect(procedure.output.encoding).toBe('application/json')
+      expect(procedure.output.schema).toBe(outputSchema)
+      expect(procedure.errors).toEqual(errors)
+      expect(procedure.lexiconType).toBe('procedure')
+    })
+
+    it('creates a minimal procedure', () => {
+      const nsid = 'com.example.ping' as NsidString
+      const parameters = new ParamsSchema({})
+      const input = new Payload(undefined, undefined)
+      const output = new Payload(undefined, undefined)
+
+      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+
+      expect(procedure.nsid).toBe(nsid)
+      expect(Object.keys(procedure.parameters.validators)).toHaveLength(0)
+      expect(procedure.input.encoding).toBeUndefined()
+      expect(procedure.output.encoding).toBeUndefined()
+      expect(procedure.errors).toBeUndefined()
+      expect(procedure.lexiconType).toBe('procedure')
+    })
+  })
+})

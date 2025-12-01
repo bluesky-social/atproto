@@ -1,5 +1,4 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { Simplify } from '../core.js'
 import {
   Infer,
   Schema,
@@ -11,7 +10,7 @@ import {
 export type DictSchemaOutput<
   KeySchema extends Validator<string>,
   ValueSchema extends Validator,
-> = Simplify<Record<Infer<KeySchema>, Infer<ValueSchema>>>
+> = Record<Infer<KeySchema>, Infer<ValueSchema>>
 
 /**
  * @note There is no dictionary in Lexicon schemas. This is a custom extension

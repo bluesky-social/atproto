@@ -9,18 +9,19 @@ import {
   ValidatorContext,
 } from '../validation.js'
 
-export type ObjectSchemaProperties = Record<string, Validator>
+export type ObjectSchemaShape = {
+  [k: string]: Validator
+}
 
-export type ObjectSchemaOutput<Properties extends ObjectSchemaProperties> =
+export type ObjectSchemaOutput<Properties extends ObjectSchemaShape> =
   WithOptionalProperties<{
     [K in keyof Properties]: Infer<Properties[K]>
   }>
 
-export class ObjectSchema<const Properties extends ObjectSchemaProperties = any>
-  extends Schema<ObjectSchemaOutput<Properties>>
-  implements Validator<ObjectSchemaOutput<Properties>>
-{
-  constructor(readonly validators: Properties) {
+export class ObjectSchema<
+  const Shape extends ObjectSchemaShape = any,
+> extends Schema<ObjectSchemaOutput<Shape>> {
+  constructor(readonly validators: Shape) {
     super()
   }
 
@@ -33,7 +34,7 @@ export class ObjectSchema<const Properties extends ObjectSchemaProperties = any>
   validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<ObjectSchemaOutput<Properties>> {
+  ): ValidationResult<ObjectSchemaOutput<Shape>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -63,7 +64,7 @@ export class ObjectSchema<const Properties extends ObjectSchemaProperties = any>
       }
     }
 
-    const output = (copy ?? input) as ObjectSchemaOutput<Properties>
+    const output = (copy ?? input) as ObjectSchemaOutput<Shape>
 
     return ctx.success(output)
   }
