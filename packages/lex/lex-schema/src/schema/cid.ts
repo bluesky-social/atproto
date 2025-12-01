@@ -4,6 +4,14 @@ import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 export type { Cid }
 
 export type CidSchemaOptions = {
+  /**
+   * In strict mode, only CID with the following properties are accepted:
+   * - version: 1
+   * - codec: raw binary (0x55) or DAG-CBOR (0x71)
+   * - hash function: SHA-256 (0x12)
+   *
+   * @default false
+   */
   strict?: boolean
 }
 

@@ -27,7 +27,8 @@ export function isBlobRef(
   }
 
   const { mimeType, size, ref } = input
-  if (typeof mimeType !== 'string') {
+  // @NOTE Very basic mime validation
+  if (typeof mimeType !== 'string' || !mimeType.includes('/')) {
     return false
   }
 

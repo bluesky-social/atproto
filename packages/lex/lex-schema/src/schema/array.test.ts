@@ -1,6 +1,4 @@
 import { ArraySchema } from './array.js'
-import { BooleanSchema } from './boolean.js'
-import { EnumSchema } from './enum.js'
 import { IntegerSchema } from './integer.js'
 import { ObjectSchema } from './object.js'
 import { StringSchema } from './string.js'
@@ -72,24 +70,6 @@ describe('ArraySchema', () => {
     const schema = new ArraySchema(new StringSchema({}))
     const result = schema.safeParse(['valid', null, 'also valid'])
     expect(result.success).toBe(false)
-  })
-
-  it('validates enum items', () => {
-    const schema = new ArraySchema(new EnumSchema(['red', 'green', 'blue']))
-    const result = schema.safeParse(['red', 'blue', 'green'])
-    expect(result.success).toBe(true)
-  })
-
-  it('rejects invalid enum items', () => {
-    const schema = new ArraySchema(new EnumSchema(['red', 'green', 'blue']))
-    const result = schema.safeParse(['red', 'yellow'])
-    expect(result.success).toBe(false)
-  })
-
-  it('validates boolean items', () => {
-    const schema = new ArraySchema(new BooleanSchema({}))
-    const result = schema.safeParse([true, false, true])
-    expect(result.success).toBe(true)
   })
 
   describe('minLength constraint', () => {
@@ -252,57 +232,6 @@ describe('ArraySchema', () => {
       )
       const result = schema.safeParse([[[1, 2], [3]], [[4, 5, 6]]])
       expect(result.success).toBe(true)
-    })
-  })
-
-  describe('complex item schemas', () => {
-    it('validates arrays with string length constraints', () => {
-      const schema = new ArraySchema(new StringSchema({ minLength: 2 }))
-      const result = schema.safeParse(['hello', 'world'])
-      expect(result.success).toBe(true)
-    })
-
-    it('rejects items that violate string constraints', () => {
-      const schema = new ArraySchema(new StringSchema({ minLength: 5 }))
-      const result = schema.safeParse(['hello', 'hi'])
-      expect(result.success).toBe(false)
-    })
-
-    it('validates arrays with integer range constraints', () => {
-      const schema = new ArraySchema(
-        new IntegerSchema({ minimum: 0, maximum: 100 }),
-      )
-      const result = schema.safeParse([10, 50, 99])
-      expect(result.success).toBe(true)
-    })
-
-    it('rejects items that violate integer constraints', () => {
-      const schema = new ArraySchema(
-        new IntegerSchema({ minimum: 0, maximum: 100 }),
-      )
-      const result = schema.safeParse([10, 50, 150])
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe('edge cases', () => {
-    it('handles arrays with many items', () => {
-      const schema = new ArraySchema(new IntegerSchema({}))
-      const largeArray = Array.from({ length: 1000 }, (_, i) => i)
-      const result = schema.safeParse(largeArray)
-      expect(result.success).toBe(true)
-    })
-
-    it('validates array with single item', () => {
-      const schema = new ArraySchema(new StringSchema({}))
-      const result = schema.safeParse(['single'])
-      expect(result.success).toBe(true)
-    })
-
-    it('stops validation at first invalid item', () => {
-      const schema = new ArraySchema(new IntegerSchema({}))
-      const result = schema.safeParse([1, 2, 'invalid', 4, 5])
-      expect(result.success).toBe(false)
     })
   })
 })

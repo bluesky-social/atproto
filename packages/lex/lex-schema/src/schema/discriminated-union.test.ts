@@ -16,7 +16,7 @@ describe('DiscriminatedUnionSchema', () => {
         type: new LiteralSchema('dog'),
         bark: new StringSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates first variant', () => {
       const result = schema.safeParse({
@@ -104,7 +104,7 @@ describe('DiscriminatedUnionSchema', () => {
         status: new EnumSchema(['complete', 'failed']),
         result: new StringSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates first variant with first enum value', () => {
       const result = schema.safeParse({
@@ -172,7 +172,7 @@ describe('DiscriminatedUnionSchema', () => {
         kind: new EnumSchema(['complex', 'advanced']),
         value: new IntegerSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates literal discriminator variant', () => {
       const result = schema.safeParse({
@@ -213,7 +213,7 @@ describe('DiscriminatedUnionSchema', () => {
         type: new LiteralSchema('only'),
         value: new StringSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates the single variant', () => {
       const result = schema.safeParse({
@@ -247,7 +247,7 @@ describe('DiscriminatedUnionSchema', () => {
         width: new IntegerSchema({}),
         height: new IntegerSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates first variant', () => {
       const result = schema.safeParse({
@@ -293,7 +293,7 @@ describe('DiscriminatedUnionSchema', () => {
         version: new LiteralSchema(2),
         newFormat: new StringSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates first version', () => {
       const result = schema.safeParse({
@@ -338,7 +338,7 @@ describe('DiscriminatedUnionSchema', () => {
         enabled: new LiteralSchema(false),
         reason: new StringSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates true variant', () => {
       const result = schema.safeParse({
@@ -375,7 +375,7 @@ describe('DiscriminatedUnionSchema', () => {
         value: new LiteralSchema('present'),
         data: new StringSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates null discriminator variant', () => {
       const result = schema.safeParse({
@@ -414,7 +414,7 @@ describe('DiscriminatedUnionSchema', () => {
             type: new LiteralSchema('duplicate'),
             b: new StringSchema({}),
           }),
-        ] as const)
+        ])
       }).toThrow('Overlapping discriminator value: duplicate')
     })
 
@@ -429,7 +429,7 @@ describe('DiscriminatedUnionSchema', () => {
             status: new EnumSchema(['pending', 'complete']),
             b: new StringSchema({}),
           }),
-        ] as const)
+        ])
       }).toThrow('Overlapping discriminator value: pending')
     })
 
@@ -444,7 +444,7 @@ describe('DiscriminatedUnionSchema', () => {
             kind: new EnumSchema(['test', 'other']),
             b: new StringSchema({}),
           }),
-        ] as const)
+        ])
       }).toThrow('Overlapping discriminator value: test')
     })
   })
@@ -459,7 +459,7 @@ describe('DiscriminatedUnionSchema', () => {
         type: new LiteralSchema('b'),
         value: new IntegerSchema({}),
       }),
-    ] as const)
+    ])
 
     it('rejects empty object', () => {
       const result = schema.safeParse({})
@@ -494,7 +494,7 @@ describe('DiscriminatedUnionSchema', () => {
           key: new LiteralSchema(''),
           value: new StringSchema({}),
         }),
-      ] as const)
+      ])
 
       const result = emptySchema.safeParse({
         key: '',
@@ -509,7 +509,7 @@ describe('DiscriminatedUnionSchema', () => {
           count: new LiteralSchema(0),
           value: new StringSchema({}),
         }),
-      ] as const)
+      ])
 
       const result = zeroSchema.safeParse({
         count: 0,
@@ -524,7 +524,7 @@ describe('DiscriminatedUnionSchema', () => {
           flag: new LiteralSchema(false),
           value: new StringSchema({}),
         }),
-      ] as const)
+      ])
 
       const result = falseSchema.safeParse({
         flag: false,
@@ -548,7 +548,7 @@ describe('DiscriminatedUnionSchema', () => {
           $type: new LiteralSchema('test'),
           value: new StringSchema({}),
         }),
-      ] as const)
+      ])
 
       const result = specialSchema.safeParse({
         $type: 'test',
@@ -586,7 +586,7 @@ describe('DiscriminatedUnionSchema', () => {
         title: new StringSchema({}),
         content: new StringSchema({}),
       }),
-    ] as const)
+    ])
 
     it('validates complex user object', () => {
       const result = schema.safeParse({
@@ -640,14 +640,14 @@ describe('DiscriminatedUnionSchema', () => {
           kind: new LiteralSchema('a'),
           value: new StringSchema({}),
         }),
-      ] as const)
+      ])
 
       const tagSchema = new DiscriminatedUnionSchema('tag', [
         new ObjectSchema({
           tag: new LiteralSchema('a'),
           value: new StringSchema({}),
         }),
-      ] as const)
+      ])
 
       expect(kindSchema.safeParse({ kind: 'a', value: 'test' }).success).toBe(
         true,
@@ -663,7 +663,7 @@ describe('DiscriminatedUnionSchema', () => {
           type: new LiteralSchema('a'),
           value: new StringSchema({}),
         }),
-      ] as const)
+      ])
 
       const result = schema.safeParse({
         kind: 'a',

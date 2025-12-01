@@ -199,6 +199,17 @@ describe('BlobSchema', () => {
       })
       expect(result.success).toBe(false)
     })
+
+    it('rejects blob with unknown properties', () => {
+      const result = schema.safeParse({
+        $type: 'blob',
+        ref: blobCid,
+        mimeType: 'image/jpeg',
+        size: 10000,
+        unknownProp: 42,
+      })
+      expect(result.success).toBe(false)
+    })
   })
 
   describe('strict validation', () => {
@@ -254,8 +265,9 @@ describe('BlobSchema', () => {
       })
       expect(result.success).toBe(true)
       if (result.success) {
-        // @ts-expect-error
-        expect(result.value.cid).toBe(blobCid.toString())
+        expect('cid' in result.value && result.value.cid).toBe(
+          blobCid.toString(),
+        )
         expect(result.value.mimeType).toBe('image/jpeg')
       }
     })
@@ -383,16 +395,6 @@ describe('BlobSchema', () => {
   describe('edge cases', () => {
     const schema = new BlobSchema({})
 
-    it('rejects empty object', () => {
-      const result = schema.safeParse({})
-      expect(result.success).toBe(false)
-    })
-
-    it('rejects object with only $type', () => {
-      const result = schema.safeParse({ $type: 'blob' })
-      expect(result.success).toBe(false)
-    })
-
     it('validates blob with large size', () => {
       const result = schema.safeParse({
         $type: 'blob',
@@ -403,14 +405,24 @@ describe('BlobSchema', () => {
       expect(result.success).toBe(true)
     })
 
-    it('validates blob with empty mimeType', () => {
+    it('rejects empty object', () => {
+      const result = schema.safeParse({})
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects object with only $type', () => {
+      const result = schema.safeParse({ $type: 'blob' })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects blob with empty mimeType', () => {
       const result = schema.safeParse({
         $type: 'blob',
         ref: blobCid,
         mimeType: '',
         size: 10000,
       })
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('rejects blob with null ref', () => {

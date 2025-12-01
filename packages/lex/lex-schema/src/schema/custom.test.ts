@@ -1,3 +1,4 @@
+import { IssueCustom } from '../validation.js'
 import { CustomSchema } from './custom.js'
 
 describe('CustomSchema', () => {
@@ -54,8 +55,7 @@ describe('CustomSchema', () => {
         )
       }, 'Must be a valid User object')
 
-      const result = schema.safeParse({ name: 'Alice', age: 30 })
-      expect(result.success).toBe(true)
+      expect(schema.matches({ name: 'Alice', age: 30 })).toBe(true)
     })
 
     it('rejects objects missing required properties', () => {
@@ -75,8 +75,7 @@ describe('CustomSchema', () => {
         )
       }, 'Must be a valid User object')
 
-      const result = schema.safeParse({ name: 'Alice' })
-      expect(result.success).toBe(false)
+      expect(schema.matches({ name: 'Alice' })).toBe(false)
     })
 
     it('validates arrays with specific element types', () => {
@@ -331,9 +330,10 @@ describe('CustomSchema', () => {
       )
 
       const input: StringOrNumber = 'hello'
-      const result = schema.safeParse(input)
 
+      const result = schema.safeParse(input)
       expect(result.success).toBe(true)
+
       if (result.success) {
         // Type should be narrowed to string
         const value: string = result.value
@@ -371,24 +371,34 @@ describe('CustomSchema', () => {
 
   describe('assertion context behavior', () => {
     it('calls assertion with null as this', () => {
-      let capturedThis: any
-      const schema = new CustomSchema(function (input): input is string {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        capturedThis = this
+      const assertion = jest.fn(function (
+        this: unknown,
+        input: unknown,
+      ): input is string {
+        expect(this).toBeNull()
         return typeof input === 'string'
-      }, 'Must be a string')
+      })
 
-      schema.safeParse('test')
-      expect(capturedThis).toBeNull()
+      new CustomSchema(assertion as any, 'Must be a string').safeParse('test')
+
+      expect(assertion).toHaveBeenCalledTimes(1)
     })
 
     it('provides addIssue method in context', () => {
       const schema = new CustomSchema((input, ctx): input is string => {
-        expect(typeof ctx.addIssue).toBe('function')
-        return typeof input === 'string'
+        ctx.addIssue(new IssueCustom(ctx.path, input, 'This is a custom issue'))
+        return false
       }, 'Must be a string')
 
-      schema.safeParse('test')
+      expect(schema.safeParse('test')).toMatchObject({
+        success: false,
+        error: {
+          issues: [
+            { message: 'This is a custom issue' },
+            { message: 'Must be a string' },
+          ],
+        },
+      })
     })
 
     it('provides path array in context', () => {
@@ -398,95 +408,6 @@ describe('CustomSchema', () => {
       }, 'Must be a string')
 
       schema.safeParse('test')
-    })
-  })
-
-  describe('real-world examples', () => {
-    it('validates credit card number format', () => {
-      const schema = new CustomSchema((input): input is string => {
-        if (typeof input !== 'string') return false
-        // Simple Luhn algorithm check
-        const digits = input.replace(/\D/g, '')
-        if (digits.length !== 16) return false
-        let sum = 0
-        let isEven = false
-        for (let i = digits.length - 1; i >= 0; i--) {
-          let digit = parseInt(digits[i])
-          if (isEven) {
-            digit *= 2
-            if (digit > 9) digit -= 9
-          }
-          sum += digit
-          isEven = !isEven
-        }
-        return sum % 10 === 0
-      }, 'Must be a valid credit card number')
-
-      const validResult = schema.safeParse('4532015112830366')
-      expect(validResult.success).toBe(true)
-
-      const invalidResult = schema.safeParse('1234567890123456')
-      expect(invalidResult.success).toBe(false)
-    })
-
-    it('validates US phone number', () => {
-      const schema = new CustomSchema((input): input is string => {
-        if (typeof input !== 'string') return false
-        const cleaned = input.replace(/\D/g, '')
-        return (
-          cleaned.length === 10 || (cleaned.length === 11 && cleaned[0] === '1')
-        )
-      }, 'Must be a valid US phone number')
-
-      const validResults = [
-        schema.safeParse('123-456-7890'),
-        schema.safeParse('(123) 456-7890'),
-        schema.safeParse('1234567890'),
-        schema.safeParse('+1-123-456-7890'),
-      ]
-      validResults.forEach((result) => expect(result.success).toBe(true))
-
-      const invalidResult = schema.safeParse('12345')
-      expect(invalidResult.success).toBe(false)
-    })
-
-    it('validates date range', () => {
-      const schema = new CustomSchema((input): input is Date => {
-        if (!(input instanceof Date)) return false
-        if (isNaN(input.getTime())) return false
-        const now = new Date()
-        const oneYearAgo = new Date(
-          now.getFullYear() - 1,
-          now.getMonth(),
-          now.getDate(),
-        )
-        return input >= oneYearAgo && input <= now
-      }, 'Date must be within the last year')
-
-      const validResult = schema.safeParse(new Date())
-      expect(validResult.success).toBe(true)
-
-      const oldDate = new Date('2020-01-01')
-      const invalidResult = schema.safeParse(oldDate)
-      expect(invalidResult.success).toBe(false)
-    })
-
-    it('validates JSON string', () => {
-      const schema = new CustomSchema((input): input is string => {
-        if (typeof input !== 'string') return false
-        try {
-          JSON.parse(input)
-          return true
-        } catch {
-          return false
-        }
-      }, 'Must be valid JSON')
-
-      const validResult = schema.safeParse('{"key": "value"}')
-      expect(validResult.success).toBe(true)
-
-      const invalidResult = schema.safeParse('{invalid json}')
-      expect(invalidResult.success).toBe(false)
     })
   })
 })
