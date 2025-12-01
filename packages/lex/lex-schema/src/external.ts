@@ -1,4 +1,4 @@
-import { $Type, $type, LexiconRecordKey, NsidString, Simplify } from './core.js'
+import { $Type, $TypeOf, $type, LexiconRecordKey, NsidString } from './core.js'
 import {
   ArraySchema,
   ArraySchemaOptions,
@@ -9,6 +9,7 @@ import {
   BytesSchema,
   BytesSchemaOptions,
   CidSchema,
+  CidSchemaOptions,
   CustomAssertion,
   CustomSchema,
   DictSchema,
@@ -25,10 +26,10 @@ import {
   NullSchema,
   NullableSchema,
   ObjectSchema,
-  ObjectSchemaProperties,
+  ObjectSchemaShape,
   OptionalSchema,
   ParamsSchema,
-  ParamsSchemaProperties,
+  ParamsSchemaShape,
   Payload,
   PayloadBody,
   Permission,
@@ -109,8 +110,8 @@ export function integer(options?: IntegerSchemaOptions) {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function cidLink() {
-  return new CidSchema()
+export function cidLink(options?: CidSchemaOptions) {
+  return new CidSchema(options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -133,17 +134,28 @@ export function string<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function regexp<T extends string>(pattern: RegExp) {
+export function regexp<T extends string = string>(pattern: RegExp) {
   return new RegexpSchema<T>(pattern)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function array<T>(items: Validator<T>, options?: ArraySchemaOptions) {
-  return new ArraySchema<T>(items, options)
+export function array<const S extends Validator>(
+  items: S,
+  options?: ArraySchemaOptions,
+): ArraySchema<S>
+export function array<T, const S extends Validator<T> = Validator<T>>(
+  items: S,
+  options?: ArraySchemaOptions,
+): ArraySchema<S>
+export function array<const S extends Validator>(
+  items: S,
+  options?: ArraySchemaOptions,
+) {
+  return new ArraySchema<S>(items, options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function object<const P extends ObjectSchemaProperties>(properties: P) {
+export function object<const P extends ObjectSchemaShape>(properties: P) {
   return new ObjectSchema<P>(properties)
 }
 
@@ -250,12 +262,8 @@ export function typedUnion<
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const Schema extends Validator<{ [_ in string]?: unknown }>,
->(
-  nsid: N,
-  hash: H,
-  schema: Schema,
-): TypedObjectSchema<Simplify<{ $type?: $Type<N, H> } & Infer<Schema>>>
+  const S extends Validator<{ [_ in string]?: unknown }>,
+>(nsid: N, hash: H, schema: S): TypedObjectSchema<$Type<N, H>, S>
 export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
     ? T extends `${infer N}#${string}`
@@ -268,14 +276,14 @@ export function typedObject<V extends { $type?: $Type }>(
       : 'main'
     : never,
   schema: Validator<Omit<V, '$type'>>,
-): TypedObjectSchema<V>
+): TypedObjectSchema<$TypeOf<V>, Validator<Omit<V, '$type'>>>
 /*@__NO_SIDE_EFFECTS__*/
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const Schema extends Validator<{ [_ in string]?: unknown }>,
->(nsid: N, hash: H, schema: Schema) {
-  return new TypedObjectSchema($type(nsid, hash), schema)
+  const S extends Validator<{ [_ in string]?: unknown }>,
+>(nsid: N, hash: H, schema: S) {
+  return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), schema)
 }
 
 /**
@@ -298,11 +306,7 @@ export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
->(
-  key: K,
-  type: AsNsid<T>,
-  schema: S,
-): RecordSchema<K, Simplify<{ $type: T } & Infer<S>>>
+>(key: K, type: AsNsid<T>, schema: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
   const V extends { $type: NsidString },
@@ -310,19 +314,19 @@ export function record<
   key: K,
   type: AsNsid<V['$type']>,
   schema: Validator<Omit<V, '$type'>>,
-): RecordSchema<K, V>
+): RecordSchema<K, V['$type'], Validator<Omit<V, '$type'>>>
 /*@__NO_SIDE_EFFECTS__*/
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
 >(key: K, type: T, schema: S) {
-  return new RecordSchema(key, type, schema)
+  return new RecordSchema<K, T, S>(key, type, schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function params<
-  const P extends ParamsSchemaProperties = NonNullable<unknown>,
+  const P extends ParamsSchemaShape = NonNullable<unknown>,
 >(properties: P = {} as P) {
   return new ParamsSchema<P>(properties)
 }
@@ -378,7 +382,6 @@ export function permission<
 export function permissionSet<
   const N extends NsidString,
   const P extends readonly Permission[],
-  const O extends PermissionSetOptions,
->(nsid: N, permissions: P, options: PermissionSetOptions & O = {} as O) {
-  return new PermissionSet<N, P, O>(nsid, permissions, options)
+>(nsid: N, permissions: P, options?: PermissionSetOptions) {
+  return new PermissionSet<N, P>(nsid, permissions, options)
 }

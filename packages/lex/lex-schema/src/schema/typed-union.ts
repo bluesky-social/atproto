@@ -45,8 +45,6 @@ export class TypedUnionSchema<
   TypedRefs extends readonly TypedRefSchema[] = any,
   Closed extends boolean = any,
 > extends Schema<TypedUnionSchemaOutput<TypedRefs, Closed>> {
-  readonly lexiconType = 'union' as const
-
   constructor(
     protected readonly refs: TypedRefs,
     public readonly closed: Closed,

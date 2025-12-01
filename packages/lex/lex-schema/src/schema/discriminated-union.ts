@@ -90,7 +90,7 @@ function buildVariantsMap<Discriminator extends string>(
   >()
 
   for (const variant of variants) {
-    const schema = variant.validators[discriminator]
+    const schema = variant.shape[discriminator]
     if (schema instanceof LiteralSchema) {
       if (variantsMap.has(schema.value)) {
         throw new TypeError(`Overlapping discriminator value: ${schema.value}`)

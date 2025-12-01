@@ -1,37 +1,34 @@
 import { isPlainObject } from '@atproto/lex-data'
+import { WithOptionalProperties } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import {
+  Infer,
   Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
 } from '../validation.js'
 import { Param, ParamScalar, paramSchema } from './_parameters.js'
-import { ObjectSchemaOutput } from './object.js'
 import { StringSchema } from './string.js'
 
-export type ParamsSchemaProperties = {
-  [_ in string]: Validator<Param | undefined>
-}
+export type ParamsSchemaShape = Record<string, Validator<Param | undefined>>
 
-export type ParamsSchemaOutput<P extends ParamsSchemaProperties> =
-  ObjectSchemaOutput<P>
+export type ParamsSchemaOutput<Shape extends ParamsSchemaShape> =
+  WithOptionalProperties<{
+    [K in keyof Shape]: Infer<Shape[K]>
+  }>
 
 export type InferParamsSchema<T> =
   T extends ParamsSchema<infer P>
     ? NonNullable<unknown> extends ParamsSchemaOutput<P>
-      ? ParamsSchemaOutput<P> | undefined
+      ? ParamsSchemaOutput<P> | undefined // Allow undefined if all params are optional
       : ParamsSchemaOutput<P>
     : never
 
 export class ParamsSchema<
-  const Validators extends ParamsSchemaProperties = ParamsSchemaProperties,
-  Output extends
-    ParamsSchemaOutput<Validators> = ParamsSchemaOutput<Validators>,
-> extends Schema<Output> {
-  readonly lexiconType = 'params' as const
-
-  constructor(readonly validators: Validators) {
+  const Shape extends ParamsSchemaShape = ParamsSchemaShape,
+> extends Schema<ParamsSchemaOutput<Shape>> {
+  constructor(readonly validators: Shape) {
     super()
   }
 
@@ -44,7 +41,7 @@ export class ParamsSchema<
   validateInContext(
     input: unknown = {},
     ctx: ValidatorContext,
-  ): ValidationResult<Output> {
+  ): ValidationResult<ParamsSchemaOutput<Shape>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -88,10 +85,12 @@ export class ParamsSchema<
       }
     }
 
-    return ctx.success((copy ?? input) as Output)
+    return ctx.success((copy ?? input) as ParamsSchemaOutput<Shape>)
   }
 
-  fromURLSearchParams(urlSearchParams: URLSearchParams): Output {
+  fromURLSearchParams(
+    urlSearchParams: URLSearchParams,
+  ): ParamsSchemaOutput<Shape> {
     const params: Record<string, Param> = {}
 
     for (const [key, value] of urlSearchParams.entries()) {
@@ -120,7 +119,7 @@ export class ParamsSchema<
     return this.parse(params)
   }
 
-  toURLSearchParams(input: Output): URLSearchParams {
+  toURLSearchParams(input: ParamsSchemaOutput<Shape>): URLSearchParams {
     const urlSearchParams = new URLSearchParams()
 
     if (input !== undefined) {

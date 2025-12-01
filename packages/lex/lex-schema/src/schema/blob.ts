@@ -35,8 +35,6 @@ export type BlobSchemaOutput<Options> = Options extends { allowLegacy: true }
 export class BlobSchema<O extends BlobSchemaOptions> extends Schema<
   BlobSchemaOutput<O>
 > {
-  readonly lexiconType = 'blob' as const
-
   constructor(readonly options: O) {
     super()
   }

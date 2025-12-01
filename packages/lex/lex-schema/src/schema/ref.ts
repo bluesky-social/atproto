@@ -8,8 +8,6 @@ import {
 export type RefSchemaGetter<V> = () => Validator<V>
 
 export class RefSchema<V = any> extends Schema<V> {
-  readonly lexiconType = 'ref' as const
-
   #getter: RefSchemaGetter<V>
 
   constructor(getter: RefSchemaGetter<V>) {

@@ -7,8 +7,6 @@ export type IntegerSchemaOptions = {
 }
 
 export class IntegerSchema extends Schema<number> {
-  readonly lexiconType = 'integer' as const
-
   constructor(readonly options: IntegerSchemaOptions = {}) {
     super()
   }

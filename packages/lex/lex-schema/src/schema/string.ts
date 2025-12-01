@@ -21,8 +21,6 @@ export type StringSchemaOutput<Options> =
 export class StringSchema<
   const Options extends StringSchemaOptions = any,
 > extends Schema<StringSchemaOutput<Options>> {
-  readonly lexiconType = 'string' as const
-
   constructor(readonly options: Options) {
     super()
   }

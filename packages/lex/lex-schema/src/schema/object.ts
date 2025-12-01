@@ -9,23 +9,22 @@ import {
   ValidatorContext,
 } from '../validation.js'
 
-export type ObjectSchemaProperties = Record<string, Validator>
+export type ObjectSchemaShape = Record<string, Validator>
 
-export type ObjectSchemaOutput<Properties extends ObjectSchemaProperties> =
+export type ObjectSchemaOutput<Shape extends ObjectSchemaShape> =
   WithOptionalProperties<{
-    [K in keyof Properties]: Infer<Properties[K]>
+    [K in keyof Shape]: Infer<Shape[K]>
   }>
 
-export class ObjectSchema<const Properties extends ObjectSchemaProperties = any>
-  extends Schema<ObjectSchemaOutput<Properties>>
-  implements Validator<ObjectSchemaOutput<Properties>>
-{
-  constructor(readonly validators: Properties) {
+export class ObjectSchema<
+  const Shape extends ObjectSchemaShape = any,
+> extends Schema<ObjectSchemaOutput<Shape>> {
+  constructor(readonly shape: Shape) {
     super()
   }
 
   get validatorsMap(): Map<string, Validator> {
-    const map = new Map(Object.entries(this.validators))
+    const map = new Map(Object.entries(this.shape))
 
     return lazyProperty(this, 'validatorsMap', map)
   }
@@ -33,7 +32,7 @@ export class ObjectSchema<const Properties extends ObjectSchemaProperties = any>
   validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<ObjectSchemaOutput<Properties>> {
+  ): ValidationResult<ObjectSchemaOutput<Shape>> {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -63,7 +62,7 @@ export class ObjectSchema<const Properties extends ObjectSchemaProperties = any>
       }
     }
 
-    const output = (copy ?? input) as ObjectSchemaOutput<Properties>
+    const output = (copy ?? input) as ObjectSchemaOutput<Shape>
 
     return ctx.success(output)
   }

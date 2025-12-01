@@ -1,8 +1,6 @@
 import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export class TokenSchema<V extends string = any> extends Schema<V> {
-  readonly lexiconType = 'token' as const
-
   constructor(protected readonly value: V) {
     super()
   }

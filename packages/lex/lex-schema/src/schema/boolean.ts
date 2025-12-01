@@ -5,8 +5,6 @@ export type BooleanSchemaOptions = {
 }
 
 export class BooleanSchema extends Schema<boolean> {
-  readonly lexiconType = 'boolean' as const
-
   constructor(readonly options?: BooleanSchemaOptions) {
     super()
   }

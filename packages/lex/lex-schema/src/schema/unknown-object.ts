@@ -5,8 +5,6 @@ export type { LexMap }
 export type UnknownObjectOutput = LexMap
 
 export class UnknownObjectSchema extends Schema<UnknownObjectOutput> {
-  readonly lexiconType = 'unknown' as const
-
   validateInContext(
     input: unknown,
     ctx: ValidatorContext,
