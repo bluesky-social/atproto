@@ -1,4 +1,3 @@
-import { NsidString } from '../core.js'
 import { ObjectSchema } from './object.js'
 import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'
@@ -13,7 +12,7 @@ import { StringSchema } from './string.js'
 describe('Procedure', () => {
   describe('basic construction', () => {
     it('creates a procedure with all parameters', () => {
-      const nsid = 'com.example.createPost' as NsidString
+      const nsid = 'com.example.createPost'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
@@ -29,7 +28,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure without errors', () => {
-      const nsid = 'com.example.doSomething' as NsidString
+      const nsid = 'com.example.doSomething'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
@@ -50,7 +49,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with empty errors array', () => {
-      const nsid = 'com.example.action' as NsidString
+      const nsid = 'com.example.action'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
@@ -64,7 +63,7 @@ describe('Procedure', () => {
 
   describe('with parameters schema', () => {
     it('creates a procedure with query parameters', () => {
-      const nsid = 'com.example.listPosts' as NsidString
+      const nsid = 'com.example.listPosts'
       const parameters = new ParamsSchema({
         limit: new StringSchema({}),
         cursor: new StringSchema({}),
@@ -86,7 +85,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with empty parameters', () => {
-      const nsid = 'com.example.action' as NsidString
+      const nsid = 'com.example.action'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
@@ -106,7 +105,7 @@ describe('Procedure', () => {
 
   describe('with input payload', () => {
     it('creates a procedure with JSON input', () => {
-      const nsid = 'com.example.createPost' as NsidString
+      const nsid = 'com.example.createPost'
       const parameters = new ParamsSchema({})
       const inputSchema = new ObjectSchema({
         text: new StringSchema({}),
@@ -127,7 +126,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with text input', () => {
-      const nsid = 'com.example.uploadText' as NsidString
+      const nsid = 'com.example.uploadText'
       const parameters = new ParamsSchema({})
       const input = new Payload('text/plain', undefined)
       const output = new Payload('application/json', undefined)
@@ -145,7 +144,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with binary input', () => {
-      const nsid = 'com.example.uploadBlob' as NsidString
+      const nsid = 'com.example.uploadBlob'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/octet-stream', undefined)
       const output = new Payload('application/json', undefined)
@@ -162,7 +161,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with no input', () => {
-      const nsid = 'com.example.action' as NsidString
+      const nsid = 'com.example.action'
       const parameters = new ParamsSchema({})
       const input = new Payload(undefined, undefined)
       const output = new Payload('application/json', undefined)
@@ -182,7 +181,7 @@ describe('Procedure', () => {
 
   describe('with output payload', () => {
     it('creates a procedure with JSON output', () => {
-      const nsid = 'com.example.getPost' as NsidString
+      const nsid = 'com.example.getPost'
       const parameters = new ParamsSchema({})
       const input = new Payload(undefined, undefined)
       const outputSchema = new ObjectSchema({
@@ -204,7 +203,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with text output', () => {
-      const nsid = 'com.example.export' as NsidString
+      const nsid = 'com.example.export'
       const parameters = new ParamsSchema({})
       const input = new Payload(undefined, undefined)
       const output = new Payload('text/plain', undefined)
@@ -221,7 +220,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with binary output', () => {
-      const nsid = 'com.example.download' as NsidString
+      const nsid = 'com.example.download'
       const parameters = new ParamsSchema({})
       const input = new Payload(undefined, undefined)
       const output = new Payload('application/octet-stream', undefined)
@@ -238,7 +237,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with no output', () => {
-      const nsid = 'com.example.deletePost' as NsidString
+      const nsid = 'com.example.deletePost'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload(undefined, undefined)
@@ -258,7 +257,7 @@ describe('Procedure', () => {
 
   describe('with error definitions', () => {
     it('creates a procedure with single error', () => {
-      const nsid = 'com.example.action' as NsidString
+      const nsid = 'com.example.action'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
@@ -270,7 +269,7 @@ describe('Procedure', () => {
     })
 
     it('creates a procedure with multiple errors', () => {
-      const nsid = 'com.example.createPost' as NsidString
+      const nsid = 'com.example.createPost'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
@@ -295,7 +294,7 @@ describe('Procedure', () => {
         limit: new StringSchema({}),
       })
       const procedure = new Procedure(
-        'com.example.list' as NsidString,
+        'com.example.list',
         parameters,
         new Payload(undefined, undefined),
         new Payload(undefined, undefined),
@@ -313,7 +312,7 @@ describe('Procedure', () => {
         text: new StringSchema({}),
       })
       const procedure = new Procedure(
-        'com.example.create' as NsidString,
+        'com.example.create',
         new ParamsSchema({}),
         new Payload('application/json', inputSchema),
         new Payload(undefined, undefined),
@@ -331,7 +330,7 @@ describe('Procedure', () => {
         uri: new StringSchema({}),
       })
       const procedure = new Procedure(
-        'com.example.get' as NsidString,
+        'com.example.get',
         new ParamsSchema({}),
         new Payload(undefined, undefined),
         new Payload('application/json', outputSchema),
@@ -347,7 +346,7 @@ describe('Procedure', () => {
 
   describe('property access', () => {
     it('provides access to all properties', () => {
-      const nsid = 'com.example.test' as NsidString
+      const nsid = 'com.example.test'
       const parameters = new ParamsSchema({})
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
@@ -371,7 +370,7 @@ describe('Procedure', () => {
       const output = new Payload('application/json', outputSchema)
 
       const procedure = new Procedure(
-        'com.example.test' as NsidString,
+        'com.example.test',
         parameters,
         input,
         output,
@@ -389,7 +388,7 @@ describe('Procedure', () => {
 
   describe('complex scenarios', () => {
     it('creates a fully-featured procedure', () => {
-      const nsid = 'com.example.chat.sendMessage' as NsidString
+      const nsid = 'com.example.chat.sendMessage'
       const parameters = new ParamsSchema({
         conversationId: new StringSchema({}),
       })
@@ -421,7 +420,7 @@ describe('Procedure', () => {
     })
 
     it('creates a minimal procedure', () => {
-      const nsid = 'com.example.ping' as NsidString
+      const nsid = 'com.example.ping'
       const parameters = new ParamsSchema({})
       const input = new Payload(undefined, undefined)
       const output = new Payload(undefined, undefined)

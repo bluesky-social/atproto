@@ -9,6 +9,7 @@ import {
   BytesSchema,
   BytesSchemaOptions,
   CidSchema,
+  CidSchemaOptions,
   CustomAssertion,
   CustomSchema,
   DictSchema,
@@ -109,8 +110,8 @@ export function integer(options?: IntegerSchemaOptions) {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function cidLink() {
-  return new CidSchema()
+export function cidLink(options?: CidSchemaOptions) {
+  return new CidSchema(options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
