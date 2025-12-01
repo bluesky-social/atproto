@@ -1,7 +1,7 @@
 import { resolveTxt } from 'node:dns/promises'
 import * as crypto from '@atproto/crypto'
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { Cid, asCid } from '@atproto/lex-data'
+import { Cid } from '@atproto/lex-data'
 import { LexiconDocument, lexiconDocumentSchema } from '@atproto/lex-document'
 import {
   MST,
@@ -10,7 +10,7 @@ import {
   readCarWithRoot,
   verifyCommitSig,
 } from '@atproto/repo'
-import { AtUri, NSID } from '@atproto/syntax'
+import { AtUri, NSID, NsidString } from '@atproto/syntax'
 import {
   AtprotoVerificationMethod,
   CreateDidResolverOptions,
@@ -24,8 +24,35 @@ import {
 import { LexResolverError } from './lex-resolver-error.js'
 import * as com from './lexicons/com.js'
 
+export type LexResolverResult = {
+  uri: AtUri
+  cid: Cid
+  lexicon: LexiconDocument
+}
+
+export type LexResolverFetchResult = {
+  cid: Cid
+  lexicon: LexiconDocument
+}
+
+type Awaitable<T> = T | Promise<T>
+
+export type LexResolverHooks = {
+  onResolveAuthority?(data: { nsid: NSID }): Awaitable<void | Did>
+  onResolveAuthorityResult?(data: { nsid: NSID; did: Did }): Awaitable<void>
+  onResolveAuthorityError?(data: { nsid: NSID; err: unknown }): Awaitable<void>
+
+  onFetch?(data: { uri: AtUri }): Awaitable<void | LexResolverFetchResult>
+  onFetchResult?(data: {
+    uri: AtUri
+    cid: Cid
+    lexicon: LexiconDocument
+  }): Awaitable<void>
+  onFetchError?(data: { uri: AtUri; err: unknown }): Awaitable<void>
+}
+
 export type LexResolverOptions = CreateDidResolverOptions & {
-  didAuthority?: Did
+  hooks?: LexResolverHooks
 }
 
 export { AtUri, type Cid, NSID }
@@ -41,40 +68,73 @@ export class LexResolver {
   async get(
     nsidStr: NSID | string,
     options?: ResolveDidOptions,
-  ): Promise<{
-    uri: AtUri
-    cid: Cid
-    lexicon: LexiconDocument
-  }> {
+  ): Promise<LexResolverResult> {
     const uri = await this.resolve(nsidStr)
     return this.fetch(uri, options)
   }
 
   async resolve(nsidStr: NSID | string): Promise<AtUri> {
     const nsid = NSID.from(nsidStr)
+
     const did =
-      this.options.didAuthority ??
-      (await resolveLexiconDidAuthority(nsid).catch((cause) => {
-        throw new LexResolverError(
-          nsid,
-          `Failed to resolve DID authority for Lexicon`,
-          { cause },
-        )
-      }))
+      (await this.options.hooks?.onResolveAuthority?.({ nsid })) ??
+      (await this.resolveLexiconAuthority(nsid).then(
+        async (did) => {
+          await this.options.hooks?.onResolveAuthorityResult?.({ nsid, did })
+          return did
+        },
+        async (err) => {
+          await this.options.hooks?.onResolveAuthorityError?.({ nsid, err })
+          throw err
+        },
+      ))
 
     return AtUri.make(did, 'com.atproto.lexicon.schema', nsid.toString())
+  }
+
+  // @TODO This class could be made compatible with browsers by making the
+  // following method abstract and/or by allowing the caller to inject a DNS
+  // resolver implementation (based on DNS-over-HTTPS or similar), instead of
+  // using the Node.js built-in resolver.
+  protected async resolveLexiconAuthority(nsid: NSID): Promise<Did> {
+    try {
+      return await getDomainTxtDid(`_lexicon.${nsid.authority}`)
+    } catch (cause) {
+      throw new LexResolverError(
+        nsid,
+        `Failed to resolve lexicon DID authority for ${nsid}`,
+        { cause },
+      )
+    }
   }
 
   async fetch(
     uriStr: AtUri | string,
     options?: ResolveDidOptions,
-  ): Promise<{
-    uri: AtUri
-    cid: Cid
-    lexicon: LexiconDocument
-  }> {
+  ): Promise<LexResolverResult> {
     const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
-    const { nsid, did } = parseLexiconUri(uri)
+
+    const { lexicon, cid } =
+      (await this.options.hooks?.onFetch?.({ uri })) ??
+      (await this.fetchLexiconUri(uri, options).then(
+        async (res) => {
+          await this.options.hooks?.onFetchResult?.({ uri, ...res })
+          return res
+        },
+        async (err) => {
+          await this.options.hooks?.onFetchError?.({ uri, err })
+          throw err
+        },
+      ))
+
+    return { uri, cid, lexicon }
+  }
+
+  protected async fetchLexiconUri(
+    uri: AtUri,
+    options?: ResolveDidOptions,
+  ): Promise<LexResolverFetchResult> {
+    const { did, nsid } = parseLexiconUri(uri)
 
     const { pds, key } = await this.didResolver
       .resolve(did, options)
@@ -82,7 +142,7 @@ export class LexResolver {
       .catch((cause) => {
         throw new LexResolverError(
           nsid,
-          `Failed to resolve DID document for ${uri}`,
+          `Failed to resolve DID document for ${did}`,
           { cause },
         )
       })
@@ -99,56 +159,48 @@ export class LexResolver {
       fetch: this.options.fetch,
     })
 
-    const response = await xrpc(agent, com.atproto.sync.getRecord, {
+    const collection = 'com.atproto.lexicon.schema'
+    const rkey = nsid.toString()
+
+    const { cid, record } = await xrpc(agent, com.atproto.sync.getRecord, {
       signal: options?.signal,
       headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
-      params: {
-        did,
-        collection: 'com.atproto.lexicon.schema',
-        rkey: nsid.toString(),
-      },
-    }).catch((cause) => {
-      throw new LexResolverError(
-        nsid,
-        `Failed to fetch Lexicon document at ${uri}`,
-        { cause },
-      )
-    })
-
-    const verified = await verifyRecordProof(response.body, uri, key).catch(
-      (cause) => {
-        throw new LexResolverError(
-          nsid,
-          `Failed to verify Lexicon record proof at ${uri}`,
-          { cause },
+      params: { did, collection, rkey },
+    }).then(
+      ({ body: carBytes }) => {
+        return verifyRecordProof(carBytes, did, key, collection, rkey).catch(
+          (cause) => {
+            throw new LexResolverError(
+              nsid,
+              `Failed to verify Lexicon record proof at ${uri}`,
+              { cause },
+            )
+          },
         )
+      },
+      (cause) => {
+        throw new LexResolverError(nsid, `Failed to fetch Record ${uri}`, {
+          cause,
+        })
       },
     )
 
-    const result = lexiconDocumentSchema.safeParse(verified.record)
-    if (!result.success) {
+    const validationResult = lexiconDocumentSchema.safeParse(record)
+    if (!validationResult.success) {
       throw new LexResolverError(nsid, `Invalid Lexicon document at ${uri}`, {
-        cause: result.error,
+        cause: validationResult.error,
       })
     }
 
-    const lexicon = result.value
-    if (lexicon.id !== nsid.toString()) {
+    const lexicon = validationResult.value
+    if (lexicon.id !== uri.rkey) {
       throw new LexResolverError(
         nsid,
-        `Invalid document id "${lexicon.id}" for ${uri}`,
+        `Invalid document id "${lexicon.id}" at ${uri}`,
       )
     }
 
-    const cid = asCid(verified.cid)
-    if (!cid) {
-      throw new LexResolverError(
-        nsid,
-        `Invalid CID "${verified.cid.toString()}" for ${uri}`,
-      )
-    }
-
-    return { lexicon, uri, cid }
+    return { lexicon, cid }
   }
 }
 
@@ -164,18 +216,6 @@ function parseLexiconUri(uri: AtUri): {
     return { did, nsid }
   } catch (cause) {
     throw new LexResolverError(nsid, `URI host is not a DID ${uri}`, { cause })
-  }
-}
-
-async function resolveLexiconDidAuthority(nsid: NSID): Promise<Did> {
-  try {
-    return await getDomainTxtDid(`_lexicon.${nsid.authority}`)
-  } catch (cause) {
-    throw new LexResolverError(
-      nsid,
-      `Failed to resolve lexicon DID authority`,
-      { cause },
-    )
   }
 }
 
@@ -197,27 +237,38 @@ async function getDomainTxtDid(domain: string): Promise<Did> {
 
 async function verifyRecordProof(
   car: Uint8Array,
-  uri: AtUri,
+  did: Did,
   key: AtprotoVerificationMethod,
+  collection: NsidString,
+  rkey: string,
 ) {
-  const signingKey = getDidKeyFromMultibase(key)
   const { root, blocks } = await readCarWithRoot(car)
   const blockstore = new MemoryBlockstore(blocks)
+
   const commit = await blockstore.readObj(root, repoDef.commit)
-  if (commit.did !== uri.host) {
+  if (commit.did !== did) {
     throw new Error(`Invalid repo did: ${commit.did}`)
   }
+
+  const signingKey = getDidKeyFromMultibase(key)
   const validSig = await verifyCommitSig(commit, signingKey)
   if (!validSig) {
     throw new Error(`Invalid signature on commit: ${root.toString()}`)
   }
+
   const mst = MST.load(blockstore, commit.data)
-  const cid = await mst.get(`${uri.collection}/${uri.rkey}`)
-  if (!cid) {
-    throw new Error('Record not found in proof')
-  }
+
+  const cid = await mst.get(`${collection}/${rkey}`)
+  if (!cid) throw new Error('Record not found in proof')
+
   const record = await blockstore.readRecord(cid)
-  return { commit, uri, cid, record }
+  if (record?.$type !== collection) {
+    throw new Error(
+      `Invalid record type: expected ${collection}, got ${record?.$type}`,
+    )
+  }
+
+  return { cid, record }
 }
 
 function getDidKeyFromMultibase(key: AtprotoVerificationMethod) {

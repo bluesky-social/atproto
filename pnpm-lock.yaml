@@ -1349,12 +1349,12 @@ importers:
       '@atproto/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
-      '@atproto/lexicon':
+      '@atproto/lex-document':
         specifier: workspace:*
-        version: link:../../lexicon
-      '@atproto/lexicon-resolver':
+        version: link:../../lex/lex-document
+      '@atproto/lex-resolver':
         specifier: workspace:*
-        version: link:../../lexicon-resolver
+        version: link:../../lex/lex-resolver
       '@atproto/oauth-provider-api':
         specifier: workspace:*
         version: link:../oauth-provider-api
@@ -1788,9 +1788,6 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      '@atproto/lexicon-resolver':
-        specifier: workspace:^
-        version: link:../lexicon-resolver
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider

@@ -125,7 +125,7 @@ export const isAtprotoAudience = (value: unknown): value is AtprotoAudience => {
   )
 }
 
-type AtprotoData<
+export type AtprotoData<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
 > = {
   did: Did<M>

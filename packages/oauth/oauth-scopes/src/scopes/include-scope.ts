@@ -88,12 +88,8 @@ export class IncludeScope {
         permission.aud === undefined &&
         this.aud !== undefined
       ) {
-        return new LexPermissionSyntax({
-          ...permission,
-          resource: permission.resource,
-          inheritAud: undefined,
-          aud: this.aud,
-        })
+        const { inheritAud, ...rest } = permission
+        return new LexPermissionSyntax({ aud: this.aud, ...rest })
       }
 
       return new LexPermissionSyntax(permission)
