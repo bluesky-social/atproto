@@ -1,8 +1,6 @@
 import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
 
 export class NullSchema extends Schema<null> {
-  readonly lexiconType = 'null' as const
-
   constructor() {
     super()
   }

@@ -375,15 +375,4 @@ describe('TypedUnionSchema', () => {
       expect(schema.closed).toBe(false)
     })
   })
-
-  describe('lexiconType property', () => {
-    const schema = new TypedUnionSchema(
-      [new TypedRefSchema(() => personSchema)],
-      true,
-    )
-
-    it('returns "union"', () => {
-      expect(schema.lexiconType).toBe('union')
-    })
-  })
 })

@@ -17,8 +17,6 @@ export class TypedObjectSchema<
   const T extends $Type = any,
   const S extends Validator<{ [_ in string]?: unknown }> = any,
 > extends Schema<TypedObjectSchemaOutput<T, S>> {
-  readonly lexiconType = 'object' as const
-
   constructor(
     readonly $type: T,
     readonly schema: S,

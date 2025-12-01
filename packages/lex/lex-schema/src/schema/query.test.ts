@@ -72,35 +72,6 @@ describe('Query', () => {
     })
   })
 
-  describe('lexiconType property', () => {
-    it('has lexiconType set to "query"', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
-      const parameters = new ParamsSchema({})
-      const output = new Payload(
-        'application/json',
-        new ObjectSchema({
-          cursor: new OptionalSchema(new StringSchema({})),
-        }),
-      )
-
-      const query = new Query(nsid, parameters, output, undefined)
-
-      expect(query.lexiconType).toBe('query')
-    })
-
-    it('lexiconType is a constant value', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
-      const parameters = new ParamsSchema({})
-      const output = new Payload('application/json', undefined)
-
-      const query = new Query(nsid, parameters, output, undefined)
-
-      expect(query.lexiconType).toBe('query')
-      // TypeScript enforces readonly at compile time
-      expect(typeof query.lexiconType).toBe('string')
-    })
-  })
-
   describe('properties', () => {
     it('has nsid property', () => {
       const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
@@ -382,7 +353,6 @@ describe('Query', () => {
 
       const query = new Query(nsid, parameters, output, undefined)
 
-      expect(query.lexiconType).toBe('query')
       expect(query.nsid).toBe('app.bsky.feed.getFeedSkeleton')
     })
 
@@ -407,7 +377,6 @@ describe('Query', () => {
 
       const query = new Query(nsid, parameters, output, errors)
 
-      expect(query.lexiconType).toBe('query')
       expect(query.nsid).toBe('app.bsky.feed.searchPosts')
       expect(query.errors).toEqual(['BadRequest'])
     })
@@ -433,7 +402,6 @@ describe('Query', () => {
 
       const query = new Query(nsid, parameters, output, undefined)
 
-      expect(query.lexiconType).toBe('query')
       expect(query.nsid).toBe('app.bsky.actor.getProfile')
     })
   })

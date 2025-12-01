@@ -219,13 +219,6 @@ describe('RefSchema', () => {
     })
   })
 
-  describe('lexiconType property', () => {
-    it('has lexiconType set to "ref"', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
-      expect(schema.lexiconType).toBe('ref')
-    })
-  })
-
   describe('multiple validations', () => {
     it('validates multiple inputs correctly', () => {
       const schema = new RefSchema(() => new StringSchema({ minLength: 3 }))

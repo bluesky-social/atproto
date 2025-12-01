@@ -223,11 +223,4 @@ describe('BytesSchema', () => {
       expect(result.success).toBe(true)
     })
   })
-
-  describe('lexiconType property', () => {
-    it('has correct lexiconType', () => {
-      const schema = new BytesSchema({})
-      expect(schema.lexiconType).toBe('bytes')
-    })
-  })
 })

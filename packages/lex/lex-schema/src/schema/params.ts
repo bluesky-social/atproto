@@ -28,8 +28,6 @@ export class ParamsSchema<
   const Shape extends ParamsSchemaShape = ParamsSchemaShape,
   Output extends ParamsSchemaOutput<Shape> = ParamsSchemaOutput<Shape>,
 > extends Schema<Output> {
-  readonly lexiconType = 'params' as const
-
   constructor(readonly validators: Shape) {
     super()
   }

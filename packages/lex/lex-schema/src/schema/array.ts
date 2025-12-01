@@ -14,8 +14,6 @@ export type ArraySchemaOptions = {
 export class ArraySchema<const T extends Validator> extends Schema<
   Array<Infer<T>>
 > {
-  readonly lexiconType = 'array' as const
-
   constructor(
     readonly itemsSchema: T,
     readonly options: ArraySchemaOptions = {},

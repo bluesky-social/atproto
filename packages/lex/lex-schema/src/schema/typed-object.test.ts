@@ -492,12 +492,6 @@ describe('TypedObjectSchema', () => {
     })
   })
 
-  describe('lexiconType property', () => {
-    it('has lexiconType set to "object"', () => {
-      expect(schema.lexiconType).toBe('object')
-    })
-  })
-
   describe('integration with all property types', () => {
     const fullSchema = new TypedObjectSchema(
       'app.bsky.test#full',

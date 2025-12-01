@@ -8,8 +8,6 @@ export type CidSchemaOptions = {
 }
 
 export class CidSchema extends Schema<Cid> {
-  readonly lexiconType = 'cid-link' as const
-
   constructor(readonly options: CidSchemaOptions = {}) {
     super()
   }

@@ -163,34 +163,6 @@ describe('PermissionSet', () => {
     })
   })
 
-  describe('lexiconType property', () => {
-    it('has lexiconType set to "permission-set"', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
-      const permissions = [
-        new Permission('app.bsky.feed.post:read', {}),
-      ] as const
-      const options = {}
-
-      const permissionSet = new PermissionSet(nsid, permissions, options)
-
-      expect(permissionSet.lexiconType).toBe('permission-set')
-    })
-
-    it('lexiconType is a constant value', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
-      const permissions = [
-        new Permission('app.bsky.feed.post:read', {}),
-      ] as const
-      const options = {}
-
-      const permissionSet = new PermissionSet(nsid, permissions, options)
-
-      expect(permissionSet.lexiconType).toBe('permission-set')
-      // TypeScript enforces readonly at compile time
-      expect(typeof permissionSet.lexiconType).toBe('string')
-    })
-  })
-
   describe('property immutability', () => {
     it('options object itself is mutable', () => {
       const nsid = asNsid('app.bsky.oauth.permissions')
@@ -254,9 +226,6 @@ describe('PermissionSet', () => {
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
       expect(permissionSet.permissions).toHaveLength(4)
-      expect(
-        permissionSet.permissions.every((p) => p.lexiconType === 'permission'),
-      ).toBe(true)
     })
 
     it('creates a PermissionSet with a single permission', () => {
@@ -508,7 +477,6 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.lexiconType).toBe('permission-set')
       expect(permissionSet.nsid).toBe('app.bsky.oauth.feed')
       expect(permissionSet.permissions).toHaveLength(6)
       expect(permissionSet.options.title).toBe('Feed Management')
@@ -529,7 +497,6 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.lexiconType).toBe('permission-set')
       expect(permissionSet.nsid).toBe('app.bsky.oauth.readonly')
       expect(
         permissionSet.permissions.every((p) => p.resource.endsWith(':read')),
@@ -559,7 +526,6 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.lexiconType).toBe('permission-set')
       expect(permissionSet.nsid).toBe('app.bsky.oauth.profile')
       expect(permissionSet.permissions).toHaveLength(2)
     })
@@ -575,7 +541,6 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.lexiconType).toBe('permission-set')
       expect(permissionSet.nsid).toBe('app.bsky.oauth.minimal')
       expect(permissionSet.permissions).toHaveLength(1)
       expect(permissionSet.options.detail).toBeUndefined()
@@ -594,8 +559,6 @@ describe('PermissionSet', () => {
 
       expect(permissionSet.permissions[0]).toBeInstanceOf(Permission)
       expect(permissionSet.permissions[1]).toBeInstanceOf(Permission)
-      expect(permissionSet.permissions[0].lexiconType).toBe('permission')
-      expect(permissionSet.permissions[1].lexiconType).toBe('permission')
     })
 
     it('preserves permission resource strings', () => {

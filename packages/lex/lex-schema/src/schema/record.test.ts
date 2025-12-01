@@ -466,21 +466,6 @@ describe('RecordSchema', () => {
     })
   })
 
-  describe('lexiconType property', () => {
-    const schema = new RecordSchema(
-      'any',
-      'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
-      }),
-    )
-
-    it('has lexiconType set to "record"', () => {
-      expect(schema.lexiconType).toBe('record')
-    })
-  })
-
   describe('$isTypeOf method', () => {
     const schema = new RecordSchema(
       'any',

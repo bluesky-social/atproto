@@ -12,8 +12,6 @@ export class PermissionSet<
   const TNsid extends NsidString = any,
   const TPermissions extends readonly Permission[] = any,
 > {
-  readonly lexiconType = 'permission-set' as const
-
   constructor(
     readonly nsid: TNsid,
     readonly permissions: TPermissions,

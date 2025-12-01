@@ -62,37 +62,6 @@ describe('Procedure', () => {
     })
   })
 
-  describe('lexiconType property', () => {
-    it('has lexiconType set to "procedure"', () => {
-      const procedure = new Procedure(
-        'com.example.test' as NsidString,
-        new ParamsSchema({}),
-        new Payload('application/json', undefined),
-        new Payload('application/json', undefined),
-        undefined,
-      )
-
-      expect(procedure.lexiconType).toBe('procedure')
-    })
-
-    it('lexiconType is a constant', () => {
-      const procedure = new Procedure(
-        'com.example.test' as NsidString,
-        new ParamsSchema({}),
-        new Payload('application/json', undefined),
-        new Payload('application/json', undefined),
-        undefined,
-      )
-
-      // Verify it's always 'procedure'
-      expect(procedure.lexiconType).toBe('procedure')
-
-      // TypeScript enforces readonly, but in JavaScript we can verify the value doesn't change
-      const originalType = procedure.lexiconType
-      expect(originalType).toBe('procedure')
-    })
-  })
-
   describe('with parameters schema', () => {
     it('creates a procedure with query parameters', () => {
       const nsid = 'com.example.listPosts' as NsidString
@@ -392,7 +361,6 @@ describe('Procedure', () => {
       expect(procedure.input).toBe(input)
       expect(procedure.output).toBe(output)
       expect(procedure.errors).toBe(errors)
-      expect(procedure.lexiconType).toBe('procedure')
     })
 
     it('maintains reference equality for complex properties', () => {
@@ -450,7 +418,6 @@ describe('Procedure', () => {
       expect(procedure.output.encoding).toBe('application/json')
       expect(procedure.output.schema).toBe(outputSchema)
       expect(procedure.errors).toEqual(errors)
-      expect(procedure.lexiconType).toBe('procedure')
     })
 
     it('creates a minimal procedure', () => {
@@ -472,7 +439,6 @@ describe('Procedure', () => {
       expect(procedure.input.encoding).toBeUndefined()
       expect(procedure.output.encoding).toBeUndefined()
       expect(procedure.errors).toBeUndefined()
-      expect(procedure.lexiconType).toBe('procedure')
     })
   })
 })

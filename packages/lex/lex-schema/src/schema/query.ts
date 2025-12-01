@@ -17,8 +17,6 @@ export class Query<
   TOutputPayload extends Payload = any,
   TErrors extends undefined | readonly string[] = any,
 > {
-  readonly lexiconType = 'query' as const
-
   constructor(
     readonly nsid: TNsid,
     readonly parameters: TParameters,

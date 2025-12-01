@@ -488,7 +488,6 @@ describe('Permission', () => {
       const keys = Object.keys(permission)
       expect(keys).toContain('resource')
       expect(keys).toContain('options')
-      expect(keys).toContain('lexiconType')
     })
 
     it('can be spread into object', () => {
@@ -496,7 +495,6 @@ describe('Permission', () => {
       const spread = { ...permission }
       expect(spread.resource).toBe('read')
       expect(spread.options).toEqual({ limit: 100 })
-      expect(spread.lexiconType).toBe('permission')
     })
   })
 
@@ -507,7 +505,6 @@ describe('Permission', () => {
       const parsed = JSON.parse(json)
       expect(parsed.resource).toBe('read')
       expect(parsed.options).toEqual({ limit: 100 })
-      expect(parsed.lexiconType).toBe('permission')
     })
 
     it('handles complex options in JSON', () => {

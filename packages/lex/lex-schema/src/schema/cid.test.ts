@@ -140,14 +140,6 @@ describe('CidSchema', () => {
     })
   })
 
-  describe('lexiconType', () => {
-    const schema = new CidSchema()
-
-    it('has the correct lexiconType', () => {
-      expect(schema.lexiconType).toBe('cid-link')
-    })
-  })
-
   describe('options', () => {
     it('stores the provided options', () => {
       const options = { strict: true }

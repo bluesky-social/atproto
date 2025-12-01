@@ -22,8 +22,6 @@ export class RecordSchema<
   T extends NsidString = any,
   S extends Validator<{ [_ in string]?: unknown }> = any,
 > extends Schema<RecordSchemaOutput<T, S>> {
-  readonly lexiconType = 'record' as const
-
   keySchema: RecordKeySchema<K>
 
   constructor(
