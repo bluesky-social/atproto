@@ -9,13 +9,11 @@ import {
   ValidatorContext,
 } from '../validation.js'
 
-export type ObjectSchemaShape = {
-  [k: string]: Validator
-}
+export type ObjectSchemaShape = Record<string, Validator>
 
-export type ObjectSchemaOutput<Properties extends ObjectSchemaShape> =
+export type ObjectSchemaOutput<Shape extends ObjectSchemaShape> =
   WithOptionalProperties<{
-    [K in keyof Properties]: Infer<Properties[K]>
+    [K in keyof Shape]: Infer<Shape[K]>
   }>
 
 export class ObjectSchema<
