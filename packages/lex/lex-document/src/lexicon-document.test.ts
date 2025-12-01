@@ -1,6 +1,6 @@
 import { lexiconDocumentSchema } from './lexicon-document.js'
 
-describe('General validation', () => {
+describe('lexiconDocumentSchema', () => {
   it('allows unknown fields to be present', () => {
     const value = {
       lexicon: 1,
