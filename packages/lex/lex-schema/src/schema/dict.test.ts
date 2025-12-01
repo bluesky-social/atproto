@@ -5,10 +5,7 @@ import { IntegerSchema } from './integer.js'
 import { StringSchema } from './string.js'
 
 describe('DictSchema', () => {
-  const schema = new DictSchema(
-    new StringSchema({}),
-    new IntegerSchema({}),
-  )
+  const schema = new DictSchema(new StringSchema({}), new IntegerSchema({}))
 
   it('validates plain objects with valid keys and values', () => {
     const result = schema.safeParse({

@@ -1,11 +1,6 @@
+import { LexiconRecordKey, NsidString, Simplify, TidString } from '../core.js'
 import {
-  $TypeOf,
-  LexiconRecordKey,
-  NsidString,
-  Simplify,
-  TidString,
-} from '../core.js'
-import {
+  Infer,
   Schema,
   ValidationResult,
   Validator,
@@ -17,18 +12,24 @@ import { StringSchema } from './string.js'
 export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
 
+export type RecordSchemaOutput<
+  T extends NsidString,
+  S extends Validator<{ [_ in string]?: unknown }>,
+> = Simplify<Omit<Infer<S>, '$type'> & { $type: T }>
+
 export class RecordSchema<
-  Key extends LexiconRecordKey = any,
-  Output extends { $type: NsidString } = any,
-> extends Schema<Output> {
+  K extends LexiconRecordKey = any,
+  T extends NsidString = any,
+  S extends Validator<{ [_ in string]?: unknown }> = any,
+> extends Schema<RecordSchemaOutput<T, S>> {
   readonly lexiconType = 'record' as const
 
-  keySchema: RecordKeySchema<Key>
+  keySchema: RecordKeySchema<K>
 
   constructor(
-    readonly key: Key,
-    readonly $type: $TypeOf<Output>,
-    readonly schema: Validator<Omit<Output, '$type'>>,
+    readonly key: K,
+    readonly $type: T,
+    readonly schema: S,
   ) {
     super()
     this.keySchema = recordKey(key)
@@ -36,13 +37,13 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X extends { $type: $TypeOf<Output> } ? X : never {
+  ): value is X extends { $type: T } ? X : X & { $type: T } {
     return value.$type === this.$type
   }
 
-  build<X extends Omit<Output, '$type'>>(
+  build<X extends Omit<Infer<S>, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: $TypeOf<Output> }> {
+  ): Simplify<Omit<X, '$type'> & { $type: T }> {
     return { ...input, $type: this.$type }
   }
 
@@ -50,15 +51,15 @@ export class RecordSchema<
     return this.isTypeOf<X>(value)
   }
 
-  $build<X extends Omit<Output, '$type'>>(input: X) {
+  $build<X extends Omit<Infer<S>, '$type'>>(input: X) {
     return this.build<X>(input)
   }
 
   validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<Output> {
-    const result = ctx.validate(input, this.schema) as ValidationResult<Output>
+  ): ValidationResult<RecordSchemaOutput<T, S>> {
+    const result = ctx.validate(input, this.schema)
 
     if (!result.success) {
       return result
@@ -68,7 +69,7 @@ export class RecordSchema<
       return ctx.issueInvalidPropertyValue(result.value, '$type', [this.$type])
     }
 
-    return result
+    return result as ValidationResult<RecordSchemaOutput<T, S>>
   }
 }
 

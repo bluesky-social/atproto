@@ -220,7 +220,9 @@ describe('RecordSchema', () => {
     })
 
     it('validates NSID with multiple segments', () => {
-      const result = schema.keySchema.safeParse('com.example.app.feature.action')
+      const result = schema.keySchema.safeParse(
+        'com.example.app.feature.action',
+      )
       expect(result.success).toBe(true)
     })
 
@@ -416,15 +418,19 @@ describe('RecordSchema', () => {
     })
 
     it('preserves extra properties not in schema', () => {
-      const result = schema.safeParse({
+      const input = {
         $type: 'app.bsky.feed.post',
         text: 'Hello world',
         extra: 'value',
         another: 123,
-      })
+      }
+
+      const result = schema.safeParse(input)
       expect(result.success).toBe(true)
       if (result.success) {
+        // @ts-expect-error
         expect(result.value.extra).toBe('value')
+        // @ts-expect-error
         expect(result.value.another).toBe(123)
       }
     })

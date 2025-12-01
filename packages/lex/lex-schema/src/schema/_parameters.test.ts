@@ -85,7 +85,10 @@ describe('paramSchema', () => {
     })
 
     it('rejects nested arrays', () => {
-      const result = paramSchema.safeParse([[1, 2], [3, 4]])
+      const result = paramSchema.safeParse([
+        [1, 2],
+        [3, 4],
+      ])
       expect(result.success).toBe(false)
     })
 
@@ -308,7 +311,10 @@ describe('paramsSchema', () => {
 
   it('rejects object with nested array parameter values', () => {
     const result = paramsSchema.safeParse({
-      nested: [[1, 2], [3, 4]],
+      nested: [
+        [1, 2],
+        [3, 4],
+      ],
     })
     expect(result.success).toBe(false)
   })
@@ -386,7 +392,7 @@ describe('paramsSchema', () => {
     it('validates parameters with special characters in keys', () => {
       const result = paramsSchema.safeParse({
         'key-with-dashes': 'value',
-        'key_with_underscores': 'value',
+        key_with_underscores: 'value',
         'key.with.dots': 'value',
       })
       expect(result.success).toBe(true)

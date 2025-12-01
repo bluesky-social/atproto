@@ -19,13 +19,7 @@ describe('Procedure', () => {
       const output = new Payload('application/json', undefined)
       const errors = ['InvalidRequest', 'Unauthorized'] as const
 
-      const procedure = new Procedure(
-        nsid,
-        parameters,
-        input,
-        output,
-        errors,
-      )
+      const procedure = new Procedure(nsid, parameters, input, output, errors)
 
       expect(procedure.nsid).toBe(nsid)
       expect(procedure.parameters).toBe(parameters)
@@ -40,7 +34,13 @@ describe('Procedure', () => {
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.nsid).toBe(nsid)
       expect(procedure.parameters).toBe(parameters)
@@ -103,7 +103,13 @@ describe('Procedure', () => {
       const input = new Payload(undefined, undefined)
       const output = new Payload('application/json', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.parameters).toBe(parameters)
       expect(procedure.parameters.validators).toHaveProperty('limit')
@@ -116,7 +122,13 @@ describe('Procedure', () => {
       const input = new Payload('application/json', undefined)
       const output = new Payload('application/json', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.parameters).toBe(parameters)
       expect(Object.keys(procedure.parameters.validators)).toHaveLength(0)
@@ -133,7 +145,13 @@ describe('Procedure', () => {
       const input = new Payload('application/json', inputSchema)
       const output = new Payload('application/json', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.input.encoding).toBe('application/json')
       expect(procedure.input.schema).toBe(inputSchema)
@@ -145,7 +163,13 @@ describe('Procedure', () => {
       const input = new Payload('text/plain', undefined)
       const output = new Payload('application/json', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.input.encoding).toBe('text/plain')
       expect(procedure.input.schema).toBeUndefined()
@@ -157,7 +181,13 @@ describe('Procedure', () => {
       const input = new Payload('application/octet-stream', undefined)
       const output = new Payload('application/json', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.input.encoding).toBe('application/octet-stream')
     })
@@ -168,7 +198,13 @@ describe('Procedure', () => {
       const input = new Payload(undefined, undefined)
       const output = new Payload('application/json', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.input.encoding).toBeUndefined()
       expect(procedure.input.schema).toBeUndefined()
@@ -186,7 +222,13 @@ describe('Procedure', () => {
       })
       const output = new Payload('application/json', outputSchema)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.output.encoding).toBe('application/json')
       expect(procedure.output.schema).toBe(outputSchema)
@@ -198,7 +240,13 @@ describe('Procedure', () => {
       const input = new Payload(undefined, undefined)
       const output = new Payload('text/plain', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.output.encoding).toBe('text/plain')
     })
@@ -209,7 +257,13 @@ describe('Procedure', () => {
       const input = new Payload(undefined, undefined)
       const output = new Payload('application/octet-stream', undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.output.encoding).toBe('application/octet-stream')
     })
@@ -220,7 +274,13 @@ describe('Procedure', () => {
       const input = new Payload('application/json', undefined)
       const output = new Payload(undefined, undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.output.encoding).toBeUndefined()
       expect(procedure.output.schema).toBeUndefined()
@@ -381,13 +441,7 @@ describe('Procedure', () => {
         'RateLimitExceeded',
       ] as const
 
-      const procedure = new Procedure(
-        nsid,
-        parameters,
-        input,
-        output,
-        errors,
-      )
+      const procedure = new Procedure(nsid, parameters, input, output, errors)
 
       expect(procedure.nsid).toBe(nsid)
       expect(procedure.parameters.validators).toHaveProperty('conversationId')
@@ -405,7 +459,13 @@ describe('Procedure', () => {
       const input = new Payload(undefined, undefined)
       const output = new Payload(undefined, undefined)
 
-      const procedure = new Procedure(nsid, parameters, input, output, undefined)
+      const procedure = new Procedure(
+        nsid,
+        parameters,
+        input,
+        output,
+        undefined,
+      )
 
       expect(procedure.nsid).toBe(nsid)
       expect(Object.keys(procedure.parameters.validators)).toHaveLength(0)

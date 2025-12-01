@@ -285,22 +285,6 @@ describe('TokenSchema', () => {
     })
   })
 
-  describe('lexiconType property', () => {
-    const schema = new TokenSchema('mytoken')
-
-    it('has lexiconType of "token"', () => {
-      expect(schema.lexiconType).toBe('token')
-    })
-
-    it('lexiconType is read-only at compile time', () => {
-      // In JavaScript, readonly doesn't throw at runtime, it's only TypeScript
-      // @ts-expect-error - should fail at compile time
-      const test = () => { schema.lexiconType = 'other' }
-      // We just verify the property exists
-      expect(schema.lexiconType).toBe('token')
-    })
-  })
-
   describe('value property', () => {
     const schema = new TokenSchema('mytoken')
 

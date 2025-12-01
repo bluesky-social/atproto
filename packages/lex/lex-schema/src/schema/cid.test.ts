@@ -22,9 +22,7 @@ describe('CidSchema', () => {
     })
 
     it('validates CID v0', () => {
-      const cid = parseCid(
-        'QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB',
-      )
+      const cid = parseCid('QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB')
       const result = schema.safeParse(cid)
       expect(result.success).toBe(true)
     })
@@ -101,9 +99,7 @@ describe('CidSchema', () => {
     })
 
     it('rejects CID v0', () => {
-      const cid = parseCid(
-        'QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB',
-      )
+      const cid = parseCid('QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB')
       const result = schema.safeParse(cid)
       expect(result.success).toBe(false)
     })

@@ -1,6 +1,6 @@
+import { IntegerSchema } from './integer.js'
 import { ObjectSchema } from './object.js'
 import { StringSchema } from './string.js'
-import { IntegerSchema } from './integer.js'
 import { TypedObjectSchema } from './typed-object.js'
 import { TypedRefSchema } from './typed-ref.js'
 import { TypedUnionSchema } from './typed-union.js'

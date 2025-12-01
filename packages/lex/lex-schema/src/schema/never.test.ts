@@ -89,7 +89,10 @@ describe('NeverSchema', () => {
     })
 
     it('rejects nested arrays', () => {
-      const result = schema.safeParse([[1, 2], [3, 4]])
+      const result = schema.safeParse([
+        [1, 2],
+        [3, 4],
+      ])
       expect(result.success).toBe(false)
     })
 

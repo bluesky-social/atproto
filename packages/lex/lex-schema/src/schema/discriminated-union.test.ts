@@ -649,9 +649,9 @@ describe('DiscriminatedUnionSchema', () => {
         }),
       ] as const)
 
-      expect(
-        kindSchema.safeParse({ kind: 'a', value: 'test' }).success,
-      ).toBe(true)
+      expect(kindSchema.safeParse({ kind: 'a', value: 'test' }).success).toBe(
+        true,
+      )
       expect(tagSchema.safeParse({ tag: 'a', value: 'test' }).success).toBe(
         true,
       )

@@ -140,9 +140,11 @@ describe('Payload', () => {
     it('throws error when schema is defined but encoding is undefined', () => {
       const schema = new StringSchema({})
       expect(() => {
+        // @ts-expect-error
         new Payload(undefined, schema)
       }).toThrow(TypeError)
       expect(() => {
+        // @ts-expect-error
         new Payload(undefined, schema)
       }).toThrow('schema cannot be defined when encoding is undefined')
     })
@@ -152,9 +154,11 @@ describe('Payload', () => {
         name: new StringSchema({}),
       })
       expect(() => {
+        // @ts-expect-error
         new Payload(undefined, schema)
       }).toThrow(TypeError)
       expect(() => {
+        // @ts-expect-error
         new Payload(undefined, schema)
       }).toThrow('schema cannot be defined when encoding is undefined')
     })
@@ -162,6 +166,7 @@ describe('Payload', () => {
     it('throws error when integer schema is defined but encoding is undefined', () => {
       const schema = new IntegerSchema({})
       expect(() => {
+        // @ts-expect-error
         new Payload(undefined, schema)
       }).toThrow(TypeError)
     })
@@ -250,7 +255,10 @@ describe('Payload', () => {
     })
 
     it('creates payload for URL encoded form', () => {
-      const payload = new Payload('application/x-www-form-urlencoded', undefined)
+      const payload = new Payload(
+        'application/x-www-form-urlencoded',
+        undefined,
+      )
       expect(payload.encoding).toBe('application/x-www-form-urlencoded')
       expect(payload.schema).toBeUndefined()
     })

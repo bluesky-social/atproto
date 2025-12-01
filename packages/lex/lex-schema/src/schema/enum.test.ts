@@ -196,7 +196,7 @@ describe('EnumSchema', () => {
     })
 
     it('uses default when no argument is passed', () => {
-      const result = schema.safeParse()
+      const result = schema.safeParse(undefined)
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.value).toBe('red')

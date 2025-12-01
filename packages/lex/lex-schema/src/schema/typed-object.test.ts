@@ -199,7 +199,7 @@ describe('TypedObjectSchema', () => {
     })
 
     it('returns false for objects with numeric $type', () => {
-      const obj = { $type: 123, text: 'Hello' } as any
+      const obj = { $type: 123, text: 'Hello' }
       expect(schema.isTypeOf(obj)).toBe(false)
     })
   })

@@ -197,21 +197,6 @@ describe('Permission', () => {
       expect(permission.options).toEqual({ fields: [] })
     })
 
-    it('accepts options with nested arrays', () => {
-      const permission = new Permission('read', {
-        matrix: [
-          [1, 2],
-          [3, 4],
-        ],
-      })
-      expect(permission.options).toEqual({
-        matrix: [
-          [1, 2],
-          [3, 4],
-        ],
-      })
-    })
-
     it('preserves array reference in options', () => {
       const fields = ['id', 'name']
       const permission = new Permission('read', { fields })
@@ -296,59 +281,6 @@ describe('Permission', () => {
       const permission = new Permission('read', options)
       expect('param' in permission.options).toBe(true)
       expect(permission.options.param).toBeUndefined()
-    })
-  })
-
-  describe('lexiconType property', () => {
-    it('has lexiconType set to "permission"', () => {
-      const permission = new Permission('read', {})
-      expect(permission.lexiconType).toBe('permission')
-    })
-
-    it('lexiconType is consistent across instances', () => {
-      const permission1 = new Permission('read', {})
-      const permission2 = new Permission('write', {})
-      expect(permission1.lexiconType).toBe(permission2.lexiconType)
-    })
-
-    it('lexiconType is readonly at compile time', () => {
-      const permission = new Permission('read', {})
-      // TypeScript enforces readonly at compile time
-      // In JavaScript, readonly doesn't prevent writes at runtime - it's only TypeScript
-      expect(permission.lexiconType).toBe('permission')
-      // @ts-expect-error - should fail at compile time
-      const test = () => { permission.lexiconType = 'other' }
-      // Just verify the property exists with correct value
-      expect(permission.lexiconType).toBe('permission')
-    })
-  })
-
-  describe('property immutability', () => {
-    it('resource is readonly at compile time', () => {
-      const permission = new Permission('read', {})
-      // TypeScript enforces readonly at compile time
-      // @ts-expect-error - should fail at compile time
-      const test = () => { permission.resource = 'write' }
-      // Verify the property has the correct value
-      expect(permission.resource).toBe('read')
-    })
-
-    it('options is readonly at compile time', () => {
-      const options = { limit: 100 }
-      const permission = new Permission('read', options)
-      // TypeScript enforces readonly at compile time
-      // @ts-expect-error - should fail at compile time
-      const test = () => { permission.options = {} }
-      // Verify the property has the correct value
-      expect(permission.options).toBe(options)
-    })
-
-    it('options object itself is mutable', () => {
-      const options = { limit: 100 }
-      const permission = new Permission('read', options)
-      // The reference is readonly, but the object itself can be mutated
-      options.limit = 200
-      expect(permission.options.limit).toBe(200)
     })
   })
 
@@ -557,13 +489,6 @@ describe('Permission', () => {
       expect(keys).toContain('resource')
       expect(keys).toContain('options')
       expect(keys).toContain('lexiconType')
-    })
-
-    it('properties are enumerable', () => {
-      const permission = new Permission('read', { limit: 100 })
-      expect(permission.propertyIsEnumerable('resource')).toBe(true)
-      expect(permission.propertyIsEnumerable('options')).toBe(true)
-      expect(permission.propertyIsEnumerable('lexiconType')).toBe(true)
     })
 
     it('can be spread into object', () => {

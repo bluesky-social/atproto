@@ -274,6 +274,7 @@ describe('TypedRefSchema', () => {
     })
 
     it('throws error if getter is called recursively', () => {
+      // @ts-expect-error
       const schema = new TypedRefSchema(() => {
         // This would cause infinite recursion if not protected
         return schema.schema
@@ -370,13 +371,19 @@ describe('TypedRefSchema', () => {
 
       const schema = new TypedRefSchema(() => typedObject)
 
-      const result1 = schema.safeParse({ $type: 'com.example.user', name: 'Alice' })
+      const result1 = schema.safeParse({
+        $type: 'com.example.user',
+        name: 'Alice',
+      })
       expect(result1.success).toBe(true)
 
       const result2 = schema.safeParse({ $type: 'com.example.user', name: 'A' })
       expect(result2.success).toBe(false)
 
-      const result3 = schema.safeParse({ $type: 'com.example.user', name: 'Bob' })
+      const result3 = schema.safeParse({
+        $type: 'com.example.user',
+        name: 'Bob',
+      })
       expect(result3.success).toBe(true)
 
       const result4 = schema.safeParse({ $type: 'com.example.user', name: '' })
@@ -394,16 +401,31 @@ describe('TypedRefSchema', () => {
 
       const schema = new TypedRefSchema(() => typedObject)
 
-      const result1 = schema.safeParse({ $type: 'com.example.user', name: 'A', age: 25 })
+      const result1 = schema.safeParse({
+        $type: 'com.example.user',
+        name: 'A',
+        age: 25,
+      })
       expect(result1.success).toBe(false)
 
-      const result2 = schema.safeParse({ $type: 'com.example.user', name: 'Alice', age: 200 })
+      const result2 = schema.safeParse({
+        $type: 'com.example.user',
+        name: 'Alice',
+        age: 200,
+      })
       expect(result2.success).toBe(false)
 
-      const result3 = schema.safeParse({ $type: 'com.example.user', name: 'Alice', age: 25 })
+      const result3 = schema.safeParse({
+        $type: 'com.example.user',
+        name: 'Alice',
+        age: 25,
+      })
       expect(result3.success).toBe(true)
 
-      const result4 = schema.safeParse({ $type: 'com.example.user', name: 'Alice' })
+      const result4 = schema.safeParse({
+        $type: 'com.example.user',
+        name: 'Alice',
+      })
       expect(result4.success).toBe(false)
     })
 
@@ -509,7 +531,10 @@ describe('TypedRefSchema', () => {
 
       const schema = new TypedRefSchema(() => typedObject)
 
-      const result = schema.safeParse({ $type: 'com.example.counter', count: 0 })
+      const result = schema.safeParse({
+        $type: 'com.example.counter',
+        count: 0,
+      })
       expect(result.success).toBe(true)
     })
 
@@ -523,7 +548,10 @@ describe('TypedRefSchema', () => {
 
       const schema = new TypedRefSchema(() => typedObject)
 
-      const result = schema.safeParse({ $type: 'com.example.text', content: '' })
+      const result = schema.safeParse({
+        $type: 'com.example.text',
+        content: '',
+      })
       expect(result.success).toBe(true)
     })
 
@@ -537,7 +565,10 @@ describe('TypedRefSchema', () => {
 
       const schema = new TypedRefSchema(() => typedObject)
 
-      const result = schema.safeParse({ $type: 'com.example.number', value: NaN })
+      const result = schema.safeParse({
+        $type: 'com.example.number',
+        value: NaN,
+      })
       expect(result.success).toBe(false)
     })
 
@@ -551,7 +582,10 @@ describe('TypedRefSchema', () => {
 
       const schema = new TypedRefSchema(() => typedObject)
 
-      const result = schema.safeParse({ $type: 'com.example.number', value: Infinity })
+      const result = schema.safeParse({
+        $type: 'com.example.number',
+        value: Infinity,
+      })
       expect(result.success).toBe(false)
     })
   })
@@ -568,7 +602,10 @@ describe('TypedRefSchema', () => {
       const innerRef = new TypedRefSchema(() => typedObject)
       const outerRef = new TypedRefSchema(() => innerRef.schema)
 
-      const result = outerRef.safeParse({ $type: 'com.example.user', name: 'Alice' })
+      const result = outerRef.safeParse({
+        $type: 'com.example.user',
+        name: 'Alice',
+      })
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.value.$type).toBe('com.example.user')

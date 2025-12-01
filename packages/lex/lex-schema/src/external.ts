@@ -1,4 +1,4 @@
-import { $Type, $type, LexiconRecordKey, NsidString, Simplify } from './core.js'
+import { $Type, $TypeOf, $type, LexiconRecordKey, NsidString } from './core.js'
 import {
   ArraySchema,
   ArraySchemaOptions,
@@ -261,12 +261,8 @@ export function typedUnion<
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const Schema extends Validator<{ [_ in string]?: unknown }>,
->(
-  nsid: N,
-  hash: H,
-  schema: Schema,
-): TypedObjectSchema<Simplify<{ $type?: $Type<N, H> } & Infer<Schema>>>
+  const S extends Validator<{ [_ in string]?: unknown }>,
+>(nsid: N, hash: H, schema: S): TypedObjectSchema<$Type<N, H>, S>
 export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
     ? T extends `${infer N}#${string}`
@@ -279,14 +275,14 @@ export function typedObject<V extends { $type?: $Type }>(
       : 'main'
     : never,
   schema: Validator<Omit<V, '$type'>>,
-): TypedObjectSchema<V>
+): TypedObjectSchema<$TypeOf<V>, Validator<Omit<V, '$type'>>>
 /*@__NO_SIDE_EFFECTS__*/
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const Schema extends Validator<{ [_ in string]?: unknown }>,
->(nsid: N, hash: H, schema: Schema) {
-  return new TypedObjectSchema($type(nsid, hash), schema)
+  const S extends Validator<{ [_ in string]?: unknown }>,
+>(nsid: N, hash: H, schema: S) {
+  return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), schema)
 }
 
 /**
@@ -309,11 +305,7 @@ export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
->(
-  key: K,
-  type: AsNsid<T>,
-  schema: S,
-): RecordSchema<K, Simplify<{ $type: T } & Infer<S>>>
+>(key: K, type: AsNsid<T>, schema: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
   const V extends { $type: NsidString },
@@ -321,14 +313,14 @@ export function record<
   key: K,
   type: AsNsid<V['$type']>,
   schema: Validator<Omit<V, '$type'>>,
-): RecordSchema<K, V>
+): RecordSchema<K, V['$type'], Validator<Omit<V, '$type'>>>
 /*@__NO_SIDE_EFFECTS__*/
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [_ in string]?: unknown }>,
 >(key: K, type: T, schema: S) {
-  return new RecordSchema(key, type, schema)
+  return new RecordSchema<K, T, S>(key, type, schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -389,7 +381,6 @@ export function permission<
 export function permissionSet<
   const N extends NsidString,
   const P extends readonly Permission[],
-  const O extends PermissionSetOptions,
->(nsid: N, permissions: P, options: PermissionSetOptions & O = {} as O) {
-  return new PermissionSet<N, P, O>(nsid, permissions, options)
+>(nsid: N, permissions: P, options?: PermissionSetOptions) {
+  return new PermissionSet<N, P>(nsid, permissions, options)
 }

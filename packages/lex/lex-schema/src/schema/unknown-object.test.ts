@@ -316,7 +316,10 @@ describe('UnknownObjectSchema', () => {
 
     it('rejects nested arrays with invalid values', () => {
       const result = schema.safeParse({
-        matrix: [[1, 2], [3, 4.5]],
+        matrix: [
+          [1, 2],
+          [3, 4.5],
+        ],
       })
       expect(result.success).toBe(false)
     })
@@ -347,7 +350,7 @@ describe('UnknownObjectSchema', () => {
         'with spaces': 'value',
         'with-dashes': 'value',
         'with.dots': 'value',
-        'with_underscores': 'value',
+        with_underscores: 'value',
       }
       const result = schema.safeParse(obj)
       expect(result.success).toBe(true)
@@ -443,7 +446,11 @@ describe('UnknownObjectSchema', () => {
 
     it('accepts complex nested arrays and objects', () => {
       const obj = {
-        matrix: [[1, 2], [3, 4], [5, 6]],
+        matrix: [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
         nested: {
           arrays: [[['deep']]],
           mixed: [{ a: 1 }, { b: 2 }],

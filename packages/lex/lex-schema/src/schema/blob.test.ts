@@ -254,6 +254,7 @@ describe('BlobSchema', () => {
       })
       expect(result.success).toBe(true)
       if (result.success) {
+        // @ts-expect-error
         expect(result.value.cid).toBe(blobCid.toString())
         expect(result.value.mimeType).toBe('image/jpeg')
       }

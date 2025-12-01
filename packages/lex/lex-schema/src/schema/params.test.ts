@@ -381,6 +381,7 @@ describe('ParamsSchema', () => {
     it('handles array values', () => {
       const result = schema.toURLSearchParams({
         name: 'Alice',
+        // @ts-expect-error
         tags: ['tag1', 'tag2'],
       })
       expect(result.toString()).toBe('name=Alice&tags=tag1&tags=tag2')
@@ -397,6 +398,7 @@ describe('ParamsSchema', () => {
     it('handles empty arrays', () => {
       const result = schema.toURLSearchParams({
         name: 'Alice',
+        // @ts-expect-error
         tags: [],
       })
       expect(result.toString()).toBe('name=Alice')
@@ -405,12 +407,16 @@ describe('ParamsSchema', () => {
     it('handles arrays with multiple types', () => {
       const result = schema.toURLSearchParams({
         name: 'Alice',
+        // @ts-expect-error
         values: [1, true, 'text'],
       })
-      expect(result.toString()).toBe('name=Alice&values=1&values=true&values=text')
+      expect(result.toString()).toBe(
+        'name=Alice&values=1&values=true&values=text',
+      )
     })
 
     it('handles undefined input', () => {
+      // @ts-expect-error
       const result = schema.toURLSearchParams(undefined)
       expect(result.toString()).toBe('')
     })
@@ -489,7 +495,9 @@ describe('ParamsSchema', () => {
   describe('complex scenarios', () => {
     const schema = new ParamsSchema({
       query: new StringSchema({ minLength: 1 }),
-      limit: new OptionalSchema(new IntegerSchema({ minimum: 1, maximum: 100 })),
+      limit: new OptionalSchema(
+        new IntegerSchema({ minimum: 1, maximum: 100 }),
+      ),
       offset: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
       filters: new OptionalSchema(new ArraySchema(new StringSchema({}))),
     })

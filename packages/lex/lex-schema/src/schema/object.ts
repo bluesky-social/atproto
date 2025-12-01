@@ -21,12 +21,12 @@ export type ObjectSchemaOutput<Properties extends ObjectSchemaShape> =
 export class ObjectSchema<
   const Shape extends ObjectSchemaShape = any,
 > extends Schema<ObjectSchemaOutput<Shape>> {
-  constructor(readonly validators: Shape) {
+  constructor(readonly shape: Shape) {
     super()
   }
 
   get validatorsMap(): Map<string, Validator> {
-    const map = new Map(Object.entries(this.validators))
+    const map = new Map(Object.entries(this.shape))
 
     return lazyProperty(this, 'validatorsMap', map)
   }

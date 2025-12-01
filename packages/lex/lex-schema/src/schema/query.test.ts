@@ -4,11 +4,7 @@ import { ObjectSchema } from './object.js'
 import { OptionalSchema } from './optional.js'
 import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'
-import {
-  InferQueryOutputBody,
-  InferQueryParameters,
-  Query,
-} from './query.js'
+import { InferQueryOutputBody, InferQueryParameters, Query } from './query.js'
 import { StringSchema } from './string.js'
 
 describe('Query', () => {
@@ -17,7 +13,9 @@ describe('Query', () => {
       const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({
         feed: new StringSchema({ format: 'at-uri' }),
-        limit: new OptionalSchema(new IntegerSchema({ minimum: 1, maximum: 100 })),
+        limit: new OptionalSchema(
+          new IntegerSchema({ minimum: 1, maximum: 100 }),
+        ),
       })
       const output = new Payload(
         'application/json',
@@ -157,7 +155,9 @@ describe('Query', () => {
       const nsid = asNsid('app.bsky.feed.searchPosts')
       const parameters = new ParamsSchema({
         q: new StringSchema({ minLength: 1 }),
-        limit: new OptionalSchema(new IntegerSchema({ minimum: 1, maximum: 100 })),
+        limit: new OptionalSchema(
+          new IntegerSchema({ minimum: 1, maximum: 100 }),
+        ),
         cursor: new OptionalSchema(new StringSchema({})),
         author: new OptionalSchema(new StringSchema({ format: 'did' })),
       })
@@ -247,7 +247,11 @@ describe('Query', () => {
 
       const query = new Query(nsid, parameters, output, errors)
 
-      expect(query.errors).toEqual(['NotFound', 'Unauthorized', 'RateLimitExceeded'])
+      expect(query.errors).toEqual([
+        'NotFound',
+        'Unauthorized',
+        'RateLimitExceeded',
+      ])
     })
 
     it('creates a Query with empty errors array', () => {
@@ -311,7 +315,9 @@ describe('Query', () => {
 
   describe('edge cases', () => {
     it('handles very long NSID', () => {
-      const nsid = asNsid('com.example.very.long.namespace.identifier.method.name')
+      const nsid = asNsid(
+        'com.example.very.long.namespace.identifier.method.name',
+      )
       const parameters = new ParamsSchema({})
       const output = new Payload('application/json', undefined)
 
@@ -416,8 +422,12 @@ describe('Query', () => {
         new ObjectSchema({
           did: new StringSchema({ format: 'did' }),
           handle: new StringSchema({ format: 'handle' }),
-          displayName: new OptionalSchema(new StringSchema({ maxGraphemes: 64 })),
-          description: new OptionalSchema(new StringSchema({ maxGraphemes: 256 })),
+          displayName: new OptionalSchema(
+            new StringSchema({ maxGraphemes: 64 }),
+          ),
+          description: new OptionalSchema(
+            new StringSchema({ maxGraphemes: 256 }),
+          ),
         }),
       )
 

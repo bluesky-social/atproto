@@ -239,7 +239,10 @@ describe('ArraySchema', () => {
 
     it('rejects invalid nested arrays', () => {
       const schema = new ArraySchema(new ArraySchema(new IntegerSchema({})))
-      const result = schema.safeParse([[1, 2], [3, 'four']])
+      const result = schema.safeParse([
+        [1, 2],
+        [3, 'four'],
+      ])
       expect(result.success).toBe(false)
     })
 
@@ -247,10 +250,7 @@ describe('ArraySchema', () => {
       const schema = new ArraySchema(
         new ArraySchema(new ArraySchema(new IntegerSchema({}))),
       )
-      const result = schema.safeParse([
-        [[1, 2], [3]],
-        [[4, 5, 6]],
-      ])
+      const result = schema.safeParse([[[1, 2], [3]], [[4, 5, 6]]])
       expect(result.success).toBe(true)
     })
   })

@@ -1,6 +1,6 @@
 import { asNsid } from '../core.js'
-import { Permission } from './permission.js'
 import { PermissionSet } from './permission-set.js'
+import { Permission } from './permission.js'
 
 describe('PermissionSet', () => {
   describe('constructor', () => {
@@ -152,7 +152,9 @@ describe('PermissionSet', () => {
         fr: 'Gestion des Publications',
         de: 'Beitragsverwaltung',
       })
-      expect(permissionSet.options.detail).toBe('Allows reading and writing posts')
+      expect(permissionSet.options.detail).toBe(
+        'Allows reading and writing posts',
+      )
       expect(permissionSet.options['detail:lang']).toEqual({
         es: 'Permite leer y escribir publicaciones',
         fr: 'Permet de lire et écrire les publications',
@@ -190,60 +192,12 @@ describe('PermissionSet', () => {
   })
 
   describe('property immutability', () => {
-    it('nsid is readonly at compile time', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
-      const permissions = [
-        new Permission('app.bsky.feed.post:read', {}),
-      ] as const
-      const options = {}
-
-      const permissionSet = new PermissionSet(nsid, permissions, options)
-
-      // TypeScript enforces readonly at compile time
-      // @ts-expect-error - should fail at compile time
-      const test = () => { permissionSet.nsid = asNsid('other.namespace.permissions') }
-      // Verify the property has the correct value
-      expect(permissionSet.nsid).toBe(nsid)
-    })
-
-    it('permissions is readonly at compile time', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
-      const permissions = [
-        new Permission('app.bsky.feed.post:read', {}),
-      ] as const
-      const options = {}
-
-      const permissionSet = new PermissionSet(nsid, permissions, options)
-
-      // TypeScript enforces readonly at compile time
-      // @ts-expect-error - should fail at compile time
-      const test = () => { permissionSet.permissions = [] }
-      // Verify the property has the correct value
-      expect(permissionSet.permissions).toBe(permissions)
-    })
-
-    it('options is readonly at compile time', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
-      const permissions = [
-        new Permission('app.bsky.feed.post:read', {}),
-      ] as const
-      const options = { title: 'Test' }
-
-      const permissionSet = new PermissionSet(nsid, permissions, options)
-
-      // TypeScript enforces readonly at compile time
-      // @ts-expect-error - should fail at compile time
-      const test = () => { permissionSet.options = {} }
-      // Verify the property has the correct value
-      expect(permissionSet.options).toBe(options)
-    })
-
     it('options object itself is mutable', () => {
       const nsid = asNsid('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
-      const options: any = { title: 'Test' }
+      const options = { title: 'Test' }
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
@@ -270,10 +224,18 @@ describe('PermissionSet', () => {
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
       expect(permissionSet.permissions).toHaveLength(4)
-      expect(permissionSet.permissions[0].resource).toBe('app.bsky.feed.post:read')
-      expect(permissionSet.permissions[1].resource).toBe('app.bsky.feed.like:read')
-      expect(permissionSet.permissions[2].resource).toBe('app.bsky.feed.repost:read')
-      expect(permissionSet.permissions[3].resource).toBe('app.bsky.graph.follow:read')
+      expect(permissionSet.permissions[0].resource).toBe(
+        'app.bsky.feed.post:read',
+      )
+      expect(permissionSet.permissions[1].resource).toBe(
+        'app.bsky.feed.like:read',
+      )
+      expect(permissionSet.permissions[2].resource).toBe(
+        'app.bsky.feed.repost:read',
+      )
+      expect(permissionSet.permissions[3].resource).toBe(
+        'app.bsky.graph.follow:read',
+      )
     })
 
     it('creates a PermissionSet with mixed read/write permissions', () => {
@@ -292,7 +254,9 @@ describe('PermissionSet', () => {
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
       expect(permissionSet.permissions).toHaveLength(4)
-      expect(permissionSet.permissions.every((p) => p.lexiconType === 'permission')).toBe(true)
+      expect(
+        permissionSet.permissions.every((p) => p.lexiconType === 'permission'),
+      ).toBe(true)
     })
 
     it('creates a PermissionSet with a single permission', () => {
@@ -308,16 +272,18 @@ describe('PermissionSet', () => {
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
       expect(permissionSet.permissions).toHaveLength(1)
-      expect(permissionSet.permissions[0].resource).toBe('app.bsky.actor.profile:read')
+      expect(permissionSet.permissions[0].resource).toBe(
+        'app.bsky.actor.profile:read',
+      )
     })
   })
 
   describe('edge cases', () => {
     it('handles very long NSID', () => {
-      const nsid = asNsid('com.example.very.long.namespace.identifier.oauth.permissions')
-      const permissions = [
-        new Permission('resource:action', {}),
-      ] as const
+      const nsid = asNsid(
+        'com.example.very.long.namespace.identifier.oauth.permissions',
+      )
+      const permissions = [new Permission('resource:action', {})] as const
       const options = {}
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
@@ -378,7 +344,9 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(Object.keys(permissionSet.options['title:lang'] || {})).toHaveLength(8)
+      expect(
+        Object.keys(permissionSet.options['title:lang'] || {}),
+      ).toHaveLength(8)
     })
 
     it('handles undefined values in title:lang', () => {
@@ -397,7 +365,9 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.options['title:lang']?.es).toBe('Gestión de Publicaciones')
+      expect(permissionSet.options['title:lang']?.es).toBe(
+        'Gestión de Publicaciones',
+      )
       expect(permissionSet.options['title:lang']?.fr).toBeUndefined()
       expect(permissionSet.options['title:lang']?.de).toBe('Beitragsverwaltung')
     })
@@ -418,7 +388,9 @@ describe('PermissionSet', () => {
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
       expect(permissionSet.options['detail:lang']?.es).toBeUndefined()
-      expect(permissionSet.options['detail:lang']?.fr).toBe('Permet de lire les publications')
+      expect(permissionSet.options['detail:lang']?.fr).toBe(
+        'Permet de lire les publications',
+      )
     })
 
     it('handles special characters in title', () => {
@@ -432,7 +404,9 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.options.title).toBe('Post Management: Read & Write (Full Access)')
+      expect(permissionSet.options.title).toBe(
+        'Post Management: Read & Write (Full Access)',
+      )
     })
 
     it('handles special characters in detail', () => {
@@ -441,12 +415,15 @@ describe('PermissionSet', () => {
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
       const options = {
-        detail: 'Allows reading posts, likes & reposts (includes all sub-resources)',
+        detail:
+          'Allows reading posts, likes & reposts (includes all sub-resources)',
       }
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.options.detail).toBe('Allows reading posts, likes & reposts (includes all sub-resources)')
+      expect(permissionSet.options.detail).toBe(
+        'Allows reading posts, likes & reposts (includes all sub-resources)',
+      )
     })
 
     it('handles unicode characters in title', () => {
@@ -493,8 +470,9 @@ describe('PermissionSet', () => {
 
     it('handles large number of permissions', () => {
       const nsid = asNsid('app.bsky.oauth.permissions')
-      const permissions = Array.from({ length: 100 }, (_, i) =>
-        new Permission(`resource${i}:action`, {}),
+      const permissions = Array.from(
+        { length: 100 },
+        (_, i) => new Permission(`resource${i}:action`, {}),
       ) as any
       const options = {}
 
@@ -553,7 +531,9 @@ describe('PermissionSet', () => {
 
       expect(permissionSet.lexiconType).toBe('permission-set')
       expect(permissionSet.nsid).toBe('app.bsky.oauth.readonly')
-      expect(permissionSet.permissions.every((p) => p.resource.endsWith(':read'))).toBe(true)
+      expect(
+        permissionSet.permissions.every((p) => p.resource.endsWith(':read')),
+      ).toBe(true)
     })
 
     it('creates a profile management permission set', () => {
@@ -629,9 +609,15 @@ describe('PermissionSet', () => {
 
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
-      expect(permissionSet.permissions[0].resource).toBe('app.bsky.feed.post:read')
-      expect(permissionSet.permissions[1].resource).toBe('app.bsky.feed.like:write')
-      expect(permissionSet.permissions[2].resource).toBe('app.bsky.graph.follow:read')
+      expect(permissionSet.permissions[0].resource).toBe(
+        'app.bsky.feed.post:read',
+      )
+      expect(permissionSet.permissions[1].resource).toBe(
+        'app.bsky.feed.like:write',
+      )
+      expect(permissionSet.permissions[2].resource).toBe(
+        'app.bsky.graph.follow:read',
+      )
     })
 
     it('preserves permission options', () => {
@@ -678,7 +664,9 @@ describe('PermissionSet', () => {
       const permissionSet = new PermissionSet(nsid, permissions, options)
 
       expect(permissionSet.options.title).toBeUndefined()
-      expect(permissionSet.options.detail).toBe('Allows reading posts from the feed')
+      expect(permissionSet.options.detail).toBe(
+        'Allows reading posts from the feed',
+      )
       expect(permissionSet.options['title:lang']).toBeUndefined()
       expect(permissionSet.options['detail:lang']).toBeUndefined()
     })

@@ -1,5 +1,7 @@
+import { Schema } from '../validation.js'
 import { IntegerSchema } from './integer.js'
 import { ObjectSchema } from './object.js'
+import { OptionalSchema } from './optional.js'
 import { RefSchema } from './ref.js'
 import { StringSchema } from './string.js'
 
@@ -160,6 +162,8 @@ describe('RefSchema', () => {
     it('prevents recursive getter calls', () => {
       // Create a schema that would cause infinite recursion if not protected
       let schema: RefSchema<any>
+
+      // eslint-disable-next-line prefer-const
       schema = new RefSchema(() => {
         // This would normally cause infinite recursion
         // but the getter protection should prevent it
@@ -175,33 +179,43 @@ describe('RefSchema', () => {
     it('supports indirect circular references', () => {
       // Create two schemas that reference each other
       // This demonstrates forward references are possible
-      let schemaA: RefSchema<any>
-      let schemaB: RefSchema<any>
 
-      schemaA = new RefSchema(
-        () =>
-          new ObjectSchema({
-            value: new StringSchema({}),
-          }),
-      )
+      type A = { value: string; ref?: B }
+      type B = { value: number; ref?: A }
 
-      schemaB = new RefSchema(
-        () =>
-          new ObjectSchema({
-            value: new IntegerSchema({}),
-            ref: schemaA,
-          }),
-      )
-
-      // This should work because each RefSchema only calls its getter once
-      const result = schemaB.safeParse({
-        value: 42,
-        ref: {
-          value: 'hello',
-        },
+      const schemaA: Schema<A> = new ObjectSchema({
+        value: new StringSchema({}),
+        ref: new OptionalSchema(new RefSchema<B>((() => schemaB) as any)),
       })
 
-      expect(result.success).toBe(true)
+      const schemaB: Schema<B> = new ObjectSchema({
+        value: new IntegerSchema({}),
+        ref: new OptionalSchema(new RefSchema<A>((() => schemaA) as any)),
+      })
+
+      expect(
+        schemaB.matches({
+          value: 42,
+          ref: {
+            value: 'hello',
+            ref: {
+              value: 3,
+            },
+          },
+        }),
+      ).toBe(true)
+
+      expect(
+        schemaA.matches({
+          value: 'hello',
+          ref: {
+            value: 3,
+            ref: {
+              value: 'world',
+            },
+          },
+        }),
+      ).toBe(true)
     })
   })
 
