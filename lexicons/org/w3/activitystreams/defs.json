@@ -1,0 +1,217 @@
+{
+  "lexicon": 1,
+  "id": "org.w3.activitystreams.defs",
+  "defs": {
+    "contextType": {
+      "type": "ref",
+      "description": "JSON-LD terms",
+      "ref": "#idOrArrayOfAndObject"
+    },
+    "objectType": {
+      "type": "ref",
+      "description": "Standard type that accepts an ActivityStreams Object/Link by id, object, or as an array",
+      "ref": "#idOrArrayOfAndObject"
+    },
+
+
+    "string": {
+      "type": "string",
+      "description": "xsd:string | rdf:langString"
+    },
+    "anyURI": {
+      "type": "string",
+      "description": "xsd:anyURI",
+      "format": "uri"
+    },
+    "id": {
+      "type": "string",
+      "description": "xsd:anyURI",
+      "format": "uri"
+    },
+    "language": {
+      "type": "string",
+      "description": "[BCP47] Language Tag",
+      "format": "language"
+    },
+
+
+    "boolean": {
+      "type": "boolean",
+      "description": "xsd:boolean"
+    },
+    "integer": {
+      "type": "integer",
+      "description": "xsd:integer"
+    },
+    "nonNegativeInteger": {
+      "type": "integer",
+      "description": "xsd:nonNegativeInteger",
+      "minimum": 0
+    },
+    "float": {
+      "type": "string",
+      "description": "xsd:float; Note: Lexicon doesn't support float"
+    },
+    "nonNegativeFloat": {
+      "type": "string",
+      "description": "xsd:float [>= 0.0f]; Note: Lexicon doesn't support float"
+    },
+    "dateTime": {
+      "type": "string",
+      "description": "xsd:dateTime",
+      "format": "datetime"
+    },
+    "duration": {
+      "type": "string",
+      "description": "xsd:duration; TODO: this"
+    },
+
+
+    "object": {
+      "type": "unknown"
+    },
+    "idObject": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "ref",
+          "ref": "#id"
+        }
+      }
+    },
+   "idTypeObject": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "ref",
+          "ref": "#id"
+        },
+        "type": {
+          "type": "ref",
+          "ref": "#string"
+        }
+      }
+    },
+
+
+    "array": {
+      "type": "array",
+      "items": {
+        "type": "unknown"
+      }
+    },
+    "arrayOfObject": {
+      "type": "array",
+      "items": {
+        "type": "ref",
+        "ref": "#object"
+      }
+    },
+    "arrayOfString": {
+      "type": "array",
+      "items": {
+        "type": "ref",
+        "ref": "#string"
+      }
+    },
+    "arrayOfAnyURI": {
+      "type": "array",
+      "items": {
+        "type": "ref",
+        "ref": "#anyURI"
+      }
+    },
+    "arrayOfId": {
+      "type": "array",
+      "items": {
+        "type": "ref",
+        "ref": "#id"
+      }
+    },
+    "arrayOfStringObject": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": ["#string", "#object"]
+      }
+    },
+    "arrayOfAnyURIObject": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": ["#anyURI", "#object"]
+      }
+    },
+    "arrayOfIdObject": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": ["#id", "#object"]
+      }
+    },
+    "arrayOfStringArrayObject": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": ["#string", "#arrayOfStringArrayObject", "#object"]
+      }
+    },
+    "arrayOfAnyURIArrayObject": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": ["#string", "#arrayOfAnyURIArrayObject", "#object"]
+      }
+    },
+    "arrayOfIdArrayObject": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": ["#string", "#arrayOfIdArrayObject", "#object"]
+      }
+    },
+
+
+    "stringArrayObject": {
+      "type": "union",
+      "refs": ["#string", "#arrayOfStringArrayObject", "#object"]
+    },
+    "anyURIArrayObject": {
+      "type": "union",
+      "refs": ["#anyURI", "#arrayOfAnyURIArrayObject", "#object"]
+    },
+    "idArrayObject": {
+      "type": "union",
+      "refs": ["#anyURI", "#arrayOfIdArrayObject", "#object"]
+    },
+
+
+    "stringOrArrayOf": {
+      "type": "union",
+      "refs": ["#string", "#arrayOfString"]
+    },
+    "anyURIOrArrayOf": {
+      "type": "union",
+      "refs": ["#anyURI", "#arrayOfAnyURI"]
+    },
+    "idOrArrayOf": {
+      "type": "union",
+      "refs": ["#id", "#arrayOfId"]
+    },
+
+    "stringOrArrayOfAndObject": {
+      "type": "union",
+      "refs": ["#string", "#arrayOfStringObject", "#object"]
+    },
+    "anyURIOrArrayOfAndObject": {
+      "type": "union",
+      "refs": ["#id", "#arrayOfAnyURIObject", "#object"]
+    },
+    "idOrArrayOfAndObject": {
+      "type": "union",
+      "refs": ["#id", "#arrayOfIdObject", "#object"]
+    }
+  }
+}
