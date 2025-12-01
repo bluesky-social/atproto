@@ -12,11 +12,11 @@ import { LexiconData, LexiconStore } from './lexicon-store.js'
  * @private
  */
 export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
-  constructor(store: LexiconStore, resolver: LexResolver) {
+  constructor(store: LexiconStore, lexResolver: LexResolver) {
     super(
       async (input, options, storedData) => {
         const now = new Date()
-        const result = await resolver.get(input, options).catch((err) => {
+        const result = await lexResolver.get(input, options).catch((err) => {
           // We swallow LexiconResolutionError errors, returning potentially
           // "null" values here to avoid hammering the resolver with requests
           // for the same lexicon that is known to be unavailable. The getter

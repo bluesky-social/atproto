@@ -348,30 +348,43 @@ export class AppContext {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
-          lexResolver: new (class extends LexResolver {
-            async get(input: string) {
-              const nsid: string = String(input)
-              try {
-                const result = await super.get(nsid)
-                const cid = result.cid.toString()
-                const uri = result.uri.toString()
-                lexiconResolverLogger.info(
-                  { nsid, uri, cid },
-                  'Resolved lexicon',
-                )
-                return result
-              } catch (err) {
-                lexiconResolverLogger.error(
-                  { nsid, err },
-                  'Lexicon resolution failed',
-                )
-                throw err
-              }
-            }
-          })({
+          lexResolver: new LexResolver({
             fetch: safeFetch,
-            didAuthority: cfg.lexicon.didAuthority,
             plcDirectoryUrl: cfg.identity.plcUrl,
+            hooks: {
+              onResolveAuthority: ({ nsid }) => {
+                lexiconResolverLogger.debug(
+                  { nsid: nsid.toString() },
+                  'Resolving lexicon DID authority',
+                )
+                // Override the lexicon did resolution to point to a custom PDS
+                return cfg.lexicon.didAuthority
+              },
+              onResolveAuthorityResult({ nsid, did }) {
+                lexiconResolverLogger.info(
+                  { nsid: nsid.toString(), did },
+                  'Resolved lexicon DID',
+                )
+              },
+              onResolveAuthorityError({ nsid, err }) {
+                lexiconResolverLogger.error(
+                  { nsid: nsid.toString(), err },
+                  'Lexicon DID resolution error',
+                )
+              },
+              onFetchResult({ uri, cid }) {
+                lexiconResolverLogger.info(
+                  { uri: uri.toString(), cid: cid.toString() },
+                  'Fetched lexicon',
+                )
+              },
+              onFetchError({ err, uri }) {
+                lexiconResolverLogger.error(
+                  { uri: uri.toString(), err },
+                  'Lexicon fetch error',
+                )
+              },
+            },
           }),
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],

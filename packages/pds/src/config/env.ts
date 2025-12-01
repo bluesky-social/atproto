@@ -157,4 +157,4 @@ export function readEnv() {
   }
 }
 
-export type ServerEnvironment = ReturnType<typeof readEnv>
+export type ServerEnvironment = Partial<ReturnType<typeof readEnv>>
