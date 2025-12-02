@@ -8,6 +8,8 @@ import { isFragment, parseDidUrlParts } from './lib/uri.js'
 const rfc3986UriSchema = z.string().url('RFC3986 URI')
 
 /**
+ * Validates full or relative DID URLs.
+ *
  * ```abnf
  * did-url = did path-abempty [ "?" query ] [ "#" fragment ]
  * path-abempty = *( "/" segment )
@@ -15,7 +17,7 @@ const rfc3986UriSchema = z.string().url('RFC3986 URI')
  *
  * @see {@link https://www.w3.org/TR/did-1.0/#did-url-syntax Decentralized Identifiers - 3.2. DID URL Syntax}
  */
-const didUrlSchema = z.string().refine(
+export const didUrlSchema = z.string().refine(
   (input): input is DidUrl => {
     if (!input) return false
 
@@ -26,7 +28,7 @@ const didUrlSchema = z.string().refine(
     // @TODO: validate "query" part ?
     // @TODO: validate "path" part ?
 
-    // Validate the authority DID, if present
+    // Validate the DID, if not a relative URL
     if (parts.path !== 0) {
       try {
         assertDid(input, 0, parts.path)
@@ -44,30 +46,6 @@ export type DidUrl = Exclude<
   `${Did | ''}${`/${string}` | ''}${`?${string}` | ''}${`#${string}` | ''}`,
   ''
 >
-/**
- * The value of the type property MUST be a string or a set of strings. In order
- * to maximize interoperability, the service type and its associated properties
- * SHOULD be registered in the DID Specification Registries
- * [DID-SPEC-REGISTRIES].
- */
-const didServiceTypeSchema = z.union([z.string(), z.array(z.string())])
-
-/**
- * > The value of the serviceEndpoint property MUST be a string, a map, or a set
- * > composed of one or more strings and/or maps. All string values MUST be
- * > valid URIs conforming to [RFC3986] and normalized according to the
- * > Normalization and Comparison rules in RFC3986 and to any normalization
- * > rules in its applicable URI scheme specification.
- *
- * @note we don't enforce the normalization requirement here
- */
-const didServiceEndpointSchema = z.union([
-  rfc3986UriSchema,
-  z.record(z.string(), rfc3986UriSchema),
-  z
-    .array(z.union([rfc3986UriSchema, z.record(z.string(), rfc3986UriSchema)]))
-    .nonempty(),
-])
 
 /**
  * Each service map MUST contain id, type, and serviceEndpoint properties.
@@ -75,16 +53,39 @@ const didServiceEndpointSchema = z.union([
  */
 const didServiceSchema = z.object({
   /**
-   * > The value of the id property MUST be a URI conforming to [RFC3986]. A
-   * > conforming producer MUST NOT produce multiple service entries with the same
-   * > id. A conforming consumer MUST produce an error if it detects multiple
-   * > service entries with the same id.
+   * > The value of the `id` property MUST be a URI conforming to [RFC3986]. A
+   * > conforming producer MUST NOT produce multiple service entries with the
+   * > same id. A conforming consumer MUST produce an error if it detects
+   * > multiple service entries with the same id.
    *
    * @see {@link https://www.w3.org/TR/did-1.0/#services}
    */
-  id: rfc3986UriSchema,
-  type: didServiceTypeSchema,
-  serviceEndpoint: didServiceEndpointSchema,
+  id: z.union([didUrlSchema, rfc3986UriSchema]),
+  /**
+   * > The value of the `type` property MUST be a string or a set of strings. In
+   * > order to maximize interoperability, the service type and its associated
+   * > properties SHOULD be registered in the DID Specification Registries
+   * > [DID-SPEC-REGISTRIES].
+   */
+  type: z.union([z.string(), z.array(z.string())]),
+  /**
+   * > The value of the `serviceEndpoint` property MUST be a string, a map, or a
+   * > set composed of one or more strings and/or maps. All string values MUST
+   * > be valid URIs conforming to [RFC3986] and normalized according to the
+   * > Normalization and Comparison rules in RFC3986 and to any normalization
+   * > rules in its applicable URI scheme specification.
+   *
+   * @note we don't enforce the normalization requirement here
+   */
+  serviceEndpoint: z.union([
+    rfc3986UriSchema,
+    z.record(z.string(), rfc3986UriSchema),
+    z
+      .array(
+        z.union([rfc3986UriSchema, z.record(z.string(), rfc3986UriSchema)]),
+      )
+      .nonempty(),
+  ]),
 })
 
 export type DidService = z.infer<typeof didServiceSchema>
@@ -105,6 +106,15 @@ const didVerificationMethodSchema = z.object({
 
 export type DidVerificationMethod = z.infer<typeof didVerificationMethodSchema>
 
+const didVerificationRelationshipSchema = z.union([
+  didVerificationMethodSchema,
+  didUrlSchema,
+])
+
+const didVerificationRelationshipsSchema = z
+  .array(didVerificationRelationshipSchema)
+  .optional()
+
 /**
  * @note This schema is incomplete
  * @see {@link https://www.w3.org/TR/did-core/#production-0}
@@ -122,23 +132,13 @@ export const didDocumentSchema = z.object({
   id: didSchema,
   controller: z.union([didSchema, z.array(didSchema)]).optional(),
   alsoKnownAs: z.array(rfc3986UriSchema).optional(),
-  verificationMethod: z.array(didVerificationMethodSchema).optional(),
-  authentication: z
-    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
-    .optional(),
-  assertionMethod: z
-    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
-    .optional(),
-  keyAgreement: z
-    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
-    .optional(),
-  capabilityInvocation: z
-    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
-    .optional(),
-  capabilityDelegation: z
-    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
-    .optional(),
   service: z.array(didServiceSchema).optional(),
+  verificationMethod: z.array(didVerificationMethodSchema).optional(),
+  authentication: didVerificationRelationshipsSchema,
+  assertionMethod: didVerificationRelationshipsSchema,
+  keyAgreement: didVerificationRelationshipsSchema,
+  capabilityInvocation: didVerificationRelationshipsSchema,
+  capabilityDelegation: didVerificationRelationshipsSchema,
 })
 
 export type DidDocument<Method extends string = string> = z.infer<
@@ -155,20 +155,13 @@ export const didDocumentValidator = didDocumentSchema
       for (let i = 0; i < service.length; i++) {
         const current = service[i]
 
-        const serviceId = current.id.startsWith('#')
-          ? current.id
-          : current.id.startsWith(did) &&
-              current.id.charCodeAt(did.length) === 35 /* # */
-            ? current.id.slice(did.length)
-            : null
-
-        if (serviceId === null) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Service id (${current.id}) must be a same-document reference or a DID URL with the DID as the authority`,
-            path: ['service', i, 'id'],
-          })
-        }
+        const serviceId =
+          // Resolve relative service IDs according to RFC3986 (ish)
+          current.id.startsWith('#') ||
+          current.id.startsWith('/') ||
+          current.id.startsWith('?')
+            ? `${did}${current.id}`
+            : current.id
 
         if (!visited.has(serviceId)) {
           visited.add(serviceId)

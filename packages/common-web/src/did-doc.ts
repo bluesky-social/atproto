@@ -167,14 +167,50 @@ const canParseUrl =
 // Types
 // --------
 
+const rfc3986UriNormalized = z.string().refine((input) => {
+  try {
+    return input.includes(':') && new URL(input).href === input
+  } catch {
+    return false
+  }
+}, 'RFC3986 URI (normalized)')
+
+const didUrl = z.string().refine((input): boolean => {
+  try {
+    // Same-document references are valid DID URLs
+    if (
+      input.startsWith('#') ||
+      input.startsWith('?') ||
+      input.startsWith('/')
+    ) {
+      new URL(input, 'http://example.com')
+      return true
+    } else {
+      const url = new URL(input)
+      return (
+        url.protocol === 'did:' &&
+        !url.hostname &&
+        !url.username &&
+        !url.password &&
+        !url.port &&
+        !url.pathname.startsWith('/') // URL parses the method-specific-id as pathname
+      )
+    }
+  } catch {
+    return false
+  }
+})
+
 const verificationMethod = z.object({
   id: z.string(),
   type: z.string(),
   controller: z.string(),
+  publicKeyJwk: z.record(z.string(), z.unknown()).optional(),
   publicKeyMultibase: z.string().optional(),
 })
 
 const service = z.object({
+  // @NOTE we don't enforce RFC3986 format on the "id" for legacy reasons
   id: z.string(),
   type: z.string(),
   /**
@@ -183,22 +219,37 @@ const service = z.object({
    * > be valid URIs conforming to [RFC3986] and normalized according to the
    * > Normalization and Comparison rules in RFC3986 and to any normalization
    * > rules in its applicable URI scheme specification.
-   *
-   * @note we don't enforce the the URL or normalization requirement here (for
-   * legacy reasons).
    */
   serviceEndpoint: z.union([
+    // @NOTE We don't enforce URI (or normalization) for string and maps here
+    // for legacy reasons.
     z.string(),
     z.record(z.string(), z.string()),
-    z.array(z.union([z.string(), z.record(z.string(), z.string())])).nonempty(),
+
+    z
+      .array(
+        z.union([
+          rfc3986UriNormalized,
+          z.record(z.string(), rfc3986UriNormalized),
+        ]),
+      )
+      .nonempty(),
   ]),
 })
+
+const verificationRelationship = z.union([verificationMethod, didUrl])
+const verificationRelationships = z.array(verificationRelationship).optional()
 
 export const didDocument = z.object({
   id: z.string(),
   alsoKnownAs: z.array(z.string()).optional(),
   verificationMethod: z.array(verificationMethod).optional(),
   service: z.array(service).optional(),
+  authentication: verificationRelationships,
+  assertionMethod: verificationRelationships,
+  keyAgreement: verificationRelationships,
+  capabilityInvocation: verificationRelationships,
+  capabilityDelegation: verificationRelationships,
 })
 
 export type DidDocument = z.infer<typeof didDocument>
