@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-installer",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "description": "Lexicon document packet manager for AT Lexicons",
   "keywords": [
