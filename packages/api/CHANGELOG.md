@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.18.4
+
+### Patch Changes
+
+- [#4407](https://github.com/bluesky-social/atproto/pull/4407) [`90f1569`](https://github.com/bluesky-social/atproto/commit/90f15698ee63d9a7374f1206754eda5d530873d7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds ageassurance namespace, methods, and utils for Age Assurance V2
+
+- Updated dependencies [[`bcae2b7`](https://github.com/bluesky-social/atproto/commit/bcae2b77b68da6dc2ec202651c8bf41fd5769f69)]:
+  - @atproto/syntax@0.4.2
+  - @atproto/common-web@0.4.6
+
 ## 0.18.3
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @atproto-labs/handle-resolver-node
 
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies [[`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e), [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea)]:
+  - @atproto/did@0.2.3
+  - @atproto-labs/handle-resolver@0.3.4
+
 ## 0.1.22
 
 ### Patch Changes
