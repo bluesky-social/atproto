@@ -122,11 +122,23 @@ export const didDocumentSchema = z.object({
   id: didSchema,
   controller: z.union([didSchema, z.array(didSchema)]).optional(),
   alsoKnownAs: z.array(rfc3986UriSchema).optional(),
-  service: z.array(didServiceSchema).optional(),
+  verificationMethod: z.array(didVerificationMethodSchema).optional(),
   authentication: z
     .array(z.union([didVerificationMethodSchema, didUrlSchema]))
     .optional(),
-  verificationMethod: z.array(didVerificationMethodSchema).optional(),
+  assertionMethod: z
+    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
+    .optional(),
+  keyAgreement: z
+    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
+    .optional(),
+  capabilityInvocation: z
+    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
+    .optional(),
+  capabilityDelegation: z
+    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
+    .optional(),
+  service: z.array(didServiceSchema).optional(),
 })
 
 export type DidDocument<Method extends string = string> = z.infer<
