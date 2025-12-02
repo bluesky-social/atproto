@@ -8,6 +8,7 @@ import { TID } from '@atproto/common'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
+import { Event as AgeAssuranceV2Event } from '../../lexicon/types/app/bsky/ageassurance/defs'
 import { Bookmark } from '../../lexicon/types/app/bsky/bookmark/defs'
 import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
 import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
@@ -175,6 +176,8 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
         ) {
           await handleAgeAssuranceEventOperation(db, req, now)
+        } else if (namespace === Namespaces.AppBskyAgeassuranceDefsEvent) {
+          await handleAgeAssuranceV2EventOperation(db, req, now)
         } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark) {
           await handleBookmarkOperation(db, req, now)
         }
@@ -305,6 +308,34 @@ const handleAgeAssuranceEventOperation = async (
   const update = {
     ageAssuranceStatus: status,
     ageAssuranceLastInitiatedAt: status === 'pending' ? createdAt : undefined,
+  }
+
+  return db.db
+    .updateTable('actor')
+    .set(update)
+    .where('did', '=', actorDid)
+    .execute()
+}
+
+const handleAgeAssuranceV2EventOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  _now: string,
+) => {
+  const { actorDid, method, payload } = req
+  if (method !== Method.CREATE) return
+
+  const parsed = jsonStringToLex(
+    Buffer.from(payload).toString('utf8'),
+  ) as AgeAssuranceV2Event
+  const { status, createdAt, access, countryCode, regionCode } = parsed
+
+  const update = {
+    ageAssuranceStatus: status,
+    ageAssuranceLastInitiatedAt: status === 'pending' ? createdAt : undefined,
+    ageAssuranceAccess: access,
+    ageAssuranceCountryCode: countryCode,
+    ageAssuranceRegionCode: regionCode,
   }
 
   return db.db

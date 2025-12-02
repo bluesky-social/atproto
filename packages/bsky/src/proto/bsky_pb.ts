@@ -3856,6 +3856,16 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
    */
   overrideApplied = false;
 
+  /**
+   * @generated from field: string access = 4;
+   */
+  access = "";
+
+  /**
+   * @generated from field: string access_reason = 5;
+   */
+  accessReason = "";
+
   constructor(data?: PartialMessage<AgeAssuranceStatus>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3867,6 +3877,8 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
     { no: 1, name: "status", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "last_initiated_at", kind: "message", T: Timestamp },
     { no: 3, name: "override_applied", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 4, name: "access", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "access_reason", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AgeAssuranceStatus {
