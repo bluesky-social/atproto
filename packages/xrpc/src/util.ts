@@ -140,9 +140,14 @@ export function constructMethodCallHeaders(
   if (schema.type === 'procedure') {
     if (opts?.encoding) {
       headers.set('content-type', opts.encoding)
-    } else if (!headers.has('content-type') && typeof data !== 'undefined') {
-      // Special handling of BodyInit types before falling back to JSON encoding
-      if (
+    } else if (!headers.has('content-type')) {
+      // Always set Content-Type for procedures, even with no body.
+      // Some proxies (e.g. Cloudflare) block POST requests without Content-Type
+      // as "cross-site form submissions".
+      if (typeof data === 'undefined') {
+        headers.set('content-type', 'application/json')
+      } else if (
+        // Special handling of BodyInit types before falling back to JSON encoding
         data instanceof ArrayBuffer ||
         data instanceof ReadableStream ||
         ArrayBuffer.isView(data)
