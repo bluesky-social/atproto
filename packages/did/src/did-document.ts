@@ -1,59 +1,64 @@
 import { z } from 'zod'
-import { Did, didSchema } from './did.js'
+import { Did, assertDid, didSchema } from './did.js'
 import { isFragment } from './lib/uri.js'
 
 /**
- * RFC3968 compliant URI
- *
- * @see {@link https://www.rfc-editor.org/rfc/rfc3986}
+ * @see {@link https://www.rfc-editor.org/rfc/rfc3986 RFC3986}
  */
-const rfc3968UriSchema = z.string().url('RFC3968 compliant URI')
-
-const didControllerSchema = z.union([didSchema, z.array(didSchema)])
+const rfc3986UriSchema = z.string().url('RFC3986 URI')
+const rfc3986SameDocumentRefSchema = z
+  .string()
+  .refine(
+    (value) => value.charCodeAt(0) === 35 /* # */ && isFragment(value, 1),
+    { message: 'RFC3986 same-document URI' },
+  )
 
 /**
- * @note this schema is too permissive
- */
-const didRelativeUriSchema = z.union([
-  rfc3968UriSchema.refine(
-    (value) => {
-      const fragmentIndex = value.indexOf('#')
-      if (fragmentIndex === -1) return false
-      return isFragment(value, fragmentIndex + 1)
-    },
-    {
-      message: 'Missing or invalid fragment in RFC3968 URI',
-    },
-  ),
-  z
-    .string()
-    .refine((value) => value.charCodeAt(0) === 35 /* # */, {
-      message: 'Fragment must start with #',
-    })
-    .refine((value) => isFragment(value, 1), {
-      message: 'Invalid char in URI fragment',
-    }),
-])
-
-const didVerificationMethodSchema = z.object({
-  id: didRelativeUriSchema,
-  type: z.string().min(1),
-  controller: didControllerSchema,
-  publicKeyJwk: z.record(z.string(), z.unknown()).optional(),
-  publicKeyMultibase: z.string().optional(),
-})
-
-/**
- * The value of the id property MUST be a URI conforming to [RFC3986]. A
- * conforming producer MUST NOT produce multiple service entries with the same
- * id. A conforming consumer MUST produce an error if it detects multiple
- * service entries with the same id.
+ * ```abnf
+ * did-url = did path-abempty [ "?" query ] [ "#" fragment ]
+ * path-abempty = *( "/" segment )
+ * ```
  *
- * @note Normally, only rfc3968UriSchema should be allowed here. However, the
- *   did:plc uses relative URI. For this reason, we also allow relative URIs
- *   here.
+ * @see {@link https://www.w3.org/TR/did-1.0/#did-url-syntax Decentralized Identifiers - 3.2. DID URL Syntax}
  */
-const didServiceIdSchema = didRelativeUriSchema
+const didUrlSchema = z.string().refine(
+  (value): value is `${Did}${`?${string}` | ''}${`#${string}` | ''}` => {
+    // Check for "fragment" presence and validity
+    const hashIdx = value.indexOf('#', 4)
+    if (hashIdx !== -1 && !isFragment(value, hashIdx + 1)) return false
+
+    // Determine "query" (including leading "?") position
+    const questIdx = value.indexOf('?', 4)
+    const queryStart =
+      questIdx !== -1 && (hashIdx === -1 || questIdx < hashIdx) ? questIdx : -1
+
+    // Determine "path" position
+    const slashIndex = value.indexOf('/', 4)
+    const pathEnd =
+      queryStart !== -1 ? queryStart : hashIdx !== -1 ? hashIdx : value.length
+    const pathStart =
+      slashIndex !== -1 && slashIndex < pathEnd ? slashIndex : pathEnd
+
+    // Validate the DID portion (ignoring "path", "query" and "fragment")
+    try {
+      assertDid(value, 0, pathStart)
+      return true
+    } catch {
+      return false
+    }
+  },
+  { message: 'DID URL' },
+)
+
+export type DidUrl = z.infer<typeof didUrlSchema>
+
+const didUrlWithFragmentSchema = didUrlSchema.refine(
+  (value): value is Extract<DidUrl, `${DidUrl}#${string}`> =>
+    value.includes('#'),
+  { message: 'DID URL with fragment' },
+)
+
+export type DidUrlWithFragment = z.infer<typeof didUrlWithFragmentSchema>
 
 /**
  * The value of the type property MUST be a string or a set of strings. In order
@@ -64,17 +69,19 @@ const didServiceIdSchema = didRelativeUriSchema
 const didServiceTypeSchema = z.union([z.string(), z.array(z.string())])
 
 /**
- * The value of the serviceEndpoint property MUST be a string, a map, or a set
- * composed of one or more strings and/or maps. All string values MUST be valid
- * URIs conforming to [RFC3986] and normalized according to the Normalization
- * and Comparison rules in RFC3986 and to any normalization rules in its
- * applicable URI scheme specification.
+ * > The value of the serviceEndpoint property MUST be a string, a map, or a set
+ * > composed of one or more strings and/or maps. All string values MUST be
+ * > valid URIs conforming to [RFC3986] and normalized according to the
+ * > Normalization and Comparison rules in RFC3986 and to any normalization
+ * > rules in its applicable URI scheme specification.
+ *
+ * @note we don't enforce the normalization requirement here
  */
 const didServiceEndpointSchema = z.union([
-  rfc3968UriSchema,
-  z.record(z.string(), rfc3968UriSchema),
+  rfc3986UriSchema,
+  z.record(z.string(), rfc3986UriSchema),
   z
-    .array(z.union([rfc3968UriSchema, z.record(z.string(), rfc3968UriSchema)]))
+    .array(z.union([rfc3986UriSchema, z.record(z.string(), rfc3986UriSchema)]))
     .nonempty(),
 ])
 
@@ -83,18 +90,39 @@ const didServiceEndpointSchema = z.union([
  * @see {@link https://www.w3.org/TR/did-core/#services}
  */
 const didServiceSchema = z.object({
-  id: didServiceIdSchema,
+  /**
+   * > The value of the id property MUST be a URI conforming to [RFC3986]. A
+   * > conforming producer MUST NOT produce multiple service entries with the same
+   * > id. A conforming consumer MUST produce an error if it detects multiple
+   * > service entries with the same id.
+   *
+   * @see {@link https://www.w3.org/TR/did-1.0/#services}
+   * @note
+   * {@link https://www.rfc-editor.org/rfc/rfc3986#section-4.4 RFC3986 - 4.4. Same-Document Reference }
+   * allows relative URIs
+   */
+  id: z.union([rfc3986SameDocumentRefSchema, didUrlWithFragmentSchema]),
   type: didServiceTypeSchema,
   serviceEndpoint: didServiceEndpointSchema,
 })
 
 export type DidService = z.infer<typeof didServiceSchema>
 
-const didAuthenticationSchema = z.union([
-  //
-  didRelativeUriSchema,
-  didVerificationMethodSchema,
-])
+const didVerificationMethodSchema = z.object({
+  /**
+   * > The value of the id property for a verification method MUST be a string
+   * > that conforms to the rules in Section 3.2 DID URL Syntax.
+   *
+   * @see {@link https://www.w3.org/TR/did-1.0/#verification-methods}
+   */
+  id: didUrlWithFragmentSchema,
+  type: z.string().min(1),
+  controller: z.union([didSchema, z.array(didSchema)]),
+  publicKeyJwk: z.record(z.string(), z.unknown()).optional(),
+  publicKeyMultibase: z.string().optional(),
+})
+
+export type DidVerificationMethod = z.infer<typeof didVerificationMethodSchema>
 
 /**
  * @note This schema is incomplete
@@ -111,13 +139,19 @@ export const didDocumentSchema = z.object({
       }),
   ]),
   id: didSchema,
-  controller: didControllerSchema.optional(),
-  alsoKnownAs: z.array(rfc3968UriSchema).optional(),
+  controller: z.union([didSchema, z.array(didSchema)]).optional(),
+  alsoKnownAs: z.array(rfc3986UriSchema).optional(),
   service: z.array(didServiceSchema).optional(),
-  authentication: z.array(didAuthenticationSchema).optional(),
-  verificationMethod: z
-    .array(z.union([didVerificationMethodSchema, didRelativeUriSchema]))
+  authentication: z
+    .array(
+      z.union([
+        didVerificationMethodSchema,
+        didUrlWithFragmentSchema,
+        rfc3986SameDocumentRefSchema,
+      ]),
+    )
     .optional(),
+  verificationMethod: z.array(didVerificationMethodSchema).optional(),
 })
 
 export type DidDocument<Method extends string = string> = z.infer<
@@ -135,8 +169,19 @@ export const didDocumentValidator = didDocumentSchema
         const current = service[i]
 
         const serviceId = current.id.startsWith('#')
-          ? `${did}${current.id}`
-          : current.id
+          ? current.id
+          : current.id.startsWith(did) &&
+              current.id.charCodeAt(did.length) === 35 /* # */
+            ? current.id.slice(did.length)
+            : null
+
+        if (serviceId === null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Service id (${current.id}) must be a same-document reference or a DID URL with the DID as the authority`,
+            path: ['service', i, 'id'],
+          })
+        }
 
         if (!visited.has(serviceId)) {
           visited.add(serviceId)

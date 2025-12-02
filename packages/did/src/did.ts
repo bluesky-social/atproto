@@ -207,27 +207,31 @@ export function assertDidMsid(
   }
 }
 
-export function assertDid(input: unknown): asserts input is Did {
+export function assertDid(
+  input: unknown,
+  start = 0,
+  end?: number,
+): asserts input is Did {
   if (typeof input !== 'string') {
     throw new InvalidDidError(typeof input, `DID must be a string`)
   }
 
-  const { length } = input
+  const length = (end ??= input.length) - start
   if (length > 2048) {
     throw new InvalidDidError(input, `DID is too long (2048 chars max)`)
   }
 
-  if (!input.startsWith(DID_PREFIX)) {
+  if (!input.startsWith(DID_PREFIX, start)) {
     throw new InvalidDidError(input, `DID requires "${DID_PREFIX}" prefix`)
   }
 
-  const idSep = input.indexOf(':', DID_PREFIX_LENGTH)
+  const idSep = input.indexOf(':', start + DID_PREFIX_LENGTH)
   if (idSep === -1) {
     throw new InvalidDidError(input, `Missing colon after method name`)
   }
 
-  assertDidMethod(input, DID_PREFIX_LENGTH, idSep)
-  assertDidMsid(input, idSep + 1, length)
+  assertDidMethod(input, start + DID_PREFIX_LENGTH, idSep)
+  assertDidMsid(input, idSep + 1, end)
 }
 
 export function isDid(input: unknown): input is Did {

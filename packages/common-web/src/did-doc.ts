@@ -177,7 +177,21 @@ const verificationMethod = z.object({
 const service = z.object({
   id: z.string(),
   type: z.string(),
-  serviceEndpoint: z.union([z.string(), z.record(z.unknown())]),
+  /**
+   * > The value of the serviceEndpoint property MUST be a string, a map, or a
+   * > set composed of one or more strings and/or maps. All string values MUST
+   * > be valid URIs conforming to [RFC3986] and normalized according to the
+   * > Normalization and Comparison rules in RFC3986 and to any normalization
+   * > rules in its applicable URI scheme specification.
+   *
+   * @note we don't enforce the the URL or normalization requirement here (for
+   * legacy reasons).
+   */
+  serviceEndpoint: z.union([
+    z.string(),
+    z.record(z.string(), z.string()),
+    z.array(z.union([z.string(), z.record(z.string(), z.string())])).nonempty(),
+  ]),
 })
 
 export const didDocument = z.object({
