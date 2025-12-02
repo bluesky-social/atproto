@@ -60,7 +60,12 @@ const didServiceSchema = z.object({
    *
    * @see {@link https://www.w3.org/TR/did-1.0/#services}
    */
-  id: z.union([didUrlSchema, rfc3986UriSchema]),
+  id: z.union([
+    rfc3986UriSchema,
+    // Note we must allow relative DID URLs here too (which rfc3986UriSchema
+    // does not allow):
+    didUrlSchema,
+  ]),
   /**
    * > The value of the `type` property MUST be a string or a set of strings. In
    * > order to maximize interoperability, the service type and its associated
