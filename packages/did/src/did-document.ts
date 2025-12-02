@@ -1,17 +1,11 @@
 import { z } from 'zod'
 import { Did, assertDid, didSchema } from './did.js'
-import { isFragment } from './lib/uri.js'
+import { isFragment, parseDidUrlParts } from './lib/uri.js'
 
 /**
  * @see {@link https://www.rfc-editor.org/rfc/rfc3986 RFC3986}
  */
 const rfc3986UriSchema = z.string().url('RFC3986 URI')
-const rfc3986SameDocumentRefSchema = z
-  .string()
-  .refine(
-    (value) => value.charCodeAt(0) === 35 /* # */ && isFragment(value, 1),
-    { message: 'RFC3986 same-document URI' },
-  )
 
 /**
  * ```abnf
@@ -22,44 +16,34 @@ const rfc3986SameDocumentRefSchema = z
  * @see {@link https://www.w3.org/TR/did-1.0/#did-url-syntax Decentralized Identifiers - 3.2. DID URL Syntax}
  */
 const didUrlSchema = z.string().refine(
-  (value): value is `${Did}${`?${string}` | ''}${`#${string}` | ''}` => {
-    // Check for "fragment" presence and validity
-    const hashIdx = value.indexOf('#', 4)
-    if (hashIdx !== -1 && !isFragment(value, hashIdx + 1)) return false
+  (input): input is DidUrl => {
+    if (!input) return false
 
-    // Determine "query" (including leading "?") position
-    const questIdx = value.indexOf('?', 4)
-    const queryStart =
-      questIdx !== -1 && (hashIdx === -1 || questIdx < hashIdx) ? questIdx : -1
+    const parts = parseDidUrlParts(input)
 
-    // Determine "path" position
-    const slashIndex = value.indexOf('/', 4)
-    const pathEnd =
-      queryStart !== -1 ? queryStart : hashIdx !== -1 ? hashIdx : value.length
-    const pathStart =
-      slashIndex !== -1 && slashIndex < pathEnd ? slashIndex : pathEnd
+    // Make sure the fragment part is valid
+    if (!isFragment(input, parts.hash)) return false
+    // @TODO: validate "query" part ?
+    // @TODO: validate "path" part ?
 
-    // Validate the DID portion (ignoring "path", "query" and "fragment")
-    try {
-      assertDid(value, 0, pathStart)
-      return true
-    } catch {
-      return false
+    // Validate the authority DID, if present
+    if (parts.path !== 0) {
+      try {
+        assertDid(input, 0, parts.path)
+      } catch {
+        return false
+      }
     }
+
+    return true
   },
   { message: 'DID URL' },
 )
 
-export type DidUrl = z.infer<typeof didUrlSchema>
-
-const didUrlWithFragmentSchema = didUrlSchema.refine(
-  (value): value is Extract<DidUrl, `${DidUrl}#${string}`> =>
-    value.includes('#'),
-  { message: 'DID URL with fragment' },
-)
-
-export type DidUrlWithFragment = z.infer<typeof didUrlWithFragmentSchema>
-
+export type DidUrl = Exclude<
+  `${Did | ''}${`/${string}` | ''}${`?${string}` | ''}${`#${string}` | ''}`,
+  ''
+>
 /**
  * The value of the type property MUST be a string or a set of strings. In order
  * to maximize interoperability, the service type and its associated properties
@@ -97,11 +81,8 @@ const didServiceSchema = z.object({
    * > service entries with the same id.
    *
    * @see {@link https://www.w3.org/TR/did-1.0/#services}
-   * @note
-   * {@link https://www.rfc-editor.org/rfc/rfc3986#section-4.4 RFC3986 - 4.4. Same-Document Reference }
-   * allows relative URIs
    */
-  id: z.union([rfc3986SameDocumentRefSchema, didUrlWithFragmentSchema]),
+  id: rfc3986UriSchema,
   type: didServiceTypeSchema,
   serviceEndpoint: didServiceEndpointSchema,
 })
@@ -115,7 +96,7 @@ const didVerificationMethodSchema = z.object({
    *
    * @see {@link https://www.w3.org/TR/did-1.0/#verification-methods}
    */
-  id: didUrlWithFragmentSchema,
+  id: didUrlSchema,
   type: z.string().min(1),
   controller: z.union([didSchema, z.array(didSchema)]),
   publicKeyJwk: z.record(z.string(), z.unknown()).optional(),
@@ -143,13 +124,7 @@ export const didDocumentSchema = z.object({
   alsoKnownAs: z.array(rfc3986UriSchema).optional(),
   service: z.array(didServiceSchema).optional(),
   authentication: z
-    .array(
-      z.union([
-        didVerificationMethodSchema,
-        didUrlWithFragmentSchema,
-        rfc3986SameDocumentRefSchema,
-      ]),
-    )
+    .array(z.union([didVerificationMethodSchema, didUrlSchema]))
     .optional(),
   verificationMethod: z.array(didVerificationMethodSchema).optional(),
 })

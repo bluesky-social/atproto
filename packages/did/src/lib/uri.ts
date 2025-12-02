@@ -76,3 +76,34 @@ export const canParse =
       return false
     }
   })
+
+export function parseDidUrlParts(
+  input: string,
+  start = 0,
+  end = input.length,
+): {
+  end: number
+  hash: number
+  search: number
+  path: number
+} {
+  // Determine for "hash" position
+  const hashIdx = input.indexOf('#', start)
+  const hash = hashIdx !== -1 && hashIdx < end ? hashIdx : end
+  if (hash === start) {
+    return { end, hash, search: hash, path: hash }
+  }
+
+  // Determine "search" position
+  const questIdx = input.indexOf('?', start)
+  const search = questIdx !== -1 && questIdx < hash ? questIdx : hash
+  if (search === start) {
+    return { end, hash, search, path: search }
+  }
+
+  // Determine "path" position
+  const slashIndex = input.indexOf('/', start)
+  const path = slashIndex !== -1 && slashIndex < search ? slashIndex : search
+
+  return { end, hash, search, path }
+}
