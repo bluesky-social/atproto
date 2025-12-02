@@ -5,6 +5,9 @@ import getProfiles from './app/bsky/actor/getProfiles'
 import getSuggestions from './app/bsky/actor/getSuggestions'
 import searchActors from './app/bsky/actor/searchActors'
 import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
+import aaBegin from './app/bsky/ageassurance/begin'
+import aaGetConfig from './app/bsky/ageassurance/getConfig'
+import aaGetState from './app/bsky/ageassurance/getState'
 import createBookmark from './app/bsky/bookmark/createBookmark'
 import deleteBookmark from './app/bsky/bookmark/deleteBookmark'
 import getBookmarks from './app/bsky/bookmark/getBookmarks'
@@ -156,6 +159,9 @@ export default function (server: Server, ctx: AppContext) {
   getTaggedSuggestions(server, ctx)
   getAgeAssuranceState(server, ctx)
   initAgeAssurance(server, ctx)
+  aaGetConfig(server, ctx)
+  aaGetState(server, ctx)
+  aaBegin(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

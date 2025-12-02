@@ -1,42 +1,41 @@
 import express, { RequestHandler } from 'express'
 import { httpLogger as log } from '../../logger'
+import { AGE_ASSURANCE_CONFIG } from '../age-assurance/const'
 import {
-  AppContextWithKwsClient,
-  KwsVerificationIntermediateQuery,
-  KwsVerificationQuery,
-  verificationIntermediateQuerySchema,
-} from './types'
+  KWSExternalPayloadVersion,
+  parseKWSExternalPayloadV1WithV2Compat,
+} from '../age-assurance/kws/external-payload'
+import { createEvent } from '../age-assurance/stash'
+import { computeAgeAssuranceAccessOrThrow } from '../age-assurance/util'
+import { AppContextWithKwsClient } from './types'
 import {
   createStashEvent,
   getClientUa,
-  parseExternalPayload,
   parseStatus,
   validateSignature,
 } from './util'
 
-const validateRequest = (
+function parseQueryParams(
   ctx: AppContextWithKwsClient,
   req: express.Request,
-): KwsVerificationQuery => {
+): {
+  status: string
+  externalPayload: string
+} {
   try {
-    const intermediate: KwsVerificationIntermediateQuery =
-      verificationIntermediateQuerySchema.parse({
-        externalPayload: req.query.externalPayload,
-        signature: req.query.signature,
-        status: req.query.status,
-      })
+    const status = String(req.query.status)
+    const externalPayload = String(req.query.externalPayload)
+    const signature = String(req.query.signature)
 
-    const data = `${intermediate.status}:${intermediate.externalPayload}`
     validateSignature(
       ctx.cfg.kws.verificationSecret,
-      data,
-      intermediate.signature,
+      `${status}:${externalPayload}`,
+      signature,
     )
 
     return {
-      ...intermediate,
-      externalPayload: parseExternalPayload(intermediate.externalPayload),
-      status: parseStatus(intermediate.status),
+      status,
+      externalPayload,
     }
   } catch (err) {
     throw new Error('Invalid KWS API request', { cause: err })
@@ -48,29 +47,51 @@ export const verificationHandler =
   async (req: express.Request, res: express.Response) => {
     let actorDid: string | undefined
     try {
-      const query = validateRequest(ctx, req)
-      const {
-        externalPayload,
-        status: { verified },
-      } = query
+      const query = parseQueryParams(ctx, req)
+      const { verified } = parseStatus(query.status)
       if (!verified) {
         throw new Error(
           'Unexpected KWS verification response call with unverified status',
         )
       }
 
-      const { actorDid: externalPayloadActorDid, attemptId } = externalPayload
-      actorDid = externalPayloadActorDid
       // Assumes `app.set('trust proxy', ...)` configured with `true` or specific values.
       const completeIp = req.ip
       const completeUa = getClientUa(req)
-      await createStashEvent(ctx, {
-        actorDid,
-        attemptId,
-        completeIp,
-        completeUa,
-        status: 'assured',
-      })
+      const externalPayload = parseKWSExternalPayloadV1WithV2Compat(
+        query.externalPayload,
+      )
+      actorDid = externalPayload.actorDid
+
+      if (externalPayload.version === KWSExternalPayloadVersion.V2) {
+        const { countryCode, regionCode, attemptId } = externalPayload
+        const { access } = computeAgeAssuranceAccessOrThrow(
+          AGE_ASSURANCE_CONFIG,
+          {
+            countryCode: countryCode,
+            regionCode: regionCode,
+            verifiedMinimumAge: 18, // `adult-verified` is 18+ only
+          },
+        )
+        await createEvent(ctx, actorDid, {
+          attemptId,
+          status: 'assured',
+          access,
+          countryCode,
+          regionCode,
+          completeIp,
+          completeUa,
+        })
+      } else {
+        await createStashEvent(ctx, {
+          actorDid,
+          attemptId: externalPayload.attemptId,
+          status: 'assured',
+          completeIp,
+          completeUa,
+        })
+      }
+
       return res
         .status(302)
         .setHeader(

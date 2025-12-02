@@ -111,6 +111,9 @@ importers:
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
+      '@jest/globals':
+        specifier: ^28.1.3
+        version: 28.1.3
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
@@ -320,6 +323,9 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
+      '@jest/globals':
+        specifier: '28'
+        version: 28.1.3
       '@types/cors':
         specifier: ^2.8.12
         version: 2.8.12

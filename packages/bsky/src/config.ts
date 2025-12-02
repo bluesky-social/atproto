@@ -13,8 +13,22 @@ export interface KwsConfig {
   clientId: string
   redirectUrl: string
   userAgent: string
+  /**
+   * V1 secret used to validate `adult-verifieid` redirects
+   */
   verificationSecret: string
+  /**
+   * V1 secret used to validate `adult-verified` webhooks
+   */
   webhookSecret: string
+  /**
+   * V2 secret used to validate `age-verified` webhooks
+   */
+  ageVerifiedWebhookSecret: string
+  /**
+   * V2 secret used to validate `age-verified` redirects
+   */
+  ageVerifiedRedirectSecret: string
 }
 
 export interface ServerConfigValues {
@@ -251,6 +265,10 @@ export class ServerConfig {
     const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
     const kwsVerificationSecret = process.env.BSKY_KWS_VERIFICATION_SECRET
     const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SECRET
+    const kwsAgeVerifiedWebhookSecret =
+      process.env.BSKY_KWS_AGE_VERIFIED_WEBHOOK_SECRET
+    const kwsAgeVerifiedRedirectSecret =
+      process.env.BSKY_KWS_AGE_VERIFIED_REDIRECT_SECRET
     if (
       kwsApiKey ||
       kwsApiOrigin ||
@@ -259,7 +277,9 @@ export class ServerConfig {
       kwsRedirectUrl ||
       kwsUserAgent ||
       kwsVerificationSecret ||
-      kwsWebhookSecret
+      kwsWebhookSecret ||
+      kwsAgeVerifiedWebhookSecret ||
+      kwsAgeVerifiedRedirectSecret
     ) {
       assert(
         kwsApiOrigin &&
@@ -269,7 +289,9 @@ export class ServerConfig {
           kwsUserAgent &&
           kwsVerificationSecret &&
           kwsWebhookSecret &&
-          kwsApiKey,
+          kwsApiKey &&
+          kwsAgeVerifiedWebhookSecret &&
+          kwsAgeVerifiedRedirectSecret,
         'all KWS environment variables must be set if any are set',
       )
       kws = {
@@ -281,6 +303,8 @@ export class ServerConfig {
         userAgent: kwsUserAgent,
         verificationSecret: kwsVerificationSecret,
         webhookSecret: kwsWebhookSecret,
+        ageVerifiedWebhookSecret: kwsAgeVerifiedWebhookSecret,
+        ageVerifiedRedirectSecret: kwsAgeVerifiedRedirectSecret,
       }
     }
 
