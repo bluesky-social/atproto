@@ -348,7 +348,9 @@ export class Client implements Agent {
   ): Promise<InferQueryOutputBody<T>>
   public async call<const T extends Query>(
     ns: Namespace<T>,
-    params: InferQueryParameters<T>,
+    params: NonNullable<unknown> extends InferQueryParameters<T>
+      ? InferQueryParameters<T> | undefined
+      : InferQueryParameters<T>,
     options?: CallOptions,
   ): Promise<InferQueryOutputBody<T>>
   public async call(
