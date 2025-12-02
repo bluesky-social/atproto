@@ -167,14 +167,6 @@ const canParseUrl =
 // Types
 // --------
 
-const rfc3986UriNormalized = z.string().refine((input) => {
-  try {
-    return input.includes(':') && new URL(input).href === input
-  } catch {
-    return false
-  }
-}, 'RFC3986 URI (normalized)')
-
 const didUrl = z.string().refine((input): boolean => {
   try {
     // Same-document references are valid DID URLs
@@ -223,17 +215,21 @@ const service = z.object({
   serviceEndpoint: z.union([
     // @NOTE We don't enforce URI (or normalization) for string and maps here
     // for legacy reasons.
+
     z.string(),
     z.record(z.string(), z.string()),
 
-    z
-      .array(
-        z.union([
-          rfc3986UriNormalized,
-          z.record(z.string(), rfc3986UriNormalized),
-        ]),
-      )
-      .nonempty(),
+    // @NOTE We don't allow arrays of endpoints here (because our code doesn't
+    // handle them), but the DID spec does allow them
+
+    // z
+    //   .array(
+    //     z.union([
+    //       rfc3986UriNormalized,
+    //       z.record(z.string(), rfc3986UriNormalized),
+    //     ]),
+    //   )
+    //   .nonempty(),
   ]),
 })
 
