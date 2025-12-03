@@ -7,7 +7,16 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
       formats: ['es', 'cjs'],
-      fileName: (format) => `index.${format}.js`,
+      fileName: (format) => {
+        switch (format) {
+          case 'es':
+            return 'index.mjs'
+          case 'cjs':
+            return 'index.cjs'
+          default:
+            return `index.${format}.js`
+        }
+      },
     },
     rollupOptions: {
       // We only want to bundle cborg because it's ESM
