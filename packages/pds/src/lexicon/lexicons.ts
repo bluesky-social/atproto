@@ -1768,11 +1768,6 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          deviceName: {
-            description:
-              'Device name where the last contact import happened. Used only for display purposes.',
-            type: 'string',
-          },
           matchesCount: {
             description:
               'Number of existing contact matches resulting of the user imports and of their imported contacts having imported the user. Matches stop being counted when the user either follows the matched contact or dismisses the match.',
@@ -1923,11 +1918,6 @@ export const schemaDict = {
               token: {
                 description:
                   'JWT to authenticate the call. Use the JWT received as a response to the call to `app.bsky.contact.verifyPhone`.',
-                type: 'string',
-              },
-              deviceName: {
-                description:
-                  'Device information to be used for display purposes of the latest contact imports.',
                 type: 'string',
               },
               contacts: {

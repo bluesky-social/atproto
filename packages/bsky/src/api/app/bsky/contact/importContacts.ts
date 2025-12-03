@@ -60,7 +60,6 @@ const skeleton = async (
   const { matches } = await ctx.rolodexClient.importContacts({
     actor: params.hydrateCtx.viewer,
     contacts: params.contacts,
-    deviceName: params.deviceName,
     token: params.token,
   })
   return {

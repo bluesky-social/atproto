@@ -19,7 +19,6 @@ export default function (server: Server, ctx: AppContext) {
       if (res.status && res.status.syncedAt) {
         const syncedAt = res.status?.syncedAt?.toDate().toISOString()
         syncStatus = {
-          deviceName: res.status.deviceName,
           matchesCount: res.status.matchesCount,
           syncedAt,
         }

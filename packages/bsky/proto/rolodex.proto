@@ -21,8 +21,7 @@ message GetSyncStatusRequest {
 
 message SyncStatus {
   google.protobuf.Timestamp synced_at = 1;
-  string device_name = 2;
-  int32 matches_count = 3;
+  int32 matches_count = 2;
 }
 
 message GetSyncStatusResponse {
@@ -52,8 +51,7 @@ message VerifyPhoneResponse {
 message ImportContactsRequest {
   string actor = 1;
   string token = 2;
-  string device_name = 3;
-  repeated string contacts = 4;
+  repeated string contacts = 3;
 }
 
 message ImportContactsMatch {
