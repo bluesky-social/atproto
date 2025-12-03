@@ -1,3 +1,6 @@
+// Must be first
+import './polyfill.js'
+
 import {
   LexBuilder,
   LexBuilderLoadOptions,
