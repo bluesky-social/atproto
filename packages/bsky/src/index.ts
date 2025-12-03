@@ -30,6 +30,7 @@ import { ImageUriBuilder } from './image/uri'
 import { createKwsClient } from './kws'
 import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
+import { authWithApiKey as rolodexAuth, createRolodexClient } from './rolodex'
 import { createStashClient } from './stash'
 import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
@@ -156,6 +157,17 @@ export class BskyAppView {
         })
       : undefined
 
+    const rolodexClient = config.rolodexUrl
+      ? createRolodexClient({
+          baseUrl: config.rolodexUrl,
+          httpVersion: config.rolodexHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.rolodexIgnoreBadTls },
+          interceptors: config.rolodexApiKey
+            ? [rolodexAuth(config.rolodexApiKey)]
+            : [],
+        })
+      : undefined
+
     const kwsClient = config.kws ? createKwsClient(config.kws) : undefined
 
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
@@ -191,6 +203,7 @@ export class BskyAppView {
       bsyncClient,
       stashClient,
       courierClient,
+      rolodexClient,
       authVerifier,
       featureGates,
       blobDispatcher,

@@ -14,6 +14,7 @@ import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import { KwsClient } from './kws'
 import { httpLogger as log } from './logger'
+import { RolodexClient } from './rolodex'
 import { StashClient } from './stash'
 import {
   ParsedLabelers,
@@ -39,6 +40,7 @@ export class AppContext {
       bsyncClient: BsyncClient
       stashClient: StashClient
       courierClient: CourierClient | undefined
+      rolodexClient: RolodexClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
       blobDispatcher: Dispatcher
@@ -104,6 +106,10 @@ export class AppContext {
 
   get courierClient(): CourierClient | undefined {
     return this.opts.courierClient
+  }
+
+  get rolodexClient(): RolodexClient | undefined {
+    return this.opts.rolodexClient
   }
 
   get authVerifier(): AuthVerifier {
