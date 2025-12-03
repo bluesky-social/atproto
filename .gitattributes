@@ -4,9 +4,6 @@ packages/bsync/src/proto/** linguist-generated=true
 
 # codegen
 packages/api/src/client/** linguist-generated=true
-packages/lexicon-resolver/src/client/** linguist-generated=true
-packages/bsky/src/lexicon/** linguist-generated=true
-packages/pds/src/lexicon/** linguist-generated=true
 packages/ozone/src/lexicon/** linguist-generated=true
 
 # i18n
