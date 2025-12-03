@@ -21,8 +21,6 @@ export type QueryParams = {}
 export interface InputSchema {
   /** JWT to authenticate the call. Use the JWT received as a response to the call to `app.bsky.contact.verifyPhone`. */
   token: string
-  /** Device information to be used for display purposes of the latest contact imports. */
-  deviceName?: string
   /** List of phone numbers in global E.164 format (e.g., '+12125550123'). Phone numbers that cannot be normalized into a valid phone number will be discarded. Should not repeat the 'phone' input used in `app.bsky.contact.verifyPhone`. */
   contacts: string[]
 }

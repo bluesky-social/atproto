@@ -29,10 +29,6 @@
           "type": "string",
           "format": "datetime"
         },
-        "deviceName": {
-          "description": "Device name where the last contact import happened. Used only for display purposes.",
-          "type": "string"
-        },
         "matchesCount": {
           "description": "Number of existing contact matches resulting of the user imports and of their imported contacts having imported the user. Matches stop being counted when the user either follows the matched contact or dismisses the match.",
           "type": "integer",

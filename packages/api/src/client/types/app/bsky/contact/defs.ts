@@ -37,8 +37,6 @@ export interface SyncStatus {
   $type?: 'app.bsky.contact.defs#syncStatus'
   /** Last date when contacts where imported. */
   syncedAt: string
-  /** Device name where the last contact import happened. Used only for display purposes. */
-  deviceName?: string
   /** Number of existing contact matches resulting of the user imports and of their imported contacts having imported the user. Matches stop being counted when the user either follows the matched contact or dismisses the match. */
   matchesCount: number
 }

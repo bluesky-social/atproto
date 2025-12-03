@@ -119,12 +119,7 @@ export class SyncStatus extends Message<SyncStatus> {
   syncedAt?: Timestamp;
 
   /**
-   * @generated from field: string device_name = 2;
-   */
-  deviceName = "";
-
-  /**
-   * @generated from field: int32 matches_count = 3;
+   * @generated from field: int32 matches_count = 2;
    */
   matchesCount = 0;
 
@@ -137,8 +132,7 @@ export class SyncStatus extends Message<SyncStatus> {
   static readonly typeName = "rolodex.SyncStatus";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "synced_at", kind: "message", T: Timestamp },
-    { no: 2, name: "device_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "matches_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "matches_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SyncStatus {
@@ -376,12 +370,7 @@ export class ImportContactsRequest extends Message<ImportContactsRequest> {
   token = "";
 
   /**
-   * @generated from field: string device_name = 3;
-   */
-  deviceName = "";
-
-  /**
-   * @generated from field: repeated string contacts = 4;
+   * @generated from field: repeated string contacts = 3;
    */
   contacts: string[] = [];
 
@@ -395,8 +384,7 @@ export class ImportContactsRequest extends Message<ImportContactsRequest> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "actor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "token", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "device_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "contacts", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 3, name: "contacts", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ImportContactsRequest {
