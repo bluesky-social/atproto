@@ -21,6 +21,8 @@ COPY ./packages/lex/lex-data ./packages/lex/lex-data
 COPY ./packages/lex/lex-json ./packages/lex/lex-json
 COPY ./packages/syntax ./packages/syntax
 
+COPY ./services/bsync ./services/bsync
+
 # install all deps
 RUN pnpm install --frozen-lockfile
 # build all packages with external node_modules

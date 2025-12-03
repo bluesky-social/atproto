@@ -47,6 +47,8 @@ COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 
+COPY ./services/bsky ./services/bsky
+
 # install all deps
 RUN pnpm install --frozen-lockfile
 # build all packages with external node_modules
