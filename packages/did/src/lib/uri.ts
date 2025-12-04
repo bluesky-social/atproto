@@ -68,7 +68,7 @@ export function isHexDigit(code: number): boolean {
 
 export const canParse =
   URL.canParse?.bind(URL) ??
-  ((url, base) => {
+  ((url: string | URL, base: string | URL) => {
     try {
       new URL(url, base)
       return true
@@ -77,33 +77,15 @@ export const canParse =
     }
   })
 
-export function parseDidUrlParts(
-  input: string,
-  start = 0,
-  end = input.length,
-): {
-  end: number
-  hash: number
-  search: number
-  path: number
-} {
-  // Determine for "hash" position
-  const hashIdx = input.indexOf('#', start)
-  const hash = hashIdx !== -1 && hashIdx < end ? hashIdx : end
-  if (hash === start) {
-    return { end, hash, search: hash, path: hash }
+/**
+ * Finds the index of the first "#", "?", or "/" character in a string
+ */
+export function findDidUrlSeparator(input: string): number {
+  let code
+  for (let i = 0; i < input.length; i++) {
+    code = input.charCodeAt(i)
+    // '#', '?', '/'
+    if (code === 35 || code === 63 || code === 47) return i
   }
-
-  // Determine "search" position
-  const questIdx = input.indexOf('?', start)
-  const search = questIdx !== -1 && questIdx < hash ? questIdx : hash
-  if (search === start) {
-    return { end, hash, search, path: search }
-  }
-
-  // Determine "path" position
-  const slashIndex = input.indexOf('/', start)
-  const path = slashIndex !== -1 && slashIndex < search ? slashIndex : search
-
-  return { end, hash, search, path }
+  return -1
 }

@@ -1,4 +1,5 @@
 import {
+  didDocument,
   getDid,
   getFeedGenEndpoint,
   getHandle,
@@ -52,8 +53,9 @@ export const parseToAtprotoDocument = (
   }
 }
 
-export const ensureAtpDocument = (doc: DidDocument): AtprotoData => {
-  const { did, signingKey, handle, pds } = parseToAtprotoDocument(doc)
+export const ensureAtpDocument = (doc: unknown): AtprotoData => {
+  const data = didDocument.parse(doc)
+  const { did, signingKey, handle, pds } = parseToAtprotoDocument(data)
   if (!did) {
     throw new Error(`Could not parse id from doc: ${doc}`)
   }

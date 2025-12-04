@@ -3,6 +3,18 @@ import { z } from 'zod'
 // Parsing atproto data
 // --------
 
+// @TODO refactor to use a shared lib (like @atproto/did or similar)
+export type Did<M extends string = string> = `did:${M}:${string}`
+export function isDid<T extends string>(input: T): input is T & Did {
+  if (!input.startsWith('did:')) return false
+  if (input.length < 8) return false
+  if (input.length > 2048) return false
+  const msidx = input.indexOf(':', 4)
+  return msidx > 4 && msidx < input.length - 1
+}
+
+const did = z.string().refine(isDid, { message: 'DID' })
+
 export const isValidDidDoc = (doc: unknown): doc is DidDocument => {
   return didDocument.safeParse(doc).success
 }
@@ -155,9 +167,9 @@ const validateUrl = (urlStr: string): string | undefined => {
 const canParseUrl =
   URL.canParse ??
   // URL.canParse is not available in Node.js < 18.17.0
-  ((urlStr: string): boolean => {
+  ((urlStr: string | URL, base?: string | URL): boolean => {
     try {
-      new URL(urlStr)
+      new URL(urlStr, base)
       return true
     } catch {
       return false
@@ -167,69 +179,89 @@ const canParseUrl =
 // Types
 // --------
 
-const didUrl = z.string().refine((input): boolean => {
-  try {
-    // Same-document references are valid DID URLs
-    if (
-      input.startsWith('#') ||
-      input.startsWith('?') ||
-      input.startsWith('/')
-    ) {
-      new URL(input, 'http://example.com')
-      return true
-    } else {
-      const url = new URL(input)
-      return (
-        url.protocol === 'did:' &&
-        !url.hostname &&
-        !url.username &&
-        !url.password &&
-        !url.port &&
-        !url.pathname.startsWith('/') // URL parses the method-specific-id as pathname
-      )
-    }
-  } catch {
-    return false
+function findDidUrlSeparator(input: string): number {
+  let code
+  for (let i = 0; i < input.length; i++) {
+    code = input.charCodeAt(i)
+    // '#', '?', '/'
+    if (code === 35 || code === 63 || code === 47) return i
   }
-})
+  return -1
+}
+
+const rfc3986Uri = z.string().url('Invalid RFC3986 URI')
+
+type DidUrl = Exclude<
+  `${Did | ''}${`/${string}` | ''}${`?${string}` | ''}${`#${string}` | ''}`,
+  ''
+>
+
+const didUrl = z.string().refine(
+  (input): input is DidUrl => {
+    if (!input) {
+      return false
+    }
+
+    const separatorIndex = findDidUrlSeparator(input)
+    // If there is no separator, check the whole input as a DID
+    if (separatorIndex === -1) {
+      return isDid(input)
+    }
+
+    // Make sure everything preceding the separator is a valid DID
+    if (separatorIndex !== 0) {
+      if (!isDid(input.slice(0, separatorIndex))) {
+        return false
+      }
+    }
+
+    // make sure the rest is a valid URI component
+    return canParseUrl(input.slice(separatorIndex), 'http://x')
+  },
+  {
+    message: 'DID URL',
+  },
+)
 
 const verificationMethod = z.object({
-  id: z.string(),
+  id: didUrl,
   type: z.string(),
-  controller: z.string(),
+  controller: z.union([did, z.array(did)]),
   publicKeyJwk: z.record(z.string(), z.unknown()).optional(),
   publicKeyMultibase: z.string().optional(),
 })
 
+/**
+ * Each service map MUST contain id, type, and serviceEndpoint properties.
+ * @see {@link https://www.w3.org/TR/did-core/#services}
+ */
 const service = z.object({
-  // @NOTE we don't enforce RFC3986 format on the "id" for legacy reasons
-  id: z.string(),
-  type: z.string(),
+  id: z.union([
+    rfc3986Uri,
+    // Note we must allow relative DID URLs here too (which the "rfc3986Uri"
+    // schema does not allow):
+    didUrl,
+  ]),
   /**
-   * > The value of the serviceEndpoint property MUST be a string, a map, or a
+   * > The value of the `type` property MUST be a string or a set of strings. In
+   * > order to maximize interoperability, the service type and its associated
+   * > properties SHOULD be registered in the DID Specification Registries
+   * > [DID-SPEC-REGISTRIES].
+   */
+  type: z.union([z.string(), z.array(z.string())]),
+  /**
+   * > The value of the `serviceEndpoint` property MUST be a string, a map, or a
    * > set composed of one or more strings and/or maps. All string values MUST
    * > be valid URIs conforming to [RFC3986] and normalized according to the
    * > Normalization and Comparison rules in RFC3986 and to any normalization
    * > rules in its applicable URI scheme specification.
+   *
+   * @note we don't enforce the normalization requirement here
    */
   serviceEndpoint: z.union([
-    // @NOTE We don't enforce URI (or normalization) for string and maps here
-    // for legacy reasons.
-
-    z.string(),
-    z.record(z.string(), z.string()),
-
-    // @NOTE We don't allow arrays of endpoints here (because our code doesn't
-    // handle them), but the DID spec does allow them
-
-    // z
-    //   .array(
-    //     z.union([
-    //       rfc3986UriNormalized,
-    //       z.record(z.string(), rfc3986UriNormalized),
-    //     ]),
-    //   )
-    //   .nonempty(),
+    rfc3986Uri,
+    z.record(z.string(), rfc3986Uri),
+    z.array(z.union([rfc3986Uri, z.record(z.string(), rfc3986Uri)])).nonempty(),
   ]),
 })
 
@@ -237,8 +269,18 @@ const verificationRelationship = z.union([verificationMethod, didUrl])
 const verificationRelationships = z.array(verificationRelationship).optional()
 
 export const didDocument = z.object({
-  id: z.string(),
-  alsoKnownAs: z.array(z.string()).optional(),
+  '@context': z.union([
+    z.literal('https://www.w3.org/ns/did/v1'),
+    z
+      .array(z.string().url())
+      .nonempty()
+      .refine((data) => data[0] === 'https://www.w3.org/ns/did/v1', {
+        message: 'First @context must be https://www.w3.org/ns/did/v1',
+      }),
+  ]),
+  id: did,
+  controller: z.union([did, z.array(did)]).optional(),
+  alsoKnownAs: z.array(rfc3986Uri).optional(),
   verificationMethod: z.array(verificationMethod).optional(),
   service: z.array(service).optional(),
   authentication: verificationRelationships,

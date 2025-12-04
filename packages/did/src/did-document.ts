@@ -1,11 +1,16 @@
 import { z } from 'zod'
 import { Did, assertDid, didSchema } from './did.js'
-import { isFragment, parseDidUrlParts } from './lib/uri.js'
+import { canParse, findDidUrlSeparator } from './lib/uri.js'
 
 /**
  * @see {@link https://www.rfc-editor.org/rfc/rfc3986 RFC3986}
  */
 const rfc3986UriSchema = z.string().url('RFC3986 URI')
+
+export type DidUrl = Exclude<
+  `${Did | ''}${`/${string}` | ''}${`?${string}` | ''}${`#${string}` | ''}`,
+  ''
+>
 
 /**
  * Validates full or relative DID URLs.
@@ -19,33 +24,37 @@ const rfc3986UriSchema = z.string().url('RFC3986 URI')
  */
 export const didUrlSchema = z.string().refine(
   (input): input is DidUrl => {
-    if (!input) return false
+    if (!input) {
+      return false
+    }
 
-    const parts = parseDidUrlParts(input)
-
-    // Make sure the fragment part is valid
-    if (!isFragment(input, parts.hash)) return false
-    // @TODO: validate "query" part ?
-    // @TODO: validate "path" part ?
-
-    // Validate the DID, if not a relative URL
-    if (parts.path !== 0) {
+    const separatorIndex = findDidUrlSeparator(input)
+    // If there is no separator, check the whole input as a DID
+    if (separatorIndex === -1) {
       try {
-        assertDid(input, 0, parts.path)
+        assertDid(input)
+      } catch {
+        return false
+      }
+
+      // No separator, valid DID
+      return true
+    }
+
+    // Make sure everything up to the separator is a valid DID
+    if (separatorIndex !== 0) {
+      try {
+        assertDid(input, 0, separatorIndex)
       } catch {
         return false
       }
     }
 
-    return true
+    // make sure the rest is a valid URI component
+    return canParse(input.slice(separatorIndex), 'http://x')
   },
   { message: 'DID URL' },
 )
-
-export type DidUrl = Exclude<
-  `${Did | ''}${`/${string}` | ''}${`?${string}` | ''}${`#${string}` | ''}`,
-  ''
->
 
 /**
  * Each service map MUST contain id, type, and serviceEndpoint properties.
@@ -57,8 +66,6 @@ const didServiceSchema = z.object({
    * > conforming producer MUST NOT produce multiple service entries with the
    * > same id. A conforming consumer MUST produce an error if it detects
    * > multiple service entries with the same id.
-   *
-   * @see {@link https://www.w3.org/TR/did-1.0/#services}
    */
   id: z.union([
     rfc3986UriSchema,
@@ -103,7 +110,7 @@ const didVerificationMethodSchema = z.object({
    * @see {@link https://www.w3.org/TR/did-1.0/#verification-methods}
    */
   id: didUrlSchema,
-  type: z.string().min(1),
+  type: z.string(),
   controller: z.union([didSchema, z.array(didSchema)]),
   publicKeyJwk: z.record(z.string(), z.unknown()).optional(),
   publicKeyMultibase: z.string().optional(),
