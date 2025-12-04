@@ -221,20 +221,6 @@ export const lexiconPayload = l.object({
 })
 export type LexiconPayload = l.Infer<typeof lexiconPayload>
 
-export const lexiconSubscriptionMessage = l.object({
-  description: strOpt,
-  schema: l.optional(
-    l.discriminatedUnion('type', [
-      lexiconRefSchema,
-      lexiconRefUnionSchema,
-      lexiconObjectSchema,
-    ]),
-  ),
-})
-export type LexiconSubscriptionMessage = l.Infer<
-  typeof lexiconSubscriptionMessage
->
-
 export const lexiconError = l.object({
   name: l.string({ minLength: 1 }),
   description: strOpt,
@@ -264,7 +250,10 @@ export const lexiconSubscriptionSchema = l.object({
   type: l.literal('subscription'),
   description: strOpt,
   parameters: l.optional(lexiconParameters),
-  message: l.optional(lexiconSubscriptionMessage),
+  message: l.object({
+    description: strOpt,
+    schema: lexiconRefUnionSchema,
+  }),
   errors: l.optional(l.array(lexiconError)),
 })
 
