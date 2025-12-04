@@ -1081,6 +1081,80 @@ export class GetNotificationDeclarationRecordsResponse extends Message<GetNotifi
 }
 
 /**
+ * @generated from message bsky.GetGermDeclarationRecordsRequest
+ */
+export class GetGermDeclarationRecordsRequest extends Message<GetGermDeclarationRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = [];
+
+  constructor(data?: PartialMessage<GetGermDeclarationRecordsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetGermDeclarationRecordsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetGermDeclarationRecordsRequest {
+    return new GetGermDeclarationRecordsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsRequest {
+    return new GetGermDeclarationRecordsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsRequest {
+    return new GetGermDeclarationRecordsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetGermDeclarationRecordsRequest | PlainMessage<GetGermDeclarationRecordsRequest> | undefined, b: GetGermDeclarationRecordsRequest | PlainMessage<GetGermDeclarationRecordsRequest> | undefined): boolean {
+    return proto3.util.equals(GetGermDeclarationRecordsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetGermDeclarationRecordsResponse
+ */
+export class GetGermDeclarationRecordsResponse extends Message<GetGermDeclarationRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = [];
+
+  constructor(data?: PartialMessage<GetGermDeclarationRecordsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetGermDeclarationRecordsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "records", kind: "message", T: Record, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetGermDeclarationRecordsResponse {
+    return new GetGermDeclarationRecordsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsResponse {
+    return new GetGermDeclarationRecordsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsResponse {
+    return new GetGermDeclarationRecordsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetGermDeclarationRecordsResponse | PlainMessage<GetGermDeclarationRecordsResponse> | undefined, b: GetGermDeclarationRecordsResponse | PlainMessage<GetGermDeclarationRecordsResponse> | undefined): boolean {
+    return proto3.util.equals(GetGermDeclarationRecordsResponse, a, b);
+  }
+}
+
+/**
  * @generated from message bsky.GetStatusRecordsRequest
  */
 export class GetStatusRecordsRequest extends Message<GetStatusRecordsRequest> {
@@ -3861,11 +3935,6 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
    */
   access = "";
 
-  /**
-   * @generated from field: string access_reason = 5;
-   */
-  accessReason = "";
-
   constructor(data?: PartialMessage<AgeAssuranceStatus>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3878,7 +3947,6 @@ export class AgeAssuranceStatus extends Message<AgeAssuranceStatus> {
     { no: 2, name: "last_initiated_at", kind: "message", T: Timestamp },
     { no: 3, name: "override_applied", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 4, name: "access", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "access_reason", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AgeAssuranceStatus {
