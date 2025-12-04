@@ -27,12 +27,13 @@ const LEXICONS: LexiconDoc[] = [
           },
         },
         message: {
-          schema: {
-            type: 'object',
-            required: ['count'],
-            properties: { count: { type: 'integer' } },
-          },
+          schema: { type: 'union', refs: ['#countdownStatus'] },
         },
+      },
+      countdownStatus: {
+        type: 'object',
+        required: ['count'],
+        properties: { count: { type: 'integer' } },
       },
     },
   },
@@ -74,6 +75,30 @@ const LEXICONS: LexiconDoc[] = [
     defs: {
       main: {
         type: 'subscription',
+        message: {
+          schema: { type: 'union', refs: ['#auth'] },
+        },
+      },
+      auth: {
+        type: 'object',
+        properties: {
+          credentials: { type: 'ref', ref: '#credentials' },
+          artifacts: { type: 'ref', ref: '#artifacts' },
+        },
+      },
+      credentials: {
+        type: 'object',
+        required: ['username'],
+        properties: {
+          username: { type: 'string' },
+        },
+      },
+      artifacts: {
+        type: 'object',
+        required: ['original'],
+        properties: {
+          original: { type: 'string' },
+        },
       },
     },
   },
@@ -89,7 +114,7 @@ describe('Subscriptions', () => {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
-      yield { count: i }
+      yield { $type: 'io.example.streamOne#countdownStatus', count: i }
     }
   })
 
@@ -110,7 +135,7 @@ describe('Subscriptions', () => {
   server.streamMethod('io.example.streamAuth', {
     auth: createBasicAuth({ username: 'admin', password: 'password' }),
     handler: async function* ({ auth }) {
-      yield auth
+      yield { ...auth, $type: 'io.example.streamAuth#auth' }
     },
   })
 
