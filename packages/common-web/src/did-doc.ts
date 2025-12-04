@@ -1,20 +1,21 @@
-import { DidDocument, didDocumentValidator as didDocument } from '@atproto/did'
+import {
+  Did,
+  DidDocument,
+  didDocumentValidator as didDocument,
+  matchesIdentifier,
+} from '@atproto/did'
 
 // Parsing atproto data
 // --------
 
-export { type DidDocument, didDocument }
+export { type Did, type DidDocument, didDocument }
 
 export const isValidDidDoc = (doc: unknown): doc is DidDocument => {
   return didDocument.safeParse(doc).success
 }
 
-export const getDid = (doc: DidDocument): string => {
-  const id = doc.id
-  if (typeof id !== 'string') {
-    throw new Error('No `id` on document')
-  }
-  return id
+export const getDid = (doc: DidDocument): Did => {
+  return doc.id
 }
 
 export const getHandle = (doc: DidDocument): string | undefined => {
@@ -44,7 +45,7 @@ export const getVerificationMaterial = (
 ): { type: string; publicKeyMultibase: string } | undefined => {
   // /!\ Hot path
 
-  const key = findItemById(doc, 'verificationMethod', `#${keyId}`)
+  const key = findItemById(doc, 'verificationMethod', keyId)
   if (!key) {
     return undefined
   }
@@ -67,21 +68,21 @@ export const getSigningDidKey = (doc: DidDocument): string | undefined => {
 
 export const getPdsEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
-    id: '#atproto_pds',
+    id: 'atproto_pds',
     type: 'AtprotoPersonalDataServer',
   })
 }
 
 export const getFeedGenEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
-    id: '#bsky_fg',
+    id: 'bsky_fg',
     type: 'BskyFeedGenerator',
   })
 }
 
 export const getNotifEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
-    id: '#bsky_notif',
+    id: 'bsky_notif',
     type: 'BskyNotificationService',
   })
 }
@@ -92,7 +93,12 @@ export const getServiceEndpoint = (
 ) => {
   // /!\ Hot path
 
-  const service = findItemById(doc, 'service', opts.id)
+  const id =
+    opts.id.charCodeAt(0) === 35 // '#'
+      ? opts.id.slice(1)
+      : opts.id
+
+  const service = findItemById(doc, 'service', id)
   if (!service) {
     return undefined
   }
@@ -111,30 +117,16 @@ export const getServiceEndpoint = (
 function findItemById<
   D extends DidDocument,
   T extends 'verificationMethod' | 'service',
->(doc: D, type: T, id: string): NonNullable<D[T]>[number] | undefined
-function findItemById(
-  doc: DidDocument,
-  type: 'verificationMethod' | 'service',
-  id: string,
-) {
+>(doc: D, type: T, id: string) {
   // /!\ Hot path
 
   const items = doc[type]
   if (items) {
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
-      const itemId = item.id
 
-      if (
-        itemId[0] === '#'
-          ? itemId === id
-          : // Optimized version of: itemId === `${doc.id}${id}`
-            itemId.length === doc.id.length + id.length &&
-            itemId[doc.id.length] === '#' &&
-            itemId.endsWith(id) &&
-            itemId.startsWith(doc.id) // <== We could probably skip this check
-      ) {
-        return item
+      if (matchesIdentifier(doc.id, id, item.id)) {
+        return item as NonNullable<D[T]>[number]
       }
     }
   }

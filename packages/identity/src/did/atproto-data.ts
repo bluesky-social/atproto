@@ -41,24 +41,20 @@ export const getDidKeyFromMultibase = (key: {
   return didKey
 }
 
-export const parseToAtprotoDocument = (
-  doc: DidDocument,
-): Partial<AtprotoData> => {
+export const parseToAtprotoDocument = (doc: DidDocument) => {
   const did = getDid(doc)
   return {
     did,
     signingKey: getKey(doc),
     handle: getHandle(doc),
     pds: getPdsEndpoint(doc),
-  }
+  } satisfies Partial<AtprotoData>
 }
 
 export const ensureAtpDocument = (doc: unknown): AtprotoData => {
   const data = didDocument.parse(doc)
   const { did, signingKey, handle, pds } = parseToAtprotoDocument(data)
-  if (!did) {
-    throw new Error(`Could not parse id from doc: ${doc}`)
-  }
+
   if (!signingKey) {
     throw new Error(`Could not parse signingKey from doc: ${doc}`)
   }
