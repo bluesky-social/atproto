@@ -12,6 +12,7 @@ import {
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyGraphDefs from '../graph/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+import type * as ComGermnetworkId from '../../../com/germnetwork/id.js'
 import type * as AppBskyNotificationDefs from '../notification/defs.js'
 import type * as AppBskyFeedThreadgate from '../feed/threadgate.js'
 import type * as AppBskyFeedPostgate from '../feed/postgate.js'
@@ -121,6 +122,7 @@ export interface ProfileAssociated {
   labeler?: boolean
   chat?: ProfileAssociatedChat
   activitySubscription?: ProfileAssociatedActivitySubscription
+  germ?: ComGermnetworkId.Main
 }
 
 const hashProfileAssociated = 'profileAssociated'
