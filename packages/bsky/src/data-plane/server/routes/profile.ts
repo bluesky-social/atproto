@@ -4,6 +4,7 @@ import { Selectable, sql } from 'kysely'
 import {
   AppBskyNotificationDeclaration,
   ChatBskyActorDeclaration,
+  ComGermnetworkId,
 } from '@atproto/api'
 import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'
@@ -38,6 +39,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const notifDeclarationUris = dids.map(
       (did) => `at://${did}/app.bsky.notification.declaration/self`,
     )
+    const germDeclarationUris = dids.map(
+      (did) => `at://${did}/com.germnetwork.id/self`,
+    )
     const { ref } = db.db.dynamic
     const [
       handlesRes,
@@ -46,6 +50,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       statuses,
       chatDeclarations,
       notifDeclarations,
+      germDeclarations,
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
@@ -73,6 +78,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       getRecords(db)({ uris: statusUris }),
       getRecords(db)({ uris: chatDeclarationUris }),
       getRecords(db)({ uris: notifDeclarationUris }),
+      getRecords(db)({ uris: germDeclarationUris }),
     ])
 
     const verificationsBySubjectDid = verificationsReceived.reduce(
@@ -93,6 +99,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const chatDeclaration = parseRecordBytes<ChatBskyActorDeclaration.Record>(
         chatDeclarations.records[i].record,
+      )
+
+      const germDeclaration = parseRecordBytes<ComGermnetworkId.Record>(
+        germDeclarations.records[i].record,
       )
 
       const verifications = verificationsBySubjectDid.get(did) ?? []
@@ -165,6 +175,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           typeof chatDeclaration?.['allowIncoming'] === 'string'
             ? chatDeclaration['allowIncoming']
             : undefined,
+        germ: germDeclaration,
         upstreamStatus: row?.upstreamStatus ?? '',
         createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
         priorityNotifications: row?.priorityNotifs ?? false,
