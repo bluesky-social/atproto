@@ -185,6 +185,14 @@ export interface Relationship {
   following?: string
   /** if the actor is followed by this DID, contains the AT-URI of the follow record */
   followedBy?: string
+  /** if the actor blocks this DID, this is the AT-URI of the block record */
+  blocking?: string
+  /** if the actor is blocked by this DID, contains the AT-URI of the block record */
+  blockedBy?: string
+  /** if the actor blocks this DID via a block list, this is the AT-URI of the listblock record */
+  blockingByList?: string
+  /** if the actor is blocked by this DID via a block list, contains the AT-URI of the listblock record */
+  blockedByList?: string
 }
 
 const hashRelationship = 'relationship'

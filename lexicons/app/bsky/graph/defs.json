@@ -159,6 +159,26 @@
           "type": "string",
           "format": "at-uri",
           "description": "if the actor is followed by this DID, contains the AT-URI of the follow record"
+        },
+        "blocking": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "if the actor blocks this DID, this is the AT-URI of the block record"
+        },
+        "blockedBy": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "if the actor is blocked by this DID, contains the AT-URI of the block record"
+        },
+        "blockingByList": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "if the actor blocks this DID via a block list, this is the AT-URI of the listblock record"
+        },
+        "blockedByList": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "if the actor is blocked by this DID via a block list, contains the AT-URI of the listblock record"
         }
       }
     }
