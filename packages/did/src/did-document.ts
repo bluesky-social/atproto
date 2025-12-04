@@ -161,7 +161,6 @@ export type DidDocument<Method extends string = string> = z.infer<
   typeof didDocumentSchema
 > & { id: Did<Method> }
 
-// @TODO: Are there other refinements needed?
 export const didDocumentValidator = didDocumentSchema
   // Ensure that every resource identifier is unique
   .superRefine((document, ctx) => {
