@@ -377,12 +377,6 @@ function verifyBlob(
       'BlobTooLarge',
     )
   }
-  if (blob.mimeType !== found.mimeType) {
-    throwInvalid(
-      `Referenced Mimetype does not match stored blob. Expected: ${found.mimeType}, Got: ${blob.mimeType}`,
-      'InvalidMimeType',
-    )
-  }
   if (
     blob.constraints.accept &&
     !acceptedMime(blob.mimeType, blob.constraints.accept)
