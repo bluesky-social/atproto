@@ -69,7 +69,7 @@ describe('did cache', () => {
     const doc = await shortCacheResolver.resolve(did)
 
     // let's mess with the cached doc so we get something different
-    await didCache.cacheDid(did, { ...doc, id: 'did:example:alice' })
+    await didCache.cacheDid(did, { ...(doc as any), id: 'did:example:alice' })
     await wait(5)
 
     // first check the cache & see that we have the stale value
@@ -93,7 +93,7 @@ describe('did cache', () => {
     const doc = await shortExpireResolver.resolve(did)
 
     // again, we mess with the cached doc so we get something different
-    await didCache.cacheDid(did, { ...doc, id: 'did:example:alice' })
+    await didCache.cacheDid(did, { ...(doc as any), id: 'did:example:alice' })
     await wait(5)
 
     // see that the resolver does not return expired value & instead force refreshes
