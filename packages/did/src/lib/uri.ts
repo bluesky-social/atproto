@@ -58,7 +58,7 @@ export function isFragment(
   return true
 }
 
-export function isHexDigit(code: number): boolean {
+function isHexDigit(code: number): boolean {
   return (
     (code >= 48 && code <= 57) || // 0-9
     (code >= 65 && code <= 70) || // A-F

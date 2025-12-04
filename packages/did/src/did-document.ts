@@ -127,10 +127,6 @@ const didVerificationRelationshipsSchema = z
   .array(didVerificationRelationshipSchema)
   .optional()
 
-/**
- * @note This schema is incomplete
- * @see {@link https://www.w3.org/TR/did-core/#production-0}
- */
 export const didDocumentSchema = z.object({
   '@context': z.union([
     z.literal('https://www.w3.org/ns/did/v1'),
@@ -141,16 +137,24 @@ export const didDocumentSchema = z.object({
         message: 'First @context must be https://www.w3.org/ns/did/v1',
       }),
   ]),
+
+  // Identifiers
   id: didSchema,
-  controller: z.union([didSchema, z.array(didSchema)]).optional(),
   alsoKnownAs: z.array(rfc3986UriSchema).optional(),
-  service: z.array(didServiceSchema).optional(),
+  controller: z.union([didSchema, z.array(didSchema)]).optional(),
+
+  // Verification Methods
   verificationMethod: z.array(didVerificationMethodSchema).optional(),
+
+  // Verification relationships
   authentication: didVerificationRelationshipsSchema,
   assertionMethod: didVerificationRelationshipsSchema,
   keyAgreement: didVerificationRelationshipsSchema,
   capabilityInvocation: didVerificationRelationshipsSchema,
   capabilityDelegation: didVerificationRelationshipsSchema,
+
+  // Services
+  service: z.array(didServiceSchema).optional(),
 })
 
 export type DidDocument<Method extends string = string> = z.infer<

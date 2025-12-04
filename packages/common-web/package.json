@@ -19,6 +19,7 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@atproto/did": "workspace:*",
     "@atproto/lex-data": "workspace:*",
     "@atproto/lex-json": "workspace:*",
     "zod": "^3.23.8"
