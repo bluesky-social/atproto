@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AppBskyEmbedExternal, AtpAgent } from '@atproto/api'
+import { AppBskyEmbedExternal, ComGermnetworkId, AtpAgent } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
@@ -453,6 +453,55 @@ describe('pds profile views', () => {
         // Doesn't need `forSnapshot` because the dates are already mocked.
         expect(data.status).toMatchSnapshot()
       })
+    })
+  })
+
+  describe('germ', () => {
+    const germDeclaration: ComGermnetworkId.Main = {
+      $type: 'com.germnetwork.id',
+      version: "1",
+      currentKey: "TODO-key",
+      keyPackage: "TODO-key"
+    }
+
+    it(`omits germ record if doesn't exist`, async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.germ).toBeUndefined()
+    })
+
+    it('returns germ record if it does exist', async () => {
+      await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: alice,
+          collection: ids.ComGermnetworkId,
+          rkey: 'self',
+          record: germDeclaration,
+        },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(forSnapshot(data.germ)).toMatchSnapshot()
     })
   })
 
