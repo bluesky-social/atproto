@@ -1,21 +1,18 @@
 import { NsidString } from '../core.js'
 import { Infer } from '../validation.js'
 import { ParamsSchema } from './params.js'
-import { InferPayloadBody, Payload } from './payload.js'
+import { InferPayloadData, Payload } from './payload.js'
 
-export type InferQueryParameters<Q extends Query> =
-  Q extends Query<any, infer P extends ParamsSchema, any> ? Infer<P> : never
-
-export type InferQueryOutputBody<Q extends Query> =
-  Q extends Query<any, any, infer O extends Payload>
-    ? InferPayloadBody<O>
-    : never
+export type InferQueryParameters<Q extends Query> = Infer<Q['parameters']>
+export type InferQueryOutputBody<Q extends Query> = InferPayloadData<
+  Q['output']
+>
 
 export class Query<
-  TNsid extends NsidString = any,
-  TParameters extends ParamsSchema = any,
-  TOutputPayload extends Payload = any,
-  TErrors extends undefined | readonly string[] = any,
+  TNsid extends NsidString = NsidString,
+  TParameters extends ParamsSchema = ParamsSchema,
+  TOutputPayload extends Payload = Payload,
+  TErrors extends undefined | readonly string[] = undefined | readonly string[],
 > {
   constructor(
     readonly nsid: TNsid,

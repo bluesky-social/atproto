@@ -129,7 +129,7 @@ export function lexToJson(value: LexValue): JsonValue {
         return lexArrayToJson(value)
       } else if (isCid(value)) {
         return encodeLexLink(value)
-      } else if (value instanceof Uint8Array) {
+      } else if (ArrayBuffer.isView(value)) {
         return encodeLexBytes(value)
       } else {
         return encodeLexMap(value)

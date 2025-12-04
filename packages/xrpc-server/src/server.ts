@@ -12,6 +12,7 @@ import express, {
 } from 'express'
 import { check, schema } from '@atproto/common'
 import { LexMap, LexValue } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import {
   LexXrpcProcedure,
   LexXrpcQuery,
@@ -117,10 +118,27 @@ export class Server {
   // handlers
   // =
 
+  add<M extends l.Procedure | l.Query, A extends Auth = Auth>(
+    _schema: M | { main: M },
+    _configOrFn: MethodConfigOrHandler<
+      A,
+      l.InferMethodParams<M>,
+      l.InferMethodInput<M>,
+      | l.InferMethodOutput<M>
+      | (M extends { errors: readonly (infer E extends string)[] }
+          ? {
+              status: number
+              error: E
+              message?: string
+            }
+          : never)
+    >,
+  ): void {}
+
   method<A extends Auth = Auth>(
     nsid: string,
     configOrFn: MethodConfigOrHandler<A>,
-  ) {
+  ): void {
     this.addMethod(nsid, configOrFn)
   }
 

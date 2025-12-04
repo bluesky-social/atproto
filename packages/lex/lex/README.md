@@ -825,7 +825,6 @@ type CallOptions = {
   headers?: HeadersInit // Additional request headers
   service?: Service // Override service proxy for this request
   labelers?: Iterable<Did> // Additional labelers for this request
-  validateRequest?: boolean // Set to "true" to enable request schema validation
   validateResponse?: boolean // Set to "false" to skip response schema validation
 }
 ```

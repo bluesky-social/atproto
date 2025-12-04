@@ -9,12 +9,12 @@ packages/bsync/src/proto
 packages/api/src/client
 packages/lexicon-resolver/src/client
 packages/bsky/src/lexicon
-packages/pds/src/lexicon
 packages/ozone/src/lexicon
 
 # @atproto/lex
 packages/lex/*/src/lexicons
 packages/lex/*/tests/lexicons
+packages/pds/src/lexicons
 packages/oauth/oauth-client-browser-example/src/lexicons
 
 # others

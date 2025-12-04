@@ -7,7 +7,6 @@ import {
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('account migration', () => {
   let network: TestNetworkNoAppView
@@ -81,7 +80,7 @@ describe('account migration', () => {
 
     const serviceJwtRes = await oldAgent.com.atproto.server.getServiceAuth({
       aud: newServerDid,
-      lxm: ids.ComAtprotoServerCreateAccount,
+      lxm: 'com.atproto.server.createAccount',
     })
     const serviceJwt = serviceJwtRes.data.token
 

@@ -172,6 +172,7 @@ export class LexDefBuilder {
     })
 
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: this.pure(`${ref.varName}.parameters`),
       $input: this.pure(`${ref.varName}.input`),
       $output: this.pure(`${ref.varName}.output`),
@@ -221,6 +222,7 @@ export class LexDefBuilder {
     })
 
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: `${ref.varName}.parameters`,
       $output: `${ref.varName}.output`,
     })

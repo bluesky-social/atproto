@@ -1,6 +1,6 @@
+import { Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { computeProxyTo, pipethrough } from '../../../../pipethrough'
 

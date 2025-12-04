@@ -1,3 +1,4 @@
+import { LexMap } from '@atproto/lex-data'
 import { LexiconRecordKey, NsidString, Simplify, TidString } from '../core.js'
 import {
   Infer,
@@ -9,18 +10,20 @@ import {
 import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
 
+export type UnknownRecord = { $type: NsidString } & LexMap
+
 export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
 
 export type RecordSchemaOutput<
   T extends NsidString,
-  S extends Validator<{ [_ in string]?: unknown }>,
-> = Simplify<Omit<Infer<S>, '$type'> & { $type: T }>
+  S extends Validator<LexMap>,
+> = Simplify<{ $type: T } & Omit<Infer<S>, '$type'>>
 
 export class RecordSchema<
   K extends LexiconRecordKey = any,
   T extends NsidString = any,
-  S extends Validator<{ [_ in string]?: unknown }> = any,
+  S extends Validator<LexMap> = any,
 > extends Schema<RecordSchemaOutput<T, S>> {
   keySchema: RecordKeySchema<K>
 
