@@ -72,6 +72,9 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
 
   // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
   client_id_metadata_document_supported: z.boolean().optional(),
+
+  // https://datatracker.ietf.org/doc/draft-emelia-oauth-authorization-management-uri/
+  authorization_management_uri: webUriSchema.optional(),
 })
 
 export type OAuthAuthorizationServerMetadata = z.infer<
