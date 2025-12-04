@@ -251,6 +251,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
           },
+          germ: {
+            type: 'ref',
+            ref: 'lex:com.germnetwork.id',
+          },
         },
       },
       profileAssociatedChat: {
@@ -14370,6 +14374,60 @@ export const schemaDict = {
       },
     },
   },
+  ComGermnetworkId: {
+    lexicon: 1,
+    id: 'com.germnetwork.id',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A delegate messaging id',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['version', 'currentKey', 'keyPackage'],
+          properties: {
+            version: {
+              type: 'string',
+            },
+            currentKey: {
+              type: 'bytes',
+            },
+            messageMe: {
+              type: 'ref',
+              ref: 'lex:com.germnetwork.id#messageMe',
+            },
+            myMessengerOverrideUrl: {
+              type: 'string',
+              format: 'uri',
+            },
+            keyPackage: {
+              type: 'bytes',
+            },
+            continuityProofs: {
+              type: 'array',
+              items: {
+                type: 'bytes',
+              },
+            },
+          },
+        },
+      },
+      messageMe: {
+        type: 'object',
+        required: ['showButtonTo', 'messageMeUrl'],
+        properties: {
+          messageMeUrl: {
+            type: 'string',
+            format: 'uri',
+          },
+          showButtonTo: {
+            type: 'string',
+            enum: ['usersIFollow', 'everyone'],
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneCommunicationCreateTemplate: {
     lexicon: 1,
     id: 'tools.ozone.communication.createTemplate',
@@ -19831,6 +19889,7 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  ComGermnetworkId: 'com.germnetwork.id',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',
