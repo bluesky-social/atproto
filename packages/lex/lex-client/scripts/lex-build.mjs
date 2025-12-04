@@ -19,6 +19,7 @@ Promise.all([
       'com.atproto.repo.putRecord',
       'com.atproto.repo.listRecords',
       'com.atproto.repo.uploadBlob',
+      'com.germnetwork.id',
     ],
     lib: '@atproto/lex-schema',
     pretty: true,
