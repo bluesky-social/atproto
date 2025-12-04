@@ -161,31 +161,44 @@ export type DidDocument<Method extends string = string> = z.infer<
   typeof didDocumentSchema
 > & { id: Did<Method> }
 
-// @TODO: add other refinements ?
+// @TODO: Are there other refinements needed?
 export const didDocumentValidator = didDocumentSchema
-  // Ensure that every service id is unique
-  .superRefine(({ id: did, service }, ctx) => {
-    if (service) {
-      const visited = new Set()
+  // Ensure that every resource identifier is unique
+  .superRefine((document, ctx) => {
+    const visited = new Set()
 
-      for (let i = 0; i < service.length; i++) {
-        const current = service[i]
+    for (const p of [
+      'verificationMethod',
+      'authentication',
+      'assertionMethod',
+      'keyAgreement',
+      'capabilityInvocation',
+      'capabilityDelegation',
+      'service',
+    ] as const) {
+      if (!document[p]) continue
 
-        const serviceId =
+      for (let i = 0; i < document[p].length; i++) {
+        const entry = document[p][i]
+
+        // Skip non-object entries (i.e., DID URL references)
+        if (typeof entry !== 'object') continue
+
+        const resolvedId =
           // Resolve relative service IDs according to RFC3986 (ish)
-          current.id.startsWith('#') ||
-          current.id.startsWith('/') ||
-          current.id.startsWith('?')
-            ? `${did}${current.id}`
-            : current.id
+          entry.id.startsWith('#') ||
+          entry.id.startsWith('/') ||
+          entry.id.startsWith('?')
+            ? `${document.id}${entry.id}`
+            : entry.id
 
-        if (!visited.has(serviceId)) {
-          visited.add(serviceId)
+        if (!visited.has(resolvedId)) {
+          visited.add(resolvedId)
         } else {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `Duplicate service id (${current.id}) found in the document`,
-            path: ['service', i, 'id'],
+            message: `Duplicate identifier (${entry.id}) found in the document`,
+            path: [p, i, 'id'],
           })
         }
       }
