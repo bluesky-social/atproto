@@ -5,6 +5,7 @@ import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile
 import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as NotificationDeclarationRecord } from '../lexicon/types/app/bsky/notification/declaration'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
+import { Record as GermDeclarationRecord } from '../lexicon/types/com/germnetwork/id'
 import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
@@ -31,6 +32,7 @@ export type Actor = {
   takedownRef?: string
   isLabeler: boolean
   allowIncomingChatsFrom?: string
+  germ?: RecordInfo<GermDeclarationRecord>
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
@@ -62,10 +64,12 @@ export type VerificationMetaRequired = Required<VerificationMeta>
 export type Actors = HydrationMap<Actor>
 
 export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
-
 export type ChatDeclarations = HydrationMap<ChatDeclaration>
-export type NotificationDeclaration = RecordInfo<NotificationDeclarationRecord>
 
+export type GermDeclaration = RecordInfo<GermDeclarationRecord>
+export type GermDeclarations = HydrationMap<GermDeclaration>
+
+export type NotificationDeclaration = RecordInfo<NotificationDeclarationRecord>
 export type NotificationDeclarations = HydrationMap<NotificationDeclaration>
 
 export type Status = RecordInfo<StatusRecord>
@@ -268,11 +272,27 @@ export class ActorHydrator {
     }, new HydrationMap<ChatDeclaration>())
   }
 
+  async getGermDeclarations(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<GermDeclarations> {
+    if (!uris.length) return new HydrationMap<GermDeclaration>()
+    const res = await this.dataplane.getGermDeclarationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<GermDeclarationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<GermDeclaration>())
+  }
+
   async getNotificationDeclarations(
     uris: string[],
     includeTakedowns = false,
   ): Promise<NotificationDeclarations> {
     if (!uris.length) return new HydrationMap<NotificationDeclaration>()
+    // TODO: should this be getNotificationDeclarationRecords?
     const res = await this.dataplane.getActorChatDeclarationRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<NotificationDeclarationRecord>(

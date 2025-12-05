@@ -1784,10 +1784,12 @@ export class ChatBskyModerationNS {
 export class ComNS {
   _server: Server
   atproto: ComAtprotoNS
+  germnetwork: ComGermnetworkNS
 
   constructor(server: Server) {
     this._server = server
     this.atproto = new ComAtprotoNS(server)
+    this.germnetwork = new ComGermnetworkNS(server)
   }
 }
 
@@ -2916,5 +2918,13 @@ export class ComAtprotoTempNS {
   ) {
     const nsid = 'com.atproto.temp.revokeAccountCredentials' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComGermnetworkNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }

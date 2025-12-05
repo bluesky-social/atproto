@@ -149,7 +149,8 @@
         "activitySubscription": {
           "type": "ref",
           "ref": "#profileAssociatedActivitySubscription"
-        }
+        },
+        "germ": { "type": "ref", "ref": "com.germnetwork.id" }
       }
     },
     "profileAssociatedChat": {

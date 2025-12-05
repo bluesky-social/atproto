@@ -297,6 +297,7 @@ export class Views {
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
+        germ: undefined, // XXX
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
