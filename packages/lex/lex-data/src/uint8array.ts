@@ -1,9 +1,11 @@
 import {
+  FromBase64Options,
   fromBase64Native,
   fromBase64Node,
   fromBase64Ponyfill,
 } from './uint8array-from-base64.js'
 import {
+  ToBase64Options,
   toBase64Native,
   toBase64Node,
   toBase64Ponyfill,
@@ -19,17 +21,24 @@ import {
  *
  * @returns The base64 encoded string
  */
-export const toBase64: (bytes: Uint8Array) => string =
-  toBase64Native ?? toBase64Node ?? toBase64Ponyfill
+export const toBase64: (
+  bytes: Uint8Array,
+  options?: ToBase64Options,
+) => string = toBase64Native ?? toBase64Node ?? toBase64Ponyfill
+export type { ToBase64Options }
 
 /**
- * Decodes a base64 string into a Uint8Array.
+ * Decodes a base64 string into a Uint8Array. This function supports both padded
+ * and unpadded base64 strings.
  *
  * @returns The decoded {@link Uint8Array}
  * @throws If the input is not a valid base64 string
  */
-export const fromBase64: (b64: string) => Uint8Array =
-  fromBase64Native ?? fromBase64Node ?? fromBase64Ponyfill
+export const fromBase64: (
+  b64: string,
+  options?: FromBase64Options,
+) => Uint8Array = fromBase64Native ?? fromBase64Node ?? fromBase64Ponyfill
+export type { FromBase64Options }
 
 if (toBase64 === toBase64Ponyfill || fromBase64 === fromBase64Ponyfill) {
   /*#__PURE__*/

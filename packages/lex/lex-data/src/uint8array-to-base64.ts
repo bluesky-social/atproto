@@ -3,6 +3,13 @@ import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 
 const Buffer = NodeJSBuffer
 
+export type ToBase64Options = {
+  /** @default 'base64' */
+  alphabet?: 'base64' | 'base64url'
+  /** @default true */
+  omitPadding?: boolean
+}
+
 declare global {
   interface Uint8Array {
     /**
@@ -18,28 +25,46 @@ declare global {
 
 export const toBase64Native =
   typeof Uint8Array.prototype.toBase64 === 'function'
-    ? function toBase64Native(bytes: Uint8Array): string {
-        return bytes.toBase64!({ omitPadding: true })
+    ? function toBase64Native(
+        bytes: Uint8Array,
+        options?: ToBase64Options,
+      ): string {
+        return bytes.toBase64!({
+          alphabet: options?.alphabet ?? 'base64',
+          omitPadding: options?.omitPadding ?? true,
+        })
       }
     : null
 
 export const toBase64Node = Buffer
-  ? function toBase64Node(bytes: Uint8Array): string {
+  ? function toBase64Node(
+      bytes: Uint8Array,
+      options?: ToBase64Options,
+    ): string {
       const b64 = (
         bytes instanceof Buffer ? bytes : Buffer.from(bytes)
-      ).toString('base64')
-      // @NOTE We strip padding for strict compatibility with
-      // uint8arrays.toString behavior. Tests failing because of the presence of
-      // padding are not really synonymous with an actual error and we might
-      // (should?) actually want to keep the padding at some point.
-      return b64.charCodeAt(b64.length - 1) === /* '=' */ 0x3d
-        ? b64.charCodeAt(b64.length - 2) === /* '=' */ 0x3d
-          ? b64.slice(0, -2) // '=='
-          : b64.slice(0, -1) // '='
-        : b64
+      ).toString(options?.alphabet ?? 'base64')
+
+      if (options?.omitPadding ?? true) {
+        return b64.charCodeAt(b64.length - 1) === /* '=' */ 0x3d
+          ? b64.charCodeAt(b64.length - 2) === /* '=' */ 0x3d
+            ? b64.slice(0, -2) // '=='
+            : b64.slice(0, -1) // '='
+          : b64
+      }
+
+      return b64
     }
   : null
 
-export function toBase64Ponyfill(bytes: Uint8Array): string {
-  return toString(bytes, 'base64')
+export function toBase64Ponyfill(
+  bytes: Uint8Array,
+  options?: ToBase64Options,
+): string {
+  const omitPadding = options?.omitPadding ?? true
+
+  return toString(
+    bytes,
+    `${options?.alphabet ?? 'base64'}${omitPadding ? '' : 'pad'}`,
+  )
 }
