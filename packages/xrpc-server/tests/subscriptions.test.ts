@@ -114,7 +114,7 @@ describe('Subscriptions', () => {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
-      yield { $type: 'io.example.streamOne#countdownStatus', count: i }
+      yield { $type: '#countdownStatus', count: i }
     }
   })
 
@@ -160,12 +160,12 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ count: 5 }),
-      new MessageFrame({ count: 4 }),
-      new MessageFrame({ count: 3 }),
-      new MessageFrame({ count: 2 }),
-      new MessageFrame({ count: 1 }),
-      new MessageFrame({ count: 0 }),
+      new MessageFrame({ count: 5 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 4 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 3 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 2 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 1 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 0 }, { type: '#countdownStatus' }),
     ])
   })
 
@@ -207,14 +207,19 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({
-        credentials: {
-          username: 'admin',
+      new MessageFrame(
+        {
+          credentials: {
+            username: 'admin',
+          },
+          artifacts: {
+            original: 'YWRtaW46cGFzc3dvcmQ=',
+          },
         },
-        artifacts: {
-          original: 'YWRtaW46cGFzc3dvcmQ=',
+        {
+          type: '#auth',
         },
-      }),
+      ),
     ])
   })
 
@@ -291,10 +296,10 @@ describe('Subscriptions', () => {
       }
 
       expect(messages).toEqual([
-        { count: 5 },
-        { count: 3 },
-        { count: 1 },
-        { count: 0 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 5 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 3 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 1 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 0 },
       ])
     })
 
@@ -363,11 +368,11 @@ describe('Subscriptions', () => {
 
       expect(error).toEqual(new Error('Oops!'))
       expect(messages).toEqual([
-        { count: 10 },
-        { count: 9 },
-        { count: 8 },
-        { count: 7 },
-        { count: 6 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 10 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 9 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 8 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 7 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 6 },
       ])
     })
   })
