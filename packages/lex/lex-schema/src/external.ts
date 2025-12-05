@@ -20,7 +20,6 @@ import {
   IntegerSchema,
   IntegerSchemaOptions,
   IntersectionSchema,
-  LexMap,
   LiteralSchema,
   LiteralSchemaOptions,
   NeverSchema,
@@ -264,7 +263,7 @@ export function typedUnion<
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<LexMap>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(nsid: N, hash: H, schema: S): TypedObjectSchema<$Type<N, H>, S>
 export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
@@ -283,7 +282,7 @@ export function typedObject<V extends { $type?: $Type }>(
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<LexMap>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(nsid: N, hash: H, schema: S) {
   return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), schema)
 }
@@ -307,11 +306,11 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<LexMap>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(key: K, type: AsNsid<T>, schema: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
-  const V extends { $type: NsidString } & LexMap,
+  const V extends { $type: NsidString } & { [k: string]: unknown },
 >(
   key: K,
   type: AsNsid<V['$type']>,
@@ -321,7 +320,7 @@ export function record<
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<LexMap>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(key: K, type: T, schema: S) {
   return new RecordSchema<K, T, S>(key, type, schema)
 }
