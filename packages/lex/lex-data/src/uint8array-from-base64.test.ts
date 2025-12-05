@@ -40,51 +40,49 @@ for (const fromBase64 of [
         expect(ui8Equals(decoded, bytes)).toBe(true)
       })
 
-      for (const string of [
-        '',
-        '\0\0',
-        '\0\0\0',
-        '\0\0\0\0',
-        '__',
-        'é',
-        'àç',
-        '\0éàç',
-        '```',
-        'aaa',
-        'Hello, World!',
-        '😀😃😄😁😆😅😂🤣😊😇',
-        '👩‍💻👨‍💻👩‍🔬👨‍🔬👩‍🚀👨‍🚀',
-        '🌍🌎🌏🌐🪐🌟✨⚡🔥💧',
-      ] as const) {
-        const buffer = Buffer.from(string, 'utf8')
+      for (const buffer of [
+        Buffer.from(''),
+        Buffer.from('\0\0'),
+        Buffer.from('\0\0\0'),
+        Buffer.from('\0\0\0\0'),
+        Buffer.from('__'),
+        Buffer.from('é'),
+        Buffer.from('àç'),
+        Buffer.from('\0éàç'),
+        Buffer.from('```'),
+        Buffer.from('aaa'),
+        Buffer.from('Hello, World!'),
+        Buffer.from('😀😃😄😁😆😅😂🤣😊😇'),
+        Buffer.from('👩‍💻👨‍💻👩‍🔬👨‍🔬👩‍🚀👨‍🚀'),
+        Buffer.from('🌍🌎🌏🌐🪐🌟✨⚡🔥💧'),
+        Buffer.from(new Uint8Array([0xfb, 0xff, 0xbf])),
+        Buffer.from(new Uint8Array([0xfb, 0xff, 0xbf])),
+        Buffer.from(new Uint8Array([0x4d])),
+        Buffer.from(new Uint8Array([0x4d, 0x61])),
+        Buffer.from(new Uint8Array([0x4d, 0x61, 0x6e])),
+        Buffer.from(new Uint8Array([0x4d])),
+        Buffer.from(new Uint8Array([0x4d, 0x61])),
+        Buffer.from(new Uint8Array([0x00, 0x4d, 0x61, 0x6e, 0x00])),
+      ]) {
         const base64 = buffer.toString('base64')
         const base64Unpadded = base64.replace(/=+$/, '')
-        const base64url = buffer.toString('base64url')
-        const base64urlUnpadded = base64url.replace(/=+$/, '')
+        const base64url = buffer.toString('base64url') // No padding in base64url
 
-        it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64)}`, () => {
+        it(`decodes ${JSON.stringify(base64)}`, () => {
           const decoded = fromBase64(base64)
           expect(decoded).toBeInstanceOf(Uint8Array)
           expect(ui8Equals(decoded, buffer)).toBe(true)
         })
 
-        it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64url)}`, () => {
+        it(`decodes ${JSON.stringify(base64url)} (base64url)`, () => {
           const decoded = fromBase64(base64url, { alphabet: 'base64url' })
           expect(decoded).toBeInstanceOf(Uint8Array)
           expect(ui8Equals(decoded, buffer)).toBe(true)
         })
 
         if (base64 !== base64Unpadded) {
-          it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64Unpadded)}`, () => {
+          it(`decodes ${JSON.stringify(base64Unpadded)} (unpadded)`, () => {
             const decoded = fromBase64(base64Unpadded)
-            expect(decoded).toBeInstanceOf(Uint8Array)
-            expect(ui8Equals(decoded, buffer)).toBe(true)
-          })
-
-          it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64urlUnpadded)}`, () => {
-            const decoded = fromBase64(base64urlUnpadded, {
-              alphabet: 'base64url',
-            })
             expect(decoded).toBeInstanceOf(Uint8Array)
             expect(ui8Equals(decoded, buffer)).toBe(true)
           })
