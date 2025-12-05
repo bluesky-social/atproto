@@ -10,12 +10,12 @@ import {
 
 export type TypedObjectSchemaOutput<
   T extends $Type,
-  S extends Validator<{ [_ in string]?: unknown }>,
+  S extends Validator<{ [k: string]: unknown }>,
 > = Simplify<Infer<S> & { $type?: T }>
 
 export class TypedObjectSchema<
   const T extends $Type = any,
-  const S extends Validator<{ [_ in string]?: unknown }> = any,
+  const S extends Validator<{ [k: string]: unknown }> = any,
 > extends Schema<TypedObjectSchemaOutput<T, S>> {
   constructor(
     readonly $type: T,

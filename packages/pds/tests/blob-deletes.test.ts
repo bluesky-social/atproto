@@ -1,7 +1,6 @@
 import { AtpAgent, BlobRef } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('blob deletes', () => {
   let network: TestNetworkNoAppView
@@ -192,7 +191,7 @@ async function updateProfile(
   return await sc.agent.api.com.atproto.repo.putRecord(
     {
       repo: did,
-      collection: ids.AppBskyActorProfile,
+      collection: 'app.bsky.actor.profile',
       rkey: 'self',
       record: {
         avatar: avatar,

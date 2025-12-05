@@ -1,4 +1,4 @@
-export { Client, buildAgent } from '@atproto/lex-client'
+export { Client, XrpcError, buildAgent } from '@atproto/lex-client'
 export { l } from '@atproto/lex-schema'
 
 // Type only re-exports

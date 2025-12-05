@@ -3,6 +3,7 @@ import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import { resultPassthru } from '../../../proxy'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
@@ -22,17 +23,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Recipient not found')
       }
 
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
-            input.body,
-            await ctx.entrywayAuthHeaders(
-              req,
-              recipientDid,
-              ids.ComAtprotoAdminSendEmail,
-            ),
-          ),
+      if (ctx.entrywayClient) {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          recipientDid,
+          ids.ComAtprotoAdminSendEmail,
         )
+        const result = await ctx.entrywayClient.xrpc(
+          com.atproto.admin.sendEmail,
+          { headers, body: input.body },
+        )
+        return resultPassthru(result)
       }
 
       if (!account.email) {

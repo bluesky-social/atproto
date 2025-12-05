@@ -161,7 +161,7 @@ export class LexiconSchemaBuilder {
         return l.subscription(
           doc.id,
           this.compileParams(doc, def.parameters),
-          this.compilePayloadSchema(doc, def.message?.schema),
+          this.compilePayloadSchema(doc, def.message.schema),
           this.compileErrors(doc, def.errors),
         )
       case 'token':
@@ -301,9 +301,8 @@ export class LexiconSchemaBuilder {
 
   protected compilePayloadSchema(
     doc: LexiconDocument,
-    def?: LexiconObject | LexiconRef | LexiconRefUnion,
+    def: LexiconObject | LexiconRef | LexiconRefUnion,
   ) {
-    if (!def) return undefined
     switch (def.type) {
       case 'object':
         return this.compileObject(doc, def)

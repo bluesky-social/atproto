@@ -14,13 +14,13 @@ export type InferRecordKey<R extends RecordSchema> =
 
 export type RecordSchemaOutput<
   T extends NsidString,
-  S extends Validator<{ [_ in string]?: unknown }>,
-> = Simplify<Omit<Infer<S>, '$type'> & { $type: T }>
+  S extends Validator<{ [k: string]: unknown }>,
+> = Simplify<{ $type: T } & Omit<Infer<S>, '$type'>>
 
 export class RecordSchema<
   K extends LexiconRecordKey = any,
   T extends NsidString = any,
-  S extends Validator<{ [_ in string]?: unknown }> = any,
+  S extends Validator<{ [k: string]: unknown }> = any,
 > extends Schema<RecordSchemaOutput<T, S>> {
   keySchema: RecordKeySchema<K>
 

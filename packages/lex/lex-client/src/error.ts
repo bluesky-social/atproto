@@ -1,5 +1,5 @@
-import { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
+import { Payload } from './util.js'
 
 export enum KnownError {
   Unknown = 'Unknown',
@@ -67,6 +67,28 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
     return this
   }
 
+  isKnownErrorFor<T extends l.Procedure | l.Query>(
+    ns: T | { main: T },
+  ): this is T extends { errors: readonly (infer E extends string)[] }
+    ? XrpcError<E>
+    : never {
+    const schema = 'main' in ns ? ns.main : ns
+    if (!schema.errors?.length) return false
+    return schema.errors.includes(this.name)
+  }
+
+  static isKnownErrorFor<T extends l.Procedure | l.Query>(
+    error: unknown,
+    ns: T | { main: T },
+  ): error is T extends { errors: readonly (infer E extends string)[] }
+    ? XrpcError<E>
+    : never {
+    const schema = 'main' in ns ? ns.main : ns
+    if (!schema.errors?.length) return false
+    if (!(error instanceof XrpcError)) return false
+    return schema.errors.includes(error.name)
+  }
+
   static from(cause: unknown, message?: string): XrpcError {
     if (cause instanceof XrpcError) {
       return cause
@@ -86,7 +108,7 @@ export class XrpcServiceError<
     name: N,
     public readonly status: number,
     public readonly headers: Headers,
-    public readonly body: undefined | LexValue,
+    public readonly payload: null | Payload,
     message?: string,
     options?: ErrorOptions,
   ) {
@@ -101,11 +123,10 @@ export class XrpcResponseError<
   constructor(
     public readonly status: number,
     public readonly headers: Headers,
-    public readonly encoding: undefined | string,
-    public readonly body: B,
+    public readonly payload: Payload<B>,
     options?: ErrorOptions,
   ) {
-    super(body.error, body.message, options)
+    super(payload.body.error, payload.body.message, options)
   }
 }
 
@@ -137,7 +158,7 @@ function asXrpcRequestFailure<M extends l.Procedure | l.Query>(
     return { success: false, error, name: 'UnexpectedError' }
   }
 
-  if (!this.errors.includes(error.name)) {
+  if (!this.errors?.includes(error.name)) {
     return { success: false, error, name: 'Unknown' }
   }
 

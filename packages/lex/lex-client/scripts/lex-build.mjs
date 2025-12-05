@@ -34,6 +34,7 @@ Promise.all([
       'app.bsky.*',
       'com.atproto.repo.createRecord',
       'com.atproto.repo.getRecord',
+      'com.atproto.repo.uploadBlob',
     ],
     lib: '@atproto/lex-schema',
     pretty: true,

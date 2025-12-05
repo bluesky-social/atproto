@@ -1,5 +1,5 @@
-import { LexValue, cidForLex } from '@atproto/lex-cbor'
-import { lexParse } from '@atproto/lex-json'
+import { LexValue, cidForLex, cidForRawBytes } from '@atproto/lex-cbor'
+import { lexParse, lexStringify } from '@atproto/lex-json'
 import { Action, Client } from '..'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
@@ -365,6 +365,88 @@ describe('Client', () => {
       })
 
       // @TODO: using getRecord method (to check we got the cid)
+    })
+  })
+
+  describe('blobs', () => {
+    const fetchHandler = jest.fn(
+      async (url: string, init?: RequestInit): Promise<Response> => {
+        expect(url).toBe('/xrpc/com.atproto.repo.uploadBlob')
+        expect(init?.method).toBe('POST')
+        const headers = new Headers(init?.headers)
+        const type = headers.get('content-type')!
+        expect(type).toBeDefined()
+        const blob =
+          init?.body instanceof Blob
+            ? init.body
+            : ArrayBuffer.isView(init?.body) ||
+                init?.body instanceof ArrayBuffer
+              ? new Blob([init.body], { type })
+              : (() => {
+                  throw new Error('Invalid body type')
+                })()
+
+        const bytes = new Uint8Array(await blob.arrayBuffer())
+
+        const responseData: com.atproto.repo.uploadBlob.Output = {
+          blob: {
+            $type: 'blob',
+            ref: await cidForRawBytes(bytes),
+            mimeType: blob.type,
+            size: blob.size,
+          },
+        }
+
+        return new Response(lexStringify(responseData), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      },
+    )
+
+    it('allows uploading blobs', async () => {
+      const client = new Client({ fetchHandler })
+      const blob = new Blob(['hello world'], { type: 'text/plain' })
+
+      const ref = await client.upload(blob)
+
+      expect(fetchHandler).toHaveBeenCalledTimes(1)
+      expect(ref.$type).toBe('blob')
+      expect(ref.mimeType).toBe('text/plain')
+      expect(ref.size).toBe(11)
+      expect(ref.ref).toEqual(
+        await cidForRawBytes(new TextEncoder().encode('hello world')),
+      )
+    })
+
+    it('allows uploading blobs from Uint8Array', async () => {
+      const client = new Client({ fetchHandler })
+      const data = new TextEncoder().encode('hello world')
+
+      const ref = await client.upload(data)
+
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      expect(ref.$type).toBe('blob')
+      expect(ref.mimeType).toBe('application/octet-stream')
+      expect(ref.size).toBe(11)
+      expect(ref.ref).toEqual(
+        await cidForRawBytes(new TextEncoder().encode('hello world')),
+      )
+    })
+
+    it('allows uploading blobs from ArrayBuffer', async () => {
+      const client = new Client({ fetchHandler })
+      const data = new TextEncoder().encode('hello world').buffer
+
+      const ref = await client.upload(data)
+
+      expect(fetchHandler).toHaveBeenCalledTimes(3)
+      expect(ref.$type).toBe('blob')
+      expect(ref.mimeType).toBe('application/octet-stream')
+      expect(ref.size).toBe(11)
+      expect(ref.ref).toEqual(
+        await cidForRawBytes(new TextEncoder().encode('hello world')),
+      )
     })
   })
 })

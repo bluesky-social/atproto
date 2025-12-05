@@ -12,6 +12,7 @@ import express, {
 } from 'express'
 import { check, schema } from '@atproto/common'
 import { LexMap, LexValue } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import {
   LexXrpcProcedure,
   LexXrpcQuery,
@@ -49,6 +50,7 @@ import {
   MethodConfig,
   MethodConfigOrHandler,
   Options,
+  Output,
   Params,
   RouteOptions,
   ServerRateLimitDescription,
@@ -117,10 +119,37 @@ export class Server {
   // handlers
   // =
 
+  add<
+    const M extends l.Procedure | l.Query,
+    const A extends Auth = Auth,
+    const P extends l.InferMethodParams<M> = l.InferMethodParams<M>,
+    const I extends l.InferMethodInput<M> = l.InferMethodInput<M>,
+    const O extends
+      | l.InferMethodOutput<M>
+      | (M extends { errors: readonly (infer E extends string)[] }
+          ? {
+              status: number
+              error: E
+              message?: string
+            }
+          : never) =
+      | l.InferMethodOutput<M>
+      | (M extends { errors: readonly (infer E extends string)[] }
+          ? {
+              status: number
+              error: E
+              message?: string
+            }
+          : never),
+  >(
+    _schema: M | { main: M },
+    _configOrFn: MethodConfigOrHandler<A, P, I, O>,
+  ): void {}
+
   method<A extends Auth = Auth>(
     nsid: string,
     configOrFn: MethodConfigOrHandler<A>,
-  ) {
+  ): void {
     this.addMethod(nsid, configOrFn)
   }
 

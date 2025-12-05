@@ -17,6 +17,7 @@ import {
   RedisRateLimiter,
   ResponseType,
   XRPCError,
+  createServer,
 } from '@atproto/xrpc-server'
 import apiRoutes from './api'
 import * as authRoutes from './auth-routes'
@@ -24,7 +25,6 @@ import * as basicRoutes from './basic-routes'
 import { ServerConfig, ServerSecrets } from './config'
 import { AppContext, AppContextOptions } from './context'
 import * as error from './error'
-import { createServer } from './lexicon'
 import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
@@ -36,7 +36,6 @@ export * from './config'
 export { AppContext } from './context'
 export { Database } from './db'
 export { DiskBlobStore } from './disk-blobstore'
-export { createServer as createLexiconServer } from './lexicon'
 export { httpLogger } from './logger'
 export { type CommitDataWithOps, type PreparedWrite } from './repo'
 export * as repoPrepare from './repo/prepare'
@@ -73,7 +72,7 @@ export class PDS {
 
     const { rateLimits } = ctx.cfg
 
-    const server = createServer({
+    const server = createServer([], {
       validateResponse: false,
       payload: {
         jsonLimit: 150 * 1024, // 150kb

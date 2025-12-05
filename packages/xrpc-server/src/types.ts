@@ -120,7 +120,7 @@ export type MethodHandler<
   P extends Params = Params,
   I extends Input = Input,
   O extends Output = Output,
-> = (ctx: HandlerContext<A, P, I>) => Awaitable<O | HandlerPipeThrough>
+> = (ctx: HandlerContext<A, P, I>) => Promise<O | HandlerPipeThrough>
 
 export type RateLimiterCreator<T extends HandlerContext = HandlerContext> = <
   C extends T = T,

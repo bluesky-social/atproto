@@ -5,7 +5,7 @@ import {
   ValidatorContext,
 } from './validator.js'
 
-export abstract class Schema<Output> implements Validator<Output> {
+export abstract class Schema<Output = any> implements Validator<Output> {
   declare readonly ['_lex']: { output: Output }
 
   abstract validateInContext(
